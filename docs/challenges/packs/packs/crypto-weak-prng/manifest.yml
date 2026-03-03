@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-weak-prng
+spec_version: challenge-pack-v1
+tags:
+- kp:prng
+title: 弱随机数

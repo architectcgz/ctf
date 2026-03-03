@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+changed="$(git diff --cached --name-only)"
+
+needs_sync=0
+if command -v rg >/dev/null 2>&1; then
+  if echo "$changed" | rg -q '(^docs/contracts/api-contract-v1\.md$|^code/|^docs/architecture/)'; then
+    needs_sync=1
+  fi
+else
+  if echo "$changed" | grep -Eq '(^docs/contracts/api-contract-v1\.md$|^code/|^docs/architecture/)'; then
+    needs_sync=1
+  fi
+fi
+
+if [[ "$needs_sync" -eq 0 ]]; then
+  exit 0
+fi
+
+python3 scripts/sync_openapi_from_contract.py --contract docs/contracts/api-contract-v1.md --openapi docs/contracts/openapi-v1.yaml
+
+# Auto-stage the generated/updated OpenAPI file.
+git add docs/contracts/openapi-v1.yaml

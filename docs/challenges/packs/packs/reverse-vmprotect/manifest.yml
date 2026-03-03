@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: medium
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-vmprotect
+spec_version: challenge-pack-v1
+tags:
+- kp:vm
+title: 代码虚拟化

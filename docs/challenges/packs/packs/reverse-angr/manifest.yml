@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-angr
+spec_version: challenge-pack-v1
+tags:
+- kp:angr
+title: Angr 自动化

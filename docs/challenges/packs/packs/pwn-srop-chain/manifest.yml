@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-srop-chain
+spec_version: challenge-pack-v1
+tags:
+- kp:srop
+title: SROP 链

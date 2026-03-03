@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-got-overwrite
+spec_version: challenge-pack-v1
+tags:
+- kp:got
+title: GOT 覆写

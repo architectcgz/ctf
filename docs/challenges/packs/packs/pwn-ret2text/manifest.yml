@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-ret2text
+spec_version: challenge-pack-v1
+tags:
+- kp:rop
+title: 返回到代码段

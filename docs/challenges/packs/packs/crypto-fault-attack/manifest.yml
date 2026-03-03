@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-fault-attack
+spec_version: challenge-pack-v1
+tags:
+- kp:fault
+title: 故障攻击

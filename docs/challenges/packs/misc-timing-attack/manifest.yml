@@ -1,0 +1,29 @@
+attachments: []
+category: misc
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: dynamic
+hints: []
+instance:
+  max_per_user: 1
+  ttl: 1h
+resources:
+  cpu: 0.2
+  memory: 64m
+  pids: 20
+runtime:
+  expose:
+  - container_port: 9999
+    protocol: tcp
+  image:
+    context_dir: docker
+    dockerfile: Dockerfile
+    source: dockerfile
+  type: container
+slug: misc-timing-attack
+spec_version: challenge-pack-v1
+tags:
+- kp:timing
+title: 时序攻击

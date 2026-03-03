@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-kernel-uaf
+spec_version: challenge-pack-v1
+tags:
+- kp:kernel
+title: 内核 UAF

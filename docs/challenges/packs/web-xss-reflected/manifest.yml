@@ -1,0 +1,42 @@
+spec_version: challenge-pack-v1
+slug: web-xss-reflected
+title: "XSS：反射型跨站脚本"
+category: web
+difficulty: beginner
+tags:
+  - "vuln:xss"
+  - "stack:php"
+  - "kp:reflected-xss"
+
+description:
+  file: statement.md
+
+hints:
+  - text: "尝试在搜索框中输入 <script>alert(1)</script>"
+    cost: 5
+  - text: "观察你的输入是如何被页面显示的"
+    cost: 10
+
+attachments: []
+
+flag:
+  mode: dynamic
+
+runtime:
+  type: container
+  image:
+    source: dockerfile
+    context_dir: docker
+    dockerfile: Dockerfile
+  expose:
+    - container_port: 80
+      protocol: tcp
+
+instance:
+  ttl: "2h"
+  max_per_user: 1
+
+resources:
+  cpu: 0.3
+  memory: "128m"
+  pids: 50

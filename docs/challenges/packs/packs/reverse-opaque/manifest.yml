@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: medium
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-opaque
+spec_version: challenge-pack-v1
+tags:
+- kp:obfuscation
+title: 不透明谓词

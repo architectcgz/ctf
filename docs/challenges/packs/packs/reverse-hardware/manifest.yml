@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-hardware
+spec_version: challenge-pack-v1
+tags:
+- kp:hardware
+title: 硬件加密

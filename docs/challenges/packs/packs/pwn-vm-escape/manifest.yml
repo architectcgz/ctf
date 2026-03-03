@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-vm-escape
+spec_version: challenge-pack-v1
+tags:
+- kp:vm
+title: 虚拟机逃逸

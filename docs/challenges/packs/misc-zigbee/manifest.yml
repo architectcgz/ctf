@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.bin
+category: misc
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: misc-zigbee
+spec_version: challenge-pack-v1
+tags:
+- kp:zigbee
+title: ZigBee 协议

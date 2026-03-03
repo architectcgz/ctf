@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-strace
+spec_version: challenge-pack-v1
+tags:
+- kp:strace
+title: 系统调用

@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-password
+spec_version: challenge-pack-v1
+tags:
+- kp:password
+title: 密码验证

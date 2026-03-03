@@ -1,6 +1,7 @@
 import { onUnmounted, ref } from 'vue'
 
 import { getWsTicket } from '@/api/auth'
+import { WS_MAX_RECONNECT_ATTEMPTS, WS_HEARTBEAT_INTERVAL_MS } from '@/utils/constants'
 
 export type WebSocketStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error'
 
@@ -37,19 +38,21 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
     status.value = 'connecting'
 
     const { ticket } = await getWsTicket()
-    const path = `${wsBase.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}?ticket=${encodeURIComponent(ticket)}`
+    const path = `${wsBase.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`
     socket = new WebSocket(resolveWsUrl(path))
 
     socket.addEventListener('open', () => {
       status.value = 'open'
       reconnectAttempt = 0
+      // 连接建立后立即发送认证消息
+      socket?.send(JSON.stringify({ type: 'auth', payload: { ticket }, timestamp: new Date().toISOString() }))
       heartbeatTimer = window.setInterval(() => {
         try {
           socket?.send(JSON.stringify({ type: 'ping', payload: {}, timestamp: new Date().toISOString() }))
         } catch {
           // ignore
         }
-      }, 30_000)
+      }, WS_HEARTBEAT_INTERVAL_MS)
     })
 
     socket.addEventListener('message', (evt) => {
@@ -76,7 +79,7 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
   }
 
   function scheduleReconnect(): void {
-    if (reconnectAttempt >= 20) return
+    if (reconnectAttempt >= WS_MAX_RECONNECT_ATTEMPTS) return
     reconnectAttempt += 1
     const delayMs = Math.min(30_000, 1000 * 2 ** (reconnectAttempt - 1))
     reconnectTimer = window.setTimeout(() => {

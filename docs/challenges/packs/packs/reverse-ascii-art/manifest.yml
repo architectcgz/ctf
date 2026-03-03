@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-ascii-art
+spec_version: challenge-pack-v1
+tags:
+- kp:ascii
+title: ASCII 艺术

@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.txt
+category: misc
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: misc-spintronics
+spec_version: challenge-pack-v1
+tags:
+- kp:spintronics
+title: 自旋电子学

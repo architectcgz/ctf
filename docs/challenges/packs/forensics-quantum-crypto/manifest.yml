@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-quantum-crypto
+spec_version: challenge-pack-v1
+tags:
+- kp:quantum
+title: 量子密码分析

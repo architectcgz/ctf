@@ -1,0 +1,39 @@
+spec_version: challenge-pack-v1
+slug: web-directory-listing
+title: "目录遍历"
+category: web
+difficulty: beginner
+tags:
+  - "vuln:info-disclosure"
+  - "kp:directory-listing"
+
+description:
+  file: statement.md
+
+hints:
+  - text: "Web 服务器开启了目录列表功能"
+    cost: 5
+
+attachments: []
+
+flag:
+  mode: dynamic
+
+runtime:
+  type: container
+  image:
+    source: dockerfile
+    context_dir: docker
+    dockerfile: Dockerfile
+  expose:
+    - container_port: 80
+      protocol: tcp
+
+instance:
+  ttl: "2h"
+  max_per_user: 1
+
+resources:
+  cpu: 0.2
+  memory: "64m"
+  pids: 30

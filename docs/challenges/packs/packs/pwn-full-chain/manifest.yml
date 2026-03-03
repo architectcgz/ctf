@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-full-chain
+spec_version: challenge-pack-v1
+tags:
+- kp:full
+title: 完整利用链

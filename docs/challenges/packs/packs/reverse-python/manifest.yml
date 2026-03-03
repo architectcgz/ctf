@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-python
+spec_version: challenge-pack-v1
+tags:
+- kp:python
+title: Python 字节码

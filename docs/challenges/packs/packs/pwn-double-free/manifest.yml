@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-double-free
+spec_version: challenge-pack-v1
+tags:
+- kp:heap
+title: Double Free

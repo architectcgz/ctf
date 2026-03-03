@@ -1,0 +1,32 @@
+spec_version: challenge-pack-v1
+slug: web-redirect
+title: "重定向跟踪"
+category: web
+difficulty: beginner
+tags:
+  - "kp:http-redirect"
+  - "kp:curl"
+description:
+  file: statement.md
+hints:
+  - text: "使用 curl -L 跟踪重定向"
+    cost: 5
+attachments: []
+flag:
+  mode: dynamic
+runtime:
+  type: container
+  image:
+    source: dockerfile
+    context_dir: docker
+    dockerfile: Dockerfile
+  expose:
+    - container_port: 80
+      protocol: tcp
+instance:
+  ttl: "2h"
+  max_per_user: 1
+resources:
+  cpu: 0.3
+  memory: "128m"
+  pids: 50

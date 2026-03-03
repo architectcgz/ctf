@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-0day
+spec_version: challenge-pack-v1
+tags:
+- kp:0day
+title: 0day 分析

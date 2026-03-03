@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.txt
+category: misc
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: misc-neuromorphic
+spec_version: challenge-pack-v1
+tags:
+- kp:neuromorphic
+title: 神经形态计算

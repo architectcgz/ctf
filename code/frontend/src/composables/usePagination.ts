@@ -1,5 +1,7 @@
 import { ref, type Ref } from 'vue'
 
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
+
 export interface PaginationState<T> {
   list: Ref<T[]>
   total: Ref<number>
@@ -17,7 +19,7 @@ export function usePagination<T>(
   const list = ref<T[]>([]) as Ref<T[]>
   const total = ref(0)
   const page = ref(1)
-  const pageSize = ref(20)
+  const pageSize = ref(DEFAULT_PAGE_SIZE)
   const loading = ref(false)
 
   async function refresh(): Promise<void> {

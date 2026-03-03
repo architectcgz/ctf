@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-bitlocker
+spec_version: challenge-pack-v1
+tags:
+- kp:bitlocker
+title: BitLocker 解密

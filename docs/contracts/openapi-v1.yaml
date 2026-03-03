@@ -1,0 +1,2125 @@
+openapi: 3.0.3
+info:
+  title: CTF Platform API (v1)
+  version: "1.0.0"
+  description: |
+    机器可读接口契约（OpenAPI 3.0）。
+
+    - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
+    - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
+    - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
+  x-last-updated: "2026-03-03"
+
+servers:
+  - url: /api/v1
+
+tags:
+  - name: Auth
+  - name: Challenges
+  - name: Instances
+  - name: Contests
+  - name: Notifications
+  - name: Teacher
+  - name: Assessment
+  - name: Reports
+  - name: Admin
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    refreshTokenCookie:
+      type: apiKey
+      in: cookie
+      name: ctf_refresh_token
+
+  schemas:
+    ID:
+      type: string
+      description: "统一：所有 id/xxx_id 字段均返回 string（避免 JS 超过 2^53 精度问题）"
+    ISODateTime:
+      type: string
+      format: date-time
+      description: 'RFC3339/ISO8601，如 "2026-03-01T03:15:22Z"'
+
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field: { type: string }
+        message: { type: string }
+
+    ApiEnvelopeBase:
+      type: object
+      required: [code, message, request_id]
+      properties:
+        code:
+          type: integer
+          description: "0=成功，非0=业务错误码（见 backend/04-api-design.md §3）"
+        message:
+          type: string
+          description: '成功固定 "success"，失败为摘要信息（前端提示优先走 errorMap）'
+        request_id:
+          type: string
+          description: "必填：用于日志追踪"
+        errors:
+          type: array
+          items: { $ref: "#/components/schemas/FieldError" }
+
+    ApiEnvelopeNull:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              nullable: true
+              description: "无业务数据时为 null"
+
+    PageResult:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: {}
+          description: "列表项类型由具体接口覆盖"
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    UserRole:
+      type: string
+      enum: [student, teacher, admin]
+
+    AuthUser:
+      type: object
+      required: [id, username, role]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        role: { $ref: "#/components/schemas/UserRole" }
+        avatar: { type: string, nullable: true }
+        name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string }
+        password: { type: string, format: password }
+
+    LoginData:
+      type: object
+      required: [access_token, token_type, expires_in, user]
+      properties:
+        access_token: { type: string }
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: "秒"
+        user: { $ref: "#/components/schemas/AuthUser" }
+
+    ApiEnvelopeLoginData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/LoginData" }
+
+    RefreshData:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token: { type: string }
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in: { type: integer }
+
+    ApiEnvelopeRefreshData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/RefreshData" }
+
+    WsTicketData:
+      type: object
+      required: [ticket, expires_at]
+      properties:
+        ticket: { type: string }
+        expires_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeWsTicketData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/WsTicketData" }
+
+    ChallengeCategory:
+      type: string
+      enum: [web, pwn, reverse, crypto, misc, forensics]
+    ChallengeDifficulty:
+      type: string
+      enum: [beginner, easy, medium, hard, hell]
+
+    ChallengeListItem:
+      type: object
+      required:
+        [id, title, category, difficulty, tags, solved_count, total_attempts, is_solved, points, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        tags:
+          type: array
+          items: { type: string }
+        solved_count: { type: integer, minimum: 0 }
+        total_attempts: { type: integer, minimum: 0 }
+        is_solved: { type: boolean }
+        points: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ChallengeListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/ChallengeListItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeChallengeListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ChallengeListData" }
+
+    ChallengeHint:
+      type: object
+      required: [id, level, is_unlocked]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        level: { type: integer, minimum: 1 }
+        title: { type: string, nullable: true }
+        cost_points: { type: integer, nullable: true, minimum: 0 }
+        is_unlocked: { type: boolean }
+        content: { type: string, nullable: true }
+
+    ChallengeDetailData:
+      type: object
+      required:
+        [id, title, description, category, difficulty, tags, points, is_solved, hints]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        description:
+          type: string
+          description: "Markdown"
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        tags:
+          type: array
+          items: { type: string }
+        points: { type: integer, minimum: 0 }
+        attachment_url: { type: string, nullable: true }
+        is_solved: { type: boolean }
+        solved_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        hints:
+          type: array
+          items: { $ref: "#/components/schemas/ChallengeHint" }
+
+    ApiEnvelopeChallengeDetailData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ChallengeDetailData" }
+
+    InstanceStatus:
+      type: string
+      enum: [pending, creating, running, expired, destroying, destroyed, failed, crashed]
+    FlagType:
+      type: string
+      enum: [static, dynamic, regex]
+
+    SshInfo:
+      type: object
+      required: [host, port, username]
+      properties:
+        host: { type: string }
+        port: { type: integer, minimum: 1, maximum: 65535 }
+        username: { type: string }
+
+    InstanceData:
+      type: object
+      required: [id, challenge_id, status, flag_type, expires_at, remaining_extends, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        status: { $ref: "#/components/schemas/InstanceStatus" }
+        access_url: { type: string, nullable: true }
+        ssh_info: { $ref: "#/components/schemas/SshInfo", nullable: true }
+        flag_type: { $ref: "#/components/schemas/FlagType" }
+        expires_at: { $ref: "#/components/schemas/ISODateTime" }
+        remaining_extends: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        queue_position: { type: integer, nullable: true, minimum: 1 }
+        eta_seconds: { type: integer, nullable: true, minimum: 0 }
+        progress: { type: integer, nullable: true, minimum: 0, maximum: 100 }
+
+    ApiEnvelopeInstanceData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/InstanceData" }
+
+    InstanceExtendData:
+      type: object
+      required: [id, expires_at, remaining_extends]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        expires_at: { $ref: "#/components/schemas/ISODateTime" }
+        remaining_extends: { type: integer, minimum: 0 }
+
+    ApiEnvelopeInstanceExtendData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/InstanceExtendData" }
+
+    InstanceListItem:
+      allOf:
+        - $ref: "#/components/schemas/InstanceData"
+        - type: object
+          required: [challenge_title, category, difficulty]
+          properties:
+            challenge_title: { type: string }
+            category: { $ref: "#/components/schemas/ChallengeCategory" }
+            difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+
+    ApiEnvelopeInstanceListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/InstanceListItem" }
+
+    SubmitFlagRequest:
+      type: object
+      required: [flag]
+      properties:
+        flag: { type: string }
+
+    SubmitFlagSuccessData:
+      type: object
+      required: [correct, points_earned, first_blood, solved_at, challenge_progress]
+      properties:
+        correct: { type: boolean, enum: [true] }
+        points_earned: { type: integer, minimum: 0 }
+        first_blood: { type: boolean }
+        solved_at: { $ref: "#/components/schemas/ISODateTime" }
+        challenge_progress:
+          type: object
+          required: [total_challenges, solved_challenges]
+          properties:
+            total_challenges: { type: integer, minimum: 0 }
+            solved_challenges: { type: integer, minimum: 0 }
+
+    SubmitFlagFailureData:
+      type: object
+      required: [correct]
+      properties:
+        correct: { type: boolean, enum: [false] }
+        remaining_attempts: { type: integer, nullable: true, minimum: 0 }
+
+    SubmitFlagData:
+      oneOf:
+        - $ref: "#/components/schemas/SubmitFlagSuccessData"
+        - $ref: "#/components/schemas/SubmitFlagFailureData"
+
+    ApiEnvelopeSubmitFlagData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/SubmitFlagData" }
+
+    UnlockHintData:
+      type: object
+      required: [hint]
+      properties:
+        hint: { $ref: "#/components/schemas/ChallengeHint" }
+        points_spent: { type: integer, nullable: true, minimum: 0 }
+        remaining_points: { type: integer, nullable: true, minimum: 0 }
+
+    ApiEnvelopeUnlockHintData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/UnlockHintData" }
+
+    MyProgressData:
+      type: object
+      required: [total_challenges, solved_challenges]
+      properties:
+        total_challenges: { type: integer, minimum: 0 }
+        solved_challenges: { type: integer, minimum: 0 }
+        by_category:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: object
+            required: [total, solved]
+            properties:
+              total: { type: integer, minimum: 0 }
+              solved: { type: integer, minimum: 0 }
+        by_difficulty:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: object
+            required: [total, solved]
+            properties:
+              total: { type: integer, minimum: 0 }
+              solved: { type: integer, minimum: 0 }
+
+    ApiEnvelopeMyProgressData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/MyProgressData" }
+
+    TimelineEvent:
+      type: object
+      required: [id, type, title, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        type:
+          type: string
+          enum: [solve, submit, instance, hint]
+        title: { type: string }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        meta:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    ApiEnvelopeMyTimelineData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/TimelineEvent" }
+
+    ContestMode:
+      type: string
+      enum: [jeopardy, awd, awd_plus, king_of_hill]
+    ContestStatus:
+      type: string
+      enum: [draft, published, registering, running, frozen, ended, cancelled, archived]
+
+    ContestListItem:
+      type: object
+      required: [id, title, mode, status, starts_at, ends_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        mode: { $ref: "#/components/schemas/ContestMode" }
+        status: { $ref: "#/components/schemas/ContestStatus" }
+        starts_at: { $ref: "#/components/schemas/ISODateTime" }
+        ends_at: { $ref: "#/components/schemas/ISODateTime" }
+        register_ends_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    ContestListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/ContestListItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeContestListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestListData" }
+
+    ContestDetailData:
+      allOf:
+        - $ref: "#/components/schemas/ContestListItem"
+        - type: object
+          properties:
+            description: { type: string, nullable: true }
+            rules: { type: string, nullable: true, description: "Markdown" }
+            team_size_limit: { type: integer, nullable: true, minimum: 1 }
+            scoreboard_frozen: { type: boolean, nullable: true }
+
+    ApiEnvelopeContestDetailData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestDetailData" }
+
+    ContestChallengeItem:
+      type: object
+      required: [id, challenge_id, title, category, difficulty, points, solved_count, is_solved]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        points: { type: integer, minimum: 0 }
+        solved_count: { type: integer, minimum: 0 }
+        is_solved: { type: boolean }
+
+    ApiEnvelopeContestChallengeListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/ContestChallengeItem" }
+
+    ScoreboardRow:
+      type: object
+      required: [rank, team_id, team_name, score, solved_count]
+      properties:
+        rank: { type: integer, minimum: 1 }
+        team_id: { $ref: "#/components/schemas/ID" }
+        team_name: { type: string }
+        score: { type: integer, minimum: 0 }
+        solved_count: { type: integer, minimum: 0 }
+        last_submission_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    ContestScoreboardData:
+      type: object
+      required: [contest, scoreboard, frozen]
+      properties:
+        contest:
+          type: object
+          required: [id, title, status, started_at, ends_at]
+          properties:
+            id: { $ref: "#/components/schemas/ID" }
+            title: { type: string }
+            status: { $ref: "#/components/schemas/ContestStatus" }
+            started_at: { $ref: "#/components/schemas/ISODateTime" }
+            ends_at: { $ref: "#/components/schemas/ISODateTime" }
+        scoreboard:
+          type: object
+          required: [list, total, page, page_size]
+          properties:
+            list:
+              type: array
+              items: { $ref: "#/components/schemas/ScoreboardRow" }
+            total: { type: integer, minimum: 0 }
+            page: { type: integer, minimum: 1 }
+            page_size: { type: integer, minimum: 1 }
+        frozen: { type: boolean }
+
+    ApiEnvelopeContestScoreboardData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestScoreboardData" }
+
+    ContestAnnouncement:
+      type: object
+      required: [id, title, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        content: { type: string, nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeContestAnnouncementListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/ContestAnnouncement" }
+
+    TeamMember:
+      type: object
+      required: [user_id, username, joined_at]
+      properties:
+        user_id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        joined_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    TeamData:
+      type: object
+      required: [id, name, captain_user_id, members]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        name: { type: string }
+        invite_code: { type: string, nullable: true, description: "仅队长可见（如有）" }
+        captain_user_id: { $ref: "#/components/schemas/ID" }
+        members:
+          type: array
+          items: { $ref: "#/components/schemas/TeamMember" }
+
+    CreateTeamRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+
+    ApiEnvelopeTeamData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeamData" }
+
+    ContestMyProgressData:
+      type: object
+      required: [contest_id, solved]
+      properties:
+        contest_id: { $ref: "#/components/schemas/ID" }
+        team_id: { $ref: "#/components/schemas/ID", nullable: true }
+        solved:
+          type: array
+          items:
+            type: object
+            required: [contest_challenge_id, solved_at, points_earned]
+            properties:
+              contest_challenge_id: { $ref: "#/components/schemas/ID" }
+              solved_at: { $ref: "#/components/schemas/ISODateTime" }
+              points_earned: { type: integer, minimum: 0 }
+
+    ApiEnvelopeContestMyProgressData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestMyProgressData" }
+
+    NotificationType:
+      type: string
+      enum: [system, contest, challenge, team]
+    NotificationItem:
+      type: object
+      required: [id, type, title, unread, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        type: { $ref: "#/components/schemas/NotificationType" }
+        title: { type: string }
+        content: { type: string, nullable: true }
+        level:
+          type: string
+          nullable: true
+          enum: [info, success, warning, error]
+        unread: { type: boolean }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    NotificationListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/NotificationItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeNotificationListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/NotificationListData" }
+
+    TeacherClassItem:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        student_count: { type: integer, nullable: true, minimum: 0 }
+
+    ApiEnvelopeTeacherClassListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/TeacherClassItem" }
+
+    TeacherStudentItem:
+      type: object
+      required: [id, username]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        name: { type: string, nullable: true }
+        progress: { $ref: "#/components/schemas/MyProgressData", nullable: true }
+
+    ApiEnvelopeTeacherStudentListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/TeacherStudentItem" }
+
+    SkillDimensionScore:
+      type: object
+      required: [key, name, value]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        value: { type: number, minimum: 0, maximum: 100 }
+
+    SkillProfileData:
+      type: object
+      required: [dimensions]
+      properties:
+        dimensions:
+          type: array
+          items: { $ref: "#/components/schemas/SkillDimensionScore" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    ApiEnvelopeSkillProfileData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/SkillProfileData" }
+
+    RecommendationItem:
+      type: object
+      required: [challenge_id, title, category, difficulty, reason]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        reason: { type: string }
+
+    ApiEnvelopeRecommendationData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/RecommendationItem" }
+
+    ReportExportData:
+      type: object
+      required: [report_id, status]
+      properties:
+        report_id: { $ref: "#/components/schemas/ID" }
+        status:
+          type: string
+          enum: [ready, processing]
+        download_url: { type: string, nullable: true }
+        expires_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    ApiEnvelopeReportExportData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ReportExportData" }
+
+    AdminDashboardData:
+      type: object
+      required: [online_instances, container_health_rate, submissions_today, submissions_error_rate]
+      properties:
+        online_instances: { type: integer, minimum: 0 }
+        container_health_rate: { type: number }
+        submissions_today: { type: integer, minimum: 0 }
+        submissions_error_rate: { type: number }
+        alerts:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [id, title, level, created_at]
+            properties:
+              id: { $ref: "#/components/schemas/ID" }
+              title: { type: string }
+              level: { type: string }
+              created_at: { $ref: "#/components/schemas/ISODateTime" }
+        recent_audit_logs:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [id, action, actor, created_at]
+            properties:
+              id: { $ref: "#/components/schemas/ID" }
+              action: { type: string }
+              actor: { type: string }
+              created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAdminDashboardData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminDashboardData" }
+
+    AdminUserStatus:
+      type: string
+      enum: [active, inactive, locked, banned]
+    AdminUserListItem:
+      type: object
+      required: [id, username, status, roles, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/AdminUserStatus" }
+        roles:
+          type: array
+          items: { $ref: "#/components/schemas/UserRole" }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    AdminUserListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/AdminUserListItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAdminUserListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminUserListData" }
+
+    AdminUserUpsertData:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/AdminUserListItem" }
+
+    ApiEnvelopeAdminUserUpsertData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminUserUpsertData" }
+
+    AdminUserUpsertRequest:
+      type: object
+      properties:
+        username: { type: string }
+        name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/AdminUserStatus" }
+        roles:
+          type: array
+          items: { $ref: "#/components/schemas/UserRole" }
+        password: { type: string, format: password, nullable: true }
+
+    AdminUserImportData:
+      type: object
+      required: [created, updated, failed]
+      properties:
+        created: { type: integer, minimum: 0 }
+        updated: { type: integer, minimum: 0 }
+        failed: { type: integer, minimum: 0 }
+        errors:
+          type: array
+          nullable: true
+          items:
+            type: object
+            required: [row, message]
+            properties:
+              row: { type: integer, minimum: 1 }
+              message: { type: string }
+
+    ApiEnvelopeAdminUserImportData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminUserImportData" }
+
+    AdminChallengeStatus:
+      type: string
+      enum: [draft, review, active, archived]
+    AdminChallengeListItem:
+      type: object
+      required: [id, title, category, difficulty, status, base_score, solve_count, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        status: { $ref: "#/components/schemas/AdminChallengeStatus" }
+        base_score: { type: integer, minimum: 0 }
+        solve_count: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    AdminChallengeListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/AdminChallengeListItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAdminChallengeListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeListData" }
+
+    AdminChallengeUpsertData:
+      type: object
+      required: [challenge]
+      properties:
+        challenge: { $ref: "#/components/schemas/AdminChallengeListItem" }
+
+    ApiEnvelopeAdminChallengeUpsertData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeUpsertData" }
+
+    ImageSourceType:
+      type: string
+      enum: [registry, dockerfile, upload]
+    ImageStatus:
+      type: string
+      enum: [pending, building, ready, failed, deprecated]
+    AdminImageListItem:
+      type: object
+      required: [id, name, tag, source_type, status, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        name: { type: string }
+        tag: { type: string }
+        source_type: { $ref: "#/components/schemas/ImageSourceType" }
+        status: { $ref: "#/components/schemas/ImageStatus" }
+        size_bytes: { type: integer, nullable: true, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    AdminImageListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/AdminImageListItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAdminImageListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminImageListData" }
+
+    AdminImageCreateData:
+      type: object
+      required: [image]
+      properties:
+        image: { $ref: "#/components/schemas/AdminImageListItem" }
+
+    ApiEnvelopeAdminImageCreateData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminImageCreateData" }
+
+    AuditLogItem:
+      type: object
+      required: [id, action, resource_type, actor_user_id, actor_username, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        action: { type: string }
+        resource_type: { type: string }
+        resource_id: { $ref: "#/components/schemas/ID", nullable: true }
+        actor_user_id: { $ref: "#/components/schemas/ID" }
+        actor_username: { type: string }
+        ip: { type: string, nullable: true }
+        user_agent: { type: string, nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        detail:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    AuditLogListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/AuditLogItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAuditLogListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AuditLogListData" }
+
+    ApiEnvelopeContestListItemPageResult:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestListData" }
+
+    AdminContestUpsertData:
+      type: object
+      required: [contest]
+      properties:
+        contest: { $ref: "#/components/schemas/ContestDetailData" }
+
+    ApiEnvelopeAdminContestUpsertData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminContestUpsertData" }
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 用户登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeLoginData" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: 用户注册（注册成功即登录）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/LoginRequest"
+              description: "注册字段以实现为准；此处至少包含 username/password"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeLoginData" }
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 刷新 Access Token（Refresh Token 由 HttpOnly Cookie 提供）
+      security:
+        - refreshTokenCookie: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "请求体为空"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeRefreshData" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 退出登录
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: 获取当前用户信息
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiEnvelopeBase"
+                  - type: object
+                    required: [data]
+                    properties:
+                      data: { $ref: "#/components/schemas/AuthUser" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/password:
+    put:
+      tags: [Auth]
+      summary: 修改密码
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [old_password, new_password]
+              properties:
+                old_password: { type: string, format: password }
+                new_password: { type: string, format: password }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/ws-ticket:
+    post:
+      tags: [Auth]
+      summary: 获取 WebSocket 一次性 ticket
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeWsTicketData" }
+
+  /challenges:
+    get:
+      tags: [Challenges]
+      summary: 获取靶场列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+        - in: query
+          name: category
+          schema: { $ref: "#/components/schemas/ChallengeCategory" }
+        - in: query
+          name: difficulty
+          schema: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        - in: query
+          name: sort
+          schema:
+            type: string
+            description: '如 "created_at:desc"'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeChallengeListData" }
+
+  /challenges/{id}:
+    get:
+      tags: [Challenges]
+      summary: 获取靶场详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeChallengeDetailData" }
+
+  /challenges/{id}/instances:
+    post:
+      tags: [Instances]
+      summary: 启动靶机实例
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceData" }
+
+  /instances/{id}:
+    delete:
+      tags: [Instances]
+      summary: 销毁实例
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /instances/{id}/extend:
+    post:
+      tags: [Instances]
+      summary: 延长实例有效期
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceExtendData" }
+
+  /instances:
+    get:
+      tags: [Instances]
+      summary: 获取我的实例列表
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceListData" }
+
+  /challenges/{id}/submissions:
+    post:
+      tags: [Challenges]
+      summary: 提交 Flag
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitFlagRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+        "400":
+          description: Bad Request（允许返回 data.correct=false 作为错误上下文）
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+
+  /challenges/{id}/hints/{level}/unlock:
+    post:
+      tags: [Challenges]
+      summary: 解锁提示
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: level
+          required: true
+          schema: { type: integer, minimum: 1 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeUnlockHintData" }
+
+  /users/me/progress:
+    get:
+      tags: [Assessment]
+      summary: 我的整体进度
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeMyProgressData" }
+
+  /users/me/timeline:
+    get:
+      tags: [Assessment]
+      summary: 我的时间线
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeMyTimelineData" }
+
+  /contests:
+    get:
+      tags: [Contests]
+      summary: 竞赛列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestListData" }
+
+  /contests/{id}:
+    get:
+      tags: [Contests]
+      summary: 竞赛详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestDetailData" }
+
+  /contests/{id}/register:
+    post:
+      tags: [Contests]
+      summary: 报名竞赛
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /contests/{id}/challenges:
+    get:
+      tags: [Contests]
+      summary: 竞赛题目列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestChallengeListData" }
+
+  /contests/{id}/challenges/{cid}/submissions:
+    post:
+      tags: [Contests]
+      summary: 竞赛中提交 Flag
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitFlagRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+
+  /contests/{id}/challenges/{cid}/instances:
+    post:
+      tags: [Contests]
+      summary: 竞赛中启动靶机实例
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceData" }
+
+  /contests/{id}/scoreboard:
+    get:
+      tags: [Contests]
+      summary: 竞赛排行榜（分页）
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 50 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestScoreboardData" }
+
+  /contests/{id}/announcements:
+    get:
+      tags: [Contests]
+      summary: 竞赛公告列表
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestAnnouncementListData" }
+
+  /contests/{id}/teams:
+    post:
+      tags: [Contests]
+      summary: 创建队伍
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTeamRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeamData" }
+
+  /contests/{id}/teams/{tid}/join:
+    post:
+      tags: [Contests]
+      summary: 加入队伍
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: tid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /contests/{id}/my-progress:
+    get:
+      tags: [Contests]
+      summary: 我在该竞赛的解题进度
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestMyProgressData" }
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: 我的通知列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNotificationListData" }
+
+  /notifications/{id}/read:
+    put:
+      tags: [Notifications]
+      summary: 标记通知为已读
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /teacher/classes:
+    get:
+      tags: [Teacher]
+      summary: 教师班级列表
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherClassListData" }
+
+  /teacher/classes/{name}/students:
+    get:
+      tags: [Teacher]
+      summary: 班级学员列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherStudentListData" }
+
+  /teacher/students/{id}/progress:
+    get:
+      tags: [Teacher]
+      summary: 教师查看指定学员进度
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeMyProgressData" }
+
+  /users/me/skill-profile:
+    get:
+      tags: [Assessment]
+      summary: 我的能力画像
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSkillProfileData" }
+
+  /users/me/recommendations:
+    get:
+      tags: [Assessment]
+      summary: 个性化推荐靶场
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeRecommendationData" }
+
+  /reports/personal:
+    post:
+      tags: [Reports]
+      summary: 导出个人能力报告（PDF）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "请求体以实现为准；允许为空"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeReportExportData" }
+
+  /reports/class:
+    post:
+      tags: [Reports]
+      summary: 导出班级报告（PDF）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "请求体以实现为准；允许为空"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeReportExportData" }
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: 管理仪表盘（概览数据）
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminDashboardData" }
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: 用户列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminUserListData" }
+    post:
+      tags: [Admin]
+      summary: 创建用户
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminUserUpsertRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminUserUpsertData" }
+
+  /admin/users/{id}:
+    put:
+      tags: [Admin]
+      summary: 更新用户
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminUserUpsertRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminUserUpsertData" }
+    delete:
+      tags: [Admin]
+      summary: 删除用户
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/users/import:
+    post:
+      tags: [Admin]
+      summary: 批量导入用户（文件上传）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminUserImportData" }
+
+  /admin/challenges:
+    get:
+      tags: [Admin]
+      summary: 题目列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeListData" }
+    post:
+      tags: [Admin]
+      summary: 创建题目
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准；返回 challenge 的列表字段子集"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
+
+  /admin/challenges/{id}:
+    put:
+      tags: [Admin]
+      summary: 更新题目
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准；返回 challenge 的列表字段子集"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
+    delete:
+      tags: [Admin]
+      summary: 删除题目
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/images:
+    get:
+      tags: [Admin]
+      summary: 镜像列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminImageListData" }
+    post:
+      tags: [Admin]
+      summary: 创建镜像记录/触发构建（字段集以实现为准）
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminImageCreateData" }
+
+  /admin/images/{id}:
+    delete:
+      tags: [Admin]
+      summary: 删除镜像
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/audit-logs:
+    get:
+      tags: [Admin]
+      summary: 审计日志查询（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAuditLogListData" }
+
+  /admin/contests:
+    get:
+      tags: [Admin]
+      summary: 竞赛列表（分页）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestListData" }
+    post:
+      tags: [Admin]
+      summary: 创建竞赛
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestUpsertData" }
+
+  /admin/contests/{id}:
+    put:
+      tags: [Admin]
+      summary: 更新竞赛
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminContestUpsertData" }
+    delete:
+      tags: [Admin]
+      summary: 删除竞赛
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }

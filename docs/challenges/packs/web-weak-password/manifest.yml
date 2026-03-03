@@ -1,0 +1,32 @@
+spec_version: challenge-pack-v1
+slug: web-weak-password
+title: "弱密码爆破"
+category: web
+difficulty: beginner
+tags:
+  - "vuln:weak-auth"
+  - "kp:brute-force"
+description:
+  file: statement.md
+hints:
+  - text: "尝试常见密码"
+    cost: 5
+attachments: []
+flag:
+  mode: dynamic
+runtime:
+  type: container
+  image:
+    source: dockerfile
+    context_dir: docker
+    dockerfile: Dockerfile
+  expose:
+    - container_port: 80
+      protocol: tcp
+instance:
+  ttl: "2h"
+  max_per_user: 1
+resources:
+  cpu: 0.3
+  memory: "128m"
+  pids: 50

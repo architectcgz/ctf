@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: medium
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-control-flow
+spec_version: challenge-pack-v1
+tags:
+- kp:obfuscation
+title: 控制流平坦化

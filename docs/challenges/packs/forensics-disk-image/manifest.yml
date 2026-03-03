@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-disk-image
+spec_version: challenge-pack-v1
+tags:
+- kp:disk-forensics
+title: 磁盘镜像分析

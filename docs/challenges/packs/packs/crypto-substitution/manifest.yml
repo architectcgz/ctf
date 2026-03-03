@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-substitution
+spec_version: challenge-pack-v1
+tags:
+- kp:substitution
+title: 替换密码

@@ -1,0 +1,15 @@
+attachments: []
+category: pwn
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: dynamic
+hints: []
+runtime:
+  type: none
+slug: pwn-glibc-2-35
+spec_version: challenge-pack-v1
+tags:
+- kp:glibc
+title: Glibc 2.35+

@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: hell
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-blockchain
+spec_version: challenge-pack-v1
+tags:
+- kp:blockchain
+title: 区块链取证

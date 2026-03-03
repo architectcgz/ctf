@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.bin
+category: misc
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: misc-fault-injection
+spec_version: challenge-pack-v1
+tags:
+- kp:fault-injection
+title: 故障注入

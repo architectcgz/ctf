@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-ext4
+spec_version: challenge-pack-v1
+tags:
+- kp:ext4
+title: EXT4 文件系统

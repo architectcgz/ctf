@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-satellite
+spec_version: challenge-pack-v1
+tags:
+- kp:satellite
+title: 卫星通信取证

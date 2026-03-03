@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-hnp
+spec_version: challenge-pack-v1
+tags:
+- kp:ecdsa
+title: 隐藏数问题

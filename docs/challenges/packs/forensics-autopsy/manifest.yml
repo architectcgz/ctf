@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.zip
+category: forensics
+description:
+  file: statement.md
+difficulty: medium
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: forensics-autopsy
+spec_version: challenge-pack-v1
+tags:
+- kp:autopsy
+title: Autopsy 磁盘分析

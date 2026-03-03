@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-hash-length-ext
+spec_version: challenge-pack-v1
+tags:
+- kp:hash
+title: 哈希长度扩展

@@ -1,0 +1,30 @@
+attachments: []
+category: web
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: dynamic
+hints: []
+instance:
+  max_per_user: 1
+  ttl: 2h
+resources:
+  cpu: 0.5
+  memory: 256m
+  pids: 100
+runtime:
+  expose:
+  - container_port: 80
+    protocol: tcp
+  image:
+    context_dir: docker
+    dockerfile: Dockerfile
+    source: dockerfile
+  type: container
+slug: web-sqli-waf-bypass
+spec_version: challenge-pack-v1
+tags:
+- vuln:sqli
+- kp:waf-bypass
+title: WAF 绕过

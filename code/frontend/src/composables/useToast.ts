@@ -1,5 +1,7 @@
 import { computed, inject, provide, ref } from 'vue'
 
+import { TOAST_DURATION } from '@/utils/constants'
+
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
 export interface ToastItem {
@@ -34,10 +36,10 @@ function dismiss(id: string): void {
 }
 
 const fallbackToast: ToastApi = {
-  success: (message) => add('success', message, 3000),
-  info: (message) => add('info', message, 3000),
-  warning: (message) => add('warning', message, 4000),
-  error: (message) => add('error', message, 5000),
+  success: (message) => add('success', message, TOAST_DURATION.SUCCESS),
+  info: (message) => add('info', message, TOAST_DURATION.INFO),
+  warning: (message) => add('warning', message, TOAST_DURATION.WARNING),
+  error: (message) => add('error', message, TOAST_DURATION.ERROR),
   dismiss,
 }
 

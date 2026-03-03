@@ -1,0 +1,15 @@
+attachments: []
+category: crypto
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: crypto-binary-decode
+spec_version: challenge-pack-v1
+tags:
+- kp:binary
+title: 二进制解码

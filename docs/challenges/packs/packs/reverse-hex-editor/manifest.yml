@@ -1,0 +1,15 @@
+attachments: []
+category: reverse
+description:
+  file: statement.md
+difficulty: beginner
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: reverse-hex-editor
+spec_version: challenge-pack-v1
+tags:
+- kp:hex
+title: 十六进制编辑

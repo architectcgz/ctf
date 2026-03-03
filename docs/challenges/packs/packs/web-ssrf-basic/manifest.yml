@@ -1,0 +1,29 @@
+attachments: []
+category: web
+description:
+  file: statement.md
+difficulty: easy
+flag:
+  mode: dynamic
+hints: []
+instance:
+  max_per_user: 1
+  ttl: 2h
+resources:
+  cpu: 0.3
+  memory: 128m
+  pids: 50
+runtime:
+  expose:
+  - container_port: 80
+    protocol: tcp
+  image:
+    context_dir: docker
+    dockerfile: Dockerfile
+    source: dockerfile
+  type: container
+slug: web-ssrf-basic
+spec_version: challenge-pack-v1
+tags:
+- vuln:ssrf
+title: SSRF

@@ -1,0 +1,16 @@
+attachments:
+- file: challenge.bin
+category: misc
+description:
+  file: statement.md
+difficulty: hard
+flag:
+  mode: static
+hints: []
+runtime:
+  type: none
+slug: misc-hardware-trojan
+spec_version: challenge-pack-v1
+tags:
+- kp:hardware
+title: 硬件木马

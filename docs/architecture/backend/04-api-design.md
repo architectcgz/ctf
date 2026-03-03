@@ -178,7 +178,7 @@ GET /api/v1/admin/audit-logs?start_time=2026-01-01T00:00:00Z&end_time=2026-02-01
 |-------------|----------|
 | `200 OK` | 查询成功、更新成功 |
 | `201 Created` | 资源创建成功 |
-| `204 No Content` | 删除成功（无响应体） |
+| `204 No Content` | 不使用（平台统一返回 Envelope，含 `request_id`；删除成功返回 `200` + `data=null`） |
 | `400 Bad Request` | 参数校验失败 |
 | `401 Unauthorized` | 未认证 / Token 无效 |
 | `403 Forbidden` | 无权限访问 |
