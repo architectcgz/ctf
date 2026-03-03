@@ -177,7 +177,10 @@ instance.interceptors.response.use(
 )
 
 export async function request<T>(config: AxiosRequestConfig): Promise<T> {
-  const resp = await instance.request<ApiEnvelope<T>>(config)
+  const resp = await instance.request<ApiEnvelope<T>>({
+    ...config,
+    signal: config.signal,
+  })
   return resp.data.data
 }
 

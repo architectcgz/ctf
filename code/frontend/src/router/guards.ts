@@ -38,8 +38,13 @@ function updatePageTitle(to: RouteLocationNormalized): void {
   document.title = title
 }
 
+let currentAbortController: AbortController | null = null
+
 export function setupRouterGuards(router: Router): void {
   router.beforeEach(async (to, _from, next) => {
+    currentAbortController?.abort()
+    currentAbortController = new AbortController()
+
     const authStore = useAuthStore()
     const toast = useToast()
 
