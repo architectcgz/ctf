@@ -26,6 +26,8 @@ make frontend-dev
 make infra-up
 ```
 
+`docker-compose.dev.yml` 的 PostgreSQL/Redis 端口仅绑定到 `127.0.0.1`，避免开发态暴露到局域网。
+
 ## 当前骨架范围
 
 - 已提供统一响应结构、请求 ID 中间件、访问日志、中断优雅退出、健康检查接口

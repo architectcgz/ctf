@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 
 import { useAuthStore } from '@/stores/auth'
-import { mapErrorCode } from '@/utils/errorMap'
+import { AUTH_ERROR_CODES, mapErrorCode } from '@/utils/errorMap'
 import { useToast } from '@/composables/useToast'
 
 export interface ApiEnvelope<T> {
@@ -42,18 +42,20 @@ let pendingRequests: Array<{
   config: AxiosRequestConfig
 }> = []
 
-function attachAuth(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+function normalizeHeaders(headers?: AxiosRequestConfig['headers']): AxiosHeaders {
+  return AxiosHeaders.from((headers ?? {}) as any)
+}
+
+function attachAuth<T extends AxiosRequestConfig>(config: T): T {
   const authStore = useAuthStore()
-  if (!config.headers) {
-    config.headers = new AxiosHeaders()
-  }
+  config.headers = normalizeHeaders(config.headers)
   if (authStore.accessToken) {
     ;(config.headers as AxiosHeaders).set('Authorization', `Bearer ${authStore.accessToken}`)
   }
   return config
 }
 
-instance.interceptors.request.use(attachAuth)
+instance.interceptors.request.use((config) => attachAuth(config as InternalAxiosRequestConfig))
 
 async function refreshTokens(): Promise<{ access_token: string; refresh_token?: string }> {
   const authStore = useAuthStore()
@@ -89,29 +91,38 @@ function humanizeError(err: unknown): string {
   return '请求失败'
 }
 
+function toApiError(
+  code: number | undefined,
+  requestId: string | undefined,
+  status: number | undefined,
+  fallbackMessage: string
+): ApiError {
+  return new ApiError(mapErrorCode(code) || fallbackMessage, {
+    code,
+    requestId,
+    status,
+  })
+}
+
 instance.interceptors.response.use(
   (response) => {
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
       if (envelope.code === 0) return response
-      const msg = mapErrorCode(envelope.code) || '请求失败'
-      throw new ApiError(msg, { code: envelope.code, requestId: envelope.request_id, status: response.status })
+      const apiError = toApiError(envelope.code, envelope.request_id, response.status, '请求失败')
+      toast.error(apiError.message)
+      return Promise.reject(apiError)
     }
     // Non-envelope response, pass through.
     return response
   },
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
-    if (error instanceof ApiError) {
-      toast.error(error.message)
-      return Promise.reject(error)
-    }
-
     const authStore = useAuthStore()
 
     const status = error.response?.status
     const code = error.response?.data?.code
 
-    if (status === 401 && code === 11002 && !isRefreshRequest(error.config)) {
+    if (status === 401 && code === AUTH_ERROR_CODES.ACCESS_TOKEN_EXPIRED && !isRefreshRequest(error.config)) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingRequests.push({ resolve, reject, config: error.config || {} })
@@ -125,11 +136,11 @@ instance.interceptors.response.use(
         authStore.updateTokens(tokens.access_token, tokens.refresh_token)
 
         pendingRequests.forEach(({ resolve, config }) => {
-          const replayConfig = attachAuth(config as InternalAxiosRequestConfig)
+          const replayConfig = attachAuth(config)
           resolve(instance(replayConfig))
         })
 
-        const replayOriginal = attachAuth(originalConfig as InternalAxiosRequestConfig)
+        const replayOriginal = attachAuth(originalConfig)
         return instance(replayOriginal)
       } catch (refreshErr) {
         pendingRequests.forEach(({ reject }) => reject(refreshErr))
@@ -150,8 +161,9 @@ instance.interceptors.response.use(
 
     const mapped = mapErrorCode(code)
     if (mapped) {
-      toast.error(mapped)
-      return Promise.reject(new ApiError(mapped, { code, requestId: error.response?.data?.request_id, status }))
+      const apiError = toApiError(code, error.response?.data?.request_id, status, mapped)
+      toast.error(apiError.message)
+      return Promise.reject(apiError)
     }
 
     toast.error('网络连接失败')

@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"ctf-platform/internal/middleware"
 	"ctf-platform/pkg/apperror"
 )
 
@@ -57,12 +56,5 @@ func InternalError(c *gin.Context) {
 }
 
 func requestID(c *gin.Context) string {
-	raw, ok := c.Get(middleware.RequestIDKey)
-	if !ok {
-		return ""
-	}
-	if requestID, ok := raw.(string); ok {
-		return requestID
-	}
-	return ""
+	return c.GetString("request_id")
 }

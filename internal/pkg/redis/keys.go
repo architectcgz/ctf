@@ -1,6 +1,11 @@
 package redis
 
-import "fmt"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"strings"
+)
 
 // ============================================================
 // 全局命名空间前缀
@@ -37,7 +42,7 @@ func TokenKey(userID int64) string {
 // LoginFailKey 登录失败计数
 // 数据结构: STRING (int) | TTL: 30min
 func LoginFailKey(username string) string {
-	return withNS(fmt.Sprintf("%s%s", keyLoginFailPrefix, username))
+	return withNS(fmt.Sprintf("%s%s", keyLoginFailPrefix, normalizedUsernameSegment(username)))
 }
 
 // UserProfileKey 用户基本信息缓存
@@ -300,4 +305,10 @@ func CaptchaKey(sessionID string) string {
 // 数据结构: HASH | TTL: 10min
 func ConfigGlobalKey() string {
 	return withNS(keyConfigGlobal)
+}
+
+func normalizedUsernameSegment(username string) string {
+	normalized := strings.ToLower(strings.TrimSpace(username))
+	sum := sha256.Sum256([]byte(normalized))
+	return hex.EncodeToString(sum[:])
 }

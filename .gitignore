@@ -13,6 +13,7 @@ frontend/node_modules/
 *.log
 *.pid
 *.out
+*:Zone.Identifier
 
 .env
 .env.local

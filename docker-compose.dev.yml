@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ctf
       POSTGRES_PASSWORD: ctf_dev_password
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - ctf-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +23,7 @@ services:
     container_name: ctf-redis
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - ctf-redis-data:/data
     healthcheck:

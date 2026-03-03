@@ -3,11 +3,16 @@ package middleware
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"sync/atomic"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 const RequestIDKey = "request_id"
+
+var fallbackRequestIDCounter atomic.Uint64
 
 func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -25,7 +30,7 @@ func RequestID() gin.HandlerFunc {
 func newRequestID() string {
 	buf := make([]byte, 8)
 	if _, err := rand.Read(buf); err != nil {
-		return "req_fallback"
+		return fmt.Sprintf("req_fallback_%d_%d", time.Now().UnixNano(), fallbackRequestIDCounter.Add(1))
 	}
 	return "req_" + hex.EncodeToString(buf)
 }

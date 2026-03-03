@@ -13,11 +13,12 @@ export interface AuthUser {
 
 const LS_ACCESS_TOKEN_KEY = 'ctf_access_token'
 const LS_REFRESH_TOKEN_KEY = 'ctf_refresh_token'
+const PERSIST_REFRESH_TOKEN = import.meta.env.VITE_PERSIST_REFRESH_TOKEN === 'true'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null)
   const accessToken = ref<string>('')
-  const refreshToken = ref<string>('') // Optional; prefer HttpOnly Cookie in production
+  const refreshToken = ref<string>('') // Dev-only fallback; production should prefer HttpOnly Cookie
 
   const isLoggedIn = computed(() => !!accessToken.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
@@ -31,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (typeof nextRefreshToken === 'string' && nextRefreshToken.length > 0) {
       refreshToken.value = nextRefreshToken
-      localStorage.setItem(LS_REFRESH_TOKEN_KEY, nextRefreshToken)
+      persistRefreshToken(nextRefreshToken)
     }
   }
 
@@ -41,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (typeof nextRefreshToken === 'string') {
       refreshToken.value = nextRefreshToken
-      localStorage.setItem(LS_REFRESH_TOKEN_KEY, nextRefreshToken)
+      persistRefreshToken(nextRefreshToken)
     }
   }
 
@@ -56,7 +57,22 @@ export const useAuthStore = defineStore('auth', () => {
   // Only restore tokens. User profile is fetched via /auth/profile on-demand (router guards).
   function restore(): void {
     accessToken.value = localStorage.getItem(LS_ACCESS_TOKEN_KEY) || ''
-    refreshToken.value = localStorage.getItem(LS_REFRESH_TOKEN_KEY) || ''
+    refreshToken.value = PERSIST_REFRESH_TOKEN ? localStorage.getItem(LS_REFRESH_TOKEN_KEY) || '' : ''
+    if (!PERSIST_REFRESH_TOKEN) {
+      clearPersistedRefreshToken()
+    }
+  }
+
+  function persistRefreshToken(nextRefreshToken: string): void {
+    if (PERSIST_REFRESH_TOKEN) {
+      localStorage.setItem(LS_REFRESH_TOKEN_KEY, nextRefreshToken)
+      return
+    }
+    clearPersistedRefreshToken()
+  }
+
+  function clearPersistedRefreshToken(): void {
+    localStorage.removeItem(LS_REFRESH_TOKEN_KEY)
   }
 
   return {
@@ -73,4 +89,3 @@ export const useAuthStore = defineStore('auth', () => {
     restore,
   }
 })
-
