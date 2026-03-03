@@ -29,10 +29,11 @@ export class ApiError extends Error {
 const toast = useToast()
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
+const DEFAULT_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 15000
 
 const instance = axios.create({
   baseURL,
-  timeout: 15000,
+  timeout: DEFAULT_TIMEOUT,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
@@ -62,7 +63,7 @@ instance.interceptors.request.use((config) => attachAuth(config as InternalAxios
 async function refreshTokens(): Promise<{ access_token: string }> {
   const refreshClient = axios.create({
     baseURL,
-    timeout: 15000,
+    timeout: DEFAULT_TIMEOUT,
     withCredentials: true,
     headers: { 'Content-Type': 'application/json' },
   })
