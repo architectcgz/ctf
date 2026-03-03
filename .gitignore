@@ -9,6 +9,9 @@ logs/
 
 frontend/dist/
 frontend/node_modules/
+code/backend/bin/
+code/frontend/dist/
+code/frontend/node_modules/
 
 *.log
 *.pid

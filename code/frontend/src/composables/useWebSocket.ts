@@ -45,7 +45,7 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
       reconnectAttempt = 0
       heartbeatTimer = window.setInterval(() => {
         try {
-          socket?.send(JSON.stringify({ type: 'ping' }))
+          socket?.send(JSON.stringify({ type: 'ping', payload: {}, timestamp: new Date().toISOString() }))
         } catch {
           // ignore
         }
@@ -54,7 +54,7 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
 
     socket.addEventListener('message', (evt) => {
       try {
-        const msg = JSON.parse(String(evt.data)) as { type?: string; payload?: unknown }
+        const msg = JSON.parse(String(evt.data)) as { type?: string; payload?: unknown; timestamp?: string }
         const type = msg.type
         if (!type) return
         const handler = handlers[type]

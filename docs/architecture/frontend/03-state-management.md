@@ -22,10 +22,6 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)          // { id, username, role, avatar, class_name }
   const accessToken = ref('')
 
-  // Refresh Token 默认不由前端持久化（推荐：后端写入 HttpOnly Cookie）
-  // 只有在后端选择“返回 refresh_token 且不使用 Cookie”的模式时，才需要在前端持久化 refreshToken。
-  const refreshToken = ref('')    // 可选
-
   const isLoggedIn = computed(() => !!accessToken.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isTeacher = computed(() => user.value?.role === 'teacher')
@@ -40,13 +36,13 @@ export const useAuthStore = defineStore('auth', () => {
   // 从 localStorage 恢复
   function restore() { ... }
 
-  return { user, accessToken, refreshToken, isLoggedIn, isAdmin, isTeacher, isStudent, setAuth, updateTokens, logout, restore }
+  return { user, accessToken, isLoggedIn, isAdmin, isTeacher, isStudent, setAuth, updateTokens, logout, restore }
 })
 ```
 
 持久化策略：
 - `accessToken` 可存 `localStorage`（便于刷新页面保持登录态）。
-- **Refresh Token 推荐由后端写入 HttpOnly Cookie（前端不落盘）**；若后端不使用 Cookie，则 `refreshToken` 才存 `localStorage`（此模式需要配合严格 CSP + 富文本 XSS 防护，否则存在账号被接管风险）。
+- **Refresh Token 必须由后端写入 HttpOnly Cookie（前端不落盘）**。
 - `user` 信息每次刷新页面从 `/api/v1/auth/profile` 重新拉取（避免前端落盘敏感信息）。
 
 ### 2.2 notification Store

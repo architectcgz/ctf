@@ -2,6 +2,10 @@
 
 > 版本：v1.0 | 更新日期：2026-03-01
 
+> 接口契约：
+> - OpenAPI（机器可读）：`ctf/docs/contracts/openapi-v1.yaml`
+> - 说明性契约（字段/示例补充）：`ctf/docs/contracts/api-contract-v1.md`
+
 ---
 
 ## 1. API 设计规范
@@ -34,7 +38,7 @@
 
 - `POST` 用于非幂等操作（创建、提交 Flag、启动实例等）
 - `PUT` 与 `PATCH` 的区别：`PUT` 需要传完整字段，`PATCH` 只传需要修改的字段
-- `DELETE` 返回 `204 No Content`（无响应体）或 `200`（带确认信息）
+- `DELETE` 统一返回 Envelope（含 `data=null`），不使用 `204 No Content`（与前端统一解析逻辑一致）
 
 ### 1.3 版本策略
 
@@ -80,6 +84,8 @@ GET /api/v1/admin/audit-logs?start_time=2026-01-01T00:00:00Z&end_time=2026-02-01
 ---
 
 ## 2. 统一响应格式
+
+> **接口契约声明（强制）**：除本设计规范的通用约束外，所有与前端联调相关的“接口返回字段/类型/分页结构/WS 消息 payload”以 `ctf/docs/contracts/api-contract-v1.md` 为准；若本文示例与契约文档不一致，以契约文档优先。
 
 ### 2.1 基础结构
 
@@ -342,7 +348,7 @@ RSA-SHA256(base64UrlEncode(header) + "." + base64UrlEncode(payload), private_key
 | Token 类型 | 有效期 | 用途 |
 |------------|--------|------|
 | Access Token | 默认 15 分钟（可配置） | 携带于请求头，用于接口鉴权 |
-| Refresh Token | 7 天 | 仅用于刷新 Access Token，存储于 HttpOnly Cookie 或客户端安全存储 |
+| Refresh Token | 7 天 | 仅用于刷新 Access Token，存储于 HttpOnly Cookie（后端写入；前端不落盘） |
 
 请求头携带方式：
 
@@ -361,13 +367,13 @@ Authorization: Bearer <access_token>
   │<──────────────────────────────│
   │                               │
   │  POST /api/v1/auth/refresh    │
-  │  Body: { refresh_token }（或从 HttpOnly Cookie 读取） │
+  │  携带 HttpOnly Cookie（Refresh Token） │
   │──────────────────────────────>│
   │                               │── 校验 Refresh Token 有效性
   │                               │── 检查是否在黑名单中
   │                               │── 签发新 Access Token
   │                               │── 轮换 Refresh Token（旧的失效）
-  │  返回新 Access + Refresh Token │
+  │  返回新 Access Token（并通过 Set-Cookie 轮换 Refresh Token） │
   │<──────────────────────────────│
   │                               │
   │  使用新 Access Token 重试请求  │
@@ -413,8 +419,8 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | 方法 | 路径 | 角色 | 说明 |
 |------|------|------|------|
 | `POST` | `/api/v1/auth/register` | * | 用户注册 |
-| `POST` | `/api/v1/auth/login` | * | 用户登录，返回双 Token |
-| `POST` | `/api/v1/auth/refresh` | @ | 刷新 Access Token |
+| `POST` | `/api/v1/auth/login` | * | 用户登录：返回 Access Token；Refresh Token 通过 HttpOnly Cookie 写入 |
+| `POST` | `/api/v1/auth/refresh` | @ | 刷新 Access Token（Refresh Token 从 HttpOnly Cookie 读取） |
 | `POST` | `/api/v1/auth/logout` | @ | 登出，Token 加入黑名单 |
 | `GET` | `/api/v1/auth/profile` | @ | 获取当前用户信息 |
 | `PUT` | `/api/v1/auth/password` | @ | 修改密码 |
@@ -568,13 +574,16 @@ Content-Type: application/json
 
 **成功响应（200）：**
 
+```
+Set-Cookie: ctf_refresh_token=<refresh_token>; HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth; Max-Age=604800
+```
+
 ```json
 {
   "code": 0,
   "message": "success",
   "data": {
     "access_token": "eyJhbGciOiJIUzI1NiIs...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
     "token_type": "Bearer",
     "expires_in": 7200,
     "user": {

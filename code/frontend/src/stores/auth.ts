@@ -8,77 +8,50 @@ export interface AuthUser {
   username: string
   role: UserRole
   avatar?: string
+  name?: string
   class_name?: string
 }
 
 const LS_ACCESS_TOKEN_KEY = 'ctf_access_token'
-const LS_REFRESH_TOKEN_KEY = 'ctf_refresh_token'
-const PERSIST_REFRESH_TOKEN = import.meta.env.VITE_PERSIST_REFRESH_TOKEN === 'true'
+const LEGACY_LS_REFRESH_TOKEN_KEY = 'ctf_refresh_token'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null)
   const accessToken = ref<string>('')
-  const refreshToken = ref<string>('') // Dev-only fallback; production should prefer HttpOnly Cookie
 
   const isLoggedIn = computed(() => !!accessToken.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isTeacher = computed(() => user.value?.role === 'teacher')
   const isStudent = computed(() => user.value?.role === 'student')
 
-  function setAuth(nextUser: AuthUser, nextAccessToken: string, nextRefreshToken?: string): void {
+  function setAuth(nextUser: AuthUser, nextAccessToken: string): void {
     user.value = nextUser
     accessToken.value = nextAccessToken
     localStorage.setItem(LS_ACCESS_TOKEN_KEY, nextAccessToken)
-
-    if (typeof nextRefreshToken === 'string' && nextRefreshToken.length > 0) {
-      refreshToken.value = nextRefreshToken
-      persistRefreshToken(nextRefreshToken)
-    }
   }
 
-  function updateTokens(nextAccessToken: string, nextRefreshToken?: string): void {
+  function updateTokens(nextAccessToken: string): void {
     accessToken.value = nextAccessToken
     localStorage.setItem(LS_ACCESS_TOKEN_KEY, nextAccessToken)
-
-    if (typeof nextRefreshToken === 'string') {
-      refreshToken.value = nextRefreshToken
-      persistRefreshToken(nextRefreshToken)
-    }
   }
 
   function logout(): void {
     user.value = null
     accessToken.value = ''
-    refreshToken.value = ''
     localStorage.removeItem(LS_ACCESS_TOKEN_KEY)
-    localStorage.removeItem(LS_REFRESH_TOKEN_KEY)
+    // Cleanup legacy key from older dual-mode designs (Refresh Token must not be stored client-side).
+    localStorage.removeItem(LEGACY_LS_REFRESH_TOKEN_KEY)
   }
 
   // Only restore tokens. User profile is fetched via /auth/profile on-demand (router guards).
   function restore(): void {
     accessToken.value = localStorage.getItem(LS_ACCESS_TOKEN_KEY) || ''
-    refreshToken.value = PERSIST_REFRESH_TOKEN ? localStorage.getItem(LS_REFRESH_TOKEN_KEY) || '' : ''
-    if (!PERSIST_REFRESH_TOKEN) {
-      clearPersistedRefreshToken()
-    }
-  }
-
-  function persistRefreshToken(nextRefreshToken: string): void {
-    if (PERSIST_REFRESH_TOKEN) {
-      localStorage.setItem(LS_REFRESH_TOKEN_KEY, nextRefreshToken)
-      return
-    }
-    clearPersistedRefreshToken()
-  }
-
-  function clearPersistedRefreshToken(): void {
-    localStorage.removeItem(LS_REFRESH_TOKEN_KEY)
+    localStorage.removeItem(LEGACY_LS_REFRESH_TOKEN_KEY)
   }
 
   return {
     user,
     accessToken,
-    refreshToken,
     isLoggedIn,
     isAdmin,
     isTeacher,

@@ -6,9 +6,10 @@ import { useToast } from '@/composables/useToast'
 
 export interface ApiEnvelope<T> {
   code: number
+  message: string
   data: T
-  message?: string
-  request_id?: string
+  request_id: string
+  errors?: Array<{ field: string; message: string }>
 }
 
 export class ApiError extends Error {
@@ -32,6 +33,7 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const instance = axios.create({
   baseURL,
   timeout: 15000,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -57,16 +59,18 @@ function attachAuth<T extends AxiosRequestConfig>(config: T): T {
 
 instance.interceptors.request.use((config) => attachAuth(config as InternalAxiosRequestConfig))
 
-async function refreshTokens(): Promise<{ access_token: string; refresh_token?: string }> {
-  const authStore = useAuthStore()
+async function refreshTokens(): Promise<{ access_token: string }> {
   const refreshClient = axios.create({
     baseURL,
     timeout: 15000,
+    withCredentials: true,
     headers: { 'Content-Type': 'application/json' },
   })
 
-  const payload = authStore.refreshToken ? { refresh_token: authStore.refreshToken } : {}
-  const resp = await refreshClient.post<ApiEnvelope<{ access_token: string; refresh_token?: string }>>('/auth/refresh', payload)
+  const resp = await refreshClient.post<ApiEnvelope<{ access_token: string; token_type?: string; expires_in?: number }>>(
+    '/auth/refresh',
+    {}
+  )
   if (resp.data?.code !== 0) {
     throw new ApiError(mapErrorCode(resp.data?.code) || '登录已过期，请重新登录', {
       code: resp.data?.code,
@@ -133,7 +137,7 @@ instance.interceptors.response.use(
       const originalConfig = error.config || {}
       try {
         const tokens = await refreshTokens()
-        authStore.updateTokens(tokens.access_token, tokens.refresh_token)
+        authStore.updateTokens(tokens.access_token)
 
         pendingRequests.forEach(({ resolve, config }) => {
           const replayConfig = attachAuth(config)

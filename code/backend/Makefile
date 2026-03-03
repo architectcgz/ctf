@@ -25,3 +25,9 @@ infra-up:
 
 infra-down:
 	docker compose -f docker-compose.dev.yml down
+
+infra-up-shared:
+	$(MAKE) -C ../.. infra-up
+
+infra-down-shared:
+	$(MAKE) -C ../.. infra-down

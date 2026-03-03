@@ -1,6 +1,7 @@
 import { request } from './request'
 
 import type { AuthUser } from '@/stores/auth'
+import type { WsTicketData } from '@/api/contracts'
 
 export interface LoginRequest {
   username: string
@@ -9,7 +10,8 @@ export interface LoginRequest {
 
 export interface AuthTokens {
   access_token: string
-  refresh_token?: string
+  token_type: 'Bearer'
+  expires_in: number
 }
 
 export interface LoginResponse extends AuthTokens {
@@ -31,8 +33,8 @@ export async function register(data: RegisterRequest): Promise<LoginResponse> {
   return request<LoginResponse>({ method: 'POST', url: '/auth/register', data })
 }
 
-export async function refreshToken(refreshToken?: string): Promise<AuthTokens> {
-  return request<AuthTokens>({ method: 'POST', url: '/auth/refresh', data: refreshToken ? { refresh_token: refreshToken } : {} })
+export async function refreshToken(): Promise<AuthTokens> {
+  return request<AuthTokens>({ method: 'POST', url: '/auth/refresh', data: {} })
 }
 
 export async function logout(): Promise<void> {
@@ -47,7 +49,6 @@ export async function changePassword(data: { old_password: string; new_password:
   await request<void>({ method: 'PUT', url: '/auth/password', data })
 }
 
-export async function getWsTicket(): Promise<{ ticket: string; expires_at?: string }> {
-  return request<{ ticket: string; expires_at?: string }>({ method: 'POST', url: '/auth/ws-ticket' })
+export async function getWsTicket(): Promise<WsTicketData> {
+  return request<WsTicketData>({ method: 'POST', url: '/auth/ws-ticket' })
 }
-

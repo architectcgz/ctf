@@ -2,31 +2,37 @@
 
 按 `docs/architecture` 的前后端说明初始化的项目骨架：
 
-- 后端：位于 `backend/`，技术栈为 Go + Gin + Viper + Zap，分层目录为 `backend/cmd/`、`backend/internal/handler/`、`backend/internal/service/`、`backend/internal/repository/`、`backend/internal/model/`、`backend/internal/middleware/`、`backend/pkg/`
+- 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap，分层目录为 `code/backend/cmd/`、`code/backend/internal/handler/`、`code/backend/internal/service/`、`code/backend/internal/repository/`、`code/backend/internal/model/`、`code/backend/internal/middleware/`、`code/backend/pkg/`
 - 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Element Plus
-- 开发依赖：`backend/docker-compose.dev.yml` 提供 PostgreSQL 和 Redis
+- 开发依赖：可复用根目录 `infra/` 的共享 PostgreSQL + Redis，也可用 `code/backend/docker-compose.dev.yml` 单独启动一套
 
 ## 启动方式
 
 后端：
 
 ```bash
-cd backend && make run
+cd code/backend && make run
 ```
 
 前端：
 
 ```bash
-cd frontend && npm run dev
+cd code/frontend && npm run dev
 ```
 
 开发基础设施：
 
 ```bash
-cd backend && make infra-up
+cd code/backend && make infra-up
 ```
 
-`backend/docker-compose.dev.yml` 的 PostgreSQL/Redis 端口仅绑定到 `127.0.0.1`，避免开发态暴露到局域网。
+复用共享基础设施（推荐，避免重复占用资源）：
+
+```bash
+cd code/backend && make infra-up-shared
+```
+
+`code/backend/docker-compose.dev.yml` 的 PostgreSQL/Redis 端口仅绑定到 `127.0.0.1`，避免开发态暴露到局域网。
 
 ## 当前骨架范围
 

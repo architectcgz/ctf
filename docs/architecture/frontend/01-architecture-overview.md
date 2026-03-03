@@ -152,7 +152,7 @@ frontend/
 ## 4. 安全基线（必须）
 
 - **富文本/Markdown 安全**：题目描述、公告、通知等内容渲染前必须做 sanitize（白名单策略），禁止任意 HTML 注入（否则可直接窃取 Token/接管账号）。
-- **Refresh Token 存储**：推荐由后端写入 HttpOnly Cookie（前端不落盘）；仅在后端不支持 Cookie 时才允许前端持久化 refresh token，并必须配合严格 CSP 与富文本 XSS 防护。
+- **Refresh Token 存储**：必须由后端写入 HttpOnly Cookie（前端不落盘）；禁止前端以任何形式持久化 refresh token（例如 localStorage / IndexedDB）。
 - **错误提示**：Toast/弹窗只展示用户可理解的文案；不直接透传后端 `message`（避免泄露内部信息），必要时附带 `request_id` 便于定位。
 - **WebSocket ticket**：短期一次性 ticket 如通过 URL query 传递，网关必须避免记录 querystring（防止在日志/代理链路中泄露）。
 

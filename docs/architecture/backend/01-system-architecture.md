@@ -465,26 +465,17 @@ ctf-platform/
 ### 6.1 统一错误处理
 
 #### 错误码体系
+本平台错误码采用 **5 位整数**，按模块划分区间，便于快速定位问题来源；完整列表见 `ctf/docs/architecture/backend/04-api-design.md` §3。
 
-采用 **模块前缀 + 序号** 的 6 位错误码设计，便于快速定位问题来源：
-
-```
-格式：AABBCC
-  AA = 模块编号（10-99）
-  BB = 子类别（01-99）
-  CC = 具体错误（01-99）
-```
-
-| 模块 | 前缀 | 示例 |
+| 模块 | 区间 | 示例 |
 |------|------|------|
-| 通用 | 10xxxx | 100001 参数校验失败、100002 未授权、100003 禁止访问、100004 资源不存在 |
-| auth | 11xxxx | 110101 用户名已存在、110102 密码错误、110103 Token 已过期 |
-| challenge | 12xxxx | 120101 题目不存在、120102 分类不存在、120103 Flag 格式非法 |
-| practice | 13xxxx | 130101 实例数超限、130102 Flag 错误、130103 实例已过期 |
-| contest | 14xxxx | 140101 竞赛未开始、140102 队伍已满、140103 重复报名 |
-| assessment | 15xxxx | 150101 评估任务不存在、150102 评估未完成 |
-| container | 16xxxx | 160101 镜像不存在、160102 端口耗尽、160103 容器启动失败 |
-| system | 17xxxx | 170101 配置项不存在 |
+| 通用 | 10000-10999 | 10002 参数校验失败、10003 未认证、10004 无权限、10005 资源不存在 |
+| 认证 | 11000-11999 | 11001 用户名或密码错误、11002 Access Token 过期 |
+| 靶场 | 12000-12999 | 12001 镜像构建失败、12003 靶机未配置 Flag |
+| 演练 | 13000-13999 | 13002 实例数上限、13003 Flag 错误、13005 实例过期 |
+| 竞赛 | 14000-14999 | 14001 竞赛未开始、14003 队伍人数已满 |
+| 评估 | 15000-15999 | 15002 报告生成失败 |
+| 容器 | 16000-16999 | 16001 容器启动超时、16004 容器镜像不存在 |
 
 #### 错误类型定义
 
@@ -503,15 +494,15 @@ func (e *AppError) Error() string {
 
 // 预定义错误构造函数
 func ErrUnauthorized() *AppError {
-    return &AppError{Code: 100002, Message: "未授权，请先登录", HTTPStatus: 401}
+    return &AppError{Code: 10003, Message: "未认证，请先登录", HTTPStatus: 401}
 }
 
 func ErrForbidden() *AppError {
-    return &AppError{Code: 100003, Message: "权限不足", HTTPStatus: 403}
+    return &AppError{Code: 10004, Message: "无权限访问该资源", HTTPStatus: 403}
 }
 
 func ErrNotFound(resource string) *AppError {
-    return &AppError{Code: 100004, Message: resource + "不存在", HTTPStatus: 404}
+    return &AppError{Code: 10005, Message: resource + "不存在", HTTPStatus: 404}
 }
 ```
 
@@ -793,7 +784,7 @@ version: "3.8"
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: ctf-postgres
     restart: unless-stopped
     environment:
@@ -811,7 +802,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4-alpine
     container_name: ctf-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD} --maxmemory 512mb --maxmemory-policy allkeys-lru

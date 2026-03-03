@@ -17,13 +17,13 @@ postgres:
   host: 127.0.0.1
   port: 5432
   database: ctf
-  username: ctf
-  password: ctf_dev_password
+  username: postgres
+  password: postgres123456
   ssl_mode: disable
   max_open_conns: 20
   max_idle_conns: 10
 
 redis:
   addr: 127.0.0.1:6379
-  password: ""
-  db: 0
+  password: "redis123456"
+  db: 2

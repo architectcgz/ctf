@@ -1,6 +1,8 @@
 # 前端 API 层设计
 
 > 对应：../backend/04-api-design.md
+>
+> **统一接口契约（强制）**：前后端联调时，接口契约以 `ctf/docs/contracts/openapi-v1.yaml`（机器可读）与 `ctf/docs/contracts/api-contract-v1.md`（说明性文档）保持一致为准；本文只描述前端实现策略与模块划分。
 
 ---
 
@@ -70,11 +72,9 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
   isRefreshing = true
   const originalConfig = error.config
   try {
-    // refreshTokenAPI 需兼容两种模式：
-    // - Refresh Token 在 HttpOnly Cookie：请求体可为空/或仅携带 CSRF token（由后端决定）
-    // - Refresh Token 在客户端存储：请求体携带 refresh_token
-    const { access_token, refresh_token } = await refreshTokenAPI()
-    authStore.updateTokens(access_token, refresh_token)
+    // Refresh Token 由后端写入 HttpOnly Cookie，刷新时只需要确保请求能携带 Cookie。
+    const { access_token } = await refreshTokenAPI()
+    authStore.updateTokens(access_token)
     // 重放队列中的请求
     pendingRequests.forEach(({ resolve, config }) => {
       config.headers.Authorization = `Bearer ${access_token}`
@@ -109,13 +109,13 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
 |------|------|------|
 | `login(data)` | POST | `/auth/login` |
 | `register(data)` | POST | `/auth/register` |
-| `refreshToken(refreshToken?)` | POST | `/auth/refresh` |
+| `refreshToken()` | POST | `/auth/refresh` |
 | `logout()` | POST | `/auth/logout` |
 | `getProfile()` | GET | `/auth/profile` |
 | `changePassword(data)` | PUT | `/auth/password` |
 | `getWsTicket()` | POST | `/auth/ws-ticket` |
 
-说明：当后端采用 HttpOnly Cookie 保存 Refresh Token 时，`refreshToken()` 可不传参（请求体为空或按后端约定携带必要字段），并确保请求能携带 Cookie（同源无需额外配置；不同源需 `withCredentials` + 后端 CORS 允许）。
+说明：Refresh Token 采用 HttpOnly Cookie 方案，`refreshToken()` 请求体为空；同源无需额外配置；不同源需 `withCredentials` + 后端 CORS 允许。
 
 ### 2.2 靶场模块 `api/challenge.ts`
 

@@ -1457,7 +1457,7 @@ container:
       - "ubuntu:22.04"
       - "nginx:alpine"
       - "mysql:8.0"
-      - "redis:7-alpine"
+      - "redis:7.4-alpine"
 
   # Flag 配置
   flag:
