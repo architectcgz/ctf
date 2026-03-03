@@ -1,7 +1,12 @@
 import { onUnmounted, ref } from 'vue'
 
 import { getWsTicket } from '@/api/auth'
-import { WS_MAX_RECONNECT_ATTEMPTS, WS_HEARTBEAT_INTERVAL_MS } from '@/utils/constants'
+import {
+  WS_MAX_RECONNECT_ATTEMPTS,
+  WS_HEARTBEAT_INTERVAL_MS,
+  WS_MAX_RECONNECT_DELAY_MS,
+  WS_RECONNECT_BASE_DELAY_MS,
+} from '@/utils/constants'
 
 export type WebSocketStatus = 'idle' | 'connecting' | 'open' | 'closed' | 'error'
 
@@ -81,7 +86,10 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
   function scheduleReconnect(): void {
     if (reconnectAttempt >= WS_MAX_RECONNECT_ATTEMPTS) return
     reconnectAttempt += 1
-    const delayMs = Math.min(30_000, 1000 * 2 ** (reconnectAttempt - 1))
+    const delayMs = Math.min(
+      WS_MAX_RECONNECT_DELAY_MS,
+      WS_RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttempt - 1)
+    )
     reconnectTimer = window.setTimeout(() => {
       connect().catch((err) => {
         console.error('WS reconnect failed:', err)
