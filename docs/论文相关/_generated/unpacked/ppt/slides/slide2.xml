@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+                
+        <p:cNvPr id="1" name=""/>
+                
+        <p:cNvGrpSpPr/>
+                
+        <p:nvPr/>
+              
+      </p:nvGrpSpPr>
+            
+      <p:grpSpPr>
+                
+        <a:xfrm>
+                    
+          <a:off x="0" y="0"/>
+                    
+          <a:ext cx="0" cy="0"/>
+                    
+          <a:chOff x="0" y="0"/>
+                    
+          <a:chExt cx="0" cy="0"/>
+                  
+        </a:xfrm>
+              
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="127" name="PlaceHolder 1"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="539280" y="232920"/>
+            <a:ext cx="8001000" cy="747720"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="91440" rIns="91440" tIns="45720" bIns="45720" anchor="b">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr indent="0">
+              <a:buNone/>
+              <a:tabLst>
+                <a:tab algn="l" pos="0"/>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="3200" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="Verdana"/>
+              </a:rPr>
+              <a:t>汇报提纲</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="3200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="Verdana"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="128" name="PlaceHolder 2"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="539280" y="1341000"/>
+            <a:ext cx="8207640" cy="4770360"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="91440" rIns="91440" tIns="45720" bIns="45720" anchor="t">
+            <a:normAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>课题意义</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>课题综述</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>课题难点</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>课题方案和需要条件</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>计划进度与预期成果</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="170000"/>
+              </a:lnSpc>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>翻译工作</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:transition spd="med">
+    <p:zoom dir="out"/>
+  </p:transition>
+</p:sld>

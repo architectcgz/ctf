@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+  <p:cSld>
+    <p:spTree>
+      <p:nvGrpSpPr>
+        <p:cNvPr id="1" name=""/>
+        <p:cNvGrpSpPr/>
+        <p:nvPr/>
+      </p:nvGrpSpPr>
+      <p:grpSpPr>
+        <a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm>
+      </p:grpSpPr>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="129" name="PlaceHolder 1"/>
+          <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+          <p:nvPr><p:ph type="title"/></p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="539280" y="232920"/><a:ext cx="8001000" cy="747720"/></a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/><a:ln w="0"><a:noFill/></a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="91440" rIns="91440" tIns="45720" bIns="45720" anchor="b"><a:noAutofit/></a:bodyPr>
+          <a:p>
+            <a:pPr indent="0"><a:buNone/></a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="3200" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="Verdana"/>
+              </a:rPr>
+              <a:t>翻译工作</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="130" name="PlaceHolder 2"/>
+          <p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+          <p:nvPr><p:ph/></p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm><a:off x="539280" y="1341000"/><a:ext cx="8207640" cy="4770360"/></a:xfrm>
+          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+          <a:noFill/><a:ln w="0"><a:noFill/></a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="91440" rIns="91440" tIns="45720" bIns="45720" anchor="t"><a:normAutofit/></a:bodyPr>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="1" lang="zh-CN" sz="2000" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>翻译文献：</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2000" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>A Review of Cyber-Ranges and Test-Beds:</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Current and Future Trends</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>作者：Ukwandu E, Farah M A B, Hindy H, et al.</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>来源：Sensors, 2020, 20: 7148</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="1" lang="zh-CN" sz="2000" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>翻译内容概述：</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>网络靶场与测试平台的定义与分类</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>现有网络靶场的架构特征与技术实现</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>网络靶场在教育、军事、企业领域的应用现状</a:t>
+            </a:r>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc><a:spcPct val="120000"/></a:lnSpc>
+              <a:spcBef><a:spcPts val="400"/></a:spcBef>
+              <a:buClr><a:srgbClr val="cc0000"/></a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="zh-CN" sz="1800" spc="-1" strike="noStrike">
+                <a:solidFill><a:srgbClr val="000000"/></a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>网络靶场的未来发展趋势与挑战</a:t>
+            </a:r>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:transition spd="med"><p:zoom dir="out"/></p:transition>
+</p:sld>

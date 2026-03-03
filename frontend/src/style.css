@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --color-base: #0f1117;
+  --color-surface: #161b22;
+  --color-elevated: #1c2128;
+  --color-primary: #0891b2;
+  --color-primary-hover: #06b6d4;
+  --color-accent: #8b5cf6;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-border: #30363d;
+  --color-border-subtle: #21262d;
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #6e7681;
+  --font-mono: "JetBrains Mono", "Cascadia Code", ui-monospace, monospace;
+  --font-sans: "Inter", "Noto Sans SC", system-ui, sans-serif;
+}
+
+:root {
+  --el-color-primary: var(--color-primary);
+  --el-color-success: var(--color-success);
+  --el-color-warning: var(--color-warning);
+  --el-color-danger: var(--color-danger);
+  --el-border-color: var(--color-border);
+  --el-text-color-primary: var(--color-text-primary);
+  --el-text-color-regular: var(--color-text-secondary);
+  --el-bg-color: var(--color-surface);
+  --el-bg-color-overlay: var(--color-elevated);
+}
+
+body {
+  @apply bg-base text-text-primary font-sans antialiased;
+  margin: 0;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+a {
+  cursor: pointer;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }

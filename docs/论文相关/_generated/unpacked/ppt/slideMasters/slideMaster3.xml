@@ -1,0 +1,765 @@
+<?xml version="1.0" encoding="utf-8"?>
+<p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" xmlns:p15="http://schemas.microsoft.com/office/powerpoint/2012/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+  <p:cSld>
+    <p:bg>
+      <p:bgPr>
+        <a:solidFill>
+          <a:srgbClr val="ffffff"/>
+        </a:solidFill>
+      </p:bgPr>
+    </p:bg>
+    <p:spTree>
+      <p:nvGrpSpPr>
+                
+        <p:cNvPr id="1" name=""/>
+                
+        <p:cNvGrpSpPr/>
+                
+        <p:nvPr/>
+              
+      </p:nvGrpSpPr>
+            
+      <p:grpSpPr>
+                
+        <a:xfrm>
+                    
+          <a:off x="0" y="0"/>
+                    
+          <a:ext cx="0" cy="0"/>
+                    
+          <a:chOff x="0" y="0"/>
+                    
+          <a:chExt cx="0" cy="0"/>
+                  
+        </a:xfrm>
+              
+      </p:grpSpPr>
+      <p:pic>
+        <p:nvPicPr>
+          <p:cNvPr id="19" name="图片 3" descr=""/>
+          <p:cNvPicPr/>
+          <p:nvPr/>
+        </p:nvPicPr>
+        <p:blipFill>
+          <a:blip r:embed="rId2"/>
+          <a:stretch/>
+        </p:blipFill>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7740720" y="312840"/>
+            <a:ext cx="1333440" cy="511200"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+      </p:pic>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="20" name="AutoShape 4"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="539640" y="1087560"/>
+            <a:ext cx="7958160" cy="109440"/>
+          </a:xfrm>
+          <a:custGeom>
+            <a:avLst/>
+            <a:gdLst/>
+            <a:ahLst/>
+            <a:rect l="l" t="t" r="r" b="b"/>
+            <a:pathLst>
+              <a:path stroke="0" w="1000" h="1000">
+                <a:moveTo>
+                  <a:pt x="0" y="0"/>
+                </a:moveTo>
+                <a:lnTo>
+                  <a:pt x="585" y="0"/>
+                </a:lnTo>
+                <a:lnTo>
+                  <a:pt x="585" y="1000"/>
+                </a:lnTo>
+                <a:lnTo>
+                  <a:pt x="0" y="1000"/>
+                </a:lnTo>
+                <a:lnTo>
+                  <a:pt x="0" y="0"/>
+                </a:lnTo>
+                <a:close/>
+              </a:path>
+              <a:path w="1000" h="1000">
+                <a:moveTo>
+                  <a:pt x="0" y="0"/>
+                </a:moveTo>
+                <a:lnTo>
+                  <a:pt x="1000" y="0"/>
+                </a:lnTo>
+              </a:path>
+            </a:pathLst>
+          </a:custGeom>
+          <a:solidFill>
+            <a:srgbClr val="cc0000"/>
+          </a:solidFill>
+          <a:ln w="9360">
+            <a:solidFill>
+              <a:srgbClr val="cc0000"/>
+            </a:solidFill>
+            <a:round/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="0"/>
+          <a:fillRef idx="0"/>
+          <a:effectRef idx="0"/>
+          <a:fontRef idx="minor"/>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="t">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:endParaRPr b="0" lang="en-US" sz="5200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="cc3300"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="21" name="Line 5"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="609480" y="6172200"/>
+            <a:ext cx="7925040" cy="0"/>
+          </a:xfrm>
+          <a:prstGeom prst="line">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:ln w="3240">
+            <a:solidFill>
+              <a:srgbClr val="cc0000"/>
+            </a:solidFill>
+            <a:miter/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="0"/>
+          <a:fillRef idx="0"/>
+          <a:effectRef idx="0"/>
+          <a:fontRef idx="minor"/>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="-46800" bIns="-46800" anchor="t">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:endParaRPr b="0" lang="en-US" sz="5200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="cc3300"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="22" name="Rectangle 6"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="7236000" y="6375240"/>
+            <a:ext cx="1369800" cy="268560"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="0"/>
+          <a:fillRef idx="0"/>
+          <a:effectRef idx="0"/>
+          <a:fontRef idx="minor"/>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="t">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr algn="r">
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:tabLst>
+                <a:tab algn="l" pos="0"/>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:fld id="{166E0718-BFA6-491F-83A7-2664ED03F9F5}" type="slidenum">
+              <a:rPr b="0" lang="en-US" sz="1200" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="Verdana"/>
+                <a:ea typeface="宋体"/>
+              </a:rPr>
+              <a:t>&lt;number&gt;</a:t>
+            </a:fld>
+            <a:endParaRPr b="0" lang="en-US" sz="1200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="cc3300"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="23" name="日期占位符 3"/>
+          <p:cNvSpPr/>
+          <p:nvPr/>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="611280" y="6396120"/>
+            <a:ext cx="1369800" cy="268200"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:style>
+          <a:lnRef idx="0"/>
+          <a:fillRef idx="0"/>
+          <a:effectRef idx="0"/>
+          <a:fontRef idx="minor"/>
+        </p:style>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="t">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr>
+              <a:lnSpc>
+                <a:spcPct val="100000"/>
+              </a:lnSpc>
+              <a:tabLst>
+                <a:tab algn="l" pos="0"/>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:fld id="{2DC27F9C-70BF-4735-86E7-4472BFC8F493}" type="datetime">
+              <a:rPr b="0" lang="zh-CN" sz="1200" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="Verdana"/>
+                <a:ea typeface="宋体"/>
+              </a:rPr>
+              <a:t>26/3/2</a:t>
+            </a:fld>
+            <a:endParaRPr b="0" lang="en-US" sz="1200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="cc3300"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="24" name="PlaceHolder 1"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="title"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="539280" y="232920"/>
+            <a:ext cx="8001000" cy="747720"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="b">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr indent="0">
+              <a:buNone/>
+              <a:tabLst>
+                <a:tab algn="l" pos="0"/>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="3200" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="Verdana"/>
+              </a:rPr>
+              <a:t>Click to edit the title text format</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="3200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="Verdana"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="25" name="PlaceHolder 2"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="body"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="539280" y="1341000"/>
+            <a:ext cx="8207640" cy="4770360"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="t">
+            <a:normAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr marL="469800" indent="-469800">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Click to edit the outline text format</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="1" marL="907920" indent="-436320">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Second Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="2" marL="1305000" indent="-395280">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Third Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="3" marL="1693800" indent="-387360">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Fourth Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="4" marL="2093760" indent="-398160">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="cc0000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Fifth Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="5" marL="2093760" indent="-398160">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="000000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Sixth Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+          <a:p>
+            <a:pPr lvl="6" marL="2093760" indent="-398160">
+              <a:lnSpc>
+                <a:spcPct val="120000"/>
+              </a:lnSpc>
+              <a:spcBef>
+                <a:spcPts val="700"/>
+              </a:spcBef>
+              <a:buClr>
+                <a:srgbClr val="000000"/>
+              </a:buClr>
+              <a:buFont typeface="WingDings" charset="2"/>
+              <a:buChar char=""/>
+              <a:tabLst>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:r>
+              <a:rPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+                <a:solidFill>
+                  <a:srgbClr val="000000"/>
+                </a:solidFill>
+                <a:latin typeface="黑体"/>
+              </a:rPr>
+              <a:t>Seventh Outline Level</a:t>
+            </a:r>
+            <a:endParaRPr b="0" lang="en-US" sz="2800" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="000000"/>
+              </a:solidFill>
+              <a:latin typeface="黑体"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+      <p:sp>
+        <p:nvSpPr>
+          <p:cNvPr id="26" name="PlaceHolder 3"/>
+          <p:cNvSpPr>
+            <a:spLocks noGrp="1"/>
+          </p:cNvSpPr>
+          <p:nvPr>
+            <p:ph type="ftr" idx="4"/>
+          </p:nvPr>
+        </p:nvSpPr>
+        <p:spPr>
+          <a:xfrm>
+            <a:off x="3124080" y="6237000"/>
+            <a:ext cx="2895840" cy="476280"/>
+          </a:xfrm>
+          <a:prstGeom prst="rect">
+            <a:avLst/>
+          </a:prstGeom>
+          <a:noFill/>
+          <a:ln w="0">
+            <a:noFill/>
+          </a:ln>
+        </p:spPr>
+        <p:txBody>
+          <a:bodyPr lIns="90000" rIns="90000" tIns="46800" bIns="46800" anchor="t">
+            <a:noAutofit/>
+          </a:bodyPr>
+          <a:p>
+            <a:pPr indent="0">
+              <a:buNone/>
+              <a:tabLst>
+                <a:tab algn="l" pos="0"/>
+                <a:tab algn="l" pos="914400"/>
+                <a:tab algn="l" pos="1828800"/>
+                <a:tab algn="l" pos="2743200"/>
+                <a:tab algn="l" pos="3657600"/>
+                <a:tab algn="l" pos="4572000"/>
+                <a:tab algn="l" pos="5486400"/>
+                <a:tab algn="l" pos="6400800"/>
+                <a:tab algn="l" pos="7315200"/>
+                <a:tab algn="l" pos="8229600"/>
+                <a:tab algn="l" pos="9144000"/>
+                <a:tab algn="l" pos="10058400"/>
+              </a:tabLst>
+            </a:pPr>
+            <a:endParaRPr b="0" lang="en-US" sz="5200" spc="-1" strike="noStrike">
+              <a:solidFill>
+                <a:srgbClr val="cc3300"/>
+              </a:solidFill>
+              <a:latin typeface="Times New Roman"/>
+            </a:endParaRPr>
+          </a:p>
+        </p:txBody>
+      </p:sp>
+    </p:spTree>
+  </p:cSld>
+  <p:clrMap bg1="lt1" bg2="lt2" tx1="dk1" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>
+  <p:sldLayoutIdLst>
+    <p:sldLayoutId id="2147483651" r:id="rId3"/>
+  </p:sldLayoutIdLst>
+</p:sldMaster>

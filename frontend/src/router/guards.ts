@@ -1,0 +1,90 @@
+import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router'
+
+import { useAuthStore } from '@/stores/auth'
+import { APP_TITLE_PREFIX, type UserRole } from '@/utils/constants'
+import { useToast } from '@/composables/useToast'
+import { getProfile } from '@/api/auth'
+
+function isPublicRoute(to: RouteLocationNormalized): boolean {
+  return to.path === '/login' || to.path === '/register'
+}
+
+function sanitizeRedirectPath(input: unknown): string {
+  if (typeof input !== 'string') return '/'
+  if (!input.startsWith('/')) return '/'
+  if (input.startsWith('//')) return '/'
+  return input
+}
+
+async function ensureProfileLoaded(): Promise<void> {
+  const authStore = useAuthStore()
+  if (!authStore.accessToken) return
+  if (authStore.user) return
+
+  const profile = await getProfile()
+  authStore.setAuth(profile, authStore.accessToken)
+}
+
+function hasRole(requiredRoles: UserRole[] | undefined, userRole: UserRole | undefined): boolean {
+  if (!requiredRoles || requiredRoles.length === 0) return true
+  if (!userRole) return false
+  return requiredRoles.includes(userRole)
+}
+
+function updatePageTitle(to: RouteLocationNormalized): void {
+  const title = to.meta?.title ? `${APP_TITLE_PREFIX} - ${to.meta.title}` : APP_TITLE_PREFIX
+  document.title = title
+}
+
+export function setupRouterGuards(router: Router): void {
+  router.beforeEach(async (to, _from, next) => {
+    const authStore = useAuthStore()
+    const toast = useToast()
+
+    try {
+      if (isPublicRoute(to)) {
+        if (authStore.isLoggedIn) {
+          const redirectTo = sanitizeRedirectPath(to.query.redirect)
+          next(redirectTo)
+          return
+        }
+        next()
+        return
+      }
+
+      if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
+        next({ path: '/login', query: { redirect: to.fullPath } })
+        return
+      }
+
+      if (to.meta?.requiresAuth) {
+        await ensureProfileLoaded()
+      }
+
+      const userRole = authStore.user?.role
+      const requiredRoles = to.meta?.roles
+      if (!hasRole(requiredRoles, userRole)) {
+        toast.warning('无权限访问该页面')
+        next('/dashboard')
+        return
+      }
+
+      next()
+    } catch (err) {
+      // Avoid exposing raw backend message.
+      console.error('Router guard error:', err)
+      toast.error('登录状态异常，请重新登录')
+      authStore.logout()
+      next({ path: '/login', query: { redirect: to.fullPath } })
+    }
+  })
+
+  router.afterEach((to) => {
+    updatePageTitle(to)
+  })
+
+  router.onError((error) => {
+    console.error('Router error:', error)
+  })
+}
+
