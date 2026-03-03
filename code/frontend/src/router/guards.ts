@@ -11,9 +11,11 @@ function isPublicRoute(to: RouteLocationNormalized): boolean {
 
 function sanitizeRedirectPath(input: unknown): string {
   if (typeof input !== 'string') return '/'
-  if (!input.startsWith('/')) return '/'
-  if (input.startsWith('//')) return '/'
-  return input
+  // 移除所有前导斜杠，只保留一个
+  const normalized = '/' + input.replace(/^\/+/, '')
+  // 检查是否包含协议或双斜杠
+  if (/^\/\/|^\/\\|:\/\//.test(normalized)) return '/'
+  return normalized
 }
 
 async function ensureProfileLoaded(): Promise<void> {
