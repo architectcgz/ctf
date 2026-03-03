@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import NProgress from 'nprogress'
 
 import { useAuthStore } from '@/stores/auth'
 import { AUTH_ERROR_CODES, mapErrorCode } from '@/utils/errorMap'
@@ -58,7 +59,10 @@ function attachAuth<T extends AxiosRequestConfig>(config: T): T {
   return config
 }
 
-instance.interceptors.request.use((config) => attachAuth(config as InternalAxiosRequestConfig))
+instance.interceptors.request.use((config) => {
+  NProgress.start()
+  return attachAuth(config as InternalAxiosRequestConfig)
+})
 
 async function refreshTokens(): Promise<{ access_token: string }> {
   const refreshClient = axios.create({
@@ -111,6 +115,7 @@ function toApiError(
 
 instance.interceptors.response.use(
   (response) => {
+    NProgress.done()
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
       if (envelope.code === 0) return response
@@ -122,6 +127,7 @@ instance.interceptors.response.use(
     return response
   },
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
+    NProgress.done()
     const authStore = useAuthStore()
 
     const status = error.response?.status

@@ -1,9 +1,13 @@
 import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
 import { useAuthStore } from '@/stores/auth'
 import { APP_TITLE_PREFIX, type UserRole } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
 import { getProfile } from '@/api/auth'
+
+NProgress.configure({ showSpinner: false })
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {
   return to.path === '/login' || to.path === '/register'
@@ -42,6 +46,8 @@ let currentAbortController: AbortController | null = null
 
 export function setupRouterGuards(router: Router): void {
   router.beforeEach(async (to, _from, next) => {
+    NProgress.start()
+
     currentAbortController?.abort()
     currentAbortController = new AbortController()
 
@@ -88,6 +94,7 @@ export function setupRouterGuards(router: Router): void {
 
   router.afterEach((to) => {
     updatePageTitle(to)
+    NProgress.done()
   })
 
   router.onError((error) => {
