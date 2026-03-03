@@ -561,7 +561,8 @@ func RequestID() gin.HandlerFunc {
 {
   "code": 0,
   "message": "success",
-  "data": { ... }
+  "data": { ... },
+  "request_id": "req_xxx"
 }
 
 // 分页响应
@@ -573,13 +574,16 @@ func RequestID() gin.HandlerFunc {
     "total": 150,
     "page": 1,
     "page_size": 20
-  }
+  },
+  "request_id": "req_xxx"
 }
 
 // 错误响应
 {
-  "code": 130102,
-  "message": "Flag 错误，请重试"
+  "code": 13003,
+  "message": "Flag 错误",
+  "data": null,
+  "request_id": "req_xxx"
 }
 ```
 
@@ -588,17 +592,22 @@ func RequestID() gin.HandlerFunc {
 ```go
 // response 包：统一响应构建
 func Success(c *gin.Context, data interface{}) {
+    requestID := c.GetString("request_id")
     c.JSON(http.StatusOK, gin.H{
         "code":    0,
         "message": "success",
         "data":    data,
+        "request_id": requestID,
     })
 }
 
 func Error(c *gin.Context, err *errcode.AppError) {
+    requestID := c.GetString("request_id")
     c.JSON(err.HTTPStatus, gin.H{
         "code":    err.Code,
         "message": err.Message,
+        "data":    nil,
+        "request_id": requestID,
     })
 }
 
@@ -611,9 +620,12 @@ func FromError(c *gin.Context, err error) {
     }
     // 未知错误，返回 500 并记录日志
     logger.ErrorCtx(c.Request.Context(), "未处理的内部错误", zap.Error(err))
+    requestID := c.GetString("request_id")
     c.JSON(http.StatusInternalServerError, gin.H{
-        "code":    100000,
+        "code":    10009,
         "message": "服务器内部错误",
+        "data":    nil,
+        "request_id": requestID,
     })
 }
 ```
