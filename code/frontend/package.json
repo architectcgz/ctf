@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint . --ext .vue,.js,.ts,.jsx,.tsx",
+    "format": "prettier --write \"src/**/*.{vue,js,ts,jsx,tsx,json,css}\""
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
@@ -24,7 +26,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "@vitejs/plugin-vue": "^6.0.2",
+    "eslint": "^10.0.2",
+    "eslint-plugin-vue": "^10.8.0",
+    "prettier": "^3.8.1",
     "typescript": "^5.9.2",
     "unplugin-auto-import": "^20.0.0",
     "unplugin-vue-components": "^29.0.0",
