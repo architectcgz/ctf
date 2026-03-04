@@ -1,21 +1,21 @@
 <template>
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-[#e6edf3]">竞赛中心</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">竞赛中心</h1>
 
     <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
     <div v-else class="space-y-4">
       <div
         v-for="contest in list"
         :key="contest.id"
-        class="cursor-pointer rounded-lg border bg-[#161b22] p-5 transition-colors duration-150"
+        class="cursor-pointer rounded-lg border bg-[var(--color-bg-surface)] p-5 transition-colors duration-150"
         :class="getContestBorderClass(contest.status)"
         @click="goToDetail(contest.id)"
       >
         <div class="space-y-3">
-          <h3 class="text-xl font-semibold text-[#e6edf3]">{{ contest.title }}</h3>
+          <h3 class="text-xl font-semibold text-[var(--color-text-primary)]">{{ contest.title }}</h3>
 
           <div class="flex items-center gap-3 text-sm">
             <span
@@ -24,10 +24,10 @@
             >
               {{ getStatusLabel(contest.status) }}
             </span>
-            <span class="text-[#8b949e]">{{ getModeLabel(contest.mode) }}</span>
+            <span class="text-[var(--color-text-secondary)]">{{ getModeLabel(contest.mode) }}</span>
           </div>
 
-          <div class="space-y-1 text-sm text-[#8b949e]">
+          <div class="space-y-1 text-sm text-[var(--color-text-secondary)]">
             <div class="font-mono">
               {{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}
             </div>
@@ -35,7 +35,7 @@
 
           <div class="flex gap-3">
             <button
-              class="rounded-lg bg-[#0891b2] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#06b6d4]"
+              class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#06b6d4]"
               @click.stop="handleAction(contest)"
             >
               {{ getActionLabel(contest.status) }}
@@ -45,7 +45,7 @@
       </div>
 
       <div v-if="list.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="text-[#6e7681]">暂无竞赛</div>
+        <div class="text-[var(--color-text-muted)]">暂无竞赛</div>
       </div>
     </div>
   </div>
@@ -93,17 +93,17 @@ function getModeLabel(mode: ContestMode): string {
 }
 
 function getContestBorderClass(status: ContestStatus): string {
-  if (status === 'running') return 'border-l-2 border-[#0891b2] border-[#30363d]'
-  if (status === 'registering') return 'border-l-2 border-[#f59e0b] border-[#30363d]'
-  if (status === 'ended') return 'border-[#30363d] opacity-70'
-  return 'border-[#30363d] hover:border-[#0891b2]/50'
+  if (status === 'running') return 'border-l-2 border-[#0891b2] border-[var(--color-border-default)]'
+  if (status === 'registering') return 'border-l-2 border-[#f59e0b] border-[var(--color-border-default)]'
+  if (status === 'ended') return 'border-[var(--color-border-default)] opacity-70'
+  return 'border-[var(--color-border-default)] hover:border-[var(--color-primary)]/50'
 }
 
 function getStatusBadgeClass(status: ContestStatus): string {
-  if (status === 'running') return 'bg-[#0891b2]/10 text-[#06b6d4]'
+  if (status === 'running') return 'bg-[var(--color-primary)]/10 text-[#06b6d4]'
   if (status === 'registering') return 'bg-[#f59e0b]/10 text-[#f59e0b]'
-  if (status === 'ended') return 'bg-[#30363d] text-[#8b949e]'
-  return 'bg-[#30363d] text-[#8b949e]'
+  if (status === 'ended') return 'bg-[#30363d] text-[var(--color-text-secondary)]'
+  return 'bg-[#30363d] text-[var(--color-text-secondary)]'
 }
 
 function getActionLabel(status: ContestStatus): string {

@@ -1,31 +1,31 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[#c9d1d9]">挑战管理</h1>
-      <button class="rounded-lg bg-[#0891b2] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90" @click="openDialog()">
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">挑战管理</h1>
+      <button class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90" @click="openDialog()">
         创建挑战
       </button>
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
-    <div v-else class="overflow-hidden rounded-lg border border-[#30363d]">
+    <div v-else class="overflow-hidden rounded-lg border border-[var(--color-border-default)]">
       <table class="w-full">
-        <thead class="bg-[#161b22]">
+        <thead class="bg-[var(--color-bg-surface)]">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">标题</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">分类</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">难度</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">分值</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">状态</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">操作</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">标题</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">分类</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">难度</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">分值</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">状态</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">操作</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[#30363d]">
-          <tr v-for="row in list" :key="row.id" class="transition-colors hover:bg-[#1c2128]">
-            <td class="px-4 py-3 text-sm text-[#c9d1d9]">{{ row.title }}</td>
+          <tr v-for="row in list" :key="row.id" class="transition-colors hover:bg-[var(--color-bg-elevated)]">
+            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ row.title }}</td>
             <td class="px-4 py-3">
               <span class="rounded px-2 py-1 text-xs font-medium" :style="{ backgroundColor: getCategoryColor(row.category) + '20', color: getCategoryColor(row.category) }">
                 {{ getCategoryLabel(row.category) }}
@@ -36,7 +36,7 @@
                 {{ getDifficultyLabel(row.difficulty) }}
               </span>
             </td>
-            <td class="px-4 py-3 text-sm text-[#c9d1d9]">{{ row.base_score }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ row.base_score }}</td>
             <td class="px-4 py-3">
               <span class="rounded px-2 py-1 text-xs font-medium" :style="{ backgroundColor: getStatusColor(row.status) + '20', color: getStatusColor(row.status) }">
                 {{ getStatusLabel(row.status) }}
@@ -44,7 +44,7 @@
             </td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
-                <button class="rounded bg-[#0891b2] px-3 py-1 text-xs text-white transition-colors hover:bg-[#0891b2]/90" @click="openDialog(row)">
+                <button class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90" @click="openDialog(row)">
                   编辑
                 </button>
                 <button class="rounded bg-red-500/20 px-3 py-1 text-xs text-red-500 transition-colors hover:bg-red-500/30" @click="handleDelete(row.id)">
@@ -58,19 +58,19 @@
     </div>
 
     <div v-if="!loading && total > 0" class="flex items-center justify-between">
-      <span class="text-sm text-[#8b949e]">共 {{ total }} 条</span>
+      <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 条</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page === 1"
-          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
           @click="changePage(page - 1)"
         >
           上一页
         </button>
-        <span class="text-sm text-[#8b949e]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+        <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
           :disabled="page >= Math.ceil(total / pageSize)"
-          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
           @click="changePage(page + 1)"
         >
           下一页
@@ -115,12 +115,12 @@
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <button class="rounded-lg border border-[#30363d] px-4 py-2 text-sm text-[#c9d1d9] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
+        <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
           取消
         </button>
         <button
           :disabled="saving"
-          class="ml-2 rounded-lg bg-[#0891b2] px-4 py-2 text-sm text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          class="ml-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
           @click="handleSave"
         >
           {{ saving ? '保存中...' : '保存' }}
