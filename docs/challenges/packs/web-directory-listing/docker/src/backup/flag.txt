@@ -1,1 +1,0 @@
-flag{directory_listing_is_dangerous}
