@@ -11,13 +11,13 @@
 
     <div v-else class="space-y-4">
       <div
-        v-for="instance in mockInstances"
+        v-for="instance in instances"
         :key="instance.id"
         class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5"
       >
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">{{ instance.title }}</h3>
+            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">{{ instance.challenge_title }}</h3>
             <div class="flex gap-2">
               <span class="rounded bg-[#06b6d4]/10 px-2 py-0.5 text-xs font-medium text-[#06b6d4]">
                 {{ instance.category }}
@@ -36,11 +36,19 @@
           <div v-if="instance.status === 'running'" class="space-y-2 text-sm">
             <div class="flex items-center justify-between">
               <span class="text-[var(--color-text-secondary)]">地址:</span>
-              <span class="font-mono text-[var(--color-text-primary)]">{{ instance.address }}</span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[var(--color-text-primary)]">{{ instance.access_url || (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '') }}</span>
+                <button
+                  @click="copyAddress(instance.access_url || (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : ''))"
+                  class="rounded px-2 py-1 text-xs text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+                >
+                  复制
+                </button>
+              </div>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-[var(--color-text-secondary)]">剩余:</span>
-              <span class="font-mono" :class="instance.remaining < 300 ? 'text-[#f59e0b]' : 'text-[var(--color-text-primary)]'">
+              <span class="font-mono" :class="instance.remaining < WARNING_THRESHOLD_SECONDS ? 'text-[#f59e0b] font-semibold' : 'text-[var(--color-text-primary)]'">
                 {{ formatTime(instance.remaining) }}
               </span>
             </div>
@@ -49,52 +57,113 @@
           <div class="flex gap-3">
             <button
               v-if="instance.status === 'running'"
-              class="rounded-lg border border-[var(--color-border-default)] bg-[#21262d] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors duration-150 hover:bg-[#30363d]"
+              @click="extendTime(instance.id)"
+              :disabled="instance.remaining_extends <= 0"
+              class="rounded-lg border border-[var(--color-border-default)] bg-[#21262d] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors duration-150 hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              延时 +30min
+              延时 +30min ({{ instance.remaining_extends }})
             </button>
             <button
+              @click="confirmDestroy(instance.id)"
               class="rounded-lg border border-[#ef4444]/20 bg-[#ef4444]/10 px-4 py-2 text-sm font-medium text-[#f87171] transition-colors duration-150 hover:bg-[#ef4444]/20"
             >
-              {{ instance.status === 'expired' ? '重新启动' : '销毁' }}
+              销毁
             </button>
           </div>
         </div>
       </div>
 
-      <div v-if="mockInstances.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="text-[var(--color-text-muted)]">暂无运行中的实例</div>
+      <div v-if="instances.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+        <div class="text-[var(--color-text-muted)] mb-4">暂无运行中的实例</div>
+        <router-link to="/student/challenges" class="text-[var(--color-primary)] hover:underline">
+          前往靶场列表创建实例
+        </router-link>
+      </div>
+    </div>
+
+    <!-- 超时提醒弹窗 -->
+    <div
+      v-if="showWarning"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      @click.self="showWarning = false"
+    >
+      <div class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6 shadow-xl">
+        <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">实例即将过期</h3>
+        <p class="mt-2 text-sm text-[var(--color-text-secondary)]">
+          实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
+        </p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            @click="showWarning = false"
+            class="rounded-lg px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)]"
+          >
+            取消
+          </button>
+          <button
+            @click="extendFromWarning"
+            class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)]"
+          >
+            延长 30 分钟
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { getMyInstances, destroyInstance as apiDestroyInstance, extendInstance } from '@/api/instance'
+import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
+
+// 常量配置
+const MAX_INSTANCES = 3
+const WARNING_THRESHOLD_SECONDS = 300
+const EXTEND_DURATION_SECONDS = 1800
+
+// 本地 ViewModel 类型
+interface InstanceViewModel extends InstanceListItem {
+  remaining: number
+}
 
 const loading = ref(false)
-const maxInstances = 3
-const mockInstances = ref([
-  { id: '1', title: 'SQL 注入基础', category: 'Web', difficulty: '简单', status: 'running', address: '10.10.1.42:8080', remaining: 4425 },
-  { id: '2', title: '栈溢出入门', category: 'Pwn', difficulty: '中等', status: 'running', address: '10.10.1.43:9999', remaining: 272 },
-  { id: '3', title: 'RSA 基础', category: 'Crypto', difficulty: '简单', status: 'expired', address: '', remaining: 0 }
-])
+const maxInstances = MAX_INSTANCES
+const instances = ref<InstanceViewModel[]>([])
 
-const runningCount = computed(() => mockInstances.value.filter(i => i.status === 'running').length)
+const showWarning = ref(false)
+const warningInstance = ref<InstanceViewModel | null>(null)
+const warnedInstances = new Set<string>()
 
-function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
+let timer: number | null = null
+
+const runningCount = computed(() => instances.value.filter(i => i.status === 'running').length)
+
+function getStatusLabel(status: InstanceStatus): string {
+  const labels: Record<InstanceStatus, string> = {
+    pending: '等待中',
+    creating: '创建中',
     running: '运行中',
     expired: '已过期',
-    pending: '排队中'
+    destroying: '销毁中',
+    destroyed: '已销毁',
+    failed: '失败',
+    crashed: '崩溃'
   }
   return labels[status] || status
 }
 
-function getStatusClass(status: string): string {
-  if (status === 'running') return 'text-[#22c55e]'
-  if (status === 'expired') return 'text-[var(--color-text-muted)]'
-  return 'text-[var(--color-primary)]'
+function getStatusClass(status: InstanceStatus): string {
+  const classes: Record<InstanceStatus, string> = {
+    pending: 'text-[#f59e0b]',
+    creating: 'text-[#f59e0b]',
+    running: 'text-[#22c55e]',
+    expired: 'text-[var(--color-text-muted)]',
+    destroying: 'text-[#f59e0b]',
+    destroyed: 'text-[var(--color-text-muted)]',
+    failed: 'text-[#ef4444]',
+    crashed: 'text-[#ef4444]'
+  }
+  return classes[status] || 'text-[var(--color-text-muted)]'
 }
 
 function formatTime(seconds: number): string {
@@ -103,4 +172,93 @@ function formatTime(seconds: number): string {
   const s = seconds % 60
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
+
+async function copyAddress(address: string) {
+  try {
+    await navigator.clipboard.writeText(address)
+    // TODO: 显示成功提示
+  } catch (error) {
+    console.error('复制失败:', error)
+    // TODO: 显示错误提示
+  }
+}
+
+async function extendTime(id: string) {
+  try {
+    const result = await extendInstance(id)
+    const instance = instances.value.find(i => i.id === id)
+    if (instance) {
+      instance.remaining = calculateRemaining(result.expires_at)
+      instance.remaining_extends = result.remaining_extends
+      warnedInstances.delete(id)
+    }
+  } catch (error) {
+    console.error('延时失败:', error)
+    // TODO: 显示错误提示
+  }
+}
+
+async function confirmDestroy(id: string) {
+  if (!confirm('确定要销毁该实例吗？此操作不可恢复。')) {
+    return
+  }
+  try {
+    await apiDestroyInstance(id)
+    instances.value = instances.value.filter(i => i.id !== id)
+    warnedInstances.delete(id)
+  } catch (error) {
+    console.error('销毁失败:', error)
+    // TODO: 显示错误提示
+  }
+}
+
+async function extendFromWarning() {
+  if (warningInstance.value) {
+    await extendTime(warningInstance.value.id)
+  }
+  showWarning.value = false
+}
+
+function calculateRemaining(expiresAt: string): number {
+  return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
+}
+
+function updateCountdown() {
+  const now = Date.now()
+  instances.value.forEach(instance => {
+    if (instance.status === 'running') {
+      instance.remaining = Math.max(0, Math.floor((new Date(instance.expires_at).getTime() - now) / 1000))
+
+      if (instance.remaining < WARNING_THRESHOLD_SECONDS && !warnedInstances.has(instance.id)) {
+        warnedInstances.add(instance.id)
+        warningInstance.value = instance
+        showWarning.value = true
+      }
+    }
+  })
+}
+
+onMounted(async () => {
+  loading.value = true
+  try {
+    const data = await getMyInstances()
+    instances.value = data.map(item => ({
+      ...item,
+      remaining: calculateRemaining(item.expires_at)
+    }))
+  } catch (error) {
+    console.error('加载实例失败:', error)
+  } finally {
+    loading.value = false
+  }
+  timer = window.setInterval(updateCountdown, 1000)
+})
+
+onUnmounted(() => {
+  if (timer !== null) {
+    clearInterval(timer)
+    timer = null
+  }
+})
 </script>
+
