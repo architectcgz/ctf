@@ -45,6 +45,6 @@ describe('ChallengeList', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    expect(wrapper.text()).toContain('挑战列表')
+    expect(wrapper.text()).toContain('靶场训练')
   })
 })
