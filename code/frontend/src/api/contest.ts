@@ -61,3 +61,14 @@ export async function joinTeam(contestId: string, teamId: string, code: string) 
 export async function getMyProgress(id: string): Promise<ContestMyProgressData> {
   return request<ContestMyProgressData>({ method: 'GET', url: `/contests/${encodeURIComponent(id)}/my-progress` })
 }
+
+export async function getMyTeam(contestId: string): Promise<TeamData | null> {
+  return request<TeamData | null>({ method: 'GET', url: `/contests/${encodeURIComponent(contestId)}/my-team` })
+}
+
+export async function kickTeamMember(contestId: string, teamId: string, userId: string) {
+  return request<void>({
+    method: 'DELETE',
+    url: `/contests/${encodeURIComponent(contestId)}/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(userId)}`,
+  })
+}
