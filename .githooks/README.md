@@ -10,5 +10,4 @@ bash scripts/install-githooks.sh
 
 当前 hooks：
 
-- `pre-commit`：当修改 `docs/contracts/api-contract-v1.md`（或相关文档/代码）时，自动运行 `scripts/sync_openapi_from_contract.py` 同步补全 `docs/contracts/openapi-v1.yaml`，并自动 `git add` 该文件。
-
+- `pre-commit`：仅当修改 API 相关文件时自动运行 `scripts/sync_openapi_from_contract.py`，当前包含 API 合同文档、`docs/architecture/backend/04-api-design.md`、后端路由/handler/dto、统一响应与错误码；不会再因容器、数据库等非 API 改动触发。

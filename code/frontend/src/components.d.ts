@@ -23,6 +23,7 @@ declare module 'vue' {
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     GaugeChart: typeof import('./components/charts/GaugeChart.vue')['default']
+    InstancePanel: typeof import('./components/common/InstancePanel.vue')['default']
     LineChart: typeof import('./components/charts/LineChart.vue')['default']
     NotificationDropdown: typeof import('./components/layout/NotificationDropdown.vue')['default']
     PageHeader: typeof import('./components/common/PageHeader.vue')['default']
