@@ -1,6 +1,8 @@
 <template>
-  <RouterView />
-  <AppToast />
+  <div class="min-h-screen bg-base text-text-primary">
+    <RouterView />
+    <AppToast />
+  </div>
 </template>
 
 <script setup lang="ts">
