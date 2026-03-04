@@ -27,3 +27,7 @@ export function formatDuration(ms: number): string {
   return `${seconds}秒`
 }
 
+export function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleString('zh-CN')
+}
+

@@ -39,8 +39,17 @@
 
     <!-- 空状态 -->
     <div v-else-if="!skillProfile" class="bg-surface rounded-lg p-8 text-center border border-border">
-      <p class="text-text-secondary mb-4">暂无能力画像数据</p>
-      <p class="text-sm text-text-tertiary">完成更多靶场挑战后，系统将为你生成能力画像</p>
+      <svg class="w-16 h-16 mx-auto mb-4 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      <p class="text-text-secondary mb-2">暂无能力画像数据</p>
+      <p class="text-sm text-text-tertiary mb-4">完成更多靶场挑战后，系统将为你生成能力画像</p>
+      <button
+        @click="router.push('/challenges')"
+        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+      >
+        去做题
+      </button>
     </div>
 
     <!-- 能力画像内容 -->
@@ -108,6 +117,15 @@ import { getRecommendations, getSkillProfile } from '@/api/assessment'
 import { getClassStudents, getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
 import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
+import { difficultyClass, difficultyLabel } from '@/utils/challenge'
+import { formatDate } from '@/utils/format'
+
+interface TooltipParams {
+  data: {
+    value: number[]
+    name: string
+  }
+}
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -220,7 +238,7 @@ function renderChart() {
     }],
     tooltip: {
       trigger: 'item',
-      formatter: (params: any) => {
+      formatter: (params: TooltipParams) => {
         const data = params.data
         return dimensions.map((d, i) => `${d.name}: ${data.value[i]}`).join('<br/>')
       }
@@ -230,37 +248,9 @@ function renderChart() {
   chartInstance.setOption(option)
 }
 
-// 难度样式
-function difficultyClass(difficulty: string) {
-  const map: Record<string, string> = {
-    beginner: 'bg-green-100 text-green-700',
-    easy: 'bg-blue-100 text-blue-700',
-    medium: 'bg-yellow-100 text-yellow-700',
-    hard: 'bg-orange-100 text-orange-700',
-    hell: 'bg-red-100 text-red-700'
-  }
-  return map[difficulty] || 'bg-gray-100 text-gray-700'
-}
-
-function difficultyLabel(difficulty: string) {
-  const map: Record<string, string> = {
-    beginner: '入门',
-    easy: '简单',
-    medium: '中等',
-    hard: '困难',
-    hell: '地狱'
-  }
-  return map[difficulty] || difficulty
-}
-
 // 跳转到靶场详情
 function goToChallenge(id: string) {
   router.push(`/challenges/${id}`)
-}
-
-// 格式化日期
-function formatDate(isoString: string) {
-  return new Date(isoString).toLocaleString('zh-CN')
 }
 
 // 监听学员切换
