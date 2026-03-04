@@ -44,6 +44,9 @@
             </td>
             <td class="px-4 py-3">
               <div class="flex gap-2">
+                <button class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90" @click="$router.push(`/admin/challenges/${row.id}`)">
+                  查看
+                </button>
                 <button class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90" @click="openDialog(row)">
                   编辑
                 </button>
@@ -113,6 +116,20 @@
             <ElOption label="已归档" value="archived" />
           </ElSelect>
         </ElFormItem>
+        <ElFormItem label="描述">
+          <ElInput v-model="form.description" type="textarea" :rows="3" placeholder="靶机描述" />
+        </ElFormItem>
+        <ElFormItem label="镜像">
+          <ElSelect v-model="form.image_id" placeholder="选择镜像" clearable>
+            <ElOption v-for="img in images" :key="img.id" :label="`${img.name}:${img.tag}`" :value="img.id" />
+          </ElSelect>
+        </ElFormItem>
+        <ElFormItem label="Flag">
+          <ElInput v-model="form.flag" placeholder="静态 Flag 或动态 Flag 模板" />
+        </ElFormItem>
+        <ElFormItem label="标签">
+          <ElInput v-model="form.tags" placeholder="用逗号分隔，如：SQL注入,WAF绕过" />
+        </ElFormItem>
       </ElForm>
       <template #footer>
         <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
@@ -133,21 +150,26 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { getChallenges, createChallenge, updateChallenge, deleteChallenge } from '@/api/admin'
+import { getChallenges, createChallenge, updateChallenge, deleteChallenge, getImages } from '@/api/admin'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
-import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus } from '@/api/contracts'
+import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus, AdminImageListItem } from '@/api/contracts'
 
 const toast = useToast()
 const dialogVisible = ref(false)
 const saving = ref(false)
 const editingId = ref<string | null>(null)
+const images = ref<AdminImageListItem[]>([])
 const form = reactive({
   title: '',
   category: 'web' as ChallengeCategory,
   difficulty: 'easy' as ChallengeDifficulty,
   base_score: 100,
   status: 'draft' as ChallengeStatus,
+  description: '',
+  image_id: '',
+  flag: '',
+  tags: '',
 })
 
 const { list, total, page, pageSize, loading, changePage, changePageSize, refresh } = usePagination(getChallenges)
@@ -161,6 +183,10 @@ function openDialog(row?: any) {
       difficulty: row.difficulty,
       base_score: row.base_score,
       status: row.status,
+      description: row.description || '',
+      image_id: row.image_id || '',
+      flag: row.flag || '',
+      tags: row.tags?.join(',') || '',
     })
   } else {
     editingId.value = null
@@ -170,6 +196,10 @@ function openDialog(row?: any) {
       difficulty: 'easy',
       base_score: 100,
       status: 'draft',
+      description: '',
+      image_id: '',
+      flag: '',
+      tags: '',
     })
   }
   dialogVisible.value = true
@@ -180,13 +210,35 @@ async function handleSave() {
     toast.error('请填写标题')
     return
   }
+
+  // 发布前校验
+  if (form.status === 'active') {
+    if (!form.image_id) {
+      toast.error('发布前必须选择镜像')
+      return
+    }
+    if (!form.flag) {
+      toast.error('发布前必须配置 Flag')
+      return
+    }
+    if (!form.tags) {
+      toast.error('发布前必须添加标签')
+      return
+    }
+  }
+
   saving.value = true
   try {
+    const data = {
+      ...form,
+      tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    }
+
     if (editingId.value) {
-      await updateChallenge(editingId.value, form)
+      await updateChallenge(editingId.value, data)
       toast.success('更新成功')
     } else {
-      await createChallenge(form)
+      await createChallenge(data)
       toast.success('创建成功')
     }
     dialogVisible.value = false
@@ -250,7 +302,17 @@ function getStatusColor(status: ChallengeStatus): string {
   return { draft: '#8b949e', review: '#f59e0b', active: '#10b981', archived: '#6e7681' }[status]
 }
 
+async function loadImages() {
+  try {
+    const res = await getImages({ page: 1, page_size: 100 })
+    images.value = res.list.filter(img => img.status === 'ready')
+  } catch (error) {
+    console.error('加载镜像列表失败', error)
+  }
+}
+
 onMounted(() => {
   refresh()
+  loadImages()
 })
 </script>

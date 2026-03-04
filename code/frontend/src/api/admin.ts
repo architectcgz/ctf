@@ -50,6 +50,10 @@ export async function getChallenges(params?: Record<string, unknown>) {
   return request<PageResult<AdminChallengeListItem>>({ method: 'GET', url: '/admin/challenges', params })
 }
 
+export async function getChallengeDetail(id: string) {
+  return request<AdminChallengeListItem>({ method: 'GET', url: `/admin/challenges/${encodeURIComponent(id)}` })
+}
+
 export async function createChallenge(data: Record<string, unknown>) {
   return request<AdminChallengeUpsertData>({ method: 'POST', url: '/admin/challenges', data })
 }

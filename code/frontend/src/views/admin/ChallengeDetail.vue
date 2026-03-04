@@ -1,0 +1,75 @@
+<template>
+  <div class="space-y-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">靶场详情</h1>
+      <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="$router.back()">
+        返回
+      </button>
+    </div>
+
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
+    </div>
+
+    <div v-else-if="challenge" class="space-y-4">
+      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">{{ challenge.title }}</h2>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="text-[var(--color-text-secondary)]">分类：</span>
+            <span class="text-[var(--color-text-primary)]">{{ challenge.category }}</span>
+          </div>
+          <div>
+            <span class="text-[var(--color-text-secondary)]">难度：</span>
+            <span class="text-[var(--color-text-primary)]">{{ challenge.difficulty }}</span>
+          </div>
+          <div>
+            <span class="text-[var(--color-text-secondary)]">分值：</span>
+            <span class="text-[var(--color-text-primary)]">{{ challenge.base_score }}</span>
+          </div>
+          <div>
+            <span class="text-[var(--color-text-secondary)]">状态：</span>
+            <span class="text-[var(--color-text-primary)]">{{ challenge.status }}</span>
+          </div>
+          <div v-if="challenge.image_name" class="col-span-2">
+            <span class="text-[var(--color-text-secondary)]">镜像：</span>
+            <span class="font-mono text-[var(--color-text-primary)]">{{ challenge.image_name }}</span>
+          </div>
+          <div v-if="challenge.flag" class="col-span-2">
+            <span class="text-[var(--color-text-secondary)]">Flag：</span>
+            <span class="font-mono text-[var(--color-text-primary)]">{{ challenge.flag }}</span>
+          </div>
+          <div v-if="challenge.tags?.length" class="col-span-2">
+            <span class="text-[var(--color-text-secondary)]">标签：</span>
+            <span v-for="tag in challenge.tags" :key="tag" class="ml-2 rounded bg-[var(--color-primary)]/20 px-2 py-1 text-xs text-[var(--color-primary)]">{{ tag }}</span>
+          </div>
+        </div>
+        <div v-if="challenge.description" class="mt-4">
+          <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
+          <div class="mt-2 text-sm text-[var(--color-text-primary)]">{{ challenge.description }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { getChallengeDetail } from '@/api/admin'
+import type { AdminChallengeListItem } from '@/api/contracts'
+
+const route = useRoute()
+const loading = ref(true)
+const challenge = ref<AdminChallengeListItem | null>(null)
+
+onMounted(async () => {
+  try {
+    challenge.value = await getChallengeDetail(route.params.id as string)
+  } catch (error) {
+    console.error('加载失败', error)
+  } finally {
+    loading.value = false
+  }
+})
+</script>
