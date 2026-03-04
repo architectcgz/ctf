@@ -12,9 +12,8 @@ func AccessLog(log *zap.Logger) gin.HandlerFunc {
 		start := time.Now()
 		c.Next()
 
-		requestID, _ := c.Get(RequestIDKey)
 		log.Info("http_request",
-			zap.String("request_id", valueOf(requestID)),
+			zap.String("request_id", c.GetString(RequestIDKey)),
 			zap.String("method", c.Request.Method),
 			zap.String("path", c.Request.URL.Path),
 			zap.String("client_ip", c.ClientIP()),
@@ -22,11 +21,4 @@ func AccessLog(log *zap.Logger) gin.HandlerFunc {
 			zap.Duration("latency", time.Since(start)),
 		)
 	}
-}
-
-func valueOf(raw any) string {
-	if v, ok := raw.(string); ok {
-		return v
-	}
-	return ""
 }

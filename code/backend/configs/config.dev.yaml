@@ -1,29 +1,14 @@
 app:
-  name: ctf-platform
   env: dev
-
-http:
-  host: 0.0.0.0
-  port: 8080
-  read_timeout: 15s
-  write_timeout: 15s
-  idle_timeout: 60s
+  version: dev
 
 log:
   level: debug
   format: console
 
-postgres:
-  host: 127.0.0.1
-  port: 5432
-  database: ctf
-  username: postgres
-  password: postgres123456
-  ssl_mode: disable
-  max_open_conns: 20
-  max_idle_conns: 10
-
 redis:
-  addr: 127.0.0.1:6379
-  password: "redis123456"
+  password: redis123456
   db: 2
+
+auth:
+  refresh_cookie_secure: false

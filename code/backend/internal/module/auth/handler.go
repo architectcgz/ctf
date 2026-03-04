@@ -1,0 +1,153 @@
+package auth
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
+	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/dto"
+	"ctf-platform/pkg/errcode"
+	"ctf-platform/pkg/response"
+)
+
+type Handler struct {
+	service      Service
+	tokenService TokenService
+	cookieConfig CookieConfig
+	log          *zap.Logger
+}
+
+type CookieConfig struct {
+	Name     string
+	Path     string
+	Secure   bool
+	HTTPOnly bool
+	SameSite http.SameSite
+	MaxAge   time.Duration
+}
+
+func NewHandler(service Service, tokenService TokenService, cookieConfig CookieConfig, log *zap.Logger) *Handler {
+	if log == nil {
+		log = zap.NewNop()
+	}
+
+	return &Handler{
+		service:      service,
+		tokenService: tokenService,
+		cookieConfig: cookieConfig,
+		log:          log,
+	}
+}
+
+func (h *Handler) Register(c *gin.Context) {
+	req := &dto.RegisterReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, tokens, err := h.service.Register(c.Request.Context(), req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	h.writeRefreshCookie(c, tokens.RefreshToken)
+	response.Success(c, resp)
+}
+
+func (h *Handler) Login(c *gin.Context) {
+	req := &dto.LoginReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, tokens, err := h.service.Login(c.Request.Context(), req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	h.writeRefreshCookie(c, tokens.RefreshToken)
+	response.Success(c, resp)
+}
+
+func (h *Handler) Refresh(c *gin.Context) {
+	refreshToken, err := c.Cookie(h.cookieConfig.Name)
+	if err != nil {
+		response.Error(c, errcode.ErrRefreshTokenExpired)
+		return
+	}
+
+	payload, refreshErr := h.tokenService.RefreshAccessToken(c.Request.Context(), refreshToken)
+	if refreshErr != nil {
+		response.FromError(c, refreshErr)
+		return
+	}
+
+	response.Success(c, &dto.RefreshResp{
+		AccessToken: payload.AccessToken,
+		TokenType:   "Bearer",
+		ExpiresIn:   payload.ExpiresIn,
+	})
+}
+
+func (h *Handler) Logout(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	h.log.Info("auth_logout_attempt", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
+	tokenExpiry := time.Until(authUser.ExpiresAt)
+	if tokenExpiry < 0 {
+		tokenExpiry = 0
+	}
+	if err := h.tokenService.RevokeToken(c.Request.Context(), authUser.JTI, tokenExpiry); err != nil {
+		h.log.Error("auth_logout_failed_revoke_access_token", zap.Int64("user_id", authUser.UserID), zap.Error(err))
+		response.FromError(c, errcode.ErrInternal.WithCause(err))
+		return
+	}
+
+	if refreshToken, cookieErr := c.Cookie(h.cookieConfig.Name); cookieErr == nil {
+		if claims, parseErr := h.tokenService.ParseToken(refreshToken); parseErr == nil {
+			refreshExpiry := time.Until(claims.ExpiresAt.Time)
+			if refreshExpiry < 0 {
+				refreshExpiry = 0
+			}
+			_ = h.tokenService.RevokeToken(c.Request.Context(), claims.ID, refreshExpiry)
+		}
+	}
+
+	h.clearRefreshCookie(c)
+	h.log.Info("auth_logout_succeeded", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
+	response.Success(c, nil)
+}
+
+func (h *Handler) Profile(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	profile, err := h.service.GetProfile(c.Request.Context(), authUser.UserID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, profile)
+}
+
+func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {
+	c.SetSameSite(h.cookieConfig.SameSite)
+	c.SetCookie(
+		h.cookieConfig.Name,
+		value,
+		int(h.cookieConfig.MaxAge.Seconds()),
+		h.cookieConfig.Path,
+		"",
+		h.cookieConfig.Secure,
+		h.cookieConfig.HTTPOnly,
+	)
+}
+
+func (h *Handler) clearRefreshCookie(c *gin.Context) {
+	c.SetSameSite(h.cookieConfig.SameSite)
+	c.SetCookie(h.cookieConfig.Name, "", -1, h.cookieConfig.Path, "", h.cookieConfig.Secure, h.cookieConfig.HTTPOnly)
+}
