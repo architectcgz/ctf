@@ -297,6 +297,13 @@ export interface AdminChallengeListItem {
   base_score: number
   solve_count: number
   created_at: ISODateTime
+  description?: string
+  hints?: string[]
+  image_id?: string
+  image_name?: string
+  flag?: string
+  resource_limits?: { cpu: number; memory: number }
+  tags?: string[]
 }
 
 export interface AdminChallengeUpsertData {

@@ -116,6 +116,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, roles: ['admin'], title: '靶场管理', icon: 'Settings' },
       },
       {
+        path: 'admin/challenges/:id',
+        name: 'AdminChallengeDetail',
+        component: () => import('@/views/admin/ChallengeDetail.vue'),
+        meta: { requiresAuth: true, roles: ['admin'], title: '靶场详情' },
+      },
+      {
         path: 'admin/contests',
         name: 'ContestManage',
         component: () => import('@/views/admin/ContestManage.vue'),
