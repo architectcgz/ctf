@@ -23,39 +23,39 @@ describe('useTheme', () => {
     })
   })
 
-  it('应该初始化为 light 模式', () => {
+  it('应该初始化为 dark 模式', () => {
     const { theme } = useTheme()
-    expect(theme.value).toBe('light')
+    expect(theme.value).toBe('dark')
   })
 
   it('应该切换主题', () => {
     const { theme, toggleTheme } = useTheme()
 
-    expect(theme.value).toBe('light')
-    toggleTheme()
     expect(theme.value).toBe('dark')
     toggleTheme()
     expect(theme.value).toBe('light')
+    toggleTheme()
+    expect(theme.value).toBe('dark')
   })
 
   it('应该设置 data-theme 属性', () => {
     const { toggleTheme } = useTheme()
 
     toggleTheme()
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
 
     toggleTheme()
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 
   it('应该持久化主题到 localStorage', () => {
     const { toggleTheme } = useTheme()
 
     toggleTheme()
-    expect(localStorage.getItem('theme')).toBe('dark')
+    expect(localStorage.getItem('theme')).toBe('light')
 
     toggleTheme()
-    expect(localStorage.getItem('theme')).toBe('light')
+    expect(localStorage.getItem('theme')).toBe('dark')
   })
 
   it('应该从 localStorage 恢复主题', () => {
