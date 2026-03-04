@@ -130,6 +130,17 @@
         <ElFormItem label="标签">
           <ElInput v-model="form.tags" placeholder="用逗号分隔，如：SQL注入,WAF绕过" />
         </ElFormItem>
+        <ElFormItem label="提示">
+          <ElInput v-model="form.hints" type="textarea" :rows="2" placeholder="每行一条提示" />
+        </ElFormItem>
+        <ElFormItem label="CPU 限制">
+          <ElInputNumber v-model="form.cpu" :min="0.1" :max="4" :step="0.1" :precision="1" />
+          <span class="ml-2 text-xs text-[var(--color-text-secondary)]">核数</span>
+        </ElFormItem>
+        <ElFormItem label="内存限制">
+          <ElInputNumber v-model="form.memory" :min="128" :max="4096" :step="128" />
+          <span class="ml-2 text-xs text-[var(--color-text-secondary)]">MB</span>
+        </ElFormItem>
       </ElForm>
       <template #footer>
         <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
@@ -170,11 +181,14 @@ const form = reactive({
   image_id: '',
   flag: '',
   tags: '',
+  hints: '',
+  cpu: 1,
+  memory: 512,
 })
 
 const { list, total, page, pageSize, loading, changePage, changePageSize, refresh } = usePagination(getChallenges)
 
-function openDialog(row?: any) {
+function openDialog(row?: AdminChallengeListItem) {
   if (row) {
     editingId.value = row.id
     Object.assign(form, {
@@ -187,6 +201,9 @@ function openDialog(row?: any) {
       image_id: row.image_id || '',
       flag: row.flag || '',
       tags: row.tags?.join(',') || '',
+      hints: row.hints?.join('\n') || '',
+      cpu: row.resource_limits?.cpu || 1,
+      memory: row.resource_limits?.memory || 512,
     })
   } else {
     editingId.value = null
@@ -200,6 +217,9 @@ function openDialog(row?: any) {
       image_id: '',
       flag: '',
       tags: '',
+      hints: '',
+      cpu: 1,
+      memory: 512,
     })
   }
   dialogVisible.value = true
@@ -232,6 +252,8 @@ async function handleSave() {
     const data = {
       ...form,
       tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      hints: form.hints ? form.hints.split('\n').map(h => h.trim()).filter(Boolean) : [],
+      resource_limits: { cpu: form.cpu, memory: form.memory },
     }
 
     if (editingId.value) {
@@ -307,7 +329,7 @@ async function loadImages() {
     const res = await getImages({ page: 1, page_size: 100 })
     images.value = res.list.filter(img => img.status === 'ready')
   } catch (error) {
-    console.error('加载镜像列表失败', error)
+    toast.error('加载镜像列表失败')
   }
 }
 

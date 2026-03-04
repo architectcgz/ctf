@@ -55,11 +55,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getChallengeDetail } from '@/api/admin'
+import { useToast } from '@/composables/useToast'
 import type { AdminChallengeListItem } from '@/api/contracts'
 
 const route = useRoute()
+const router = useRouter()
+const toast = useToast()
 const loading = ref(true)
 const challenge = ref<AdminChallengeListItem | null>(null)
 
@@ -67,7 +70,8 @@ onMounted(async () => {
   try {
     challenge.value = await getChallengeDetail(route.params.id as string)
   } catch (error) {
-    console.error('加载失败', error)
+    toast.error('加载失败')
+    setTimeout(() => router.back(), 1500)
   } finally {
     loading.value = false
   }
