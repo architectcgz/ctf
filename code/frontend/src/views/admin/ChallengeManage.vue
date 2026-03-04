@@ -1,44 +1,82 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold">挑战管理</h1>
-      <ElButton type="primary" @click="openDialog()">创建挑战</ElButton>
+      <h1 class="text-2xl font-bold text-[#c9d1d9]">挑战管理</h1>
+      <button class="rounded-lg bg-[#0891b2] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90" @click="openDialog()">
+        创建挑战
+      </button>
     </div>
 
-    <ElTable v-loading="loading" :data="list" stripe>
-      <ElTableColumn prop="title" label="标题" />
-      <ElTableColumn prop="category" label="分类">
-        <template #default="{ row }">
-          <ElTag size="small">{{ getCategoryLabel(row.category) }}</ElTag>
-        </template>
-      </ElTableColumn>
-      <ElTableColumn prop="difficulty" label="难度">
-        <template #default="{ row }">
-          <ElTag :type="getDifficultyColor(row.difficulty)" size="small">{{ getDifficultyLabel(row.difficulty) }}</ElTag>
-        </template>
-      </ElTableColumn>
-      <ElTableColumn prop="base_score" label="分值" width="80" />
-      <ElTableColumn prop="status" label="状态">
-        <template #default="{ row }">
-          <ElTag :type="getStatusColor(row.status)" size="small">{{ getStatusLabel(row.status) }}</ElTag>
-        </template>
-      </ElTableColumn>
-      <ElTableColumn label="操作" width="180">
-        <template #default="{ row }">
-          <ElButton size="small" @click="openDialog(row)">编辑</ElButton>
-          <ElButton size="small" type="danger" @click="handleDelete(row.id)">删除</ElButton>
-        </template>
-      </ElTableColumn>
-    </ElTable>
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+    </div>
 
-    <ElPagination
-      v-model:current-page="page"
-      v-model:page-size="pageSize"
-      :total="total"
-      layout="total, prev, pager, next"
-      @current-change="changePage"
-      @size-change="changePageSize"
-    />
+    <div v-else class="overflow-hidden rounded-lg border border-[#30363d]">
+      <table class="w-full">
+        <thead class="bg-[#161b22]">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">标题</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">分类</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">难度</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">分值</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">状态</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[#c9d1d9]">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#30363d]">
+          <tr v-for="row in list" :key="row.id" class="transition-colors hover:bg-[#1c2128]">
+            <td class="px-4 py-3 text-sm text-[#c9d1d9]">{{ row.title }}</td>
+            <td class="px-4 py-3">
+              <span class="rounded px-2 py-1 text-xs font-medium" :style="{ backgroundColor: getCategoryColor(row.category) + '20', color: getCategoryColor(row.category) }">
+                {{ getCategoryLabel(row.category) }}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="rounded px-2 py-1 text-xs font-medium" :style="{ backgroundColor: getDifficultyColor(row.difficulty) + '20', color: getDifficultyColor(row.difficulty) }">
+                {{ getDifficultyLabel(row.difficulty) }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-sm text-[#c9d1d9]">{{ row.base_score }}</td>
+            <td class="px-4 py-3">
+              <span class="rounded px-2 py-1 text-xs font-medium" :style="{ backgroundColor: getStatusColor(row.status) + '20', color: getStatusColor(row.status) }">
+                {{ getStatusLabel(row.status) }}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2">
+                <button class="rounded bg-[#0891b2] px-3 py-1 text-xs text-white transition-colors hover:bg-[#0891b2]/90" @click="openDialog(row)">
+                  编辑
+                </button>
+                <button class="rounded bg-red-500/20 px-3 py-1 text-xs text-red-500 transition-colors hover:bg-red-500/30" @click="handleDelete(row.id)">
+                  删除
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div v-if="!loading && total > 0" class="flex items-center justify-between">
+      <span class="text-sm text-[#8b949e]">共 {{ total }} 条</span>
+      <div class="flex items-center gap-2">
+        <button
+          :disabled="page === 1"
+          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          @click="changePage(page - 1)"
+        >
+          上一页
+        </button>
+        <span class="text-sm text-[#8b949e]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+        <button
+          :disabled="page >= Math.ceil(total / pageSize)"
+          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          @click="changePage(page + 1)"
+        >
+          下一页
+        </button>
+      </div>
+    </div>
 
     <ElDialog v-model="dialogVisible" :title="editingId ? '编辑挑战' : '创建挑战'" width="600px">
       <ElForm :model="form" label-width="100px">
@@ -77,8 +115,16 @@
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="handleSave">保存</ElButton>
+        <button class="rounded-lg border border-[#30363d] px-4 py-2 text-sm text-[#c9d1d9] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
+          取消
+        </button>
+        <button
+          :disabled="saving"
+          class="ml-2 rounded-lg bg-[#0891b2] px-4 py-2 text-sm text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          @click="handleSave"
+        >
+          {{ saving ? '保存中...' : '保存' }}
+        </button>
       </template>
     </ElDialog>
   </div>
@@ -87,7 +133,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
-
 import { getChallenges, createChallenge, updateChallenge, deleteChallenge } from '@/api/admin'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
@@ -178,6 +223,10 @@ function getCategoryLabel(category: ChallengeCategory): string {
   return labels[category]
 }
 
+function getCategoryColor(category: ChallengeCategory): string {
+  return { web: '#3b82f6', pwn: '#ef4444', reverse: '#8b5cf6', crypto: '#f59e0b', misc: '#10b981', forensics: '#06b6d4' }[category]
+}
+
 function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
   const labels: Record<ChallengeDifficulty, string> = {
     beginner: '入门',
@@ -190,39 +239,18 @@ function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
 }
 
 function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-  const colors: Record<ChallengeDifficulty, string> = {
-    beginner: 'info',
-    easy: 'success',
-    medium: 'warning',
-    hard: 'danger',
-    hell: 'danger',
-  }
-  return colors[difficulty]
+  return { beginner: '#10b981', easy: '#3b82f6', medium: '#f59e0b', hard: '#ef4444', hell: '#7c3aed' }[difficulty]
 }
 
 function getStatusLabel(status: ChallengeStatus): string {
-  const labels: Record<ChallengeStatus, string> = {
-    draft: '草稿',
-    review: '审核中',
-    active: '已发布',
-    archived: '已归档',
-  }
-  return labels[status]
+  return { draft: '草稿', review: '审核中', active: '已发布', archived: '已归档' }[status]
 }
 
 function getStatusColor(status: ChallengeStatus): string {
-  const colors: Record<ChallengeStatus, string> = {
-    draft: 'info',
-    review: 'warning',
-    active: 'success',
-    archived: '',
-  }
-  return colors[status]
+  return { draft: '#8b949e', review: '#f59e0b', active: '#10b981', archived: '#6e7681' }[status]
 }
 
 onMounted(() => {
   refresh()
 })
 </script>
-
-
