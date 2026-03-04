@@ -61,7 +61,7 @@
               :disabled="instance.remaining_extends <= 0"
               class="rounded-lg border border-[var(--color-border-default)] bg-[#21262d] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors duration-150 hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              延时 +30min ({{ instance.remaining_extends }})
+              延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
             </button>
             <button
               @click="confirmDestroy(instance.id)"
@@ -103,7 +103,7 @@
             @click="extendFromWarning"
             class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-primary-hover)]"
           >
-            延长 30 分钟
+            延长 {{ EXTEND_DURATION_SECONDS / 60 }} 分钟
           </button>
         </div>
       </div>
@@ -219,6 +219,12 @@ async function extendFromWarning() {
   showWarning.value = false
 }
 
+function handleEscKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && showWarning.value) {
+    showWarning.value = false
+  }
+}
+
 function calculateRemaining(expiresAt: string): number {
   return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
 }
@@ -252,6 +258,7 @@ onMounted(async () => {
     loading.value = false
   }
   timer = window.setInterval(updateCountdown, 1000)
+  window.addEventListener('keydown', handleEscKey)
 })
 
 onUnmounted(() => {
@@ -259,6 +266,7 @@ onUnmounted(() => {
     clearInterval(timer)
     timer = null
   }
+  window.removeEventListener('keydown', handleEscKey)
 })
 </script>
 
