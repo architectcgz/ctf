@@ -6,6 +6,7 @@ bin/
 dist/
 coverage.out
 logs/
+docs/
 
 frontend/dist/
 frontend/node_modules/
