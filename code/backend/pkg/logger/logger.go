@@ -29,9 +29,16 @@ func New(cfg config.LogConfig) (*zap.Logger, error) {
 		Development:      encoding == "console",
 		Encoding:         encoding,
 		EncoderConfig:    encoderConfig,
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
+		OutputPaths:      nonEmpty(cfg.OutputPaths, []string{"stdout"}),
+		ErrorOutputPaths: nonEmpty(cfg.ErrorOutputPaths, []string{"stderr"}),
 	}
 
 	return zapConfig.Build(zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
+}
+
+func nonEmpty(values []string, fallback []string) []string {
+	if len(values) == 0 {
+		return fallback
+	}
+	return values
 }
