@@ -1,32 +1,32 @@
 <template>
   <div class="space-y-6">
-    <h1 class="text-2xl font-bold text-[#e6edf3]">排行榜</h1>
+    <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">排行榜</h1>
 
     <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
-    <div v-else class="overflow-hidden rounded-lg border border-[#30363d]">
+    <div v-else class="overflow-hidden rounded-lg border border-[var(--color-border-default)]">
       <table class="w-full">
-        <thead class="bg-[#161b22]">
+        <thead class="bg-[var(--color-bg-surface)]">
           <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#8b949e]">排名</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#8b949e]">队伍/用户</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#8b949e]">得分</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[#8b949e]">解题数</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">排名</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">队伍/用户</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">得分</th>
+            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">解题数</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="(item, index) in mockData"
             :key="index"
-            class="border-b border-[#21262d] transition-colors duration-100 hover:bg-[#1c2128]"
+            class="border-b border-[var(--color-border-subtle)] transition-colors duration-100 hover:bg-[var(--color-bg-elevated)]"
             :class="getRowClass(index + 1)"
           >
-            <td class="px-4 py-3 font-mono font-bold text-[#e6edf3]">{{ index + 1 }}</td>
-            <td class="px-4 py-3 text-sm text-[#e6edf3]">{{ item.name }}</td>
-            <td class="px-4 py-3 font-mono text-sm text-[#e6edf3]">{{ item.score }}</td>
-            <td class="px-4 py-3 text-sm text-[#e6edf3]">{{ item.solved }}</td>
+            <td class="px-4 py-3 font-mono font-bold text-[var(--color-text-primary)]">{{ index + 1 }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ item.name }}</td>
+            <td class="px-4 py-3 font-mono text-sm text-[var(--color-text-primary)]">{{ item.score }}</td>
+            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ item.solved }}</td>
           </tr>
         </tbody>
       </table>

@@ -1,18 +1,18 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[#c9d1d9]">靶场训练</h1>
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">靶场训练</h1>
       <div class="flex gap-3">
         <input
           v-model="searchQuery"
           type="text"
           placeholder="搜索挑战..."
-          class="w-64 rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-[#c9d1d9] placeholder-[#6e7681] focus:border-[#0891b2] focus:outline-none"
+          class="w-64 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none"
           @input="onSearch"
         />
         <select
           v-model="categoryFilter"
-          class="rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-[#c9d1d9] focus:border-[#0891b2] focus:outline-none"
+          class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
           @change="onFilterChange"
         >
           <option value="">全部分类</option>
@@ -25,7 +25,7 @@
         </select>
         <select
           v-model="difficultyFilter"
-          class="rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-[#c9d1d9] focus:border-[#0891b2] focus:outline-none"
+          class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
           @change="onFilterChange"
         >
           <option value="">全部难度</option>
@@ -39,22 +39,22 @@
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
     <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <div
         v-for="challenge in list"
         :key="challenge.id"
-        class="cursor-pointer rounded-lg border bg-[#161b22] transition-all hover:border-[#0891b2]/50"
-        :class="challenge.is_solved ? 'border-green-500/30' : 'border-[#30363d]'"
+        class="cursor-pointer rounded-lg border bg-[var(--color-bg-surface)] transition-all hover:border-[var(--color-primary)]/50"
+        :class="challenge.is_solved ? 'border-green-500/30' : 'border-[var(--color-border-default)]'"
         :style="{ borderTopWidth: '2px', borderTopColor: getCategoryBorderColor(challenge.category) }"
         @click="goToDetail(challenge.id)"
       >
         <div class="space-y-3 p-4">
           <div class="flex items-start justify-between">
-            <h3 class="font-mono text-lg font-medium text-[#c9d1d9]">{{ challenge.title }}</h3>
-            <span class="font-mono text-sm text-[#0891b2]">{{ challenge.points }}pts</span>
+            <h3 class="font-mono text-lg font-medium text-[var(--color-text-primary)]">{{ challenge.title }}</h3>
+            <span class="font-mono text-sm text-[var(--color-primary)]">{{ challenge.points }}pts</span>
           </div>
 
           <div class="flex flex-wrap gap-2">
@@ -72,18 +72,18 @@
             </span>
           </div>
 
-          <p class="line-clamp-2 text-sm text-[#8b949e]">
+          <p class="line-clamp-2 text-sm text-[var(--color-text-secondary)]">
             {{ challenge.description || '暂无描述' }}
           </p>
 
           <div class="flex items-center justify-between">
-            <span class="text-xs text-[#6e7681]">{{ challenge.solved_count }} 人解出</span>
+            <span class="text-xs text-[var(--color-text-muted)]">{{ challenge.solved_count }} 人解出</span>
             <button
               class="rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
               :class="
                 challenge.is_solved
-                  ? 'bg-[#21262d] text-[#8b949e] hover:bg-[#30363d]'
-                  : 'bg-[#0891b2] text-white hover:bg-[#0891b2]/90'
+                  ? 'bg-[#21262d] text-[var(--color-text-secondary)] hover:bg-[#30363d]'
+                  : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/90'
               "
             >
               {{ challenge.is_solved ? '查看详情' : '开始挑战' }}
@@ -93,20 +93,20 @@
       </div>
     </div>
 
-    <div v-if="!loading && total > 0" class="flex items-center justify-between border-t border-[#30363d] pt-4">
-      <span class="text-sm text-[#8b949e]">共 {{ total }} 个挑战</span>
+    <div v-if="!loading && total > 0" class="flex items-center justify-between border-t border-[var(--color-border-default)] pt-4">
+      <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 个挑战</span>
       <div class="flex items-center gap-2">
         <button
           :disabled="page === 1"
-          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
           @click="changePage(page - 1)"
         >
           上一页
         </button>
-        <span class="text-sm text-[#8b949e]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+        <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
         <button
           :disabled="page >= Math.ceil(total / pageSize)"
-          class="rounded-lg border border-[#30363d] px-3 py-1.5 text-sm text-[#c9d1d9] transition-colors hover:border-[#0891b2] disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
           @click="changePage(page + 1)"
         >
           下一页

@@ -1,23 +1,23 @@
 <template>
   <div class="space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[#e6edf3]">我的实例</h1>
-      <span class="text-sm text-[#8b949e]">运行中: {{ runningCount }}/{{ maxInstances }}</span>
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">我的实例</h1>
+      <span class="text-sm text-[var(--color-text-secondary)]">运行中: {{ runningCount }}/{{ maxInstances }}</span>
     </div>
 
     <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
     <div v-else class="space-y-4">
       <div
         v-for="instance in mockInstances"
         :key="instance.id"
-        class="rounded-lg border border-[#30363d] bg-[#161b22] p-5"
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5"
       >
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-[#e6edf3]">{{ instance.title }}</h3>
+            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">{{ instance.title }}</h3>
             <div class="flex gap-2">
               <span class="rounded bg-[#06b6d4]/10 px-2 py-0.5 text-xs font-medium text-[#06b6d4]">
                 {{ instance.category }}
@@ -30,17 +30,17 @@
 
           <div class="flex items-center gap-2 text-sm">
             <span :class="getStatusClass(instance.status)">●</span>
-            <span class="text-[#8b949e]">{{ getStatusLabel(instance.status) }}</span>
+            <span class="text-[var(--color-text-secondary)]">{{ getStatusLabel(instance.status) }}</span>
           </div>
 
           <div v-if="instance.status === 'running'" class="space-y-2 text-sm">
             <div class="flex items-center justify-between">
-              <span class="text-[#8b949e]">地址:</span>
-              <span class="font-mono text-[#e6edf3]">{{ instance.address }}</span>
+              <span class="text-[var(--color-text-secondary)]">地址:</span>
+              <span class="font-mono text-[var(--color-text-primary)]">{{ instance.address }}</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-[#8b949e]">剩余:</span>
-              <span class="font-mono" :class="instance.remaining < 300 ? 'text-[#f59e0b]' : 'text-[#e6edf3]'">
+              <span class="text-[var(--color-text-secondary)]">剩余:</span>
+              <span class="font-mono" :class="instance.remaining < 300 ? 'text-[#f59e0b]' : 'text-[var(--color-text-primary)]'">
                 {{ formatTime(instance.remaining) }}
               </span>
             </div>
@@ -49,7 +49,7 @@
           <div class="flex gap-3">
             <button
               v-if="instance.status === 'running'"
-              class="rounded-lg border border-[#30363d] bg-[#21262d] px-4 py-2 text-sm font-medium text-[#e6edf3] transition-colors duration-150 hover:bg-[#30363d]"
+              class="rounded-lg border border-[var(--color-border-default)] bg-[#21262d] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors duration-150 hover:bg-[#30363d]"
             >
               延时 +30min
             </button>
@@ -63,7 +63,7 @@
       </div>
 
       <div v-if="mockInstances.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="text-[#6e7681]">暂无运行中的实例</div>
+        <div class="text-[var(--color-text-muted)]">暂无运行中的实例</div>
       </div>
     </div>
   </div>
@@ -93,8 +93,8 @@ function getStatusLabel(status: string): string {
 
 function getStatusClass(status: string): string {
   if (status === 'running') return 'text-[#22c55e]'
-  if (status === 'expired') return 'text-[#6e7681]'
-  return 'text-[#0891b2]'
+  if (status === 'expired') return 'text-[var(--color-text-muted)]'
+  return 'text-[var(--color-primary)]'
 }
 
 function formatTime(seconds: number): string {

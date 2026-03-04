@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
     <div v-else-if="challenge" class="space-y-6">
       <div class="flex items-start justify-between">
         <div class="space-y-3">
-          <h1 class="text-3xl font-bold text-[#c9d1d9]">{{ challenge.title }}</h1>
+          <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">{{ challenge.title }}</h1>
           <div class="flex flex-wrap gap-2">
             <span
               class="rounded px-3 py-1 text-sm font-medium"
@@ -21,34 +21,34 @@
             >
               {{ getDifficultyLabel(challenge.difficulty) }}
             </span>
-            <span v-for="tag in challenge.tags" :key="tag" class="rounded bg-[#21262d] px-3 py-1 text-sm text-[#8b949e]">
+            <span v-for="tag in challenge.tags" :key="tag" class="rounded bg-[#21262d] px-3 py-1 text-sm text-[var(--color-text-secondary)]">
               {{ tag }}
             </span>
           </div>
-          <div class="text-sm text-[#8b949e]">{{ challenge.solved_count }} 人解出</div>
+          <div class="text-sm text-[var(--color-text-secondary)]">{{ challenge.solved_count }} 人解出</div>
         </div>
         <div class="text-right">
-          <div class="font-mono text-3xl font-bold text-[#0891b2]">{{ challenge.points }}pts</div>
+          <div class="font-mono text-3xl font-bold text-[var(--color-primary)]">{{ challenge.points }}pts</div>
           <span v-if="challenge.is_solved" class="mt-2 inline-block rounded bg-green-500/20 px-3 py-1 text-sm font-medium text-green-500">
             已完成 ✓
           </span>
         </div>
       </div>
 
-      <div class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
-        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">挑战描述</h2>
-        <div v-html="sanitizedDescription" class="prose prose-invert max-w-none text-[#8b949e]"></div>
+      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">挑战描述</h2>
+        <div v-html="sanitizedDescription" class="prose prose-invert max-w-none text-[var(--color-text-secondary)]"></div>
         <button
           v-if="challenge.attachment_url"
-          class="mt-4 rounded-lg bg-[#21262d] px-4 py-2 text-sm text-[#c9d1d9] transition-colors hover:bg-[#30363d]"
+          class="mt-4 rounded-lg bg-[#21262d] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#30363d]"
           @click="downloadAttachment"
         >
           下载附件
         </button>
       </div>
 
-      <div class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
-        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">Flag 提交</h2>
+      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">Flag 提交</h2>
         <div class="space-y-4">
           <div class="flex gap-2">
             <input
@@ -56,13 +56,13 @@
               type="text"
               placeholder="flag{...}"
               :disabled="challenge.is_solved"
-              class="flex-1 rounded-lg border bg-[#0d1117] px-4 py-2 font-mono text-[#c9d1d9] placeholder-[#6e7681] transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              class="flex-1 rounded-lg border bg-[var(--color-bg-base)] px-4 py-2 font-mono text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               :class="submitResult?.success ? 'border-green-500' : 'border-[#0891b2]'"
               @keyup.enter="submitFlagHandler"
             />
             <button
               :disabled="challenge.is_solved || submitting"
-              class="rounded-lg bg-[#0891b2] px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              class="rounded-lg bg-[var(--color-primary)] px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
               @click="submitFlagHandler"
             >
               {{ submitting ? '提交中...' : '提交' }}
@@ -74,17 +74,17 @@
         </div>
       </div>
 
-      <div v-if="!challenge.is_solved" class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
-        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">靶机实例</h2>
+      <div v-if="!challenge.is_solved" class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">靶机实例</h2>
         <div class="space-y-4">
           <button
             :disabled="creating"
-            class="rounded-lg bg-[#0891b2] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+            class="rounded-lg bg-[var(--color-primary)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
             @click="startChallenge"
           >
             {{ creating ? '正在创建实例...' : '启动靶机' }}
           </button>
-          <div class="text-sm text-[#6e7681]">点击按钮创建专属实例，实例有效期为 2 小时</div>
+          <div class="text-sm text-[var(--color-text-muted)]">点击按钮创建专属实例，实例有效期为 2 小时</div>
         </div>
       </div>
     </div>

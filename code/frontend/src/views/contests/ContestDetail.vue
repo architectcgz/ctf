@@ -1,27 +1,27 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
 
     <div v-else-if="contest" class="space-y-6">
-      <div class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
-        <h1 class="text-3xl font-bold text-[#e6edf3]">{{ contest.title }}</h1>
-        <p class="mt-3 text-[#8b949e]">{{ contest.description }}</p>
+      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">{{ contest.title }}</h1>
+        <p class="mt-3 text-[var(--color-text-secondary)]">{{ contest.description }}</p>
 
         <div class="mt-4 flex items-center gap-4 text-sm">
           <span class="rounded px-2 py-0.5 text-xs font-medium" :class="getStatusBadgeClass(contest.status)">
             {{ getStatusLabel(contest.status) }}
           </span>
-          <span class="text-[#8b949e]">{{ getModeLabel(contest.mode) }}</span>
+          <span class="text-[var(--color-text-secondary)]">{{ getModeLabel(contest.mode) }}</span>
         </div>
 
-        <div class="mt-4 font-mono text-sm text-[#8b949e]">
+        <div class="mt-4 font-mono text-sm text-[var(--color-text-secondary)]">
           {{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}
         </div>
       </div>
 
-      <div class="text-center text-[#6e7681]">竞赛详情页面开发中...</div>
+      <div class="text-center text-[var(--color-text-muted)]">竞赛详情页面开发中...</div>
     </div>
   </div>
 </template>
@@ -62,9 +62,9 @@ function getModeLabel(mode: ContestMode): string {
 }
 
 function getStatusBadgeClass(status: ContestStatus): string {
-  if (status === 'running') return 'bg-[#0891b2]/10 text-[#06b6d4]'
+  if (status === 'running') return 'bg-[var(--color-primary)]/10 text-[#06b6d4]'
   if (status === 'registering') return 'bg-[#f59e0b]/10 text-[#f59e0b]'
-  return 'bg-[#30363d] text-[#8b949e]'
+  return 'bg-[#30363d] text-[var(--color-text-secondary)]'
 }
 
 function formatTime(time: string): string {
