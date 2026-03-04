@@ -15,8 +15,26 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    <div v-if="loading" class="space-y-6">
+      <div class="bg-surface rounded-lg p-6 border border-border">
+        <div class="h-6 w-32 bg-background animate-pulse rounded mb-4"></div>
+        <div class="w-full h-[400px] bg-background animate-pulse rounded"></div>
+      </div>
+      <div class="bg-surface rounded-lg p-6 border border-border">
+        <div class="h-6 w-24 bg-background animate-pulse rounded mb-4"></div>
+        <div class="space-y-3">
+          <div class="h-20 bg-background animate-pulse rounded"></div>
+          <div class="h-20 bg-background animate-pulse rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="bg-error/10 border border-error/30 rounded-lg p-8 text-center">
+      <p class="text-error mb-4">{{ error }}</p>
+      <button @click="loadSkillProfile" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+        重试
+      </button>
     </div>
 
     <!-- 空状态 -->
@@ -55,7 +73,7 @@
           <div
             v-for="item in recommendations"
             :key="item.challenge_id"
-            class="flex items-start justify-between p-4 bg-background rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+            class="flex items-start justify-between p-4 bg-background rounded-lg border border-border hover:border-primary hover:bg-surface transition-all cursor-pointer"
             @click="goToChallenge(item.challenge_id)"
           >
             <div class="flex-1">
@@ -81,24 +99,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 
 import { getRecommendations, getSkillProfile } from '@/api/assessment'
-import { getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
+import { getClassStudents, getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
 import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
+const WEAK_DIMENSION_THRESHOLD = 60
+
 const isTeacher = computed(() => authStore.isTeacher)
 const selectedStudentId = ref('')
 const students = ref<TeacherStudentItem[]>([])
 
 const loading = ref(false)
+const error = ref<string | null>(null)
 const skillProfile = ref<SkillProfileData | null>(null)
 const chartRef = ref<HTMLElement>()
 let chartInstance: echarts.ECharts | null = null
@@ -106,17 +127,30 @@ let chartInstance: echarts.ECharts | null = null
 const loadingRecommendations = ref(false)
 const recommendations = ref<RecommendationItem[]>([])
 
-// 薄弱项（分数低于 60）
 const weakDimensions = computed(() => {
   if (!skillProfile.value) return []
   return skillProfile.value.dimensions
-    .filter(d => d.value < 60)
+    .filter(d => d.value < WEAK_DIMENSION_THRESHOLD)
     .map(d => d.name)
 })
+
+// 加载学员列表
+async function loadStudents() {
+  if (!isTeacher.value) return
+  try {
+    const className = authStore.user?.class_name
+    if (className) {
+      students.value = await getClassStudents(className)
+    }
+  } catch (err) {
+    console.error('加载学员列表失败:', err)
+  }
+}
 
 // 加载能力画像
 async function loadSkillProfile() {
   loading.value = true
+  error.value = null
   try {
     if (selectedStudentId.value) {
       skillProfile.value = await getStudentSkillProfile(selectedStudentId.value)
@@ -124,8 +158,9 @@ async function loadSkillProfile() {
       skillProfile.value = await getSkillProfile()
     }
     renderChart()
-  } catch (error) {
-    console.error('加载能力画像失败:', error)
+  } catch (err) {
+    console.error('加载能力画像失败:', err)
+    error.value = '加载能力画像失败，请稍后重试'
     skillProfile.value = null
   } finally {
     loading.value = false
@@ -141,8 +176,8 @@ async function loadRecommendations() {
     } else {
       recommendations.value = await getRecommendations()
     }
-  } catch (error) {
-    console.error('加载推荐靶场失败:', error)
+  } catch (err) {
+    console.error('加载推荐靶场失败:', err)
     recommendations.value = []
   } finally {
     loadingRecommendations.value = false
@@ -157,25 +192,30 @@ function renderChart() {
     chartInstance = echarts.init(chartRef.value)
   }
 
+  const styles = getComputedStyle(document.documentElement)
+  const primaryColor = styles.getPropertyValue('--color-primary').trim() || '#3b82f6'
+  const borderColor = styles.getPropertyValue('--color-border').trim() || '#e5e7eb'
+  const textSecondary = styles.getPropertyValue('--color-text-secondary').trim() || '#666'
+
   const dimensions = skillProfile.value.dimensions
   const option: EChartsOption = {
     radar: {
       indicator: dimensions.map(d => ({ name: d.name, max: 100 })),
       radius: '65%',
       splitNumber: 4,
-      axisName: { color: '#666' },
-      splitLine: { lineStyle: { color: '#e5e7eb' } },
+      axisName: { color: textSecondary },
+      splitLine: { lineStyle: { color: borderColor } },
       splitArea: { show: false },
-      axisLine: { lineStyle: { color: '#e5e7eb' } }
+      axisLine: { lineStyle: { color: borderColor } }
     },
     series: [{
       type: 'radar',
       data: [{
         value: dimensions.map(d => d.value),
         name: '能力值',
-        areaStyle: { color: 'rgba(59, 130, 246, 0.2)' },
-        lineStyle: { color: '#3b82f6', width: 2 },
-        itemStyle: { color: '#3b82f6' }
+        areaStyle: { color: `${primaryColor}33` },
+        lineStyle: { color: primaryColor, width: 2 },
+        itemStyle: { color: primaryColor }
       }]
     }],
     tooltip: {
@@ -229,11 +269,18 @@ watch(selectedStudentId, () => {
   loadRecommendations()
 })
 
+const handleResize = () => chartInstance?.resize()
+
 onMounted(() => {
+  loadStudents()
   loadSkillProfile()
   loadRecommendations()
+  window.addEventListener('resize', handleResize)
+})
 
-  // 响应式调整图表大小
-  window.addEventListener('resize', () => chartInstance?.resize())
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize)
+  chartInstance?.dispose()
+  chartInstance = null
 })
 </script>
