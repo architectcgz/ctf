@@ -1,58 +1,92 @@
 <template>
-  <div v-loading="loading" class="space-y-6">
-    <div v-if="challenge" class="space-y-6">
+  <div class="space-y-6">
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[#30363d] border-t-[#0891b2]"></div>
+    </div>
+
+    <div v-else-if="challenge" class="space-y-6">
       <div class="flex items-start justify-between">
-        <div class="space-y-2">
-          <h1 class="text-3xl font-bold">{{ challenge.title }}</h1>
+        <div class="space-y-3">
+          <h1 class="text-3xl font-bold text-[#c9d1d9]">{{ challenge.title }}</h1>
           <div class="flex flex-wrap gap-2">
-            <ElTag :type="getCategoryColor(challenge.category)" size="large">{{ getCategoryLabel(challenge.category) }}</ElTag>
-            <ElTag :type="getDifficultyColor(challenge.difficulty)" size="large">{{ getDifficultyLabel(challenge.difficulty) }}</ElTag>
-            <ElTag v-for="tag in challenge.tags" :key="tag" size="large">{{ tag }}</ElTag>
+            <span
+              class="rounded px-3 py-1 text-sm font-medium"
+              :style="{ backgroundColor: getCategoryColor(challenge.category) + '20', color: getCategoryColor(challenge.category) }"
+            >
+              {{ getCategoryLabel(challenge.category) }}
+            </span>
+            <span
+              class="rounded px-3 py-1 text-sm font-medium"
+              :style="{ backgroundColor: getDifficultyColor(challenge.difficulty) + '20', color: getDifficultyColor(challenge.difficulty) }"
+            >
+              {{ getDifficultyLabel(challenge.difficulty) }}
+            </span>
+            <span v-for="tag in challenge.tags" :key="tag" class="rounded bg-[#21262d] px-3 py-1 text-sm text-[#8b949e]">
+              {{ tag }}
+            </span>
           </div>
+          <div class="text-sm text-[#8b949e]">{{ challenge.solved_count }} 人解出</div>
         </div>
         <div class="text-right">
-          <div class="text-3xl font-bold text-primary">{{ challenge.points }} 分</div>
-          <ElTag v-if="challenge.is_solved" type="success" size="large" class="mt-2">已完成</ElTag>
+          <div class="font-mono text-3xl font-bold text-[#0891b2]">{{ challenge.points }}pts</div>
+          <span v-if="challenge.is_solved" class="mt-2 inline-block rounded bg-green-500/20 px-3 py-1 text-sm font-medium text-green-500">
+            已完成 ✓
+          </span>
         </div>
       </div>
 
-      <ElCard>
-        <template #header>
-          <span class="font-semibold">挑战描述</span>
-        </template>
-        <div v-html="sanitizedDescription" class="prose max-w-none"></div>
-        <div v-if="challenge.attachment_url" class="mt-4">
-          <ElButton @click="downloadAttachment">下载附件</ElButton>
-        </div>
-      </ElCard>
+      <div class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">挑战描述</h2>
+        <div v-html="sanitizedDescription" class="prose prose-invert max-w-none text-[#8b949e]"></div>
+        <button
+          v-if="challenge.attachment_url"
+          class="mt-4 rounded-lg bg-[#21262d] px-4 py-2 text-sm text-[#c9d1d9] transition-colors hover:bg-[#30363d]"
+          @click="downloadAttachment"
+        >
+          下载附件
+        </button>
+      </div>
 
-      <ElCard v-if="!challenge.is_solved">
-        <template #header>
-          <span class="font-semibold">开始挑战</span>
-        </template>
+      <div class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">Flag 提交</h2>
         <div class="space-y-4">
-          <ElButton type="primary" size="large" :loading="creating" @click="startChallenge">
-            {{ creating ? '正在创建实例...' : '开始挑战' }}
-          </ElButton>
-          <div class="text-sm text-gray-600">点击按钮创建专属实例，实例有效期为 2 小时</div>
-        </div>
-      </ElCard>
-
-      <ElCard>
-        <template #header>
-          <span class="font-semibold">提交 Flag</span>
-        </template>
-        <div class="space-y-4">
-          <ElInput v-model="flagInput" placeholder="flag{...}" :disabled="challenge.is_solved" @keyup.enter="submitFlagHandler">
-            <template #append>
-              <ElButton :loading="submitting" :disabled="challenge.is_solved" @click="submitFlagHandler">提交</ElButton>
-            </template>
-          </ElInput>
-          <div v-if="submitResult" :class="submitResult.success ? 'text-green-600' : 'text-red-600'">
+          <div class="flex gap-2">
+            <input
+              v-model="flagInput"
+              type="text"
+              placeholder="flag{...}"
+              :disabled="challenge.is_solved"
+              class="flex-1 rounded-lg border bg-[#0d1117] px-4 py-2 font-mono text-[#c9d1d9] placeholder-[#6e7681] transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              :class="submitResult?.success ? 'border-green-500' : 'border-[#0891b2]'"
+              @keyup.enter="submitFlagHandler"
+            />
+            <button
+              :disabled="challenge.is_solved || submitting"
+              class="rounded-lg bg-[#0891b2] px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              @click="submitFlagHandler"
+            >
+              {{ submitting ? '提交中...' : '提交' }}
+            </button>
+          </div>
+          <div v-if="submitResult" :class="submitResult.success ? 'text-green-500' : 'text-red-500'" class="text-sm">
             {{ submitResult.message }}
           </div>
         </div>
-      </ElCard>
+      </div>
+
+      <div v-if="!challenge.is_solved" class="rounded-lg border border-[#30363d] bg-[#161b22] p-6">
+        <h2 class="mb-4 text-lg font-semibold text-[#c9d1d9]">靶机实例</h2>
+        <div class="space-y-4">
+          <button
+            :disabled="creating"
+            class="rounded-lg bg-[#0891b2] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0891b2]/90 disabled:cursor-not-allowed disabled:opacity-50"
+            @click="startChallenge"
+          >
+            {{ creating ? '正在创建实例...' : '启动靶机' }}
+          </button>
+          <div class="text-sm text-[#6e7681]">点击按钮创建专属实例，实例有效期为 2 小时</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -60,7 +94,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
 import { getChallengeDetail, submitFlag, createInstance } from '@/api/challenge'
 import { useSanitize } from '@/composables/useSanitize'
 import { useToast } from '@/composables/useToast'
@@ -149,12 +182,12 @@ function getCategoryLabel(category: ChallengeCategory): string {
 
 function getCategoryColor(category: ChallengeCategory): string {
   const colors: Record<ChallengeCategory, string> = {
-    web: 'primary',
-    pwn: 'danger',
-    reverse: 'warning',
-    crypto: 'success',
-    misc: 'info',
-    forensics: '',
+    web: '#3b82f6',
+    pwn: '#ef4444',
+    reverse: '#8b5cf6',
+    crypto: '#f59e0b',
+    misc: '#10b981',
+    forensics: '#06b6d4',
   }
   return colors[category]
 }
@@ -172,11 +205,11 @@ function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
 
 function getDifficultyColor(difficulty: ChallengeDifficulty): string {
   const colors: Record<ChallengeDifficulty, string> = {
-    beginner: 'info',
-    easy: 'success',
-    medium: 'warning',
-    hard: 'danger',
-    hell: 'danger',
+    beginner: '#10b981',
+    easy: '#3b82f6',
+    medium: '#f59e0b',
+    hard: '#ef4444',
+    hell: '#7c3aed',
   }
   return colors[difficulty]
 }
@@ -185,4 +218,3 @@ onMounted(() => {
   loadChallenge()
 })
 </script>
-
