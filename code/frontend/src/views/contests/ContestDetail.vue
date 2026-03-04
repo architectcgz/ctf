@@ -126,9 +126,11 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getContestDetail, getContestChallenges, getMyTeam, createTeam, joinTeam, kickTeamMember, submitContestFlag } from '@/api/contest'
-import type { ContestDetailData, ContestStatus, ContestMode, ContestChallengeItem, TeamData, SubmitFlagData } from '@/api/contracts'
+import type { ContestDetailData, ContestChallengeItem, TeamData, SubmitFlagData } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
+import { formatTime, formatDuration } from '@/utils/format'
+import { getStatusLabel, getModeLabel, getStatusBadgeClass } from '@/utils/contest'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -208,18 +210,6 @@ function startCountdown() {
       }
     }
   }, 1000)
-}
-
-function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-
-  if (days > 0) return `${days}天 ${hours % 24}时`
-  if (hours > 0) return `${hours}时 ${minutes % 60}分`
-  if (minutes > 0) return `${minutes}分 ${seconds % 60}秒`
-  return `${seconds}秒`
 }
 
 function selectChallenge(chal: ContestChallengeItem) {
@@ -334,31 +324,5 @@ async function kickMember(userId: string) {
     console.error(err)
     toast.error(err instanceof Error ? err.message : '踢出成员失败')
   }
-}
-
-function getStatusLabel(status: ContestStatus): string {
-  const labels: Record<ContestStatus, string> = {
-    draft: '草稿', published: '已发布', registering: '报名中',
-    running: '进行中', frozen: '已冻结', ended: '已结束',
-    cancelled: '已取消', archived: '已归档'
-  }
-  return labels[status] || status
-}
-
-function getModeLabel(mode: ContestMode): string {
-  const labels: Record<ContestMode, string> = {
-    jeopardy: 'Jeopardy', awd: 'AWD', awd_plus: 'AWD Plus', king_of_hill: 'King of Hill'
-  }
-  return labels[mode] || mode
-}
-
-function getStatusBadgeClass(status: ContestStatus): string {
-  if (status === 'running') return 'bg-[var(--color-primary)]/10 text-[#06b6d4]'
-  if (status === 'registering') return 'bg-[#f59e0b]/10 text-[#f59e0b]'
-  return 'bg-[#30363d] text-[var(--color-text-secondary)]'
-}
-
-function formatTime(time: string): string {
-  return new Date(time).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 </script>
