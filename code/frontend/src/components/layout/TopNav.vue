@@ -8,11 +8,11 @@
       <div class="flex items-center gap-2">
         <button
           @click="toggleTheme"
-          class="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-elevated text-text-secondary transition-colors hover:bg-surface hover:text-text-primary"
+          class="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] transition-colors duration-150 hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-text-primary)]"
           :aria-label="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'"
         >
-          <Sun v-if="theme === 'dark'" class="h-4 w-4" />
-          <Moon v-else class="h-4 w-4" />
+          <Sun v-if="theme === 'dark'" class="h-5 w-5" />
+          <Moon v-else class="h-5 w-5" />
         </button>
 
         <NotificationDropdown />
