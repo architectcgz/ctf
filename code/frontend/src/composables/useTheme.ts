@@ -1,8 +1,9 @@
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 
 type Theme = 'light' | 'dark'
 
-const theme = ref<Theme>('light')
+const theme = ref<Theme>('dark')
+const initialized = ref(false)
 
 export function useTheme() {
   const setTheme = (newTheme: Theme) => {
@@ -16,16 +17,12 @@ export function useTheme() {
   }
 
   const initTheme = () => {
+    if (initialized.value) return
+    initialized.value = true
     const saved = localStorage.getItem('theme') as Theme | null
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     setTheme(saved || (prefersDark ? 'dark' : 'light'))
   }
-
-  onMounted(() => {
-    if (!localStorage.getItem('theme')) {
-      initTheme()
-    }
-  })
 
   return { theme, toggleTheme, initTheme }
 }
