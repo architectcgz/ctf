@@ -1,29 +1,27 @@
 app:
-  name: ctf-platform
   env: prod
-
-http:
-  host: 0.0.0.0
-  port: 8080
-  read_timeout: 15s
-  write_timeout: 15s
-  idle_timeout: 60s
+  version: 1.0.0
 
 log:
   level: info
   format: json
 
 postgres:
-  host: 127.0.0.1
-  port: 5432
-  database: ctf
   username: ctf
   password: change_me
   ssl_mode: require
   max_open_conns: 40
   max_idle_conns: 20
+  conn_max_lifetime: 30m
 
 redis:
-  addr: 127.0.0.1:6379
   password: change_me
   db: 0
+
+cors:
+  allow_origins: []
+
+auth:
+  refresh_cookie_secure: true
+  private_key_path: /etc/ctf/keys/private.pem
+  public_key_path: /etc/ctf/keys/public.pem

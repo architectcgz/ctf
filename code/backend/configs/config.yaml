@@ -1,0 +1,91 @@
+app:
+  name: ctf-platform
+  env: dev
+  version: dev
+
+http:
+  host: 0.0.0.0
+  port: 8080
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+
+log:
+  level: info
+  format: json
+  output_paths:
+    - stdout
+  error_output_paths:
+    - stderr
+
+postgres:
+  host: 127.0.0.1
+  port: 5432
+  database: ctf
+  username: postgres
+  password: postgres123456
+  ssl_mode: disable
+  max_open_conns: 20
+  max_idle_conns: 10
+  conn_max_lifetime: 30m
+
+redis:
+  addr: 127.0.0.1:6379
+  password: redis123456
+  db: 2
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+
+cors:
+  allow_origins:
+    - http://localhost:5173
+    - http://127.0.0.1:5173
+  allow_methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  allow_headers:
+    - Authorization
+    - Content-Type
+    - X-Request-ID
+  expose_headers:
+    - X-Request-ID
+    - X-RateLimit-Limit
+    - X-RateLimit-Remaining
+    - X-RateLimit-Reset
+    - Retry-After
+  allow_credentials: true
+  max_age: 12h
+
+auth:
+  issuer: ctf-platform
+  access_token_ttl: 15m
+  refresh_token_ttl: 168h
+  refresh_cookie_name: ctf_refresh_token
+  refresh_cookie_path: /api/v1/auth
+  refresh_cookie_secure: false
+  refresh_cookie_http_only: true
+  refresh_cookie_same_site: lax
+  private_key_path: configs/keys/dev_private.pem
+  public_key_path: configs/keys/dev_public.pem
+  token_blacklist_prefix: ctf:auth:blacklist
+
+rate_limit:
+  redis_key_prefix: ctf:ratelimit
+  global:
+    enabled: true
+    limit: 120
+    window: 1m
+  login:
+    enabled: true
+    limit: 10
+    window: 1m
+  flag_submit:
+    enabled: true
+    limit: 5
+    window: 1m
+
