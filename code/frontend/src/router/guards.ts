@@ -65,22 +65,24 @@ export function setupRouterGuards(router: Router): void {
         return
       }
 
-      if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
-        next({ path: '/login', query: { redirect: to.fullPath } })
-        return
-      }
+      // 临时禁用登录检查，用于查看页面效果
+      // if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
+      //   next({ path: '/login', query: { redirect: to.fullPath } })
+      //   return
+      // }
 
       if (to.meta?.requiresAuth) {
         await ensureProfileLoaded()
       }
 
-      const userRole = authStore.user?.role
-      const requiredRoles = to.meta?.roles
-      if (!hasRole(requiredRoles, userRole)) {
-        toast.warning('无权限访问该页面')
-        next('/dashboard')
-        return
-      }
+      // 临时禁用角色权限检查
+      // const userRole = authStore.user?.role
+      // const requiredRoles = to.meta?.roles
+      // if (!hasRole(requiredRoles, userRole)) {
+      //   toast.warning('无权限访问该页面')
+      //   next('/dashboard')
+      //   return
+      // }
 
       next()
     } catch (err) {

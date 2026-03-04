@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-base text-text-primary">
+  <div class="app-root">
     <RouterView />
     <AppToast />
   </div>
@@ -17,3 +17,11 @@ onMounted(() => {
   initTheme()
 })
 </script>
+
+<style scoped>
+.app-root {
+  min-height: 100vh;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+}
+</style>
