@@ -6,3 +6,7 @@ export function formatDurationHms(totalSeconds: number): string {
   return [hours, minutes, seconds].map((v) => String(v).padStart(2, '0')).join(':')
 }
 
+export function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleString('zh-CN')
+}
+
