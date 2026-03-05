@@ -12,9 +12,9 @@ type ContainerConfig struct {
 
 // ResourceLimits 资源限制
 type ResourceLimits struct {
-	CPUQuota  int64
-	Memory    int64
-	PidsLimit int64
+	CPUQuota  float64 // CPU 核心数，如 0.5 表示 0.5 核
+	Memory    int64   // 内存限制（字节）
+	PidsLimit int64   // 进程数限制
 }
 
 // SecurityConfig 安全配置

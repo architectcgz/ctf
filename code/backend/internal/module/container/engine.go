@@ -29,6 +29,19 @@ func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
 }
 
 func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error) {
+	// 运行时参数校验
+	if cfg.Resources != nil {
+		if cfg.Resources.CPUQuota <= 0 || cfg.Resources.CPUQuota > 16 {
+			return "", fmt.Errorf("invalid cpu quota: %f", cfg.Resources.CPUQuota)
+		}
+		if cfg.Resources.Memory < 64*1024*1024 || cfg.Resources.Memory > 16*1024*1024*1024 {
+			return "", fmt.Errorf("invalid memory: %d", cfg.Resources.Memory)
+		}
+		if cfg.Resources.PidsLimit <= 0 || cfg.Resources.PidsLimit > 10000 {
+			return "", fmt.Errorf("invalid pids limit: %d", cfg.Resources.PidsLimit)
+		}
+	}
+
 	if cfg.Resources == nil {
 		cfg.Resources = &model.ResourceLimits{
 			CPUQuota:  e.containerCfg.DefaultCPUQuota,
@@ -55,8 +68,9 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		exposedPorts[port] = struct{}{}
 	}
 
+	// CPU 配额转换：核心数 → 纳秒（1 核 = 1e9 纳秒）
 	resources := container.Resources{
-		NanoCPUs:  cfg.Resources.CPUQuota * 10000,
+		NanoCPUs:  int64(cfg.Resources.CPUQuota * 1e9),
 		Memory:    cfg.Resources.Memory,
 		PidsLimit: &cfg.Resources.PidsLimit,
 	}

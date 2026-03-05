@@ -100,8 +100,8 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota       int64    `mapstructure:"default_cpu_quota"`
-	DefaultMemory         int64    `mapstructure:"default_memory"`
+	DefaultCPUQuota       float64  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory         int64    `mapstructure:"default_memory"`    // 内存限制（字节）
 	DefaultPidsLimit      int64    `mapstructure:"default_pids_limit"`
 	ReadonlyRootfs        bool     `mapstructure:"readonly_rootfs"`
 	RunAsUser             string   `mapstructure:"run_as_user"`
@@ -149,14 +149,14 @@ func Load(env string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
-	if c.Container.DefaultCPUQuota <= 0 {
-		return fmt.Errorf("container.default_cpu_quota must be positive")
+	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
+		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
 	}
-	if c.Container.DefaultMemory <= 0 {
-		return fmt.Errorf("container.default_memory must be positive")
+	if c.Container.DefaultMemory < 64*1024*1024 || c.Container.DefaultMemory > 16*1024*1024*1024 {
+		return fmt.Errorf("container.default_memory must be between 64MB and 16GB")
 	}
-	if c.Container.DefaultPidsLimit <= 0 {
-		return fmt.Errorf("container.default_pids_limit must be positive")
+	if c.Container.DefaultPidsLimit <= 0 || c.Container.DefaultPidsLimit > 10000 {
+		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)
-	v.SetDefault("container.default_cpu_quota", 50000)
+	v.SetDefault("container.default_cpu_quota", 0.5)
 	v.SetDefault("container.default_memory", 268435456)
 	v.SetDefault("container.default_pids_limit", 100)
 	v.SetDefault("container.readonly_rootfs", false)
