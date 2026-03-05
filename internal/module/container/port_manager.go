@@ -26,26 +26,37 @@ func NewPortManager(start, end int) *PortManager {
 
 // AllocatePort 分配可用端口
 func (pm *PortManager) AllocatePort() (int, error) {
-	pm.mu.Lock()
-	defer pm.mu.Unlock()
-
 	// 尝试 100 次随机分配
 	for i := 0; i < 100; i++ {
-		port := pm.rangeStart + rand.Intn(pm.rangeEnd-pm.rangeStart)
-
-		// 检查是否已被使用
-		if pm.usedPorts[port] {
-			continue
+		port := pm.selectPort()
+		if port == 0 {
+			return 0, fmt.Errorf("无法分配可用端口")
 		}
 
-		// 检查端口是否真实可用
+		// 锁外验证端口可用性
 		if pm.isPortAvailable(port) {
+			pm.mu.Lock()
 			pm.usedPorts[port] = true
+			pm.mu.Unlock()
 			return port, nil
 		}
 	}
 
 	return 0, fmt.Errorf("无法分配可用端口")
+}
+
+// selectPort 在锁内选择一个未使用的端口
+func (pm *PortManager) selectPort() int {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	for i := 0; i < 100; i++ {
+		port := pm.rangeStart + rand.Intn(pm.rangeEnd-pm.rangeStart)
+		if !pm.usedPorts[port] {
+			return port
+		}
+	}
+	return 0
 }
 
 // ReleasePort 释放端口

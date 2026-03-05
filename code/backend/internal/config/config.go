@@ -105,6 +105,8 @@ type ContainerConfig struct {
 	DefaultPidsLimit int64  `mapstructure:"default_pids_limit"`
 	ReadonlyRootfs   bool   `mapstructure:"readonly_rootfs"`
 	RunAsUser        string `mapstructure:"run_as_user"`
+	PortRangeStart   int    `mapstructure:"port_range_start"`
+	PortRangeEnd     int    `mapstructure:"port_range_end"`
 }
 
 func Load(env string) (*Config, error) {
@@ -204,4 +206,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.default_pids_limit", 100)
 	v.SetDefault("container.readonly_rootfs", false)
 	v.SetDefault("container.run_as_user", "")
+	v.SetDefault("container.port_range_start", 30000)
+	v.SetDefault("container.port_range_end", 40000)
 }
