@@ -90,7 +90,6 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 	hostCfg := &container.HostConfig{
 		PortBindings: portBindings,
 		Resources:    resources,
-		NetworkMode:  container.NetworkMode(cfg.Network),
 		Privileged:   false, // 强制禁用特权模式
 	}
 
@@ -110,8 +109,16 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		}
 	}
 
+	// 构建网络配置
+	networkCfg := &network.NetworkingConfig{}
+	if cfg.Network != "" {
+		networkCfg.EndpointsConfig = map[string]*network.EndpointSettings{
+			cfg.Network: {},
+		}
+	}
+
 	// 创建容器
-	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, "")
+	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, networkCfg, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -197,6 +204,22 @@ func (e *Engine) Close() error {
 
 // CreateNetwork 创建 Docker 网络
 func (e *Engine) CreateNetwork(ctx context.Context, name string) (string, error) {
+	// 检查是否存在同名网络
+	networks, err := e.cli.NetworkList(ctx, types.NetworkListOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	for _, net := range networks {
+		if net.Name == name {
+			// 删除旧网络
+			if err := e.cli.NetworkRemove(ctx, net.ID); err != nil {
+				return "", err
+			}
+			break
+		}
+	}
+
 	resp, err := e.cli.NetworkCreate(ctx, name, types.NetworkCreate{
 		Driver: "bridge",
 		CheckDuplicate: true,
