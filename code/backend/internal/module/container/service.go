@@ -7,6 +7,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
@@ -14,12 +15,14 @@ import (
 
 type Service struct {
 	repo   *Repository
+	config *config.ContainerConfig
 	logger *zap.Logger
 }
 
-func NewService(repo *Repository, logger *zap.Logger) *Service {
+func NewService(repo *Repository, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
 	return &Service{
 		repo:   repo,
+		config: cfg,
 		logger: logger,
 	}
 }
@@ -30,7 +33,7 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if len(instances) >= 3 {
+	if len(instances) >= s.config.MaxConcurrentPerUser {
 		return nil, errcode.ErrInstanceLimitExceeded
 	}
 
@@ -40,8 +43,8 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 		ChallengeID: challengeID,
 		ContainerID: fmt.Sprintf("container-%d-%d", userID, time.Now().Unix()),
 		Status:      model.InstanceStatusCreating,
-		ExpiresAt:   time.Now().Add(2 * time.Hour),
-		MaxExtends:  2,
+		ExpiresAt:   time.Now().Add(s.config.DefaultTTL),
+		MaxExtends:  s.config.MaxExtends,
 	}
 
 	if err := s.repo.Create(instance); err != nil {
@@ -51,7 +54,16 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 	// TODO: 实际创建容器（B9-B11 实现后集成）
 	instance.Status = model.InstanceStatusRunning
 	instance.AccessURL = fmt.Sprintf("http://localhost:3%04d", 1000+instance.ID)
-	s.repo.UpdateStatus(instance.ID, model.InstanceStatusRunning)
+	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
+		s.logger.Error("更新实例状态失败", zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	s.logger.Info("创建实例",
+		zap.Int64("user_id", userID),
+		zap.Int64("challenge_id", challengeID),
+		zap.Int64("instance_id", instance.ID),
+		zap.Time("expires_at", instance.ExpiresAt))
 
 	return toInstanceResp(instance), nil
 }
@@ -65,7 +77,18 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 		return errcode.ErrForbidden
 	}
 
-	// TODO: 停止并删除容器
+	// TODO: 停止并删除容器（B9-B11 实现后集成）
+	// if err := s.containerEngine.RemoveContainer(ctx, instance.ContainerID); err != nil {
+	//     s.logger.Error("删除容器失败", zap.Error(err))
+	// }
+	// if err := s.containerEngine.RemoveNetwork(ctx, instance.NetworkID); err != nil {
+	//     s.logger.Error("删除网络失败", zap.Error(err))
+	// }
+
+	s.logger.Info("销毁实例",
+		zap.Int64("instance_id", instanceID),
+		zap.Int64("user_id", userID))
+
 	return s.repo.UpdateStatus(instanceID, model.InstanceStatusStopped)
 }
 
@@ -80,12 +103,18 @@ func (s *Service) ExtendInstance(instanceID, userID int64) error {
 	if instance.Status != model.InstanceStatusRunning {
 		return errcode.ErrInstanceExpired
 	}
-	if instance.ExtendCount >= instance.MaxExtends {
-		return errcode.ErrExtendLimitExceeded
+
+	// 使用原子更新避免并发竞争
+	if err := s.repo.AtomicExtend(instanceID, userID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
+		return err
 	}
 
-	newExpiresAt := instance.ExpiresAt.Add(1 * time.Hour)
-	return s.repo.UpdateExtend(instanceID, newExpiresAt, instance.ExtendCount+1)
+	s.logger.Info("延时实例",
+		zap.Int64("instance_id", instanceID),
+		zap.Int("extend_count", instance.ExtendCount+1),
+		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
+
+	return nil
 }
 
 func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
@@ -109,9 +138,29 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 
 	for _, inst := range instances {
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", inst.ID))
-		// TODO: 停止容器、删除容器、删除网络
+
+		// TODO: 实际清理容器资源（B9-B11 实现后集成）
+		// if err := s.containerEngine.RemoveContainer(ctx, inst.ContainerID); err != nil {
+		//     s.logger.Error("删除容器失败", zap.Error(err))
+		// }
+		// if inst.NetworkID != "" {
+		//     if err := s.containerEngine.RemoveNetwork(ctx, inst.NetworkID); err != nil {
+		//         s.logger.Error("删除网络失败", zap.Error(err))
+		//     }
+		// }
+
 		s.repo.UpdateStatus(inst.ID, model.InstanceStatusExpired)
 	}
+	return nil
+}
+
+func (s *Service) CleanupOrphans(ctx context.Context) error {
+	// TODO: 实现孤儿容器清理（B9-B11 实现后集成）
+	// 1. 获取所有运行中的容器列表
+	// 2. 查询数据库中的实例记录
+	// 3. 找出数据库中不存在但容器仍在运行的孤儿容器
+	// 4. 删除孤儿容器和网络
+	s.logger.Info("孤儿容器清理功能待实现")
 	return nil
 }
 

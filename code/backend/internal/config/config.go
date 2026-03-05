@@ -100,13 +100,18 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota  int64  `mapstructure:"default_cpu_quota"`
-	DefaultMemory    int64  `mapstructure:"default_memory"`
-	DefaultPidsLimit int64  `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs   bool   `mapstructure:"readonly_rootfs"`
-	RunAsUser        string `mapstructure:"run_as_user"`
-	PortRangeStart   int    `mapstructure:"port_range_start"`
-	PortRangeEnd     int    `mapstructure:"port_range_end"`
+	DefaultCPUQuota         int64         `mapstructure:"default_cpu_quota"`
+	DefaultMemory           int64         `mapstructure:"default_memory"`
+	DefaultPidsLimit        int64         `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs          bool          `mapstructure:"readonly_rootfs"`
+	RunAsUser               string        `mapstructure:"run_as_user"`
+	PortRangeStart          int           `mapstructure:"port_range_start"`
+	PortRangeEnd            int           `mapstructure:"port_range_end"`
+	MaxConcurrentPerUser    int           `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL              time.Duration `mapstructure:"default_ttl"`
+	MaxExtends              int           `mapstructure:"max_extends"`
+	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
+	CleanupInterval         string        `mapstructure:"cleanup_interval"`
 }
 
 func Load(env string) (*Config, error) {
@@ -208,4 +213,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.run_as_user", "")
 	v.SetDefault("container.port_range_start", 30000)
 	v.SetDefault("container.port_range_end", 40000)
+	v.SetDefault("container.max_concurrent_per_user", 3)
+	v.SetDefault("container.default_ttl", 2*time.Hour)
+	v.SetDefault("container.max_extends", 2)
+	v.SetDefault("container.extend_duration", 1*time.Hour)
+	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 }

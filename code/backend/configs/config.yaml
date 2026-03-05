@@ -97,4 +97,9 @@ container:
   run_as_user: ""               # 运行用户（空表示使用镜像默认用户）
   port_range_start: 30000       # 容器端口映射起始端口
   port_range_end: 40000         # 容器端口映射结束端口
+  max_concurrent_per_user: 3    # 每用户最大并发实例数
+  default_ttl: 2h               # 实例默认过期时间
+  max_extends: 2                # 最大延时次数
+  extend_duration: 1h           # 每次延时时长
+  cleanup_interval: "*/5 * * * *"  # 清理任务执行间隔（cron 表达式）
 

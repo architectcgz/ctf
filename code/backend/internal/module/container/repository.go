@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	"ctf-platform/pkg/errcode"
 )
 
 type Repository struct {
@@ -59,4 +60,21 @@ func (r *Repository) UpdateExtend(id int64, expiresAt time.Time, extendCount int
 			"expires_at":   expiresAt,
 			"extend_count": extendCount,
 		}).Error
+}
+
+func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, duration time.Duration) error {
+	result := r.db.Model(&model.Instance{}).
+		Where("id = ? AND user_id = ? AND status = ? AND extend_count < ?",
+			id, userID, model.InstanceStatusRunning, maxExtends).
+		Updates(map[string]interface{}{
+			"expires_at":   gorm.Expr("expires_at + ?", duration),
+			"extend_count": gorm.Expr("extend_count + 1"),
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errcode.ErrExtendLimitExceeded
+	}
+	return nil
 }
