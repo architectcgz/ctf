@@ -21,8 +21,8 @@ func NewCleaner(service *Service, logger *zap.Logger) *Cleaner {
 	}
 }
 
-func (c *Cleaner) Start() error {
-	_, err := c.cron.AddFunc("*/5 * * * *", func() {
+func (c *Cleaner) Start(interval string) error {
+	_, err := c.cron.AddFunc(interval, func() {
 		c.logger.Info("开始清理过期实例")
 		if err := c.service.CleanExpiredInstances(context.Background()); err != nil {
 			c.logger.Error("清理过期实例失败", zap.Error(err))
@@ -32,7 +32,7 @@ func (c *Cleaner) Start() error {
 		return err
 	}
 	c.cron.Start()
-	c.logger.Info("实例清理定时任务已启动")
+	c.logger.Info("实例清理定时任务已启动", zap.String("interval", interval))
 	return nil
 }
 
