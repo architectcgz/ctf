@@ -2,27 +2,51 @@ package container
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 )
 
 type Engine struct {
-	cli *client.Client
+	cli          *client.Client
+	containerCfg *config.ContainerConfig
 }
 
-func NewEngine() (*Engine, error) {
+func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
 	}
-	return &Engine{cli: cli}, nil
+	return &Engine{
+		cli:          cli,
+		containerCfg: cfg,
+	}, nil
 }
 
 func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error) {
+	if cfg.Resources == nil {
+		cfg.Resources = &model.ResourceLimits{
+			CPUQuota:  e.containerCfg.DefaultCPUQuota,
+			Memory:    e.containerCfg.DefaultMemory,
+			PidsLimit: e.containerCfg.DefaultPidsLimit,
+		}
+	}
+
+	if cfg.Security == nil {
+		cfg.Security = &model.SecurityConfig{
+			ReadonlyRootfs: e.containerCfg.ReadonlyRootfs,
+			CapDrop:        []string{"ALL"},
+			CapAdd:         e.containerCfg.AllowedCapabilities,
+			SecurityOpt:    []string{fmt.Sprintf("seccomp=%s", e.containerCfg.Seccomp), "no-new-privileges:true"},
+			User:           e.containerCfg.RunAsUser,
+		}
+	}
+
 	portBindings := nat.PortMap{}
 	exposedPorts := nat.PortSet{}
 	for containerPort, hostPort := range cfg.Ports {
@@ -31,37 +55,33 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		exposedPorts[port] = struct{}{}
 	}
 
-	resources := container.Resources{}
-	if cfg.Resources != nil {
-		resources.NanoCPUs = cfg.Resources.CPUQuota * 10000
-		resources.Memory = cfg.Resources.Memory
-		resources.PidsLimit = &cfg.Resources.PidsLimit
+	resources := container.Resources{
+		NanoCPUs:  cfg.Resources.CPUQuota * 10000,
+		Memory:    cfg.Resources.Memory,
+		PidsLimit: &cfg.Resources.PidsLimit,
 	}
 
 	containerCfg := &container.Config{
 		Image:        cfg.Image,
 		Env:          cfg.Env,
 		ExposedPorts: exposedPorts,
+		User:         cfg.Security.User,
 	}
 
 	hostCfg := &container.HostConfig{
-		PortBindings: portBindings,
-		Resources:    resources,
-		NetworkMode:  container.NetworkMode(cfg.Network),
-		Privileged:   false,
+		PortBindings:   portBindings,
+		Resources:      resources,
+		NetworkMode:    container.NetworkMode(cfg.Network),
+		Privileged:     false,
+		ReadonlyRootfs: cfg.Security.ReadonlyRootfs,
+		CapDrop:        cfg.Security.CapDrop,
+		CapAdd:         cfg.Security.CapAdd,
+		SecurityOpt:    cfg.Security.SecurityOpt,
 	}
 
-	if cfg.Security != nil {
-		containerCfg.User = cfg.Security.User
-		hostCfg.ReadonlyRootfs = cfg.Security.ReadonlyRootfs
-		hostCfg.CapDrop = cfg.Security.CapDrop
-		hostCfg.CapAdd = cfg.Security.CapAdd
-		hostCfg.SecurityOpt = cfg.Security.SecurityOpt
-
-		if cfg.Security.ReadonlyRootfs {
-			hostCfg.Tmpfs = map[string]string{
-				"/tmp": "rw,noexec,nosuid,size=65536k",
-			}
+	if cfg.Security.ReadonlyRootfs {
+		hostCfg.Tmpfs = map[string]string{
+			"/tmp": "rw,noexec,nosuid,size=65536k",
 		}
 	}
 
@@ -72,11 +92,12 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 	return resp.ID, nil
 }
 
-func DefaultSecurityConfig() *model.SecurityConfig {
+func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
 	return &model.SecurityConfig{
-		ReadonlyRootfs: false,
+		ReadonlyRootfs: cfg.ReadonlyRootfs,
 		CapDrop:        []string{"ALL"},
-		CapAdd:         []string{"CHOWN", "SETUID", "SETGID"},
-		SecurityOpt:    []string{"no-new-privileges:true"},
+		CapAdd:         cfg.AllowedCapabilities,
+		SecurityOpt:    []string{fmt.Sprintf("seccomp=%s", cfg.Seccomp), "no-new-privileges:true"},
+		User:           cfg.RunAsUser,
 	}
 }

@@ -95,4 +95,9 @@ container:
   default_pids_limit: 100
   readonly_rootfs: false
   run_as_user: ""
+  allowed_capabilities:
+    - CHOWN
+    - SETUID
+    - SETGID
+  seccomp: default
 

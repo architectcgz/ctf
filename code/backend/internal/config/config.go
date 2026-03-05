@@ -100,11 +100,13 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota  int64  `mapstructure:"default_cpu_quota"`
-	DefaultMemory    int64  `mapstructure:"default_memory"`
-	DefaultPidsLimit int64  `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs   bool   `mapstructure:"readonly_rootfs"`
-	RunAsUser        string `mapstructure:"run_as_user"`
+	DefaultCPUQuota       int64    `mapstructure:"default_cpu_quota"`
+	DefaultMemory         int64    `mapstructure:"default_memory"`
+	DefaultPidsLimit      int64    `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs        bool     `mapstructure:"readonly_rootfs"`
+	RunAsUser             string   `mapstructure:"run_as_user"`
+	AllowedCapabilities   []string `mapstructure:"allowed_capabilities"`
+	Seccomp               string   `mapstructure:"seccomp"`
 }
 
 func Load(env string) (*Config, error) {
@@ -139,7 +141,24 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+
 	return cfg, nil
+}
+
+func (c *Config) Validate() error {
+	if c.Container.DefaultCPUQuota <= 0 {
+		return fmt.Errorf("container.default_cpu_quota must be positive")
+	}
+	if c.Container.DefaultMemory <= 0 {
+		return fmt.Errorf("container.default_memory must be positive")
+	}
+	if c.Container.DefaultPidsLimit <= 0 {
+		return fmt.Errorf("container.default_pids_limit must be positive")
+	}
+	return nil
 }
 
 func (c PostgresConfig) DSN() string {
@@ -204,4 +223,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.default_pids_limit", 100)
 	v.SetDefault("container.readonly_rootfs", false)
 	v.SetDefault("container.run_as_user", "")
+	v.SetDefault("container.allowed_capabilities", []string{"CHOWN", "SETUID", "SETGID"})
+	v.SetDefault("container.seccomp", "default")
 }
