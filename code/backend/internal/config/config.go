@@ -18,6 +18,7 @@ type Config struct {
 	CORS      CORSConfig      `mapstructure:"cors"`
 	Auth      AuthConfig      `mapstructure:"auth"`
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
+	Container ContainerConfig `mapstructure:"container"`
 }
 
 type AppConfig struct {
@@ -96,6 +97,14 @@ type RateLimitPolicyConfig struct {
 	Enabled bool          `mapstructure:"enabled"`
 	Limit   int           `mapstructure:"limit"`
 	Window  time.Duration `mapstructure:"window"`
+}
+
+type ContainerConfig struct {
+	DefaultCPUQuota  int64  `mapstructure:"default_cpu_quota"`
+	DefaultMemory    int64  `mapstructure:"default_memory"`
+	DefaultPidsLimit int64  `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs   bool   `mapstructure:"readonly_rootfs"`
+	RunAsUser        string `mapstructure:"run_as_user"`
 }
 
 func Load(env string) (*Config, error) {
@@ -190,4 +199,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)
+	v.SetDefault("container.default_cpu_quota", 50000)
+	v.SetDefault("container.default_memory", 268435456)
+	v.SetDefault("container.default_pids_limit", 100)
+	v.SetDefault("container.readonly_rootfs", false)
+	v.SetDefault("container.run_as_user", "")
 }

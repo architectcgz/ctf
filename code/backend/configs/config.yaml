@@ -89,3 +89,10 @@ rate_limit:
     limit: 5
     window: 1m
 
+container:
+  default_cpu_quota: 50000
+  default_memory: 268435456
+  default_pids_limit: 100
+  readonly_rootfs: false
+  run_as_user: ""
+
