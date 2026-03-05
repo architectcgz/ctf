@@ -10,15 +10,16 @@ import (
 )
 
 type Config struct {
-	App       AppConfig       `mapstructure:"app"`
-	HTTP      HTTPConfig      `mapstructure:"http"`
-	Log       LogConfig       `mapstructure:"log"`
-	Postgres  PostgresConfig  `mapstructure:"postgres"`
-	Redis     RedisConfig     `mapstructure:"redis"`
-	CORS      CORSConfig      `mapstructure:"cors"`
-	Auth      AuthConfig      `mapstructure:"auth"`
-	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
-	Container ContainerConfig `mapstructure:"container"`
+	App        AppConfig        `mapstructure:"app"`
+	HTTP       HTTPConfig       `mapstructure:"http"`
+	Log        LogConfig        `mapstructure:"log"`
+	Postgres   PostgresConfig   `mapstructure:"postgres"`
+	Redis      RedisConfig      `mapstructure:"redis"`
+	CORS       CORSConfig       `mapstructure:"cors"`
+	Auth       AuthConfig       `mapstructure:"auth"`
+	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
+	Container  ContainerConfig  `mapstructure:"container"`
+	Pagination PaginationConfig `mapstructure:"pagination"`
 }
 
 type AppConfig struct {
@@ -112,6 +113,11 @@ type ContainerConfig struct {
 	MaxExtends              int           `mapstructure:"max_extends"`
 	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
 	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+}
+
+type PaginationConfig struct {
+	DefaultPageSize int `mapstructure:"default_page_size"`
+	MaxPageSize     int `mapstructure:"max_page_size"`
 }
 
 func Load(env string) (*Config, error) {
@@ -218,4 +224,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("pagination.default_page_size", 20)
+	v.SetDefault("pagination.max_page_size", 100)
 }
