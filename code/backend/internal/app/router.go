@@ -88,7 +88,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	// 镜像管理（仅管理员）
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, nil, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, nil, cfg, log.Named("image_service"))
 	imageHandler := challengeModule.NewImageHandler(imageService)
 	adminOnly.POST("/images", imageHandler.CreateImage)
 	adminOnly.GET("/images", imageHandler.ListImages)
