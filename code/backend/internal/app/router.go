@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
+	challengeModule "ctf-platform/internal/module/challenge"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -84,6 +85,16 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
+
+	// 镜像管理（仅管理员）
+	imageRepo := challengeModule.NewImageRepository(db)
+	imageService := challengeModule.NewImageService(imageRepo, nil, log.Named("image_service"))
+	imageHandler := challengeModule.NewImageHandler(imageService)
+	adminOnly.POST("/images", imageHandler.CreateImage)
+	adminOnly.GET("/images", imageHandler.ListImages)
+	adminOnly.GET("/images/:id", imageHandler.GetImage)
+	adminOnly.PUT("/images/:id", imageHandler.UpdateImage)
+	adminOnly.DELETE("/images/:id", imageHandler.DeleteImage)
 
 	return engine, nil
 }
