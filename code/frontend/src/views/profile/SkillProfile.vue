@@ -120,13 +120,6 @@ import { useAuthStore } from '@/stores/auth'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { formatDate } from '@/utils/format'
 
-interface TooltipParams {
-  data: {
-    value: number[]
-    name: string
-  }
-}
-
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -238,9 +231,10 @@ function renderChart() {
     }],
     tooltip: {
       trigger: 'item',
-      formatter: (params: TooltipParams) => {
-        const data = params.data
-        return dimensions.map((d, i) => `${d.name}: ${data.value[i]}`).join('<br/>')
+      formatter: (params: unknown) => {
+        const data = (params as { data?: { value?: number[] } })?.data
+        const values = Array.isArray(data?.value) ? data.value : []
+        return dimensions.map((d, i) => `${d.name}: ${values[i] ?? 0}`).join('<br/>')
       }
     }
   }

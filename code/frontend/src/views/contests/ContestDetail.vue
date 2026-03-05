@@ -110,7 +110,7 @@
     <div v-if="showJoinTeam" @click.self="closeJoinTeam" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
         <h3 class="text-lg font-bold text-[var(--color-text-primary)]">加入队伍</h3>
-        <input v-model="inviteCode" @keyup.enter="joinTeamAction" placeholder="邀请码" class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]" />
+        <input v-model="teamIdInput" @keyup.enter="joinTeamAction" placeholder="队伍 ID" class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]" />
         <div class="mt-4 flex justify-end gap-2">
           <button @click="closeJoinTeam" class="rounded border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)]">取消</button>
           <button @click="joinTeamAction" :disabled="joiningTeam" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50">
@@ -147,7 +147,7 @@ const submitResult = ref<SubmitFlagData | null>(null)
 const showCreateTeam = ref(false)
 const showJoinTeam = ref(false)
 const teamName = ref('')
-const inviteCode = ref('')
+const teamIdInput = ref('')
 const creatingTeam = ref(false)
 const joiningTeam = ref(false)
 
@@ -282,23 +282,19 @@ function closeCreateTeam() {
 }
 
 async function joinTeamAction() {
-  const code = inviteCode.value.trim()
-  if (!code) {
-    toast.warning('请输入邀请码')
-    return
-  }
-  if (code.length < 4 || code.length > 20) {
-    toast.warning('邀请码长度应在 4-20 字符之间')
+  const teamId = teamIdInput.value.trim()
+  if (!teamId) {
+    toast.warning('请输入队伍 ID')
     return
   }
   if (!contest.value || joiningTeam.value) return
 
   joiningTeam.value = true
   try {
-    await joinTeam(contest.value.id, code)
+    await joinTeam(contest.value.id, teamId)
     team.value = await getMyTeam(contest.value.id)
     showJoinTeam.value = false
-    inviteCode.value = ''
+    teamIdInput.value = ''
     toast.success('加入队伍成功')
   } catch (err) {
     console.error(err)
@@ -310,7 +306,7 @@ async function joinTeamAction() {
 
 function closeJoinTeam() {
   showJoinTeam.value = false
-  inviteCode.value = ''
+  teamIdInput.value = ''
 }
 
 async function kickMember(userId: string) {

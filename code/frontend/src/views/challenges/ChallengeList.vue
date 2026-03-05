@@ -73,7 +73,7 @@
           </div>
 
           <p class="line-clamp-2 text-sm text-[var(--color-text-secondary)]">
-            {{ challenge.description || '暂无描述' }}
+            标签：{{ challenge.tags.length > 0 ? challenge.tags.join(' / ') : '暂无' }}
           </p>
 
           <div class="flex items-center justify-between">

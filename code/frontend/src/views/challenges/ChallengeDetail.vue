@@ -25,7 +25,6 @@
               {{ tag }}
             </span>
           </div>
-          <div class="text-sm text-[var(--color-text-secondary)]">{{ challenge.solved_count }} 人解出</div>
         </div>
         <div class="text-right">
           <div class="font-mono text-3xl font-bold text-[var(--color-primary)]">{{ challenge.points }}pts</div>
@@ -132,7 +131,7 @@ async function startChallenge() {
   if (!challenge.value) return
   creating.value = true
   try {
-    const instance = await createInstance(challenge.value.id)
+    await createInstance(challenge.value.id)
     toast.success('实例创建成功')
     router.push('/instances')
   } catch (error) {

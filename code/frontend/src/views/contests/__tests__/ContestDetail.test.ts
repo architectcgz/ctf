@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { createPinia } from 'pinia'
 import ContestDetail from '../ContestDetail.vue'
 
 vi.mock('@/api/contest', () => ({
@@ -13,23 +14,30 @@ vi.mock('@/api/contest', () => ({
     starts_at: '2024-03-15T09:00:00Z',
     ends_at: '2024-03-15T21:00:00Z',
   }),
+  getMyTeam: vi.fn().mockResolvedValue(null),
+  getContestChallenges: vi.fn().mockResolvedValue([]),
+  createTeam: vi.fn(),
+  joinTeam: vi.fn(),
+  kickTeamMember: vi.fn(),
+  submitContestFlag: vi.fn(),
 }))
 
 describe('ContestDetail', () => {
   let router: any
 
-  beforeEach(() => {
+  beforeEach(async () => {
     router = createRouter({
       history: createMemoryHistory(),
       routes: [{ path: '/contests/:id', component: { template: '<div />' } }],
     })
-    router.push('/contests/1')
+    await router.push('/contests/1')
+    await router.isReady()
   })
 
   it('应该渲染竞赛详情页面', async () => {
     const wrapper = mount(ContestDetail, {
       global: {
-        plugins: [router],
+        plugins: [createPinia(), router],
       },
     })
 

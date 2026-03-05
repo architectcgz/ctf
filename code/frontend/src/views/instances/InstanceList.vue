@@ -75,7 +75,7 @@
 
       <div v-if="instances.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
         <div class="text-[var(--color-text-muted)] mb-4">暂无运行中的实例</div>
-        <router-link to="/student/challenges" class="text-[var(--color-primary)] hover:underline">
+        <router-link to="/challenges" class="text-[var(--color-primary)] hover:underline">
           前往靶场列表创建实例
         </router-link>
       </div>
@@ -114,6 +114,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getMyInstances, destroyInstance as apiDestroyInstance, extendInstance } from '@/api/instance'
+import { useClipboard } from '@/composables/useClipboard'
+import { useToast } from '@/composables/useToast'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
 
 // 常量配置
@@ -129,6 +131,8 @@ interface InstanceViewModel extends InstanceListItem {
 const loading = ref(false)
 const maxInstances = MAX_INSTANCES
 const instances = ref<InstanceViewModel[]>([])
+const toast = useToast()
+const { copy } = useClipboard()
 
 const showWarning = ref(false)
 const warningInstance = ref<InstanceViewModel | null>(null)
@@ -174,13 +178,8 @@ function formatTime(seconds: number): string {
 }
 
 async function copyAddress(address: string) {
-  try {
-    await navigator.clipboard.writeText(address)
-    // TODO: 显示成功提示
-  } catch (error) {
-    console.error('复制失败:', error)
-    // TODO: 显示错误提示
-  }
+  if (!address) return
+  await copy(address)
 }
 
 async function extendTime(id: string) {
@@ -194,7 +193,7 @@ async function extendTime(id: string) {
     }
   } catch (error) {
     console.error('延时失败:', error)
-    // TODO: 显示错误提示
+    toast.error('延时失败，请稍后重试')
   }
 }
 
@@ -208,7 +207,7 @@ async function confirmDestroy(id: string) {
     warnedInstances.delete(id)
   } catch (error) {
     console.error('销毁失败:', error)
-    // TODO: 显示错误提示
+    toast.error('销毁失败，请稍后重试')
   }
 }
 
@@ -254,6 +253,7 @@ onMounted(async () => {
     }))
   } catch (error) {
     console.error('加载实例失败:', error)
+    toast.error('加载实例失败，请刷新重试')
   } finally {
     loading.value = false
   }
@@ -269,4 +269,3 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleEscKey)
 })
 </script>
-

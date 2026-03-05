@@ -56,24 +56,70 @@
 
 <script setup lang="ts">
 import { Bell } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import { getNotifications, markAsRead as markAsReadApi } from '@/api/notification'
 import { useNotificationStore } from '@/stores/notification'
 import { useTheme } from '@/composables/useTheme'
+import { useToast } from '@/composables/useToast'
 
 const store = useNotificationStore()
 const { theme } = useTheme()
+const toast = useToast()
 const open = ref(false)
+const loaded = ref(false)
+const loading = ref(false)
 
 const unreadCount = computed(() => store.unreadCount)
 const items = computed(() => store.notifications)
 
-function markAsRead(id: string) {
+watch(open, (val) => {
+  if (val && !loaded.value) {
+    void loadNotifications()
+  }
+})
+
+async function loadNotifications() {
+  loading.value = true
+  try {
+    const data = await getNotifications({ page: 1, page_size: 20 })
+    store.setNotifications(
+      data.list.map((item) => ({
+        id: String(item.id),
+        type: item.type,
+        title: item.title,
+        time: item.created_at,
+        unread: item.unread,
+      }))
+    )
+    loaded.value = true
+  } catch (error) {
+    toast.error('加载通知失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+async function markAsRead(id: string) {
+  const target = store.notifications.find((item) => item.id === id)
+  if (!target?.unread) return
+  try {
+    await markAsReadApi(id)
+  } catch (error) {
+    toast.error('标记已读失败')
+    return
+  }
   store.markAsRead(id)
 }
 
-function markAllRead() {
+async function markAllRead() {
+  const unreadItems = store.notifications.filter((item) => item.unread)
+  if (unreadItems.length === 0) return
+  const results = await Promise.allSettled(unreadItems.map((item) => markAsReadApi(item.id)))
+  const failedCount = results.filter((result) => result.status === 'rejected').length
+  if (failedCount > 0) {
+    toast.warning(`部分通知标记失败（${failedCount} 条）`)
+  }
   store.markAllRead()
 }
 </script>
-

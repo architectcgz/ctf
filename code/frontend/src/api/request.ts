@@ -27,8 +27,6 @@ export class ApiError extends Error {
   }
 }
 
-const toast = useToast()
-
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 const DEFAULT_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT) || 15000
 
@@ -113,8 +111,17 @@ function toApiError(
   })
 }
 
+function getToast() {
+  return useToast()
+}
+
+function withRequestId(message: string, requestId: string | undefined): string {
+  return requestId ? `${message}（请求ID: ${requestId}）` : message
+}
+
 instance.interceptors.response.use(
   (response) => {
+    const toast = getToast()
     NProgress.done()
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
@@ -127,6 +134,7 @@ instance.interceptors.response.use(
     return response
   },
   async (error: AxiosError<ApiEnvelope<unknown>>) => {
+    const toast = getToast()
     NProgress.done()
     const authStore = useAuthStore()
 
@@ -166,19 +174,28 @@ instance.interceptors.response.use(
     }
 
     if (status === 429) {
-      toast.warning('请求过于频繁，请稍后再试')
+      const retryAfter = error.response?.headers?.['retry-after']
+      const retryMessage = retryAfter ? `请求过于频繁，请 ${retryAfter} 秒后重试` : '请求过于频繁，请稍后再试'
+      toast.warning(retryMessage)
       return Promise.reject(error)
     }
 
     const mapped = mapErrorCode(code)
     if (mapped) {
       const apiError = toApiError(code, error.response?.data?.request_id, status, mapped)
-      toast.error(apiError.message)
+      toast.error(withRequestId(apiError.message, apiError.requestId))
       return Promise.reject(apiError)
     }
 
-    toast.error('网络连接失败')
-    return Promise.reject(error)
+    if (!error.response) {
+      toast.error('网络连接失败')
+      return Promise.reject(error)
+    }
+
+    const fallbackMessage = status && status >= 500 ? '服务暂时不可用，请稍后重试' : '请求失败，请稍后重试'
+    const apiError = toApiError(code, error.response?.data?.request_id, status, fallbackMessage)
+    toast.error(withRequestId(apiError.message, apiError.requestId))
+    return Promise.reject(apiError)
   }
 )
 

@@ -50,11 +50,10 @@ export async function createTeam(id: string, data: Record<string, unknown>): Pro
   return request<TeamData>({ method: 'POST', url: `/contests/${encodeURIComponent(id)}/teams`, data })
 }
 
-export async function joinTeam(contestId: string, code: string) {
+export async function joinTeam(contestId: string, teamId: string) {
   return request<void>({
     method: 'POST',
-    url: `/contests/${encodeURIComponent(contestId)}/join`,
-    data: { code },
+    url: `/contests/${encodeURIComponent(contestId)}/teams/${encodeURIComponent(teamId)}/join`,
   })
 }
 

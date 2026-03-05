@@ -1,9 +1,9 @@
-import type { NavigationGuardNext, RouteLocationNormalized, Router } from 'vue-router'
+import type { RouteLocationNormalized, Router } from 'vue-router'
 import NProgress from 'nprogress'
 import 'nprogress/nprogress.css'
 
 import { useAuthStore } from '@/stores/auth'
-import { APP_TITLE_PREFIX, type UserRole } from '@/utils/constants'
+import { APP_TITLE_PREFIX } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
 import { getProfile } from '@/api/auth'
 
@@ -29,12 +29,6 @@ async function ensureProfileLoaded(): Promise<void> {
 
   const profile = await getProfile()
   authStore.setAuth(profile, authStore.accessToken)
-}
-
-function hasRole(requiredRoles: UserRole[] | undefined, userRole: UserRole | undefined): boolean {
-  if (!requiredRoles || requiredRoles.length === 0) return true
-  if (!userRole) return false
-  return requiredRoles.includes(userRole)
 }
 
 function updatePageTitle(to: RouteLocationNormalized): void {
@@ -103,4 +97,3 @@ export function setupRouterGuards(router: Router): void {
     console.error('Router error:', error)
   })
 }
-
