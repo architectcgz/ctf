@@ -87,7 +87,8 @@ function getModeLabel(mode: ContestMode): string {
   const labels: Record<ContestMode, string> = {
     jeopardy: 'Jeopardy',
     awd: 'AWD',
-    mixed: '混合模式'
+    awd_plus: 'AWD+',
+    king_of_hill: 'King of the Hill',
   }
   return labels[mode] || mode
 }

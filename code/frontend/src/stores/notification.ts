@@ -14,6 +14,10 @@ export const useNotificationStore = defineStore('notification', () => {
 
   const unreadCount = computed(() => notifications.value.filter((n) => n.unread).length)
 
+  function setNotifications(items: NotificationItem[]): void {
+    notifications.value = items
+  }
+
   function addNotification(item: NotificationItem): void {
     notifications.value = [item, ...notifications.value].slice(0, 20)
   }
@@ -26,6 +30,5 @@ export const useNotificationStore = defineStore('notification', () => {
     notifications.value = notifications.value.map((n) => ({ ...n, unread: false }))
   }
 
-  return { notifications, unreadCount, addNotification, markAsRead, markAllRead }
+  return { notifications, unreadCount, setNotifications, addNotification, markAsRead, markAllRead }
 })
-

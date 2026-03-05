@@ -164,7 +164,13 @@ import { ElMessageBox } from 'element-plus'
 import { getChallenges, createChallenge, updateChallenge, deleteChallenge, getImages } from '@/api/admin'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
-import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus, AdminImageListItem } from '@/api/contracts'
+import type {
+  AdminChallengeListItem,
+  AdminImageListItem,
+  ChallengeCategory,
+  ChallengeDifficulty,
+  ChallengeStatus,
+} from '@/api/contracts'
 
 const toast = useToast()
 const dialogVisible = ref(false)

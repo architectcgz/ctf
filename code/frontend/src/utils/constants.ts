@@ -7,6 +7,7 @@ export const APP_TITLE_PREFIX = 'CTF 靶场平台'
 // WebSocket 配置
 export const WS_MAX_RECONNECT_ATTEMPTS = 20
 export const WS_HEARTBEAT_INTERVAL_MS = 30_000
+export const WS_PONG_TIMEOUT_MS = 60_000
 export const WS_MAX_RECONNECT_DELAY_MS = 30_000
 export const WS_RECONNECT_BASE_DELAY_MS = 1000
 
@@ -20,4 +21,3 @@ export const TOAST_DURATION = {
 
 // 分页配置
 export const DEFAULT_PAGE_SIZE = 20
-

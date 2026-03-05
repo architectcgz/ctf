@@ -1,4 +1,4 @@
-import { computed, inject, provide, ref } from 'vue'
+import { computed, getCurrentInstance, inject, provide, ref } from 'vue'
 
 import { TOAST_DURATION } from '@/utils/constants'
 
@@ -49,6 +49,9 @@ export function provideToast(): ToastApi {
 }
 
 export function useToast(): ToastApi {
+  if (!getCurrentInstance()) {
+    return fallbackToast
+  }
   return inject(TOAST_KEY, fallbackToast)
 }
 
@@ -57,4 +60,3 @@ export function useToastState() {
     toasts: computed(() => toasts.value),
   }
 }
-
