@@ -57,3 +57,13 @@ var (
 	ErrEmailExists         = New(11009, "邮箱已被注册", http.StatusConflict)
 	ErrLoginTooFrequent    = New(11010, "登录失败次数过多，账户临时锁定", http.StatusTooManyRequests)
 )
+
+// 容器相关错误码 (12000-12999)
+var (
+	ErrInstanceNotFound      = New(12001, "实例不存在", http.StatusNotFound)
+	ErrInstanceLimitExceeded = New(12002, "实例数量超限", http.StatusForbidden)
+	ErrInstanceExpired       = New(12003, "实例已过期", http.StatusGone)
+	ErrExtendLimitExceeded   = New(12004, "延时次数已达上限", http.StatusForbidden)
+	ErrContainerCreateFailed = New(12005, "容器创建失败", http.StatusInternalServerError)
+	ErrContainerStartFailed  = New(12006, "容器启动失败", http.StatusInternalServerError)
+)
