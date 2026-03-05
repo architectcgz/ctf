@@ -89,3 +89,10 @@ rate_limit:
     limit: 5
     window: 1m
 
+container:
+  default_cpu_quota: 50000      # 0.5 核（微秒）
+  default_memory: 268435456     # 256MB（字节）
+  default_pids_limit: 100       # 最多 100 个进程
+  readonly_rootfs: false        # 是否启用只读根文件系统
+  run_as_user: ""               # 运行用户（空表示使用镜像默认用户）
+
