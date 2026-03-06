@@ -129,6 +129,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	contestChallengeRepo := contestModule.NewChallengeRepository(db)
 	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challengeRepo, contestRepo)
 	contestChallengeHandler := contestModule.NewChallengeHandler(contestChallengeService)
+	teamRepo := contestModule.NewTeamRepository(db)
+	teamService := contestModule.NewTeamService(teamRepo, contestRepo)
+	teamHandler := contestModule.NewTeamHandler(teamService)
 	adminOnly.POST("/contests", contestHandler.CreateContest)
 	adminOnly.PUT("/contests/:id", middleware.ParseInt64Param("id"), contestHandler.UpdateContest)
 	adminOnly.GET("/contests", contestHandler.ListContests)
@@ -142,6 +145,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	contestGroup.GET("", contestHandler.ListContests)
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
 	protected.GET("/contests/:id/challenges", contestChallengeHandler.ListChallenges)
+	protected.GET("/contests/:id/teams", teamHandler.ListTeams)
+	protected.POST("/contests/:id/teams", teamHandler.CreateTeam)
+	protected.POST("/contests/:id/teams/:tid/join", teamHandler.JoinTeam)
+	protected.DELETE("/contests/:id/teams/:tid/leave", teamHandler.LeaveTeam)
+	protected.DELETE("/contests/:id/teams/:tid", teamHandler.DismissTeam)
 
 	// 实践模块（学员）
 	practiceRepo := practiceModule.NewRepository(db)
