@@ -24,6 +24,7 @@ type Contest struct {
 	Mode        string         `gorm:"column:mode"`
 	StartTime   time.Time      `gorm:"column:start_time"`
 	EndTime     time.Time      `gorm:"column:end_time"`
+	FreezeTime  *time.Time     `gorm:"column:freeze_time"`
 	Status      string         `gorm:"column:status"`
 	CreatedAt   time.Time      `gorm:"column:created_at"`
 	UpdatedAt   time.Time      `gorm:"column:updated_at"`

@@ -22,6 +22,7 @@ type Repository interface {
 	List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error)
 	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
 	UpdateStatus(ctx context.Context, id int64, status string) error
+	FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error)
 }
 
 type repository struct {
@@ -80,7 +81,10 @@ func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []
 		case model.ContestStatusRegistration:
 			conditions = append(conditions, "(status = ? AND start_time <= ?)")
 			args = append(args, status, now)
-		case model.ContestStatusRunning, model.ContestStatusFrozen:
+		case model.ContestStatusRunning:
+			conditions = append(conditions, "(status = ? AND ((freeze_time IS NOT NULL AND freeze_time <= ?) OR end_time <= ?))")
+			args = append(args, status, now, now)
+		case model.ContestStatusFrozen:
 			conditions = append(conditions, "(status = ? AND end_time <= ?)")
 			args = append(args, status, now)
 		}
@@ -123,4 +127,14 @@ func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) 
 	}
 
 	return nil
+}
+
+func (r *repository) FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error) {
+	if len(ids) == 0 {
+		return []*model.Team{}, nil
+	}
+
+	var teams []*model.Team
+	err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&teams).Error
+	return teams, err
 }

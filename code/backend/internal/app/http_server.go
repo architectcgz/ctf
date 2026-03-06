@@ -40,6 +40,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 	contestRepo := contest.NewRepository(db)
 	statusUpdater := contest.NewStatusUpdater(
 		contestRepo,
+		cache,
 		cfg.Contest.StatusUpdateInterval,
 		cfg.Contest.StatusUpdateBatchSize,
 		log.Named("contest_status_updater"),
