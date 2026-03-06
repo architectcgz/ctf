@@ -147,3 +147,32 @@ func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
 		Count(&count).Error
 	return count, err
 }
+
+// FindPublishedWithTags 查询匹配标签的已发布靶场（用于推荐）
+func (r *Repository) FindPublishedWithTags(limit int, tagIDs []int64, excludeSolved []int64) ([]*model.Challenge, error) {
+	var challenges []*model.Challenge
+
+	db := r.db.Model(&model.Challenge{}).
+		Where("status = ?", model.ChallengeStatusPublished)
+
+	if len(tagIDs) > 0 {
+		db = db.Joins("JOIN challenge_tags ON challenges.id = challenge_tags.challenge_id").
+			Where("challenge_tags.tag_id IN ?", tagIDs)
+	}
+
+	if len(excludeSolved) > 0 {
+		db = db.Where("challenges.id NOT IN ?", excludeSolved)
+	}
+
+	err := db.Order("difficulty ASC, points ASC").Limit(limit).Find(&challenges).Error
+	return challenges, err
+}
+
+// FindTagsByDimensions 根据维度查询标签 ID
+func (r *Repository) FindTagsByDimensions(dimensions []string) ([]int64, error) {
+	var tagIDs []int64
+	err := r.db.Model(&model.Tag{}).
+		Where("dimension IN ?", dimensions).
+		Pluck("id", &tagIDs).Error
+	return tagIDs, err
+}
