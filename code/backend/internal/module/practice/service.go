@@ -20,15 +20,20 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+type AssessmentService interface {
+	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
+}
+
 type Service struct {
-	repo             *Repository
-	challengeRepo    *challenge.Repository
-	instanceRepo     *container.Repository
-	containerService *container.Service
-	scoreService     *ScoreService
-	redis            *redis.Client
-	config           *config.Config
-	logger           *zap.Logger
+	repo              *Repository
+	challengeRepo     *challenge.Repository
+	instanceRepo      *container.Repository
+	containerService  *container.Service
+	scoreService      *ScoreService
+	assessmentService AssessmentService
+	redis             *redis.Client
+	config            *config.Config
+	logger            *zap.Logger
 }
 
 func NewService(
@@ -37,19 +42,21 @@ func NewService(
 	instanceRepo *container.Repository,
 	containerService *container.Service,
 	scoreService *ScoreService,
+	assessmentService AssessmentService,
 	redis *redis.Client,
 	config *config.Config,
 	logger *zap.Logger,
 ) *Service {
 	return &Service{
-		repo:             repo,
-		challengeRepo:    challengeRepo,
-		instanceRepo:     instanceRepo,
-		containerService: containerService,
-		scoreService:     scoreService,
-		redis:            redis,
-		config:           config,
-		logger:           logger,
+		repo:              repo,
+		challengeRepo:     challengeRepo,
+		instanceRepo:      instanceRepo,
+		containerService:  containerService,
+		scoreService:      scoreService,
+		assessmentService: assessmentService,
+		redis:             redis,
+		config:            config,
+		logger:            logger,
 	}
 }
 
@@ -185,6 +192,7 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
+		s.triggerAssessmentUpdate(userID, challengeItem.Category)
 	}
 
 	resp := &dto.SubmissionResp{
@@ -374,6 +382,29 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	instance.NetworkID = networkID
 	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, port)
 	return nil
+}
+
+func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
+	if s.assessmentService == nil || !model.IsValidDimension(dimension) {
+		return
+	}
+
+	go func() {
+		timer := time.NewTimer(s.config.Assessment.IncrementalUpdateDelay)
+		defer timer.Stop()
+
+		<-timer.C
+
+		ctx, cancel := context.WithTimeout(context.Background(), s.config.Assessment.IncrementalUpdateTimeout)
+		defer cancel()
+
+		if err := s.assessmentService.UpdateSkillProfileForDimension(ctx, userID, dimension); err != nil {
+			s.logger.Error("更新能力画像失败",
+				zap.Int64("user_id", userID),
+				zap.String("dimension", dimension),
+				zap.Error(err))
+		}
+	}()
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

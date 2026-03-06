@@ -126,9 +126,18 @@ score:
 cache:
   progress_ttl: 10m
 
+assessment:
+  redis_key_prefix: ctf:assessment:skill-profile
+  full_rebuild_cron: "0 0 * * *"
+  full_rebuild_timeout: 30m
+  lock_ttl: 10s
+  incremental_update_delay: 100ms
+  incremental_update_timeout: 5s
+
 contest:
   status_update_interval: 1m
   status_update_batch_size: 1000
   base_score: 1000
   min_score: 100
   decay: 0.9
+  first_blood_bonus: 0.1

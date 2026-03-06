@@ -10,6 +10,7 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	assessmentModule "ctf-platform/internal/module/assessment"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
 	containerModule "ctf-platform/internal/module/container"
@@ -112,7 +113,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/challenges/:id", challengeHandler.UpdateChallenge)
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
-	// Flag 管理（仅管理员）
+
 	flagService, err := challengeModule.NewFlagService(db)
 	if err != nil {
 		return nil, err
@@ -121,8 +122,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
 	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
 
-	// 实践模块（学员）
-	// 竞赛管理（仅管理员）
+	assessmentRepo := assessmentModule.NewRepository(db)
+	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
+	assessmentHandler := assessmentModule.NewHandler(assessmentService)
+
+	// 竞赛管理
 	contestRepo := contestModule.NewRepository(db)
 	scoreboardService := contestModule.NewScoreboardService(contestRepo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
@@ -135,6 +139,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	teamHandler := contestModule.NewTeamHandler(teamService)
 	submissionService := contestModule.NewSubmissionService(db, cache, flagService, teamRepo, scoreboardService, cfg)
 	submissionHandler := contestModule.NewSubmissionHandler(submissionService)
+
 	adminOnly.POST("/contests", contestHandler.CreateContest)
 	adminOnly.PUT("/contests/:id", middleware.ParseInt64Param("id"), contestHandler.UpdateContest)
 	adminOnly.GET("/contests", contestHandler.ListContests)
@@ -145,7 +150,6 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/contests/:id/challenges/:cid", contestChallengeHandler.UpdatePoints)
 	adminOnly.DELETE("/contests/:id/challenges/:cid", contestChallengeHandler.RemoveChallenge)
 
-	// 竞赛公开接口
 	contestGroup := apiV1.Group("/contests")
 	contestGroup.GET("", contestHandler.ListContests)
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
@@ -163,22 +167,33 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	instanceRepo := containerModule.NewRepository(db)
 	containerService := containerModule.NewService(instanceRepo, &cfg.Container, log.Named("container_service"))
 	scoreService := practiceModule.NewScoreService(db, cache, log.Named("score_service"), &cfg.Score)
-	practiceService := practiceModule.NewService(practiceRepo, challengeRepo, instanceRepo, containerService, scoreService, cache, cfg, log.Named("practice_service"))
+	practiceService := practiceModule.NewService(
+		practiceRepo,
+		challengeRepo,
+		instanceRepo,
+		containerService,
+		scoreService,
+		assessmentService,
+		cache,
+		cfg,
+		log.Named("practice_service"),
+	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.POST("/challenges/:id/submit", practiceHandler.SubmitFlag)
 	protected.GET("/instances", practiceHandler.ListUserInstances)
 	protected.GET("/instances/:id", practiceHandler.GetInstance)
 
-	// 实例销毁与延时沿用 container 模块能力
 	containerHandler := containerModule.NewHandler(containerService)
 	protected.DELETE("/instances/:id", containerHandler.DestroyInstance)
 	protected.POST("/instances/:id/extend", containerHandler.ExtendInstance)
 
-	// 个人进度（学员）
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
+	usersGroup.GET("/me/skill-profile", assessmentHandler.GetMySkillProfile)
+	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
+	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 
 	return engine, nil
 }
