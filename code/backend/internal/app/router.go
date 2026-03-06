@@ -96,5 +96,16 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/images/:id", imageHandler.UpdateImage)
 	adminOnly.DELETE("/images/:id", imageHandler.DeleteImage)
 
+	// 靶场管理（仅管理员）
+	challengeRepo := challengeModule.NewRepository(db)
+	challengeService := challengeModule.NewService(challengeRepo, imageRepo, cache)
+	challengeHandler := challengeModule.NewHandler(challengeService)
+	adminOnly.POST("/challenges", challengeHandler.CreateChallenge)
+	adminOnly.GET("/challenges", challengeHandler.ListChallenges)
+	adminOnly.GET("/challenges/:id", challengeHandler.GetChallenge)
+	adminOnly.PUT("/challenges/:id", challengeHandler.UpdateChallenge)
+	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
+	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
+
 	return engine, nil
 }

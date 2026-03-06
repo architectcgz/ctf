@@ -37,8 +37,38 @@ type ChallengeQuery struct {
 	Category   string `form:"category"`
 	Difficulty string `form:"difficulty"`
 	Status     string `form:"status"`
+	Keyword    string `form:"keyword"`
+	SortBy     string `form:"sort_by"`
 	Page       int    `form:"page" binding:"omitempty,min=1"`
 	Size       int    `form:"size" binding:"omitempty,min=1,max=100"`
+}
+
+// ChallengeListItem 学员视图靶场列表项
+type ChallengeListItem struct {
+	ID            int64     `json:"id"`
+	Title         string    `json:"title"`
+	Category      string    `json:"category"`
+	Difficulty    string    `json:"difficulty"`
+	Points        int       `json:"points"`
+	SolvedCount   int64     `json:"solved_count"`
+	TotalAttempts int64     `json:"total_attempts"`
+	IsSolved      bool      `json:"is_solved"`
+	CreatedAt     time.Time `json:"created_at"`
+}
+
+// ChallengeDetailResp 学员视图靶场详情
+type ChallengeDetailResp struct {
+	ID            int64     `json:"id"`
+	Title         string    `json:"title"`
+	Description   string    `json:"description"`
+	Category      string    `json:"category"`
+	Difficulty    string    `json:"difficulty"`
+	Points        int       `json:"points"`
+	SolvedCount   int64     `json:"solved_count"`
+	TotalAttempts int64     `json:"total_attempts"`
+	IsSolved      bool      `json:"is_solved"`
+	FlagType      string    `json:"flag_type"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type ConfigureFlagReq struct {
