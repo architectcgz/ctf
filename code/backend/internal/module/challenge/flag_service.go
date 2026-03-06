@@ -33,7 +33,6 @@ func NewFlagService(db *gorm.DB) (*FlagService, error) {
 	}, nil
 }
 
-// ConfigureStaticFlag 配置静态 Flag
 func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix string) error {
 	// 校验 Flag 格式
 	if !flagPattern.MatchString(flag) {
@@ -92,8 +91,6 @@ func (s *FlagService) ConfigureDynamicFlag(challengeID int64, flagPrefix string)
 	return s.db.Model(&challenge).Updates(updates).Error
 }
 
-// GenerateDynamicFlag 生成动态 Flag
-// nonce 参数应从 instances.nonce 字段获取，由实例创建时生成
 func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce string) (string, error) {
 	if nonce == "" {
 		return "", errcode.ErrInvalidParams

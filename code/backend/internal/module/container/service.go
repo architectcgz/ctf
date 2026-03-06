@@ -27,6 +27,38 @@ func NewService(repo *Repository, cfg *config.ContainerConfig, logger *zap.Logge
 	}
 }
 
+// CreateContainer 创建容器（B9-B11 实现后替换为真实 Docker 调用）
+func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, port int, err error) {
+	// TODO: 实际的 Docker 容器创建逻辑
+	// 当前为模拟实现，等待 B9-B11 完成后集成
+
+	select {
+	case <-ctx.Done():
+		return "", "", 0, ctx.Err()
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	containerID = fmt.Sprintf("ctf-%d", time.Now().UnixNano())
+	networkID = fmt.Sprintf("net-%d", time.Now().UnixNano())
+	port = s.config.PortRangeStart + int(time.Now().Unix()%int64(s.config.PortRangeEnd-s.config.PortRangeStart))
+
+	return containerID, networkID, port, nil
+}
+
+// RemoveContainer 删除容器
+func (s *Service) RemoveContainer(containerID string) error {
+	// TODO: 实际的 Docker 容器删除逻辑
+	s.logger.Info("删除容器（模拟）", zap.String("container_id", containerID))
+	return nil
+}
+
+// RemoveNetwork 删除网络
+func (s *Service) RemoveNetwork(networkID string) error {
+	// TODO: 实际的 Docker 网络删除逻辑
+	s.logger.Info("删除网络（模拟）", zap.String("network_id", networkID))
+	return nil
+}
+
 func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, error) {
 	// 检查用户并发实例数
 	instances, err := s.repo.FindByUserID(userID)

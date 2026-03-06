@@ -12,6 +12,8 @@ import (
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
+	containerModule "ctf-platform/internal/module/container"
+	practiceModule "ctf-platform/internal/module/practice"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -109,6 +111,15 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/challenges/:id", challengeHandler.UpdateChallenge)
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
+
+	// 实践模块（学员）
+	instanceRepo := containerModule.NewRepository(db)
+	containerService := containerModule.NewService(instanceRepo, &cfg.Container, log.Named("container_service"))
+	practiceService := practiceModule.NewService(challengeRepo, instanceRepo, containerService, cfg, log.Named("practice_service"))
+	practiceHandler := practiceModule.NewHandler(practiceService)
+	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
+	protected.GET("/instances", practiceHandler.ListUserInstances)
+	protected.GET("/instances/:id", practiceHandler.GetInstance)
 
 	return engine, nil
 }

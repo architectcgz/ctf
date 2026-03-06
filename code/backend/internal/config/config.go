@@ -109,13 +109,16 @@ type ContainerConfig struct {
 	RunAsUser             string   `mapstructure:"run_as_user"`
 	AllowedCapabilities   []string `mapstructure:"allowed_capabilities"`
 	Seccomp               string   `mapstructure:"seccomp"`
-	PortRangeStart        int           `mapstructure:"port_range_start"`
-	PortRangeEnd          int           `mapstructure:"port_range_end"`
-	MaxConcurrentPerUser  int           `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL            time.Duration `mapstructure:"default_ttl"`
-	MaxExtends            int           `mapstructure:"max_extends"`
-	ExtendDuration        time.Duration `mapstructure:"extend_duration"`
-	CleanupInterval       string        `mapstructure:"cleanup_interval"`
+	PortRangeStart          int           `mapstructure:"port_range_start"`
+	PortRangeEnd            int           `mapstructure:"port_range_end"`
+	MaxConcurrentPerUser    int           `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL              time.Duration `mapstructure:"default_ttl"`
+	MaxExtends              int           `mapstructure:"max_extends"`
+	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
+	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+	CreateTimeout           time.Duration `mapstructure:"create_timeout"`
+	FlagGlobalSecret        string        `mapstructure:"flag_global_secret"`
+	PublicHost              string        `mapstructure:"public_host"`
 }
 
 type PaginationConfig struct {
@@ -250,6 +253,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
