@@ -8,7 +8,6 @@ import (
 	"encoding/base32"
 	"errors"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 )
