@@ -110,6 +110,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
 
+	// 能力画像
+	assessmentRepo := assessmentModule.NewRepository(db)
+	assessmentService := assessmentModule.NewService(assessmentRepo, db)
+	assessmentHandler := assessmentModule.NewHandler(assessmentService)
+
 	// Flag 提交（学员）
 	practiceRepo := practiceModule.NewRepository(db)
 	containerRepo := containerModule.NewRepository(db)
@@ -117,6 +122,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		practiceRepo,
 		challengeRepo,
 		containerRepo,
+		assessmentService,
 		cache,
 		log,
 		cfg.Container.FlagGlobalSecret,
@@ -128,10 +134,6 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	challengeGroup := protected.Group("/challenges")
 	challengeGroup.POST("/:id/submit", middleware.ParseChallengeID(), practiceHandler.SubmitFlag)
 
-	// 能力画像
-	assessmentRepo := assessmentModule.NewRepository(db)
-	assessmentService := assessmentModule.NewService(assessmentRepo, db)
-	assessmentHandler := assessmentModule.NewHandler(assessmentService)
 	protected.GET("/users/me/skill-profile", assessmentHandler.GetMySkillProfile)
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 
