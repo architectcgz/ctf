@@ -20,6 +20,7 @@ type Config struct {
 	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
 	Container  ContainerConfig  `mapstructure:"container"`
 	Pagination PaginationConfig `mapstructure:"pagination"`
+	Challenge  ChallengeConfig  `mapstructure:"challenge"`
 }
 
 type AppConfig struct {
@@ -120,6 +121,10 @@ type ContainerConfig struct {
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type ChallengeConfig struct {
+	SolvedCountCacheTTL time.Duration `mapstructure:"solved_count_cache_ttl"`
 }
 
 func Load(env string) (*Config, error) {
@@ -247,4 +252,5 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
+	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
 }

@@ -38,7 +38,7 @@ type ChallengeQuery struct {
 	Difficulty string `form:"difficulty"`
 	Status     string `form:"status"`
 	Keyword    string `form:"keyword"`
-	SortBy     string `form:"sort_by"`
+	SortBy     string `form:"sort_by" binding:"omitempty,oneof=created_at difficulty"`
 	Page       int    `form:"page" binding:"omitempty,min=1"`
 	Size       int    `form:"size" binding:"omitempty,min=1,max=100"`
 }
@@ -67,7 +67,6 @@ type ChallengeDetailResp struct {
 	SolvedCount   int64     `json:"solved_count"`
 	TotalAttempts int64     `json:"total_attempts"`
 	IsSolved      bool      `json:"is_solved"`
-	FlagType      string    `json:"flag_type"`
 	CreatedAt     time.Time `json:"created_at"`
 }
 
