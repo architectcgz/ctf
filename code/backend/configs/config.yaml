@@ -120,3 +120,6 @@ score:
   cache_ttl: 5m
   lock_timeout: 5s
   max_ranking_limit: 100
+
+cache:
+  progress_ttl: 10m

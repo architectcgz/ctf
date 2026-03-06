@@ -2,6 +2,7 @@ package practice
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
@@ -178,6 +180,13 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
+	if isCorrect {
+		cacheKey := constants.UserProgressKey(userID)
+		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
+			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
+		}
+	}
+
 	resp := &dto.SubmissionResp{
 		IsCorrect:   isCorrect,
 		SubmittedAt: submission.SubmittedAt,
@@ -194,6 +203,91 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		}
 	} else {
 		resp.Message = "Flag 错误，请重试"
+	}
+
+	return resp, nil
+}
+
+func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
+	ctx := context.Background()
+	cacheKey := constants.UserProgressKey(userID)
+
+	cached, err := s.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var resp dto.ProgressResp
+		if json.Unmarshal([]byte(cached), &resp) == nil {
+			return &resp, nil
+		}
+		s.logger.Warn("进度缓存反序列化失败", zap.Int64("user_id", userID))
+	}
+
+	totalScore, totalSolved, err := s.repo.GetUserProgress(userID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	rank, err := s.repo.GetUserRank(userID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	categoryStats, err := s.repo.GetCategoryStats(userID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	difficultyStats, err := s.repo.GetDifficultyStats(userID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.ProgressResp{
+		TotalScore:      totalScore,
+		TotalSolved:     totalSolved,
+		Rank:            rank,
+		CategoryStats:   make([]dto.CategoryStat, len(categoryStats)),
+		DifficultyStats: make([]dto.DifficultyStat, len(difficultyStats)),
+	}
+	for i, stat := range categoryStats {
+		resp.CategoryStats[i] = dto.CategoryStat{
+			Category: stat.Category,
+			Solved:   stat.Solved,
+			Total:    stat.Total,
+		}
+	}
+	for i, stat := range difficultyStats {
+		resp.DifficultyStats[i] = dto.DifficultyStat{
+			Difficulty: stat.Difficulty,
+			Solved:     stat.Solved,
+			Total:      stat.Total,
+		}
+	}
+
+	if data, err := json.Marshal(resp); err == nil {
+		_ = s.redis.Set(ctx, cacheKey, data, s.config.Cache.ProgressTTL).Err()
+	}
+
+	return resp, nil
+}
+
+func (s *Service) GetTimeline(userID int64, limit, offset int) (*dto.TimelineResp, error) {
+	events, err := s.repo.GetUserTimeline(userID, limit, offset)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.TimelineResp{
+		Events: make([]dto.TimelineEvent, len(events)),
+	}
+	for i, event := range events {
+		resp.Events[i] = dto.TimelineEvent{
+			Type:        event.Type,
+			ChallengeID: event.ChallengeID,
+			Title:       event.Title,
+			Timestamp:   event.Timestamp,
+			IsCorrect:   event.IsCorrect,
+			Points:      event.Points,
+		}
 	}
 	return resp, nil
 }

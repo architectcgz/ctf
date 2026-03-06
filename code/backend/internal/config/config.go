@@ -22,6 +22,7 @@ type Config struct {
 	Pagination PaginationConfig `mapstructure:"pagination"`
 	Challenge  ChallengeConfig  `mapstructure:"challenge"`
 	Score      ScoreConfig      `mapstructure:"score"`
+	Cache      CacheConfig      `mapstructure:"cache"`
 }
 
 type AppConfig struct {
@@ -103,23 +104,23 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota       float64  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
-	DefaultMemory         int64    `mapstructure:"default_memory"`    // 内存限制（字节）
-	DefaultPidsLimit      int64    `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs        bool     `mapstructure:"readonly_rootfs"`
-	RunAsUser             string   `mapstructure:"run_as_user"`
-	AllowedCapabilities   []string `mapstructure:"allowed_capabilities"`
-	Seccomp               string   `mapstructure:"seccomp"`
-	PortRangeStart          int           `mapstructure:"port_range_start"`
-	PortRangeEnd            int           `mapstructure:"port_range_end"`
-	MaxConcurrentPerUser    int           `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL              time.Duration `mapstructure:"default_ttl"`
-	MaxExtends              int           `mapstructure:"max_extends"`
-	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
-	CleanupInterval         string        `mapstructure:"cleanup_interval"`
-	CreateTimeout           time.Duration `mapstructure:"create_timeout"`
-	FlagGlobalSecret        string        `mapstructure:"flag_global_secret"`
-	PublicHost              string        `mapstructure:"public_host"`
+	DefaultCPUQuota      float64       `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory        int64         `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit     int64         `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs       bool          `mapstructure:"readonly_rootfs"`
+	RunAsUser            string        `mapstructure:"run_as_user"`
+	AllowedCapabilities  []string      `mapstructure:"allowed_capabilities"`
+	Seccomp              string        `mapstructure:"seccomp"`
+	PortRangeStart       int           `mapstructure:"port_range_start"`
+	PortRangeEnd         int           `mapstructure:"port_range_end"`
+	MaxConcurrentPerUser int           `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL           time.Duration `mapstructure:"default_ttl"`
+	MaxExtends           int           `mapstructure:"max_extends"`
+	ExtendDuration       time.Duration `mapstructure:"extend_duration"`
+	CleanupInterval      string        `mapstructure:"cleanup_interval"`
+	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
+	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
+	PublicHost           string        `mapstructure:"public_host"`
 }
 
 type PaginationConfig struct {
@@ -127,10 +128,14 @@ type PaginationConfig struct {
 	MaxPageSize     int `mapstructure:"max_page_size"`
 }
 
+type CacheConfig struct {
+	ProgressTTL time.Duration `mapstructure:"progress_ttl"`
+}
+
 type ScoreConfig struct {
-	CacheTTL         time.Duration `mapstructure:"cache_ttl"`
-	LockTimeout      time.Duration `mapstructure:"lock_timeout"`
-	MaxRankingLimit  int           `mapstructure:"max_ranking_limit"`
+	CacheTTL        time.Duration `mapstructure:"cache_ttl"`
+	LockTimeout     time.Duration `mapstructure:"lock_timeout"`
+	MaxRankingLimit int           `mapstructure:"max_ranking_limit"`
 }
 
 type ChallengeConfig struct {
@@ -268,4 +273,5 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("score.cache_ttl", 5*time.Minute)
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)
+	v.SetDefault("cache.progress_ttl", 10*time.Minute)
 }
