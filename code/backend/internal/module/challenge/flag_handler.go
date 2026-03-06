@@ -22,13 +22,13 @@ func NewFlagHandler(flagService *FlagService) *FlagHandler {
 func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, err)
+		response.FromError(c, err)
 		return
 	}
 
 	var req dto.ConfigureFlagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, err)
+		response.ValidationError(c, err)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	}
 
 	if err != nil {
-		response.Error(c, err)
+		response.FromError(c, err)
 		return
 	}
 
@@ -51,13 +51,13 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.Error(c, err)
+		response.FromError(c, err)
 		return
 	}
 
 	flagResp, err := h.flagService.GetFlagConfig(challengeID)
 	if err != nil {
-		response.Error(c, err)
+		response.FromError(c, err)
 		return
 	}
 
