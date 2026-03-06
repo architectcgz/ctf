@@ -21,6 +21,14 @@ type Service struct {
 	logger *zap.Logger
 }
 
+const (
+	managedByLabelKey           = "managed-by"
+	managedByLabelValue         = "ctf-platform"
+	challengeInstanceLabelKey   = "ctf-component"
+	challengeInstanceLabelValue = "challenge-instance"
+	managedContainerNamePrefix  = "ctf-instance-"
+)
+
 func NewService(repo *Repository, engine *Engine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
@@ -52,10 +60,12 @@ func (s *Service) CreateContainer(ctx context.Context, imageName string, env map
 
 	containerID, err = s.engine.CreateContainer(ctx, &model.ContainerConfig{
 		Image: imageName,
+		Name:  buildManagedContainerName(),
 		Env:   envMapToList(env),
 		Ports: map[string]string{
 			strconv.Itoa(s.config.DefaultExposedPort): strconv.Itoa(port),
 		},
+		Labels: managedContainerLabels(),
 	})
 	if err != nil {
 		return "", "", 0, err
@@ -71,7 +81,7 @@ func (s *Service) CreateContainer(ctx context.Context, imageName string, env map
 // RemoveContainer 删除容器
 func (s *Service) RemoveContainer(containerID string) error {
 	if s.engine == nil {
-		s.logger.Info("删除容器（模拟）", zap.String("container_id", containerID))
+		s.logger.Info("删除容器（降级模拟）", zap.String("container_id", containerID))
 		return nil
 	}
 
@@ -82,7 +92,7 @@ func (s *Service) RemoveContainer(containerID string) error {
 		return err
 	}
 
-	s.logger.Info("删除容器（模拟）", zap.String("container_id", containerID))
+	s.logger.Info("删除容器", zap.String("container_id", containerID))
 	return nil
 }
 
@@ -91,7 +101,18 @@ func (s *Service) RemoveNetwork(networkID string) error {
 	if networkID == "" {
 		return nil
 	}
-	s.logger.Info("删除网络（模拟）", zap.String("network_id", networkID))
+	if s.engine == nil {
+		s.logger.Info("删除网络（降级跳过）", zap.String("network_id", networkID))
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.engine.RemoveNetwork(ctx, networkID); err != nil {
+		return err
+	}
+
+	s.logger.Info("删除网络", zap.String("network_id", networkID))
 	return nil
 }
 
@@ -215,12 +236,40 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 }
 
 func (s *Service) CleanupOrphans(ctx context.Context) error {
-	// TODO: 实现孤儿容器清理（B9-B11 实现后集成）
-	// 1. 获取所有运行中的容器列表
-	// 2. 查询数据库中的实例记录
-	// 3. 找出数据库中不存在但容器仍在运行的孤儿容器
-	// 4. 删除孤儿容器和网络
-	s.logger.Info("孤儿容器清理功能待实现")
+	if s.engine == nil {
+		s.logger.Debug("跳过孤儿容器清理，Docker 引擎未启用")
+		return nil
+	}
+
+	managedContainers, err := s.engine.ListManagedContainers(ctx, managedByFilter())
+	if err != nil {
+		return err
+	}
+	activeContainerIDs, err := s.repo.ListActiveContainerIDs()
+	if err != nil {
+		return err
+	}
+
+	activeSet := make(map[string]struct{}, len(activeContainerIDs))
+	for _, containerID := range activeContainerIDs {
+		activeSet[containerID] = struct{}{}
+	}
+
+	orphanContainers := selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod, time.Now())
+	for _, orphan := range orphanContainers {
+		if err := s.RemoveContainer(orphan.ID); err != nil {
+			s.logger.Warn("删除孤儿容器失败",
+				zap.String("container_id", orphan.ID),
+				zap.String("container_name", orphan.Name),
+				zap.Error(err))
+			continue
+		}
+		s.logger.Warn("已清理孤儿容器",
+			zap.String("container_id", orphan.ID),
+			zap.String("container_name", orphan.Name),
+			zap.Time("created_at", orphan.CreatedAt))
+	}
+
 	return nil
 }
 
@@ -253,6 +302,40 @@ func envMapToList(env map[string]string) []string {
 		values = append(values, fmt.Sprintf("%s=%s", key, value))
 	}
 	return values
+}
+
+func buildManagedContainerName() string {
+	return fmt.Sprintf("%s%d", managedContainerNamePrefix, time.Now().UnixNano())
+}
+
+func managedContainerLabels() map[string]string {
+	return map[string]string{
+		managedByLabelKey:         managedByLabelValue,
+		challengeInstanceLabelKey: challengeInstanceLabelValue,
+	}
+}
+
+func managedByFilter() string {
+	return fmt.Sprintf("%s=%s", managedByLabelKey, managedByLabelValue)
+}
+
+func selectOrphanContainers(
+	managedContainers []ManagedContainer,
+	activeContainerIDs map[string]struct{},
+	gracePeriod time.Duration,
+	now time.Time,
+) []ManagedContainer {
+	orphanContainers := make([]ManagedContainer, 0, len(managedContainers))
+	for _, container := range managedContainers {
+		if _, exists := activeContainerIDs[container.ID]; exists {
+			continue
+		}
+		if !container.CreatedAt.IsZero() && now.Sub(container.CreatedAt) < gracePeriod {
+			continue
+		}
+		orphanContainers = append(orphanContainers, container)
+	}
+	return orphanContainers
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

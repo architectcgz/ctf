@@ -28,6 +28,9 @@ func (c *Cleaner) Start(interval string) error {
 		if err := c.service.CleanExpiredInstances(context.Background()); err != nil {
 			c.logger.Error("清理过期实例失败", zap.Error(err))
 		}
+		if err := c.service.CleanupOrphans(context.Background()); err != nil {
+			c.logger.Error("清理孤儿容器失败", zap.Error(err))
+		}
 	}
 
 	_, err := c.cron.AddFunc(interval, cleanFunc)

@@ -124,6 +124,7 @@ type ContainerConfig struct {
 	MaxExtends           int           `mapstructure:"max_extends"`
 	ExtendDuration       time.Duration `mapstructure:"extend_duration"`
 	CleanupInterval      string        `mapstructure:"cleanup_interval"`
+	OrphanGracePeriod    time.Duration `mapstructure:"orphan_grace_period"`
 	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
 	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
 	PublicHost           string        `mapstructure:"public_host"`
@@ -240,6 +241,9 @@ func (c *Config) Validate() error {
 	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
 		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
 	}
+	if c.Container.OrphanGracePeriod <= 0 {
+		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
+	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
 		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
 	}
@@ -351,6 +355,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
 	v.SetDefault("container.create_timeout", 30*time.Second)
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("pagination.default_page_size", 20)

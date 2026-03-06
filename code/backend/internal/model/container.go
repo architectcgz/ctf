@@ -3,8 +3,10 @@ package model
 // ContainerConfig 容器配置
 type ContainerConfig struct {
 	Image     string
+	Name      string
 	Env       []string
 	Ports     map[string]string
+	Labels    map[string]string
 	Resources *ResourceLimits
 	Security  *SecurityConfig
 	Network   string

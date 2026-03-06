@@ -116,6 +116,17 @@ func (r *Repository) CountRunning() (int64, error) {
 	return count, err
 }
 
+func (r *Repository) ListActiveContainerIDs() ([]string, error) {
+	var containerIDs []string
+	if err := r.db.Model(&model.Instance{}).
+		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("container_id <> ''").
+		Pluck("container_id", &containerIDs).Error; err != nil {
+		return nil, err
+	}
+	return containerIDs, nil
+}
+
 func (r *Repository) ListAllocatedPorts() ([]int, error) {
 	var accessURLs []string
 	if err := r.db.Model(&model.Instance{}).
