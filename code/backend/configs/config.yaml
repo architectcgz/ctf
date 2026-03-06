@@ -115,3 +115,8 @@ pagination:
 
 challenge:
   solved_count_cache_ttl: 5m
+
+score:
+  cache_ttl: 5m
+  lock_timeout: 5s
+  max_ranking_limit: 100
