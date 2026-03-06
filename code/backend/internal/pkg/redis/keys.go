@@ -224,7 +224,7 @@ func RankContestTeamKey(contestID int64) string {
 }
 
 // RankContestFrozenKey 封榜后的排行榜快照
-// 数据结构: STRING (JSON 快照) | TTL: 至竞赛结束
+// 数据结构: ZSET (score=total_score, member=team_id) | TTL: 至竞赛结束
 func RankContestFrozenKey(contestID int64) string {
 	return withNS(fmt.Sprintf(keyRankContestFrozenPrefix, contestID))
 }
