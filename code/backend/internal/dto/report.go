@@ -1,0 +1,17 @@
+package dto
+
+type CreatePersonalReportReq struct {
+	Format string `json:"format" binding:"omitempty,oneof=pdf excel"`
+}
+
+type CreateClassReportReq struct {
+	ClassName string `json:"class_name"`
+	Format    string `json:"format" binding:"omitempty,oneof=pdf excel"`
+}
+
+type ReportExportData struct {
+	ReportID    int64   `json:"report_id"`
+	Status      string  `json:"status"`
+	DownloadURL *string `json:"download_url,omitempty"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
+}

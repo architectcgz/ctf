@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/authctx"
 	"ctf-platform/pkg/response"
 )
 
@@ -17,7 +18,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) CreateInstance(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.ValidationError(c, err)
@@ -34,7 +35,7 @@ func (h *Handler) CreateInstance(c *gin.Context) {
 }
 
 func (h *Handler) DestroyInstance(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	instanceID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.ValidationError(c, err)
@@ -50,7 +51,7 @@ func (h *Handler) DestroyInstance(c *gin.Context) {
 }
 
 func (h *Handler) ExtendInstance(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	instanceID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.ValidationError(c, err)
@@ -66,7 +67,7 @@ func (h *Handler) ExtendInstance(c *gin.Context) {
 }
 
 func (h *Handler) ListInstances(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	instances, err := h.service.GetUserInstances(userID)
 	if err != nil {

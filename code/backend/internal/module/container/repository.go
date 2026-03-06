@@ -1,6 +1,9 @@
 package container
 
 import (
+	"errors"
+	"net/url"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -39,10 +42,36 @@ func (r *Repository) FindByUserID(userID int64) ([]*model.Instance, error) {
 	return instances, err
 }
 
+func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	var instance model.Instance
+	err := r.db.Where("user_id = ? AND challenge_id = ? AND status IN ?", userID, challengeID,
+		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		First(&instance).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
+}
+
 func (r *Repository) UpdateStatus(id int64, status string) error {
 	return r.db.Model(&model.Instance{}).
 		Where("id = ?", id).
 		Update("status", status).Error
+}
+
+func (r *Repository) UpdateRuntime(instance *model.Instance) error {
+	return r.db.Model(&model.Instance{}).
+		Where("id = ?", instance.ID).
+		Updates(map[string]any{
+			"container_id": instance.ContainerID,
+			"network_id":   instance.NetworkID,
+			"access_url":   instance.AccessURL,
+			"status":       instance.Status,
+			"updated_at":   time.Now(),
+		}).Error
 }
 
 func (r *Repository) FindExpired() ([]*model.Instance, error) {
@@ -77,4 +106,51 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 		return errcode.ErrExtendLimitExceeded
 	}
 	return nil
+}
+
+func (r *Repository) CountRunning() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Instance{}).
+		Where("status = ?", model.InstanceStatusRunning).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *Repository) ListActiveContainerIDs() ([]string, error) {
+	var containerIDs []string
+	if err := r.db.Model(&model.Instance{}).
+		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("container_id <> ''").
+		Pluck("container_id", &containerIDs).Error; err != nil {
+		return nil, err
+	}
+	return containerIDs, nil
+}
+
+func (r *Repository) ListAllocatedPorts() ([]int, error) {
+	var accessURLs []string
+	if err := r.db.Model(&model.Instance{}).
+		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("access_url <> ''").
+		Pluck("access_url", &accessURLs).Error; err != nil {
+		return nil, err
+	}
+
+	ports := make([]int, 0, len(accessURLs))
+	for _, rawURL := range accessURLs {
+		parsed, err := url.Parse(rawURL)
+		if err != nil {
+			continue
+		}
+		portValue := parsed.Port()
+		if portValue == "" {
+			continue
+		}
+		port, err := strconv.Atoi(portValue)
+		if err != nil {
+			continue
+		}
+		ports = append(ports, port)
+	}
+	return ports, nil
 }

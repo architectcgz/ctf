@@ -22,6 +22,8 @@ func setupTagTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	db.AutoMigrate(&model.Tag{}, &model.ChallengeTag{})
+	if err := db.AutoMigrate(&model.Challenge{}, &model.Tag{}, &model.ChallengeTag{}); err != nil {
+		t.Fatalf("failed to migrate tag tables: %v", err)
+	}
 	return db
 }
