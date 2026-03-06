@@ -28,7 +28,7 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 
 	var req dto.ConfigureFlagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.FromError(c, err)
+		response.ValidationError(c, err)
 		return
 	}
 
