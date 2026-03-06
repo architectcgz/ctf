@@ -40,16 +40,20 @@ func (s *ChallengeService) AddChallengeToContest(contestID int64, req *dto.AddCo
 		return nil, err
 	}
 
-	if s.isContestRunning(contest) {
+	if s.isContestModifiable(contest) {
 		return nil, errcode.ErrContestRunning
 	}
 
-	_, err = s.challengeRepo.FindByID(req.ChallengeID)
+	challenge, err := s.challengeRepo.FindByID(req.ChallengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, err
+	}
+
+	if challenge.Status != model.ChallengeStatusPublished {
+		return nil, errcode.ErrChallengeNotPublished
 	}
 
 	exists, err := s.repo.Exists(contestID, req.ChallengeID)
@@ -60,10 +64,15 @@ func (s *ChallengeService) AddChallengeToContest(contestID int64, req *dto.AddCo
 		return nil, errcode.ErrChallengeAlreadyAdded
 	}
 
+	points := req.Points
+	if points == 0 {
+		points = challenge.Points
+	}
+
 	cc := &model.ContestChallenge{
 		ContestID:   contestID,
 		ChallengeID: req.ChallengeID,
-		Points:      req.Points,
+		Points:      points,
 		Order:       req.Order,
 	}
 
@@ -83,8 +92,16 @@ func (s *ChallengeService) RemoveChallengeFromContest(contestID, challengeID int
 		return err
 	}
 
-	if s.isContestRunning(contest) {
+	if s.isContestModifiable(contest) {
 		return errcode.ErrContestRunning
+	}
+
+	exists, err := s.repo.Exists(contestID, challengeID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errcode.ErrChallengeNotInContest
 	}
 
 	return s.repo.RemoveChallenge(contestID, challengeID)
@@ -99,8 +116,16 @@ func (s *ChallengeService) UpdateChallengePoints(contestID, challengeID int64, r
 		return err
 	}
 
-	if s.isContestRunning(contest) {
+	if s.isContestModifiable(contest) {
 		return errcode.ErrContestRunning
+	}
+
+	exists, err := s.repo.Exists(contestID, challengeID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return errcode.ErrChallengeNotInContest
 	}
 
 	return s.repo.UpdatePoints(contestID, challengeID, req.Points)
@@ -119,8 +144,8 @@ func (s *ChallengeService) GetContestChallenges(contestID int64) ([]*dto.Contest
 	return result, nil
 }
 
-func (s *ChallengeService) isContestRunning(contest *model.Contest) bool {
-	return contest.Status == "running"
+func (s *ChallengeService) isContestModifiable(contest *model.Contest) bool {
+	return contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded
 }
 
 func (s *ChallengeService) toResp(cc *model.ContestChallenge) *dto.ContestChallengeResp {
