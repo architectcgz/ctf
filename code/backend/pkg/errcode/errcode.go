@@ -79,10 +79,17 @@ var (
 
 // 竞赛相关错误码 (14000-14999)
 var (
-	ErrContestNotStarted    = New(14001, "竞赛尚未开始", http.StatusForbidden)
-	ErrContestEnded         = New(14002, "竞赛已结束", http.StatusForbidden)
-	ErrNotRegistered        = New(14005, "未报名该竞赛", http.StatusForbidden)
-	ErrContestNotFound      = New(14010, "竞赛不存在", http.StatusNotFound)
-	ErrTeamNotFound         = New(14011, "队伍不存在", http.StatusNotFound)
-	ErrChallengeNotInContest = New(14012, "题目不在该竞赛中", http.StatusNotFound)
+	ErrContestNotStarted         = New(14001, "竞赛尚未开始", http.StatusForbidden)
+	ErrContestEnded              = New(14002, "竞赛已结束", http.StatusForbidden)
+	ErrContestNotRunning         = New(14003, "竞赛未在进行中", http.StatusForbidden)
+	ErrRegistrationNotApproved   = New(14004, "报名未通过审核", http.StatusForbidden)
+	ErrNotRegistered             = New(14005, "未报名该竞赛", http.StatusForbidden)
+	ErrContestNotFound           = New(14010, "竞赛不存在", http.StatusNotFound)
+	ErrTeamNotFound              = New(14011, "队伍不存在", http.StatusNotFound)
+	ErrChallengeNotInContest     = New(14012, "题目不在该竞赛中", http.StatusNotFound)
+	ErrContestChallengeAlreadySolved = New(14013, "该题目已在本场竞赛中解决", http.StatusConflict)
 )
+
+func ErrInvalidParam(param string) *AppError {
+	return New(10001, "参数错误: "+param, http.StatusBadRequest)
+}

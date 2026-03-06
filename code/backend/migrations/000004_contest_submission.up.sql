@@ -8,6 +8,11 @@ ADD COLUMN score INT NOT NULL DEFAULT 0;
 
 CREATE INDEX idx_submissions_contest_id ON submissions(contest_id) WHERE contest_id IS NOT NULL;
 
+-- 防止同一用户在同一竞赛中对同一题目重复获得分数
+CREATE UNIQUE INDEX uk_submission_contest_user_challenge
+ON submissions(contest_id, user_id, challenge_id)
+WHERE is_correct = TRUE AND contest_id IS NOT NULL;
+
 -- 创建 contests 表
 CREATE TABLE contests (
     id BIGSERIAL PRIMARY KEY,
