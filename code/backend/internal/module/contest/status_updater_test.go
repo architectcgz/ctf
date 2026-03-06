@@ -26,6 +26,10 @@ func (s *statusUpdaterRepoStub) Update(context.Context, *model.Contest) error {
 	panic("unexpected call")
 }
 
+func (s *statusUpdaterRepoStub) FindTeamsByIDs(context.Context, []int64) ([]*model.Team, error) {
+	panic("unexpected call")
+}
+
 func (s *statusUpdaterRepoStub) List(context.Context, *string, int, int) ([]*model.Contest, int64, error) {
 	panic("unexpected call")
 }
@@ -55,7 +59,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 			},
 		},
 	}
-	updater := NewStatusUpdater(repo, time.Minute, 100, nil)
+	updater := NewStatusUpdater(repo, nil, time.Minute, 100, nil)
 
 	updater.updateStatuses(context.Background())
 
@@ -66,7 +70,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 
 func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 	repo := &statusUpdaterRepoStub{}
-	updater := NewStatusUpdater(repo, time.Minute, 100, nil)
+	updater := NewStatusUpdater(repo, nil, time.Minute, 100, nil)
 
 	updater.updateStatuses(context.Background())
 

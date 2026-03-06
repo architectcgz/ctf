@@ -186,6 +186,7 @@ func toContestResp(contest *model.Contest) *dto.ContestResp {
 		Mode:        contest.Mode,
 		StartTime:   contest.StartTime,
 		EndTime:     contest.EndTime,
+		FreezeTime:  contest.FreezeTime,
 		Status:      contest.Status,
 		CreatedAt:   contest.CreatedAt,
 		UpdatedAt:   contest.UpdatedAt,

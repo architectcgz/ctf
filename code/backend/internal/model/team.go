@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Team 队伍模型
 type Team struct {
 	ID         int64          `gorm:"column:id;primaryKey"`
 	ContestID  int64          `gorm:"column:contest_id;index"`
@@ -23,7 +22,6 @@ func (Team) TableName() string {
 	return "teams"
 }
 
-// TeamMember 队伍成员模型
 type TeamMember struct {
 	ID        int64     `gorm:"column:id;primaryKey"`
 	ContestID int64     `gorm:"column:contest_id"`

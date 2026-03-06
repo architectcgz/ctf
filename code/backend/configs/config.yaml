@@ -129,3 +129,6 @@ cache:
 contest:
   status_update_interval: 1m
   status_update_batch_size: 1000
+  base_score: 1000
+  min_score: 100
+  decay: 0.9

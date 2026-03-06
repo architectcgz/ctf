@@ -90,4 +90,6 @@ var (
 	ErrChallengeNotPublished   = New(14009, "只能添加已发布的题目", http.StatusBadRequest)
 	ErrContestChallengeVisible = New(14010, "当前竞赛状态下不可查看题目", http.StatusForbidden)
 	ErrContestChallengeHasSubs = New(14011, "该题目已有竞赛提交记录，无法移除", http.StatusConflict)
+	ErrContestEnded            = New(14012, "竞赛已结束", http.StatusForbidden)
+	ErrScoreboardNotFrozen     = New(14013, "排行榜未冻结", http.StatusBadRequest)
 )

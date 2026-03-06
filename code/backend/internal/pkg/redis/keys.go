@@ -191,6 +191,8 @@ const (
 	keyRankContestTeamPrefix = "rank:contest:%d:team"
 	// keyRankContestFrozenPrefix 封榜后的排行榜快照
 	keyRankContestFrozenPrefix = "rank:contest:%d:frozen"
+	// keyContestFreezeFlagPrefix 竞赛排行榜冻结标记
+	keyContestFreezeFlagPrefix = "contest:freeze_flag:"
 )
 
 // ContestDetailKey 竞赛详情缓存
@@ -224,9 +226,15 @@ func RankContestTeamKey(contestID int64) string {
 }
 
 // RankContestFrozenKey 封榜后的排行榜快照
-// 数据结构: STRING (JSON 快照) | TTL: 至竞赛结束
+// 数据结构: ZSET (score=total_score, member=team_id) | TTL: 至竞赛结束
 func RankContestFrozenKey(contestID int64) string {
 	return withNS(fmt.Sprintf(keyRankContestFrozenPrefix, contestID))
+}
+
+// ContestFreezeFlagKey 竞赛排行榜冻结标记
+// 数据结构: STRING ("1") | TTL: 至竞赛结束
+func ContestFreezeFlagKey(contestID int64) string {
+	return withNS(fmt.Sprintf("%s%d", keyContestFreezeFlagPrefix, contestID))
 }
 
 // ============================================================

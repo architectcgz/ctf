@@ -124,8 +124,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	// 实践模块（学员）
 	// 竞赛管理（仅管理员）
 	contestRepo := contestModule.NewRepository(db)
+	scoreboardService := contestModule.NewScoreboardService(contestRepo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
-	contestHandler := contestModule.NewHandler(contestService)
+	contestHandler := contestModule.NewHandler(contestService, scoreboardService)
 	contestChallengeRepo := contestModule.NewChallengeRepository(db)
 	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challengeRepo, contestRepo)
 	contestChallengeHandler := contestModule.NewChallengeHandler(contestChallengeService)
@@ -135,6 +136,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.POST("/contests", contestHandler.CreateContest)
 	adminOnly.PUT("/contests/:id", middleware.ParseInt64Param("id"), contestHandler.UpdateContest)
 	adminOnly.GET("/contests", contestHandler.ListContests)
+	adminOnly.POST("/contests/:id/freeze", contestHandler.FreezeScoreboard)
+	adminOnly.POST("/contests/:id/unfreeze", contestHandler.UnfreezeScoreboard)
 	adminOnly.GET("/contests/:id/challenges", contestChallengeHandler.ListAdminChallenges)
 	adminOnly.POST("/contests/:id/challenges", contestChallengeHandler.AddChallenge)
 	adminOnly.PUT("/contests/:id/challenges/:cid", contestChallengeHandler.UpdatePoints)
@@ -144,6 +147,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	contestGroup := apiV1.Group("/contests")
 	contestGroup.GET("", contestHandler.ListContests)
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
+	contestGroup.GET("/:id/scoreboard", contestHandler.GetScoreboard)
 	protected.GET("/contests/:id/challenges", contestChallengeHandler.ListChallenges)
 	protected.GET("/contests/:id/teams", teamHandler.ListTeams)
 	protected.POST("/contests/:id/teams", teamHandler.CreateTeam)
