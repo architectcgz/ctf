@@ -1,5 +1,5 @@
 -- 添加 order 唯一索引
-ALTER TABLE contest_challenges ADD UNIQUE KEY idx_contest_order (contest_id, `order`);
+ALTER TABLE contest_challenges ADD UNIQUE KEY idx_contest_order (contest_id, `order`, deleted_at);
 
 -- 添加外键约束
 ALTER TABLE contest_challenges
