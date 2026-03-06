@@ -83,17 +83,23 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// H3: 状态流转校验
+	// H3: 状态流转校验（先校验，不修改）
 	if req.Status != nil && *req.Status != contest.Status {
 		if !isValidTransition(contest.Status, *req.Status) {
 			return nil, errcode.ErrInvalidStatusTransition
 		}
-		contest.Status = *req.Status
 	}
 
-	// H5: 禁止在 running/ended 状态修改时间
+	// H5: 禁止在 registration/running/ended 状态修改开始时间
+	if contest.Status == model.ContestStatusRegistration || contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
+		if req.StartTime != nil {
+			return nil, errcode.ErrContestAlreadyStarted
+		}
+	}
+
+	// 禁止在 running/ended 状态修改结束时间
 	if contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
-		if req.StartTime != nil || req.EndTime != nil {
+		if req.EndTime != nil {
 			return nil, errcode.ErrContestAlreadyStarted
 		}
 	}
@@ -101,7 +107,7 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 	// M5: 禁止在非 draft 状态修改模式
 	if req.Mode != nil && *req.Mode != contest.Mode {
 		if contest.Status != model.ContestStatusDraft {
-			return nil, errcode.ErrContestAlreadyStarted
+			return nil, errcode.ErrCannotModifyAfterDraft
 		}
 		contest.Mode = *req.Mode
 	}
@@ -121,6 +127,11 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 
 	if !contest.EndTime.After(contest.StartTime) {
 		return nil, errcode.ErrInvalidTimeRange
+	}
+
+	// 所有校验通过后再设置状态
+	if req.Status != nil {
+		contest.Status = *req.Status
 	}
 
 	if err := s.repo.Update(ctx, contest); err != nil {
