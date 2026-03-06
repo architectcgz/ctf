@@ -3,6 +3,7 @@ package contest
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -18,6 +19,7 @@ type Repository interface {
 	FindByID(ctx context.Context, id int64) (*model.Contest, error)
 	Update(ctx context.Context, contest *model.Contest) error
 	List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error)
+	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
 	UpdateStatus(ctx context.Context, id int64, status string) error
 }
 
@@ -66,6 +68,35 @@ func (r *repository) List(ctx context.Context, status *string, offset, limit int
 	return contests, total, err
 }
 
+func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error) {
+	var contests []*model.Contest
+	var total int64
+
+	query := r.db.WithContext(ctx).Model(&model.Contest{}).
+		Where("status IN ?", statuses).
+		Where("end_time > ?", now)
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Offset(offset).Limit(limit).Find(&contests).Error
+	return contests, total, err
+}
+
 func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) error {
-	return r.db.WithContext(ctx).Model(&model.Contest{}).Where("id = ?", id).Update("status", status).Error
+	result := r.db.WithContext(ctx).Model(&model.Contest{}).
+		Where("id = ?", id).
+		Where("status != ?", status).
+		Update("status", status)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return ErrContestNotFound
+	}
+
+	return nil
 }

@@ -10,19 +10,26 @@ import (
 )
 
 type StatusUpdater struct {
-	repo Repository
-	log  *zap.Logger
+	repo      Repository
+	log       *zap.Logger
+	interval  time.Duration
+	batchSize int
 }
 
-func NewStatusUpdater(repo Repository, log *zap.Logger) *StatusUpdater {
+func NewStatusUpdater(repo Repository, interval time.Duration, batchSize int, log *zap.Logger) *StatusUpdater {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &StatusUpdater{repo: repo, log: log}
+	return &StatusUpdater{
+		repo:      repo,
+		log:       log,
+		interval:  interval,
+		batchSize: batchSize,
+	}
 }
 
 func (u *StatusUpdater) Start(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(u.interval)
 	defer ticker.Stop()
 
 	for {
@@ -38,7 +45,13 @@ func (u *StatusUpdater) Start(ctx context.Context) {
 func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 	now := time.Now()
 
-	contests, _, err := u.repo.List(ctx, nil, 0, 1000)
+	statuses := []string{
+		model.ContestStatusDraft,
+		model.ContestStatusRegistration,
+		model.ContestStatusRunning,
+	}
+
+	contests, _, err := u.repo.ListByStatusesAndTimeRange(ctx, statuses, now, 0, u.batchSize)
 	if err != nil {
 		u.log.Error("list_contests_failed", zap.Error(err))
 		return
