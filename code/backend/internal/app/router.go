@@ -10,6 +10,7 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	assessmentModule "ctf-platform/internal/module/assessment"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
 	containerModule "ctf-platform/internal/module/container"
@@ -126,6 +127,13 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	challengeGroup := protected.Group("/challenges")
 	challengeGroup.POST("/:id/submit", middleware.ParseChallengeID(), practiceHandler.SubmitFlag)
+
+	// 能力画像
+	assessmentRepo := assessmentModule.NewRepository(db)
+	assessmentService := assessmentModule.NewService(assessmentRepo, db)
+	assessmentHandler := assessmentModule.NewHandler(assessmentService)
+	protected.GET("/users/me/skill-profile", assessmentHandler.GetMySkillProfile)
+	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 
 	return engine, nil
 }
