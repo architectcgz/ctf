@@ -112,12 +112,14 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	// Flag 提交（学员）
 	practiceRepo := practiceModule.NewRepository(db)
 	containerRepo := containerModule.NewRepository(db)
+	scoreService := practiceModule.NewScoreService(db, cache, log.Named("score_service"), &cfg.Score)
 	practiceService := practiceModule.NewService(
 		practiceRepo,
 		challengeRepo,
 		containerRepo,
+		scoreService,
 		cache,
-		log,
+		log.Named("practice_service"),
 		cfg.Container.FlagGlobalSecret,
 		cfg.RateLimit.FlagSubmit.Limit,
 		cfg.RateLimit.FlagSubmit.Window,
