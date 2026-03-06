@@ -4,9 +4,12 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	ErrMsgInvalidContestID = "无效的竞赛ID"
 )
 
 type Handler struct {
@@ -24,8 +27,8 @@ func NewHandler(scoreboardService *ScoreboardService, repo *Repository) *Handler
 // GetScoreboard 获取排行榜
 func (h *Handler) GetScoreboard(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.InvalidParams(c, "无效的竞赛ID")
+	if err != nil || contestID <= 0 {
+		response.InvalidParams(c, ErrMsgInvalidContestID)
 		return
 	}
 
@@ -41,8 +44,8 @@ func (h *Handler) GetScoreboard(c *gin.Context) {
 // FreezeScoreboard 冻结排行榜
 func (h *Handler) FreezeScoreboard(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.InvalidParams(c, "无效的竞赛ID")
+	if err != nil || contestID <= 0 {
+		response.InvalidParams(c, ErrMsgInvalidContestID)
 		return
 	}
 
@@ -52,39 +55,23 @@ func (h *Handler) FreezeScoreboard(c *gin.Context) {
 		return
 	}
 
-	contest, err := h.repo.FindByID(contestID)
-	if err != nil {
+	if err := h.scoreboardService.FreezeScoreboard(c.Request.Context(), contestID, req.MinutesBeforeEnd); err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	freezeTime := contest.EndTime.Add(-time.Duration(req.MinutesBeforeEnd) * time.Minute)
-	contest.FreezeTime = &freezeTime
-
-	if err := h.repo.Update(contest); err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, gin.H{"freeze_time": freezeTime})
+	response.Success(c, gin.H{"message": "排行榜已冻结"})
 }
 
 // UnfreezeScoreboard 解冻排行榜
 func (h *Handler) UnfreezeScoreboard(c *gin.Context) {
 	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.InvalidParams(c, "无效的竞赛ID")
+	if err != nil || contestID <= 0 {
+		response.InvalidParams(c, ErrMsgInvalidContestID)
 		return
 	}
 
-	contest, err := h.repo.FindByID(contestID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	contest.FreezeTime = nil
-	if err := h.repo.Update(contest); err != nil {
+	if err := h.scoreboardService.UnfreezeScoreboard(c.Request.Context(), contestID); err != nil {
 		response.FromError(c, err)
 		return
 	}

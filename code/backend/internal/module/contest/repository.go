@@ -28,3 +28,9 @@ func (r *Repository) FindTeamByID(teamID int64) (*model.Team, error) {
 	err := r.db.Where("id = ?", teamID).First(&team).Error
 	return &team, err
 }
+
+func (r *Repository) FindTeamsByIDs(ids []int64) ([]*model.Team, error) {
+	var teams []*model.Team
+	err := r.db.Where("id IN ?", ids).Find(&teams).Error
+	return teams, err
+}
