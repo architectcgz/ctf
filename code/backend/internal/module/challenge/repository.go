@@ -89,6 +89,7 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Where("difficulty = ?", query.Difficulty)
 	}
 	if query.Keyword != "" {
+		// GORM 会自动转义参数，防止 SQL 注入
 		db = db.Where("title LIKE ? OR description LIKE ?", "%"+query.Keyword+"%", "%"+query.Keyword+"%")
 	}
 
@@ -103,21 +104,24 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Order("created_at DESC")
 	}
 
-	page := query.Page
+	db = r.applyPagination(db, query.Page, query.Size)
+	err := db.Find(&challenges).Error
+	return challenges, total, err
+}
+
+// applyPagination 应用分页逻辑
+func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 	if page < 1 {
 		page = 1
 	}
-	size := query.Size
 	if size < 1 {
 		size = 20
 	}
 	if size > 100 {
 		size = 100
 	}
-
 	offset := (page - 1) * size
-	err := db.Offset(offset).Limit(size).Find(&challenges).Error
-	return challenges, total, err
+	return db.Offset(offset).Limit(size)
 }
 
 // GetSolvedStatus 获取用户是否已完成靶场
@@ -146,4 +150,71 @@ func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
 		Where("challenge_id = ?", challengeID).
 		Count(&count).Error
 	return count, err
+}
+
+// BatchGetSolvedStatus 批量获取用户完成状态
+func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error) {
+	if userID == 0 || len(challengeIDs) == 0 {
+		return make(map[int64]bool), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+	}
+	err := r.db.Table("submissions").
+		Select("DISTINCT challenge_id").
+		Where("user_id = ? AND challenge_id IN ? AND is_correct = ?", userID, challengeIDs, true).
+		Find(&results).Error
+
+	statusMap := make(map[int64]bool)
+	for _, r := range results {
+		statusMap[r.ChallengeID] = true
+	}
+	return statusMap, err
+}
+
+// BatchGetSolvedCount 批量获取靶场完成人数
+func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error) {
+	if len(challengeIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+		Count       int64
+	}
+	err := r.db.Table("submissions").
+		Select("challenge_id, COUNT(DISTINCT user_id) as count").
+		Where("challenge_id IN ? AND is_correct = ?", challengeIDs, true).
+		Group("challenge_id").
+		Find(&results).Error
+
+	countMap := make(map[int64]int64)
+	for _, r := range results {
+		countMap[r.ChallengeID] = r.Count
+	}
+	return countMap, err
+}
+
+// BatchGetTotalAttempts 批量获取靶场尝试次数
+func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int64, error) {
+	if len(challengeIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+		Count       int64
+	}
+	err := r.db.Table("submissions").
+		Select("challenge_id, COUNT(*) as count").
+		Where("challenge_id IN ?", challengeIDs).
+		Group("challenge_id").
+		Find(&results).Error
+
+	countMap := make(map[int64]int64)
+	for _, r := range results {
+		countMap[r.ChallengeID] = r.Count
+	}
+	return countMap, err
 }
