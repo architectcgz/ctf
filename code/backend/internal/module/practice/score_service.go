@@ -86,7 +86,17 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 				return 0
 			end
 		`
-		s.redis.Eval(ctx, script, []string{lockKey}, lockToken)
+		result, err := s.redis.Eval(ctx, script, []string{lockKey}, lockToken).Result()
+		if err != nil {
+			s.logger.Error("释放分布式锁失败",
+				zap.Int64("userID", userID),
+				zap.String("lockKey", lockKey),
+				zap.Error(err))
+		} else if result == int64(0) {
+			s.logger.Warn("锁已被其他协程占用或已过期",
+				zap.Int64("userID", userID),
+				zap.String("lockToken", lockToken))
+		}
 	}()
 
 	// 查询用户已解决的题目
