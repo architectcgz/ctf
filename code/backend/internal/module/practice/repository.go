@@ -168,7 +168,7 @@ func (r *Repository) GetUserTimeline(userID int64, limit, offset int) ([]struct 
 	err := r.db.Raw(`
 		SELECT events.*, c.title FROM (
 			SELECT 'instance_start' as type, i.challenge_id, i.created_at as timestamp,
-				NULL::boolean as is_correct, NULL::integer as points
+				NULL as is_correct, NULL as points
 			FROM instances i
 			WHERE i.user_id = ?
 			UNION ALL
@@ -179,7 +179,7 @@ func (r *Repository) GetUserTimeline(userID int64, limit, offset int) ([]struct 
 			WHERE s.user_id = ?
 			UNION ALL
 			SELECT 'instance_destroy' as type, i.challenge_id, i.updated_at as timestamp,
-				NULL::boolean as is_correct, NULL::integer as points
+				NULL as is_correct, NULL as points
 			FROM instances i
 			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired')
 		) events
