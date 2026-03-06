@@ -2,12 +2,12 @@ package practice
 
 import (
 	"context"
+	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -24,6 +24,7 @@ type Service struct {
 	globalSecret  string
 	submitLimit   int
 	submitWindow  time.Duration
+	progressTTL   time.Duration
 }
 
 type ChallengeRepository interface {
@@ -34,7 +35,7 @@ type InstanceRepository interface {
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
-func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
+func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow, progressTTL time.Duration) *Service {
 	return &Service{
 		repo:          repo,
 		challengeRepo: challengeRepo,
@@ -44,6 +45,7 @@ func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRep
 		globalSecret:  globalSecret,
 		submitLimit:   submitLimit,
 		submitWindow:  submitWindow,
+		progressTTL:   progressTTL,
 	}
 }
 
@@ -70,7 +72,7 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	}
 
 	// 3. 防暴力破解：使用 Redis 限流（每用户每题）
-	rateLimitKey := fmt.Sprintf("ctf:submit:%d:%d", userID, challengeID)
+	rateLimitKey := constants.SubmitLimitKey(userID, challengeID)
 	ctx := context.Background()
 	count, err := s.redis.Incr(ctx, rateLimitKey).Result()
 	if err != nil {
@@ -126,14 +128,20 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// 6. 记录日志
+	// 6. 提交成功后删除进度缓存
+	if isCorrect {
+		cacheKey := constants.UserProgressKey(userID)
+		s.redis.Del(ctx, cacheKey)
+	}
+
+	// 7. 记录日志
 	if isCorrect {
 		s.logger.Info("Flag验证成功", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID))
 	} else {
 		s.logger.Debug("Flag验证失败", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID), zap.String("flagPrefix", flag[:min(len(flag), 10)]))
 	}
 
-	// 7. 返回结果
+	// 8. 返回结果
 	resp := &dto.SubmissionResp{
 		IsCorrect:   isCorrect,
 		SubmittedAt: submission.SubmittedAt,
@@ -151,13 +159,15 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 // GetProgress 获取用户解题进度
 func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf("ctf:progress:%d", userID)
+	cacheKey := constants.UserProgressKey(userID)
 
 	// 1. 尝试从缓存获取
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var resp dto.ProgressResp
-		if json.Unmarshal([]byte(cached), &resp) == nil {
+		if err := json.Unmarshal([]byte(cached), &resp); err != nil {
+			s.logger.Warn("进度缓存反序列化失败", zap.Int64("userID", userID), zap.Error(err))
+		} else {
 			return &resp, nil
 		}
 	}
@@ -212,17 +222,17 @@ func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
 		}
 	}
 
-	// 4. 缓存结果（10 分钟）
+	// 4. 缓存结果
 	if data, err := json.Marshal(resp); err == nil {
-		s.redis.Set(ctx, cacheKey, data, 10*time.Minute)
+		s.redis.Set(ctx, cacheKey, data, s.progressTTL)
 	}
 
 	return resp, nil
 }
 
 // GetTimeline 获取用户时间线
-func (s *Service) GetTimeline(userID int64) (*dto.TimelineResp, error) {
-	events, err := s.repo.GetUserTimeline(userID)
+func (s *Service) GetTimeline(userID int64, limit int) (*dto.TimelineResp, error) {
+	events, err := s.repo.GetUserTimeline(userID, limit)
 	if err != nil {
 		s.logger.Error("查询用户时间线失败", zap.Int64("userID", userID), zap.Error(err))
 		return nil, errcode.ErrInternal.WithCause(err)

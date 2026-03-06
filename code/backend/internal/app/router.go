@@ -121,6 +121,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		cfg.Container.FlagGlobalSecret,
 		cfg.RateLimit.FlagSubmit.Limit,
 		cfg.RateLimit.FlagSubmit.Window,
+		cfg.Cache.ProgressTTL,
 	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
 
