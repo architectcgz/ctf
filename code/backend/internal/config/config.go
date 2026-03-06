@@ -23,6 +23,7 @@ type Config struct {
 	Challenge  ChallengeConfig  `mapstructure:"challenge"`
 	Score      ScoreConfig      `mapstructure:"score"`
 	Cache      CacheConfig      `mapstructure:"cache"`
+	Contest    ContestConfig    `mapstructure:"contest"`
 }
 
 type AppConfig struct {
@@ -140,6 +141,11 @@ type ScoreConfig struct {
 
 type ChallengeConfig struct {
 	SolvedCountCacheTTL time.Duration `mapstructure:"solved_count_cache_ttl"`
+}
+
+type ContestConfig struct {
+	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
+	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
 }
 
 func Load(env string) (*Config, error) {
@@ -274,4 +280,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)
 	v.SetDefault("cache.progress_ttl", 10*time.Minute)
+	v.SetDefault("contest.status_update_interval", 1*time.Minute)
+	v.SetDefault("contest.status_update_batch_size", 1000)
 }

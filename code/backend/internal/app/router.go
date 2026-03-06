@@ -13,6 +13,7 @@ import (
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
 	containerModule "ctf-platform/internal/module/container"
+	contestModule "ctf-platform/internal/module/contest"
 	practiceModule "ctf-platform/internal/module/practice"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
@@ -119,6 +120,20 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	flagHandler := challengeModule.NewFlagHandler(flagService)
 	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
 	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
+
+	// 实践模块（学员）
+	// 竞赛管理（仅管理员）
+	contestRepo := contestModule.NewRepository(db)
+	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
+	contestHandler := contestModule.NewHandler(contestService)
+	adminOnly.POST("/contests", contestHandler.CreateContest)
+	adminOnly.PUT("/contests/:id", middleware.ParseInt64Param("id"), contestHandler.UpdateContest)
+	adminOnly.GET("/contests", contestHandler.ListContests)
+
+	// 竞赛公开接口
+	contestGroup := apiV1.Group("/contests")
+	contestGroup.GET("", contestHandler.ListContests)
+	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
 
 	// 实践模块（学员）
 	practiceRepo := practiceModule.NewRepository(db)

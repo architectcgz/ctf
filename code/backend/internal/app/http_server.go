@@ -11,12 +11,16 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/contest"
 )
 
 type HTTPServer struct {
-	server  *http.Server
-	cleaner *container.Cleaner
-	logger  *zap.Logger
+	server        *http.Server
+	cleaner       *container.Cleaner
+	statusUpdater *contest.StatusUpdater
+	updaterCtx    context.Context
+	updaterCancel context.CancelFunc
+	logger        *zap.Logger
 }
 
 func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*HTTPServer, error) {
@@ -33,6 +37,16 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		return nil, fmt.Errorf("启动清理任务失败: %w", err)
 	}
 
+	contestRepo := contest.NewRepository(db)
+	statusUpdater := contest.NewStatusUpdater(
+		contestRepo,
+		cfg.Contest.StatusUpdateInterval,
+		cfg.Contest.StatusUpdateBatchSize,
+		log.Named("contest_status_updater"),
+	)
+	updaterCtx, updaterCancel := context.WithCancel(context.Background())
+	go statusUpdater.Start(updaterCtx)
+
 	return &HTTPServer{
 		server: &http.Server{
 			Addr:         fmt.Sprintf("%s:%d", cfg.HTTP.Host, cfg.HTTP.Port),
@@ -41,8 +55,11 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 			WriteTimeout: cfg.HTTP.WriteTimeout,
 			IdleTimeout:  cfg.HTTP.IdleTimeout,
 		},
-		cleaner: cleaner,
-		logger:  log,
+		cleaner:       cleaner,
+		statusUpdater: statusUpdater,
+		updaterCtx:    updaterCtx,
+		updaterCancel: updaterCancel,
+		logger:        log,
 	}, nil
 }
 
@@ -53,5 +70,7 @@ func (s *HTTPServer) Start() error {
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	s.logger.Info("停止清理任务")
 	s.cleaner.Stop()
+	s.logger.Info("停止竞赛状态更新任务")
+	s.updaterCancel()
 	return s.server.Shutdown(ctx)
 }
