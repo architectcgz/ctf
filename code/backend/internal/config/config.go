@@ -10,16 +10,17 @@ import (
 )
 
 type Config struct {
-	App        AppConfig        `mapstructure:"app"`
-	HTTP       HTTPConfig       `mapstructure:"http"`
-	Log        LogConfig        `mapstructure:"log"`
-	Postgres   PostgresConfig   `mapstructure:"postgres"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	CORS       CORSConfig       `mapstructure:"cors"`
-	Auth       AuthConfig       `mapstructure:"auth"`
-	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
-	Container  ContainerConfig  `mapstructure:"container"`
-	Pagination PaginationConfig `mapstructure:"pagination"`
+	App            AppConfig            `mapstructure:"app"`
+	HTTP           HTTPConfig           `mapstructure:"http"`
+	Log            LogConfig            `mapstructure:"log"`
+	Postgres       PostgresConfig       `mapstructure:"postgres"`
+	Redis          RedisConfig          `mapstructure:"redis"`
+	CORS           CORSConfig           `mapstructure:"cors"`
+	Auth           AuthConfig           `mapstructure:"auth"`
+	RateLimit      RateLimitConfig      `mapstructure:"rate_limit"`
+	Container      ContainerConfig      `mapstructure:"container"`
+	Pagination     PaginationConfig     `mapstructure:"pagination"`
+	Recommendation RecommendationConfig `mapstructure:"recommendation"`
 }
 
 type AppConfig struct {
@@ -119,6 +120,12 @@ type ContainerConfig struct {
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type RecommendationConfig struct {
+	WeakThreshold  float64       `mapstructure:"weak_threshold"`
+	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
+	CacheKeyPrefix string        `mapstructure:"cache_key_prefix"`
 }
 
 func Load(env string) (*Config, error) {
@@ -227,4 +234,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
+	v.SetDefault("recommendation.weak_threshold", 0.4)
+	v.SetDefault("recommendation.cache_ttl", 1*time.Hour)
+	v.SetDefault("recommendation.cache_key_prefix", "ctf:recommendation")
 }
