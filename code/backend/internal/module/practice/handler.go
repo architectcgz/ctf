@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -67,4 +68,29 @@ func (h *Handler) ListUserInstances(c *gin.Context) {
 	}
 
 	response.Success(c, instances)
+}
+
+// SubmitFlag 提交 Flag
+// POST /api/v1/challenges/:id/submit
+func (h *Handler) SubmitFlag(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	var req dto.SubmitFlagReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	resp, err := h.service.SubmitFlag(userID, challengeID, req.Flag)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }

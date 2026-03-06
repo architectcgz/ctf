@@ -93,3 +93,13 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 	}
 	return nil
 }
+
+// FindByUserAndChallenge 查找用户的靶场实例
+func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	var instance model.Instance
+	err := r.db.Where("user_id = ? AND challenge_id = ? AND status = ?",
+		userID, challengeID, model.InstanceStatusRunning).
+		Order("created_at DESC").
+		First(&instance).Error
+	return &instance, err
+}
