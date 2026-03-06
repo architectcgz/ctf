@@ -21,6 +21,7 @@ type Config struct {
 	Container  ContainerConfig  `mapstructure:"container"`
 	Pagination PaginationConfig `mapstructure:"pagination"`
 	Challenge  ChallengeConfig  `mapstructure:"challenge"`
+	Score      ScoreConfig      `mapstructure:"score"`
 }
 
 type AppConfig struct {
@@ -124,6 +125,12 @@ type ContainerConfig struct {
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type ScoreConfig struct {
+	CacheTTL         time.Duration `mapstructure:"cache_ttl"`
+	LockTimeout      time.Duration `mapstructure:"lock_timeout"`
+	MaxRankingLimit  int           `mapstructure:"max_ranking_limit"`
 }
 
 type ChallengeConfig struct {
@@ -258,4 +265,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
+	v.SetDefault("score.cache_ttl", 5*time.Minute)
+	v.SetDefault("score.lock_timeout", 5*time.Second)
+	v.SetDefault("score.max_ranking_limit", 100)
 }

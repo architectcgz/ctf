@@ -23,6 +23,7 @@ type Service struct {
 	challengeRepo    *challenge.Repository
 	instanceRepo     *container.Repository
 	containerService *container.Service
+	scoreService     *ScoreService
 	redis            *redis.Client
 	config           *config.Config
 	logger           *zap.Logger
@@ -33,6 +34,7 @@ func NewService(
 	challengeRepo *challenge.Repository,
 	instanceRepo *container.Repository,
 	containerService *container.Service,
+	scoreService *ScoreService,
 	redis *redis.Client,
 	config *config.Config,
 	logger *zap.Logger,
@@ -42,6 +44,7 @@ func NewService(
 		challengeRepo:    challengeRepo,
 		instanceRepo:     instanceRepo,
 		containerService: containerService,
+		scoreService:     scoreService,
 		redis:            redis,
 		config:           config,
 		logger:           logger,
@@ -182,6 +185,13 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	if isCorrect {
 		resp.Message = "恭喜你，Flag 正确！"
 		resp.Points = challengeItem.Points
+		if s.scoreService != nil {
+			go func() {
+				if err := s.scoreService.UpdateUserScore(userID); err != nil {
+					s.logger.Error("更新用户得分失败", zap.Int64("user_id", userID), zap.Error(err))
+				}
+			}()
+		}
 	} else {
 		resp.Message = "Flag 错误，请重试"
 	}
