@@ -107,7 +107,9 @@ container:
   max_extends: 2
   extend_duration: 1h
   cleanup_interval: "*/5 * * * *"
+  create_timeout: 30s
   flag_global_secret: "change-this-in-production-use-env-var"
+  public_host: localhost
 
 pagination:
   default_page_size: 20
@@ -123,3 +125,7 @@ score:
 
 cache:
   progress_ttl: 10m
+
+contest:
+  status_update_interval: 1m
+  status_update_batch_size: 1000
