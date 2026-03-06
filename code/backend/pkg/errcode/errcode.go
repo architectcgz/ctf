@@ -79,7 +79,8 @@ var (
 
 // 竞赛相关错误码 (14000-14999)
 var (
-	ErrContestNotFound      = New(14001, "竞赛不存在", http.StatusNotFound)
-	ErrInvalidTimeRange     = New(14002, "结束时间必须晚于开始时间", http.StatusBadRequest)
-	ErrContestAlreadyStarted = New(14003, "竞赛已开始，无法修改", http.StatusForbidden)
+	ErrContestNotFound           = New(14001, "竞赛不存在", http.StatusNotFound)
+	ErrInvalidTimeRange          = New(14002, "结束时间必须晚于开始时间", http.StatusBadRequest)
+	ErrContestAlreadyStarted     = New(14003, "竞赛已开始，无法修改", http.StatusForbidden)
+	ErrInvalidStatusTransition   = New(14004, "非法的状态流转", http.StatusBadRequest)
 )

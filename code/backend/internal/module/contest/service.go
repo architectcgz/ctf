@@ -3,7 +3,6 @@ package contest
 import (
 	"context"
 	"errors"
-	"time"
 
 	"go.uber.org/zap"
 
@@ -11,6 +10,27 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
+
+var validStatusTransitions = map[string][]string{
+	model.ContestStatusDraft:        {model.ContestStatusRegistration},
+	model.ContestStatusRegistration: {model.ContestStatusDraft, model.ContestStatusRunning},
+	model.ContestStatusRunning:      {model.ContestStatusFrozen, model.ContestStatusEnded},
+	model.ContestStatusFrozen:       {model.ContestStatusEnded},
+	model.ContestStatusEnded:        {},
+}
+
+func isValidTransition(from, to string) bool {
+	allowed, ok := validStatusTransitions[from]
+	if !ok {
+		return false
+	}
+	for _, s := range allowed {
+		if s == to {
+			return true
+		}
+	}
+	return false
+}
 
 type Service interface {
 	CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
@@ -63,23 +83,40 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
+	// H3: 状态流转校验
+	if req.Status != nil && *req.Status != contest.Status {
+		if !isValidTransition(contest.Status, *req.Status) {
+			return nil, errcode.ErrInvalidStatusTransition
+		}
+		contest.Status = *req.Status
+	}
+
+	// H5: 禁止在 running/ended 状态修改时间
+	if contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
+		if req.StartTime != nil || req.EndTime != nil {
+			return nil, errcode.ErrContestAlreadyStarted
+		}
+	}
+
+	// M5: 禁止在非 draft 状态修改模式
+	if req.Mode != nil && *req.Mode != contest.Mode {
+		if contest.Status != model.ContestStatusDraft {
+			return nil, errcode.ErrContestAlreadyStarted
+		}
+		contest.Mode = *req.Mode
+	}
+
 	if req.Title != nil {
 		contest.Title = *req.Title
 	}
 	if req.Description != nil {
 		contest.Description = *req.Description
 	}
-	if req.Mode != nil {
-		contest.Mode = *req.Mode
-	}
 	if req.StartTime != nil {
 		contest.StartTime = *req.StartTime
 	}
 	if req.EndTime != nil {
 		contest.EndTime = *req.EndTime
-	}
-	if req.Status != nil {
-		contest.Status = *req.Status
 	}
 
 	if !contest.EndTime.After(contest.StartTime) {
