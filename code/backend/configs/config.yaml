@@ -102,6 +102,7 @@ container:
   seccomp: default
   port_range_start: 30000
   port_range_end: 40000
+  default_exposed_port: 8080
   max_concurrent_per_user: 3
   default_ttl: 2h
   max_extends: 2

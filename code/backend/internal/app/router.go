@@ -340,11 +340,18 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	// 实践模块（学员）
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := containerModule.NewRepository(db)
-	containerService := containerModule.NewService(instanceRepo, &cfg.Container, log.Named("container_service"))
+	var containerEngine *containerModule.Engine
+	if engine, err := containerModule.NewEngine(&cfg.Container); err != nil {
+		log.Warn("container_engine_init_failed", zap.Error(err))
+	} else {
+		containerEngine = engine
+	}
+	containerService := containerModule.NewService(instanceRepo, containerEngine, &cfg.Container, log.Named("container_service"))
 	scoreService := practiceModule.NewScoreService(db, cache, log.Named("score_service"), &cfg.Score)
 	practiceService := practiceModule.NewService(
 		practiceRepo,
 		challengeRepo,
+		imageRepo,
 		instanceRepo,
 		containerService,
 		scoreService,

@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,46 +16,81 @@ import (
 
 type Service struct {
 	repo   *Repository
+	engine *Engine
 	config *config.ContainerConfig
 	logger *zap.Logger
 }
 
-func NewService(repo *Repository, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+func NewService(repo *Repository, engine *Engine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &Service{
 		repo:   repo,
+		engine: engine,
 		config: cfg,
 		logger: logger,
 	}
 }
 
-// CreateContainer 创建容器（B9-B11 实现后替换为真实 Docker 调用）
 func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, port int, err error) {
-	// TODO: 实际的 Docker 容器创建逻辑
-	// 当前为模拟实现，等待 B9-B11 完成后集成
-
-	select {
-	case <-ctx.Done():
-		return "", "", 0, ctx.Err()
-	case <-time.After(100 * time.Millisecond):
+	port, err = s.allocatePort()
+	if err != nil {
+		return "", "", 0, err
 	}
 
-	containerID = fmt.Sprintf("ctf-%d", time.Now().UnixNano())
-	networkID = fmt.Sprintf("net-%d", time.Now().UnixNano())
-	port = s.config.PortRangeStart + int(time.Now().Unix()%int64(s.config.PortRangeEnd-s.config.PortRangeStart))
+	if s.engine == nil {
+		select {
+		case <-ctx.Done():
+			return "", "", 0, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
 
-	return containerID, networkID, port, nil
+		containerID = fmt.Sprintf("ctf-%d", time.Now().UnixNano())
+		return containerID, "", port, nil
+	}
+
+	containerID, err = s.engine.CreateContainer(ctx, &model.ContainerConfig{
+		Image: imageName,
+		Env:   envMapToList(env),
+		Ports: map[string]string{
+			strconv.Itoa(s.config.DefaultExposedPort): strconv.Itoa(port),
+		},
+	})
+	if err != nil {
+		return "", "", 0, err
+	}
+	if err := s.engine.StartContainer(ctx, containerID); err != nil {
+		_ = s.engine.RemoveContainer(context.Background(), containerID, true)
+		return "", "", 0, err
+	}
+
+	return containerID, "", port, nil
 }
 
 // RemoveContainer 删除容器
 func (s *Service) RemoveContainer(containerID string) error {
-	// TODO: 实际的 Docker 容器删除逻辑
+	if s.engine == nil {
+		s.logger.Info("删除容器（模拟）", zap.String("container_id", containerID))
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	_ = s.engine.StopContainer(ctx, containerID, 5*time.Second)
+	if err := s.engine.RemoveContainer(ctx, containerID, true); err != nil {
+		return err
+	}
+
 	s.logger.Info("删除容器（模拟）", zap.String("container_id", containerID))
 	return nil
 }
 
 // RemoveNetwork 删除网络
 func (s *Service) RemoveNetwork(networkID string) error {
-	// TODO: 实际的 Docker 网络删除逻辑
+	if networkID == "" {
+		return nil
+	}
 	s.logger.Info("删除网络（模拟）", zap.String("network_id", networkID))
 	return nil
 }
@@ -83,7 +119,6 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// TODO: 实际创建容器（B9-B11 实现后集成）
 	instance.Status = model.InstanceStatusRunning
 	instance.AccessURL = fmt.Sprintf("http://localhost:3%04d", 1000+instance.ID)
 	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
@@ -108,14 +143,6 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 	if instance.UserID != userID {
 		return errcode.ErrForbidden
 	}
-
-	// TODO: 停止并删除容器（B9-B11 实现后集成）
-	// if err := s.containerEngine.RemoveContainer(ctx, instance.ContainerID); err != nil {
-	//     s.logger.Error("删除容器失败", zap.Error(err))
-	// }
-	// if err := s.containerEngine.RemoveNetwork(ctx, instance.NetworkID); err != nil {
-	//     s.logger.Error("删除网络失败", zap.Error(err))
-	// }
 
 	s.logger.Info("销毁实例",
 		zap.Int64("instance_id", instanceID),
@@ -171,15 +198,16 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	for _, inst := range instances {
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", inst.ID))
 
-		// TODO: 实际清理容器资源（B9-B11 实现后集成）
-		// if err := s.containerEngine.RemoveContainer(ctx, inst.ContainerID); err != nil {
-		//     s.logger.Error("删除容器失败", zap.Error(err))
-		// }
-		// if inst.NetworkID != "" {
-		//     if err := s.containerEngine.RemoveNetwork(ctx, inst.NetworkID); err != nil {
-		//         s.logger.Error("删除网络失败", zap.Error(err))
-		//     }
-		// }
+		if inst.ContainerID != "" {
+			if err := s.RemoveContainer(inst.ContainerID); err != nil {
+				s.logger.Warn("删除过期容器失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+			}
+		}
+		if inst.NetworkID != "" {
+			if err := s.RemoveNetwork(inst.NetworkID); err != nil {
+				s.logger.Warn("删除过期网络失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+			}
+		}
 
 		s.repo.UpdateStatus(inst.ID, model.InstanceStatusExpired)
 	}
@@ -194,6 +222,37 @@ func (s *Service) CleanupOrphans(ctx context.Context) error {
 	// 4. 删除孤儿容器和网络
 	s.logger.Info("孤儿容器清理功能待实现")
 	return nil
+}
+
+func (s *Service) allocatePort() (int, error) {
+	usedPorts, err := s.repo.ListAllocatedPorts()
+	if err != nil {
+		return 0, err
+	}
+
+	used := make(map[int]struct{}, len(usedPorts))
+	for _, port := range usedPorts {
+		used[port] = struct{}{}
+	}
+
+	for port := s.config.PortRangeStart; port < s.config.PortRangeEnd; port++ {
+		if _, exists := used[port]; exists {
+			continue
+		}
+		return port, nil
+	}
+	return 0, fmt.Errorf("no available port in range %d-%d", s.config.PortRangeStart, s.config.PortRangeEnd)
+}
+
+func envMapToList(env map[string]string) []string {
+	if len(env) == 0 {
+		return nil
+	}
+	values := make([]string, 0, len(env))
+	for key, value := range env {
+		values = append(values, fmt.Sprintf("%s=%s", key, value))
+	}
+	return values
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

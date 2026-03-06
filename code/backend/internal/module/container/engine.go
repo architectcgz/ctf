@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -104,6 +105,19 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		return "", err
 	}
 	return resp.ID, nil
+}
+
+func (e *Engine) StartContainer(ctx context.Context, containerID string) error {
+	return e.cli.ContainerStart(ctx, containerID, container.StartOptions{})
+}
+
+func (e *Engine) StopContainer(ctx context.Context, containerID string, timeout time.Duration) error {
+	timeoutSeconds := int(timeout.Seconds())
+	return e.cli.ContainerStop(ctx, containerID, container.StopOptions{Timeout: &timeoutSeconds})
+}
+
+func (e *Engine) RemoveContainer(ctx context.Context, containerID string, force bool) error {
+	return e.cli.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: force})
 }
 
 func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
