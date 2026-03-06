@@ -113,6 +113,7 @@ type ContainerConfig struct {
 	MaxExtends              int           `mapstructure:"max_extends"`
 	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
 	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+	FlagGlobalSecret        string        `mapstructure:"flag_global_secret"`
 }
 
 type PaginationConfig struct {
