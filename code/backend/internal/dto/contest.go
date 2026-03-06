@@ -3,11 +3,10 @@ package dto
 import "time"
 
 type ScoreboardItem struct {
-	TeamID    int64   `json:"team_id"`
-	TeamName  string  `json:"team_name"`
-	Score     float64 `json:"score"`
-	Rank      int     `json:"rank"`
-	SolveTime int64   `json:"solve_time"`
+	TeamID   int64   `json:"team_id"`
+	TeamName string  `json:"team_name"`
+	Score    float64 `json:"score"`
+	Rank     int     `json:"rank"`
 }
 
 type ScoreboardResp struct {
