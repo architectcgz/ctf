@@ -66,13 +66,15 @@ func (h *Handler) GetProgress(c *gin.Context) {
 // @Tags Practice
 // @Produce json
 // @Param limit query int false "返回记录数" default(100)
+// @Param offset query int false "偏移量" default(0)
 // @Success 200 {object} response.Response{data=dto.TimelineResp}
 // @Router /api/v1/users/me/timeline [get]
 func (h *Handler) GetTimeline(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
 	var req struct {
-		Limit int `form:"limit" binding:"omitempty,min=1,max=500"`
+		Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`
+		Offset int `form:"offset" binding:"omitempty,min=0"`
 	}
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.FromError(c, err)
@@ -83,7 +85,7 @@ func (h *Handler) GetTimeline(c *gin.Context) {
 		req.Limit = 100
 	}
 
-	resp, err := h.service.GetTimeline(userID, req.Limit)
+	resp, err := h.service.GetTimeline(userID, req.Limit, req.Offset)
 	if err != nil {
 		response.FromError(c, err)
 		return

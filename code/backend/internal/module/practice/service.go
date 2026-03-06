@@ -231,8 +231,8 @@ func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
 }
 
 // GetTimeline 获取用户时间线
-func (s *Service) GetTimeline(userID int64, limit int) (*dto.TimelineResp, error) {
-	events, err := s.repo.GetUserTimeline(userID, limit)
+func (s *Service) GetTimeline(userID int64, limit, offset int) (*dto.TimelineResp, error) {
+	events, err := s.repo.GetUserTimeline(userID, limit, offset)
 	if err != nil {
 		s.logger.Error("查询用户时间线失败", zap.Int64("userID", userID), zap.Error(err))
 		return nil, errcode.ErrInternal.WithCause(err)
