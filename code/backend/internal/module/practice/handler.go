@@ -65,12 +65,25 @@ func (h *Handler) GetProgress(c *gin.Context) {
 // @Summary 获取解题时间线
 // @Tags Practice
 // @Produce json
+// @Param limit query int false "返回记录数" default(100)
 // @Success 200 {object} response.Response{data=dto.TimelineResp}
 // @Router /api/v1/users/me/timeline [get]
 func (h *Handler) GetTimeline(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
-	resp, err := h.service.GetTimeline(userID)
+	var req struct {
+		Limit int `form:"limit" binding:"omitempty,min=1,max=500"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	if req.Limit == 0 {
+		req.Limit = 100
+	}
+
+	resp, err := h.service.GetTimeline(userID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return
