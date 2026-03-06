@@ -38,12 +38,8 @@ func NewScoreboardService(repo *Repository, redis *redislib.Client, cfg *config.
 
 // UpdateScore 更新队伍分数
 func (s *ScoreboardService) UpdateScore(ctx context.Context, contestID, teamID int64, points float64) error {
-	contest, err := s.repo.FindByID(contestID)
-	if err != nil {
-		return err
-	}
-
-	isFrozen := contest.FreezeTime != nil && time.Now().After(*contest.FreezeTime)
+	freezeFlagKey := redis.ContestFreezeFlagKey(contestID)
+	isFrozen := s.redis.Exists(ctx, freezeFlagKey).Val() > 0
 	if isFrozen {
 		s.logger.Warn("attempt to update score during freeze period",
 			zap.Int64("contest_id", contestID),
@@ -176,7 +172,10 @@ func (s *ScoreboardService) CalculateDynamicScore(solveCount int) float64 {
 
 // CreateSnapshot 创建排行榜快照
 func (s *ScoreboardService) CreateSnapshot(ctx context.Context, srcKey, dstKey string) error {
-	return s.redis.Copy(ctx, srcKey, dstKey, 0, false).Err()
+	return s.redis.ZUnionStore(ctx, dstKey, &redislib.ZStore{
+		Keys:    []string{srcKey},
+		Weights: []float64{1},
+	}).Err()
 }
 
 // FreezeScoreboard 冻结排行榜
@@ -196,6 +195,9 @@ func (s *ScoreboardService) FreezeScoreboard(ctx context.Context, contestID int6
 
 	freezeTime := contest.EndTime.Add(-time.Duration(minutesBeforeEnd) * time.Minute)
 	contest.FreezeTime = &freezeTime
+
+	freezeFlagKey := redis.ContestFreezeFlagKey(contestID)
+	s.redis.Set(ctx, freezeFlagKey, "1", 0)
 
 	srcKey := redis.RankContestTeamKey(contestID)
 	dstKey := redis.RankContestFrozenKey(contestID)
@@ -222,7 +224,18 @@ func (s *ScoreboardService) UnfreezeScoreboard(ctx context.Context, contestID in
 		return err
 	}
 
+	if contest.Status == model.ContestStatusFinished {
+		return errors.New("竞赛已结束，无法解冻")
+	}
+
+	if contest.FreezeTime == nil {
+		return errors.New("排行榜未冻结")
+	}
+
 	contest.FreezeTime = nil
+
+	freezeFlagKey := redis.ContestFreezeFlagKey(contestID)
+	s.redis.Del(ctx, freezeFlagKey)
 
 	dstKey := redis.RankContestFrozenKey(contestID)
 	s.redis.Del(ctx, dstKey)
