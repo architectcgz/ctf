@@ -15,14 +15,15 @@ import (
 )
 
 type Service struct {
-	repo          *Repository
-	challengeRepo ChallengeRepository
-	instanceRepo  InstanceRepository
-	redis         *redis.Client
-	logger        *zap.Logger
-	globalSecret  string
-	submitLimit   int
-	submitWindow  time.Duration
+	repo              *Repository
+	challengeRepo     ChallengeRepository
+	instanceRepo      InstanceRepository
+	assessmentService AssessmentService
+	redis             *redis.Client
+	logger            *zap.Logger
+	globalSecret      string
+	submitLimit       int
+	submitWindow      time.Duration
 }
 
 type ChallengeRepository interface {
@@ -33,16 +34,21 @@ type InstanceRepository interface {
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
-func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
+type AssessmentService interface {
+	CalculateSkillProfile(userID int64) ([]*dto.SkillDimension, error)
+}
+
+func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, assessmentService AssessmentService, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
 	return &Service{
-		repo:          repo,
-		challengeRepo: challengeRepo,
-		instanceRepo:  instanceRepo,
-		redis:         redis,
-		logger:        logger,
-		globalSecret:  globalSecret,
-		submitLimit:   submitLimit,
-		submitWindow:  submitWindow,
+		repo:              repo,
+		challengeRepo:     challengeRepo,
+		instanceRepo:      instanceRepo,
+		assessmentService: assessmentService,
+		redis:             redis,
+		logger:            logger,
+		globalSecret:      globalSecret,
+		submitLimit:       submitLimit,
+		submitWindow:      submitWindow,
 	}
 }
 
@@ -128,6 +134,14 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	// 6. 记录日志
 	if isCorrect {
 		s.logger.Info("Flag验证成功", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID))
+		// 增量更新能力画像
+		if s.assessmentService != nil {
+			go func() {
+				if _, err := s.assessmentService.CalculateSkillProfile(userID); err != nil {
+					s.logger.Error("更新能力画像失败", zap.Int64("userID", userID), zap.Error(err))
+				}
+			}()
+		}
 	} else {
 		s.logger.Debug("Flag验证失败", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID), zap.String("flagPrefix", flag[:min(len(flag), 10)]))
 	}
