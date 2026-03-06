@@ -60,6 +60,18 @@ func (r *Repository) UpdateStatus(id int64, status string) error {
 		Update("status", status).Error
 }
 
+func (r *Repository) UpdateRuntime(instance *model.Instance) error {
+	return r.db.Model(&model.Instance{}).
+		Where("id = ?", instance.ID).
+		Updates(map[string]any{
+			"container_id": instance.ContainerID,
+			"network_id":   instance.NetworkID,
+			"access_url":   instance.AccessURL,
+			"status":       instance.Status,
+			"updated_at":   time.Now(),
+		}).Error
+}
+
 func (r *Repository) FindExpired() ([]*model.Instance, error) {
 	var instances []*model.Instance
 	err := r.db.Where("status = ? AND expires_at < ?",
