@@ -72,11 +72,13 @@ type ChallengeDetailResp struct {
 }
 
 type ConfigureFlagReq struct {
-	FlagType string `json:"flag_type" binding:"required,oneof=static dynamic"`
-	Flag     string `json:"flag" binding:"required_if=FlagType static"`
+	FlagType   string `json:"flag_type" binding:"required,oneof=static dynamic"`
+	Flag       string `json:"flag" binding:"required_if=FlagType static"`
+	FlagPrefix string `json:"flag_prefix" binding:"omitempty,max=32"`
 }
 
 type FlagResp struct {
 	FlagType   string `json:"flag_type"`
+	FlagPrefix string `json:"flag_prefix,omitempty"`
 	Configured bool   `json:"configured"`
 }
