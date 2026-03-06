@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/module/assessment"
 	"ctf-platform/internal/module/container"
 	"ctf-platform/internal/module/contest"
 )
@@ -17,6 +18,7 @@ import (
 type HTTPServer struct {
 	server        *http.Server
 	cleaner       *container.Cleaner
+	assessment    *assessment.Cleaner
 	statusUpdater *contest.StatusUpdater
 	updaterCtx    context.Context
 	updaterCancel context.CancelFunc
@@ -35,6 +37,13 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 
 	if err := cleaner.Start(cfg.Container.CleanupInterval); err != nil {
 		return nil, fmt.Errorf("启动清理任务失败: %w", err)
+	}
+
+	assessmentRepo := assessment.NewRepository(db)
+	assessmentService := assessment.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
+	assessmentCleaner := assessment.NewCleaner(assessmentService, log.Named("assessment_cleaner"))
+	if err := assessmentCleaner.Start(cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout); err != nil {
+		return nil, fmt.Errorf("启动能力画像任务失败: %w", err)
 	}
 
 	contestRepo := contest.NewRepository(db)
@@ -57,6 +66,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 			IdleTimeout:  cfg.HTTP.IdleTimeout,
 		},
 		cleaner:       cleaner,
+		assessment:    assessmentCleaner,
 		statusUpdater: statusUpdater,
 		updaterCtx:    updaterCtx,
 		updaterCancel: updaterCancel,
@@ -71,6 +81,8 @@ func (s *HTTPServer) Start() error {
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	s.logger.Info("停止清理任务")
 	s.cleaner.Stop()
+	s.logger.Info("停止能力画像任务")
+	s.assessment.Stop()
 	s.logger.Info("停止竞赛状态更新任务")
 	s.updaterCancel()
 	return s.server.Shutdown(ctx)

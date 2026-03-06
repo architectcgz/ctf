@@ -23,6 +23,7 @@ type Config struct {
 	Challenge  ChallengeConfig  `mapstructure:"challenge"`
 	Score      ScoreConfig      `mapstructure:"score"`
 	Cache      CacheConfig      `mapstructure:"cache"`
+	Assessment AssessmentConfig `mapstructure:"assessment"`
 	Contest    ContestConfig    `mapstructure:"contest"`
 }
 
@@ -141,6 +142,15 @@ type ScoreConfig struct {
 
 type ChallengeConfig struct {
 	SolvedCountCacheTTL time.Duration `mapstructure:"solved_count_cache_ttl"`
+}
+
+type AssessmentConfig struct {
+	RedisKeyPrefix           string        `mapstructure:"redis_key_prefix"`
+	FullRebuildCron          string        `mapstructure:"full_rebuild_cron"`
+	FullRebuildTimeout       time.Duration `mapstructure:"full_rebuild_timeout"`
+	LockTTL                  time.Duration `mapstructure:"lock_ttl"`
+	IncrementalUpdateDelay   time.Duration `mapstructure:"incremental_update_delay"`
+	IncrementalUpdateTimeout time.Duration `mapstructure:"incremental_update_timeout"`
 }
 
 type ContestConfig struct {
@@ -284,6 +294,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)
 	v.SetDefault("cache.progress_ttl", 10*time.Minute)
+	v.SetDefault("assessment.redis_key_prefix", "ctf:assessment:skill-profile")
+	v.SetDefault("assessment.full_rebuild_cron", "0 0 * * *")
+	v.SetDefault("assessment.full_rebuild_timeout", 30*time.Minute)
+	v.SetDefault("assessment.lock_ttl", 10*time.Second)
+	v.SetDefault("assessment.incremental_update_delay", 100*time.Millisecond)
+	v.SetDefault("assessment.incremental_update_timeout", 5*time.Second)
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.base_score", 1000.0)
