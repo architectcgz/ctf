@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	rediskeys "ctf-platform/internal/pkg/redis"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -59,16 +60,30 @@ func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error
 	return weakDimensions, nil
 }
 
+// toChallengeRecommendation 将 Model 转换为 DTO
+func toChallengeRecommendation(c *model.Challenge, reason string) *dto.ChallengeRecommendation {
+	return &dto.ChallengeRecommendation{
+		ID:         c.ID,
+		Title:      c.Title,
+		Category:   c.Category,
+		Difficulty: c.Difficulty,
+		Points:     c.Points,
+		Reason:     reason,
+	}
+}
+
 func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf("%s:user:%d", s.cacheKeyPrefix, userID)
+	cacheKey := rediskeys.RecommendationKey(userID)
 
 	// 尝试从缓存获取
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
 		var recommendations []*dto.ChallengeRecommendation
-		if json.Unmarshal([]byte(cached), &recommendations) == nil {
+		if err := json.Unmarshal([]byte(cached), &recommendations); err == nil {
 			return recommendations, nil
+		} else {
+			s.logger.Warn("缓存反序列化失败", zap.String("cacheKey", cacheKey), zap.Error(err))
 		}
 	}
 
@@ -109,19 +124,17 @@ func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]
 
 	recommendations := make([]*dto.ChallengeRecommendation, 0, len(challenges))
 	for _, c := range challenges {
-		recommendations = append(recommendations, &dto.ChallengeRecommendation{
-			ID:         c.ID,
-			Title:      c.Title,
-			Category:   c.Category,
-			Difficulty: c.Difficulty,
-			Points:     c.Points,
-			Reason:     fmt.Sprintf("针对薄弱维度：%s", c.Category),
-		})
+		reason := fmt.Sprintf("针对薄弱维度：%s", c.Category)
+		recommendations = append(recommendations, toChallengeRecommendation(c, reason))
 	}
 
 	// 缓存结果
 	if data, err := json.Marshal(recommendations); err == nil {
-		s.redis.Set(ctx, cacheKey, data, s.cacheTTL)
+		if err := s.redis.Set(ctx, cacheKey, data, s.cacheTTL).Err(); err != nil {
+			s.logger.Warn("缓存写入失败", zap.String("cacheKey", cacheKey), zap.Error(err))
+		}
+	} else {
+		s.logger.Error("推荐结果序列化失败", zap.Error(err))
 	}
 
 	return recommendations, nil
