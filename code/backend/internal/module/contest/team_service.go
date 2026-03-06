@@ -71,7 +71,7 @@ func (s *TeamService) CreateTeam(captainID int64, req *dto.CreateTeamReq) (*dto.
 	}
 
 	if team == nil || team.ID == 0 {
-		return nil, errors.New("创建队伍失败")
+		return nil, errcode.ErrInviteCodeGenerationFailed
 	}
 
 	return s.toTeamResp(team, 1), nil
@@ -95,7 +95,7 @@ func (s *TeamService) JoinTeam(userID int64, req *dto.JoinTeamReq) (*dto.TeamRes
 	// 使用带锁的添加成员方法，防止并发竞态
 	err = s.teamRepo.AddMemberWithLock(team.ID, userID)
 	if err != nil {
-		if errors.Is(err, gorm.ErrInvalidData) {
+		if errors.Is(err, ErrTeamFull) {
 			return nil, errcode.ErrTeamFull
 		}
 		return nil, err
