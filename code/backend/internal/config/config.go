@@ -101,18 +101,20 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota         int64         `mapstructure:"default_cpu_quota"`
-	DefaultMemory           int64         `mapstructure:"default_memory"`
-	DefaultPidsLimit        int64         `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs          bool          `mapstructure:"readonly_rootfs"`
-	RunAsUser               string        `mapstructure:"run_as_user"`
-	PortRangeStart          int           `mapstructure:"port_range_start"`
-	PortRangeEnd            int           `mapstructure:"port_range_end"`
-	MaxConcurrentPerUser    int           `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL              time.Duration `mapstructure:"default_ttl"`
-	MaxExtends              int           `mapstructure:"max_extends"`
-	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
-	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+	DefaultCPUQuota       float64  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory         int64    `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit      int64    `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs        bool     `mapstructure:"readonly_rootfs"`
+	RunAsUser             string   `mapstructure:"run_as_user"`
+	AllowedCapabilities   []string `mapstructure:"allowed_capabilities"`
+	Seccomp               string   `mapstructure:"seccomp"`
+	PortRangeStart        int           `mapstructure:"port_range_start"`
+	PortRangeEnd          int           `mapstructure:"port_range_end"`
+	MaxConcurrentPerUser  int           `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL            time.Duration `mapstructure:"default_ttl"`
+	MaxExtends            int           `mapstructure:"max_extends"`
+	ExtendDuration        time.Duration `mapstructure:"extend_duration"`
+	CleanupInterval       string        `mapstructure:"cleanup_interval"`
 }
 
 type PaginationConfig struct {
@@ -152,7 +154,24 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+
 	return cfg, nil
+}
+
+func (c *Config) Validate() error {
+	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
+		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
+	}
+	if c.Container.DefaultMemory < 64*1024*1024 || c.Container.DefaultMemory > 16*1024*1024*1024 {
+		return fmt.Errorf("container.default_memory must be between 64MB and 16GB")
+	}
+	if c.Container.DefaultPidsLimit <= 0 || c.Container.DefaultPidsLimit > 10000 {
+		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
+	}
+	return nil
 }
 
 func (c PostgresConfig) DSN() string {
@@ -212,11 +231,13 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)
-	v.SetDefault("container.default_cpu_quota", 50000)
+	v.SetDefault("container.default_cpu_quota", 0.5)
 	v.SetDefault("container.default_memory", 268435456)
 	v.SetDefault("container.default_pids_limit", 100)
 	v.SetDefault("container.readonly_rootfs", false)
 	v.SetDefault("container.run_as_user", "")
+	v.SetDefault("container.allowed_capabilities", []string{"CHOWN", "SETUID", "SETGID"})
+	v.SetDefault("container.seccomp", "default")
 	v.SetDefault("container.port_range_start", 30000)
 	v.SetDefault("container.port_range_end", 40000)
 	v.SetDefault("container.max_concurrent_per_user", 3)
