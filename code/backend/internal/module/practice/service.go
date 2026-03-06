@@ -131,7 +131,9 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	// 6. 提交成功后删除进度缓存
 	if isCorrect {
 		cacheKey := constants.UserProgressKey(userID)
-		s.redis.Del(ctx, cacheKey)
+		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
+			s.logger.Warn("删除进度缓存失败", zap.Int64("userID", userID), zap.Error(err))
+		}
 	}
 
 	// 7. 记录日志
