@@ -79,7 +79,9 @@ var (
 
 // 竞赛相关错误码 (14000-14999)
 var (
-	ErrContestNotFound       = New(14001, "竞赛不存在", http.StatusNotFound)
-	ErrContestRunning        = New(14002, "竞赛进行中，无法修改", http.StatusForbidden)
-	ErrChallengeAlreadyAdded = New(14003, "题目已添加到竞赛", http.StatusConflict)
+	ErrContestNotFound        = New(14001, "竞赛不存在", http.StatusNotFound)
+	ErrContestRunning         = New(14002, "竞赛进行中或已结束，无法修改", http.StatusForbidden)
+	ErrChallengeAlreadyAdded  = New(14003, "题目已添加到竞赛", http.StatusConflict)
+	ErrChallengeNotInContest  = New(14004, "题目不在竞赛中", http.StatusNotFound)
+	ErrChallengeNotPublished  = New(14005, "只能添加已发布的题目", http.StatusBadRequest)
 )
