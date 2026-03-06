@@ -1,6 +1,7 @@
 package container
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -45,6 +46,9 @@ func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.I
 		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return &instance, nil
