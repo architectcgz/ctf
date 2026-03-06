@@ -25,6 +25,7 @@ type Config struct {
 	Cache          CacheConfig          `mapstructure:"cache"`
 	Assessment     AssessmentConfig     `mapstructure:"assessment"`
 	Recommendation RecommendationConfig `mapstructure:"recommendation"`
+	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
 	Contest        ContestConfig        `mapstructure:"contest"`
 }
 
@@ -161,6 +162,12 @@ type RecommendationConfig struct {
 	MaxLimit      int           `mapstructure:"max_limit"`
 }
 
+type DashboardConfig struct {
+	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
+	AlertThreshold float64       `mapstructure:"alert_threshold"`
+	RedisKeyPrefix string        `mapstructure:"redis_key_prefix"`
+}
+
 type ContestConfig struct {
 	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
 	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
@@ -230,6 +237,12 @@ func (c *Config) Validate() error {
 	}
 	if c.Recommendation.MaxLimit < c.Recommendation.DefaultLimit {
 		return fmt.Errorf("recommendation.max_limit must be greater than or equal to default_limit")
+	}
+	if c.Dashboard.CacheTTL <= 0 {
+		return fmt.Errorf("dashboard.cache_ttl must be greater than 0")
+	}
+	if c.Dashboard.AlertThreshold <= 0 || c.Dashboard.AlertThreshold > 100 {
+		return fmt.Errorf("dashboard.alert_threshold must be between 0 and 100")
 	}
 	return nil
 }
@@ -324,6 +337,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("recommendation.cache_ttl", time.Hour)
 	v.SetDefault("recommendation.default_limit", 6)
 	v.SetDefault("recommendation.max_limit", 20)
+	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
+	v.SetDefault("dashboard.alert_threshold", 80.0)
+	v.SetDefault("dashboard.redis_key_prefix", "ctf:dashboard")
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.base_score", 1000.0)
