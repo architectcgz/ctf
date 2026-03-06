@@ -221,6 +221,10 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
+	if strings.TrimSpace(cfg.Container.FlagGlobalSecret) == "" {
+		return nil, fmt.Errorf("container.flag_global_secret must be set via CTF_CONTAINER_FLAG_GLOBAL_SECRET environment variable")
+	}
+
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("validate config: %w", err)
 	}
