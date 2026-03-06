@@ -182,6 +182,11 @@ func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 	result := make([]*dto.InstanceInfo, len(instances))
 	for i, inst := range instances {
 		result[i] = toInstanceInfo(inst)
+
+		// 填充靶场名称
+		if chal, err := s.challengeRepo.FindByID(inst.ChallengeID); err == nil {
+			result[i].ChallengeName = chal.Title
+		}
 	}
 	return result, nil
 }
