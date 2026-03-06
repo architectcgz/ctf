@@ -116,6 +116,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		practiceRepo,
 		challengeRepo,
 		containerRepo,
+		cache,
+		log,
 		cfg.Container.FlagGlobalSecret,
 		cfg.RateLimit.FlagSubmit.Limit,
 		cfg.RateLimit.FlagSubmit.Window,
@@ -123,9 +125,6 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	practiceHandler := practiceModule.NewHandler(practiceService)
 
 	challengeGroup := protected.Group("/challenges")
-	if cfg.RateLimit.FlagSubmit.Enabled {
-		challengeGroup.Use(middleware.RateLimitByIP(rateChecker, "flag_submit", cfg.RateLimit.FlagSubmit.Limit, cfg.RateLimit.FlagSubmit.Window))
-	}
 	challengeGroup.POST("/:id/submit", middleware.ParseChallengeID(), practiceHandler.SubmitFlag)
 
 	return engine, nil
