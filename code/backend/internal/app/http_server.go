@@ -32,7 +32,13 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 	}
 
 	containerRepo := container.NewRepository(db)
-	containerService := container.NewService(containerRepo, &cfg.Container, log.Named("container_service"))
+	var containerEngine *container.Engine
+	if engine, err := container.NewEngine(&cfg.Container); err != nil {
+		log.Warn("container_engine_init_failed_for_cleaner", zap.Error(err))
+	} else {
+		containerEngine = engine
+	}
+	containerService := container.NewService(containerRepo, containerEngine, &cfg.Container, log.Named("container_service"))
 	cleaner := container.NewCleaner(containerService, log.Named("container_cleaner"))
 
 	if err := cleaner.Start(cfg.Container.CleanupInterval); err != nil {

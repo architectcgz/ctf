@@ -118,6 +118,7 @@ type ContainerConfig struct {
 	Seccomp              string        `mapstructure:"seccomp"`
 	PortRangeStart       int           `mapstructure:"port_range_start"`
 	PortRangeEnd         int           `mapstructure:"port_range_end"`
+	DefaultExposedPort   int           `mapstructure:"default_exposed_port"`
 	MaxConcurrentPerUser int           `mapstructure:"max_concurrent_per_user"`
 	DefaultTTL           time.Duration `mapstructure:"default_ttl"`
 	MaxExtends           int           `mapstructure:"max_extends"`
@@ -236,6 +237,9 @@ func (c *Config) Validate() error {
 	if c.Container.DefaultPidsLimit <= 0 || c.Container.DefaultPidsLimit > 10000 {
 		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
 	}
+	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
+		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
+	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
 		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
 	}
@@ -341,6 +345,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.seccomp", "default")
 	v.SetDefault("container.port_range_start", 30000)
 	v.SetDefault("container.port_range_end", 40000)
+	v.SetDefault("container.default_exposed_port", 8080)
 	v.SetDefault("container.max_concurrent_per_user", 3)
 	v.SetDefault("container.default_ttl", 2*time.Hour)
 	v.SetDefault("container.max_extends", 2)

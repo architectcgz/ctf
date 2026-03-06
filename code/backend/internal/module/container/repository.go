@@ -2,6 +2,8 @@ package container
 
 import (
 	"errors"
+	"net/url"
+	"strconv"
 	"time"
 
 	"gorm.io/gorm"
@@ -112,4 +114,32 @@ func (r *Repository) CountRunning() (int64, error) {
 		Where("status = ?", model.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
+}
+
+func (r *Repository) ListAllocatedPorts() ([]int, error) {
+	var accessURLs []string
+	if err := r.db.Model(&model.Instance{}).
+		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("access_url <> ''").
+		Pluck("access_url", &accessURLs).Error; err != nil {
+		return nil, err
+	}
+
+	ports := make([]int, 0, len(accessURLs))
+	for _, rawURL := range accessURLs {
+		parsed, err := url.Parse(rawURL)
+		if err != nil {
+			continue
+		}
+		portValue := parsed.Port()
+		if portValue == "" {
+			continue
+		}
+		port, err := strconv.Atoi(portValue)
+		if err != nil {
+			continue
+		}
+		ports = append(ports, port)
+	}
+	return ports, nil
 }

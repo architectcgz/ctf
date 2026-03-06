@@ -28,6 +28,7 @@ type AssessmentService interface {
 type Service struct {
 	repo              *Repository
 	challengeRepo     *challenge.Repository
+	imageRepo         *challenge.ImageRepository
 	instanceRepo      *container.Repository
 	containerService  *container.Service
 	scoreService      *ScoreService
@@ -40,6 +41,7 @@ type Service struct {
 func NewService(
 	repo *Repository,
 	challengeRepo *challenge.Repository,
+	imageRepo *challenge.ImageRepository,
 	instanceRepo *container.Repository,
 	containerService *container.Service,
 	scoreService *ScoreService,
@@ -51,6 +53,7 @@ func NewService(
 	return &Service{
 		repo:              repo,
 		challengeRepo:     challengeRepo,
+		imageRepo:         imageRepo,
 		instanceRepo:      instanceRepo,
 		containerService:  containerService,
 		scoreService:      scoreService,
@@ -370,11 +373,20 @@ func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Chall
 }
 
 func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+	imageItem, err := s.imageRepo.FindByID(chal.ImageID)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if imageItem.Status != model.ImageStatusAvailable {
+		return errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
+	}
+
 	env := map[string]string{
 		"FLAG": flag,
 	}
 
-	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, fmt.Sprintf("image-%d", chal.ImageID), env)
+	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
+	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, imageRef, env)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
