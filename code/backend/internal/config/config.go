@@ -25,6 +25,7 @@ type Config struct {
 	Cache          CacheConfig          `mapstructure:"cache"`
 	Assessment     AssessmentConfig     `mapstructure:"assessment"`
 	Recommendation RecommendationConfig `mapstructure:"recommendation"`
+	Report         ReportConfig         `mapstructure:"report"`
 	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
 	Contest        ContestConfig        `mapstructure:"contest"`
 }
@@ -162,6 +163,15 @@ type RecommendationConfig struct {
 	MaxLimit      int           `mapstructure:"max_limit"`
 }
 
+type ReportConfig struct {
+	StorageDir      string        `mapstructure:"storage_dir"`
+	DefaultFormat   string        `mapstructure:"default_format"`
+	PersonalTimeout time.Duration `mapstructure:"personal_timeout"`
+	ClassTimeout    time.Duration `mapstructure:"class_timeout"`
+	FileTTL         time.Duration `mapstructure:"file_ttl"`
+	MaxWorkers      int           `mapstructure:"max_workers"`
+}
+
 type DashboardConfig struct {
 	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
 	AlertThreshold float64       `mapstructure:"alert_threshold"`
@@ -237,6 +247,24 @@ func (c *Config) Validate() error {
 	}
 	if c.Recommendation.MaxLimit < c.Recommendation.DefaultLimit {
 		return fmt.Errorf("recommendation.max_limit must be greater than or equal to default_limit")
+	}
+	if strings.TrimSpace(c.Report.StorageDir) == "" {
+		return fmt.Errorf("report.storage_dir must not be empty")
+	}
+	if c.Report.DefaultFormat != "pdf" && c.Report.DefaultFormat != "excel" {
+		return fmt.Errorf("report.default_format must be pdf or excel")
+	}
+	if c.Report.PersonalTimeout <= 0 {
+		return fmt.Errorf("report.personal_timeout must be greater than 0")
+	}
+	if c.Report.ClassTimeout <= 0 {
+		return fmt.Errorf("report.class_timeout must be greater than 0")
+	}
+	if c.Report.FileTTL <= 0 {
+		return fmt.Errorf("report.file_ttl must be greater than 0")
+	}
+	if c.Report.MaxWorkers <= 0 {
+		return fmt.Errorf("report.max_workers must be greater than 0")
 	}
 	if c.Dashboard.CacheTTL <= 0 {
 		return fmt.Errorf("dashboard.cache_ttl must be greater than 0")
@@ -337,6 +365,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("recommendation.cache_ttl", time.Hour)
 	v.SetDefault("recommendation.default_limit", 6)
 	v.SetDefault("recommendation.max_limit", 20)
+	v.SetDefault("report.storage_dir", "storage/exports")
+	v.SetDefault("report.default_format", "pdf")
+	v.SetDefault("report.personal_timeout", 30*time.Second)
+	v.SetDefault("report.class_timeout", 2*time.Minute)
+	v.SetDefault("report.file_ttl", 7*24*time.Hour)
+	v.SetDefault("report.max_workers", 2)
 	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
 	v.SetDefault("dashboard.alert_threshold", 80.0)
 	v.SetDefault("dashboard.redis_key_prefix", "ctf:dashboard")
