@@ -76,3 +76,10 @@ var (
 	ErrChallengeNotFound   = New(13004, "靶场不存在", http.StatusNotFound)
 	ErrChallengeNotPublish = New(13005, "靶场未发布", http.StatusForbidden)
 )
+
+// 竞赛相关错误码 (14000-14999)
+var (
+	ErrContestNotFound       = New(14001, "竞赛不存在", http.StatusNotFound)
+	ErrContestRunning        = New(14002, "竞赛进行中，无法修改", http.StatusForbidden)
+	ErrChallengeAlreadyAdded = New(14003, "题目已添加到竞赛", http.StatusConflict)
+)
