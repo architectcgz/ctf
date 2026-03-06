@@ -160,6 +160,15 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
+	// 验证配置
+	if cfg.Recommendation.WeakThreshold < 0 || cfg.Recommendation.WeakThreshold > 1 {
+		return nil, fmt.Errorf("recommendation.weak_threshold 必须在 0-1 之间，当前值: %.2f", cfg.Recommendation.WeakThreshold)
+	}
+
+	if cfg.Recommendation.CacheTTL < time.Minute {
+		return nil, fmt.Errorf("recommendation.cache_ttl 不能小于 1 分钟，当前值: %v", cfg.Recommendation.CacheTTL)
+	}
+
 	return cfg, nil
 }
 

@@ -269,6 +269,21 @@ func AWDScoreboardKey(contestID int64) string {
 }
 
 // ============================================================
+// 能力评估与推荐模块
+// ============================================================
+
+const (
+	// keyRecommendationUserPrefix 用户推荐靶场缓存
+	keyRecommendationUserPrefix = "recommendation:user:"
+)
+
+// RecommendationKey 用户推荐靶场缓存
+// 数据结构: STRING (JSON) | TTL: 1h
+func RecommendationKey(userID int64) string {
+	return withNS(fmt.Sprintf("%s%d", keyRecommendationUserPrefix, userID))
+}
+
+// ============================================================
 // 通知与杂项模块
 // ============================================================
 
