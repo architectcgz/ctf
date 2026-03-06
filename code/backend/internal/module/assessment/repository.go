@@ -63,3 +63,22 @@ func (r *Repository) GetDimensionScores(userID int64) ([]DimensionScore, error) 
 	`, userID).Scan(&scores).Error
 	return scores, err
 }
+
+// GetDimensionScore 查询用户单个维度得分统计（增量更新用）
+func (r *Repository) GetDimensionScore(userID int64, dimension string) (*DimensionScore, error) {
+	var score DimensionScore
+	err := r.db.Raw(`
+		SELECT
+			c.category as dimension,
+			SUM(c.points) as total_score,
+			COALESCE(SUM(CASE WHEN s.is_correct = 1 THEN c.points ELSE 0 END), 0) as user_score
+		FROM challenges c
+		LEFT JOIN submissions s ON c.id = s.challenge_id AND s.user_id = ?
+		WHERE c.status = 'published' AND c.category = ?
+		GROUP BY c.category
+	`, userID, dimension).Scan(&score).Error
+	if err != nil {
+		return nil, err
+	}
+	return &score, nil
+}

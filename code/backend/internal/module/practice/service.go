@@ -37,6 +37,7 @@ type InstanceRepository interface {
 type AssessmentService interface {
 	CalculateSkillProfile(userID int64) ([]*dto.SkillDimension, error)
 	CalculateSkillProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error)
+	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
 }
 
 func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, assessmentService AssessmentService, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
@@ -135,9 +136,11 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	// 6. 记录日志
 	if isCorrect {
 		s.logger.Info("Flag验证成功", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID))
-		// 异步更新能力画像（带 panic 恢复和超时控制）
+		// 异步更新能力画像（增量更新，只更新相关维度）
 		if s.assessmentService != nil {
-			go func() {
+			dimension := challenge.Category
+			// 延迟 100ms 触发，确保数据已提交
+			time.AfterFunc(100*time.Millisecond, func() {
 				defer func() {
 					if r := recover(); r != nil {
 						s.logger.Error("画像更新 panic", zap.Int64("userID", userID), zap.Any("panic", r))
@@ -147,10 +150,10 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
-				if _, err := s.assessmentService.CalculateSkillProfileWithContext(ctx, userID); err != nil {
-					s.logger.Error("更新能力画像失败", zap.Int64("userID", userID), zap.Error(err))
+				if err := s.assessmentService.UpdateSkillProfileForDimension(ctx, userID, dimension); err != nil {
+					s.logger.Error("更新能力画像失败", zap.Int64("userID", userID), zap.String("dimension", dimension), zap.Error(err))
 				}
-			}()
+			})
 		}
 	} else {
 		s.logger.Debug("Flag验证失败", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID), zap.String("flagPrefix", flag[:min(len(flag), 10)]))

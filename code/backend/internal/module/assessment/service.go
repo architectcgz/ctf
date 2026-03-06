@@ -33,6 +33,49 @@ func (s *Service) CalculateSkillProfile(userID int64) ([]*dto.SkillDimension, er
 	return s.CalculateSkillProfileWithContext(context.Background(), userID)
 }
 
+// UpdateSkillProfileForDimension 增量更新指定维度的能力画像
+func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error {
+	// 校验维度合法性
+	if !model.IsValidDimension(dimension) {
+		s.logger.Warn("无效维度", zap.String("dimension", dimension))
+		return fmt.Errorf("invalid dimension: %s", dimension)
+	}
+
+	// 使用分布式锁避免并发重复计算
+	lockKey := fmt.Sprintf("skill_profile:lock:%d:%s", userID, dimension)
+	locked, err := s.redis.SetNX(ctx, lockKey, 1, 10*time.Second).Result()
+	if err != nil {
+		s.logger.Warn("获取分布式锁失败", zap.Int64("userID", userID), zap.String("dimension", dimension), zap.Error(err))
+		return err
+	}
+	if !locked {
+		s.logger.Debug("维度画像正在计算中，跳过", zap.Int64("userID", userID), zap.String("dimension", dimension))
+		return nil
+	}
+	defer s.redis.Del(ctx, lockKey)
+
+	// 查询该维度得分
+	score, err := s.repo.GetDimensionScore(userID, dimension)
+	if err != nil {
+		return err
+	}
+
+	var rate float64
+	if score.TotalScore > 0 {
+		rate = float64(score.UserScore) / float64(score.TotalScore)
+	}
+
+	// 更新数据库
+	profile := &model.SkillProfile{
+		UserID:    userID,
+		Dimension: dimension,
+		Score:     rate,
+		UpdatedAt: time.Now(),
+	}
+
+	return s.repo.Upsert(profile)
+}
+
 // CalculateSkillProfileWithContext 带超时控制的画像计算
 func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
 	start := time.Now()
@@ -44,8 +87,11 @@ func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID i
 	lockKey := fmt.Sprintf("skill_profile:lock:%d", userID)
 	locked, err := s.redis.SetNX(ctx, lockKey, 1, 10*time.Second).Result()
 	if err != nil {
-		s.logger.Warn("获取分布式锁失败", zap.Int64("userID", userID), zap.Error(err))
-	} else if !locked {
+		// Redis 故障时返回已有画像，避免进入临界区
+		s.logger.Warn("获取分布式锁失败，返回已有画像", zap.Int64("userID", userID), zap.Error(err))
+		return s.getExistingProfile(userID)
+	}
+	if !locked {
 		s.logger.Debug("画像正在计算中，跳过", zap.Int64("userID", userID))
 		return s.getExistingProfile(userID)
 	}
