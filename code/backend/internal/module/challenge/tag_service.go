@@ -18,8 +18,9 @@ func NewTagService(repo *TagRepository) *TagService {
 
 func (s *TagService) CreateTag(req *dto.CreateTagReq) (*dto.TagResp, error) {
 	tag := &model.Tag{
-		Name:      req.Name,
-		Dimension: req.Dimension,
+		Name:        req.Name,
+		Type:        req.Type,
+		Description: req.Description,
 	}
 
 	if err := s.repo.Create(tag); err != nil {
@@ -29,8 +30,8 @@ func (s *TagService) CreateTag(req *dto.CreateTagReq) (*dto.TagResp, error) {
 	return toTagResp(tag), nil
 }
 
-func (s *TagService) ListTags(dimension string) ([]*dto.TagResp, error) {
-	tags, err := s.repo.List(dimension)
+func (s *TagService) ListTags(tagType string) ([]*dto.TagResp, error) {
+	tags, err := s.repo.List(tagType)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -42,23 +43,39 @@ func (s *TagService) ListTags(dimension string) ([]*dto.TagResp, error) {
 	return result, nil
 }
 
-func (s *TagService) AttachTags(challengeID int64, tagIDs []int64) error {
-	for _, tagID := range tagIDs {
-		if _, err := s.repo.FindByID(tagID); err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return errcode.ErrNotFound("标签")
-			}
-			return errcode.ErrInternal.WithCause(err)
-		}
-
-		if err := s.repo.AttachToChallenge(challengeID, tagID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
+func (s *TagService) DeleteTag(id int64) error {
+	count, err := s.repo.CountChallengesByTagID(id)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
 	}
-	return nil
+	if count > 0 {
+		return errcode.ErrConflict("标签已被使用，无法删除")
+	}
+
+	return s.repo.Delete(id)
+}
+
+func (s *TagService) AttachTags(challengeID int64, tagIDs []int64) error {
+	tags, err := s.repo.FindByIDs(tagIDs)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if len(tags) != len(tagIDs) {
+		return errcode.ErrNotFound("部分标签")
+	}
+
+	return s.repo.AttachTagsInTx(challengeID, tagIDs)
 }
 
 func (s *TagService) DetachTags(challengeID int64, tagIDs []int64) error {
+	tags, err := s.repo.FindByIDs(tagIDs)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if len(tags) != len(tagIDs) {
+		return errcode.ErrNotFound("部分标签")
+	}
+
 	for _, tagID := range tagIDs {
 		if err := s.repo.DetachFromChallenge(challengeID, tagID); err != nil {
 			return errcode.ErrInternal.WithCause(err)
@@ -82,9 +99,10 @@ func (s *TagService) GetChallengeTagIDs(challengeID int64) ([]int64, error) {
 
 func toTagResp(tag *model.Tag) *dto.TagResp {
 	return &dto.TagResp{
-		ID:        tag.ID,
-		Name:      tag.Name,
-		Dimension: tag.Dimension,
-		CreatedAt: tag.CreatedAt,
+		ID:          tag.ID,
+		Name:        tag.Name,
+		Type:        tag.Type,
+		Description: tag.Description,
+		CreatedAt:   tag.CreatedAt,
 	}
 }
