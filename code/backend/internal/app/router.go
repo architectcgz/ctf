@@ -124,7 +124,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	assessmentRepo := assessmentModule.NewRepository(db)
 	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
-	assessmentHandler := assessmentModule.NewHandler(assessmentService)
+	recommendationService := assessmentModule.NewRecommendationService(assessmentRepo, challengeRepo, cache, cfg.Recommendation, log.Named("recommendation_service"))
+	assessmentHandler := assessmentModule.NewHandler(assessmentService, recommendationService)
 
 	// 竞赛管理
 	contestRepo := contestModule.NewRepository(db)
@@ -192,6 +193,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
 	usersGroup.GET("/me/skill-profile", assessmentHandler.GetMySkillProfile)
+	usersGroup.GET("/me/recommendations", assessmentHandler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 

@@ -10,21 +10,22 @@ import (
 )
 
 type Config struct {
-	App        AppConfig        `mapstructure:"app"`
-	HTTP       HTTPConfig       `mapstructure:"http"`
-	Log        LogConfig        `mapstructure:"log"`
-	Postgres   PostgresConfig   `mapstructure:"postgres"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	CORS       CORSConfig       `mapstructure:"cors"`
-	Auth       AuthConfig       `mapstructure:"auth"`
-	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
-	Container  ContainerConfig  `mapstructure:"container"`
-	Pagination PaginationConfig `mapstructure:"pagination"`
-	Challenge  ChallengeConfig  `mapstructure:"challenge"`
-	Score      ScoreConfig      `mapstructure:"score"`
-	Cache      CacheConfig      `mapstructure:"cache"`
-	Assessment AssessmentConfig `mapstructure:"assessment"`
-	Contest    ContestConfig    `mapstructure:"contest"`
+	App            AppConfig            `mapstructure:"app"`
+	HTTP           HTTPConfig           `mapstructure:"http"`
+	Log            LogConfig            `mapstructure:"log"`
+	Postgres       PostgresConfig       `mapstructure:"postgres"`
+	Redis          RedisConfig          `mapstructure:"redis"`
+	CORS           CORSConfig           `mapstructure:"cors"`
+	Auth           AuthConfig           `mapstructure:"auth"`
+	RateLimit      RateLimitConfig      `mapstructure:"rate_limit"`
+	Container      ContainerConfig      `mapstructure:"container"`
+	Pagination     PaginationConfig     `mapstructure:"pagination"`
+	Challenge      ChallengeConfig      `mapstructure:"challenge"`
+	Score          ScoreConfig          `mapstructure:"score"`
+	Cache          CacheConfig          `mapstructure:"cache"`
+	Assessment     AssessmentConfig     `mapstructure:"assessment"`
+	Recommendation RecommendationConfig `mapstructure:"recommendation"`
+	Contest        ContestConfig        `mapstructure:"contest"`
 }
 
 type AppConfig struct {
@@ -153,6 +154,13 @@ type AssessmentConfig struct {
 	IncrementalUpdateTimeout time.Duration `mapstructure:"incremental_update_timeout"`
 }
 
+type RecommendationConfig struct {
+	WeakThreshold float64       `mapstructure:"weak_threshold"`
+	CacheTTL      time.Duration `mapstructure:"cache_ttl"`
+	DefaultLimit  int           `mapstructure:"default_limit"`
+	MaxLimit      int           `mapstructure:"max_limit"`
+}
+
 type ContestConfig struct {
 	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
 	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
@@ -210,6 +218,18 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.DefaultPidsLimit <= 0 || c.Container.DefaultPidsLimit > 10000 {
 		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
+	}
+	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
+		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
+	}
+	if c.Recommendation.CacheTTL < time.Minute {
+		return fmt.Errorf("recommendation.cache_ttl must be at least 1 minute")
+	}
+	if c.Recommendation.DefaultLimit <= 0 {
+		return fmt.Errorf("recommendation.default_limit must be greater than 0")
+	}
+	if c.Recommendation.MaxLimit < c.Recommendation.DefaultLimit {
+		return fmt.Errorf("recommendation.max_limit must be greater than or equal to default_limit")
 	}
 	return nil
 }
@@ -300,6 +320,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("assessment.lock_ttl", 10*time.Second)
 	v.SetDefault("assessment.incremental_update_delay", 100*time.Millisecond)
 	v.SetDefault("assessment.incremental_update_timeout", 5*time.Second)
+	v.SetDefault("recommendation.weak_threshold", 0.4)
+	v.SetDefault("recommendation.cache_ttl", time.Hour)
+	v.SetDefault("recommendation.default_limit", 6)
+	v.SetDefault("recommendation.max_limit", 20)
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.base_score", 1000.0)

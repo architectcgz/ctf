@@ -134,6 +134,12 @@ assessment:
   incremental_update_delay: 100ms
   incremental_update_timeout: 5s
 
+recommendation:
+  weak_threshold: 0.4
+  cache_ttl: 1h
+  default_limit: 6
+  max_limit: 20
+
 contest:
   status_update_interval: 1m
   status_update_batch_size: 1000

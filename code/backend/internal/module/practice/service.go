@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
 	"ctf-platform/internal/module/container"
+	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -189,7 +190,7 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 
 	if isCorrect {
 		cacheKey := constants.UserProgressKey(userID)
-		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
+		if err := s.redis.Del(ctx, cacheKey, rediskeys.RecommendationKey(userID)).Err(); err != nil {
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 		s.triggerAssessmentUpdate(userID, challengeItem.Category)

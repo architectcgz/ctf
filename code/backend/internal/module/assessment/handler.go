@@ -9,11 +9,15 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	service               *Service
+	recommendationService *RecommendationService
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, recommendationService *RecommendationService) *Handler {
+	return &Handler{
+		service:               service,
+		recommendationService: recommendationService,
+	}
 }
 
 // GetMySkillProfile 获取我的能力画像
@@ -44,4 +48,24 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 	}
 
 	response.Success(c, profile)
+}
+
+func (h *Handler) GetRecommendations(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+
+	var req struct {
+		Limit int `form:"limit"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	result, err := h.recommendationService.Recommend(userID, req.Limit)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, result)
 }
