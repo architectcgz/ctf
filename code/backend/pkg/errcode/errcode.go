@@ -92,4 +92,8 @@ var (
 	ErrContestChallengeHasSubs = New(14011, "该题目已有竞赛提交记录，无法移除", http.StatusConflict)
 	ErrContestEnded            = New(14012, "竞赛已结束", http.StatusForbidden)
 	ErrScoreboardNotFrozen     = New(14013, "排行榜未冻结", http.StatusBadRequest)
+	ErrContestNotRunning       = New(14014, "竞赛未在进行中", http.StatusForbidden)
+	ErrRegistrationNotApproved = New(14015, "报名未通过审核", http.StatusForbidden)
+	ErrNotRegistered           = New(14016, "未报名该竞赛", http.StatusForbidden)
+	ErrContestChallengeSolved  = New(14017, "该题目已在本场竞赛中解出", http.StatusConflict)
 )
