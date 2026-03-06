@@ -4,8 +4,6 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
-
-	"gorm.io/gorm"
 )
 
 type TagService struct {
@@ -49,7 +47,7 @@ func (s *TagService) DeleteTag(id int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if count > 0 {
-		return errcode.ErrConflict("标签已被使用，无法删除")
+		return errcode.ErrConflict.WithCause(nil)
 	}
 
 	return s.repo.Delete(id)
@@ -61,7 +59,7 @@ func (s *TagService) AttachTags(challengeID int64, tagIDs []int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if len(tags) != len(tagIDs) {
-		return errcode.ErrNotFound("部分标签")
+		return errcode.ErrNotFound
 	}
 
 	return s.repo.AttachTagsInTx(challengeID, tagIDs)
@@ -73,7 +71,7 @@ func (s *TagService) DetachTags(challengeID int64, tagIDs []int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	if len(tags) != len(tagIDs) {
-		return errcode.ErrNotFound("部分标签")
+		return errcode.ErrNotFound
 	}
 
 	for _, tagID := range tagIDs {
