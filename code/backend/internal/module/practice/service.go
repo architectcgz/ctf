@@ -36,6 +36,7 @@ type InstanceRepository interface {
 
 type AssessmentService interface {
 	CalculateSkillProfile(userID int64) ([]*dto.SkillDimension, error)
+	CalculateSkillProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error)
 }
 
 func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, assessmentService AssessmentService, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
@@ -134,10 +135,19 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	// 6. 记录日志
 	if isCorrect {
 		s.logger.Info("Flag验证成功", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID))
-		// 增量更新能力画像
+		// 异步更新能力画像（带 panic 恢复和超时控制）
 		if s.assessmentService != nil {
 			go func() {
-				if _, err := s.assessmentService.CalculateSkillProfile(userID); err != nil {
+				defer func() {
+					if r := recover(); r != nil {
+						s.logger.Error("画像更新 panic", zap.Int64("userID", userID), zap.Any("panic", r))
+					}
+				}()
+
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				if _, err := s.assessmentService.CalculateSkillProfileWithContext(ctx, userID); err != nil {
 					s.logger.Error("更新能力画像失败", zap.Int64("userID", userID), zap.Error(err))
 				}
 			}()
