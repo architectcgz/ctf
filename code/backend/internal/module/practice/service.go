@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -142,6 +143,104 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		resp.Points = challenge.Points
 	} else {
 		resp.Message = "Flag 错误，请重试"
+	}
+
+	return resp, nil
+}
+
+// GetProgress 获取用户解题进度
+func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("ctf:progress:%d", userID)
+
+	// 1. 尝试从缓存获取
+	cached, err := s.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var resp dto.ProgressResp
+		if json.Unmarshal([]byte(cached), &resp) == nil {
+			return &resp, nil
+		}
+	}
+
+	// 2. 查询数据库
+	totalScore, totalSolved, err := s.repo.GetUserProgress(userID)
+	if err != nil {
+		s.logger.Error("查询用户进度失败", zap.Int64("userID", userID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	rank, err := s.repo.GetUserRank(userID)
+	if err != nil {
+		s.logger.Error("查询用户排名失败", zap.Int64("userID", userID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	categoryStats, err := s.repo.GetCategoryStats(userID)
+	if err != nil {
+		s.logger.Error("查询分类统计失败", zap.Int64("userID", userID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	difficultyStats, err := s.repo.GetDifficultyStats(userID)
+	if err != nil {
+		s.logger.Error("查询难度统计失败", zap.Int64("userID", userID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	// 3. 构建响应
+	resp := &dto.ProgressResp{
+		TotalScore:      totalScore,
+		TotalSolved:     totalSolved,
+		Rank:            rank,
+		CategoryStats:   make([]dto.CategoryStat, len(categoryStats)),
+		DifficultyStats: make([]dto.DifficultyStat, len(difficultyStats)),
+	}
+
+	for i, stat := range categoryStats {
+		resp.CategoryStats[i] = dto.CategoryStat{
+			Category: stat.Category,
+			Solved:   stat.Solved,
+			Total:    stat.Total,
+		}
+	}
+
+	for i, stat := range difficultyStats {
+		resp.DifficultyStats[i] = dto.DifficultyStat{
+			Difficulty: stat.Difficulty,
+			Solved:     stat.Solved,
+			Total:      stat.Total,
+		}
+	}
+
+	// 4. 缓存结果（10 分钟）
+	if data, err := json.Marshal(resp); err == nil {
+		s.redis.Set(ctx, cacheKey, data, 10*time.Minute)
+	}
+
+	return resp, nil
+}
+
+// GetTimeline 获取用户时间线
+func (s *Service) GetTimeline(userID int64) (*dto.TimelineResp, error) {
+	events, err := s.repo.GetUserTimeline(userID)
+	if err != nil {
+		s.logger.Error("查询用户时间线失败", zap.Int64("userID", userID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.TimelineResp{
+		Events: make([]dto.TimelineEvent, len(events)),
+	}
+
+	for i, event := range events {
+		resp.Events[i] = dto.TimelineEvent{
+			Type:        event.Type,
+			ChallengeID: event.ChallengeID,
+			Title:       event.Title,
+			Timestamp:   event.Timestamp,
+			IsCorrect:   event.IsCorrect,
+			Points:      event.Points,
+		}
 	}
 
 	return resp, nil

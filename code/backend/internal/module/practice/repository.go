@@ -49,3 +49,136 @@ func (r *Repository) IsUniqueViolation(err error) bool {
 	}
 	return false
 }
+
+// GetUserProgress 获取用户解题进度统计
+func (r *Repository) GetUserProgress(userID int64) (totalScore int, totalSolved int, err error) {
+	var result struct {
+		TotalScore  int `gorm:"column:total_score"`
+		TotalSolved int `gorm:"column:total_solved"`
+	}
+	err = r.db.Table("submissions s").
+		Select("COALESCE(SUM(c.points), 0) as total_score, COUNT(DISTINCT s.challenge_id) as total_solved").
+		Joins("JOIN challenges c ON s.challenge_id = c.id").
+		Where("s.user_id = ? AND s.is_correct = ? AND c.status = ?", userID, true, "published").
+		Scan(&result).Error
+	return result.TotalScore, result.TotalSolved, err
+}
+
+// GetCategoryStats 获取分类统计
+func (r *Repository) GetCategoryStats(userID int64) ([]struct {
+	Category string
+	Solved   int
+	Total    int
+}, error) {
+	var stats []struct {
+		Category string
+		Solved   int
+		Total    int
+	}
+	err := r.db.Raw(`
+		SELECT
+			c.category,
+			COUNT(DISTINCT CASE WHEN s.is_correct THEN c.id END) as solved,
+			COUNT(DISTINCT c.id) as total
+		FROM challenges c
+		LEFT JOIN submissions s ON c.id = s.challenge_id AND s.user_id = ? AND s.is_correct = true
+		WHERE c.status = ?
+		GROUP BY c.category
+		ORDER BY c.category
+	`, userID, "published").Scan(&stats).Error
+	return stats, err
+}
+
+// GetDifficultyStats 获取难度统计
+func (r *Repository) GetDifficultyStats(userID int64) ([]struct {
+	Difficulty string
+	Solved     int
+	Total      int
+}, error) {
+	var stats []struct {
+		Difficulty string
+		Solved     int
+		Total      int
+	}
+	err := r.db.Raw(`
+		SELECT
+			c.difficulty,
+			COUNT(DISTINCT CASE WHEN s.is_correct THEN c.id END) as solved,
+			COUNT(DISTINCT c.id) as total
+		FROM challenges c
+		LEFT JOIN submissions s ON c.id = s.challenge_id AND s.user_id = ? AND s.is_correct = true
+		WHERE c.status = ?
+		GROUP BY c.difficulty
+		ORDER BY
+			CASE c.difficulty
+				WHEN 'beginner' THEN 1
+				WHEN 'easy' THEN 2
+				WHEN 'medium' THEN 3
+				WHEN 'hard' THEN 4
+				WHEN 'insane' THEN 5
+			END
+	`, userID, "published").Scan(&stats).Error
+	return stats, err
+}
+
+// GetUserRank 获取用户排名
+func (r *Repository) GetUserRank(userID int64) (int, error) {
+	var rank int
+	err := r.db.Raw(`
+		SELECT COUNT(*) + 1 as rank
+		FROM (
+			SELECT s.user_id, SUM(c.points) as total_score
+			FROM submissions s
+			JOIN challenges c ON s.challenge_id = c.id
+			WHERE s.is_correct = true AND c.status = ?
+			GROUP BY s.user_id
+			HAVING SUM(c.points) > (
+				SELECT COALESCE(SUM(c2.points), 0)
+				FROM submissions s2
+				JOIN challenges c2 ON s2.challenge_id = c2.id
+				WHERE s2.user_id = ? AND s2.is_correct = true AND c2.status = ?
+			)
+		) ranked
+	`, "published", userID, "published").Scan(&rank).Error
+	return rank, err
+}
+
+// GetUserTimeline 获取用户时间线
+func (r *Repository) GetUserTimeline(userID int64) ([]struct {
+	Type        string
+	ChallengeID int64
+	Title       string
+	Timestamp   time.Time
+	IsCorrect   *bool
+	Points      *int
+}, error) {
+	var events []struct {
+		Type        string
+		ChallengeID int64
+		Title       string
+		Timestamp   time.Time
+		IsCorrect   *bool
+		Points      *int
+	}
+
+	err := r.db.Raw(`
+		SELECT 'instance_start' as type, i.challenge_id, c.title, i.created_at as timestamp, NULL as is_correct, NULL as points
+		FROM instances i
+		JOIN challenges c ON i.challenge_id = c.id
+		WHERE i.user_id = ?
+		UNION ALL
+		SELECT 'flag_submit' as type, s.challenge_id, c.title, s.submitted_at as timestamp, s.is_correct,
+			CASE WHEN s.is_correct THEN c.points ELSE NULL END as points
+		FROM submissions s
+		JOIN challenges c ON s.challenge_id = c.id
+		WHERE s.user_id = ?
+		UNION ALL
+		SELECT 'instance_destroy' as type, i.challenge_id, c.title, i.updated_at as timestamp, NULL as is_correct, NULL as points
+		FROM instances i
+		JOIN challenges c ON i.challenge_id = c.id
+		WHERE i.user_id = ? AND i.status IN ('stopped', 'expired')
+		ORDER BY timestamp ASC
+	`, userID, userID, userID).Scan(&events).Error
+
+	return events, err
+}
