@@ -23,3 +23,18 @@ func ParseChallengeID() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// ParseInt64Param 解析路径参数中的 int64 ID
+func ParseInt64Param(paramName string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param(paramName)
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil || id <= 0 {
+			response.FromError(c, errcode.ErrInvalidParams)
+			c.Abort()
+			return
+		}
+		c.Set(paramName, id)
+		c.Next()
+	}
+}
