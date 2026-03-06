@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS contest_challenges (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
-    UNIQUE KEY idx_contest_challenge (contest_id, challenge_id),
+    UNIQUE KEY idx_contest_challenge (contest_id, challenge_id, deleted_at),
     KEY idx_contest_id (contest_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
