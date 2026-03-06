@@ -8,10 +8,10 @@ import (
 
 type ContestChallenge struct {
 	ID          int64          `gorm:"column:id;primaryKey"`
-	ContestID   int64          `gorm:"column:contest_id;index:idx_contest_challenge,unique"`
+	ContestID   int64          `gorm:"column:contest_id;index:idx_contest_challenge,unique;index:idx_contest_order,unique"`
 	ChallengeID int64          `gorm:"column:challenge_id;index:idx_contest_challenge,unique"`
 	Points      int            `gorm:"column:points"`
-	Order       int            `gorm:"column:order"`
+	Order       int            `gorm:"column:order;index:idx_contest_order,unique"`
 	CreatedAt   time.Time      `gorm:"column:created_at"`
 	UpdatedAt   time.Time      `gorm:"column:updated_at"`
 	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at"`
