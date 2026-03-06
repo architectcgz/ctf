@@ -125,26 +125,28 @@ func (r *Repository) GetDifficultyStats(userID int64) ([]struct {
 func (r *Repository) GetUserRank(userID int64) (int, error) {
 	var rank int
 	err := r.db.Raw(`
-		SELECT COUNT(*) + 1 as rank
-		FROM (
-			SELECT s.user_id, SUM(c.points) as total_score
+		WITH ranked_users AS (
+			SELECT
+				s.user_id,
+				RANK() OVER (ORDER BY SUM(c.points) DESC) as rank
 			FROM submissions s
 			JOIN challenges c ON s.challenge_id = c.id
 			WHERE s.is_correct = true AND c.status = ?
 			GROUP BY s.user_id
-			HAVING SUM(c.points) > (
-				SELECT COALESCE(SUM(c2.points), 0)
-				FROM submissions s2
-				JOIN challenges c2 ON s2.challenge_id = c2.id
-				WHERE s2.user_id = ? AND s2.is_correct = true AND c2.status = ?
-			)
-		) ranked
-	`, "published", userID, "published").Scan(&rank).Error
-	return rank, err
+		)
+		SELECT COALESCE(rank, 0) FROM ranked_users WHERE user_id = ?
+	`, "published", userID).Scan(&rank).Error
+	if err != nil {
+		return 0, err
+	}
+	if rank == 0 {
+		rank = 1
+	}
+	return rank, nil
 }
 
 // GetUserTimeline 获取用户时间线
-func (r *Repository) GetUserTimeline(userID int64) ([]struct {
+func (r *Repository) GetUserTimeline(userID int64, limit int) ([]struct {
 	Type        string
 	ChallengeID int64
 	Title       string
@@ -161,24 +163,32 @@ func (r *Repository) GetUserTimeline(userID int64) ([]struct {
 		Points      *int
 	}
 
+	if limit <= 0 {
+		limit = 100
+	}
+
 	err := r.db.Raw(`
-		SELECT 'instance_start' as type, i.challenge_id, c.title, i.created_at as timestamp, NULL as is_correct, NULL as points
-		FROM instances i
-		JOIN challenges c ON i.challenge_id = c.id
-		WHERE i.user_id = ?
-		UNION ALL
-		SELECT 'flag_submit' as type, s.challenge_id, c.title, s.submitted_at as timestamp, s.is_correct,
-			CASE WHEN s.is_correct THEN c.points ELSE NULL END as points
-		FROM submissions s
-		JOIN challenges c ON s.challenge_id = c.id
-		WHERE s.user_id = ?
-		UNION ALL
-		SELECT 'instance_destroy' as type, i.challenge_id, c.title, i.updated_at as timestamp, NULL as is_correct, NULL as points
-		FROM instances i
-		JOIN challenges c ON i.challenge_id = c.id
-		WHERE i.user_id = ? AND i.status IN ('stopped', 'expired')
-		ORDER BY timestamp ASC
-	`, userID, userID, userID).Scan(&events).Error
+		SELECT * FROM (
+			SELECT 'instance_start' as type, i.challenge_id, i.created_at as timestamp,
+				NULL::boolean as is_correct, NULL::integer as points
+			FROM instances i
+			WHERE i.user_id = ?
+			UNION ALL
+			SELECT 'flag_submit' as type, s.challenge_id, s.submitted_at as timestamp,
+				s.is_correct, CASE WHEN s.is_correct THEN c.points ELSE NULL END as points
+			FROM submissions s
+			LEFT JOIN challenges c ON s.challenge_id = c.id
+			WHERE s.user_id = ?
+			UNION ALL
+			SELECT 'instance_destroy' as type, i.challenge_id, i.updated_at as timestamp,
+				NULL::boolean as is_correct, NULL::integer as points
+			FROM instances i
+			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired')
+		) events
+		LEFT JOIN challenges c ON events.challenge_id = c.id
+		ORDER BY events.timestamp DESC
+		LIMIT ?
+	`, userID, userID, userID, limit).Scan(&events).Error
 
 	return events, err
 }
