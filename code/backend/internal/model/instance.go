@@ -11,6 +11,7 @@ type Instance struct {
 	NetworkID    string    `gorm:"size:64"`
 	Status       string    `gorm:"size:16;not null;index"`
 	AccessURL    string    `gorm:"size:255"`
+	Nonce        string    `gorm:"size:64"`
 	ExpiresAt    time.Time `gorm:"not null;index"`
 	ExtendCount  int       `gorm:"default:0"`
 	MaxExtends   int       `gorm:"default:2"`
