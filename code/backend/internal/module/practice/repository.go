@@ -2,8 +2,11 @@ package practice
 
 import (
 	"ctf-platform/internal/model"
+	"errors"
+	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -35,4 +38,14 @@ func (r *Repository) CountRecentSubmissions(userID, challengeID int64, since tim
 		Where("user_id = ? AND challenge_id = ? AND submitted_at >= ?", userID, challengeID, since).
 		Count(&count).Error
 	return count, err
+}
+
+// IsUniqueViolation 检测是否为唯一约束冲突错误
+func (r *Repository) IsUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		// 23505 是 PostgreSQL 唯一约束冲突错误码
+		return pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, "idx_submissions_user_challenge_correct")
+	}
+	return false
 }
