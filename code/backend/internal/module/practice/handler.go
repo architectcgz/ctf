@@ -42,3 +42,39 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 
 	response.Success(c, resp)
 }
+
+// GetProgress 获取个人解题进度
+// @Summary 获取个人解题进度
+// @Tags Practice
+// @Produce json
+// @Success 200 {object} response.Response{data=dto.ProgressResp}
+// @Router /api/v1/users/me/progress [get]
+func (h *Handler) GetProgress(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+
+	resp, err := h.service.GetProgress(userID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetTimeline 获取解题时间线
+// @Summary 获取解题时间线
+// @Tags Practice
+// @Produce json
+// @Success 200 {object} response.Response{data=dto.TimelineResp}
+// @Router /api/v1/users/me/timeline [get]
+func (h *Handler) GetTimeline(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+
+	resp, err := h.service.GetTimeline(userID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
