@@ -15,3 +15,8 @@ func WithNamespace(key string) string {
 func ChallengeSolvedCount(challengeID int64) string {
 	return WithNamespace(fmt.Sprintf("challenge:solved_count:%d", challengeID))
 }
+
+// UserProgressKey 用户进度缓存 Key
+func UserProgressKey(userID int64) string {
+	return WithNamespace(fmt.Sprintf("user:progress:%d", userID))
+}

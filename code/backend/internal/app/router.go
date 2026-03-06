@@ -137,5 +137,10 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	protected.DELETE("/instances/:id", containerHandler.DestroyInstance)
 	protected.POST("/instances/:id/extend", containerHandler.ExtendInstance)
 
+	// 个人进度（学员）
+	usersGroup := protected.Group("/users")
+	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
+	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
+
 	return engine, nil
 }
