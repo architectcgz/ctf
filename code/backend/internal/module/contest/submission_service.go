@@ -1,27 +1,32 @@
 package contest
 
 import (
+	"context"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
 	"ctf-platform/pkg/errcode"
+	"fmt"
 	"math"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type SubmissionService struct {
 	db          *gorm.DB
+	redis       *redis.Client
 	flagService *challenge.FlagService
 	cfg         *config.Config
 }
 
-func NewSubmissionService(db *gorm.DB, flagService *challenge.FlagService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(db *gorm.DB, redis *redis.Client, flagService *challenge.FlagService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		db:          db,
+		redis:       redis,
 		flagService: flagService,
 		cfg:         cfg,
 	}
@@ -70,16 +75,40 @@ func (s *SubmissionService) SubmitFlagInContest(userID, contestID, challengeID i
 		return nil, err
 	}
 
+	// 频率限制检查（防止恶意刷错误提交）
+	ctx := context.Background()
+	rateLimitKey := fmt.Sprintf("submission:rate:%d:%d:%d", userID, contestID, challengeID)
+	exists, _ := s.redis.Exists(ctx, rateLimitKey).Result()
+	if exists > 0 {
+		return nil, errcode.ErrSubmitTooFrequent
+	}
+
 	// 验证 Flag
 	isCorrect, err := s.flagService.ValidateFlag(userID, challengeID, flag, "")
 	if err != nil {
 		return nil, err
 	}
 
+	// 错误提交设置频率限制（5秒内最多1次）
+	if !isCorrect {
+		s.redis.Set(ctx, rateLimitKey, "1", 5*time.Second)
+	}
+
 	var submission *model.Submission
 	var finalScore int
 
 	if isCorrect {
+		// 事务外查询 Challenge 避免死锁
+		var chal model.Challenge
+		if err := s.db.First(&chal, challengeID).Error; err != nil {
+			return nil, err
+		}
+
+		baseScore := chal.Points
+		if cc.ContestScore != nil {
+			baseScore = *cc.ContestScore
+		}
+
 		// 在事务中处理首杀、计分和提交记录创建
 		err = s.db.Transaction(func(tx *gorm.DB) error {
 			// 事务内二次检查是否已解决（防止并发重复提交）
@@ -91,17 +120,6 @@ func (s *SubmissionService) SubmitFlagInContest(userID, contestID, challengeID i
 
 			if count > 0 {
 				return errcode.ErrContestChallengeAlreadySolved
-			}
-
-			// 获取基础分数
-			var chal model.Challenge
-			if err := tx.First(&chal, challengeID).Error; err != nil {
-				return err
-			}
-
-			baseScore := chal.Points
-			if cc.ContestScore != nil {
-				baseScore = *cc.ContestScore
 			}
 
 			// 使用乐观锁抢首杀
