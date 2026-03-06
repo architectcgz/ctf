@@ -1,11 +1,13 @@
 package contest
 
 import (
+	"crypto/rand"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
+	"encoding/base32"
 	"errors"
-	"math/rand"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -18,6 +20,7 @@ type TeamService struct {
 
 type UserRepository interface {
 	FindByID(id int64) (*model.User, error)
+	FindByIDs(ids []int64) ([]*model.User, error)
 }
 
 func NewTeamService(teamRepo *TeamRepository, userRepo UserRepository) *TeamService {
@@ -31,7 +34,7 @@ func (s *TeamService) CreateTeam(captainID int64, req *dto.CreateTeamReq) (*dto.
 	// 检查用户是否已在该竞赛的队伍中
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(captainID, req.ContestID)
 	if err == nil && existingTeam.ID > 0 {
-		return nil, errcode.New(14001, "您已加入该竞赛的队伍", 409)
+		return nil, errcode.ErrAlreadyInTeam
 	}
 
 	maxMembers := req.MaxMembers
@@ -39,26 +42,37 @@ func (s *TeamService) CreateTeam(captainID int64, req *dto.CreateTeamReq) (*dto.
 		maxMembers = 4
 	}
 
-	team := &model.Team{
-		ContestID:  req.ContestID,
-		Name:       req.Name,
-		CaptainID:  captainID,
-		InviteCode: generateInviteCode(),
-		MaxMembers: maxMembers,
+	// 重试生成邀请码并创建队伍
+	const maxRetries = 3
+	var team *model.Team
+	for i := 0; i < maxRetries; i++ {
+		inviteCode, err := generateInviteCode()
+		if err != nil {
+			return nil, err
+		}
+
+		team = &model.Team{
+			ContestID:  req.ContestID,
+			Name:       req.Name,
+			CaptainID:  captainID,
+			InviteCode: inviteCode,
+			MaxMembers: maxMembers,
+		}
+
+		err = s.teamRepo.CreateWithMember(team, captainID)
+		if err == nil {
+			break
+		}
+
+		// 检查是否为唯一索引冲突
+		if !strings.Contains(err.Error(), "duplicate") && !strings.Contains(err.Error(), "unique") {
+			return nil, err
+		}
+		// 重试
 	}
 
-	if err := s.teamRepo.Create(team); err != nil {
-		return nil, err
-	}
-
-	// 队长自动加入队伍
-	member := &model.TeamMember{
-		TeamID:   team.ID,
-		UserID:   captainID,
-		JoinedAt: time.Now(),
-	}
-	if err := s.teamRepo.AddMember(member); err != nil {
-		return nil, err
+	if team == nil || team.ID == 0 {
+		return nil, errors.New("创建队伍失败")
 	}
 
 	return s.toTeamResp(team, 1), nil
@@ -68,7 +82,7 @@ func (s *TeamService) JoinTeam(userID int64, req *dto.JoinTeamReq) (*dto.TeamRes
 	team, err := s.teamRepo.FindByInviteCode(req.InviteCode)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errcode.New(14002, "邀请码无效", 404)
+			return nil, errcode.ErrInvalidInviteCode
 		}
 		return nil, err
 	}
@@ -76,42 +90,49 @@ func (s *TeamService) JoinTeam(userID int64, req *dto.JoinTeamReq) (*dto.TeamRes
 	// 检查用户是否已在该竞赛的队伍中
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(userID, team.ContestID)
 	if err == nil && existingTeam.ID > 0 {
-		return nil, errcode.New(14003, "您已加入该竞赛的队伍", 409)
+		return nil, errcode.ErrAlreadyInTeamDup
 	}
 
-	// 检查队伍人数
-	count, err := s.teamRepo.GetMemberCount(team.ID)
+	// 使用带锁的添加成员方法，防止并发竞态
+	err = s.teamRepo.AddMemberWithLock(team.ID, userID)
 	if err != nil {
-		return nil, err
-	}
-	if count >= int64(team.MaxMembers) {
-		return nil, errcode.New(14004, "队伍人数已满", 403)
-	}
-
-	member := &model.TeamMember{
-		TeamID:   team.ID,
-		UserID:   userID,
-		JoinedAt: time.Now(),
-	}
-	if err := s.teamRepo.AddMember(member); err != nil {
+		if errors.Is(err, gorm.ErrInvalidData) {
+			return nil, errcode.ErrTeamFull
+		}
 		return nil, err
 	}
 
-	return s.toTeamResp(team, int(count)+1), nil
+	count, _ := s.teamRepo.GetMemberCount(team.ID)
+	return s.toTeamResp(team, int(count)), nil
 }
 
 func (s *TeamService) LeaveTeam(userID, teamID int64) error {
 	team, err := s.teamRepo.FindByID(teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errcode.New(14005, "队伍不存在", 404)
+			return errcode.ErrTeamNotFound
 		}
 		return err
 	}
 
-	// 队长不能直接退出，需要先解散队伍
 	if team.CaptainID == userID {
-		return errcode.New(14006, "队长不能退出队伍，请先解散队伍", 403)
+		return errcode.ErrCaptainCannotLeave
+	}
+
+	members, err := s.teamRepo.GetMembers(teamID)
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, m := range members {
+		if m.UserID == userID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errcode.ErrNotInTeam
 	}
 
 	return s.teamRepo.RemoveMember(teamID, userID)
@@ -121,23 +142,23 @@ func (s *TeamService) DismissTeam(captainID, teamID int64) error {
 	team, err := s.teamRepo.FindByID(teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errcode.New(14005, "队伍不存在", 404)
+			return errcode.ErrTeamNotFound
 		}
 		return err
 	}
 
 	if team.CaptainID != captainID {
-		return errcode.New(14007, "只有队长可以解散队伍", 403)
+		return errcode.ErrNotCaptain
 	}
 
-	return s.teamRepo.Delete(teamID)
+	return s.teamRepo.DeleteWithMembers(teamID)
 }
 
 func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error) {
 	team, err := s.teamRepo.FindByID(teamID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, errcode.New(14005, "队伍不存在", 404)
+			return nil, nil, errcode.ErrTeamNotFound
 		}
 		return nil, nil, err
 	}
@@ -147,17 +168,30 @@ func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMembe
 		return nil, nil, err
 	}
 
+	userIDs := make([]int64, len(members))
+	for i, m := range members {
+		userIDs[i] = m.UserID
+	}
+
+	users, err := s.userRepo.FindByIDs(userIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	userMap := make(map[int64]*model.User)
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
 	memberResps := make([]*dto.TeamMemberResp, 0, len(members))
 	for _, m := range members {
-		user, err := s.userRepo.FindByID(m.UserID)
-		if err != nil {
-			continue
+		if user, ok := userMap[m.UserID]; ok {
+			memberResps = append(memberResps, &dto.TeamMemberResp{
+				UserID:   m.UserID,
+				Username: user.Username,
+				JoinedAt: m.JoinedAt,
+			})
 		}
-		memberResps = append(memberResps, &dto.TeamMemberResp{
-			UserID:   m.UserID,
-			Username: user.Username,
-			JoinedAt: m.JoinedAt,
-		})
 	}
 
 	return s.toTeamResp(team, len(members)), memberResps, nil
@@ -169,10 +203,20 @@ func (s *TeamService) ListTeams(contestID int64) ([]*dto.TeamResp, error) {
 		return nil, err
 	}
 
+	teamIDs := make([]int64, len(teams))
+	for i, t := range teams {
+		teamIDs[i] = t.ID
+	}
+
+	countMap, err := s.teamRepo.GetMemberCountBatch(teamIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]*dto.TeamResp, 0, len(teams))
 	for _, team := range teams {
-		count, _ := s.teamRepo.GetMemberCount(team.ID)
-		result = append(result, s.toTeamResp(team, int(count)))
+		count := countMap[team.ID]
+		result = append(result, s.toTeamResp(team, count))
 	}
 	return result, nil
 }
@@ -190,11 +234,15 @@ func (s *TeamService) toTeamResp(team *model.Team, memberCount int) *dto.TeamRes
 	}
 }
 
-func generateInviteCode() string {
-	const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-	code := make([]byte, 6)
-	for i := range code {
-		code[i] = chars[rand.Intn(len(chars))]
+func generateInviteCode() (string, error) {
+	bytes := make([]byte, 4)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
 	}
-	return string(code)
+	code := base32.StdEncoding.EncodeToString(bytes)
+	code = strings.ReplaceAll(code, "=", "")
+	if len(code) > 6 {
+		code = code[:6]
+	}
+	return code, nil
 }
