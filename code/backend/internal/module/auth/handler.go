@@ -7,17 +7,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
-	service      Service
-	tokenService TokenService
-	cookieConfig CookieConfig
-	log          *zap.Logger
+	service       Service
+	tokenService  TokenService
+	cookieConfig  CookieConfig
+	log           *zap.Logger
+	auditRecorder auditlog.Recorder
 }
 
 type CookieConfig struct {
@@ -29,16 +32,17 @@ type CookieConfig struct {
 	MaxAge   time.Duration
 }
 
-func NewHandler(service Service, tokenService TokenService, cookieConfig CookieConfig, log *zap.Logger) *Handler {
+func NewHandler(service Service, tokenService TokenService, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
 	}
 
 	return &Handler{
-		service:      service,
-		tokenService: tokenService,
-		cookieConfig: cookieConfig,
-		log:          log,
+		service:       service,
+		tokenService:  tokenService,
+		cookieConfig:  cookieConfig,
+		log:           log,
+		auditRecorder: auditRecorder,
 	}
 }
 
@@ -68,11 +72,36 @@ func (h *Handler) Login(c *gin.Context) {
 
 	resp, tokens, err := h.service.Login(c.Request.Context(), req)
 	if err != nil {
+		h.recordAudit(c, auditlog.Entry{
+			Action:       model.AuditActionLogin,
+			ResourceType: "auth",
+			Detail: map[string]any{
+				"username":   req.Username,
+				"result":     "failed",
+				"error":      err.Error(),
+				"request_id": c.GetString("request_id"),
+			},
+			IPAddress: c.ClientIP(),
+			UserAgent: userAgentPtr(c.Request.UserAgent()),
+		})
 		response.FromError(c, err)
 		return
 	}
 
 	h.writeRefreshCookie(c, tokens.RefreshToken)
+	userID := resp.User.ID
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       &userID,
+		Action:       model.AuditActionLogin,
+		ResourceType: "auth",
+		Detail: map[string]any{
+			"username":   resp.User.Username,
+			"result":     "success",
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: userAgentPtr(c.Request.UserAgent()),
+	})
 	response.Success(c, resp)
 }
 
@@ -121,6 +150,17 @@ func (h *Handler) Logout(c *gin.Context) {
 
 	h.clearRefreshCookie(c)
 	h.log.Info("auth_logout_succeeded", zap.Int64("user_id", authUser.UserID), zap.String("username", authUser.Username))
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       &authUser.UserID,
+		Action:       model.AuditActionLogout,
+		ResourceType: "auth",
+		Detail: map[string]any{
+			"username":   authUser.Username,
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: userAgentPtr(c.Request.UserAgent()),
+	})
 	response.Success(c, nil)
 }
 
@@ -150,4 +190,20 @@ func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {
 func (h *Handler) clearRefreshCookie(c *gin.Context) {
 	c.SetSameSite(h.cookieConfig.SameSite)
 	c.SetCookie(h.cookieConfig.Name, "", -1, h.cookieConfig.Path, "", h.cookieConfig.Secure, h.cookieConfig.HTTPOnly)
+}
+
+func (h *Handler) recordAudit(c *gin.Context, entry auditlog.Entry) {
+	if h.auditRecorder == nil {
+		return
+	}
+	if err := h.auditRecorder.Record(c.Request.Context(), entry); err != nil {
+		h.log.Warn("auth_audit_record_failed", zap.String("action", entry.Action), zap.Error(err))
+	}
+}
+
+func userAgentPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
