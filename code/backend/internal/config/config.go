@@ -125,6 +125,7 @@ type PaginationConfig struct {
 type DashboardConfig struct {
 	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
 	AlertThreshold float64       `mapstructure:"alert_threshold"`
+	RedisKeyPrefix string        `mapstructure:"redis_key_prefix"`
 }
 
 func Load(env string) (*Config, error) {
@@ -235,4 +236,5 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
 	v.SetDefault("dashboard.alert_threshold", 80.0)
+	v.SetDefault("dashboard.redis_key_prefix", "ctf:dashboard")
 }
