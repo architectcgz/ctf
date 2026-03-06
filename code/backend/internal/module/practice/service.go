@@ -41,7 +41,13 @@ func NewService(
 }
 
 func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, error) {
-	// 1. 校验并发限制
+	// 1. 检查是否已有该靶场的运行中实例
+	existingInstance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeID)
+	if err == nil && existingInstance != nil {
+		return toInstanceResp(existingInstance), nil
+	}
+
+	// 2. 校验并发限制
 	instances, err := s.instanceRepo.FindByUserID(userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -54,16 +60,19 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInstanceLimitExceeded
 	}
 
-	// 2. 查询靶场信息
+	// 3. 查询靶场信息
 	chal, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
-		return nil, errcode.ErrNotFound
+		if err.Error() == "record not found" {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if chal.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrNotFound
 	}
 
-	// 3. 生成 Flag
+	// 4. 生成 Flag
 	var flag string
 	var nonce string
 	if chal.FlagType == model.FlagTypeDynamic {
@@ -84,7 +93,7 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		flag = chal.FlagHash
 	}
 
-	// 4. 创建实例记录
+	// 5. 创建实例记录
 	instance := &model.Instance{
 		UserID:      userID,
 		ChallengeID: challengeID,
@@ -98,7 +107,7 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// 5. 创建容器（带超时控制）
+	// 6. 创建容器（带超时控制）
 	ctx, cancel := context.WithTimeout(context.Background(), s.config.Container.CreateTimeout)
 	defer cancel()
 
@@ -117,7 +126,7 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, err
 	}
 
-	// 6. 更新实例状态
+	// 7. 更新实例状态
 	instance.Status = model.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err))
