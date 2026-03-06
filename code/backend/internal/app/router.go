@@ -108,6 +108,12 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
 
+	// Flag 管理（仅管理员）
+	flagService := challengeModule.NewFlagService(db)
+	flagHandler := challengeModule.NewFlagHandler(flagService)
+	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
+	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
+
 	// 实例管理（学员）
 	containerRepo := containerModule.NewRepository(db)
 	containerService := containerModule.NewService(containerRepo, &cfg.Container, log.Named("container_service"))
