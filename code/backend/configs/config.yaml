@@ -90,18 +90,23 @@ rate_limit:
     window: 1m
 
 container:
-  default_cpu_quota: 50000      # 0.5 核（微秒）
-  default_memory: 268435456     # 256MB（字节）
-  default_pids_limit: 100       # 最多 100 个进程
-  readonly_rootfs: false        # 是否启用只读根文件系统
-  run_as_user: ""               # 运行用户（空表示使用镜像默认用户）
-  port_range_start: 30000       # 容器端口映射起始端口
-  port_range_end: 40000         # 容器端口映射结束端口
-  max_concurrent_per_user: 3    # 每用户最大并发实例数
-  default_ttl: 2h               # 实例默认过期时间
-  max_extends: 2                # 最大延时次数
-  extend_duration: 1h           # 每次延时时长
-  cleanup_interval: "*/5 * * * *"  # 清理任务执行间隔（cron 表达式）
+  default_cpu_quota: 0.5
+  default_memory: 268435456
+  default_pids_limit: 100
+  readonly_rootfs: false
+  run_as_user: ""
+  allowed_capabilities:
+    - CHOWN
+    - SETUID
+    - SETGID
+  seccomp: default
+  port_range_start: 30000
+  port_range_end: 40000
+  max_concurrent_per_user: 3
+  default_ttl: 2h
+  max_extends: 2
+  extend_duration: 1h
+  cleanup_interval: "*/5 * * * *"
 
 pagination:
   default_page_size: 20
