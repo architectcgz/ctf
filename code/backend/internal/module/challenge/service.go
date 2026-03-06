@@ -2,12 +2,11 @@ package challenge
 
 import (
 	"context"
+	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"time"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -32,7 +31,7 @@ func (s *Service) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeRe
 	_, err := s.imageRepo.FindByID(req.ImageID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("镜像不存在")
+			return nil, ErrImageNotFound
 		}
 		return nil, err
 	}
@@ -78,7 +77,7 @@ func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 	if req.ImageID > 0 {
 		_, err := s.imageRepo.FindByID(req.ImageID)
 		if err != nil {
-			return errors.New("镜像不存在")
+			return ErrImageNotFound
 		}
 		challenge.ImageID = req.ImageID
 	}
@@ -92,7 +91,7 @@ func (s *Service) DeleteChallenge(id int64) error {
 		return err
 	}
 	if hasInstances {
-		return errors.New("存在运行中的实例，无法删除")
+		return ErrHasRunningInstances
 	}
 
 	return s.repo.Delete(id)
@@ -117,14 +116,7 @@ func (s *Service) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, er
 		list[i] = s.toResp(c)
 	}
 
-	page := query.Page
-	if page < 1 {
-		page = 1
-	}
-	size := query.Size
-	if size < 1 {
-		size = 20
-	}
+	page, size := normalizePagination(query.Page, query.Size)
 
 	return &dto.PageResult{
 		List:  list,
@@ -141,7 +133,7 @@ func (s *Service) PublishChallenge(id int64) error {
 	}
 
 	if challenge.ImageID == 0 {
-		return errors.New("靶场未关联镜像，无法发布")
+		return ErrImageNotLinked
 	}
 
 	challenge.Status = model.ChallengeStatusPublished
@@ -193,14 +185,7 @@ func (s *Service) ListPublishedChallenges(userID int64, query *dto.ChallengeQuer
 		list = append(list, item)
 	}
 
-	page := query.Page
-	if page < 1 {
-		page = 1
-	}
-	size := query.Size
-	if size < 1 {
-		size = 20
-	}
+	page, size := normalizePagination(query.Page, query.Size)
 
 	return &dto.PageResult{
 		List:  list,
@@ -218,7 +203,7 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 	}
 
 	if challenge.Status != model.ChallengeStatusPublished {
-		return nil, errors.New("challenge not published")
+		return nil, ErrChallengeNotPublished
 	}
 
 	isSolved, _ := s.repo.GetSolvedStatus(userID, challengeID)
@@ -243,7 +228,7 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 // getSolvedCountCached 获取完成人数（带缓存）
 func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
 	ctx := context.Background()
-	cacheKey := fmt.Sprintf("challenge:solved_count:%d", challengeID)
+	cacheKey := constants.ChallengeSolvedCount(challengeID)
 
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -259,7 +244,21 @@ func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
 	}
 
 	data, _ := json.Marshal(count)
-	s.redis.Set(ctx, cacheKey, data, 5*time.Minute)
+	s.redis.Set(ctx, cacheKey, data, SolvedCountCacheTTL)
 
 	return count, nil
+}
+
+// normalizePagination 统一处理分页参数
+func normalizePagination(page, size int) (int, int) {
+	if page < 1 {
+		page = DefaultPage
+	}
+	if size < 1 {
+		size = DefaultPageSize
+	}
+	if size > MaxPageSize {
+		size = MaxPageSize
+	}
+	return page, size
 }
