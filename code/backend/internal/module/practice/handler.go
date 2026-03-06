@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
@@ -21,7 +22,7 @@ func NewHandler(service *Service) *Handler {
 // StartChallenge 启动靶机实例
 // POST /api/v1/challenges/:id/instances
 func (h *Handler) StartChallenge(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, errcode.ErrInvalidParams)
@@ -40,7 +41,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 // GetInstance 获取实例详情
 // GET /api/v1/instances/:id
 func (h *Handler) GetInstance(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	instanceID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, errcode.ErrInvalidParams)
@@ -59,7 +60,7 @@ func (h *Handler) GetInstance(c *gin.Context) {
 // ListUserInstances 获取我的实例列表
 // GET /api/v1/instances
 func (h *Handler) ListUserInstances(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	instances, err := h.service.ListUserInstances(userID)
 	if err != nil {
@@ -73,7 +74,7 @@ func (h *Handler) ListUserInstances(c *gin.Context) {
 // SubmitFlag 提交 Flag
 // POST /api/v1/challenges/:id/submit
 func (h *Handler) SubmitFlag(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		response.Error(c, errcode.ErrInvalidParams)
@@ -98,7 +99,7 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 // GetProgress 获取个人解题进度
 // GET /api/v1/users/me/progress
 func (h *Handler) GetProgress(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	resp, err := h.service.GetProgress(userID)
 	if err != nil {
@@ -112,7 +113,7 @@ func (h *Handler) GetProgress(c *gin.Context) {
 // GetTimeline 获取解题时间线
 // GET /api/v1/users/me/timeline
 func (h *Handler) GetTimeline(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	var req struct {
 		Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`

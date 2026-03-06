@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 	"strconv"
@@ -93,7 +94,7 @@ func (h *ChallengeHandler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	payload, err := h.service.GetContestChallenges(c.Request.Context(), c.GetInt64("user_id"), contestID)
+	payload, err := h.service.GetContestChallenges(c.Request.Context(), authctx.MustCurrentUser(c).UserID, contestID)
 	if err != nil {
 		response.FromError(c, err)
 		return

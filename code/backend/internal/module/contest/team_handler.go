@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 	"strconv"
@@ -29,7 +30,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	teamResp, err := h.teamService.CreateTeam(c.Request.Context(), contestID, userID, &req)
 	if err != nil {
 		response.FromError(c, err)
@@ -51,7 +52,7 @@ func (h *TeamHandler) JoinTeam(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	teamResp, err := h.teamService.JoinTeam(c.Request.Context(), contestID, userID, teamID)
 	if err != nil {
 		response.FromError(c, err)
@@ -73,7 +74,7 @@ func (h *TeamHandler) LeaveTeam(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	if err := h.teamService.LeaveTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
 		response.FromError(c, err)
 		return
@@ -94,7 +95,7 @@ func (h *TeamHandler) DismissTeam(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 	if err := h.teamService.DismissTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
 		response.FromError(c, err)
 		return

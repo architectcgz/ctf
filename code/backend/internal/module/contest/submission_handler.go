@@ -1,6 +1,7 @@
 package contest
 
 import (
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 	"strconv"
@@ -30,7 +31,7 @@ func (h *SubmissionHandler) SubmitFlag(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	var req dto.SubmitFlagReq
 	if err := c.ShouldBindJSON(&req); err != nil {
