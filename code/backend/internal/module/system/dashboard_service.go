@@ -19,7 +19,6 @@ import (
 
 const (
 	dashboardCacheKey = "ctf:dashboard:stats"
-	alertThreshold    = 80.0 // 资源使用率告警阈值 (%)
 )
 
 type DashboardService struct {
@@ -60,10 +59,18 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 	}
 
 	// 统计在线用户数
-	stats.OnlineUsers, _ = s.countOnlineUsers(ctx)
+	onlineUsers, err := s.countOnlineUsers(ctx)
+	if err != nil {
+		s.logger.Error("统计在线用户失败", zap.Error(err))
+	}
+	stats.OnlineUsers = onlineUsers
 
 	// 统计活跃容器数
-	stats.ActiveContainers, _ = s.containerRepo.CountRunning()
+	activeContainers, err := s.containerRepo.CountRunning()
+	if err != nil {
+		s.logger.Error("统计活跃容器失败", zap.Error(err))
+	}
+	stats.ActiveContainers = activeContainers
 
 	// 获取容器资源使用情况
 	containerStats, err := s.getContainerStats(ctx)
@@ -95,13 +102,13 @@ func (s *DashboardService) getContainerStats(ctx context.Context) ([]dto.Contain
 			s.logger.Warn("获取容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
 			continue
 		}
+		defer stat.Body.Close()
 
 		var v types.StatsJSON
 		if err := json.NewDecoder(stat.Body).Decode(&v); err != nil {
-			stat.Body.Close()
+			s.logger.Warn("解析容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
 			continue
 		}
-		stat.Body.Close()
 
 		cpuPercent := calculateCPUPercent(&v)
 		memPercent := calculateMemoryPercent(&v)
@@ -157,23 +164,24 @@ func (s *DashboardService) calculateAverageUsage(stats []dto.ContainerStat) (flo
 
 // checkAlerts 检查资源告警
 func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.ResourceAlert {
-	alerts := []dto.ResourceAlert{}
+	alerts := []dto.ResourceAlert
+	threshold := s.config.Dashboard.AlertThreshold
 	for _, stat := range stats {
-		if stat.CPUPercent > alertThreshold {
+		if stat.CPUPercent > threshold {
 			alerts = append(alerts, dto.ResourceAlert{
 				ContainerID: stat.ContainerID,
 				Type:        "cpu",
 				Value:       stat.CPUPercent,
-				Threshold:   alertThreshold,
+				Threshold:   threshold,
 				Message:     fmt.Sprintf("容器 %s CPU 使用率过高: %.2f%%", stat.ContainerName, stat.CPUPercent),
 			})
 		}
-		if stat.MemoryPercent > alertThreshold {
+		if stat.MemoryPercent > threshold {
 			alerts = append(alerts, dto.ResourceAlert{
 				ContainerID: stat.ContainerID,
 				Type:        "memory",
 				Value:       stat.MemoryPercent,
-				Threshold:   alertThreshold,
+				Threshold:   threshold,
 				Message:     fmt.Sprintf("容器 %s 内存使用率过高: %.2f%%", stat.ContainerName, stat.MemoryPercent),
 			})
 		}
@@ -183,7 +191,7 @@ func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.Resource
 
 // countOnlineUsers 统计在线用户数
 func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) {
-	pattern := s.config.Auth.TokenBlacklistPrefix + ":session:*"
+	pattern := s.config.Auth.TokenBlacklistPrefix + ":*"
 	iter := s.redis.Scan(ctx, 0, pattern, 0).Iterator()
 	count := int64(0)
 	for iter.Next(ctx) {
@@ -212,7 +220,7 @@ func (s *DashboardService) saveToCache(ctx context.Context, stats *dto.Dashboard
 		s.logger.Error("序列化统计数据失败", zap.Error(err))
 		return
 	}
-	if err := s.redis.Set(ctx, dashboardCacheKey, data, 30*time.Second).Err(); err != nil {
+	if err := s.redis.Set(ctx, dashboardCacheKey, data, s.config.Dashboard.CacheTTL).Err(); err != nil {
 		s.logger.Error("缓存统计数据失败", zap.Error(err))
 	}
 }
