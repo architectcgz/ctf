@@ -10,16 +10,24 @@ import (
 )
 
 type Config struct {
-	App        AppConfig        `mapstructure:"app"`
-	HTTP       HTTPConfig       `mapstructure:"http"`
-	Log        LogConfig        `mapstructure:"log"`
-	Postgres   PostgresConfig   `mapstructure:"postgres"`
-	Redis      RedisConfig      `mapstructure:"redis"`
-	CORS       CORSConfig       `mapstructure:"cors"`
-	Auth       AuthConfig       `mapstructure:"auth"`
-	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
-	Container  ContainerConfig  `mapstructure:"container"`
-	Pagination PaginationConfig `mapstructure:"pagination"`
+	App            AppConfig            `mapstructure:"app"`
+	HTTP           HTTPConfig           `mapstructure:"http"`
+	Log            LogConfig            `mapstructure:"log"`
+	Postgres       PostgresConfig       `mapstructure:"postgres"`
+	Redis          RedisConfig          `mapstructure:"redis"`
+	CORS           CORSConfig           `mapstructure:"cors"`
+	Auth           AuthConfig           `mapstructure:"auth"`
+	RateLimit      RateLimitConfig      `mapstructure:"rate_limit"`
+	Container      ContainerConfig      `mapstructure:"container"`
+	Pagination     PaginationConfig     `mapstructure:"pagination"`
+	Challenge      ChallengeConfig      `mapstructure:"challenge"`
+	Score          ScoreConfig          `mapstructure:"score"`
+	Cache          CacheConfig          `mapstructure:"cache"`
+	Assessment     AssessmentConfig     `mapstructure:"assessment"`
+	Recommendation RecommendationConfig `mapstructure:"recommendation"`
+	Report         ReportConfig         `mapstructure:"report"`
+	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
+	Contest        ContestConfig        `mapstructure:"contest"`
 }
 
 type AppConfig struct {
@@ -101,23 +109,84 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota         int64         `mapstructure:"default_cpu_quota"`
-	DefaultMemory           int64         `mapstructure:"default_memory"`
-	DefaultPidsLimit        int64         `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs          bool          `mapstructure:"readonly_rootfs"`
-	RunAsUser               string        `mapstructure:"run_as_user"`
-	PortRangeStart          int           `mapstructure:"port_range_start"`
-	PortRangeEnd            int           `mapstructure:"port_range_end"`
-	MaxConcurrentPerUser    int           `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL              time.Duration `mapstructure:"default_ttl"`
-	MaxExtends              int           `mapstructure:"max_extends"`
-	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
-	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+	DefaultCPUQuota      float64       `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory        int64         `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit     int64         `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs       bool          `mapstructure:"readonly_rootfs"`
+	RunAsUser            string        `mapstructure:"run_as_user"`
+	AllowedCapabilities  []string      `mapstructure:"allowed_capabilities"`
+	Seccomp              string        `mapstructure:"seccomp"`
+	PortRangeStart       int           `mapstructure:"port_range_start"`
+	PortRangeEnd         int           `mapstructure:"port_range_end"`
+	DefaultExposedPort   int           `mapstructure:"default_exposed_port"`
+	MaxConcurrentPerUser int           `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL           time.Duration `mapstructure:"default_ttl"`
+	MaxExtends           int           `mapstructure:"max_extends"`
+	ExtendDuration       time.Duration `mapstructure:"extend_duration"`
+	CleanupInterval      string        `mapstructure:"cleanup_interval"`
+	OrphanGracePeriod    time.Duration `mapstructure:"orphan_grace_period"`
+	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
+	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
+	PublicHost           string        `mapstructure:"public_host"`
 }
 
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type CacheConfig struct {
+	ProgressTTL time.Duration `mapstructure:"progress_ttl"`
+}
+
+type ScoreConfig struct {
+	CacheTTL        time.Duration `mapstructure:"cache_ttl"`
+	LockTimeout     time.Duration `mapstructure:"lock_timeout"`
+	MaxRankingLimit int           `mapstructure:"max_ranking_limit"`
+}
+
+type ChallengeConfig struct {
+	SolvedCountCacheTTL time.Duration `mapstructure:"solved_count_cache_ttl"`
+}
+
+type AssessmentConfig struct {
+	RedisKeyPrefix           string        `mapstructure:"redis_key_prefix"`
+	FullRebuildCron          string        `mapstructure:"full_rebuild_cron"`
+	FullRebuildTimeout       time.Duration `mapstructure:"full_rebuild_timeout"`
+	LockTTL                  time.Duration `mapstructure:"lock_ttl"`
+	IncrementalUpdateDelay   time.Duration `mapstructure:"incremental_update_delay"`
+	IncrementalUpdateTimeout time.Duration `mapstructure:"incremental_update_timeout"`
+}
+
+type RecommendationConfig struct {
+	WeakThreshold float64       `mapstructure:"weak_threshold"`
+	CacheTTL      time.Duration `mapstructure:"cache_ttl"`
+	DefaultLimit  int           `mapstructure:"default_limit"`
+	MaxLimit      int           `mapstructure:"max_limit"`
+}
+
+type ReportConfig struct {
+	StorageDir      string        `mapstructure:"storage_dir"`
+	DefaultFormat   string        `mapstructure:"default_format"`
+	PersonalTimeout time.Duration `mapstructure:"personal_timeout"`
+	ClassTimeout    time.Duration `mapstructure:"class_timeout"`
+	FileTTL         time.Duration `mapstructure:"file_ttl"`
+	MaxWorkers      int           `mapstructure:"max_workers"`
+}
+
+type DashboardConfig struct {
+	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
+	AlertThreshold float64       `mapstructure:"alert_threshold"`
+	RedisKeyPrefix string        `mapstructure:"redis_key_prefix"`
+}
+
+type ContestConfig struct {
+	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
+	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
+	BaseScore             float64       `mapstructure:"base_score"`
+	MinScore              float64       `mapstructure:"min_score"`
+	Decay                 float64       `mapstructure:"decay"`
+	FirstBloodBonus       float64       `mapstructure:"first_blood_bonus"`
 }
 
 func Load(env string) (*Config, error) {
@@ -152,7 +221,70 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
+	if strings.TrimSpace(cfg.Container.FlagGlobalSecret) == "" {
+		return nil, fmt.Errorf("container.flag_global_secret must be set via CTF_CONTAINER_FLAG_GLOBAL_SECRET environment variable")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+
 	return cfg, nil
+}
+
+func (c *Config) Validate() error {
+	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
+		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
+	}
+	if c.Container.DefaultMemory < 64*1024*1024 || c.Container.DefaultMemory > 16*1024*1024*1024 {
+		return fmt.Errorf("container.default_memory must be between 64MB and 16GB")
+	}
+	if c.Container.DefaultPidsLimit <= 0 || c.Container.DefaultPidsLimit > 10000 {
+		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
+	}
+	if c.Container.DefaultExposedPort <= 0 || c.Container.DefaultExposedPort > 65535 {
+		return fmt.Errorf("container.default_exposed_port must be between 1 and 65535")
+	}
+	if c.Container.OrphanGracePeriod <= 0 {
+		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
+	}
+	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
+		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
+	}
+	if c.Recommendation.CacheTTL < time.Minute {
+		return fmt.Errorf("recommendation.cache_ttl must be at least 1 minute")
+	}
+	if c.Recommendation.DefaultLimit <= 0 {
+		return fmt.Errorf("recommendation.default_limit must be greater than 0")
+	}
+	if c.Recommendation.MaxLimit < c.Recommendation.DefaultLimit {
+		return fmt.Errorf("recommendation.max_limit must be greater than or equal to default_limit")
+	}
+	if strings.TrimSpace(c.Report.StorageDir) == "" {
+		return fmt.Errorf("report.storage_dir must not be empty")
+	}
+	if c.Report.DefaultFormat != "pdf" && c.Report.DefaultFormat != "excel" {
+		return fmt.Errorf("report.default_format must be pdf or excel")
+	}
+	if c.Report.PersonalTimeout <= 0 {
+		return fmt.Errorf("report.personal_timeout must be greater than 0")
+	}
+	if c.Report.ClassTimeout <= 0 {
+		return fmt.Errorf("report.class_timeout must be greater than 0")
+	}
+	if c.Report.FileTTL <= 0 {
+		return fmt.Errorf("report.file_ttl must be greater than 0")
+	}
+	if c.Report.MaxWorkers <= 0 {
+		return fmt.Errorf("report.max_workers must be greater than 0")
+	}
+	if c.Dashboard.CacheTTL <= 0 {
+		return fmt.Errorf("dashboard.cache_ttl must be greater than 0")
+	}
+	if c.Dashboard.AlertThreshold <= 0 || c.Dashboard.AlertThreshold > 100 {
+		return fmt.Errorf("dashboard.alert_threshold must be between 0 and 100")
+	}
+	return nil
 }
 
 func (c PostgresConfig) DSN() string {
@@ -212,18 +344,54 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)
-	v.SetDefault("container.default_cpu_quota", 50000)
+	v.SetDefault("container.default_cpu_quota", 0.5)
 	v.SetDefault("container.default_memory", 268435456)
 	v.SetDefault("container.default_pids_limit", 100)
 	v.SetDefault("container.readonly_rootfs", false)
 	v.SetDefault("container.run_as_user", "")
+	v.SetDefault("container.allowed_capabilities", []string{"CHOWN", "SETUID", "SETGID"})
+	v.SetDefault("container.seccomp", "default")
 	v.SetDefault("container.port_range_start", 30000)
 	v.SetDefault("container.port_range_end", 40000)
+	v.SetDefault("container.default_exposed_port", 8080)
 	v.SetDefault("container.max_concurrent_per_user", 3)
 	v.SetDefault("container.default_ttl", 2*time.Hour)
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
+	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
+	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
+	v.SetDefault("score.cache_ttl", 5*time.Minute)
+	v.SetDefault("score.lock_timeout", 5*time.Second)
+	v.SetDefault("score.max_ranking_limit", 100)
+	v.SetDefault("cache.progress_ttl", 10*time.Minute)
+	v.SetDefault("assessment.redis_key_prefix", "ctf:assessment:skill-profile")
+	v.SetDefault("assessment.full_rebuild_cron", "0 0 * * *")
+	v.SetDefault("assessment.full_rebuild_timeout", 30*time.Minute)
+	v.SetDefault("assessment.lock_ttl", 10*time.Second)
+	v.SetDefault("assessment.incremental_update_delay", 100*time.Millisecond)
+	v.SetDefault("assessment.incremental_update_timeout", 5*time.Second)
+	v.SetDefault("recommendation.weak_threshold", 0.4)
+	v.SetDefault("recommendation.cache_ttl", time.Hour)
+	v.SetDefault("recommendation.default_limit", 6)
+	v.SetDefault("recommendation.max_limit", 20)
+	v.SetDefault("report.storage_dir", "storage/exports")
+	v.SetDefault("report.default_format", "pdf")
+	v.SetDefault("report.personal_timeout", 30*time.Second)
+	v.SetDefault("report.class_timeout", 2*time.Minute)
+	v.SetDefault("report.file_ttl", 7*24*time.Hour)
+	v.SetDefault("report.max_workers", 2)
+	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
+	v.SetDefault("dashboard.alert_threshold", 80.0)
+	v.SetDefault("dashboard.redis_key_prefix", "ctf:dashboard")
+	v.SetDefault("contest.status_update_interval", 1*time.Minute)
+	v.SetDefault("contest.status_update_batch_size", 1000)
+	v.SetDefault("contest.base_score", 1000.0)
+	v.SetDefault("contest.min_score", 100.0)
+	v.SetDefault("contest.decay", 0.9)
+	v.SetDefault("contest.first_blood_bonus", 0.1)
 }

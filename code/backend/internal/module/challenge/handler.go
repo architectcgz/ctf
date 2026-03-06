@@ -1,6 +1,7 @@
 package challenge
 
 import (
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 	"strconv"
@@ -123,12 +124,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		userID = int64(0)
-	}
-
-	result, err := h.service.ListPublishedChallenges(userID.(int64), &query)
+	result, err := h.service.ListPublishedChallenges(authctx.MustCurrentUser(c).UserID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -145,12 +141,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		userID = int64(0)
-	}
-
-	detail, err := h.service.GetPublishedChallenge(userID.(int64), id)
+	detail, err := h.service.GetPublishedChallenge(authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return

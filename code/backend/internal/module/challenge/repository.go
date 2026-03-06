@@ -3,6 +3,7 @@ package challenge
 import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -75,6 +76,14 @@ func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
 	return count > 0, err
 }
 
+func (r *Repository) CountByImageID(imageID int64) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Challenge{}).
+		Where("image_id = ?", imageID).
+		Count(&count).Error
+	return count, err
+}
+
 // ListPublished 查询已发布的靶场列表（学员视图）
 func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
@@ -89,6 +98,7 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Where("difficulty = ?", query.Difficulty)
 	}
 	if query.Keyword != "" {
+		// GORM 会自动转义参数，防止 SQL 注入
 		db = db.Where("title LIKE ? OR description LIKE ?", "%"+query.Keyword+"%", "%"+query.Keyword+"%")
 	}
 
@@ -103,21 +113,24 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Order("created_at DESC")
 	}
 
-	page := query.Page
+	db = r.applyPagination(db, query.Page, query.Size)
+	err := db.Find(&challenges).Error
+	return challenges, total, err
+}
+
+// applyPagination 应用分页逻辑
+func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 	if page < 1 {
 		page = 1
 	}
-	size := query.Size
 	if size < 1 {
 		size = 20
 	}
 	if size > 100 {
 		size = 100
 	}
-
 	offset := (page - 1) * size
-	err := db.Offset(offset).Limit(size).Find(&challenges).Error
-	return challenges, total, err
+	return db.Offset(offset).Limit(size)
 }
 
 // GetSolvedStatus 获取用户是否已完成靶场
@@ -146,4 +159,128 @@ func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
 		Where("challenge_id = ?", challengeID).
 		Count(&count).Error
 	return count, err
+}
+
+// BatchGetSolvedStatus 批量获取用户完成状态
+func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error) {
+	if userID == 0 || len(challengeIDs) == 0 {
+		return make(map[int64]bool), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+	}
+	err := r.db.Table("submissions").
+		Select("DISTINCT challenge_id").
+		Where("user_id = ? AND challenge_id IN ? AND is_correct = ?", userID, challengeIDs, true).
+		Find(&results).Error
+
+	statusMap := make(map[int64]bool)
+	for _, r := range results {
+		statusMap[r.ChallengeID] = true
+	}
+	return statusMap, err
+}
+
+// BatchGetSolvedCount 批量获取靶场完成人数
+func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error) {
+	if len(challengeIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+		Count       int64
+	}
+	err := r.db.Table("submissions").
+		Select("challenge_id, COUNT(DISTINCT user_id) as count").
+		Where("challenge_id IN ? AND is_correct = ?", challengeIDs, true).
+		Group("challenge_id").
+		Find(&results).Error
+
+	countMap := make(map[int64]int64)
+	for _, r := range results {
+		countMap[r.ChallengeID] = r.Count
+	}
+	return countMap, err
+}
+
+// BatchGetTotalAttempts 批量获取靶场尝试次数
+func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int64, error) {
+	if len(challengeIDs) == 0 {
+		return make(map[int64]int64), nil
+	}
+
+	var results []struct {
+		ChallengeID int64
+		Count       int64
+	}
+	err := r.db.Table("submissions").
+		Select("challenge_id, COUNT(*) as count").
+		Where("challenge_id IN ?", challengeIDs).
+		Group("challenge_id").
+		Find(&results).Error
+
+	countMap := make(map[int64]int64)
+	for _, r := range results {
+		countMap[r.ChallengeID] = r.Count
+	}
+	return countMap, err
+}
+
+func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+	if len(dimensions) == 0 || limit <= 0 {
+		return []*model.Challenge{}, nil
+	}
+
+	normalized := make([]string, 0, len(dimensions))
+	seen := make(map[string]struct{}, len(dimensions))
+	for _, dimension := range dimensions {
+		key := strings.ToLower(strings.TrimSpace(dimension))
+		if key == "" {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		normalized = append(normalized, key)
+	}
+	if len(normalized) == 0 {
+		return []*model.Challenge{}, nil
+	}
+
+	var challenges []*model.Challenge
+	query := r.db.Model(&model.Challenge{}).
+		Distinct("challenges.*").
+		Joins("LEFT JOIN challenge_tags ON challenge_tags.challenge_id = challenges.id").
+		Joins("LEFT JOIN tags ON tags.id = challenge_tags.tag_id").
+		Where("challenges.status = ?", model.ChallengeStatusPublished).
+		Where(
+			"(LOWER(challenges.category) IN ? OR (tags.type = ? AND LOWER(tags.name) IN ?))",
+			normalized,
+			model.TagTypeKnowledge,
+			normalized,
+		)
+
+	if len(excludeSolved) > 0 {
+		query = query.Where("challenges.id NOT IN ?", excludeSolved)
+	}
+
+	err := query.
+		Order(`
+			CASE challenges.difficulty
+				WHEN 'beginner' THEN 1
+				WHEN 'easy' THEN 2
+				WHEN 'medium' THEN 3
+				WHEN 'hard' THEN 4
+				WHEN 'insane' THEN 5
+				ELSE 6
+			END ASC
+		`).
+		Order("challenges.points ASC").
+		Order("challenges.created_at DESC").
+		Limit(limit).
+		Find(&challenges).Error
+	return challenges, err
 }

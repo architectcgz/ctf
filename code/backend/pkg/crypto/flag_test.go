@@ -8,7 +8,7 @@ import (
 func TestGenerateDynamicFlag(t *testing.T) {
 	t.Parallel()
 
-	flag := GenerateDynamicFlag(1, 100, "secret", "nonce123")
+	flag := GenerateDynamicFlag(1, 100, "secret", "nonce123", "")
 	if !strings.HasPrefix(flag, "flag{") || !strings.HasSuffix(flag, "}") {
 		t.Fatalf("invalid flag format: %s", flag)
 	}
@@ -17,13 +17,13 @@ func TestGenerateDynamicFlag(t *testing.T) {
 	}
 
 	// 相同输入应生成相同 flag
-	flag2 := GenerateDynamicFlag(1, 100, "secret", "nonce123")
+	flag2 := GenerateDynamicFlag(1, 100, "secret", "nonce123", "")
 	if flag != flag2 {
 		t.Fatalf("flags should be identical")
 	}
 
 	// 不同 nonce 应生成不同 flag
-	flag3 := GenerateDynamicFlag(1, 100, "secret", "nonce456")
+	flag3 := GenerateDynamicFlag(1, 100, "secret", "nonce456", "")
 	if flag == flag3 {
 		t.Fatalf("flags should differ with different nonce")
 	}

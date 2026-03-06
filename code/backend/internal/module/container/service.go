@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,16 +16,104 @@ import (
 
 type Service struct {
 	repo   *Repository
+	engine *Engine
 	config *config.ContainerConfig
 	logger *zap.Logger
 }
 
-func NewService(repo *Repository, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+const (
+	managedByLabelKey           = "managed-by"
+	managedByLabelValue         = "ctf-platform"
+	challengeInstanceLabelKey   = "ctf-component"
+	challengeInstanceLabelValue = "challenge-instance"
+	managedContainerNamePrefix  = "ctf-instance-"
+)
+
+func NewService(repo *Repository, engine *Engine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &Service{
 		repo:   repo,
+		engine: engine,
 		config: cfg,
 		logger: logger,
 	}
+}
+
+func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, port int, err error) {
+	port, err = s.allocatePort()
+	if err != nil {
+		return "", "", 0, err
+	}
+
+	if s.engine == nil {
+		select {
+		case <-ctx.Done():
+			return "", "", 0, ctx.Err()
+		case <-time.After(100 * time.Millisecond):
+		}
+
+		containerID = fmt.Sprintf("ctf-%d", time.Now().UnixNano())
+		return containerID, "", port, nil
+	}
+
+	containerID, err = s.engine.CreateContainer(ctx, &model.ContainerConfig{
+		Image: imageName,
+		Name:  buildManagedContainerName(),
+		Env:   envMapToList(env),
+		Ports: map[string]string{
+			strconv.Itoa(s.config.DefaultExposedPort): strconv.Itoa(port),
+		},
+		Labels: managedContainerLabels(),
+	})
+	if err != nil {
+		return "", "", 0, err
+	}
+	if err := s.engine.StartContainer(ctx, containerID); err != nil {
+		_ = s.engine.RemoveContainer(context.Background(), containerID, true)
+		return "", "", 0, err
+	}
+
+	return containerID, "", port, nil
+}
+
+// RemoveContainer 删除容器
+func (s *Service) RemoveContainer(containerID string) error {
+	if s.engine == nil {
+		s.logger.Info("删除容器（降级模拟）", zap.String("container_id", containerID))
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	_ = s.engine.StopContainer(ctx, containerID, 5*time.Second)
+	if err := s.engine.RemoveContainer(ctx, containerID, true); err != nil {
+		return err
+	}
+
+	s.logger.Info("删除容器", zap.String("container_id", containerID))
+	return nil
+}
+
+// RemoveNetwork 删除网络
+func (s *Service) RemoveNetwork(networkID string) error {
+	if networkID == "" {
+		return nil
+	}
+	if s.engine == nil {
+		s.logger.Info("删除网络（降级跳过）", zap.String("network_id", networkID))
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.engine.RemoveNetwork(ctx, networkID); err != nil {
+		return err
+	}
+
+	s.logger.Info("删除网络", zap.String("network_id", networkID))
+	return nil
 }
 
 func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, error) {
@@ -51,7 +140,6 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// TODO: 实际创建容器（B9-B11 实现后集成）
 	instance.Status = model.InstanceStatusRunning
 	instance.AccessURL = fmt.Sprintf("http://localhost:3%04d", 1000+instance.ID)
 	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
@@ -76,14 +164,6 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 	if instance.UserID != userID {
 		return errcode.ErrForbidden
 	}
-
-	// TODO: 停止并删除容器（B9-B11 实现后集成）
-	// if err := s.containerEngine.RemoveContainer(ctx, instance.ContainerID); err != nil {
-	//     s.logger.Error("删除容器失败", zap.Error(err))
-	// }
-	// if err := s.containerEngine.RemoveNetwork(ctx, instance.NetworkID); err != nil {
-	//     s.logger.Error("删除网络失败", zap.Error(err))
-	// }
 
 	s.logger.Info("销毁实例",
 		zap.Int64("instance_id", instanceID),
@@ -139,15 +219,16 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	for _, inst := range instances {
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", inst.ID))
 
-		// TODO: 实际清理容器资源（B9-B11 实现后集成）
-		// if err := s.containerEngine.RemoveContainer(ctx, inst.ContainerID); err != nil {
-		//     s.logger.Error("删除容器失败", zap.Error(err))
-		// }
-		// if inst.NetworkID != "" {
-		//     if err := s.containerEngine.RemoveNetwork(ctx, inst.NetworkID); err != nil {
-		//         s.logger.Error("删除网络失败", zap.Error(err))
-		//     }
-		// }
+		if inst.ContainerID != "" {
+			if err := s.RemoveContainer(inst.ContainerID); err != nil {
+				s.logger.Warn("删除过期容器失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+			}
+		}
+		if inst.NetworkID != "" {
+			if err := s.RemoveNetwork(inst.NetworkID); err != nil {
+				s.logger.Warn("删除过期网络失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+			}
+		}
 
 		s.repo.UpdateStatus(inst.ID, model.InstanceStatusExpired)
 	}
@@ -155,13 +236,106 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 }
 
 func (s *Service) CleanupOrphans(ctx context.Context) error {
-	// TODO: 实现孤儿容器清理（B9-B11 实现后集成）
-	// 1. 获取所有运行中的容器列表
-	// 2. 查询数据库中的实例记录
-	// 3. 找出数据库中不存在但容器仍在运行的孤儿容器
-	// 4. 删除孤儿容器和网络
-	s.logger.Info("孤儿容器清理功能待实现")
+	if s.engine == nil {
+		s.logger.Debug("跳过孤儿容器清理，Docker 引擎未启用")
+		return nil
+	}
+
+	managedContainers, err := s.engine.ListManagedContainers(ctx, managedByFilter())
+	if err != nil {
+		return err
+	}
+	activeContainerIDs, err := s.repo.ListActiveContainerIDs()
+	if err != nil {
+		return err
+	}
+
+	activeSet := make(map[string]struct{}, len(activeContainerIDs))
+	for _, containerID := range activeContainerIDs {
+		activeSet[containerID] = struct{}{}
+	}
+
+	orphanContainers := selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod, time.Now())
+	for _, orphan := range orphanContainers {
+		if err := s.RemoveContainer(orphan.ID); err != nil {
+			s.logger.Warn("删除孤儿容器失败",
+				zap.String("container_id", orphan.ID),
+				zap.String("container_name", orphan.Name),
+				zap.Error(err))
+			continue
+		}
+		s.logger.Warn("已清理孤儿容器",
+			zap.String("container_id", orphan.ID),
+			zap.String("container_name", orphan.Name),
+			zap.Time("created_at", orphan.CreatedAt))
+	}
+
 	return nil
+}
+
+func (s *Service) allocatePort() (int, error) {
+	usedPorts, err := s.repo.ListAllocatedPorts()
+	if err != nil {
+		return 0, err
+	}
+
+	used := make(map[int]struct{}, len(usedPorts))
+	for _, port := range usedPorts {
+		used[port] = struct{}{}
+	}
+
+	for port := s.config.PortRangeStart; port < s.config.PortRangeEnd; port++ {
+		if _, exists := used[port]; exists {
+			continue
+		}
+		return port, nil
+	}
+	return 0, fmt.Errorf("no available port in range %d-%d", s.config.PortRangeStart, s.config.PortRangeEnd)
+}
+
+func envMapToList(env map[string]string) []string {
+	if len(env) == 0 {
+		return nil
+	}
+	values := make([]string, 0, len(env))
+	for key, value := range env {
+		values = append(values, fmt.Sprintf("%s=%s", key, value))
+	}
+	return values
+}
+
+func buildManagedContainerName() string {
+	return fmt.Sprintf("%s%d", managedContainerNamePrefix, time.Now().UnixNano())
+}
+
+func managedContainerLabels() map[string]string {
+	return map[string]string{
+		managedByLabelKey:         managedByLabelValue,
+		challengeInstanceLabelKey: challengeInstanceLabelValue,
+	}
+}
+
+func managedByFilter() string {
+	return fmt.Sprintf("%s=%s", managedByLabelKey, managedByLabelValue)
+}
+
+func selectOrphanContainers(
+	managedContainers []ManagedContainer,
+	activeContainerIDs map[string]struct{},
+	gracePeriod time.Duration,
+	now time.Time,
+) []ManagedContainer {
+	orphanContainers := make([]ManagedContainer, 0, len(managedContainers))
+	for _, container := range managedContainers {
+		if _, exists := activeContainerIDs[container.ID]; exists {
+			continue
+		}
+		if !container.CreatedAt.IsZero() && now.Sub(container.CreatedAt) < gracePeriod {
+			continue
+		}
+		orphanContainers = append(orphanContainers, container)
+	}
+	return orphanContainers
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

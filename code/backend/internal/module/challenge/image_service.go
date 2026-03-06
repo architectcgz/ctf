@@ -17,18 +17,29 @@ import (
 )
 
 type ImageService struct {
-	repo         *ImageRepository
-	dockerClient *client.Client
-	config       *config.Config
-	logger       *zap.Logger
+	repo          *ImageRepository
+	challengeRepo *Repository
+	dockerClient  *client.Client
+	config        *config.Config
+	logger        *zap.Logger
 }
 
-func NewImageService(repo *ImageRepository, dockerClient *client.Client, cfg *config.Config, logger *zap.Logger) *ImageService {
+func NewImageService(
+	repo *ImageRepository,
+	challengeRepo *Repository,
+	dockerClient *client.Client,
+	cfg *config.Config,
+	logger *zap.Logger,
+) *ImageService {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &ImageService{
-		repo:         repo,
-		dockerClient: dockerClient,
-		config:       cfg,
-		logger:       logger,
+		repo:          repo,
+		challengeRepo: challengeRepo,
+		dockerClient:  dockerClient,
+		config:        cfg,
+		logger:        logger,
 	}
 }
 
@@ -141,14 +152,13 @@ func (s *ImageService) DeleteImage(id int64) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	// TODO: 检查是否有靶场使用该镜像（B14 实现后启用）
-	// count, err := s.challengeRepo.CountByImageID(id)
-	// if err != nil {
-	// 	return errcode.ErrInternal.WithCause(err)
-	// }
-	// if count > 0 {
-	// 	return errcode.ErrImageInUse
-	// }
+	count, err := s.challengeRepo.CountByImageID(id)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if count > 0 {
+		return errcode.ErrImageInUse
+	}
 
 	// 删除数据库记录
 	if err := s.repo.Delete(id); err != nil {

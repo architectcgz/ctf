@@ -1,0 +1,7 @@
+ALTER TABLE teams
+    ADD COLUMN IF NOT EXISTS total_score INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS last_solve_at TIMESTAMP;
+
+ALTER TABLE contest_challenges
+    ADD COLUMN IF NOT EXISTS contest_score INTEGER,
+    ADD COLUMN IF NOT EXISTS first_blood_by BIGINT;
