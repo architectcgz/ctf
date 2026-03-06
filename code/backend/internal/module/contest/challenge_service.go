@@ -40,7 +40,7 @@ func (s *ChallengeService) AddChallengeToContest(contestID int64, req *dto.AddCo
 		return nil, err
 	}
 
-	if s.isContestModifiable(contest) {
+	if s.isContestImmutable(contest) {
 		return nil, errcode.ErrContestRunning
 	}
 
@@ -92,7 +92,7 @@ func (s *ChallengeService) RemoveChallengeFromContest(contestID, challengeID int
 		return err
 	}
 
-	if s.isContestModifiable(contest) {
+	if s.isContestImmutable(contest) {
 		return errcode.ErrContestRunning
 	}
 
@@ -116,7 +116,7 @@ func (s *ChallengeService) UpdateChallengePoints(contestID, challengeID int64, r
 		return err
 	}
 
-	if s.isContestModifiable(contest) {
+	if s.isContestImmutable(contest) {
 		return errcode.ErrContestRunning
 	}
 
@@ -144,7 +144,7 @@ func (s *ChallengeService) GetContestChallenges(contestID int64) ([]*dto.Contest
 	return result, nil
 }
 
-func (s *ChallengeService) isContestModifiable(contest *model.Contest) bool {
+func (s *ChallengeService) isContestImmutable(contest *model.Contest) bool {
 	return contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded
 }
 
