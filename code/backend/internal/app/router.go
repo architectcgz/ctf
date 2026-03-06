@@ -111,7 +111,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	// 实践模块（学员）
 	instanceRepo := containerModule.NewRepository(db)
-	practiceService := practiceModule.NewService(challengeRepo, instanceRepo, cfg, log.Named("practice_service"))
+	containerService := containerModule.NewService(instanceRepo, &cfg.Container, log.Named("container_service"))
+	practiceService := practiceModule.NewService(challengeRepo, instanceRepo, containerService, cfg, log.Named("practice_service"))
 	practiceHandler := practiceModule.NewHandler(practiceService)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.GET("/instances", practiceHandler.ListUserInstances)

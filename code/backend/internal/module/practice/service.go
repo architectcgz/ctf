@@ -17,23 +17,26 @@ import (
 )
 
 type Service struct {
-	challengeRepo *challenge.Repository
-	instanceRepo  *container.Repository
-	config        *config.Config
-	logger        *zap.Logger
+	challengeRepo    *challenge.Repository
+	instanceRepo     *container.Repository
+	containerService *container.Service
+	config           *config.Config
+	logger           *zap.Logger
 }
 
 func NewService(
 	challengeRepo *challenge.Repository,
 	instanceRepo *container.Repository,
+	containerService *container.Service,
 	config *config.Config,
 	logger *zap.Logger,
 ) *Service {
 	return &Service{
-		challengeRepo: challengeRepo,
-		instanceRepo:  instanceRepo,
-		config:        config,
-		logger:        logger,
+		challengeRepo:    challengeRepo,
+		instanceRepo:     instanceRepo,
+		containerService: containerService,
+		config:           config,
+		logger:           logger,
 	}
 }
 
@@ -44,6 +47,10 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if len(instances) >= s.config.Container.MaxConcurrentPerUser {
+		s.logger.Warn("用户实例数量超限",
+			zap.Int64("user_id", userID),
+			zap.Int("current", len(instances)),
+			zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
 		return nil, errcode.ErrInstanceLimitExceeded
 	}
 
@@ -56,7 +63,7 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrNotFound
 	}
 
-	// 3. 生成动态 Flag（如果需要）
+	// 3. 生成 Flag
 	var flag string
 	var nonce string
 	if chal.FlagType == model.FlagTypeDynamic {
@@ -64,7 +71,17 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
-		flag = crypto.GenerateDynamicFlag(userID, challengeID, chal.FlagSalt, nonce)
+		globalSecret := s.config.Container.FlagGlobalSecret
+		if globalSecret == "" {
+			return nil, errcode.ErrInternal.WithCause(fmt.Errorf("Flag 全局密钥未配置"))
+		}
+		flag = crypto.GenerateDynamicFlag(userID, challengeID, globalSecret, nonce)
+		s.logger.Debug("生成动态 Flag",
+			zap.Int64("user_id", userID),
+			zap.Int64("challenge_id", challengeID),
+			zap.String("nonce", nonce))
+	} else if chal.FlagType == model.FlagTypeStatic {
+		flag = chal.FlagHash
 	}
 
 	// 4. 创建实例记录
@@ -82,11 +99,20 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 	}
 
 	// 5. 创建容器（带超时控制）
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.config.Container.CreateTimeout)
 	defer cancel()
 
 	if err := s.createContainer(ctx, instance, chal, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
+
+		// 清理资源
+		if instance.NetworkID != "" {
+			s.containerService.RemoveNetwork(instance.NetworkID)
+		}
+		if instance.ContainerID != "" {
+			s.containerService.RemoveContainer(instance.ContainerID)
+		}
+
 		s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusFailed)
 		return nil, err
 	}
@@ -107,23 +133,21 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 }
 
 func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
-	// TODO: 实际的 Docker 容器创建逻辑
-	// 这里使用模拟实现，实际应调用 Docker SDK
-
-	// 模拟容器创建延迟
-	select {
-	case <-ctx.Done():
-		return errcode.ErrContainerCreateFailed.WithCause(ctx.Err())
-	case <-time.After(100 * time.Millisecond):
+	// 构建环境变量
+	env := map[string]string{
+		"FLAG": flag,
 	}
 
-	// 生成容器 ID 和访问地址
-	instance.ContainerID = fmt.Sprintf("ctf-%d-%d-%d", instance.UserID, instance.ChallengeID, time.Now().Unix())
-	instance.NetworkID = fmt.Sprintf("net-%d", instance.ID)
+	// 调用 container.Service 创建容器
+	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, fmt.Sprintf("image-%d", chal.ImageID), env)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
 
-	// 分配端口
-	port := s.config.Container.PortRangeStart + int(instance.ID%int64(s.config.Container.PortRangeEnd-s.config.Container.PortRangeStart))
-	instance.AccessURL = fmt.Sprintf("http://localhost:%d", port)
+	// 更新实例信息
+	instance.ContainerID = containerID
+	instance.NetworkID = networkID
+	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, port)
 
 	return nil
 }
