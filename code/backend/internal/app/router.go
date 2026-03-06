@@ -111,6 +111,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/challenges/:id", challengeHandler.UpdateChallenge)
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
+	// Flag 管理（仅管理员）
+	flagService := challengeModule.NewFlagService(db)
+	flagHandler := challengeModule.NewFlagHandler(flagService)
+	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
+	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
 
 	// 实践模块（学员）
 	instanceRepo := containerModule.NewRepository(db)
@@ -120,6 +125,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.GET("/instances", practiceHandler.ListUserInstances)
 	protected.GET("/instances/:id", practiceHandler.GetInstance)
+
+	// 实例销毁与延时沿用 container 模块能力
+	containerHandler := containerModule.NewHandler(containerService)
+	protected.DELETE("/instances/:id", containerHandler.DestroyInstance)
+	protected.POST("/instances/:id/extend", containerHandler.ExtendInstance)
 
 	return engine, nil
 }
