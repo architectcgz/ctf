@@ -2,6 +2,7 @@ package contest
 
 import (
 	"ctf-platform/internal/dto"
+	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 	"strconv"
 
@@ -18,8 +19,18 @@ func NewSubmissionHandler(service *SubmissionService) *SubmissionHandler {
 
 // SubmitFlag 竞赛中提交 Flag
 func (h *SubmissionHandler) SubmitFlag(c *gin.Context) {
-	contestID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	challengeID, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || contestID <= 0 {
+		response.Error(c, errcode.ErrInvalidParam("竞赛ID"))
+		return
+	}
+
+	challengeID, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || challengeID <= 0 {
+		response.Error(c, errcode.ErrInvalidParam("题目ID"))
+		return
+	}
+
 	userID := c.GetInt64("user_id")
 
 	var req dto.SubmitFlagReq
