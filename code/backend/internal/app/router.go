@@ -101,8 +101,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	}
 
 	// 镜像管理（仅管理员）
+	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, dockerClient, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, dockerClient, cfg, log.Named("image_service"))
 	imageHandler := challengeModule.NewImageHandler(imageService)
 	adminOnly.POST("/images",
 		middleware.Audit(auditService, middleware.AuditOptions{
@@ -131,7 +132,6 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	)
 
 	// 靶场管理（仅管理员）
-	challengeRepo := challengeModule.NewRepository(db)
 	challengeConfig := &challengeModule.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}
