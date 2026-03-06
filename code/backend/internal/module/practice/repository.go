@@ -134,19 +134,17 @@ func (r *Repository) GetUserRank(userID int64) (int, error) {
 			WHERE s.is_correct = true AND c.status = ?
 			GROUP BY s.user_id
 		)
-		SELECT COALESCE(rank, 0) FROM ranked_users WHERE user_id = ?
+		SELECT COALESCE(rank, (SELECT COUNT(DISTINCT user_id) + 1 FROM ranked_users))
+		FROM ranked_users WHERE user_id = ?
 	`, "published", userID).Scan(&rank).Error
 	if err != nil {
 		return 0, err
-	}
-	if rank == 0 {
-		rank = 1
 	}
 	return rank, nil
 }
 
 // GetUserTimeline 获取用户时间线
-func (r *Repository) GetUserTimeline(userID int64, limit int) ([]struct {
+func (r *Repository) GetUserTimeline(userID int64, limit, offset int) ([]struct {
 	Type        string
 	ChallengeID int64
 	Title       string
@@ -168,7 +166,7 @@ func (r *Repository) GetUserTimeline(userID int64, limit int) ([]struct {
 	}
 
 	err := r.db.Raw(`
-		SELECT * FROM (
+		SELECT events.*, c.title FROM (
 			SELECT 'instance_start' as type, i.challenge_id, i.created_at as timestamp,
 				NULL::boolean as is_correct, NULL::integer as points
 			FROM instances i
@@ -187,8 +185,8 @@ func (r *Repository) GetUserTimeline(userID int64, limit int) ([]struct {
 		) events
 		LEFT JOIN challenges c ON events.challenge_id = c.id
 		ORDER BY events.timestamp DESC
-		LIMIT ?
-	`, userID, userID, userID, limit).Scan(&events).Error
+		LIMIT ? OFFSET ?
+	`, userID, userID, userID, limit, offset).Scan(&events).Error
 
 	return events, err
 }
