@@ -20,6 +20,7 @@ type Config struct {
 	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
 	Container  ContainerConfig  `mapstructure:"container"`
 	Pagination PaginationConfig `mapstructure:"pagination"`
+	Contest    ContestConfig    `mapstructure:"contest"`
 }
 
 type AppConfig struct {
@@ -119,6 +120,10 @@ type ContainerConfig struct {
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type ContestConfig struct {
+	FirstBloodBonus float64 `mapstructure:"first_blood_bonus"`
 }
 
 func Load(env string) (*Config, error) {
@@ -227,4 +232,5 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
+	v.SetDefault("contest.first_blood_bonus", 0.1)
 }
