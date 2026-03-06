@@ -68,10 +68,10 @@ func (r *TagRepository) FindByChallengeID(challengeID int64) ([]*model.Tag, erro
 
 func (r *TagRepository) AttachTagsInTx(challengeID int64, tagIDs []int64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		for _, tagID := range tagIDs {
+		for _, tid := range tagIDs {
 			ct := &model.ChallengeTag{
 				ChallengeID: challengeID,
-				TagID:       tagID,
+				TagID:       tid,
 			}
 			if err := tx.Create(ct).Error; err != nil {
 				return err
