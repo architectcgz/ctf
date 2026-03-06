@@ -53,6 +53,9 @@ func Auth(tokenService authModule.TokenService) gin.HandlerFunc {
 			JTI:       claims.ID,
 			ExpiresAt: claims.ExpiresAt.Time,
 		})
+		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.Username)
+		c.Set("role", claims.Role)
 		c.Next()
 	}
 }
