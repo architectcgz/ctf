@@ -107,6 +107,7 @@ container:
   max_extends: 2
   extend_duration: 1h
   cleanup_interval: "*/5 * * * *"
+  flag_global_secret: "change-this-in-production-use-env-var"
 
 pagination:
   default_page_size: 20

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -17,37 +19,41 @@ import (
 )
 
 type Service struct {
+	repo             *Repository
 	challengeRepo    *challenge.Repository
 	instanceRepo     *container.Repository
 	containerService *container.Service
+	redis            *redis.Client
 	config           *config.Config
 	logger           *zap.Logger
 }
 
 func NewService(
+	repo *Repository,
 	challengeRepo *challenge.Repository,
 	instanceRepo *container.Repository,
 	containerService *container.Service,
+	redis *redis.Client,
 	config *config.Config,
 	logger *zap.Logger,
 ) *Service {
 	return &Service{
+		repo:             repo,
 		challengeRepo:    challengeRepo,
 		instanceRepo:     instanceRepo,
 		containerService: containerService,
+		redis:            redis,
 		config:           config,
 		logger:           logger,
 	}
 }
 
 func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, error) {
-	// 1. 检查是否已有该靶场的运行中实例
 	existingInstance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeID)
 	if err == nil && existingInstance != nil {
 		return toInstanceResp(existingInstance), nil
 	}
 
-	// 2. 校验并发限制
 	instances, err := s.instanceRepo.FindByUserID(userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -60,40 +66,22 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInstanceLimitExceeded
 	}
 
-	// 3. 查询靶场信息
 	chal, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return nil, errcode.ErrNotFound
+		if err == gorm.ErrRecordNotFound {
+			return nil, errcode.ErrChallengeNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if chal.Status != model.ChallengeStatusPublished {
-		return nil, errcode.ErrNotFound
+		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	// 4. 生成 Flag
-	var flag string
-	var nonce string
-	if chal.FlagType == model.FlagTypeDynamic {
-		nonce, err = crypto.GenerateNonce()
-		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
-		}
-		globalSecret := s.config.Container.FlagGlobalSecret
-		if globalSecret == "" {
-			return nil, errcode.ErrInternal.WithCause(fmt.Errorf("Flag 全局密钥未配置"))
-		}
-		flag = crypto.GenerateDynamicFlag(userID, challengeID, globalSecret, nonce)
-		s.logger.Debug("生成动态 Flag",
-			zap.Int64("user_id", userID),
-			zap.Int64("challenge_id", challengeID),
-			zap.String("nonce", nonce))
-	} else if chal.FlagType == model.FlagTypeStatic {
-		flag = chal.FlagHash
+	flag, nonce, err := s.buildInstanceFlag(userID, challengeID, chal)
+	if err != nil {
+		return nil, err
 	}
 
-	// 5. 创建实例记录
 	instance := &model.Instance{
 		UserID:      userID,
 		ChallengeID: challengeID,
@@ -107,26 +95,21 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// 6. 创建容器（带超时控制）
 	ctx, cancel := context.WithTimeout(context.Background(), s.config.Container.CreateTimeout)
 	defer cancel()
 
 	if err := s.createContainer(ctx, instance, chal, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
-
-		// 清理资源
 		if instance.NetworkID != "" {
-			s.containerService.RemoveNetwork(instance.NetworkID)
+			_ = s.containerService.RemoveNetwork(instance.NetworkID)
 		}
 		if instance.ContainerID != "" {
-			s.containerService.RemoveContainer(instance.ContainerID)
+			_ = s.containerService.RemoveContainer(instance.ContainerID)
 		}
-
-		s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusFailed)
+		_ = s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusFailed)
 		return nil, err
 	}
 
-	// 7. 更新实例状态
 	instance.Status = model.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err))
@@ -141,24 +124,68 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 	return toInstanceResp(instance), nil
 }
 
-func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
-	// 构建环境变量
-	env := map[string]string{
-		"FLAG": flag,
-	}
-
-	// 调用 container.Service 创建容器
-	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, fmt.Sprintf("image-%d", chal.ImageID), env)
+func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
+	challengeItem, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
-		return errcode.ErrContainerCreateFailed.WithCause(err)
+		if err == gorm.ErrRecordNotFound {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		s.logger.Error("查询靶场失败", zap.Int64("challenge_id", challengeID), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// 更新实例信息
-	instance.ContainerID = containerID
-	instance.NetworkID = networkID
-	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, port)
+	if challengeItem.Status != model.ChallengeStatusPublished {
+		return nil, errcode.ErrChallengeNotPublish
+	}
 
-	return nil
+	if _, err := s.repo.FindCorrectSubmission(userID, challengeID); err == nil {
+		return nil, errcode.ErrAlreadySolved
+	}
+
+	ctx := context.Background()
+	rateLimitKey := fmt.Sprintf("%s:submit:%d:%d", s.config.RateLimit.RedisKeyPrefix, userID, challengeID)
+	count, err := s.redis.Incr(ctx, rateLimitKey).Result()
+	if err != nil {
+		s.logger.Error("提交限流失败", zap.String("key", rateLimitKey), zap.Error(err))
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if count == 1 {
+		_ = s.redis.Expire(ctx, rateLimitKey, s.config.RateLimit.FlagSubmit.Window).Err()
+	}
+	if count > int64(s.config.RateLimit.FlagSubmit.Limit) {
+		return nil, errcode.ErrSubmitTooFrequent
+	}
+
+	isCorrect, err := s.validateSubmittedFlag(userID, challengeItem, flag)
+	if err != nil {
+		return nil, err
+	}
+
+	submission := &model.Submission{
+		UserID:      userID,
+		ChallengeID: challengeID,
+		Flag:        "",
+		IsCorrect:   isCorrect,
+		SubmittedAt: time.Now(),
+	}
+	if err := s.repo.CreateSubmission(submission); err != nil {
+		if isCorrect && s.repo.IsUniqueViolation(err) {
+			return nil, errcode.ErrAlreadySolved
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.SubmissionResp{
+		IsCorrect:   isCorrect,
+		SubmittedAt: submission.SubmittedAt,
+	}
+	if isCorrect {
+		resp.Message = "恭喜你，Flag 正确！"
+		resp.Points = challengeItem.Points
+	} else {
+		resp.Message = "Flag 错误，请重试"
+	}
+	return resp, nil
 }
 
 func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, error) {
@@ -182,13 +209,67 @@ func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 	result := make([]*dto.InstanceInfo, len(instances))
 	for i, inst := range instances {
 		result[i] = toInstanceInfo(inst)
-
-		// 填充靶场名称
 		if chal, err := s.challengeRepo.FindByID(inst.ChallengeID); err == nil {
 			result[i].ChallengeName = chal.Title
 		}
 	}
 	return result, nil
+}
+
+func (s *Service) buildInstanceFlag(userID, challengeID int64, chal *model.Challenge) (string, string, error) {
+	switch chal.FlagType {
+	case model.FlagTypeDynamic:
+		nonce, err := crypto.GenerateNonce()
+		if err != nil {
+			return "", "", errcode.ErrInternal.WithCause(err)
+		}
+		if s.config.Container.FlagGlobalSecret == "" {
+			return "", "", errcode.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
+		}
+		flag := crypto.GenerateDynamicFlag(userID, challengeID, s.config.Container.FlagGlobalSecret, nonce, chal.FlagPrefix)
+		return flag, nonce, nil
+	case model.FlagTypeStatic:
+		return chal.FlagHash, "", nil
+	default:
+		return "", "", nil
+	}
+}
+
+func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Challenge, flag string) (bool, error) {
+	if challengeItem.FlagType == model.FlagTypeStatic {
+		inputHash := crypto.HashStaticFlag(flag, challengeItem.FlagSalt)
+		return crypto.ValidateFlag(inputHash, challengeItem.FlagHash), nil
+	}
+
+	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
+		return false, errcode.ErrInternal.WithCause(err)
+	}
+	if instance == nil || instance.Nonce == "" || s.config.Container.FlagGlobalSecret == "" {
+		return false, nil
+	}
+
+	expectedFlag := crypto.GenerateDynamicFlag(userID, challengeItem.ID, s.config.Container.FlagGlobalSecret, instance.Nonce, challengeItem.FlagPrefix)
+	return crypto.ValidateFlag(flag, expectedFlag), nil
+}
+
+func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+	env := map[string]string{
+		"FLAG": flag,
+	}
+
+	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, fmt.Sprintf("image-%d", chal.ImageID), env)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+
+	instance.ContainerID = containerID
+	instance.NetworkID = networkID
+	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, port)
+	return nil
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

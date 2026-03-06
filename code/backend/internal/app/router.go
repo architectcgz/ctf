@@ -118,11 +118,13 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
 
 	// 实践模块（学员）
+	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := containerModule.NewRepository(db)
 	containerService := containerModule.NewService(instanceRepo, &cfg.Container, log.Named("container_service"))
-	practiceService := practiceModule.NewService(challengeRepo, instanceRepo, containerService, cfg, log.Named("practice_service"))
+	practiceService := practiceModule.NewService(practiceRepo, challengeRepo, instanceRepo, containerService, cache, cfg, log.Named("practice_service"))
 	practiceHandler := practiceModule.NewHandler(practiceService)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
+	protected.POST("/challenges/:id/submit", practiceHandler.SubmitFlag)
 	protected.GET("/instances", practiceHandler.ListUserInstances)
 	protected.GET("/instances/:id", practiceHandler.GetInstance)
 
