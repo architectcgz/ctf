@@ -94,3 +94,10 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 	return nil
 }
 
+func (r *Repository) CountRunning() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Instance{}).
+		Where("status = ?", model.InstanceStatusRunning).
+		Count(&count).Error
+	return count, err
+}

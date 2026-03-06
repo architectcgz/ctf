@@ -140,6 +140,11 @@ recommendation:
   default_limit: 6
   max_limit: 20
 
+dashboard:
+  cache_ttl: 30s
+  alert_threshold: 80
+  redis_key_prefix: ctf:dashboard
+
 contest:
   status_update_interval: 1m
   status_update_batch_size: 1000

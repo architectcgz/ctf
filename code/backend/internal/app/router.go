@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -16,6 +17,7 @@ import (
 	containerModule "ctf-platform/internal/module/container"
 	contestModule "ctf-platform/internal/module/contest"
 	practiceModule "ctf-platform/internal/module/practice"
+	systemModule "ctf-platform/internal/module/system"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -121,6 +123,21 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	flagHandler := challengeModule.NewFlagHandler(flagService)
 	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
 	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
+
+	containerRepoForDashboard := containerModule.NewRepository(db)
+	dockerClient, dockerErr := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if dockerErr != nil {
+		log.Warn("dashboard_docker_client_init_failed", zap.Error(dockerErr))
+	}
+	dashboardService := systemModule.NewDashboardService(
+		containerRepoForDashboard,
+		dockerClient,
+		cache,
+		cfg,
+		log.Named("dashboard_service"),
+	)
+	dashboardHandler := systemModule.NewDashboardHandler(dashboardService)
+	adminOnly.GET("/dashboard", dashboardHandler.GetDashboard)
 
 	assessmentRepo := assessmentModule.NewRepository(db)
 	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
