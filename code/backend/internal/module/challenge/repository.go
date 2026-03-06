@@ -3,6 +3,7 @@ package challenge
 import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -217,4 +218,61 @@ func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int6
 		countMap[r.ChallengeID] = r.Count
 	}
 	return countMap, err
+}
+
+func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+	if len(dimensions) == 0 || limit <= 0 {
+		return []*model.Challenge{}, nil
+	}
+
+	normalized := make([]string, 0, len(dimensions))
+	seen := make(map[string]struct{}, len(dimensions))
+	for _, dimension := range dimensions {
+		key := strings.ToLower(strings.TrimSpace(dimension))
+		if key == "" {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		normalized = append(normalized, key)
+	}
+	if len(normalized) == 0 {
+		return []*model.Challenge{}, nil
+	}
+
+	var challenges []*model.Challenge
+	query := r.db.Model(&model.Challenge{}).
+		Distinct("challenges.*").
+		Joins("LEFT JOIN challenge_tags ON challenge_tags.challenge_id = challenges.id").
+		Joins("LEFT JOIN tags ON tags.id = challenge_tags.tag_id").
+		Where("challenges.status = ?", model.ChallengeStatusPublished).
+		Where(
+			"(LOWER(challenges.category) IN ? OR (tags.type = ? AND LOWER(tags.name) IN ?))",
+			normalized,
+			model.TagTypeKnowledge,
+			normalized,
+		)
+
+	if len(excludeSolved) > 0 {
+		query = query.Where("challenges.id NOT IN ?", excludeSolved)
+	}
+
+	err := query.
+		Order(`
+			CASE challenges.difficulty
+				WHEN 'beginner' THEN 1
+				WHEN 'easy' THEN 2
+				WHEN 'medium' THEN 3
+				WHEN 'hard' THEN 4
+				WHEN 'insane' THEN 5
+				ELSE 6
+			END ASC
+		`).
+		Order("challenges.points ASC").
+		Order("challenges.created_at DESC").
+		Limit(limit).
+		Find(&challenges).Error
+	return challenges, err
 }
