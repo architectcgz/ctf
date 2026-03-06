@@ -11,6 +11,7 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
+	assessmentModule "ctf-platform/internal/module/assessment"
 	challengeModule "ctf-platform/internal/module/challenge"
 	containerModule "ctf-platform/internal/module/container"
 	practiceModule "ctf-platform/internal/module/practice"
@@ -126,6 +127,20 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	challengeGroup := protected.Group("/challenges")
 	challengeGroup.POST("/:id/submit", middleware.ParseChallengeID(), practiceHandler.SubmitFlag)
+
+	// 推荐系统（学员）
+	assessmentRepo := assessmentModule.NewRepository(db)
+	recommendationService := assessmentModule.NewRecommendationService(
+		assessmentRepo,
+		challengeRepo,
+		cache,
+		log.Named("recommendation_service"),
+		cfg.Recommendation.WeakThreshold,
+		cfg.Recommendation.CacheTTL,
+		cfg.Recommendation.CacheKeyPrefix,
+	)
+	assessmentHandler := assessmentModule.NewHandler(recommendationService)
+	protected.GET("/users/me/recommendations", assessmentHandler.GetRecommendations)
 
 	return engine, nil
 }
