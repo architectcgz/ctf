@@ -12,6 +12,31 @@ const (
 	DimensionForensics = "forensics"
 )
 
+// ValidDimensions 合法维度集合
+var ValidDimensions = map[string]bool{
+	DimensionWeb:       true,
+	DimensionPwn:       true,
+	DimensionReverse:   true,
+	DimensionCrypto:    true,
+	DimensionMisc:      true,
+	DimensionForensics: true,
+}
+
+// AllDimensions 所有维度列表
+var AllDimensions = []string{
+	DimensionWeb,
+	DimensionPwn,
+	DimensionReverse,
+	DimensionCrypto,
+	DimensionMisc,
+	DimensionForensics,
+}
+
+// IsValidDimension 检查维度是否合法
+func IsValidDimension(dimension string) bool {
+	return ValidDimensions[dimension]
+}
+
 // SkillProfile 用户能力画像
 type SkillProfile struct {
 	ID        int64     `gorm:"column:id;primaryKey"`
