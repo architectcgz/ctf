@@ -1,6 +1,7 @@
 package container
 
 import (
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
@@ -37,6 +38,20 @@ func (r *Repository) FindByUserID(userID int64) ([]*model.Instance, error) {
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
+}
+
+func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	var instance model.Instance
+	err := r.db.Where("user_id = ? AND challenge_id = ? AND status IN ?", userID, challengeID,
+		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		First(&instance).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
 }
 
 func (r *Repository) UpdateStatus(id int64, status string) error {

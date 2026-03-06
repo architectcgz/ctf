@@ -3,6 +3,7 @@ package challenge
 import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 	"strconv"
 
@@ -22,7 +23,7 @@ func NewFlagHandler(flagService *FlagService) *FlagHandler {
 func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.FromError(c, err)
+		response.Error(c, errcode.ErrInvalidParams)
 		return
 	}
 
@@ -51,7 +52,7 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		response.FromError(c, err)
+		response.Error(c, errcode.ErrInvalidParams)
 		return
 	}
 
