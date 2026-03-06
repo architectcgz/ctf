@@ -20,6 +20,7 @@ type Config struct {
 	RateLimit  RateLimitConfig  `mapstructure:"rate_limit"`
 	Container  ContainerConfig  `mapstructure:"container"`
 	Pagination PaginationConfig `mapstructure:"pagination"`
+	Dashboard  DashboardConfig  `mapstructure:"dashboard"`
 }
 
 type AppConfig struct {
@@ -119,6 +120,11 @@ type ContainerConfig struct {
 type PaginationConfig struct {
 	DefaultPageSize int `mapstructure:"default_page_size"`
 	MaxPageSize     int `mapstructure:"max_page_size"`
+}
+
+type DashboardConfig struct {
+	CacheTTL       time.Duration `mapstructure:"cache_ttl"`
+	AlertThreshold float64       `mapstructure:"alert_threshold"`
 }
 
 func Load(env string) (*Config, error) {
@@ -227,4 +233,6 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
+	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
+	v.SetDefault("dashboard.alert_threshold", 80.0)
 }
