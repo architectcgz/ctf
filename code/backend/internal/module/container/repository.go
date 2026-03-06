@@ -88,3 +88,12 @@ func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.I
 		First(&instance).Error
 	return &instance, err
 }
+
+// CountRunning 统计运行中的容器数量
+func (r *Repository) CountRunning() (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Instance{}).
+		Where("status = ?", model.InstanceStatusRunning).
+		Count(&count).Error
+	return count, err
+}
