@@ -128,7 +128,13 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		userID = int64(0)
 	}
 
-	result, err := h.service.ListPublishedChallenges(userID.(int64), &query)
+	uid, ok := userID.(int64)
+	if !ok {
+		response.InvalidParams(c, "无效的用户ID")
+		return
+	}
+
+	result, err := h.service.ListPublishedChallenges(uid, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -150,7 +156,13 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		userID = int64(0)
 	}
 
-	detail, err := h.service.GetPublishedChallenge(userID.(int64), id)
+	uid, ok := userID.(int64)
+	if !ok {
+		response.InvalidParams(c, "无效的用户ID")
+		return
+	}
+
+	detail, err := h.service.GetPublishedChallenge(uid, id)
 	if err != nil {
 		response.FromError(c, err)
 		return

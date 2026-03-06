@@ -53,17 +53,8 @@ func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64,
 		return nil, 0, err
 	}
 
-	page := query.Page
-	if page < 1 {
-		page = 1
-	}
-	size := query.Size
-	if size < 1 {
-		size = 20
-	}
-
-	offset := (page - 1) * size
-	err := db.Offset(offset).Limit(size).Order("created_at DESC").Find(&challenges).Error
+	db = r.applyPagination(db, query.Page, query.Size)
+	err := db.Order("created_at DESC").Find(&challenges).Error
 	return challenges, total, err
 }
 
@@ -89,7 +80,8 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Where("difficulty = ?", query.Difficulty)
 	}
 	if query.Keyword != "" {
-		db = db.Where("title LIKE ? OR description LIKE ?", "%"+query.Keyword+"%", "%"+query.Keyword+"%")
+		keyword := "%" + query.Keyword + "%"
+		db = db.Where("title LIKE ? OR description LIKE ?", keyword, keyword)
 	}
 
 	if err := db.Count(&total).Error; err != nil {
@@ -103,21 +95,24 @@ func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challeng
 		db = db.Order("created_at DESC")
 	}
 
-	page := query.Page
-	if page < 1 {
-		page = 1
-	}
-	size := query.Size
-	if size < 1 {
-		size = 20
-	}
-	if size > 100 {
-		size = 100
-	}
-
-	offset := (page - 1) * size
-	err := db.Offset(offset).Limit(size).Find(&challenges).Error
+	db = r.applyPagination(db, query.Page, query.Size)
+	err := db.Find(&challenges).Error
 	return challenges, total, err
+}
+
+// applyPagination 统一处理分页逻辑
+func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
+	if page < 1 {
+		page = DefaultPage
+	}
+	if size < 1 {
+		size = DefaultPageSize
+	}
+	if size > MaxPageSize {
+		size = MaxPageSize
+	}
+	offset := (page - 1) * size
+	return db.Offset(offset).Limit(size)
 }
 
 // GetSolvedStatus 获取用户是否已完成靶场
