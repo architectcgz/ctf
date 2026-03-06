@@ -112,7 +112,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	// 能力画像
 	assessmentRepo := assessmentModule.NewRepository(db)
-	assessmentService := assessmentModule.NewService(assessmentRepo, db)
+	assessmentService := assessmentModule.NewService(assessmentRepo, db, cache, log.Named("assessment"))
 	assessmentHandler := assessmentModule.NewHandler(assessmentService)
 
 	// Flag 提交（学员）
