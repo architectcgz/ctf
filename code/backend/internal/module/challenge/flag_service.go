@@ -5,13 +5,14 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
+	"fmt"
 	"os"
 	"regexp"
 
 	"gorm.io/gorm"
 )
 
-var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[a-zA-Z0-9_\-]+\}$`)
+var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[^\{\}\n\r]+\}$`)
 
 type FlagService struct {
 	db           *gorm.DB
@@ -21,10 +22,10 @@ type FlagService struct {
 func NewFlagService(db *gorm.DB) (*FlagService, error) {
 	secret := os.Getenv("CTF_FLAG_SECRET")
 	if secret == "" {
-		return nil, errcode.ErrInternal
+		return nil, fmt.Errorf("CTF_FLAG_SECRET 环境变量未配置")
 	}
 	if len(secret) < 32 {
-		return nil, errcode.ErrInternal
+		return nil, fmt.Errorf("CTF_FLAG_SECRET 长度不足 32 字节，当前长度: %d", len(secret))
 	}
 	return &FlagService{
 		db:           db,
@@ -36,10 +37,10 @@ func NewFlagService(db *gorm.DB) (*FlagService, error) {
 func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix string) error {
 	// 校验 Flag 格式
 	if !flagPattern.MatchString(flag) {
-		return errcode.ErrInvalidParams
+		return errcode.New(10001, "Flag 格式错误，必须以 prefix{ 开头并以 } 结尾，如 flag{abc123}", 400)
 	}
 	if len(flag) > 256 {
-		return errcode.ErrInvalidParams
+		return errcode.New(10001, fmt.Sprintf("Flag 长度不能超过 256 字符，当前长度: %d", len(flag)), 400)
 	}
 
 	return s.db.Transaction(func(tx *gorm.DB) error {
