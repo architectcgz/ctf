@@ -2,11 +2,14 @@ package contest
 
 import (
 	"ctf-platform/internal/model"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+var ErrTeamFull = errors.New("team is full")
 
 type TeamRepository struct {
 	db *gorm.DB
@@ -76,7 +79,7 @@ func (r *TeamRepository) AddMemberWithLock(teamID, userID int64) error {
 		}
 
 		if count >= int64(team.MaxMembers) {
-			return gorm.ErrInvalidData
+			return ErrTeamFull
 		}
 
 		member := &model.TeamMember{
