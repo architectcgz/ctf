@@ -18,6 +18,7 @@ type Service struct {
 	repo          *Repository
 	challengeRepo ChallengeRepository
 	instanceRepo  InstanceRepository
+	scoreService  *ScoreService
 	redis         *redis.Client
 	logger        *zap.Logger
 	globalSecret  string
@@ -33,11 +34,12 @@ type InstanceRepository interface {
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
-func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
+func NewService(repo *Repository, challengeRepo ChallengeRepository, instanceRepo InstanceRepository, scoreService *ScoreService, redis *redis.Client, logger *zap.Logger, globalSecret string, submitLimit int, submitWindow time.Duration) *Service {
 	return &Service{
 		repo:          repo,
 		challengeRepo: challengeRepo,
 		instanceRepo:  instanceRepo,
+		scoreService:  scoreService,
 		redis:         redis,
 		logger:        logger,
 		globalSecret:  globalSecret,
@@ -128,6 +130,13 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	// 6. 记录日志
 	if isCorrect {
 		s.logger.Info("Flag验证成功", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID))
+
+		// 异步更新用户得分
+		go func() {
+			if err := s.scoreService.UpdateUserScore(userID); err != nil {
+				s.logger.Error("更新用户得分失败", zap.Int64("userID", userID), zap.Error(err))
+			}
+		}()
 	} else {
 		s.logger.Debug("Flag验证失败", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID), zap.String("flagPrefix", flag[:min(len(flag), 10)]))
 	}
