@@ -72,9 +72,13 @@ func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []
 	var contests []*model.Contest
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&model.Contest{}).Where("status IN ?", statuses).
-		Where(r.db.Where("status = ? AND start_time <= ?", model.ContestStatusRegistration, now).
-			Or("status = ? AND end_time <= ?", model.ContestStatusRunning, now))
+	// 明确的查询逻辑：
+	// 1. registration 状态 + start_time <= now（需要流转到 running）
+	// 2. running 状态 + end_time <= now（需要流转到 ended）
+	query := r.db.WithContext(ctx).Model(&model.Contest{}).
+		Where("(status = ? AND start_time <= ?) OR (status = ? AND end_time <= ?)",
+			model.ContestStatusRegistration, now,
+			model.ContestStatusRunning, now)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
