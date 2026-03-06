@@ -40,7 +40,7 @@ func (r *ImageRepository) List(name, status string, offset, limit int) ([]*model
 	var images []*model.Image
 	var total int64
 
-	query := r.db.Model(&model.Image)
+	query := r.db.Model(&model.Image{})
 	if name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
