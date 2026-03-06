@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	containertypes "github.com/docker/docker/api/types/container"
@@ -15,11 +14,9 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/module/container"
+	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
-const (
-	dashboardCacheKey = "ctf:dashboard:stats"
-)
 
 type DashboardService struct {
 	containerRepo *container.Repository
@@ -43,6 +40,11 @@ func NewDashboardService(
 		config:        cfg,
 		logger:        logger,
 	}
+}
+
+// getCacheKey 动态构建缓存 Key
+func (s *DashboardService) getCacheKey() string {
+	return fmt.Sprintf("%s:stats", s.config.Dashboard.RedisKeyPrefix)
 }
 
 // GetDashboardStats 获取仪表盘统计数据
@@ -97,35 +99,37 @@ func (s *DashboardService) getContainerStats(ctx context.Context) ([]dto.Contain
 
 	stats := make([]dto.ContainerStat, 0, len(containers))
 	for _, c := range containers {
-		stat, err := s.dockerClient.ContainerStats(ctx, c.ID, false)
-		if err != nil {
-			s.logger.Warn("获取容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
-			continue
-		}
-		defer stat.Body.Close()
+		func() {
+			stat, err := s.dockerClient.ContainerStats(ctx, c.ID, false)
+			if err != nil {
+				s.logger.Warn("获取容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
+				return
+			}
+			defer stat.Body.Close()
 
-		var v types.StatsJSON
-		if err := json.NewDecoder(stat.Body).Decode(&v); err != nil {
-			s.logger.Warn("解析容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
-			continue
-		}
+			var v types.StatsJSON
+			if err := json.NewDecoder(stat.Body).Decode(&v); err != nil {
+				s.logger.Warn("解析容器统计失败", zap.String("container_id", c.ID), zap.Error(err))
+				return
+			}
 
-		cpuPercent := calculateCPUPercent(&v)
-		memPercent := calculateMemoryPercent(&v)
+			cpuPercent := calculateCPUPercent(&v)
+			memPercent := calculateMemoryPercent(&v)
 
-		containerName := c.ID[:12]
-		if len(c.Names) > 0 {
-			containerName = c.Names[0]
-		}
+			containerName := c.ID[:12]
+			if len(c.Names) > 0 {
+				containerName = c.Names[0]
+			}
 
-		stats = append(stats, dto.ContainerStat{
-			ContainerID:   c.ID[:12],
-			ContainerName: containerName,
-			CPUPercent:    cpuPercent,
-			MemoryPercent: memPercent,
-			MemoryUsage:   int64(v.MemoryStats.Usage),
-			MemoryLimit:   int64(v.MemoryStats.Limit),
-		})
+			stats = append(stats, dto.ContainerStat{
+				ContainerID:   c.ID[:12],
+				ContainerName: containerName,
+				CPUPercent:    cpuPercent,
+				MemoryPercent: memPercent,
+				MemoryUsage:   int64(v.MemoryStats.Usage),
+				MemoryLimit:   int64(v.MemoryStats.Limit),
+			})
+		}()
 	}
 
 	return stats, nil
@@ -164,7 +168,7 @@ func (s *DashboardService) calculateAverageUsage(stats []dto.ContainerStat) (flo
 
 // checkAlerts 检查资源告警
 func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.ResourceAlert {
-	alerts := []dto.ResourceAlert
+	alerts := []dto.ResourceAlert{}
 	threshold := s.config.Dashboard.AlertThreshold
 	for _, stat := range stats {
 		if stat.CPUPercent > threshold {
@@ -190,19 +194,28 @@ func (s *DashboardService) checkAlerts(stats []dto.ContainerStat) []dto.Resource
 }
 
 // countOnlineUsers 统计在线用户数
+// 通过统计 Redis 中存在的 Refresh Token 数量来估算在线用户
 func (s *DashboardService) countOnlineUsers(ctx context.Context) (int64, error) {
-	pattern := s.config.Auth.TokenBlacklistPrefix + ":*"
-	iter := s.redis.Scan(ctx, 0, pattern, 0).Iterator()
+	pattern := rediskeys.Namespace + ":token:*"
+	var cursor uint64
 	count := int64(0)
-	for iter.Next(ctx) {
-		count++
+	for {
+		keys, nextCursor, err := s.redis.Scan(ctx, cursor, pattern, 100).Result()
+		if err != nil {
+			return 0, err
+		}
+		count += int64(len(keys))
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
 	}
-	return count, iter.Err()
+	return count, nil
 }
 
 // getFromCache 从缓存获取统计数据
 func (s *DashboardService) getFromCache(ctx context.Context) (*dto.DashboardStats, error) {
-	data, err := s.redis.Get(ctx, dashboardCacheKey).Bytes()
+	data, err := s.redis.Get(ctx, s.getCacheKey()).Bytes()
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +233,7 @@ func (s *DashboardService) saveToCache(ctx context.Context, stats *dto.Dashboard
 		s.logger.Error("序列化统计数据失败", zap.Error(err))
 		return
 	}
-	if err := s.redis.Set(ctx, dashboardCacheKey, data, s.config.Dashboard.CacheTTL).Err(); err != nil {
+	if err := s.redis.Set(ctx, s.getCacheKey(), data, s.config.Dashboard.CacheTTL).Err(); err != nil {
 		s.logger.Error("缓存统计数据失败", zap.Error(err))
 	}
 }
