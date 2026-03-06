@@ -40,3 +40,26 @@ func (r *Repository) BatchUpsert(profiles []*model.SkillProfile) error {
 		DoUpdates: clause.AssignmentColumns([]string{"score", "updated_at"}),
 	}).Create(profiles).Error
 }
+
+// DimensionScore 维度得分统计
+type DimensionScore struct {
+	Dimension  string
+	TotalScore int
+	UserScore  int
+}
+
+// GetDimensionScores 查询用户各维度得分统计
+func (r *Repository) GetDimensionScores(userID int64) ([]DimensionScore, error) {
+	var scores []DimensionScore
+	err := r.db.Raw(`
+		SELECT
+			c.category as dimension,
+			SUM(c.points) as total_score,
+			COALESCE(SUM(CASE WHEN s.is_correct = 1 THEN c.points ELSE 0 END), 0) as user_score
+		FROM challenges c
+		LEFT JOIN submissions s ON c.id = s.challenge_id AND s.user_id = ?
+		WHERE c.status = 'published'
+		GROUP BY c.category
+	`, userID).Scan(&scores).Error
+	return scores, err
+}
