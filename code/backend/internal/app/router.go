@@ -12,6 +12,8 @@ import (
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
+	containerModule "ctf-platform/internal/module/container"
+	practiceModule "ctf-platform/internal/module/practice"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -106,6 +108,25 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.PUT("/challenges/:id", challengeHandler.UpdateChallenge)
 	adminOnly.DELETE("/challenges/:id", challengeHandler.DeleteChallenge)
 	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
+
+	// Flag 提交（学员）
+	practiceRepo := practiceModule.NewRepository(db)
+	containerRepo := containerModule.NewRepository(db)
+	practiceService := practiceModule.NewService(
+		practiceRepo,
+		challengeRepo,
+		containerRepo,
+		cfg.Container.FlagGlobalSecret,
+		cfg.RateLimit.FlagSubmit.Limit,
+		cfg.RateLimit.FlagSubmit.Window,
+	)
+	practiceHandler := practiceModule.NewHandler(practiceService)
+
+	challengeGroup := protected.Group("/challenges")
+	if cfg.RateLimit.FlagSubmit.Enabled {
+		challengeGroup.Use(middleware.RateLimitByIP(rateChecker, "flag_submit", cfg.RateLimit.FlagSubmit.Limit, cfg.RateLimit.FlagSubmit.Window))
+	}
+	challengeGroup.POST("/:id/submit", middleware.ParseChallengeID(), practiceHandler.SubmitFlag)
 
 	return engine, nil
 }

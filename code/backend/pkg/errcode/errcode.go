@@ -67,3 +67,12 @@ var (
 	ErrContainerCreateFailed = New(12005, "容器创建失败", http.StatusInternalServerError)
 	ErrContainerStartFailed  = New(12006, "容器启动失败", http.StatusInternalServerError)
 )
+
+// Flag 提交相关错误码 (13000-13999)
+var (
+	ErrFlagIncorrect       = New(13001, "Flag 错误", http.StatusBadRequest)
+	ErrAlreadySolved       = New(13002, "该题目已完成", http.StatusConflict)
+	ErrSubmitTooFrequent   = New(13003, "提交过于频繁，请稍后再试", http.StatusTooManyRequests)
+	ErrChallengeNotFound   = New(13004, "靶场不存在", http.StatusNotFound)
+	ErrChallengeNotPublish = New(13005, "靶场未发布", http.StatusForbidden)
+)
