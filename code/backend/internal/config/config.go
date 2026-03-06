@@ -113,6 +113,9 @@ type ContainerConfig struct {
 	MaxExtends              int           `mapstructure:"max_extends"`
 	ExtendDuration          time.Duration `mapstructure:"extend_duration"`
 	CleanupInterval         string        `mapstructure:"cleanup_interval"`
+	CreateTimeout           time.Duration `mapstructure:"create_timeout"`
+	FlagGlobalSecret        string        `mapstructure:"flag_global_secret"`
+	PublicHost              string        `mapstructure:"public_host"`
 }
 
 type PaginationConfig struct {
@@ -224,6 +227,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 }
