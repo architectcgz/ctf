@@ -98,9 +98,12 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 				s.logger.Error("查询实例失败", zap.Int64("userID", userID), zap.Int64("challengeID", challengeID), zap.Error(err))
 				return nil, errcode.ErrInternal.WithCause(err)
 			}
-		} else if instance.Nonce != "" {
-			expectedFlag := crypto.GenerateDynamicFlag(userID, challengeID, s.globalSecret, instance.Nonce)
-			isCorrect = crypto.ValidateFlag(flag, expectedFlag)
+		} else {
+			// 实例存在，验证 Flag
+			if instance.Nonce != "" {
+				expectedFlag := crypto.GenerateDynamicFlag(userID, challengeID, s.globalSecret, instance.Nonce)
+				isCorrect = crypto.ValidateFlag(flag, expectedFlag)
+			}
 		}
 	}
 
