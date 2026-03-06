@@ -76,6 +76,14 @@ func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
 	return count > 0, err
 }
 
+func (r *Repository) CountByImageID(imageID int64) (int64, error) {
+	var count int64
+	err := r.db.Model(&model.Challenge{}).
+		Where("image_id = ?", imageID).
+		Count(&count).Error
+	return count, err
+}
+
 // ListPublished 查询已发布的靶场列表（学员视图）
 func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
