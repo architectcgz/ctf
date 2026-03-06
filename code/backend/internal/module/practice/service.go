@@ -124,7 +124,7 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 	}
 
 	instance.Status = model.InstanceStatusRunning
-	if err := s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
+	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err))
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

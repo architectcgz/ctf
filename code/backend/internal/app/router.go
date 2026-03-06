@@ -95,10 +95,14 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
 	auditHandler := systemModule.NewAuditHandler(auditService)
 	auditLogger := log.Named("audit_middleware")
+	dockerClient, dockerErr := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if dockerErr != nil {
+		log.Warn("docker_client_init_failed", zap.Error(dockerErr))
+	}
 
 	// 镜像管理（仅管理员）
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, nil, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, dockerClient, cfg, log.Named("image_service"))
 	imageHandler := challengeModule.NewImageHandler(imageService)
 	adminOnly.POST("/images",
 		middleware.Audit(auditService, middleware.AuditOptions{
@@ -184,9 +188,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
 	containerRepoForDashboard := containerModule.NewRepository(db)
-	dockerClient, dockerErr := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if dockerErr != nil {
-		log.Warn("dashboard_docker_client_init_failed", zap.Error(dockerErr))
+		log.Warn("dashboard_docker_client_unavailable", zap.Error(dockerErr))
 	}
 	dashboardService := systemModule.NewDashboardService(
 		containerRepoForDashboard,
