@@ -126,14 +126,22 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	contestRepo := contestModule.NewRepository(db)
 	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
 	contestHandler := contestModule.NewHandler(contestService)
+	contestChallengeRepo := contestModule.NewChallengeRepository(db)
+	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challengeRepo, contestRepo)
+	contestChallengeHandler := contestModule.NewChallengeHandler(contestChallengeService)
 	adminOnly.POST("/contests", contestHandler.CreateContest)
 	adminOnly.PUT("/contests/:id", middleware.ParseInt64Param("id"), contestHandler.UpdateContest)
 	adminOnly.GET("/contests", contestHandler.ListContests)
+	adminOnly.GET("/contests/:id/challenges", contestChallengeHandler.ListAdminChallenges)
+	adminOnly.POST("/contests/:id/challenges", contestChallengeHandler.AddChallenge)
+	adminOnly.PUT("/contests/:id/challenges/:cid", contestChallengeHandler.UpdatePoints)
+	adminOnly.DELETE("/contests/:id/challenges/:cid", contestChallengeHandler.RemoveChallenge)
 
 	// 竞赛公开接口
 	contestGroup := apiV1.Group("/contests")
 	contestGroup.GET("", contestHandler.ListContests)
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
+	protected.GET("/contests/:id/challenges", contestChallengeHandler.ListChallenges)
 
 	// 实践模块（学员）
 	practiceRepo := practiceModule.NewRepository(db)
