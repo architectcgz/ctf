@@ -7,9 +7,11 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/pkg/cache"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -63,13 +65,29 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 	ctx := context.Background()
 	lockKey := cache.ScoreLockKey(userID)
 
-	// 获取分布式锁
-	lock, err := s.redis.SetNX(ctx, lockKey, 1, s.config.LockTimeout).Result()
-	if err != nil || !lock {
-		s.logger.Warn("获取计分锁失败", zap.Int64("userID", userID), zap.Error(err))
-		return nil
+	// 获取分布式锁（使用唯一 token 防止误删）
+	lockToken := uuid.New().String()
+	lock, err := s.redis.SetNX(ctx, lockKey, lockToken, s.config.LockTimeout).Result()
+	if err != nil {
+		s.logger.Error("获取计分锁失败", zap.Int64("userID", userID), zap.Error(err))
+		return fmt.Errorf("获取分布式锁失败: %w", err)
 	}
-	defer s.redis.Del(ctx, lockKey)
+	if !lock {
+		s.logger.Warn("计分锁已被占用", zap.Int64("userID", userID))
+		return fmt.Errorf("用户 %d 正在计分中，请稍后重试", userID)
+	}
+
+	// 释放锁时验证 token，避免误删其他协程的锁
+	defer func() {
+		script := `
+			if redis.call("get", KEYS[1]) == ARGV[1] then
+				return redis.call("del", KEYS[1])
+			else
+				return 0
+			end
+		`
+		s.redis.Eval(ctx, script, []string{lockKey}, lockToken)
+	}()
 
 	// 查询用户已解决的题目
 	var submissions []model.Submission
@@ -105,13 +123,24 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 	// 使用 Pipeline 批量更新 Redis
 	pipe := s.redis.Pipeline()
 	cacheKey := cache.UserScoreKey(userID)
-	pipe.Set(ctx, cacheKey, totalScore, s.config.CacheTTL)
+
+	// 缓存完整的 UserScoreInfo JSON（与 GetUserScore 保持一致）
+	info := &dto.UserScoreInfo{
+		UserID:      userID,
+		TotalScore:  totalScore,
+		SolvedCount: len(submissions),
+	}
+	data, _ := json.Marshal(info)
+	pipe.Set(ctx, cacheKey, data, s.config.CacheTTL)
+
 	pipe.ZAdd(ctx, cache.RankingKey(), redis.Z{
 		Score:  float64(totalScore),
 		Member: userID,
 	})
+
 	if _, err := pipe.Exec(ctx); err != nil {
 		s.logger.Error("批量更新缓存失败", zap.Int64("userID", userID), zap.Error(err))
+		return fmt.Errorf("更新得分成功但缓存同步失败: %w", err)
 	}
 
 	return nil
@@ -135,30 +164,32 @@ func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
 	var userScore model.UserScore
 	err = s.db.Where("user_id = ?", userID).First(&userScore).Error
 
-	var info *dto.UserScoreInfo
 	if err == gorm.ErrRecordNotFound {
-		info = &dto.UserScoreInfo{
+		// 空结果不缓存，直接返回默认值
+		return &dto.UserScoreInfo{
 			UserID:      userID,
 			TotalScore:  0,
 			SolvedCount: 0,
 			Rank:        0,
-		}
-	} else if err != nil {
-		return nil, err
-	} else {
-		var user model.User
-		s.db.Select("username").Where("id = ?", userID).First(&user)
-
-		info = &dto.UserScoreInfo{
-			UserID:      userScore.UserID,
-			Username:    user.Username,
-			TotalScore:  userScore.TotalScore,
-			SolvedCount: userScore.SolvedCount,
-			Rank:        userScore.Rank,
-		}
+		}, nil
 	}
 
-	// 缓存结果（包括空结果）
+	if err != nil {
+		return nil, err
+	}
+
+	var user model.User
+	s.db.Select("username").Where("id = ?", userID).First(&user)
+
+	info := &dto.UserScoreInfo{
+		UserID:      userScore.UserID,
+		Username:    user.Username,
+		TotalScore:  userScore.TotalScore,
+		SolvedCount: userScore.SolvedCount,
+		Rank:        userScore.Rank,
+	}
+
+	// 只缓存存在的记录
 	data, _ := json.Marshal(info)
 	s.redis.Set(ctx, cacheKey, data, s.config.CacheTTL)
 
@@ -198,16 +229,13 @@ func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
 			s.logger.Error("批量查询用户名失败", zap.Error(err))
 		}
 
-		result := make([]*dto.RankingItem, 0, len(members))
-		for i, member := range members {
-			userIDStr, _ := member.Member.(string)
-			userID, _ := strconv.ParseInt(userIDStr, 10, 64)
-
+		result := make([]*dto.RankingItem, 0, len(userIDs))
+		for i, userID := range userIDs {
 			result = append(result, &dto.RankingItem{
 				Rank:       i + 1,
 				UserID:     userID,
 				Username:   userMap[userID],
-				TotalScore: int(member.Score),
+				TotalScore: int(members[i].Score),
 			})
 		}
 		return result, nil
@@ -256,9 +284,18 @@ func (s *ScoreService) getUsernames(userIDs []int64) (map[int64]string, error) {
 		return nil, err
 	}
 
-	result := make(map[int64]string, len(users))
+	result := make(map[int64]string, len(userIDs))
 	for _, user := range users {
 		result[user.ID] = user.Username
 	}
+
+	// 为不存在的用户填充默认值
+	for _, id := range userIDs {
+		if _, exists := result[id]; !exists {
+			result[id] = fmt.Sprintf("用户%d", id)
+			s.logger.Warn("用户不存在", zap.Int64("userID", id))
+		}
+	}
+
 	return result, nil
 }
