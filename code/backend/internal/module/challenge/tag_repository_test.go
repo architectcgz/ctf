@@ -9,7 +9,7 @@ func TestTagRepositoryCreate(t *testing.T) {
 	db := setupTagTestDB(t)
 	repo := NewTagRepository(db)
 
-	tag := &model.Tag{Name: "SQL注入", Dimension: "技术"}
+	tag := &model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability}
 	err := repo.Create(tag)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
@@ -23,10 +23,10 @@ func TestTagRepositoryList(t *testing.T) {
 	db := setupTagTestDB(t)
 	repo := NewTagRepository(db)
 
-	db.Create(&model.Tag{Name: "SQL注入", Dimension: "技术"})
-	db.Create(&model.Tag{Name: "XSS", Dimension: "技术"})
+	db.Create(&model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability})
+	db.Create(&model.Tag{Name: "XSS", Type: model.TagTypeVulnerability})
 
-	tags, err := repo.List("技术")
+	tags, err := repo.List(model.TagTypeVulnerability)
 	if err != nil {
 		t.Fatalf("List() error = %v", err)
 	}
@@ -38,6 +38,9 @@ func TestTagRepositoryList(t *testing.T) {
 func TestTagRepositoryAttachToChallenge(t *testing.T) {
 	db := setupTagTestDB(t)
 	repo := NewTagRepository(db)
+
+	db.Create(&model.Challenge{ID: 1, Title: "test", Status: model.ChallengeStatusDraft})
+	db.Create(&model.Tag{ID: 1, Name: "SQL注入", Type: model.TagTypeVulnerability})
 
 	err := repo.AttachToChallenge(1, 1)
 	if err != nil {

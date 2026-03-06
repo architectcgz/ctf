@@ -40,7 +40,7 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListTags(query.Dimension)
+	result, err := h.service.ListTags(query.Type)
 	if err != nil {
 		response.FromError(c, err)
 		return
