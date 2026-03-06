@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/authctx"
 	"ctf-platform/pkg/response"
 )
 
@@ -22,7 +23,7 @@ func NewHandler(service *Service, recommendationService *RecommendationService) 
 
 // GetMySkillProfile 获取我的能力画像
 func (h *Handler) GetMySkillProfile(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	profile, err := h.service.GetSkillProfile(userID)
 	if err != nil {
@@ -51,7 +52,7 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 }
 
 func (h *Handler) GetRecommendations(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	userID := authctx.MustCurrentUser(c).UserID
 
 	var req struct {
 		Limit int `form:"limit"`
