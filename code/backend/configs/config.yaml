@@ -108,6 +108,7 @@ container:
   max_extends: 2
   extend_duration: 1h
   cleanup_interval: "*/5 * * * *"
+  orphan_grace_period: 5m
   create_timeout: 30s
   flag_global_secret: "change-this-in-production-use-env-var"
   public_host: localhost

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
@@ -16,6 +17,12 @@ import (
 type Engine struct {
 	cli          *client.Client
 	containerCfg *config.ContainerConfig
+}
+
+type ManagedContainer struct {
+	ID        string
+	Name      string
+	CreatedAt time.Time
 }
 
 func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
@@ -81,6 +88,7 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		Env:          cfg.Env,
 		ExposedPorts: exposedPorts,
 		User:         cfg.Security.User,
+		Labels:       cfg.Labels,
 	}
 
 	hostCfg := &container.HostConfig{
@@ -100,7 +108,7 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		}
 	}
 
-	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, "")
+	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
 	if err != nil {
 		return "", err
 	}
@@ -118,6 +126,36 @@ func (e *Engine) StopContainer(ctx context.Context, containerID string, timeout 
 
 func (e *Engine) RemoveContainer(ctx context.Context, containerID string, force bool) error {
 	return e.cli.ContainerRemove(ctx, containerID, container.RemoveOptions{Force: force})
+}
+
+func (e *Engine) RemoveNetwork(ctx context.Context, networkID string) error {
+	return e.cli.NetworkRemove(ctx, networkID)
+}
+
+func (e *Engine) ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error) {
+	containers, err := e.cli.ContainerList(ctx, container.ListOptions{
+		All: true,
+		Filters: filters.NewArgs(
+			filters.Arg("label", managedBy),
+		),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]ManagedContainer, 0, len(containers))
+	for _, item := range containers {
+		name := item.ID[:12]
+		if len(item.Names) > 0 {
+			name = item.Names[0]
+		}
+		items = append(items, ManagedContainer{
+			ID:        item.ID,
+			Name:      name,
+			CreatedAt: time.Unix(item.Created, 0),
+		})
+	}
+	return items, nil
 }
 
 func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
