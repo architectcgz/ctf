@@ -1,13 +1,13 @@
 CREATE TABLE IF NOT EXISTS tags (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(64) NOT NULL,
-    dimension VARCHAR(32) NOT NULL DEFAULT 'category',
+    type VARCHAR(32) NOT NULL DEFAULT 'vulnerability',
+    description TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE UNIQUE INDEX uk_tags_name_dimension ON tags(name, dimension);
-CREATE INDEX idx_tags_dimension ON tags(dimension);
+CREATE UNIQUE INDEX uk_tags_name_type ON tags(name, type);
 
 CREATE TABLE IF NOT EXISTS challenge_tags (
     id BIGSERIAL PRIMARY KEY,

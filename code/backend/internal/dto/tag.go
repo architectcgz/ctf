@@ -3,15 +3,17 @@ package dto
 import "time"
 
 type CreateTagReq struct {
-	Name      string `json:"name" binding:"required,max=64"`
-	Dimension string `json:"dimension" binding:"required,oneof=category technique tool platform"`
+	Name        string `json:"name" binding:"required,min=2,max=64"`
+	Type        string `json:"type" binding:"required,oneof=vulnerability tech_stack knowledge"`
+	Description string `json:"description" binding:"max=500"`
 }
 
 type TagResp struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	Dimension string    `json:"dimension"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Type        string    `json:"type"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type AttachTagsReq struct {
@@ -19,5 +21,5 @@ type AttachTagsReq struct {
 }
 
 type TagQuery struct {
-	Dimension string `form:"dimension" binding:"omitempty,oneof=category technique tool platform"`
+	Type string `form:"type" binding:"omitempty,oneof=vulnerability tech_stack knowledge"`
 }
