@@ -72,10 +72,9 @@ func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []
 	var contests []*model.Contest
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&model.Contest{}).
-		Where("status IN ?", statuses).
-		Where("start_time <= ?", now).
-		Where("end_time > ?", now)
+	query := r.db.WithContext(ctx).Model(&model.Contest{}).Where("status IN ?", statuses).
+		Where(r.db.Where("status = ? AND start_time <= ?", model.ContestStatusRegistration, now).
+			Or("status = ? AND end_time <= ?", model.ContestStatusRunning, now))
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -86,23 +85,26 @@ func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []
 }
 
 func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) error {
-	// 先查询竞赛是否存在
-	var contest model.Contest
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&contest).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	result := r.db.WithContext(ctx).Model(&model.Contest{}).
+		Where("id = ? AND status != ?", id, status).
+		Update("status", status)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// RowsAffected == 0 可能是不存在或状态已相同，需要区分
+	if result.RowsAffected == 0 {
+		var exists bool
+		err := r.db.WithContext(ctx).Model(&model.Contest{}).
+			Select("1").Where("id = ?", id).Limit(1).Find(&exists).Error
+		if err != nil {
+			return err
+		}
+		if !exists {
 			return ErrContestNotFound
 		}
-		return err
 	}
 
-	// 状态相同时直接返回成功（幂等）
-	if contest.Status == status {
-		return nil
-	}
-
-	// 更新状态
-	return r.db.WithContext(ctx).Model(&model.Contest{}).
-		Where("id = ?", id).
-		Update("status", status).Error
+	return nil
 }
