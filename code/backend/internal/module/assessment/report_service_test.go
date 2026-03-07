@@ -5,7 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 )
 
 func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
@@ -85,6 +87,50 @@ func TestWritePersonalExcelCreatesWorkbook(t *testing.T) {
 	}
 	if len(content) < 2 || content[0] != 'P' || content[1] != 'K' {
 		t.Fatalf("expected ZIP header, got %q", string(content[:min(2, len(content))]))
+	}
+}
+
+func TestReportFilePathUsesXLSXExtensionForExcel(t *testing.T) {
+	t.Parallel()
+
+	service := &ReportService{
+		config: config.ReportConfig{
+			StorageDir: t.TempDir(),
+		},
+	}
+
+	path, err := service.reportFilePath(42, "class", "excel")
+	if err != nil {
+		t.Fatalf("reportFilePath() error = %v", err)
+	}
+
+	if filepath.Ext(path) != ".xlsx" {
+		t.Fatalf("expected .xlsx extension, got %s", filepath.Ext(path))
+	}
+}
+
+func TestReportFileExtension(t *testing.T) {
+	t.Parallel()
+
+	if got := reportFileExtension("excel"); got != "xlsx" {
+		t.Fatalf("expected xlsx extension for excel, got %s", got)
+	}
+	if got := reportFileExtension("pdf"); got != "pdf" {
+		t.Fatalf("expected pdf extension for pdf, got %s", got)
+	}
+}
+
+func TestReportDownloadFileNameUsesRealExtension(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     7,
+		Type:   model.ReportTypeClass,
+		Format: model.ReportFormatExcel,
+	}
+
+	if got := reportDownloadFileName(report); got != "class-report-7.xlsx" {
+		t.Fatalf("expected xlsx download filename, got %s", got)
 	}
 }
 
