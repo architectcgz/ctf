@@ -18,6 +18,7 @@ import (
 	contestModule "ctf-platform/internal/module/contest"
 	practiceModule "ctf-platform/internal/module/practice"
 	systemModule "ctf-platform/internal/module/system"
+	teacherModule "ctf-platform/internal/module/teacher"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -205,6 +206,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
 	recommendationService := assessmentModule.NewRecommendationService(assessmentRepo, challengeRepo, cache, cfg.Recommendation, log.Named("recommendation_service"))
 	assessmentHandler := assessmentModule.NewHandler(assessmentService, recommendationService)
+	teacherRepo := teacherModule.NewRepository(db)
+	teacherService := teacherModule.NewService(teacherRepo, recommendationService, log.Named("teacher_service"))
+	teacherHandler := teacherModule.NewHandler(teacherService)
 	reportRepo := assessmentModule.NewReportRepository(db)
 	reportService := assessmentModule.NewReportService(reportRepo, assessmentService, cfg.Report, log.Named("report_service"))
 	reportHandler := assessmentModule.NewReportHandler(reportService)
@@ -404,7 +408,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	usersGroup.GET("/me/skill-profile", assessmentHandler.GetMySkillProfile)
 	usersGroup.GET("/me/recommendations", assessmentHandler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
+	teacherOrAbove.GET("/classes", teacherHandler.ListClasses)
+	teacherOrAbove.GET("/classes/:name/students", teacherHandler.ListClassStudents)
+	teacherOrAbove.GET("/students/:id/progress", teacherHandler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
+	teacherOrAbove.GET("/students/:id/recommendations", teacherHandler.GetStudentRecommendations)
 	protected.POST("/reports/personal", reportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id/download", reportHandler.DownloadReport)
 	protected.POST("/reports/class", middleware.RequireRole(model.RoleTeacher), reportHandler.CreateClassReport)
