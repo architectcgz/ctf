@@ -123,17 +123,25 @@ export interface UnlockHintData {
 }
 
 export interface MyProgressData {
-  total_challenges: number
-  solved_challenges: number
+  total_score?: number
+  total_solved?: number
+  rank?: number
+  category_stats?: Array<{ category: string; total: number; solved: number }>
+  difficulty_stats?: Array<{ difficulty: string; total: number; solved: number }>
+  total_challenges?: number
+  solved_challenges?: number
   by_category?: Record<string, { total: number; solved: number }>
   by_difficulty?: Record<string, { total: number; solved: number }>
 }
 
 export interface TimelineEvent {
   id: ID
-  type: 'solve' | 'submit' | 'instance' | 'hint'
+  type: 'solve' | 'submit' | 'instance' | 'hint' | string
   title: string
   created_at: ISODateTime
+  challenge_id?: ID
+  is_correct?: boolean
+  points?: number
   meta?: Record<string, unknown>
 }
 
