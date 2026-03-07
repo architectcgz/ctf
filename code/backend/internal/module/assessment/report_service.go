@@ -159,8 +159,8 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 		return nil, errcode.ErrInternal.WithCause(statErr)
 	}
 
-	fileName := fmt.Sprintf("%s-report-%d.%s", report.Type, report.ID, report.Format)
-	contentType := mime.TypeByExtension("." + report.Format)
+	fileName := reportDownloadFileName(report)
+	contentType := reportContentType(report.Format)
 	if contentType == "" {
 		switch report.Format {
 		case model.ReportFormatPDF:
@@ -321,7 +321,8 @@ func (s *ReportService) reportFilePath(reportID int64, reportType, format string
 	if err := os.MkdirAll(storageDir, 0o755); err != nil {
 		return "", err
 	}
-	fileName := fmt.Sprintf("%s-%d-%d.%s", reportType, reportID, time.Now().Unix(), format)
+	extension := reportFileExtension(format)
+	fileName := fmt.Sprintf("%s-%d-%d.%s", reportType, reportID, time.Now().Unix(), extension)
 	return filepath.Join(storageDir, fileName), nil
 }
 
@@ -350,6 +351,21 @@ func (s *ReportService) normalizeFormat(format string) string {
 	default:
 		return s.config.DefaultFormat
 	}
+}
+
+func reportFileExtension(format string) string {
+	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatExcel) {
+		return "xlsx"
+	}
+	return "pdf"
+}
+
+func reportDownloadFileName(report *model.Report) string {
+	return fmt.Sprintf("%s-report-%d.%s", report.Type, report.ID, reportFileExtension(report.Format))
+}
+
+func reportContentType(format string) string {
+	return mime.TypeByExtension("." + reportFileExtension(format))
 }
 
 func (s *ReportService) markFailed(reportID int64, err error) {
