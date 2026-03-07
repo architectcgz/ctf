@@ -9,7 +9,7 @@
       >
         <option value="">我的能力画像</option>
         <option v-for="student in students" :key="student.id" :value="student.id">
-          {{ student.name }} ({{ student.username }})
+          {{ student.name || student.username }} ({{ student.username }})
         </option>
       </select>
     </div>
