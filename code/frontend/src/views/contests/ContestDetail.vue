@@ -1,17 +1,24 @@
 <template>
   <div class="space-y-6">
     <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
+      ></div>
     </div>
 
     <div v-else-if="contest" class="space-y-6">
       <!-- 竞赛信息 -->
-      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+      <div
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
         <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">{{ contest.title }}</h1>
         <p class="mt-3 text-[var(--color-text-secondary)]">{{ contest.description }}</p>
 
         <div class="mt-4 flex items-center gap-4 text-sm">
-          <span class="rounded px-2 py-0.5 text-xs font-medium" :class="getStatusBadgeClass(contest.status)">
+          <span
+            class="rounded px-2 py-0.5 text-xs font-medium"
+            :class="getStatusBadgeClass(contest.status)"
+          >
             {{ getStatusLabel(contest.status) }}
           </span>
           <span class="text-[var(--color-text-secondary)]">{{ getModeLabel(contest.mode) }}</span>
@@ -28,14 +35,22 @@
       </div>
 
       <!-- 队伍管理 -->
-      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+      <div
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
         <h2 class="text-xl font-bold text-[var(--color-text-primary)]">队伍</h2>
 
         <div v-if="!team" class="mt-4 space-y-3">
-          <button @click="showCreateTeam = true" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90">
+          <button
+            @click="showCreateTeam = true"
+            class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
             创建队伍
           </button>
-          <button @click="showJoinTeam = true" class="ml-2 rounded border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]">
+          <button
+            @click="showJoinTeam = true"
+            class="ml-2 rounded border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]"
+          >
             加入队伍
           </button>
         </div>
@@ -43,14 +58,30 @@
         <div v-else class="mt-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">{{ team.name }}</h3>
-            <span v-if="team.invite_code" class="font-mono text-sm text-[var(--color-text-secondary)]">邀请码: {{ team.invite_code }}</span>
+            <span
+              v-if="team.invite_code"
+              class="font-mono text-sm text-[var(--color-text-secondary)]"
+              >邀请码: {{ team.invite_code }}</span
+            >
           </div>
           <div class="mt-3 space-y-2">
-            <div v-for="member in team.members" :key="member.user_id" class="flex items-center justify-between rounded border border-[var(--color-border-default)] p-2">
+            <div
+              v-for="member in team.members"
+              :key="member.user_id"
+              class="flex items-center justify-between rounded border border-[var(--color-border-default)] p-2"
+            >
               <span class="text-[var(--color-text-primary)]">{{ member.username }}</span>
               <div class="flex items-center gap-2">
-                <span v-if="member.user_id === team.captain_user_id" class="text-xs text-[var(--color-text-muted)]">队长</span>
-                <button v-if="isCaptain && member.user_id !== team.captain_user_id" @click="kickMember(member.user_id)" class="text-xs text-red-500 hover:underline">
+                <span
+                  v-if="member.user_id === team.captain_user_id"
+                  class="text-xs text-[var(--color-text-muted)]"
+                  >队长</span
+                >
+                <button
+                  v-if="isCaptain && member.user_id !== team.captain_user_id"
+                  @click="kickMember(member.user_id)"
+                  class="text-xs text-red-500 hover:underline"
+                >
                   踢出
                 </button>
               </div>
@@ -60,11 +91,20 @@
       </div>
 
       <!-- 题目列表 -->
-      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+      <div
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
         <h2 class="text-xl font-bold text-[var(--color-text-primary)]">题目</h2>
-        <div v-if="challenges.length === 0" class="mt-4 text-center text-[var(--color-text-muted)]">暂无题目</div>
+        <div v-if="challenges.length === 0" class="mt-4 text-center text-[var(--color-text-muted)]">
+          暂无题目
+        </div>
         <div v-else class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div v-for="chal in challenges" :key="chal.id" @click="selectChallenge(chal)" class="cursor-pointer rounded border border-[var(--color-border-default)] p-4 hover:border-[var(--color-primary)]">
+          <div
+            v-for="chal in challenges"
+            :key="chal.id"
+            @click="selectChallenge(chal)"
+            class="cursor-pointer rounded border border-[var(--color-border-default)] p-4 hover:border-[var(--color-primary)]"
+          >
             <div class="flex items-center justify-between">
               <h3 class="font-semibold text-[var(--color-text-primary)]">{{ chal.title }}</h3>
               <span v-if="chal.is_solved" class="text-green-500">✓</span>
@@ -78,28 +118,68 @@
       </div>
 
       <!-- Flag 提交 -->
-      <div v-if="selectedChallenge" class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
-        <h2 class="text-xl font-bold text-[var(--color-text-primary)]">提交 Flag - {{ selectedChallenge.title }}</h2>
+      <div
+        v-if="selectedChallenge"
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
+        <h2 class="text-xl font-bold text-[var(--color-text-primary)]">
+          提交 Flag - {{ selectedChallenge.title }}
+        </h2>
         <div class="mt-4 flex gap-2">
-          <input v-model="flagInput" @keyup.enter="submitFlag" placeholder="flag{...}" class="flex-1 rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]" />
-          <button @click="submitFlag" :disabled="submitting" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50">
+          <input
+            v-model="flagInput"
+            @keyup.enter="submitFlag"
+            placeholder="flag{...}"
+            class="flex-1 rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]"
+          />
+          <button
+            @click="submitFlag"
+            :disabled="submitting"
+            class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          >
             {{ submitting ? '提交中...' : '提交' }}
           </button>
         </div>
-        <div v-if="submitResult" class="mt-3 rounded p-3" :class="submitResult.correct ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'">
+        <div
+          v-if="submitResult"
+          class="mt-3 rounded p-3"
+          :class="
+            submitResult.correct ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+          "
+        >
           {{ submitResult.correct ? `正确！+${submitResult.points_earned} 分` : '错误' }}
         </div>
       </div>
     </div>
 
     <!-- 创建队伍弹窗 -->
-    <div v-if="showCreateTeam" @click.self="closeCreateTeam" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+    <div
+      v-if="showCreateTeam"
+      @click.self="closeCreateTeam"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+      <div
+        class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
         <h3 class="text-lg font-bold text-[var(--color-text-primary)]">创建队伍</h3>
-        <input v-model="teamName" @keyup.enter="createTeamAction" placeholder="队伍名称" class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]" />
+        <input
+          v-model="teamName"
+          @keyup.enter="createTeamAction"
+          placeholder="队伍名称"
+          class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]"
+        />
         <div class="mt-4 flex justify-end gap-2">
-          <button @click="closeCreateTeam" class="rounded border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)]">取消</button>
-          <button @click="createTeamAction" :disabled="creatingTeam" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50">
+          <button
+            @click="closeCreateTeam"
+            class="rounded border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)]"
+          >
+            取消
+          </button>
+          <button
+            @click="createTeamAction"
+            :disabled="creatingTeam"
+            class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
             {{ creatingTeam ? '创建中...' : '创建' }}
           </button>
         </div>
@@ -107,13 +187,33 @@
     </div>
 
     <!-- 加入队伍弹窗 -->
-    <div v-if="showJoinTeam" @click.self="closeJoinTeam" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+    <div
+      v-if="showJoinTeam"
+      @click.self="closeJoinTeam"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+      <div
+        class="w-full max-w-md rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
         <h3 class="text-lg font-bold text-[var(--color-text-primary)]">加入队伍</h3>
-        <input v-model="teamIdInput" @keyup.enter="joinTeamAction" placeholder="队伍 ID" class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]" />
+        <input
+          v-model="teamIdInput"
+          @keyup.enter="joinTeamAction"
+          placeholder="队伍 ID"
+          class="mt-4 w-full rounded border border-[var(--color-border-default)] bg-[var(--color-bg-default)] px-3 py-2 text-[var(--color-text-primary)]"
+        />
         <div class="mt-4 flex justify-end gap-2">
-          <button @click="closeJoinTeam" class="rounded border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)]">取消</button>
-          <button @click="joinTeamAction" :disabled="joiningTeam" class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50">
+          <button
+            @click="closeJoinTeam"
+            class="rounded border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)]"
+          >
+            取消
+          </button>
+          <button
+            @click="joinTeamAction"
+            :disabled="joiningTeam"
+            class="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
             {{ joiningTeam ? '加入中...' : '加入' }}
           </button>
         </div>
@@ -125,8 +225,21 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { getContestDetail, getContestChallenges, getMyTeam, createTeam, joinTeam, kickTeamMember, submitContestFlag } from '@/api/contest'
-import type { ContestDetailData, ContestChallengeItem, TeamData, SubmitFlagData } from '@/api/contracts'
+import {
+  getContestDetail,
+  getContestChallenges,
+  getMyTeam,
+  createTeam,
+  joinTeam,
+  kickTeamMember,
+  submitContestFlag,
+} from '@/api/contest'
+import type {
+  ContestDetailData,
+  ContestChallengeItem,
+  TeamData,
+  SubmitFlagData,
+} from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/composables/useToast'
 import { formatTime, formatDuration } from '@/utils/format'
@@ -153,7 +266,9 @@ const joiningTeam = ref(false)
 
 let timer: number | null = null
 
-const isCaptain = computed(() => team.value && authStore.user && team.value.captain_user_id === authStore.user.id)
+const isCaptain = computed(
+  () => team.value && authStore.user && team.value.captain_user_id === authStore.user.id
+)
 
 onMounted(async () => {
   loading.value = true
@@ -163,7 +278,7 @@ onMounted(async () => {
 
     const [teamData, challengesData] = await Promise.all([
       getMyTeam(contestId).catch(() => null),
-      getContestChallenges(contestId).catch(() => [])
+      getContestChallenges(contestId).catch(() => []),
     ])
 
     team.value = teamData
@@ -238,7 +353,7 @@ async function submitFlag() {
     submitResult.value = result
 
     if (result.correct) {
-      const idx = challenges.value.findIndex(c => c.id === selectedChallenge.value!.id)
+      const idx = challenges.value.findIndex((c) => c.id === selectedChallenge.value!.id)
       if (idx !== -1) challenges.value[idx].is_solved = true
       flagInput.value = ''
     }
@@ -264,7 +379,8 @@ async function createTeamAction() {
 
   creatingTeam.value = true
   try {
-    team.value = await createTeam(contest.value.id, { name })
+    await createTeam(contest.value.id, { name })
+    team.value = await getMyTeam(contest.value.id)
     showCreateTeam.value = false
     teamName.value = ''
     toast.success('创建队伍成功')

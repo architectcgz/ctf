@@ -1,6 +1,12 @@
 import { getAxiosInstance, request } from './request'
 
-import type { MyProgressData, RecommendationItem, ReportExportData, SkillProfileData, TimelineEvent } from './contracts'
+import type {
+  MyProgressData,
+  RecommendationItem,
+  ReportExportData,
+  SkillProfileData,
+  TimelineEvent,
+} from './contracts'
 import {
   normalizeRecommendations,
   normalizeSkillProfile,
@@ -30,12 +36,18 @@ interface RawTimelineResponse {
 }
 
 export async function getSkillProfile(): Promise<SkillProfileData> {
-  const payload = await request<RawSkillProfileResponse>({ method: 'GET', url: '/users/me/skill-profile' })
+  const payload = await request<RawSkillProfileResponse>({
+    method: 'GET',
+    url: '/users/me/skill-profile',
+  })
   return normalizeSkillProfile(payload)
 }
 
 export async function getRecommendations(): Promise<RecommendationItem[]> {
-  const payload = await request<RawRecommendationResponse>({ method: 'GET', url: '/users/me/recommendations' })
+  const payload = await request<RawRecommendationResponse>({
+    method: 'GET',
+    url: '/users/me/recommendations',
+  })
   return normalizeRecommendations(payload)
 }
 
@@ -54,13 +66,14 @@ export async function getMyTimeline(): Promise<TimelineEvent[]> {
   const payload = await request<RawTimelineResponse>({ method: 'GET', url: '/users/me/timeline' })
   return payload.events.map((item) => ({
     id: `${item.type}-${item.challenge_id}-${item.timestamp}`,
-    type: item.type === 'instance_start' || item.type === 'instance_destroy'
-      ? 'instance'
-      : item.type === 'flag_submit' && item.is_correct
-        ? 'solve'
-        : item.type === 'flag_submit'
-          ? 'submit'
-          : item.type,
+    type:
+      item.type === 'instance_start' || item.type === 'instance_destroy'
+        ? 'instance'
+        : item.type === 'flag_submit' && item.is_correct
+          ? 'solve'
+          : item.type === 'flag_submit'
+            ? 'submit'
+            : item.type,
     title: item.title,
     created_at: item.timestamp,
     challenge_id: String(item.challenge_id),
@@ -72,8 +85,26 @@ export async function getMyTimeline(): Promise<TimelineEvent[]> {
   }))
 }
 
-export async function exportPersonalReport(data: Record<string, unknown>): Promise<ReportExportData> {
-  const payload = await request<ReportExportData & { report_id: string | number }>({ method: 'POST', url: '/reports/personal', data })
+export async function exportPersonalReport(
+  data: Record<string, unknown>
+): Promise<ReportExportData> {
+  const payload = await request<ReportExportData & { report_id: string | number }>({
+    method: 'POST',
+    url: '/reports/personal',
+    data,
+  })
+  return {
+    ...payload,
+    report_id: String(payload.report_id),
+  }
+}
+
+export async function getReportStatus(reportId: string | number): Promise<ReportExportData> {
+  const payload = await request<ReportExportData & { report_id: string | number }>({
+    method: 'GET',
+    url: `/reports/${encodeURIComponent(String(reportId))}`,
+  })
+
   return {
     ...payload,
     report_id: String(payload.report_id),

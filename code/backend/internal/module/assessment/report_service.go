@@ -134,10 +134,8 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if role != model.RoleAdmin {
-		if report.UserID == nil || *report.UserID != requesterID {
-			return nil, errcode.ErrForbidden
-		}
+	if err := validateReportAccess(report, requesterID, role); err != nil {
+		return nil, err
 	}
 	if report.Status == model.ReportStatusProcessing {
 		return nil, errcode.New(errcode.ErrConflict.Code, "报告仍在生成中", errcode.ErrConflict.HTTPStatus)
@@ -179,6 +177,20 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 		FileName:    fileName,
 		ContentType: contentType,
 	}, nil
+}
+
+func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error) {
+	report, err := s.repo.FindByID(ctx, reportID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if err := validateReportAccess(report, requesterID, role); err != nil {
+		return nil, err
+	}
+	return buildReportExportDataFromModel(report), nil
 }
 
 func (s *ReportService) runAsyncReport(reportID int64, fn func(context.Context) error) {
@@ -351,17 +363,45 @@ func (s *ReportService) markFailed(reportID int64, err error) {
 }
 
 func buildReportExportData(reportID int64, status string, expiresAt time.Time) *dto.ReportExportData {
-	resp := &dto.ReportExportData{
-		ReportID: reportID,
-		Status:   status,
+	report := &model.Report{
+		ID:        reportID,
+		Status:    status,
+		ExpiresAt: nil,
 	}
-	if status == model.ReportStatusReady {
-		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", reportID)
-		expires := expiresAt.Format(time.RFC3339)
+	if !expiresAt.IsZero() {
+		report.ExpiresAt = &expiresAt
+	}
+	return buildReportExportDataFromModel(report)
+}
+
+func buildReportExportDataFromModel(report *model.Report) *dto.ReportExportData {
+	resp := &dto.ReportExportData{
+		ReportID: report.ID,
+		Status:   report.Status,
+	}
+	if report.Status == model.ReportStatusReady {
+		downloadURL := fmt.Sprintf("/api/v1/reports/%d/download", report.ID)
 		resp.DownloadURL = &downloadURL
-		resp.ExpiresAt = &expires
+		if report.ExpiresAt != nil && !report.ExpiresAt.IsZero() {
+			expires := report.ExpiresAt.Format(time.RFC3339)
+			resp.ExpiresAt = &expires
+		}
+	}
+	if report.Status == model.ReportStatusFailed && report.ErrorMsg != nil && strings.TrimSpace(*report.ErrorMsg) != "" {
+		message := strings.TrimSpace(*report.ErrorMsg)
+		resp.ErrorMessage = &message
 	}
 	return resp
+}
+
+func validateReportAccess(report *model.Report, requesterID int64, role string) error {
+	if role == model.RoleAdmin {
+		return nil
+	}
+	if report.UserID == nil || *report.UserID != requesterID {
+		return errcode.ErrForbidden
+	}
+	return nil
 }
 
 func fillMissingDimensionAverages(rows []ClassDimensionAverage) []ClassDimensionAverage {

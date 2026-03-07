@@ -1,117 +1,302 @@
+<script setup lang="ts">
+import { onMounted, useTemplateRef } from 'vue'
+
+import AdminUserFormDialog from '@/components/admin/user/AdminUserFormDialog.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SectionCard from '@/components/common/SectionCard.vue'
+import { useAdminUsers } from '@/composables/useAdminUsers'
+
+const {
+  list,
+  total,
+  page,
+  pageSize,
+  loading,
+  refresh,
+  changePage,
+  keyword,
+  roleFilter,
+  statusFilter,
+  dialogOpen,
+  dialogMode,
+  saving,
+  formDraft,
+  importResult,
+  openCreateDialog,
+  openEditDialog,
+  closeDialog,
+  saveUser,
+  removeUser,
+  importUserFile,
+} = useAdminUsers()
+
+const importInput = useTemplateRef<HTMLInputElement>('importInput')
+
+onMounted(() => {
+  void refresh()
+})
+
+function triggerImport() {
+  importInput.value?.click()
+}
+
+async function handleImportChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) {
+    return
+  }
+  try {
+    await importUserFile(file)
+  } finally {
+    input.value = ''
+  }
+}
+
+async function handleDelete(userId: string) {
+  const user = list.value.find((item) => item.id === userId)
+  if (!user || !window.confirm(`确定删除用户 ${user.username} 吗？`)) {
+    return
+  }
+  await removeUser(user)
+}
+
+function handleDialogOpenChange(value: boolean) {
+  if (!value) {
+    closeDialog()
+  }
+}
+</script>
+
 <template>
   <div class="space-y-6">
     <PageHeader
       eyebrow="Admin"
       title="用户管理"
-      description="用户列表、导入、编辑与状态管理的页面框架已保留，但当前后端主线还没有提供 /admin/users 路由。这里明确展示为降级态，避免继续使用假数据误导联调。"
+      description="当前页已接入真实的管理员用户接口，支持列表、筛选、创建、编辑、删除和 CSV 批量导入。"
     >
-      <div
-        class="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200"
-      >
-        <span class="h-2 w-2 rounded-full bg-amber-300" />
-        后端接口待补齐
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-primary"
+          @click="refresh"
+        >
+          刷新列表
+        </button>
+        <button
+          type="button"
+          class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-primary"
+          @click="triggerImport"
+        >
+          批量导入
+        </button>
+        <button
+          type="button"
+          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+          @click="openCreateDialog"
+        >
+          创建用户
+        </button>
       </div>
     </PageHeader>
 
-    <div class="grid gap-4 lg:grid-cols-[1.4fr,1fr]">
-      <SectionCard
-        title="当前状态"
-        subtitle="移除了静态 mock 用户表。只有在后端补齐管理员用户路由后，才会恢复真实的列表、搜索和编辑交互。"
-      >
-        <AppEmpty
-          icon="UsersRound"
-          title="暂时无法展示用户列表"
-          description="当前主线仅提供管理员 dashboard、审计日志、镜像、靶场和竞赛管理接口，尚未提供 /api/v1/admin/users 相关能力。"
-        >
-          <template #action>
-            <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-text-muted">
-              <span class="rounded-full border border-border px-3 py-1">列表查询</span>
-              <span class="rounded-full border border-border px-3 py-1">批量导入</span>
-              <span class="rounded-full border border-border px-3 py-1">状态编辑</span>
-              <span class="rounded-full border border-border px-3 py-1">角色调整</span>
-            </div>
-          </template>
-        </AppEmpty>
-      </SectionCard>
+    <input
+      ref="importInput"
+      type="file"
+      accept=".csv,text/csv"
+      class="hidden"
+      @change="handleImportChange"
+    />
 
-      <SectionCard
-        title="后续接入清单"
-        subtitle="等后端补齐接口后，页面可以按下面的顺序直接恢复成真实管理页。"
-      >
-        <ol class="space-y-3 text-sm text-text-secondary">
-          <li class="rounded-xl border border-border bg-elevated px-4 py-3">
-            <div class="font-medium text-text-primary">1. 用户列表与分页</div>
-            <div class="mt-1">
-              接入 `GET /admin/users`，替换当前降级卡片，恢复搜索、筛选和分页。
-            </div>
-          </li>
-          <li class="rounded-xl border border-border bg-elevated px-4 py-3">
-            <div class="font-medium text-text-primary">2. 创建 / 编辑用户</div>
-            <div class="mt-1">
-              接入 `POST /admin/users` 与 `PUT /admin/users/:id`，补齐用户表单与角色配置。
-            </div>
-          </li>
-          <li class="rounded-xl border border-border bg-elevated px-4 py-3">
-            <div class="font-medium text-text-primary">3. 删除与批量导入</div>
-            <div class="mt-1">接入删除和导入接口，补齐批量导入反馈、失败行提示和审计记录联动。</div>
-          </li>
-        </ol>
-      </SectionCard>
-    </div>
+    <SectionCard
+      title="筛选与导入"
+      subtitle="列表筛选和 CSV 导入都直接走主线后端接口，不再保留说明型降级卡片。"
+    >
+      <div class="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div class="grid gap-4 md:grid-cols-3">
+          <label class="space-y-2">
+            <span class="text-sm text-slate-300">关键词</span>
+            <input
+              v-model="keyword"
+              type="text"
+              class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+              placeholder="用户名 / 邮箱 / 班级"
+            />
+          </label>
 
-    <SectionCard title="接口缺口" subtitle="这是当前页面明确依赖但后端主线尚未提供的接口集合。">
-      <div class="grid gap-3 md:grid-cols-2">
-        <div
-          v-for="endpoint in missingEndpoints"
-          :key="endpoint.path"
-          class="rounded-xl border border-border bg-elevated px-4 py-3"
-        >
-          <div class="font-mono text-xs text-cyan-300">
-            {{ endpoint.method }} {{ endpoint.path }}
+          <label class="space-y-2">
+            <span class="text-sm text-slate-300">角色</span>
+            <select
+              v-model="roleFilter"
+              class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            >
+              <option value="all">全部角色</option>
+              <option value="student">student</option>
+              <option value="teacher">teacher</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-sm text-slate-300">状态</span>
+            <select
+              v-model="statusFilter"
+              class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            >
+              <option value="all">全部状态</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+              <option value="locked">locked</option>
+              <option value="banned">banned</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rounded-2xl border border-border bg-surface-alt/60 p-5">
+          <p class="text-sm font-medium text-slate-100">CSV 导入格式</p>
+          <p class="mt-2 text-sm leading-6 text-slate-400">
+            按列顺序上传：`username,password,email,class_name,role,status`。首行可带表头；已存在用户名会执行更新。
+          </p>
+          <div
+            v-if="importResult"
+            class="mt-4 rounded-xl border border-border bg-surface px-4 py-4 text-sm text-slate-300"
+          >
+            <p>
+              创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
+              {{ importResult.failed }}
+            </p>
+            <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-rose-300">
+              <li
+                v-for="item in importResult.errors.slice(0, 5)"
+                :key="`${item.row}-${item.message}`"
+              >
+                第 {{ item.row }} 行：{{ item.message }}
+              </li>
+            </ul>
           </div>
-          <div class="mt-2 text-sm text-text-secondary">{{ endpoint.description }}</div>
         </div>
       </div>
     </SectionCard>
+
+    <SectionCard
+      title="用户列表"
+      subtitle="所有数据都来自 `/admin/users`，编辑只暴露后端已支持的字段。"
+    >
+      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+        <AppLoading>正在同步用户列表...</AppLoading>
+      </div>
+
+      <AppEmpty
+        v-else-if="list.length === 0"
+        title="暂无用户"
+        description="当前筛选条件下没有匹配用户。你可以调整筛选，或者直接创建新用户。"
+        icon="UsersRound"
+      >
+        <template #action>
+          <button
+            type="button"
+            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+            @click="openCreateDialog"
+          >
+            创建第一个用户
+          </button>
+        </template>
+      </AppEmpty>
+
+      <div v-else class="space-y-5">
+        <div class="overflow-hidden rounded-2xl border border-border">
+          <table class="min-w-full divide-y divide-border">
+            <thead class="bg-surface-alt/70">
+              <tr class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                <th class="px-4 py-3">用户</th>
+                <th class="px-4 py-3">角色</th>
+                <th class="px-4 py-3">状态</th>
+                <th class="px-4 py-3">班级</th>
+                <th class="px-4 py-3">创建时间</th>
+                <th class="px-4 py-3">操作</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border bg-surface/70">
+              <tr v-for="user in list" :key="user.id" class="transition hover:bg-surface-alt/60">
+                <td class="px-4 py-4 align-top">
+                  <p class="font-medium text-slate-100">{{ user.username }}</p>
+                  <p class="mt-1 text-sm text-slate-400">{{ user.email || '未填写邮箱' }}</p>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-300">
+                  {{ user.roles.join(', ') }}
+                </td>
+                <td class="px-4 py-4 align-top">
+                  <span
+                    class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-slate-200"
+                  >
+                    {{ user.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-300">
+                  {{ user.class_name || '未分配' }}
+                </td>
+                <td class="px-4 py-4 align-top text-sm text-slate-300">
+                  {{ new Date(user.created_at).toLocaleString('zh-CN') }}
+                </td>
+                <td class="px-4 py-4 align-top">
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      class="rounded-xl border border-border px-3 py-1.5 text-sm text-slate-100 transition hover:border-primary"
+                      @click="openEditDialog(user)"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      type="button"
+                      class="rounded-xl border border-rose-500/30 px-3 py-1.5 text-sm text-rose-300 transition hover:bg-rose-500/10"
+                      @click="handleDelete(user.id)"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span>共 {{ total }} 个用户</span>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="page <= 1"
+              @click="changePage(page - 1)"
+            >
+              上一页
+            </button>
+            <span>{{ page }} / {{ Math.max(1, Math.ceil(total / pageSize)) }}</span>
+            <button
+              type="button"
+              class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="page >= Math.max(1, Math.ceil(total / pageSize))"
+              @click="changePage(page + 1)"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+      </div>
+    </SectionCard>
+
+    <AdminUserFormDialog
+      :open="dialogOpen"
+      :mode="dialogMode"
+      :draft="formDraft"
+      :saving="saving"
+      @update:open="handleDialogOpenChange"
+      @save="saveUser"
+    />
   </div>
 </template>
-
-<script setup lang="ts">
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
-
-interface MissingEndpoint {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  path: string
-  description: string
-}
-
-const missingEndpoints: MissingEndpoint[] = [
-  {
-    method: 'GET',
-    path: '/api/v1/admin/users',
-    description: '管理员查询用户列表、搜索和分页。',
-  },
-  {
-    method: 'POST',
-    path: '/api/v1/admin/users',
-    description: '管理员创建用户并分配初始角色、班级信息。',
-  },
-  {
-    method: 'PUT',
-    path: '/api/v1/admin/users/:id',
-    description: '管理员更新用户状态、角色和资料。',
-  },
-  {
-    method: 'DELETE',
-    path: '/api/v1/admin/users/:id',
-    description: '管理员删除或停用用户。',
-  },
-  {
-    method: 'POST',
-    path: '/api/v1/admin/users/import',
-    description: '管理员通过文件批量导入用户。',
-  },
-]
-</script>

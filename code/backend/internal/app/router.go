@@ -11,6 +11,7 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	adminUserModule "ctf-platform/internal/module/adminuser"
 	assessmentModule "ctf-platform/internal/module/assessment"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
@@ -211,6 +212,47 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	)
 	dashboardHandler := systemModule.NewDashboardHandler(dashboardService)
 	adminOnly.GET("/dashboard", dashboardHandler.GetDashboard)
+	riskRepo := systemModule.NewRiskRepository(db)
+	riskService := systemModule.NewRiskService(riskRepo, log.Named("risk_service"))
+	riskHandler := systemModule.NewRiskHandler(riskService)
+	adminOnly.GET("/cheat-detection", riskHandler.GetCheatDetection)
+
+	adminUserRepo := adminUserModule.NewRepository(db)
+	adminUserService := adminUserModule.NewService(adminUserRepo, cfg.Pagination, log.Named("admin_user_service"))
+	adminUserHandler := adminUserModule.NewHandler(adminUserService)
+	adminOnly.GET("/users", adminUserHandler.ListUsers)
+	adminOnly.POST("/users",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "user",
+		}, auditLogger),
+		adminUserHandler.CreateUser,
+	)
+	adminOnly.PUT("/users/:id",
+		middleware.ParseInt64Param("id"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "user",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		adminUserHandler.UpdateUser,
+	)
+	adminOnly.DELETE("/users/:id",
+		middleware.ParseInt64Param("id"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "user",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		adminUserHandler.DeleteUser,
+	)
+	adminOnly.POST("/users/import",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "user_import",
+		}, auditLogger),
+		adminUserHandler.ImportUsers,
+	)
 
 	assessmentRepo := assessmentModule.NewRepository(db)
 	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
@@ -315,6 +357,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		submissionHandler.SubmitFlag,
 	)
 	protected.GET("/contests/:id/teams", teamHandler.ListTeams)
+	protected.GET("/contests/:id/my-team", teamHandler.GetMyTeam)
 	protected.POST("/contests/:id/teams",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:        model.AuditActionCreate,
@@ -349,6 +392,15 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
 		}, auditLogger),
 		teamHandler.DismissTeam,
+	)
+	protected.DELETE("/contests/:id/teams/:tid/members/:uid",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "team_membership",
+			ResourceIDParam: "uid",
+			DetailBuilder:   middleware.DetailFromParams("id", "tid", "uid"),
+		}, auditLogger),
+		teamHandler.KickMember,
 	)
 
 	// 实践模块（学员）
@@ -424,6 +476,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/students/:id/recommendations", teacherHandler.GetStudentRecommendations)
 	protected.POST("/reports/personal", reportHandler.CreatePersonalReport)
+	protected.GET("/reports/:id", reportHandler.GetReportStatus)
 	protected.GET("/reports/:id/download", reportHandler.DownloadReport)
 	protected.POST("/reports/class", middleware.RequireRole(model.RoleTeacher), reportHandler.CreateClassReport)
 	teacherOrAbove.POST("/reports/class", reportHandler.CreateClassReport)

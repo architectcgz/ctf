@@ -71,3 +71,19 @@ func (h *ReportHandler) DownloadReport(c *gin.Context) {
 	c.Header("Content-Type", download.ContentType)
 	c.FileAttachment(download.Path, download.FileName)
 }
+
+func (h *ReportHandler) GetReportStatus(c *gin.Context) {
+	reportID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || reportID <= 0 {
+		response.InvalidParams(c, "无效的报告ID")
+		return
+	}
+
+	currentUser := authctx.MustCurrentUser(c)
+	report, err := h.service.GetStatus(c.Request.Context(), reportID, currentUser.UserID, currentUser.Role)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, report)
+}
