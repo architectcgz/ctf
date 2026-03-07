@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { APP_TITLE_PREFIX } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
 import { getProfile } from '@/api/auth'
+import type { UserRole } from '@/utils/constants'
 
 NProgress.configure({ showSpinner: false })
 
@@ -13,13 +14,19 @@ function isPublicRoute(to: RouteLocationNormalized): boolean {
   return to.path === '/login' || to.path === '/register'
 }
 
-function sanitizeRedirectPath(input: unknown): string {
+export function sanitizeRedirectPath(input: unknown): string {
   if (typeof input !== 'string') return '/'
+  if (/^\s*$/.test(input)) return '/'
+  if (/^(?:[a-z][a-z0-9+\-.]*:)?\/\//i.test(input) || input.startsWith('/\\')) return '/'
   // 移除所有前导斜杠，只保留一个
   const normalized = '/' + input.replace(/^\/+/, '')
-  // 检查是否包含协议或双斜杠
-  if (/^\/\/|^\/\\|:\/\//.test(normalized)) return '/'
   return normalized
+}
+
+export function hasRequiredRole(requiredRoles: RouteLocationNormalized['meta']['roles'], currentRole: UserRole | undefined): boolean {
+  if (!requiredRoles || requiredRoles.length === 0) return true
+  if (!currentRole) return false
+  return requiredRoles.includes(currentRole)
 }
 
 async function ensureProfileLoaded(): Promise<void> {
@@ -36,14 +43,9 @@ function updatePageTitle(to: RouteLocationNormalized): void {
   document.title = title
 }
 
-let currentAbortController: AbortController | null = null
-
 export function setupRouterGuards(router: Router): void {
   router.beforeEach(async (to, _from, next) => {
     NProgress.start()
-
-    currentAbortController?.abort()
-    currentAbortController = new AbortController()
 
     const authStore = useAuthStore()
     const toast = useToast()
@@ -59,24 +61,21 @@ export function setupRouterGuards(router: Router): void {
         return
       }
 
-      // 临时禁用登录检查，用于查看页面效果
-      // if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
-      //   next({ path: '/login', query: { redirect: to.fullPath } })
-      //   return
-      // }
+      if (to.meta?.requiresAuth && !authStore.isLoggedIn) {
+        next({ path: '/login', query: { redirect: to.fullPath } })
+        return
+      }
 
       if (to.meta?.requiresAuth) {
         await ensureProfileLoaded()
       }
 
-      // 临时禁用角色权限检查
-      // const userRole = authStore.user?.role
-      // const requiredRoles = to.meta?.roles
-      // if (!hasRole(requiredRoles, userRole)) {
-      //   toast.warning('无权限访问该页面')
-      //   next('/dashboard')
-      //   return
-      // }
+      const userRole = authStore.user?.role
+      if (!hasRequiredRole(to.meta?.roles, userRole)) {
+        toast.warning('无权限访问该页面')
+        next('/403')
+        return
+      }
 
       next()
     } catch (err) {
