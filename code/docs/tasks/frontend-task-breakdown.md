@@ -78,14 +78,15 @@
 
 ### R3 任务文档与 review 留档同步
 
-- 状态：`in_progress`
+- 状态：`completed`
 - 目标：把任务文档、最新实现状态和后续待办保持一致，避免文档滞后于代码。
 - 范围：
   - `code/docs/tasks/*.md`
   - 必要时补充 `code/frontend/docs/reviews/frontend/`
 - 当前现状：
   - 本文档已更新为最新状态
-  - 新增的“实时通知链路”尚无单独 review 文档
+  - 本轮“竞赛管理真实性回归”已补 review 文档：
+    - [ctf-frontend-code-review-admin-contests-round1-74e5b72.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-admin-contests-round1-74e5b72.md)
 - 验收标准：
   - 文档状态与主线代码一致
   - 后续新增批次继续按 review 文档归档
@@ -107,13 +108,13 @@
 
 1. `UserManage` 的假数据已清除，但对应真实后端接口仍未提供。
 2. 竞赛公共页使用的 contest 契约仍保留历史枚举（如 `registering`），后续如果继续扩展公开竞赛流程，建议统一收敛到共享映射层。
-3. 前端 review 文档目前覆盖到并行交付阶段，最新“实时通知链路”“用户管理降级页”“竞赛管理真实性回归”如果继续扩展，建议补单独 review 记录。
+3. “实时通知链路”和“用户管理降级页”如果后续继续扩展，建议各自补独立 review 记录。
 
 ## 建议执行顺序
 
-1. 下一步聚焦 `R3`，把本轮新增实现与 review 留档同步。
+1. 当前前端任务拆分中的 `R1-R3` 已全部收口。
 2. 若后续继续做公开竞赛流程联调，优先统一 `contest` 共享契约。
-3. 每完成一个批次，都进入 `code-reviewer -> test-engineer` 闭环。
+3. 后续新增批次继续保持 `code-reviewer -> test-engineer` 闭环。
 
 ## 交付物
 
