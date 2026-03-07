@@ -267,6 +267,67 @@ func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.Te
 	return result, nil
 }
 
+func (s *TeamService) GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error) {
+	team, err := s.teamRepo.FindUserTeamInContest(userID, contestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	teamResp, members, err := s.GetTeamInfo(team.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]any{
+		"id":              teamResp.ID,
+		"name":            teamResp.Name,
+		"invite_code":     teamResp.InviteCode,
+		"captain_user_id": teamResp.CaptainID,
+		"members":         members,
+	}, nil
+}
+
+func (s *TeamService) KickMember(_ context.Context, contestID, captainID, teamID, memberUserID int64) error {
+	team, err := s.teamRepo.FindByID(teamID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrTeamNotFound
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if team.ContestID != contestID {
+		return errcode.ErrTeamNotFound
+	}
+	if team.CaptainID != captainID {
+		return errcode.ErrNotCaptain
+	}
+	if memberUserID == captainID {
+		return errcode.ErrCaptainCannotLeave
+	}
+
+	members, err := s.teamRepo.GetMembers(teamID)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	found := false
+	for _, member := range members {
+		if member.UserID == memberUserID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errcode.ErrNotInTeam
+	}
+	if err := s.teamRepo.RemoveMember(teamID, memberUserID); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
+}
+
 func (s *TeamService) toTeamResp(team *model.Team, memberCount int) *dto.TeamResp {
 	return &dto.TeamResp{
 		ID:          team.ID,

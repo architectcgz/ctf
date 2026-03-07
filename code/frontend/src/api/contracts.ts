@@ -71,7 +71,15 @@ export interface ChallengeDetailData {
   hints: ChallengeHint[]
 }
 
-export type InstanceStatus = 'pending' | 'creating' | 'running' | 'expired' | 'destroying' | 'destroyed' | 'failed' | 'crashed'
+export type InstanceStatus =
+  | 'pending'
+  | 'creating'
+  | 'running'
+  | 'expired'
+  | 'destroying'
+  | 'destroyed'
+  | 'failed'
+  | 'crashed'
 export type FlagType = 'static' | 'dynamic' | 'regex'
 
 export interface InstanceData {
@@ -146,7 +154,15 @@ export interface TimelineEvent {
 }
 
 export type ContestMode = 'jeopardy' | 'awd' | 'awd_plus' | 'king_of_hill'
-export type ContestStatus = 'draft' | 'published' | 'registering' | 'running' | 'frozen' | 'ended' | 'cancelled' | 'archived'
+export type ContestStatus =
+  | 'draft'
+  | 'published'
+  | 'registering'
+  | 'running'
+  | 'frozen'
+  | 'ended'
+  | 'cancelled'
+  | 'archived'
 
 export interface ContestListItem {
   id: ID
@@ -186,7 +202,13 @@ export interface ScoreboardRow {
 }
 
 export interface ContestScoreboardData {
-  contest: { id: ID; title: string; status: ContestStatus; started_at: ISODateTime; ends_at: ISODateTime }
+  contest: {
+    id: ID
+    title: string
+    status: ContestStatus
+    started_at: ISODateTime
+    ends_at: ISODateTime
+  }
   scoreboard: PageResult<ScoreboardRow>
   frozen: boolean
 }
@@ -257,9 +279,10 @@ export interface RecommendationItem {
 
 export interface ReportExportData {
   report_id: ID
-  status: 'ready' | 'processing'
+  status: 'ready' | 'processing' | 'failed'
   download_url?: string
   expires_at?: ISODateTime
+  error_message?: string
 }
 
 export interface AdminContainerStat {
@@ -293,6 +316,7 @@ export type UserStatus = 'active' | 'inactive' | 'locked' | 'banned'
 export interface AdminUserListItem {
   id: ID
   username: string
+  email?: string
   name?: string
   class_name?: string
   status: UserStatus
@@ -309,6 +333,33 @@ export interface AdminUserImportData {
   updated: number
   failed: number
   errors?: Array<{ row: number; message: string }>
+}
+
+export interface AdminCheatDetectionSummary {
+  submit_burst_users: number
+  shared_ip_groups: number
+  affected_users: number
+}
+
+export interface AdminCheatDetectionSuspect {
+  user_id: ID
+  username: string
+  submit_count: number
+  last_seen_at: ISODateTime
+  reason: string
+}
+
+export interface AdminCheatDetectionIPGroup {
+  ip: string
+  user_count: number
+  usernames: string[]
+}
+
+export interface AdminCheatDetectionData {
+  generated_at: ISODateTime
+  summary: AdminCheatDetectionSummary
+  suspects: AdminCheatDetectionSuspect[]
+  shared_ips: AdminCheatDetectionIPGroup[]
 }
 
 export type ChallengeStatus = 'draft' | 'review' | 'active' | 'archived'

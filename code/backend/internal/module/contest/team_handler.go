@@ -138,3 +138,44 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 
 	response.Success(c, teams)
 }
+
+func (h *TeamHandler) GetMyTeam(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的竞赛ID")
+		return
+	}
+
+	userID := authctx.MustCurrentUser(c).UserID
+	team, err := h.teamService.GetMyTeam(c.Request.Context(), contestID, userID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, team)
+}
+
+func (h *TeamHandler) KickMember(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的竞赛ID")
+		return
+	}
+	teamID, err := strconv.ParseInt(c.Param("tid"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的队伍ID")
+		return
+	}
+	memberUserID, err := strconv.ParseInt(c.Param("uid"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的用户ID")
+		return
+	}
+
+	userID := authctx.MustCurrentUser(c).UserID
+	if err := h.teamService.KickMember(c.Request.Context(), contestID, userID, teamID, memberUserID); err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, gin.H{"message": "移除成功"})
+}

@@ -2,6 +2,7 @@ import { request } from './request'
 
 import type {
   AdminChallengeListItem,
+  AdminCheatDetectionData,
   AdminChallengeUpsertData,
   AdminDashboardData,
   AdminImageCreateData,
@@ -16,9 +17,40 @@ import type {
   ContestStatus,
   PageResult,
 } from './contracts'
+import type { UserRole } from '@/utils/constants'
 
-type AdminContestStatus = Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
+type AdminContestStatus = Extract<
+  ContestStatus,
+  'draft' | 'registering' | 'running' | 'frozen' | 'ended'
+>
 type AdminContestMode = Extract<ContestMode, 'jeopardy' | 'awd'>
+type UserStatus = 'active' | 'inactive' | 'locked' | 'banned'
+
+interface UserListParams {
+  page?: number
+  page_size?: number
+  keyword?: string
+  role?: UserRole
+  status?: UserStatus
+  class_name?: string
+}
+
+export interface AdminUserCreatePayload {
+  username: string
+  password: string
+  email?: string
+  class_name?: string
+  role: UserRole
+  status?: UserStatus
+}
+
+export interface AdminUserUpdatePayload {
+  password?: string
+  email?: string
+  class_name?: string
+  role?: UserRole
+  status?: UserStatus
+}
 
 interface RawContestItem {
   id: number
@@ -31,6 +63,37 @@ interface RawContestItem {
   status: 'draft' | 'registration' | 'running' | 'frozen' | 'ended'
   created_at: string
   updated_at: string
+}
+
+interface RawAdminUser {
+  id: string | number
+  username: string
+  email?: string | null
+  class_name?: string | null
+  status: UserStatus
+  roles: UserRole[]
+  created_at: string
+}
+
+interface RawCheatDetectionData {
+  generated_at: string
+  summary: {
+    submit_burst_users: number
+    shared_ip_groups: number
+    affected_users: number
+  }
+  suspects: Array<{
+    user_id: string | number
+    username: string
+    submit_count: number
+    last_seen_at: string
+    reason: string
+  }>
+  shared_ips: Array<{
+    ip: string
+    user_count: number
+    usernames: string[]
+  }>
 }
 
 interface ContestListParams {
@@ -97,20 +160,77 @@ function serializeContestPayload(data: AdminContestCreatePayload | AdminContestU
   }
 }
 
+function normalizeAdminUser(item: RawAdminUser): AdminUserListItem {
+  return {
+    id: String(item.id),
+    username: item.username,
+    email: item.email || undefined,
+    class_name: item.class_name || undefined,
+    status: item.status,
+    roles: item.roles,
+    created_at: item.created_at,
+  }
+}
+
+function normalizeCheatDetection(data: RawCheatDetectionData): AdminCheatDetectionData {
+  return {
+    generated_at: data.generated_at,
+    summary: data.summary,
+    suspects: data.suspects.map((item) => ({
+      ...item,
+      user_id: String(item.user_id),
+    })),
+    shared_ips: data.shared_ips,
+  }
+}
+
 export async function getDashboard(): Promise<AdminDashboardData> {
   return request<AdminDashboardData>({ method: 'GET', url: '/admin/dashboard' })
 }
 
-export async function getUsers(params?: Record<string, unknown>) {
-  return request<PageResult<AdminUserListItem>>({ method: 'GET', url: '/admin/users', params })
+export async function getUsers(params?: UserListParams): Promise<PageResult<AdminUserListItem>> {
+  const response = await request<PageResult<RawAdminUser>>({
+    method: 'GET',
+    url: '/admin/users',
+    params: {
+      page: params?.page,
+      size: params?.page_size,
+      keyword: params?.keyword,
+      role: params?.role,
+      status: params?.status,
+      class_name: params?.class_name,
+    },
+  })
+
+  return {
+    ...response,
+    list: response.list.map(normalizeAdminUser),
+  }
 }
 
-export async function createUser(data: Record<string, unknown>) {
-  return request<AdminUserUpsertData>({ method: 'POST', url: '/admin/users', data })
+export async function createUser(data: AdminUserCreatePayload): Promise<AdminUserUpsertData> {
+  const response = await request<{ user: RawAdminUser }>({
+    method: 'POST',
+    url: '/admin/users',
+    data,
+  })
+  return {
+    user: normalizeAdminUser(response.user),
+  }
 }
 
-export async function updateUser(id: string, data: Record<string, unknown>) {
-  return request<AdminUserUpsertData>({ method: 'PUT', url: `/admin/users/${encodeURIComponent(id)}`, data })
+export async function updateUser(
+  id: string,
+  data: AdminUserUpdatePayload
+): Promise<AdminUserUpsertData> {
+  const response = await request<{ user: RawAdminUser }>({
+    method: 'PUT',
+    url: `/admin/users/${encodeURIComponent(id)}`,
+    data,
+  })
+  return {
+    user: normalizeAdminUser(response.user),
+  }
 }
 
 export async function deleteUser(id: string) {
@@ -129,11 +249,18 @@ export async function importUsers(file: File) {
 }
 
 export async function getChallenges(params?: Record<string, unknown>) {
-  return request<PageResult<AdminChallengeListItem>>({ method: 'GET', url: '/admin/challenges', params })
+  return request<PageResult<AdminChallengeListItem>>({
+    method: 'GET',
+    url: '/admin/challenges',
+    params,
+  })
 }
 
 export async function getChallengeDetail(id: string) {
-  return request<AdminChallengeListItem>({ method: 'GET', url: `/admin/challenges/${encodeURIComponent(id)}` })
+  return request<AdminChallengeListItem>({
+    method: 'GET',
+    url: `/admin/challenges/${encodeURIComponent(id)}`,
+  })
 }
 
 export async function createChallenge(data: Record<string, unknown>) {
@@ -141,7 +268,11 @@ export async function createChallenge(data: Record<string, unknown>) {
 }
 
 export async function updateChallenge(id: string, data: Record<string, unknown>) {
-  return request<AdminChallengeUpsertData>({ method: 'PUT', url: `/admin/challenges/${encodeURIComponent(id)}`, data })
+  return request<AdminChallengeUpsertData>({
+    method: 'PUT',
+    url: `/admin/challenges/${encodeURIComponent(id)}`,
+    data,
+  })
 }
 
 export async function deleteChallenge(id: string) {
@@ -164,7 +295,17 @@ export async function getAuditLogs(params?: Record<string, unknown>) {
   return request<PageResult<AuditLogItem>>({ method: 'GET', url: '/admin/audit-logs', params })
 }
 
-export async function getContests(params?: ContestListParams): Promise<PageResult<ContestDetailData>> {
+export async function getCheatDetection(): Promise<AdminCheatDetectionData> {
+  const response = await request<RawCheatDetectionData>({
+    method: 'GET',
+    url: '/admin/cheat-detection',
+  })
+  return normalizeCheatDetection(response)
+}
+
+export async function getContests(
+  params?: ContestListParams
+): Promise<PageResult<ContestDetailData>> {
   const response = await request<PageResult<RawContestItem>>({
     method: 'GET',
     url: '/admin/contests',
@@ -181,7 +322,9 @@ export async function getContests(params?: ContestListParams): Promise<PageResul
   }
 }
 
-export async function createContest(data: AdminContestCreatePayload): Promise<{ contest: ContestDetailData }> {
+export async function createContest(
+  data: AdminContestCreatePayload
+): Promise<{ contest: ContestDetailData }> {
   const contest = await request<RawContestItem>({
     method: 'POST',
     url: '/admin/contests',
@@ -191,7 +334,10 @@ export async function createContest(data: AdminContestCreatePayload): Promise<{ 
   return { contest: normalizeContest(contest) }
 }
 
-export async function updateContest(id: string, data: AdminContestUpdatePayload): Promise<{ contest: ContestDetailData }> {
+export async function updateContest(
+  id: string,
+  data: AdminContestUpdatePayload
+): Promise<{ contest: ContestDetailData }> {
   const contest = await request<RawContestItem>({
     method: 'PUT',
     url: `/admin/contests/${encodeURIComponent(id)}`,

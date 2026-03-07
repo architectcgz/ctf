@@ -11,6 +11,7 @@ const authApiMocks = vi.hoisted(() => ({
 
 const assessmentApiMocks = vi.hoisted(() => ({
   exportPersonalReport: vi.fn(),
+  getReportStatus: vi.fn(),
   downloadReport: vi.fn(),
 }))
 
@@ -24,6 +25,7 @@ describe('UserProfile', () => {
 
     authApiMocks.getProfile.mockReset()
     assessmentApiMocks.exportPersonalReport.mockReset()
+    assessmentApiMocks.getReportStatus.mockReset()
     assessmentApiMocks.downloadReport.mockReset()
 
     authApiMocks.getProfile.mockResolvedValue({
@@ -38,19 +40,27 @@ describe('UserProfile', () => {
       status: 'ready',
       expires_at: '2026-03-08T10:00:00Z',
     })
+    assessmentApiMocks.getReportStatus.mockResolvedValue({
+      report_id: 'report-1',
+      status: 'ready',
+      expires_at: '2026-03-08T10:00:00Z',
+    })
     assessmentApiMocks.downloadReport.mockResolvedValue({
       blob: new Blob(['demo']),
       filename: 'report.pdf',
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'student-1',
-      username: 'alice',
-      role: 'student',
-      class_name: 'Class A',
-      name: 'Alice',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+        name: 'Alice',
+      },
+      'token'
+    )
 
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:demo'),
@@ -61,16 +71,18 @@ describe('UserProfile', () => {
   it('应该展示个人资料并支持生成报告', async () => {
     const originalCreateElement = document.createElement.bind(document)
     const clickMock = vi.fn()
-    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
-      if (tagName === 'a') {
-        return {
-          href: '',
-          download: '',
-          click: clickMock,
-        } as unknown as HTMLAnchorElement
-      }
-      return originalCreateElement(tagName)
-    })
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        if (tagName === 'a') {
+          return {
+            href: '',
+            download: '',
+            click: clickMock,
+          } as unknown as HTMLAnchorElement
+        }
+        return originalCreateElement(tagName)
+      })
 
     const wrapper = mount(UserProfile)
     await flushPromises()
@@ -79,7 +91,9 @@ describe('UserProfile', () => {
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('密码修改接口')
 
-    const createButton = wrapper.findAll('button').find((button) => button.text().includes('生成个人报告'))
+    const createButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('生成个人报告'))
     expect(createButton).toBeTruthy()
 
     await createButton!.trigger('click')
@@ -88,7 +102,9 @@ describe('UserProfile', () => {
     expect(assessmentApiMocks.exportPersonalReport).toHaveBeenCalledWith({ format: 'pdf' })
     expect(wrapper.text()).toContain('report-1')
 
-    const downloadButton = wrapper.findAll('button').find((button) => button.text().includes('下载最近报告'))
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载最近报告'))
     expect(downloadButton).toBeTruthy()
 
     await downloadButton!.trigger('click')

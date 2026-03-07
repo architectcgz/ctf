@@ -5,9 +5,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ReportExport from '../ReportExport.vue'
 import { useAuthStore } from '@/stores/auth'
 
-const { downloadReportMock, exportClassReportMock } = vi.hoisted(() => ({
+const { downloadReportMock, exportClassReportMock, getReportStatusMock } = vi.hoisted(() => ({
   exportClassReportMock: vi.fn(),
   downloadReportMock: vi.fn(),
+  getReportStatusMock: vi.fn(),
 }))
 
 vi.mock('@/api/teacher', () => ({
@@ -16,6 +17,7 @@ vi.mock('@/api/teacher', () => ({
 
 vi.mock('@/api/assessment', () => ({
   downloadReport: downloadReportMock,
+  getReportStatus: getReportStatusMock,
 }))
 
 describe('ReportExport', () => {
@@ -26,6 +28,7 @@ describe('ReportExport', () => {
     setActivePinia(pinia)
     exportClassReportMock.mockReset()
     downloadReportMock.mockReset()
+    getReportStatusMock.mockReset()
     localStorage.clear()
 
     const authStore = useAuthStore()
@@ -53,6 +56,11 @@ describe('ReportExport', () => {
       report_id: '101',
       status: 'processing',
     })
+    getReportStatusMock.mockResolvedValue({
+      report_id: '101',
+      status: 'ready',
+      expires_at: '2026-03-07T12:00:00Z',
+    })
 
     const wrapper = mount(ReportExport, {
       global: {
@@ -71,7 +79,6 @@ describe('ReportExport', () => {
       format: 'pdf',
     })
     expect(wrapper.text()).toContain('101')
-    expect(wrapper.text()).toContain('生成中')
   })
 
   it('应该在报告就绪后触发下载', async () => {
