@@ -59,17 +59,22 @@
 
 ### R2 管理端非核心页真实性核对
 
-- 状态：`pending`
+- 状态：`completed`
 - 目标：继续清理管理端中可能残留的“半成品页面”与假交互。
 - 范围：
-  - `src/views/admin/UserManage.vue`
+  - `src/views/admin/ContestManage.vue`
   - `src/views/admin/ImageManage.vue`
   - `src/views/admin/ChallengeManage.vue`
   - 相关 API 和测试
-- 重点检查：
-  - 是否仍有 mock 数据
-  - 是否存在只做静态渲染、未接真实接口的按钮
-  - 是否存在文案已完成但行为未落地的入口
+- 当前现状：
+  - `ContestManage` 已移除 `mockContests`，改为真实接入 `/admin/contests`
+  - `admin.ts` 已补竞赛字段归一化，修正 `start_time/end_time/status=registration` 与前端契约差异
+  - `ContestManage` 只保留后端已提供的列表、创建、编辑能力；删除能力不再伪造
+  - `CheatDetection` 与 `UserManage` 继续保持显式降级态，不再伪装成已接后端
+- 验收结果：
+  - 管理端视图中残留的 mock 数据已清理完毕
+  - 不再保留“有按钮但无真实行为”的竞赛管理入口
+  - 已补页面测试与 API 归一化测试
 
 ### R3 任务文档与 review 留档同步
 
@@ -101,14 +106,14 @@
 ## 当前风险与注意事项
 
 1. `UserManage` 的假数据已清除，但对应真实后端接口仍未提供。
-2. 管理端其他页面虽然已接主流程，但仍需要继续核对“按钮是否真实生效”，避免只完成只读视图。
-3. 前端 review 文档目前覆盖到并行交付阶段，最新“实时通知链路”和“用户管理降级页”如果继续扩展，建议补单独 review 记录。
+2. 竞赛公共页使用的 contest 契约仍保留历史枚举（如 `registering`），后续如果继续扩展公开竞赛流程，建议统一收敛到共享映射层。
+3. 前端 review 文档目前覆盖到并行交付阶段，最新“实时通知链路”“用户管理降级页”“竞赛管理真实性回归”如果继续扩展，建议补单独 review 记录。
 
 ## 建议执行顺序
 
-1. 下一步做 `R2`，对管理端非核心页做真实性回归。
-2. 每完成一个批次，都进入 `code-reviewer -> test-engineer` 闭环。
-3. 同步更新本文档和 review 记录，保持任务状态可追踪。
+1. 下一步聚焦 `R3`，把本轮新增实现与 review 留档同步。
+2. 若后续继续做公开竞赛流程联调，优先统一 `contest` 共享契约。
+3. 每完成一个批次，都进入 `code-reviewer -> test-engineer` 闭环。
 
 ## 交付物
 

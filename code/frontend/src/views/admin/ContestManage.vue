@@ -1,69 +1,154 @@
-<template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">竞赛管理</h1>
-      <button class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-[#06b6d4]">
-        创建竞赛
-      </button>
-    </div>
-
-    <div class="flex gap-3">
-      <input
-        type="text"
-        placeholder="搜索竞赛..."
-        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[#0891b2]/50"
-      />
-    </div>
-
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
-    </div>
-
-    <div v-else class="overflow-hidden rounded-lg border border-[var(--color-border-default)]">
-      <table class="w-full">
-        <thead class="bg-[var(--color-bg-surface)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">标题</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">状态</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">开始时间</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">参赛人数</th>
-            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-[var(--color-text-secondary)]">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="contest in mockContests"
-            :key="contest.id"
-            class="border-b border-[var(--color-border-subtle)] transition-colors duration-100 hover:bg-[var(--color-bg-elevated)]"
-          >
-            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ contest.title }}</td>
-            <td class="px-4 py-3 text-sm">
-              <span class="rounded px-2 py-0.5 text-xs font-medium" :class="getStatusClass(contest.status)">
-                {{ contest.status }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ contest.startTime }}</td>
-            <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ contest.participants }}</td>
-            <td class="px-4 py-3 text-sm">
-              <button class="text-[var(--color-primary)] hover:text-[#06b6d4]">编辑</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 
-const loading = ref(false)
-const mockContests = ref([
-  { id: '1', title: '2026 春季校园 CTF', status: '进行中', startTime: '2026-03-15 09:00', participants: 32 }
-])
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SectionCard from '@/components/common/SectionCard.vue'
+import AdminContestFormDialog from '@/components/admin/contest/AdminContestFormDialog.vue'
+import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
+import { useAdminContests } from '@/composables/useAdminContests'
 
-function getStatusClass(status: string): string {
-  if (status === '进行中') return 'bg-[var(--color-primary)]/10 text-[#06b6d4]'
-  return 'bg-[#30363d] text-[var(--color-text-secondary)]'
+const {
+  list,
+  total,
+  page,
+  pageSize,
+  loading,
+  refresh,
+  changePage,
+  statusFilter,
+  dialogOpen,
+  mode,
+  saving,
+  formDraft,
+  fieldLocks,
+  statusOptions,
+  openCreateDialog,
+  openEditDialog,
+  closeDialog,
+  saveContest,
+} = useAdminContests()
+
+onMounted(() => {
+  void refresh()
+})
+
+function handleDialogOpenChange(value: boolean) {
+  if (!value) {
+    closeDialog()
+  }
 }
 </script>
+
+<template>
+  <div class="space-y-6">
+    <PageHeader
+      eyebrow="Admin Console"
+      title="竞赛管理"
+      description="当前页已接入真实的 /admin/contests 接口，支持列表、状态筛选、创建与编辑。删除入口保持关闭，避免继续暴露不存在的后端行为。"
+    >
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="rounded-xl border border-border px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-primary"
+          @click="refresh"
+        >
+          刷新列表
+        </button>
+        <button
+          type="button"
+          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+          @click="openCreateDialog"
+        >
+          创建竞赛
+        </button>
+      </div>
+    </PageHeader>
+
+    <SectionCard
+      title="接入边界"
+      subtitle="这页只保留主线后端已经提供的能力；未提供的行为会显式说明，不再保留占位按钮。"
+    >
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/8 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">已接入</p>
+          <p class="mt-2 text-sm text-slate-200">竞赛列表、创建、编辑都走真实接口。</p>
+        </div>
+        <div class="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">受后端约束</p>
+          <p class="mt-2 text-sm text-slate-200">状态流转、时间字段可编辑范围与后端规则保持一致。</p>
+        </div>
+        <div class="rounded-2xl border border-slate-500/25 bg-slate-500/8 p-4">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">暂未暴露</p>
+          <p class="mt-2 text-sm text-slate-200">删除接口主线未提供，页面不再展示假删除能力。</p>
+        </div>
+      </div>
+    </SectionCard>
+
+    <SectionCard
+      title="竞赛列表"
+      subtitle="支持按状态回看当前竞赛窗口，并在编辑时遵守后端的状态与时间流转限制。"
+    >
+      <template #header>
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm text-slate-400" for="contest-status-filter">状态筛选</label>
+          <select
+            id="contest-status-filter"
+            v-model="statusFilter"
+            class="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-primary"
+          >
+            <option value="all">全部状态</option>
+            <option value="draft">草稿</option>
+            <option value="registering">报名中</option>
+            <option value="running">进行中</option>
+            <option value="frozen">已冻结</option>
+            <option value="ended">已结束</option>
+          </select>
+        </div>
+      </template>
+
+      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+        <AppLoading>正在同步竞赛列表...</AppLoading>
+      </div>
+
+      <AppEmpty
+        v-else-if="list.length === 0"
+        title="暂无竞赛"
+        description="当前筛选条件下没有竞赛数据。你可以直接创建新竞赛，或者切换状态查看其他竞赛。"
+        icon="Flag"
+      >
+        <template #action>
+          <button
+            type="button"
+            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+            @click="openCreateDialog"
+          >
+            创建第一场竞赛
+          </button>
+        </template>
+      </AppEmpty>
+
+      <AdminContestTable
+        v-else
+        :contests="list"
+        :page="page"
+        :page-size="pageSize"
+        :total="total"
+        @edit="openEditDialog"
+        @change-page="changePage"
+      />
+    </SectionCard>
+
+    <AdminContestFormDialog
+      :open="dialogOpen"
+      :mode="mode"
+      :draft="formDraft"
+      :saving="saving"
+      :status-options="statusOptions"
+      :field-locks="fieldLocks"
+      @update:open="handleDialogOpenChange"
+      @save="saveContest"
+    />
+  </div>
+</template>
