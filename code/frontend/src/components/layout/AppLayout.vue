@@ -13,9 +13,16 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
 import TopNav from '@/components/layout/TopNav.vue'
-</script>
+import { useNotificationRealtime } from '@/composables/useNotificationRealtime'
 
+const { start } = useNotificationRealtime()
+
+onMounted(() => {
+  void start()
+})
+</script>
