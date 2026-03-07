@@ -254,13 +254,30 @@ export interface ReportExportData {
   expires_at?: ISODateTime
 }
 
+export interface AdminContainerStat {
+  container_id: string
+  container_name: string
+  cpu_percent: number
+  memory_percent: number
+  memory_usage: number
+  memory_limit: number
+}
+
+export interface AdminResourceAlert {
+  container_id: string
+  type: 'cpu' | 'memory'
+  value: number
+  threshold: number
+  message: string
+}
+
 export interface AdminDashboardData {
-  online_instances: number
-  container_health_rate: number
-  submissions_today: number
-  submissions_error_rate: number
-  alerts?: Array<{ id: ID; title: string; level: string; created_at: ISODateTime }>
-  recent_audit_logs?: Array<{ id: ID; action: string; actor: string; created_at: ISODateTime }>
+  online_users: number
+  active_containers: number
+  cpu_usage: number
+  memory_usage: number
+  container_stats: AdminContainerStat[]
+  alerts: AdminResourceAlert[]
 }
 
 export type UserStatus = 'active' | 'inactive' | 'locked' | 'banned'
@@ -332,7 +349,7 @@ export interface AuditLogItem {
   action: string
   resource_type: string
   resource_id?: ID
-  actor_user_id: ID
+  actor_user_id?: ID
   actor_username: string
   ip?: string
   user_agent?: string
@@ -350,4 +367,3 @@ export interface WsMessage<T> {
   payload: T
   timestamp: ISODateTime
 }
-
