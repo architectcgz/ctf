@@ -112,39 +112,3 @@ export async function downloadReport(reportId: string | number): Promise<Downloa
     filename: resolveFilename(response.headers['content-disposition'], `report-${normalizedId}`),
   }
 }
-
-export interface DownloadedReport {
-  blob: Blob
-  filename: string
-}
-
-function resolveFilename(contentDisposition: string | undefined, fallback: string): string {
-  if (!contentDisposition) return fallback
-
-  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)
-  if (utf8Match?.[1]) {
-    return decodeURIComponent(utf8Match[1])
-  }
-
-  const basicMatch = contentDisposition.match(/filename="?([^";]+)"?/i)
-  if (basicMatch?.[1]) {
-    return basicMatch[1]
-  }
-
-  return fallback
-}
-
-export async function downloadReport(reportId: string | number): Promise<DownloadedReport> {
-  const normalizedId = encodeURIComponent(String(reportId))
-  const response = await getAxiosInstance().get<Blob>(`/reports/${normalizedId}/download`, {
-    responseType: 'blob',
-  })
-
-  return {
-    blob: response.data,
-    filename: resolveFilename(
-      response.headers['content-disposition'],
-      `report-${normalizedId}`
-    ),
-  }
-}

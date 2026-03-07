@@ -13,6 +13,7 @@ describe('skillProfile utils', () => {
       ],
     })
 
+    expect(result.updated_at).toBe('2026-03-07T12:00:00Z')
     expect(result.dimensions).toEqual([
       { key: 'web', name: 'Web', value: 75 },
       { key: 'crypto', name: '密码', value: 32 },
