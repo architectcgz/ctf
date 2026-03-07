@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"ctf-platform/internal/authctx"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
@@ -69,6 +70,14 @@ func (m *mockTokenService) IsRevoked(ctx context.Context, jti string) (bool, err
 }
 
 func (m *mockTokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error) {
+	return nil, nil
+}
+
+func (m *mockTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error) {
+	return nil, nil
+}
+
+func (m *mockTokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error) {
 	return nil, nil
 }
 

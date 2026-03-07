@@ -23,6 +23,7 @@ import (
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
 	ratelimitpkg "ctf-platform/pkg/ratelimit"
+	websocketpkg "ctf-platform/pkg/websocket"
 )
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
@@ -56,10 +57,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	}
 
 	authRepository := authModule.NewRepository(db)
-	tokenService := authModule.NewTokenService(cfg.Auth, cache, jwtManager)
+	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
 	authService := authModule.NewService(authRepository, tokenService, log.Named("auth_service"))
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
+	wsManager := websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager"))
 	authHandler := authModule.NewHandler(authService, tokenService, authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
@@ -86,6 +88,14 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	protected.Use(middleware.Auth(tokenService))
 	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/auth/profile", authHandler.Profile)
+	protected.POST("/auth/ws-ticket", authHandler.IssueWSTicket)
+
+	notificationRepo := systemModule.NewNotificationRepository(db)
+	notificationService := systemModule.NewNotificationService(notificationRepo, cfg.Pagination, wsManager, log.Named("notification_service"))
+	notificationHandler := systemModule.NewNotificationHandler(notificationService, tokenService, wsManager, log.Named("notification_handler"))
+	protected.GET("/notifications", notificationHandler.ListNotifications)
+	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), notificationHandler.MarkAsRead)
+	engine.GET("/ws/notifications", notificationHandler.ServeWS)
 
 	teacherOrAbove := protected.Group("/teacher")
 	teacherOrAbove.Use(middleware.RequireRole(model.RoleTeacher))

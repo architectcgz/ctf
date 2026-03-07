@@ -154,6 +154,14 @@ dashboard:
   alert_threshold: 80
   redis_key_prefix: ctf:dashboard
 
+websocket:
+  ticket_ttl: 30s
+  ticket_key_prefix: ctf:ws:ticket
+  heartbeat_interval: 30s
+  read_timeout: 75s
+  retry_initial_delay: 1s
+  retry_max_delay: 30s
+
 contest:
   status_update_interval: 1m
   status_update_batch_size: 1000

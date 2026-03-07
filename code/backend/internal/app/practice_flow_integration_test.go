@@ -530,7 +530,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	if err != nil {
 		t.Fatalf("create jwt manager: %v", err)
 	}
-	tokenService := authModule.NewTokenService(cfg.Auth, cache, jwtManager)
+	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
 	authRepo := authModule.NewRepository(db)
 	authService := authModule.NewService(authRepo, tokenService, logger)
 	auditRepo := systemModule.NewAuditRepository(db)
@@ -672,6 +672,14 @@ func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 		Pagination: config.PaginationConfig{
 			DefaultPageSize: 20,
 			MaxPageSize:     100,
+		},
+		WebSocket: config.WebSocketConfig{
+			TicketTTL:         30 * time.Second,
+			TicketKeyPrefix:   "test:ws:ticket",
+			HeartbeatInterval: 100 * time.Millisecond,
+			ReadTimeout:       time.Second,
+			RetryInitialDelay: time.Second,
+			RetryMaxDelay:     5 * time.Second,
 		},
 	}
 }
