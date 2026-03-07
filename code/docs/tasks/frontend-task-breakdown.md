@@ -1,192 +1,119 @@
-# CTF 前端任务拆分
+# CTF 前端任务拆分与状态
 
 ## 文档信息
 
 - 范围：`/home/azhi/workspace/projects/ctf/code/frontend`
-- 目标：将当前前端工作拆分为可并行执行的独立任务，并明确每个任务的验收标准、依赖关系与阻塞项
+- 目标：记录前端任务拆分、当前完成状态、剩余待办与后续执行顺序
 - 流水线：`leader -> requirements-analyst（按需） -> frontend-engineer -> code-reviewer -> test-engineer`
+- 最后更新：2026-03-07
 
 ## 当前判断
 
-- 前端技术栈已经就绪：Vue 3、Vite、Pinia、Vue Router、Element Plus、Tailwind CSS。
-- 学员端与管理员端已有较完整 API 可接入。
-- 教师端前端已预定义部分 API，但当前后端代码中仅明确确认了：
-  - 学员能力画像查看：`GET /teacher/students/:id/skill-profile`
-  - 班级报告导出：`POST /reports/class`
-- 教师端以下接口在当前后端代码中暂未确认存在，需先核实：
-  - `GET /teacher/classes`
-  - `GET /teacher/classes/:name/students`
-  - `GET /teacher/students/:id/progress`
-  - `GET /teacher/students/:id/recommendations`
+- 前端主线能力已基本闭合：鉴权守卫、学员端、管理端核心页、教师端核心页、通知链路均已落地。
+- 教师端相关后端接口已补齐并合入主线，不再阻塞 `TeacherDashboard` / `ClassManagement`。
+- 通知能力已完成前后端闭环：
+  - 后端：`POST /auth/ws-ticket`、`GET /notifications`、`PUT /notifications/:id/read`、`GET /ws/notifications`
+  - 前端：通知下拉、通知中心、WebSocket 实时同步
+- 当前剩余工作已不再是主流程打通，而是收尾型任务：清理仍依赖 mock 数据的页面、继续补 review 与文档闭环。
 
-## 任务拆分
+## 已完成任务
 
-### F0 基础对齐
+| 任务                    | 状态    | 结果                                  | 对应提交  |
+| ----------------------- | ------- | ------------------------------------- | --------- |
+| F0 基础对齐             | ✅ 完成 | 恢复路由守卫、校正前后端契约          | `fe30bcc` |
+| F1 学员侧页面完善       | ✅ 完成 | 完成 Dashboard、Profile、个人报告导出 | `c1e0006` |
+| F2 管理侧页面完善       | ✅ 完成 | 完成系统概览、审计日志、作弊研判页    | `d5d09fa` |
+| F3 教师侧报告导出       | ✅ 完成 | 完成教师端报告导出                    | `f666799` |
+| F4 教师侧班级与教学概览 | ✅ 完成 | 完成教学概览、班级管理                | `766f29e` |
+| F6 通知实时链路         | ✅ 完成 | 完成 ws-ticket + WebSocket 通知同步   | `6fccfb8` |
 
-- 目标：完成前后端契约核对，修正明显不一致项，恢复基础鉴权能力，输出阻塞清单。
+## 已完成质量闭环
+
+- 前端 review 文档：
+  - [ctf-frontend-code-review-contract-guard-round1-11e5349.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-contract-guard-round1-11e5349.md)
+  - [ctf-frontend-code-review-student-pages-round1-821a2be.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-student-pages-round1-821a2be.md)
+  - [ctf-frontend-code-review-admin-pages-round1-da5c98a.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-admin-pages-round1-da5c98a.md)
+  - [ctf-frontend-code-review-teacher-report-round1-8ae3904.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-teacher-report-round1-8ae3904.md)
+  - [ctf-frontend-code-review-teacher-pages-round1-a2c09af.md](/home/azhi/workspace/projects/ctf/code/frontend/docs/reviews/frontend/ctf-frontend-code-review-teacher-pages-round1-a2c09af.md)
+- 当前主线验证通过：
+  - `npm run test:run`
+  - `npm run typecheck`
+
+## 剩余任务拆分
+
+### R1 管理端用户管理页去 mock
+
+- 状态：`completed`
+- 目标：将 `UserManage` 从静态 mock 页面改成真实可接入页面，或在后端接口缺失时显式降级。
 - 范围：
-  - `src/api/contracts.ts`
-  - `src/router/guards.ts`
-  - 相关 API 文件与类型
-- 主要工作：
-  - 校对管理员 dashboard、audit 等返回结构与后端 DTO 是否一致
-  - 恢复当前被临时关闭的登录校验与角色校验
-  - 形成教师端缺失接口清单，避免前端直接依赖不存在的 API
+  - `src/views/admin/UserManage.vue`
+  - 可能涉及 `src/api/admin.ts`、类型定义与测试
+- 当前现状：
+  - 已移除本地 `mockUsers`
+  - 当前页面改为显式降级态，明确说明 `/admin/users` 接口缺失
+  - 待后端补齐接口后再恢复真实列表、搜索、分页、编辑能力
 - 验收标准：
-  - 路由守卫重新生效
-  - 类型定义与已确认接口一致
-  - 输出教师端阻塞接口列表
-- 依赖：无
-- 阻塞：无
+  - 不保留假数据
+  - 明确展示“接口未提供”的降级态
+  - 已补测试
 
-### F1 学员侧页面完善
+### R2 管理端非核心页真实性核对
 
-- 目标：把学员侧占位页替换为可用页面，优先覆盖真实可接入能力。
+- 状态：`pending`
+- 目标：继续清理管理端中可能残留的“半成品页面”与假交互。
 - 范围：
-  - `src/views/dashboard/DashboardView.vue`
-  - `src/views/profile/UserProfile.vue`
-  - 如需要，补充相关 composable / 组件 / 测试
-- 主要工作：
-  - `Dashboard` 基于已有接口展示训练总览、进度、推荐入口
-  - `Profile` 接入个人资料展示与密码修改
-  - 接入个人报告导出入口（如放在 profile 或 dashboard 内）
-- 验收标准：
-  - 页面无占位文案
-  - 数据来自真实 API
-  - 错误态、空态、加载态完整
-  - 关键交互有自动化测试
-- 依赖：
-  - 建议在 F0 完成后开始
-- 阻塞：无
+  - `src/views/admin/UserManage.vue`
+  - `src/views/admin/ImageManage.vue`
+  - `src/views/admin/ChallengeManage.vue`
+  - 相关 API 和测试
+- 重点检查：
+  - 是否仍有 mock 数据
+  - 是否存在只做静态渲染、未接真实接口的按钮
+  - 是否存在文案已完成但行为未落地的入口
 
-### F2 管理侧页面完善
+### R3 任务文档与 review 留档同步
 
-- 目标：完成管理员核心页面，优先接通系统概览与审计日志。
+- 状态：`in_progress`
+- 目标：把任务文档、最新实现状态和后续待办保持一致，避免文档滞后于代码。
 - 范围：
-  - `src/views/admin/AdminDashboard.vue`
-  - `src/views/admin/AuditLog.vue`
-  - `src/views/admin/CheatDetection.vue`
-- 主要工作：
-  - `AdminDashboard` 接入真实 dashboard API
-  - `AuditLog` 实现筛选、分页、表格展示
-  - `CheatDetection` 判断是否有后端接口；若没有，先给出降级实现方案或保持阻塞
+  - `code/docs/tasks/*.md`
+  - 必要时补充 `code/frontend/docs/reviews/frontend/`
+- 当前现状：
+  - 本文档已更新为最新状态
+  - 新增的“实时通知链路”尚无单独 review 文档
 - 验收标准：
-  - dashboard 指标、容器/告警信息真实展示
-  - audit log 可筛选、翻页、查看关键字段
-  - 无 mock 数据残留
-  - 关键页面有组件测试
-- 依赖：
-  - 建议在 F0 完成后开始
-- 阻塞：
-  - `CheatDetection` 是否存在专用后端接口待确认
+  - 文档状态与主线代码一致
+  - 后续新增批次继续按 review 文档归档
 
-### F3 教师侧报告导出
+## 已解除的阻塞项
 
-- 目标：优先落地教师端当前已确认有后端支撑的能力。
-- 范围：
-  - `src/views/teacher/ReportExport.vue`
-- 主要工作：
-  - 提供班级选择、导出格式选择、导出状态展示
-  - 如接口返回下载地址，则提供下载入口
-  - 如接口返回 processing，则给出状态说明与重试方式
-- 验收标准：
-  - 页面基于真实 `POST /reports/class`
-  - 支持当前教师所属班级默认导出
-  - 成功、失败、处理中状态可区分
-  - 有基础测试覆盖
-- 依赖：
-  - 建议在 F0 完成后开始
-- 阻塞：无
+1. 教师端接口阻塞已解除：
+   - `GET /teacher/classes`
+   - `GET /teacher/classes/:name/students`
+   - `GET /teacher/students/:id/progress`
+   - `GET /teacher/students/:id/recommendations`
+2. 通知能力阻塞已解除：
+   - `POST /auth/ws-ticket`
+   - `GET /notifications`
+   - `PUT /notifications/:id/read`
+   - `GET /ws/notifications`
 
-### F4 教师侧班级与教学概览
+## 当前风险与注意事项
 
-- 目标：实现教师视角的班级列表、学生详情、教学概览。
-- 范围：
-  - `src/views/teacher/TeacherDashboard.vue`
-  - `src/views/teacher/ClassManagement.vue`
-- 主要工作：
-  - 展示班级、学生、进度、能力画像、推荐信息
-  - 需要基于教师班级/学生相关 API 完成真实联动
-- 验收标准：
-  - 不使用伪造数据
-  - 页面功能完整可交互
-  - 支持加载态、空态、错误态
-  - 有自动化测试覆盖主要交互
-- 依赖：
-  - F0 完成
-  - 教师相关后端接口确认可用
-- 阻塞：
-  - 当前后端接口未全部确认，暂不能直接开工
+1. `UserManage` 的假数据已清除，但对应真实后端接口仍未提供。
+2. 管理端其他页面虽然已接主流程，但仍需要继续核对“按钮是否真实生效”，避免只完成只读视图。
+3. 前端 review 文档目前覆盖到并行交付阶段，最新“实时通知链路”和“用户管理降级页”如果继续扩展，建议补单独 review 记录。
 
-### F5 统一质量闭环
+## 建议执行顺序
 
-- 目标：确保所有前端任务均按流水线完成 review 与测试。
-- 主要工作：
-  - 每个功能任务完成后调用 `code-reviewer`
-  - review 问题修复后调用 `test-engineer`
-  - 运行对应测试命令并记录结果
-- 验收标准：
-  - 所有任务均有 review 记录
-  - 所有任务均有测试变更或明确说明无需新增测试的理由
-  - 相关测试可在本地通过
-- 依赖：
-  - F1 / F2 / F3 / F4 各自实现完成后执行
-
-## 并行执行建议
-
-### Lane A
-
-- 任务：F0 基础对齐
-- 说明：必须最先开始，但周期应尽量短，为其他 lane 解锁
-
-### Lane B
-
-- 任务：F1 学员侧页面完善
-- 说明：在 F0 核心契约确认后即可独立推进
-
-### Lane C
-
-- 任务：F2 管理侧页面完善
-- 说明：与 F1 可并行，接口基础较明确
-
-### Lane D
-
-- 任务：F3 教师侧报告导出
-- 说明：可与 F1/F2 并行，因为接口已确认存在
-
-### 暂缓 Lane
-
-- 任务：F4 教师侧班级与教学概览
-- 说明：待后端教师接口确认后再启动
-
-## 依赖关系
-
-| 任务 | blockedBy |
-|------|-----------|
-| F0 | 无 |
-| F1 | F0 |
-| F2 | F0 |
-| F3 | F0 |
-| F4 | F0 + 教师端缺失接口补齐 |
-| F5 | 对应实现任务完成 |
-
-## 风险与阻塞项
-
-1. 教师端接口未闭合，直接开发 `TeacherDashboard` / `ClassManagement` 会导致前端落到不存在的 API 上。
-2. `CheatDetection` 页面当前未确认有专用后端接口，需先判断是新需求还是前端聚合视图。
-3. 路由守卫当前存在临时关闭逻辑，若不先修复，会影响后续联调和权限测试可信度。
-
-## 执行顺序建议
-
-1. 先完成 F0，并输出接口核对结果。
-2. 并发启动 F1、F2、F3，分别独立走完整流水线。
-3. 等教师端接口确认后，再启动 F4。
-4. 每个任务都必须经过 `code-reviewer` 与 `test-engineer`，不得跳过。
+1. 下一步做 `R2`，对管理端非核心页做真实性回归。
+2. 每完成一个批次，都进入 `code-reviewer -> test-engineer` 闭环。
+3. 同步更新本文档和 review 记录，保持任务状态可追踪。
 
 ## 交付物
 
-- 前端任务拆分文档：本文档
-- 后续每个任务的：
-  - engineer 完成报告
-  - review 文档
-  - 测试完成报告
+- 任务状态文档：本文档
+- 已归档前端 review 文档：`code/frontend/docs/reviews/frontend/`
+- 前端验证命令：
+  - `npm run test:run`
+  - `npm run typecheck`
