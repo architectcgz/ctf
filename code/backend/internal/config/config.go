@@ -392,6 +392,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
 	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.flag_global_secret", "")
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
