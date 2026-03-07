@@ -27,6 +27,7 @@ type Config struct {
 	Recommendation RecommendationConfig `mapstructure:"recommendation"`
 	Report         ReportConfig         `mapstructure:"report"`
 	Dashboard      DashboardConfig      `mapstructure:"dashboard"`
+	WebSocket      WebSocketConfig      `mapstructure:"websocket"`
 	Contest        ContestConfig        `mapstructure:"contest"`
 }
 
@@ -180,6 +181,15 @@ type DashboardConfig struct {
 	RedisKeyPrefix string        `mapstructure:"redis_key_prefix"`
 }
 
+type WebSocketConfig struct {
+	TicketTTL         time.Duration `mapstructure:"ticket_ttl"`
+	TicketKeyPrefix   string        `mapstructure:"ticket_key_prefix"`
+	HeartbeatInterval time.Duration `mapstructure:"heartbeat_interval"`
+	ReadTimeout       time.Duration `mapstructure:"read_timeout"`
+	RetryInitialDelay time.Duration `mapstructure:"retry_initial_delay"`
+	RetryMaxDelay     time.Duration `mapstructure:"retry_max_delay"`
+}
+
 type ContestConfig struct {
 	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
 	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
@@ -283,6 +293,27 @@ func (c *Config) Validate() error {
 	}
 	if c.Dashboard.AlertThreshold <= 0 || c.Dashboard.AlertThreshold > 100 {
 		return fmt.Errorf("dashboard.alert_threshold must be between 0 and 100")
+	}
+	if c.WebSocket.TicketTTL <= 0 {
+		return fmt.Errorf("websocket.ticket_ttl must be greater than 0")
+	}
+	if strings.TrimSpace(c.WebSocket.TicketKeyPrefix) == "" {
+		return fmt.Errorf("websocket.ticket_key_prefix must not be empty")
+	}
+	if c.WebSocket.HeartbeatInterval <= 0 {
+		return fmt.Errorf("websocket.heartbeat_interval must be greater than 0")
+	}
+	if c.WebSocket.ReadTimeout <= 0 {
+		return fmt.Errorf("websocket.read_timeout must be greater than 0")
+	}
+	if c.WebSocket.ReadTimeout <= c.WebSocket.HeartbeatInterval {
+		return fmt.Errorf("websocket.read_timeout must be greater than heartbeat_interval")
+	}
+	if c.WebSocket.RetryInitialDelay <= 0 {
+		return fmt.Errorf("websocket.retry_initial_delay must be greater than 0")
+	}
+	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
+		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
 	return nil
 }
@@ -388,6 +419,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("dashboard.cache_ttl", 30*time.Second)
 	v.SetDefault("dashboard.alert_threshold", 80.0)
 	v.SetDefault("dashboard.redis_key_prefix", "ctf:dashboard")
+	v.SetDefault("websocket.ticket_ttl", 30*time.Second)
+	v.SetDefault("websocket.ticket_key_prefix", "ctf:ws:ticket")
+	v.SetDefault("websocket.heartbeat_interval", 30*time.Second)
+	v.SetDefault("websocket.read_timeout", 75*time.Second)
+	v.SetDefault("websocket.retry_initial_delay", time.Second)
+	v.SetDefault("websocket.retry_max_delay", 30*time.Second)
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
 	v.SetDefault("contest.base_score", 1000.0)

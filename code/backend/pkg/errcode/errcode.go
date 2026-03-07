@@ -97,3 +97,9 @@ var (
 	ErrNotRegistered           = New(14016, "未报名该竞赛", http.StatusForbidden)
 	ErrContestChallengeSolved  = New(14017, "该题目已在本场竞赛中解出", http.StatusConflict)
 )
+
+// 通知与 WebSocket 相关错误码 (15000-15999)
+var (
+	ErrNotificationNotFound = New(15001, "通知不存在", http.StatusNotFound)
+	ErrWSTicketInvalid      = New(15002, "WebSocket Ticket 无效或已过期", http.StatusUnauthorized)
+)

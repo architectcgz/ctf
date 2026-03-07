@@ -83,11 +83,13 @@ type integrationTestEnv struct {
 }
 
 type memoryTokenService struct {
-	config  config.AuthConfig
-	manager *jwtpkg.Manager
+	config   config.AuthConfig
+	wsConfig config.WebSocketConfig
+	manager  *jwtpkg.Manager
 
 	mu      sync.Mutex
 	revoked map[string]time.Time
+	tickets map[string]authctx.CurrentUser
 }
 
 var fallbackRequestIDCounter atomic.Uint64
@@ -368,7 +370,10 @@ func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
 	if err != nil {
 		t.Fatalf("create jwt manager: %v", err)
 	}
-	tokenService := newMemoryTokenService(authCfg, jwtManager)
+	tokenService := newMemoryTokenService(authCfg, config.WebSocketConfig{
+		TicketTTL:       30 * time.Second,
+		TicketKeyPrefix: "test:ws:ticket",
+	}, jwtManager)
 	authRepo := NewRepository(db)
 	authService := NewService(authRepo, tokenService, zap.NewNop())
 	auditRepo := systemModule.NewAuditRepository(db)
@@ -433,11 +438,13 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 	}
 }
 
-func newMemoryTokenService(cfg config.AuthConfig, manager *jwtpkg.Manager) TokenService {
+func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, manager *jwtpkg.Manager) TokenService {
 	return &memoryTokenService{
-		config:  cfg,
-		manager: manager,
-		revoked: make(map[string]time.Time),
+		config:   cfg,
+		wsConfig: wsCfg,
+		manager:  manager,
+		revoked:  make(map[string]time.Time),
+		tickets:  make(map[string]authctx.CurrentUser),
 	}
 }
 
@@ -521,6 +528,40 @@ func (s *memoryTokenService) IsRevoked(ctx context.Context, jti string) (bool, e
 
 func (s *memoryTokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error) {
 	return s.manager.ParseToken(tokenString)
+}
+
+func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error) {
+	ticket := fmt.Sprintf("ticket_%s", randomHex(12))
+	expiresAt := time.Now().Add(s.wsConfig.TicketTTL)
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.tickets[ticket] = authctx.CurrentUser{
+		UserID:   user.UserID,
+		Username: user.Username,
+		Role:     user.Role,
+	}
+
+	return &WSTicket{
+		Ticket:    ticket,
+		ExpiresAt: expiresAt,
+	}, nil
+}
+
+func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error) {
+	if ticket == "" {
+		return nil, errcode.ErrWSTicketInvalid
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user, ok := s.tickets[ticket]
+	if !ok {
+		return nil, errcode.ErrWSTicketInvalid
+	}
+	delete(s.tickets, ticket)
+	return &user, nil
 }
 
 func seedRoles(t *testing.T, db *gorm.DB) {
@@ -720,6 +761,14 @@ func newTestRequestID() string {
 		return fmt.Sprintf("req_fallback_%d_%d", time.Now().UnixNano(), fallbackRequestIDCounter.Add(1))
 	}
 	return "req_" + hex.EncodeToString(buffer)
+}
+
+func randomHex(size int) string {
+	buffer := make([]byte, size)
+	if _, err := rand.Read(buffer); err != nil {
+		return fmt.Sprintf("fallback_%d", fallbackRequestIDCounter.Add(1))
+	}
+	return hex.EncodeToString(buffer)
 }
 
 func mapTestAuthError(err error) error {

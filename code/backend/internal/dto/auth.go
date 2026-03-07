@@ -35,3 +35,8 @@ type RefreshResp struct {
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`
 }
+
+type WSTicketResp struct {
+	Ticket    string `json:"ticket"`
+	ExpiresAt string `json:"expires_at"`
+}

@@ -174,6 +174,20 @@ func (h *Handler) Profile(c *gin.Context) {
 	response.Success(c, profile)
 }
 
+func (h *Handler) IssueWSTicket(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	ticket, err := h.tokenService.IssueWSTicket(c.Request.Context(), authUser)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, &dto.WSTicketResp{
+		Ticket:    ticket.Ticket,
+		ExpiresAt: ticket.ExpiresAt.Format(time.RFC3339),
+	})
+}
+
 func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {
 	c.SetSameSite(h.cookieConfig.SameSite)
 	c.SetCookie(
