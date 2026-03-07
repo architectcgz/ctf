@@ -26,7 +26,7 @@ export function useTeacherWorkspace() {
   const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
   const solvedRate = computed(() => {
     if (!progress.value?.total_challenges) return 0
-    return Math.round((progress.value.solved_challenges / progress.value.total_challenges) * 100)
+    return Math.round(((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100)
   })
   const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
 

@@ -65,7 +65,7 @@ function openChallenge(challengeId: string): void {
               <div class="rounded-2xl bg-[var(--color-bg-base)] px-5 py-4 text-center">
                 <p class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Solved Rate</p>
                 <p class="mt-2 text-3xl font-semibold text-[var(--color-primary)]">
-                  {{ progress?.total_challenges ? Math.round((progress.solved_challenges / progress.total_challenges) * 100) : 0 }}%
+                  {{ progress?.total_challenges ? Math.round((((progress.solved_challenges ?? 0)) / progress.total_challenges) * 100) : 0 }}%
                 </p>
               </div>
             </div>
