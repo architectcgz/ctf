@@ -56,7 +56,7 @@ describe('ContestManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('竞赛管理')
+    expect(wrapper.text()).toContain('赛事编排台')
     expect(wrapper.text()).toContain('2026 春季校园 CTF')
     expect(wrapper.text()).toContain('报名中')
     expect(contestMocks.getContests).toHaveBeenCalledWith({

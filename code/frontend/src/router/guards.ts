@@ -7,6 +7,7 @@ import { APP_TITLE_PREFIX } from '@/utils/constants'
 import { useToast } from '@/composables/useToast'
 import { getProfile } from '@/api/auth'
 import type { UserRole } from '@/utils/constants'
+import { resolveRouteTitle } from '@/utils/routeTitle'
 
 NProgress.configure({ showSpinner: false })
 
@@ -39,7 +40,8 @@ async function ensureProfileLoaded(): Promise<void> {
 }
 
 function updatePageTitle(to: RouteLocationNormalized): void {
-  const title = to.meta?.title ? `${APP_TITLE_PREFIX} - ${to.meta.title}` : APP_TITLE_PREFIX
+  const routeTitle = resolveRouteTitle(to)
+  const title = routeTitle ? `${APP_TITLE_PREFIX} - ${routeTitle}` : APP_TITLE_PREFIX
   document.title = title
 }
 

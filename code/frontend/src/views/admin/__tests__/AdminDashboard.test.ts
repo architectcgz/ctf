@@ -3,14 +3,25 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import AdminDashboard from '../AdminDashboard.vue'
 
+const pushMock = vi.fn()
+
 const adminApiMocks = vi.hoisted(() => ({
   getDashboard: vi.fn(),
 }))
+
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRouter: () => ({ push: pushMock }),
+  }
+})
 
 vi.mock('@/api/admin', () => adminApiMocks)
 
 describe('AdminDashboard', () => {
   beforeEach(() => {
+    pushMock.mockReset()
     adminApiMocks.getDashboard.mockReset()
     adminApiMocks.getDashboard.mockResolvedValue({
       online_users: 18,
@@ -45,7 +56,7 @@ describe('AdminDashboard', () => {
     await flushPromises()
 
     expect(adminApiMocks.getDashboard).toHaveBeenCalledTimes(1)
-    expect(wrapper.text()).toContain('系统概览')
+    expect(wrapper.text()).toContain('系统值守台')
     expect(wrapper.text()).toContain('18')
     expect(wrapper.text()).toContain('6')
     expect(wrapper.text()).toContain('CPU 持续高于阈值')

@@ -1,96 +1,108 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">通知中心</h1>
-      <button
-        type="button"
-        class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)]"
-        @click="refresh"
-      >
-        刷新
-      </button>
-    </div>
-
-    <div v-if="loading" class="flex justify-center py-12">
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
-      ></div>
-    </div>
-
-    <div
-      v-else-if="list.length === 0"
-      class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-8 text-center text-[var(--color-text-muted)]"
+    <PageHeader
+      eyebrow="Notification Center"
+      title="通知中心"
+      description="统一查看系统、竞赛、团队和训练相关消息，未读状态与顶部铃铛保持同步。"
     >
-      暂无通知
-    </div>
+      <ElButton plain @click="markCurrentPageRead">本页已读</ElButton>
+      <ElButton type="primary" @click="refresh">刷新</ElButton>
+    </PageHeader>
 
-    <div v-else class="space-y-3">
-      <button
-        v-for="item in list"
-        :key="item.id"
-        type="button"
-        class="w-full rounded-lg border p-4 text-left transition-colors hover:border-[var(--color-primary)]/40"
-        :class="
-          item.unread
-            ? 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/5'
-            : 'border-[var(--color-border-default)] bg-[var(--color-bg-surface)]'
-        "
-        @click="handleMarkAsRead(item)"
+    <section class="grid gap-4 md:grid-cols-3">
+      <MetricCard label="本页消息" :value="list.length" hint="当前分页已加载的通知数量" accent="primary" />
+      <MetricCard label="未读消息" :value="unreadOnPage" hint="当前分页仍未处理的通知数" :accent="unreadOnPage > 0 ? 'warning' : 'success'" />
+      <MetricCard label="总消息数" :value="total" hint="通知中心累计消息总数" accent="primary" />
+    </section>
+
+    <SectionCard title="消息列表" subtitle="按时间倒序展示；点击未读消息会自动标记已读。">
+      <div v-if="loading" class="flex justify-center py-12">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
+        />
+      </div>
+
+      <div
+        v-else-if="list.length === 0"
+        class="rounded-2xl border border-dashed border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-8 text-center text-[var(--color-text-muted)]"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div class="space-y-2">
-            <div class="flex items-center gap-2">
-              <span class="rounded px-2 py-0.5 text-xs font-medium" :class="typeClass(item.type)">
-                {{ item.type }}
-              </span>
-              <span
-                v-if="item.unread"
-                class="rounded bg-[var(--color-primary)] px-2 py-0.5 text-[10px] font-semibold text-white"
-                >未读</span
-              >
-            </div>
-            <div class="text-sm font-medium text-[var(--color-text-primary)]">{{ item.title }}</div>
-            <div v-if="item.content" class="text-sm text-[var(--color-text-secondary)]">
-              {{ item.content }}
-            </div>
-          </div>
-          <div class="shrink-0 text-xs text-[var(--color-text-muted)]">
-            {{ formatDate(item.created_at) }}
-          </div>
-        </div>
-      </button>
-    </div>
+        暂无通知
+      </div>
 
-    <div v-if="!loading && total > 0" class="flex items-center justify-between">
-      <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 条</span>
-      <div class="flex items-center gap-2">
+      <div v-else class="space-y-3">
         <button
-          :disabled="page === 1"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page - 1)"
+          v-for="item in list"
+          :key="item.id"
+          type="button"
+          class="w-full rounded-[24px] border p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/40"
+          :class="
+            item.unread
+              ? 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/6 shadow-[0_18px_36px_var(--color-shadow-soft)]'
+              : 'border-[var(--color-border-default)] bg-[var(--color-bg-base)]'
+          "
+          @click="handleMarkAsRead(item)"
         >
-          上一页
-        </button>
-        <span class="text-sm text-[var(--color-text-secondary)]"
-          >{{ page }} / {{ Math.ceil(total / pageSize) }}</span
-        >
-        <button
-          :disabled="page >= Math.ceil(total / pageSize)"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page + 1)"
-        >
-          下一页
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0 space-y-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full border px-2.5 py-1 text-xs font-medium" :class="typeClass(item.type)">
+                  {{ typeLabel(item.type) }}
+                </span>
+                <span
+                  v-if="item.unread"
+                  class="rounded-full bg-[var(--color-primary)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white"
+                >
+                  未读
+                </span>
+              </div>
+              <div class="text-sm font-semibold text-[var(--color-text-primary)]">{{ item.title }}</div>
+              <div v-if="item.content" class="text-sm leading-6 text-[var(--color-text-secondary)]">
+                {{ item.content }}
+              </div>
+            </div>
+            <div class="shrink-0 text-right">
+              <div class="text-xs text-[var(--color-text-muted)]">
+                {{ formatDate(item.created_at) }}
+              </div>
+              <div v-if="item.unread" class="mt-3 flex justify-end">
+                <span class="inline-block h-2.5 w-2.5 rounded-full bg-[var(--color-primary)]" />
+              </div>
+            </div>
+          </div>
         </button>
       </div>
-    </div>
+
+      <div v-if="!loading && total > 0" class="mt-6 flex flex-col gap-3 border-t border-border-subtle pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 条，第 {{ page }} / {{ Math.ceil(total / pageSize) }} 页</span>
+        <div class="flex items-center gap-2">
+          <button
+            :disabled="page === 1"
+            class="rounded-xl border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            @click="changePage(page - 1)"
+          >
+            上一页
+          </button>
+          <button
+            :disabled="page >= Math.ceil(total / pageSize)"
+            class="rounded-xl border border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            @click="changePage(page + 1)"
+          >
+            下一页
+          </button>
+        </div>
+      </div>
+    </SectionCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
+import MetricCard from '@/components/common/MetricCard.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SectionCard from '@/components/common/SectionCard.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import { useNotificationStore } from '@/stores/notification'
@@ -109,12 +121,20 @@ async function fetchNotifications(params: { page: number; page_size: number }) {
 
 const { list, total, page, pageSize, loading, changePage, refresh } =
   usePagination<NotificationItem>(fetchNotifications)
+const unreadOnPage = computed(() => list.value.filter((item) => item.unread).length)
 
 function typeClass(type: string): string {
-  if (type === 'contest') return 'bg-[#f59e0b]/20 text-[#f59e0b]'
-  if (type === 'challenge') return 'bg-[#10b981]/20 text-[#10b981]'
-  if (type === 'team') return 'bg-[#8b5cf6]/20 text-[#8b5cf6]'
-  return 'bg-[#0891b2]/20 text-[#0891b2]'
+  if (type === 'contest') return 'border-[#f59e0b]/30 bg-[#f59e0b]/12 text-[#f59e0b]'
+  if (type === 'challenge') return 'border-[#10b981]/30 bg-[#10b981]/12 text-[#10b981]'
+  if (type === 'team') return 'border-[#8b5cf6]/30 bg-[#8b5cf6]/12 text-[#8b5cf6]'
+  return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/12 text-[var(--color-primary)]'
+}
+
+function typeLabel(type: string): string {
+  if (type === 'contest') return '竞赛'
+  if (type === 'challenge') return '训练'
+  if (type === 'team') return '团队'
+  return '系统'
 }
 
 async function handleMarkAsRead(item: NotificationItem): Promise<void> {
@@ -128,6 +148,22 @@ async function handleMarkAsRead(item: NotificationItem): Promise<void> {
     notificationStore.markAsRead(String(item.id))
   } catch (error) {
     toast.error('标记已读失败')
+  }
+}
+
+async function markCurrentPageRead(): Promise<void> {
+  const unreadItems = list.value.filter((item) => item.unread)
+  if (unreadItems.length === 0) return
+
+  const results = await Promise.allSettled(unreadItems.map((item) => markAsRead(String(item.id))))
+  const failedCount = results.filter((result) => result.status === 'rejected').length
+  list.value.forEach((item) => {
+    if (item.unread) item.unread = false
+  })
+  notificationStore.markAllRead()
+
+  if (failedCount > 0) {
+    toast.warning(`部分通知标记失败（${failedCount} 条）`)
   }
 }
 

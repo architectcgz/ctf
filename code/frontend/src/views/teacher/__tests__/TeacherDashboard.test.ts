@@ -75,7 +75,7 @@ describe('TeacherDashboard', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学概览')
+    expect(wrapper.text()).toContain('教学介入台')
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('50%')

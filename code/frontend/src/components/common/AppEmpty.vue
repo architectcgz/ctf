@@ -11,12 +11,15 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
-import * as LucideIcons from 'lucide-vue-next'
-import { Inbox } from 'lucide-vue-next'
+import { Flag, Inbox, UsersRound } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 type IconComp = Component
-const iconRegistry = LucideIcons as unknown as Record<string, Component>
+const iconRegistry: Record<string, Component> = {
+  Inbox,
+  Flag,
+  UsersRound,
+}
 
 const props = withDefaults(
   defineProps<{

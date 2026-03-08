@@ -1,7 +1,9 @@
 APP_ENV ?= dev
 APP_NAME ?= ctf-api
 GO ?= go
-MIGRATE ?= $(GO) run github.com/golang-migrate/migrate/v4/cmd/migrate
+MIGRATE_VERSION ?= v4.18.3
+MIGRATE_TAGS ?= postgres
+MIGRATE ?= $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v4/cmd/migrate@$(MIGRATE_VERSION)
 MIGRATIONS_DIR ?= ./migrations
 MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:5432/ctf?sslmode=disable
 

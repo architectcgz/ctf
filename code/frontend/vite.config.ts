@@ -37,18 +37,28 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          echarts: [
-            'echarts/core',
-            'echarts/charts',
-            'echarts/components',
-            'echarts/renderers',
-            'vue-echarts',
-          ],
-          vendor: ['vue', 'vue-router', 'pinia', '@vueuse/core', 'axios', 'element-plus'],
+        manualChunks(id) {
+          if (id.includes('echarts') || id.includes('vue-echarts')) {
+            return 'echarts'
+          }
+
+          if (id.includes('element-plus')) {
+            return 'element-plus'
+          }
+
+          if (id.includes('/vue-router/') || id.includes('/pinia/') || id.includes('/@vueuse/core/')) {
+            return 'vue-ecosystem'
+          }
+
+          if (id.includes('/axios/')) {
+            return 'network'
+          }
+
+          if (id.includes('/node_modules/vue/')) {
+            return 'vue-core'
+          }
         },
       },
     },
   },
 })
-
