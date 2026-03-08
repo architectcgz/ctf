@@ -57,7 +57,11 @@
       <!-- 雷达图 -->
       <div class="bg-surface rounded-lg p-6 border border-border">
         <h2 class="text-lg font-semibold mb-4">能力维度分析</h2>
-        <div ref="chartRef" class="w-full h-[400px]"></div>
+        <RadarChart
+          :indicators="radarIndicators"
+          :values="radarValues"
+          name="能力值"
+        />
         <p v-if="skillProfile.updated_at" class="text-xs text-text-tertiary mt-4 text-center">
           更新时间：{{ formatDate(skillProfile.updated_at) }}
         </p>
@@ -108,12 +112,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import * as echarts from 'echarts'
-import type { EChartsOption } from 'echarts'
 
 import { getRecommendations, getSkillProfile } from '@/api/assessment'
+import RadarChart from '@/components/charts/RadarChart.vue'
 import { getClassStudents, getStudentRecommendations, getStudentSkillProfile } from '@/api/teacher'
 import type { RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
@@ -132,8 +135,6 @@ const students = ref<TeacherStudentItem[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const skillProfile = ref<SkillProfileData | null>(null)
-const chartRef = ref<HTMLElement>()
-let chartInstance: echarts.ECharts | null = null
 
 const loadingRecommendations = ref(false)
 const recommendations = ref<RecommendationItem[]>([])
@@ -144,6 +145,15 @@ const weakDimensions = computed(() => {
     .filter(d => d.value < WEAK_DIMENSION_THRESHOLD)
     .map(d => d.name)
 })
+const radarIndicators = computed(() =>
+  skillProfile.value?.dimensions.map((dimension) => ({
+    name: dimension.name,
+    max: 100,
+  })) || [],
+)
+const radarValues = computed(() =>
+  skillProfile.value?.dimensions.map((dimension) => dimension.value) || [],
+)
 
 // 加载学员列表
 async function loadStudents() {
@@ -168,7 +178,6 @@ async function loadSkillProfile() {
     } else {
       skillProfile.value = await getSkillProfile()
     }
-    renderChart()
   } catch (err) {
     console.error('加载能力画像失败:', err)
     error.value = '加载能力画像失败，请稍后重试'
@@ -195,53 +204,6 @@ async function loadRecommendations() {
   }
 }
 
-// 渲染雷达图
-function renderChart() {
-  if (!chartRef.value || !skillProfile.value) return
-
-  if (!chartInstance) {
-    chartInstance = echarts.init(chartRef.value)
-  }
-
-  const styles = getComputedStyle(document.documentElement)
-  const primaryColor = styles.getPropertyValue('--color-primary').trim() || '#3b82f6'
-  const borderColor = styles.getPropertyValue('--color-border').trim() || '#e5e7eb'
-  const textSecondary = styles.getPropertyValue('--color-text-secondary').trim() || '#666'
-
-  const dimensions = skillProfile.value.dimensions
-  const option: EChartsOption = {
-    radar: {
-      indicator: dimensions.map(d => ({ name: d.name, max: 100 })),
-      radius: '65%',
-      splitNumber: 4,
-      axisName: { color: textSecondary },
-      splitLine: { lineStyle: { color: borderColor } },
-      splitArea: { show: false },
-      axisLine: { lineStyle: { color: borderColor } }
-    },
-    series: [{
-      type: 'radar',
-      data: [{
-        value: dimensions.map(d => d.value),
-        name: '能力值',
-        areaStyle: { color: `${primaryColor}33` },
-        lineStyle: { color: primaryColor, width: 2 },
-        itemStyle: { color: primaryColor }
-      }]
-    }],
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: unknown) => {
-        const data = (params as { data?: { value?: number[] } })?.data
-        const values = Array.isArray(data?.value) ? data.value : []
-        return dimensions.map((d, i) => `${d.name}: ${values[i] ?? 0}`).join('<br/>')
-      }
-    }
-  }
-
-  chartInstance.setOption(option)
-}
-
 // 跳转到靶场详情
 function goToChallenge(id: string) {
   router.push(`/challenges/${id}`)
@@ -253,18 +215,9 @@ watch(selectedStudentId, () => {
   loadRecommendations()
 })
 
-const handleResize = () => chartInstance?.resize()
-
 onMounted(() => {
   loadStudents()
   loadSkillProfile()
   loadRecommendations()
-  window.addEventListener('resize', handleResize)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize)
-  chartInstance?.dispose()
-  chartInstance = null
 })
 </script>

@@ -31,11 +31,17 @@ describe('ChallengeList', () => {
   beforeEach(() => {
     router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/challenges/:id', component: { template: '<div />' } }],
+      routes: [
+        { path: '/challenges', component: { template: '<div />' } },
+        { path: '/challenges/:id', component: { template: '<div />' } },
+      ],
     })
   })
 
   it('应该渲染挑战列表', async () => {
+    await router.push('/challenges')
+    await router.isReady()
+
     const wrapper = mount(ChallengeList, {
       global: {
         plugins: [router],

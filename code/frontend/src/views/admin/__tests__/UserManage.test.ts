@@ -59,7 +59,7 @@ describe('UserManage', () => {
     await flushPromises()
 
     expect(wrapper.exists()).toBe(true)
-    expect(wrapper.text()).toContain('用户管理')
+    expect(wrapper.text()).toContain('用户治理台')
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('alice@example.com')
     expect(wrapper.text()).toContain('teacher')

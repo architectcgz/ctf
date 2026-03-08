@@ -7,6 +7,9 @@ import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
+const routeState = {
+  query: {} as Record<string, string>,
+}
 
 const assessmentApiMocks = vi.hoisted(() => ({
   getMyProgress: vi.fn(),
@@ -23,6 +26,7 @@ vi.mock('vue-router', async () => {
       push: pushMock,
       replace: replaceMock,
     }),
+    useRoute: () => routeState,
   }
 })
 
@@ -34,6 +38,7 @@ describe('DashboardView', () => {
     localStorage.clear()
     pushMock.mockReset()
     replaceMock.mockReset()
+    routeState.query = {}
 
     assessmentApiMocks.getMyProgress.mockReset()
     assessmentApiMocks.getMyTimeline.mockReset()
@@ -88,10 +93,31 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('alice 的训练仪表盘')
+    expect(wrapper.text()).toContain('为 alice 定制的训练概览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
+    expect(wrapper.text()).toContain('优先训练队列')
+  })
+
+  it('应该在 recommendation 子菜单下展示训练建议', async () => {
+    routeState.query = { panel: 'recommendation' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    }, 'token')
+
+    const wrapper = mount(DashboardView)
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('训练建议')
+    expect(wrapper.text()).toContain('补短板计划')
     expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('待加强：密码')
+    expect(wrapper.text()).toContain('优先修复的能力维度')
   })
 
   it('应该把教师用户重定向到教师首页', async () => {

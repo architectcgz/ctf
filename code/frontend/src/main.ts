@@ -1,6 +1,3 @@
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
@@ -16,7 +13,6 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus)
 
 // 全局错误处理
 app.config.errorHandler = (err, instance, info) => {
@@ -27,4 +23,3 @@ app.config.errorHandler = (err, instance, info) => {
 useAuthStore(pinia).restore()
 
 app.mount('#app')
-
