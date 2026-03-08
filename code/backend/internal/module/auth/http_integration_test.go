@@ -174,6 +174,91 @@ func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
 	}
 }
 
+func TestHTTP_ChangePasswordFlow(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+
+	registerResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/register",
+		map[string]any{
+			"username": "change_pwd_user",
+			"password": "Password123",
+		},
+		nil,
+		nil,
+	)
+	if registerResp.Code != http.StatusOK {
+		t.Fatalf("unexpected register status: %d body=%s", registerResp.Code, registerResp.Body.String())
+	}
+	registerBody := decodeEnvelope(t, registerResp)
+	registerData := decodeJSON[testLoginResponse](t, registerBody.Data)
+
+	changeResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPut,
+		"/api/v1/auth/password",
+		map[string]any{
+			"old_password": "Password123",
+			"new_password": "Password456",
+		},
+		map[string]string{
+			"Authorization": "Bearer " + registerData.AccessToken,
+		},
+		nil,
+	)
+	if changeResp.Code != http.StatusOK {
+		t.Fatalf("unexpected change password status: %d body=%s", changeResp.Code, changeResp.Body.String())
+	}
+	changeBody := decodeEnvelope(t, changeResp)
+	if changeBody.Code != 0 {
+		t.Fatalf("unexpected change password code: %d body=%s", changeBody.Code, changeResp.Body.String())
+	}
+
+	oldLoginResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/login",
+		map[string]any{
+			"username": "change_pwd_user",
+			"password": "Password123",
+		},
+		nil,
+		nil,
+	)
+	if oldLoginResp.Code != http.StatusUnauthorized {
+		t.Fatalf("expected old password login to fail, got %d body=%s", oldLoginResp.Code, oldLoginResp.Body.String())
+	}
+	oldLoginBody := decodeEnvelope(t, oldLoginResp)
+	if oldLoginBody.Code != errcode.ErrInvalidCredentials.Code {
+		t.Fatalf("expected invalid credentials code %d, got %d", errcode.ErrInvalidCredentials.Code, oldLoginBody.Code)
+	}
+
+	newLoginResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/login",
+		map[string]any{
+			"username": "change_pwd_user",
+			"password": "Password456",
+		},
+		nil,
+		nil,
+	)
+	if newLoginResp.Code != http.StatusOK {
+		t.Fatalf("expected new password login to succeed, got %d body=%s", newLoginResp.Code, newLoginResp.Body.String())
+	}
+	newLoginBody := decodeEnvelope(t, newLoginResp)
+	newLoginData := decodeJSON[testLoginResponse](t, newLoginBody.Data)
+	if newLoginData.AccessToken == "" {
+		t.Fatalf("expected new access token after password change")
+	}
+}
+
 func TestHTTP_LogoutRevokesAccessTokenAndAdminCanQueryAuditLogs(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 
@@ -403,6 +488,7 @@ func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
 	protected.Use(testAuthMiddleware(tokenService))
 	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/auth/profile", authHandler.Profile)
+	protected.PUT("/auth/password", authHandler.ChangePassword)
 
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(testRequireRole(model.RoleAdmin))

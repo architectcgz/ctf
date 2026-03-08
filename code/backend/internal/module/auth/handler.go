@@ -174,6 +174,47 @@ func (h *Handler) Profile(c *gin.Context) {
 	response.Success(c, profile)
 }
 
+func (h *Handler) ChangePassword(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	req := &dto.ChangePasswordReq{}
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	if err := h.service.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
+		h.recordAudit(c, auditlog.Entry{
+			UserID:       &authUser.UserID,
+			Action:       model.AuditActionUpdate,
+			ResourceType: "auth_password",
+			Detail: map[string]any{
+				"username":   authUser.Username,
+				"result":     "failed",
+				"error":      err.Error(),
+				"request_id": c.GetString("request_id"),
+			},
+			IPAddress: c.ClientIP(),
+			UserAgent: userAgentPtr(c.Request.UserAgent()),
+		})
+		response.FromError(c, err)
+		return
+	}
+
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       &authUser.UserID,
+		Action:       model.AuditActionUpdate,
+		ResourceType: "auth_password",
+		Detail: map[string]any{
+			"username":   authUser.Username,
+			"result":     "success",
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: userAgentPtr(c.Request.UserAgent()),
+	})
+	response.Success(c, nil)
+}
+
 func (h *Handler) IssueWSTicket(c *gin.Context) {
 	authUser := authctx.MustCurrentUser(c)
 	ticket, err := h.tokenService.IssueWSTicket(c.Request.Context(), authUser)

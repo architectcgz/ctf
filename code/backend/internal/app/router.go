@@ -89,6 +89,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	protected.Use(middleware.Auth(tokenService))
 	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/auth/profile", authHandler.Profile)
+	protected.PUT("/auth/password", authHandler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authHandler.IssueWSTicket)
 
 	notificationRepo := systemModule.NewNotificationRepository(db)
