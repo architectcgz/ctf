@@ -60,7 +60,7 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
         accent="primary"
         eyebrow="Class Control"
         :title="selectedClassName ? `${selectedClassName} 的样本编排` : '先选择一个班级'"
-        subtitle="这页专门服务老师做班级运营决策。左侧负责筛班级和找人，右侧保留学员详情与推荐任务，不再走通用管理页布局。"
+        subtitle="左侧先筛班级和查找学员，右侧再查看详细画像与推荐任务，便于老师快速做教学决策。"
       >
         <template #header>
           <span

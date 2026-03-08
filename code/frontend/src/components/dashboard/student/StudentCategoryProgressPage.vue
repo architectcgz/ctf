@@ -40,26 +40,25 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[0.7fr_1.3fr]">
       <div class="grid gap-4">
-        <AppCard
-          variant="hero"
-          accent="primary"
-          eyebrow="Coverage Overview"
-          title="覆盖概况"
-          subtitle="当前总训练覆盖率。这个页面专门聚焦不同题型的完成深度，而不是继续复用主页摘要。"
-        >
-        <div class="grid gap-4 md:grid-cols-[auto_1fr] md:items-end">
-          <div class="text-5xl font-semibold tracking-tight text-text-primary">{{ completionRate }}%</div>
-          <AppCard variant="action" accent="primary">
-            <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-              <Radar class="h-4 w-4 text-primary" />
-              覆盖率代表已完成题目在全部分类题量中的占比
+        <div class="rounded-[30px] border border-cyan-500/20 bg-[linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">Coverage Overview</div>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">覆盖概况</h2>
+          <p class="mt-3 text-sm leading-7 text-cyan-50/80">
+            从整体覆盖率判断训练结构，再对照分类进度决定下一步优先补强的方向。
+          </p>
+          <div class="mt-6 grid gap-4 md:grid-cols-[auto_1fr] md:items-end">
+            <div class="text-5xl font-semibold tracking-tight text-white">{{ completionRate }}%</div>
+            <div class="rounded-[24px] border border-white/10 bg-white/6 px-5 py-5">
+              <div class="flex items-center gap-2 text-sm font-medium text-white">
+                <Radar class="h-4 w-4 text-cyan-200" />
+                覆盖率代表已完成题目在全部分类题量中的占比
+              </div>
+              <div class="mt-2 text-sm leading-6 text-cyan-50/75">
+                先看覆盖率，再看强弱方向，最后回到分类进度板逐项补齐。
+              </div>
             </div>
-            <div class="mt-2 text-sm leading-6 text-text-secondary">
-              先看覆盖率，再看强弱方向，最后回到分类进度板逐项补齐。
-            </div>
-          </AppCard>
+          </div>
         </div>
-      </AppCard>
 
         <AppCard
           variant="metric"

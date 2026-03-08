@@ -58,32 +58,40 @@ const weakLabel = computed(() => (props.weakDimensions.length > 0 ? props.weakDi
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <AppCard
-        variant="hero"
-        accent="primary"
-        eyebrow="Intervention Deck"
-        :title="selectedClassName ? `${selectedClassName} 的教学焦点` : '先选择一个班级'"
-        :subtitle="
-          selectedClassName
-            ? '当前页面把班级切换、重点样本和教学建议收在同一个工作区，方便老师快速决定今天该先介入谁。'
-            : '选择班级后，会同步刷新学员样本、进度、能力画像和推荐任务。'
-        "
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
-          >
-            {{ selectedClassName || '未选择班级' }}
-          </span>
-        </template>
-
-        <div class="grid gap-3 md:grid-cols-3">
-          <AppCard variant="metric" accent="primary" eyebrow="班级人数" :title="String(selectedClass?.student_count || students.length)" subtitle="当前班级纳入视图的人数" />
-          <AppCard variant="metric" accent="primary" eyebrow="样本完成率" :title="`${solvedRate}%`" subtitle="按当前选中学员样本计算" />
-          <AppCard variant="metric" accent="warning" eyebrow="薄弱维度" :title="weakLabel" subtitle="当前最值得介入的方向" />
+      <div class="rounded-[30px] border border-cyan-500/20 bg-[linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">
+          <span>Intervention Deck</span>
+          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">{{ selectedClassName || '未选择班级' }}</span>
         </div>
-      </AppCard>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">
+          {{ selectedClassName ? `${selectedClassName} 的教学焦点` : '先选择一个班级' }}
+        </h2>
+        <p class="mt-3 text-sm leading-7 text-cyan-50/80">
+          {{
+            selectedClassName
+              ? '先看班级整体状态，再锁定重点样本和推荐任务，快速决定今天优先介入谁。'
+              : '选择班级后，会同步刷新学员样本、进度、能力画像和推荐任务。'
+          }}
+        </p>
+
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">班级人数</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ selectedClass?.student_count || students.length }}</div>
+            <div class="mt-2 text-sm text-cyan-50/70">当前班级纳入视图的人数</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">样本完成率</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ solvedRate }}%</div>
+            <div class="mt-2 text-sm text-cyan-50/70">按当前选中学员样本计算</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">薄弱维度</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ weakLabel }}</div>
+            <div class="mt-2 text-sm text-cyan-50/70">当前最值得介入的方向</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
         <AppCard variant="metric" accent="primary" eyebrow="管理班级" :title="String(classes.length)" subtitle="教师权限下当前可访问的班级数量。">

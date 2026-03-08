@@ -71,7 +71,7 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <SectionCard title="难度层级视图" subtitle="这页单独围绕难度结构展开，让你判断训练是否长期停留在舒适区。">
+      <SectionCard title="难度层级视图" subtitle="观察不同难度的覆盖情况，判断训练是否长期停留在舒适区。">
         <div v-if="orderedStats.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary">
           暂无难度统计数据。
         </div>
@@ -120,10 +120,10 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
           <AppCard variant="action" accent="primary">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
               <Layers2 class="h-4 w-4 text-sky-300" />
-              这页关注什么
+              难度结构
             </div>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
-              主页看的是总览，这页看的是难度分层。如果你只做简单题，总分和解题数会涨，但结构不会健康。
+              如果你只做简单题，总分和解题数会涨，但整体结构不会健康。这里更适合看难度分层是否均衡上探。
             </div>
           </AppCard>
 

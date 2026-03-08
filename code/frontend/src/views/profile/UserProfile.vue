@@ -34,6 +34,46 @@ const profileFields = computed(() => {
   ]
 })
 
+const reportStateMeta = computed(() => {
+  if (latestReport.value?.status === 'ready') {
+    return {
+      label: '可下载',
+      borderColor: 'rgba(63,185,80,0.24)',
+      badgeBackground: 'rgba(63,185,80,0.12)',
+      badgeColor: 'var(--color-success)',
+      background: 'linear-gradient(145deg,rgba(20,83,45,0.52),rgba(15,23,42,0.94))',
+    }
+  }
+
+  if (latestReport.value?.status === 'failed') {
+    return {
+      label: '失败',
+      borderColor: 'rgba(248,81,73,0.24)',
+      badgeBackground: 'rgba(248,81,73,0.12)',
+      badgeColor: 'var(--color-danger)',
+      background: 'linear-gradient(145deg,rgba(127,29,29,0.56),rgba(15,23,42,0.94))',
+    }
+  }
+
+  if (latestReport.value?.status === 'processing') {
+    return {
+      label: '生成中',
+      borderColor: 'rgba(210,153,34,0.24)',
+      badgeBackground: 'rgba(210,153,34,0.12)',
+      badgeColor: 'var(--color-warning)',
+      background: 'linear-gradient(145deg,rgba(120,53,15,0.48),rgba(15,23,42,0.94))',
+    }
+  }
+
+  return {
+    label: '待创建',
+    borderColor: 'color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default))',
+    badgeBackground: 'var(--color-primary-soft)',
+    badgeColor: 'var(--color-primary)',
+    background: 'linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))',
+  }
+})
+
 async function loadProfile(): Promise<void> {
   loading.value = true
   error.value = null
@@ -124,34 +164,32 @@ onMounted(() => {
           </button>
         </template>
 
-        <AppCard
+        <div
           v-if="profile"
-          variant="hero"
-          accent="primary"
-          eyebrow="Profile Snapshot"
-          :title="profile.name || profile.username"
-          subtitle="账号基础信息、角色和班级都收进同一块个人视图，避免再拆成松散的信息盒。"
+          class="rounded-[30px] border border-cyan-500/20 bg-[linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
         >
-          <template #header>
-            <span
-              class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-              style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
-            >
-              {{ profile.role }}
-            </span>
-          </template>
+          <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">
+            <span>Profile Snapshot</span>
+            <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">{{ profile.role }}</span>
+          </div>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">{{ profile.name || profile.username }}</h2>
+          <p class="mt-3 text-sm leading-7 text-cyan-50/80">
+            这里聚合你的账号身份、班级归属和基础资料，方便快速确认当前训练账号的信息状态。
+          </p>
 
-          <div class="grid gap-4 sm:grid-cols-2">
-            <AppCard
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+            <div
               v-for="item in profileFields"
               :key="item.label"
-              variant="metric"
-              accent="primary"
-              :eyebrow="item.label"
-              :title="item.value"
-            />
+              class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4"
+            >
+              <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/60">
+                {{ item.label }}
+              </div>
+              <div class="mt-2 text-xl font-semibold text-white">{{ item.value }}</div>
+            </div>
           </div>
-        </AppCard>
+        </div>
 
         <AppEmpty
           v-else
@@ -166,33 +204,23 @@ onMounted(() => {
       </SectionCard>
 
       <SectionCard title="个人报告导出" subtitle="生成 PDF 或 Excel 报告，便于训练复盘和归档。">
-        <AppCard
-          variant="hero"
-          accent="primary"
-          eyebrow="Report Export"
-          title="最近一次导出任务"
-          :subtitle="latestReport ? '导出状态会在这里汇总，准备就绪后可直接下载。' : '先选择导出格式，再创建本次个人报告。'"
+        <div
+          class="rounded-[30px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+          :style="{ borderColor: reportStateMeta.borderColor, background: reportStateMeta.background }"
         >
-          <template #header>
+          <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/72">
+            <span>Report Export</span>
             <span
-              class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-              :style="latestReport?.status === 'ready'
-                ? 'border-color: rgba(63,185,80,0.24); background-color: rgba(63,185,80,0.12); color: var(--color-success);'
-                : latestReport?.status === 'failed'
-                  ? 'border-color: rgba(248,81,73,0.24); background-color: rgba(248,81,73,0.12); color: var(--color-danger);'
-                  : 'border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);'"
+              class="rounded-full border px-2 py-1"
+              :style="{ borderColor: reportStateMeta.borderColor, backgroundColor: reportStateMeta.badgeBackground, color: reportStateMeta.badgeColor }"
             >
-              {{
-                latestReport?.status === 'ready'
-                  ? '可下载'
-                  : latestReport?.status === 'failed'
-                    ? '失败'
-                    : latestReport?.status === 'processing'
-                      ? '生成中'
-                      : '待创建'
-              }}
+              {{ reportStateMeta.label }}
             </span>
-          </template>
+          </div>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">个人报告导出</h2>
+          <p class="mt-3 text-sm leading-7 text-white/80">
+            {{ latestReport ? '最近一次导出状态会在这里汇总，准备就绪后可直接下载。' : '先选择导出格式，再创建本次个人报告。' }}
+          </p>
 
           <label class="block text-sm font-medium text-[var(--color-text-primary)]">
             导出格式
@@ -272,7 +300,7 @@ onMounted(() => {
           <AppCard v-else variant="action" accent="neutral">
             创建报告后，这里会显示最近一次导出任务的状态和下载入口。
           </AppCard>
-        </AppCard>
+        </div>
       </SectionCard>
     </div>
   </div>

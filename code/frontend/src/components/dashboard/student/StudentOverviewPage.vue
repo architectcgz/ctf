@@ -36,41 +36,41 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-      <AppCard
-        variant="hero"
-        accent="primary"
-        eyebrow="Student Workspace"
-        :title="`为 ${displayName} 定制的训练概览`"
-        subtitle="主页只保留最关键的训练摘要。具体的分类进度、训练建议、近期动态和难度分布，已经拆成左侧导航下的独立页面。"
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
-          >
+      <div class="rounded-[30px] border border-cyan-500/20 bg-[linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">
+          <span>Student Workspace</span>
+          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">
             {{ className || '自由训练' }}
           </span>
-        </template>
+        </div>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">为 {{ displayName }} 定制的训练概览</h2>
+        <p class="mt-3 text-sm leading-7 text-cyan-50/80">
+          先看当前排名、完成率和待加强维度，再决定今天优先推进哪一类训练。
+        </p>
 
-        <div class="grid gap-3 md:grid-cols-3">
-          <AppCard variant="metric" accent="primary" eyebrow="当前排名" :title="`#${progress.rank ?? '-'}`" subtitle="综合全站训练表现计算" />
-          <AppCard variant="metric" accent="primary" eyebrow="完成率" :title="`${completionRate}%`" subtitle="按当前题量估算的覆盖程度" />
-          <AppCard
-            variant="metric"
-            accent="warning"
-            eyebrow="待加强维度"
-            :title="weakDimensions[0] || '暂无明显短板'"
-            subtitle="建议从左侧“训练建议”进入细看"
-          />
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">当前排名</div>
+            <div class="mt-2 text-2xl font-semibold text-white">#{{ progress.rank ?? '-' }}</div>
+            <div class="mt-2 text-sm text-cyan-50/70">综合全站训练表现计算</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">完成率</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ completionRate }}%</div>
+            <div class="mt-2 text-sm text-cyan-50/70">按当前题量估算的覆盖程度</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">待加强维度</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ weakDimensions[0] || '暂无明显短板' }}</div>
+            <div class="mt-2 text-sm text-cyan-50/70">建议从左侧“训练建议”进入细看</div>
+          </div>
         </div>
 
-        <template #footer>
-          <div class="flex flex-wrap gap-3">
-            <ElButton type="primary" @click="emit('openChallenges')">继续训练</ElButton>
-            <ElButton plain @click="emit('openSkillProfile')">查看能力画像</ElButton>
-          </div>
-        </template>
-      </AppCard>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <ElButton type="primary" @click="emit('openChallenges')">继续训练</ElButton>
+          <ElButton plain @click="emit('openSkillProfile')">查看能力画像</ElButton>
+        </div>
+      </div>
 
       <div class="grid gap-3">
         <AppCard
