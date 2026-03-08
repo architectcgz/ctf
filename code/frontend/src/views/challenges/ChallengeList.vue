@@ -10,7 +10,7 @@
       </button>
     </PageHeader>
 
-    <section class="rounded-[28px] border border-border bg-surface/82 p-5 shadow-[0_20px_50px_var(--color-shadow-soft)]">
+    <AppCard variant="panel" accent="primary">
       <div class="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_repeat(2,minmax(0,220px))]">
         <input
           v-model="searchQuery"
@@ -45,7 +45,7 @@
           <option value="hell">地狱</option>
         </select>
       </div>
-    </section>
+    </AppCard>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
@@ -87,15 +87,18 @@
     </AppEmpty>
 
     <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <div
+      <AppCard
         v-for="challenge in list"
         :key="challenge.id"
-        class="cursor-pointer rounded-lg border bg-[var(--color-bg-surface)] transition-all hover:border-[var(--color-primary)]/50"
-        :class="challenge.is_solved ? 'border-green-500/30' : 'border-[var(--color-border-default)]'"
+        as="button"
+        variant="action"
+        :accent="challenge.is_solved ? 'success' : 'primary'"
+        interactive
+        class="cursor-pointer text-left"
         :style="{ borderTopWidth: '2px', borderTopColor: getCategoryBorderColor(challenge.category) }"
         @click="goToDetail(challenge.id)"
       >
-        <div class="space-y-3 p-4">
+        <div class="space-y-3">
           <div class="flex items-start justify-between">
             <h3 class="font-mono text-lg font-medium text-[var(--color-text-primary)]">{{ challenge.title }}</h3>
             <span class="font-mono text-sm text-[var(--color-primary)]">{{ challenge.points }}pts</span>
@@ -122,41 +125,43 @@
 
           <div class="flex items-center justify-between">
             <span class="text-xs text-[var(--color-text-muted)]">{{ challenge.solved_count }} 人解出</span>
-            <button
+            <span
               class="rounded-lg px-4 py-1.5 text-sm font-medium transition-colors"
               :class="
                 challenge.is_solved
-                  ? 'bg-[#21262d] text-[var(--color-text-secondary)] hover:bg-[#30363d]'
-                  : 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/90'
+                  ? 'bg-[#21262d] text-[var(--color-text-secondary)]'
+                  : 'bg-[var(--color-primary)] text-white'
               "
             >
               {{ challenge.is_solved ? '查看详情' : '开始挑战' }}
-            </button>
+            </span>
           </div>
         </div>
-      </div>
+      </AppCard>
     </div>
 
-    <div v-if="!loading && total > 0" class="flex items-center justify-between border-t border-[var(--color-border-default)] pt-4">
-      <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 个挑战</span>
-      <div class="flex items-center gap-2">
-        <button
-          :disabled="page === 1"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page - 1)"
-        >
-          上一页
-        </button>
-        <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button
-          :disabled="page >= Math.ceil(total / pageSize)"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page + 1)"
-        >
-          下一页
-        </button>
+    <AppCard v-if="!loading && total > 0" variant="panel" accent="neutral">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 个挑战</span>
+        <div class="flex items-center gap-2">
+          <button
+            :disabled="page === 1"
+            class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            @click="changePage(page - 1)"
+          >
+            上一页
+          </button>
+          <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+          <button
+            :disabled="page >= Math.ceil(total / pageSize)"
+            class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            @click="changePage(page + 1)"
+          >
+            下一页
+          </button>
+        </div>
       </div>
-    </div>
+    </AppCard>
   </div>
 </template>
 
@@ -165,6 +170,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getChallenges } from '@/api/challenge'
 import { ApiError } from '@/api/request'
+import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { usePagination } from '@/composables/usePagination'

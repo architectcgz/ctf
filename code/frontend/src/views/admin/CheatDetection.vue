@@ -4,7 +4,10 @@ import { useRouter } from 'vue-router'
 
 import { getCheatDetection } from '@/api/admin'
 import type { AdminCheatDetectionData } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 
 const router = useRouter()
@@ -49,18 +52,11 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <section
-      class="rounded-[28px] border border-[var(--color-border-default)] bg-[linear-gradient(135deg,rgba(127,29,29,0.08),rgba(217,119,6,0.14))] p-7 shadow-sm"
-    >
-      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-red-600/85">Risk Triage</p>
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]">
-        作弊检测
-      </h1>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
-        当前页已接入真实的 `/admin/cheat-detection`
-        接口，展示最近一轮基于审计日志聚合的高频提交账号和共享 IP 线索。
-      </p>
-    </section>
+    <PageHeader
+      eyebrow="Risk Triage"
+      title="作弊检测"
+      description="当前页已接入真实的 `/admin/cheat-detection` 接口，展示最近一轮基于审计日志聚合的高频提交账号和共享 IP 线索。"
+    />
 
     <div v-if="loading" class="flex justify-center py-10">
       <AppLoading>正在加载风险线索...</AppLoading>
@@ -75,43 +71,9 @@ onMounted(() => {
       </div>
 
       <section v-if="riskData" class="grid gap-4 lg:grid-cols-3">
-        <article
-          class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 shadow-sm"
-        >
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">
-            Submit Burst
-          </p>
-          <h2 class="mt-3 text-3xl font-semibold text-[var(--color-text-primary)]">
-            {{ riskData.summary.submit_burst_users }}
-          </h2>
-          <p class="mt-2 text-sm text-[var(--color-text-secondary)]">
-            最近窗口内提交次数超过阈值的账号数。
-          </p>
-        </article>
-        <article
-          class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 shadow-sm"
-        >
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-500">Shared IP</p>
-          <h2 class="mt-3 text-3xl font-semibold text-[var(--color-text-primary)]">
-            {{ riskData.summary.shared_ip_groups }}
-          </h2>
-          <p class="mt-2 text-sm text-[var(--color-text-secondary)]">
-            最近 24 小时内存在多账号复用的 IP 组数。
-          </p>
-        </article>
-        <article
-          class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 shadow-sm"
-        >
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-rose-500">
-            Affected Users
-          </p>
-          <h2 class="mt-3 text-3xl font-semibold text-[var(--color-text-primary)]">
-            {{ riskData.summary.affected_users }}
-          </h2>
-          <p class="mt-2 text-sm text-[var(--color-text-secondary)]">
-            当前聚合结果覆盖到的可疑账号总数。
-          </p>
-        </article>
+        <AppCard variant="metric" accent="warning" eyebrow="Submit Burst" :title="String(riskData.summary.submit_burst_users)" subtitle="最近窗口内提交次数超过阈值的账号数。" />
+        <AppCard variant="metric" accent="primary" eyebrow="Shared IP" :title="String(riskData.summary.shared_ip_groups)" subtitle="最近 24 小时内存在多账号复用的 IP 组数。" />
+        <AppCard variant="metric" accent="danger" eyebrow="Affected Users" :title="String(riskData.summary.affected_users)" subtitle="当前聚合结果覆盖到的可疑账号总数。" />
       </section>
 
       <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -119,18 +81,19 @@ onMounted(() => {
           title="高频提交账号"
           subtitle="这些账号在最近窗口内的提交次数超过阈值，建议先结合审计日志复核。"
         >
-          <div
+          <AppEmpty
             v-if="!riskData?.suspects.length"
-            class="rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-8 text-center text-sm text-[var(--color-text-secondary)]"
-          >
-            当前没有超过阈值的高频提交账号。
-          </div>
+            icon="UsersRound"
+            title="当前没有超过阈值的高频提交账号"
+            description="说明最近窗口内还没有明显的提交爆发样本。"
+          />
 
           <div v-else class="space-y-3">
-            <div
+            <AppCard
               v-for="suspect in riskData.suspects"
               :key="suspect.user_id"
-              class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-4"
+              variant="action"
+              accent="warning"
             >
               <div class="flex items-start justify-between gap-4">
                 <div>
@@ -148,7 +111,7 @@ onMounted(() => {
               <p class="mt-3 text-xs text-[var(--color-text-secondary)]">
                 最近出现时间：{{ new Date(suspect.last_seen_at).toLocaleString('zh-CN') }}
               </p>
-            </div>
+            </AppCard>
           </div>
         </SectionCard>
 
@@ -156,18 +119,19 @@ onMounted(() => {
           title="共享 IP 线索"
           subtitle="同一 IP 在最近 24 小时内出现多个账号登录，适合作为第二层排查线索。"
         >
-          <div
+          <AppEmpty
             v-if="!riskData?.shared_ips.length"
-            class="rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-8 text-center text-sm text-[var(--color-text-secondary)]"
-          >
-            当前没有共享 IP 线索。
-          </div>
+            icon="UsersRound"
+            title="当前没有共享 IP 线索"
+            description="最近 24 小时内还没有发现明显的多账号复用 IP。"
+          />
 
           <div v-else class="space-y-3">
-            <div
+            <AppCard
               v-for="group in riskData.shared_ips"
               :key="group.ip"
-              class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-4"
+              variant="action"
+              accent="primary"
             >
               <div class="flex items-start justify-between gap-4">
                 <div>
@@ -182,7 +146,7 @@ onMounted(() => {
                   {{ group.user_count }} 账号
                 </span>
               </div>
-            </div>
+            </AppCard>
           </div>
         </SectionCard>
       </section>
@@ -192,11 +156,14 @@ onMounted(() => {
         subtitle="保留直接跳转审计日志的入口，便于把自动聚合结果继续下钻到原始记录。"
       >
         <div class="grid gap-3 lg:grid-cols-2">
-          <button
+          <AppCard
             v-for="action in quickActions"
             :key="action.title"
-            type="button"
-            class="flex items-start justify-between gap-4 rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]"
+            as="button"
+            variant="action"
+            accent="warning"
+            interactive
+            class="cursor-pointer"
             @click="openAudit(action.query)"
           >
             <div>
@@ -206,7 +173,7 @@ onMounted(() => {
               </p>
             </div>
             <span class="mt-0.5 text-sm font-medium text-[var(--color-primary)]">打开</span>
-          </button>
+          </AppCard>
         </div>
       </SectionCard>
     </div>
