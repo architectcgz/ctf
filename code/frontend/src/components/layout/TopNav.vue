@@ -39,7 +39,7 @@
           <Moon v-else class="h-4 w-4" />
         </button>
 
-        <NotificationDropdown />
+        <NotificationDropdown :realtime-status="notificationStatus" />
 
         <div class="flex items-center gap-2 rounded-2xl border border-border bg-surface px-2.5 py-1.5 shadow-[0_10px_24px_var(--color-shadow-soft)] sm:gap-3 sm:px-3">
           <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/12 text-xs font-semibold text-primary">
@@ -75,10 +75,12 @@ import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
+import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 
 defineProps<{
   sidebarCollapsed: boolean
+  notificationStatus: WebSocketStatus
 }>()
 
 defineEmits<{

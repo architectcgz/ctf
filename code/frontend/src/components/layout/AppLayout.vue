@@ -15,6 +15,7 @@
       <div class="min-w-0 flex-1">
         <TopNav
           :sidebar-collapsed="sidebarCollapsed"
+          :notification-status="notificationStatus"
           @toggle-sidebar="sidebarOpen = true"
           @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
         />
@@ -36,7 +37,7 @@ import TopNav from '@/components/layout/TopNav.vue'
 import { useNotificationRealtime } from '@/composables/useNotificationRealtime'
 
 const route = useRoute()
-const { start } = useNotificationRealtime()
+const { start, status: notificationStatus } = useNotificationRealtime()
 const sidebarCollapsed = ref(false)
 const sidebarOpen = ref(false)
 
