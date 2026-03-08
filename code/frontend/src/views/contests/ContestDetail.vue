@@ -144,10 +144,10 @@
           v-if="submitResult"
           class="mt-3 rounded p-3"
           :class="
-            submitResult.correct ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+            submitResult.is_correct ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
           "
         >
-          {{ submitResult.correct ? `正确！+${submitResult.points_earned} 分` : '错误' }}
+          {{ submitResult.is_correct ? `正确！+${submitResult.points ?? 0} 分` : submitResult.message }}
         </div>
       </div>
     </div>
@@ -352,7 +352,7 @@ async function submitFlag() {
     const result = await submitContestFlag(contest.value.id, selectedChallenge.value.id, flag)
     submitResult.value = result
 
-    if (result.correct) {
+    if (result.is_correct) {
       const idx = challenges.value.findIndex((c) => c.id === selectedChallenge.value!.id)
       if (idx !== -1) challenges.value[idx].is_solved = true
       flagInput.value = ''

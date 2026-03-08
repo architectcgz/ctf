@@ -13,7 +13,7 @@ export async function getChallengeDetail(id: string): Promise<ChallengeDetailDat
 }
 
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {
-  return request<SubmitFlagData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/submissions`, data: { flag } })
+  return request<SubmitFlagData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/submit`, data: { flag } })
 }
 
 export async function unlockHint(id: string, level: number): Promise<UnlockHintData> {
