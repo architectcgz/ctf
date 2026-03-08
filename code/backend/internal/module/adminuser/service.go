@@ -48,6 +48,8 @@ func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]d
 
 	users, total, err := s.repo.List(ctx, UserListFilter{
 		Keyword:   strings.TrimSpace(query.Keyword),
+		StudentNo: strings.TrimSpace(query.StudentNo),
+		TeacherNo: strings.TrimSpace(query.TeacherNo),
 		Role:      strings.TrimSpace(query.Role),
 		Status:    strings.TrimSpace(query.Status),
 		ClassName: strings.TrimSpace(query.ClassName),
@@ -66,9 +68,12 @@ func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]d
 }
 
 func (s *Service) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error) {
+	identity := normalizeIdentityNumbers(req.Role, req.StudentNo, req.TeacherNo)
 	user := &model.User{
 		Username:  strings.TrimSpace(req.Username),
 		Email:     strings.TrimSpace(req.Email),
+		StudentNo: identity.StudentNo,
+		TeacherNo: identity.TeacherNo,
 		Role:      req.Role,
 		ClassName: strings.TrimSpace(req.ClassName),
 		Status:    defaultUserStatus(req.Status),
@@ -97,6 +102,12 @@ func (s *Service) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateA
 	if req.Email != nil {
 		user.Email = strings.TrimSpace(*req.Email)
 	}
+	if req.StudentNo != nil {
+		user.StudentNo = strings.TrimSpace(*req.StudentNo)
+	}
+	if req.TeacherNo != nil {
+		user.TeacherNo = strings.TrimSpace(*req.TeacherNo)
+	}
 	if req.ClassName != nil {
 		user.ClassName = strings.TrimSpace(*req.ClassName)
 	}
@@ -106,6 +117,9 @@ func (s *Service) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateA
 	if req.Status != nil && strings.TrimSpace(*req.Status) != "" {
 		user.Status = strings.TrimSpace(*req.Status)
 	}
+	identity := normalizeIdentityNumbers(user.Role, user.StudentNo, user.TeacherNo)
+	user.StudentNo = identity.StudentNo
+	user.TeacherNo = identity.TeacherNo
 
 	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, mapServiceError(err)
@@ -174,6 +188,8 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 	className := strings.TrimSpace(getCSVValue(record, 3))
 	role := strings.TrimSpace(getCSVValue(record, 4))
 	status := strings.TrimSpace(getCSVValue(record, 5))
+	studentNo := strings.TrimSpace(getCSVValue(record, 6))
+	teacherNo := strings.TrimSpace(getCSVValue(record, 7))
 
 	if username == "" {
 		return false, fmt.Errorf("username 不能为空")
@@ -198,6 +214,8 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 			Username:  username,
 			Password:  password,
 			Email:     email,
+			StudentNo: studentNo,
+			TeacherNo: teacherNo,
 			ClassName: className,
 			Role:      role,
 			Status:    status,
@@ -210,6 +228,8 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 
 	req := &dto.UpdateAdminUserReq{
 		Email:     &email,
+		StudentNo: &studentNo,
+		TeacherNo: &teacherNo,
 		ClassName: &className,
 		Role:      &role,
 		Status:    &status,
@@ -226,6 +246,14 @@ func toAdminUserResp(user *model.User) dto.AdminUserResp {
 	if strings.TrimSpace(user.Email) != "" {
 		email = &user.Email
 	}
+	var studentNo *string
+	if strings.TrimSpace(user.StudentNo) != "" {
+		studentNo = &user.StudentNo
+	}
+	var teacherNo *string
+	if strings.TrimSpace(user.TeacherNo) != "" {
+		teacherNo = &user.TeacherNo
+	}
 	var className *string
 	if strings.TrimSpace(user.ClassName) != "" {
 		className = &user.ClassName
@@ -235,6 +263,8 @@ func toAdminUserResp(user *model.User) dto.AdminUserResp {
 		ID:        user.ID,
 		Username:  user.Username,
 		Email:     email,
+		StudentNo: studentNo,
+		TeacherNo: teacherNo,
 		ClassName: className,
 		Status:    user.Status,
 		Roles:     []string{user.Role},
@@ -258,6 +288,10 @@ func mapServiceError(err error) error {
 		return errcode.ErrUsernameExists
 	case errors.Is(err, ErrEmailExists):
 		return errcode.ErrEmailExists
+	case errors.Is(err, ErrStudentNoExists):
+		return errcode.ErrStudentNoExists
+	case errors.Is(err, ErrTeacherNoExists):
+		return errcode.ErrTeacherNoExists
 	case errors.Is(err, ErrRoleNotFound):
 		return errcode.ErrInternal.WithCause(err)
 	default:
@@ -283,4 +317,28 @@ func getCSVValue(record []string, index int) string {
 		return ""
 	}
 	return record[index]
+}
+
+type identityNumbers struct {
+	StudentNo string
+	TeacherNo string
+}
+
+func normalizeIdentityNumbers(role, studentNo, teacherNo string) identityNumbers {
+	normalized := identityNumbers{
+		StudentNo: strings.TrimSpace(studentNo),
+		TeacherNo: strings.TrimSpace(teacherNo),
+	}
+
+	switch strings.TrimSpace(role) {
+	case model.RoleStudent:
+		normalized.TeacherNo = ""
+	case model.RoleTeacher:
+		normalized.StudentNo = ""
+	default:
+		normalized.StudentNo = ""
+		normalized.TeacherNo = ""
+	}
+
+	return normalized
 }

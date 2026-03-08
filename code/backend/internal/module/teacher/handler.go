@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
@@ -31,8 +32,13 @@ func (h *Handler) ListClasses(c *gin.Context) {
 
 func (h *Handler) ListClassStudents(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherStudentQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
 
-	items, err := h.service.ListClassStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	items, err := h.service.ListClassStudents(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -6,9 +6,14 @@ type TeacherClassItem struct {
 }
 
 type TeacherStudentItem struct {
-	ID       int64   `json:"id"`
-	Username string  `json:"username"`
-	Name     *string `json:"name,omitempty"`
+	ID        int64   `json:"id"`
+	Username  string  `json:"username"`
+	StudentNo *string `json:"student_no,omitempty"`
+	Name      *string `json:"name,omitempty"`
+}
+
+type TeacherStudentQuery struct {
+	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
 }
 
 type ProgressBreakdown struct {

@@ -38,9 +38,9 @@ func setupTeacherTestDB(t *testing.T) *gorm.DB {
 
 	now := time.Now()
 	users := []model.User{
-		{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
-		{ID: 2, Username: "student-a", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
-		{ID: 3, Username: "student-b", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 1, Username: "teacher-a", TeacherNo: "T-1001", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 2, Username: "student-a", StudentNo: "S-1001", Role: model.RoleStudent, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
+		{ID: 3, Username: "student-b", StudentNo: "S-1002", Role: model.RoleStudent, ClassName: "Class B", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
 		{ID: 4, Username: "admin", Role: model.RoleAdmin, Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now},
 	}
 	for _, user := range users {
@@ -82,6 +82,24 @@ func TestServiceListClassesTeacherScoped(t *testing.T) {
 	}
 	if len(items) != 1 || items[0].Name != "Class A" || items[0].StudentCount != 1 {
 		t.Fatalf("unexpected classes: %+v", items)
+	}
+}
+
+func TestServiceListClassStudentsFiltersByStudentNo(t *testing.T) {
+	db := setupTeacherTestDB(t)
+	service := NewService(NewRepository(db), &stubRecommendationProvider{}, nil)
+
+	items, err := service.ListClassStudents(context.Background(), 1, model.RoleTeacher, "Class A", &dto.TeacherStudentQuery{
+		StudentNo: "S-1001",
+	})
+	if err != nil {
+		t.Fatalf("ListClassStudents() error = %v", err)
+	}
+	if len(items) != 1 || items[0].Username != "student-a" {
+		t.Fatalf("unexpected students: %+v", items)
+	}
+	if items[0].StudentNo == nil || *items[0].StudentNo != "S-1001" {
+		t.Fatalf("expected student no to be returned, got %+v", items[0])
 	}
 }
 

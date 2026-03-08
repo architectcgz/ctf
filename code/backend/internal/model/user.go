@@ -19,6 +19,8 @@ type User struct {
 	Username     string         `gorm:"column:username"`
 	PasswordHash string         `gorm:"column:password_hash"`
 	Email        string         `gorm:"column:email"`
+	StudentNo    string         `gorm:"column:student_no"`
+	TeacherNo    string         `gorm:"column:teacher_no"`
 	Role         string         `gorm:"column:role"`
 	ClassName    string         `gorm:"column:class_name"`
 	Status       string         `gorm:"column:status"`
