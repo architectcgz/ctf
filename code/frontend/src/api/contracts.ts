@@ -109,20 +109,12 @@ export interface InstanceListItem extends InstanceData {
   difficulty: ChallengeDifficulty
 }
 
-export interface SubmitFlagSuccessData {
-  correct: true
-  points_earned: number
-  first_blood: boolean
-  solved_at: ISODateTime
-  challenge_progress: { total_challenges: number; solved_challenges: number }
+export interface SubmitFlagData {
+  is_correct: boolean
+  message: string
+  points?: number
+  submitted_at: ISODateTime
 }
-
-export interface SubmitFlagFailureData {
-  correct: false
-  remaining_attempts?: number
-}
-
-export type SubmitFlagData = SubmitFlagSuccessData | SubmitFlagFailureData
 
 export interface UnlockHintData {
   hint: ChallengeHint

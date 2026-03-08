@@ -427,6 +427,8 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		log.Named("practice_service"),
 	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
+	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
+	protected.GET("/challenges/:id", challengeHandler.GetPublishedChallenge)
 	protected.POST("/challenges/:id/instances",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:        model.AuditActionCreate,

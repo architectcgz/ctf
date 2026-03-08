@@ -147,12 +147,12 @@ async function submitFlagHandler() {
   submitResult.value = null
   try {
     const result = await submitFlag(challenge.value.id, flagInput.value.trim())
-    if (result.correct) {
-      submitResult.value = { success: true, message: '恭喜！Flag 正确！' }
+    if (result.is_correct) {
+      submitResult.value = { success: true, message: result.message }
       toast.success('Flag 正确！')
       challenge.value.is_solved = true
     } else {
-      submitResult.value = { success: false, message: 'Flag 错误，请重试' }
+      submitResult.value = { success: false, message: result.message }
     }
   } catch (error) {
     submitResult.value = { success: false, message: '提交失败，请重试' }
