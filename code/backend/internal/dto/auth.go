@@ -14,6 +14,11 @@ type LoginReq struct {
 
 type RefreshReq struct{}
 
+type ChangePasswordReq struct {
+	OldPassword string `json:"old_password" binding:"required,min=8,max=72"`
+	NewPassword string `json:"new_password" binding:"required,min=8,max=72"`
+}
+
 type AuthUser struct {
 	ID        int64   `json:"id"`
 	Username  string  `json:"username"`

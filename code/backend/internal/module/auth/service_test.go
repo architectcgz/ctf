@@ -19,6 +19,7 @@ type mockRepository struct {
 	createFn         func(ctx context.Context, user *model.User) error
 	findByUsernameFn func(ctx context.Context, username string) (*model.User, error)
 	findByIDFn       func(ctx context.Context, userID int64) (*model.User, error)
+	updatePasswordFn func(ctx context.Context, userID int64, newHash string) error
 }
 
 func (m *mockRepository) Create(ctx context.Context, user *model.User) error {
@@ -43,7 +44,110 @@ func (m *mockRepository) FindByID(ctx context.Context, userID int64) (*model.Use
 }
 
 func (m *mockRepository) UpdatePassword(ctx context.Context, userID int64, newHash string) error {
-	return nil
+	if m.updatePasswordFn == nil {
+		return nil
+	}
+	return m.updatePasswordFn(ctx, userID, newHash)
+}
+
+func TestServiceChangePasswordSuccess(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{
+		ID:       1,
+		Username: "alice_1",
+		Role:     model.RoleStudent,
+		Status:   model.UserStatusActive,
+	}
+	if err := user.SetPassword("Password123"); err != nil {
+		t.Fatalf("SetPassword() error = %v", err)
+	}
+	oldHash := user.PasswordHash
+
+	var updatedHash string
+	service := NewService(&mockRepository{
+		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			if userID != user.ID {
+				t.Fatalf("unexpected user id: %d", userID)
+			}
+			return user, nil
+		},
+		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
+			if userID != user.ID {
+				t.Fatalf("unexpected user id: %d", userID)
+			}
+			updatedHash = newHash
+			return nil
+		},
+	}, &mockTokenService{}, zap.NewNop())
+
+	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+		OldPassword: "Password123",
+		NewPassword: "Password456",
+	})
+	if err != nil {
+		t.Fatalf("ChangePassword() error = %v", err)
+	}
+	if updatedHash == "" || updatedHash == oldHash {
+		t.Fatalf("expected password hash to be updated")
+	}
+	if !user.CheckPassword("Password456") {
+		t.Fatalf("expected user password to be replaced with new password")
+	}
+}
+
+func TestServiceChangePasswordOldPasswordInvalid(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{ID: 1, Username: "alice_1"}
+	if err := user.SetPassword("Password123"); err != nil {
+		t.Fatalf("SetPassword() error = %v", err)
+	}
+
+	service := NewService(&mockRepository{
+		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return user, nil
+		},
+		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
+			t.Fatalf("UpdatePassword() should not be called")
+			return nil
+		},
+	}, &mockTokenService{}, zap.NewNop())
+
+	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+		OldPassword: "wrong-password",
+		NewPassword: "Password456",
+	})
+	if !errors.Is(err, errcode.ErrOldPasswordInvalid) {
+		t.Fatalf("expected old password invalid, got %v", err)
+	}
+}
+
+func TestServiceChangePasswordRejectsSamePassword(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{ID: 1, Username: "alice_1"}
+	if err := user.SetPassword("Password123"); err != nil {
+		t.Fatalf("SetPassword() error = %v", err)
+	}
+
+	service := NewService(&mockRepository{
+		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
+			return user, nil
+		},
+		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
+			t.Fatalf("UpdatePassword() should not be called")
+			return nil
+		},
+	}, &mockTokenService{}, zap.NewNop())
+
+	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
+		OldPassword: "Password123",
+		NewPassword: "Password123",
+	})
+	if !errors.Is(err, errcode.ErrPasswordUnchanged) {
+		t.Fatalf("expected password unchanged error, got %v", err)
+	}
 }
 
 type mockTokenService struct {

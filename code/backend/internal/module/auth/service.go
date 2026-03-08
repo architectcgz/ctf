@@ -15,6 +15,7 @@ type Service interface {
 	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *TokenPair, error)
 	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *TokenPair, error)
 	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
+	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
 	ValidatePassword(user *model.User, password string) bool
 }
 
@@ -112,6 +113,40 @@ func (s *service) GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, 
 	}
 	profile := buildAuthUser(user)
 	return &profile, nil
+}
+
+func (s *service) ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error {
+	user, err := s.repo.FindByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return errcode.ErrUnauthorized
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+
+	if !s.ValidatePassword(user, req.OldPassword) {
+		s.log.Warn("auth_change_password_failed_old_password_invalid", zap.Int64("user_id", userID))
+		return errcode.ErrOldPasswordInvalid
+	}
+	if req.OldPassword == req.NewPassword {
+		s.log.Warn("auth_change_password_failed_password_unchanged", zap.Int64("user_id", userID))
+		return errcode.ErrPasswordUnchanged
+	}
+
+	if err := user.SetPassword(req.NewPassword); err != nil {
+		s.log.Error("auth_change_password_hash_failed", zap.Int64("user_id", userID), zap.Error(err))
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if err := s.repo.UpdatePassword(ctx, userID, user.PasswordHash); err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return errcode.ErrUnauthorized
+		}
+		s.log.Error("auth_change_password_update_failed", zap.Int64("user_id", userID), zap.Error(err))
+		return errcode.ErrInternal.WithCause(err)
+	}
+
+	s.log.Info("auth_change_password_succeeded", zap.Int64("user_id", userID))
+	return nil
 }
 
 func (s *service) ValidatePassword(user *model.User, password string) bool {
