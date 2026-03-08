@@ -98,13 +98,19 @@ function humanizeError(err: unknown): string {
   return '请求失败'
 }
 
+function resolveApiMessage(code: number | undefined, message: string | undefined, fallbackMessage: string): string {
+  const normalizedMessage = typeof message === 'string' ? message.trim() : ''
+  return normalizedMessage || mapErrorCode(code) || fallbackMessage
+}
+
 function toApiError(
   code: number | undefined,
   requestId: string | undefined,
   status: number | undefined,
-  fallbackMessage: string
+  fallbackMessage: string,
+  message?: string
 ): ApiError {
-  return new ApiError(mapErrorCode(code) || fallbackMessage, {
+  return new ApiError(resolveApiMessage(code, message, fallbackMessage), {
     code,
     requestId,
     status,
@@ -115,10 +121,6 @@ function getToast() {
   return useToast()
 }
 
-function withRequestId(message: string, requestId: string | undefined): string {
-  return requestId ? `${message}（请求ID: ${requestId}）` : message
-}
-
 instance.interceptors.response.use(
   (response) => {
     const toast = getToast()
@@ -126,7 +128,7 @@ instance.interceptors.response.use(
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
       if (envelope.code === 0) return response
-      const apiError = toApiError(envelope.code, envelope.request_id, response.status, '请求失败')
+      const apiError = toApiError(envelope.code, envelope.request_id, response.status, '请求失败', envelope.message)
       toast.error(apiError.message)
       return Promise.reject(apiError)
     }
@@ -182,8 +184,8 @@ instance.interceptors.response.use(
 
     const mapped = mapErrorCode(code)
     if (mapped) {
-      const apiError = toApiError(code, error.response?.data?.request_id, status, mapped)
-      toast.error(withRequestId(apiError.message, apiError.requestId))
+      const apiError = toApiError(code, error.response?.data?.request_id, status, mapped, error.response?.data?.message)
+      toast.error(apiError.message)
       return Promise.reject(apiError)
     }
 
@@ -193,8 +195,8 @@ instance.interceptors.response.use(
     }
 
     const fallbackMessage = status && status >= 500 ? '服务暂时不可用，请稍后重试' : '请求失败，请稍后重试'
-    const apiError = toApiError(code, error.response?.data?.request_id, status, fallbackMessage)
-    toast.error(withRequestId(apiError.message, apiError.requestId))
+    const apiError = toApiError(code, error.response?.data?.request_id, status, fallbackMessage, error.response?.data?.message)
+    toast.error(apiError.message)
     return Promise.reject(apiError)
   }
 )

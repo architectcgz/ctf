@@ -8,6 +8,7 @@ export interface PaginationState<T> {
   page: Ref<number>
   pageSize: Ref<number>
   loading: Ref<boolean>
+  error: Ref<unknown | null>
   changePage: (next: number) => Promise<void>
   changePageSize: (next: number) => Promise<void>
   refresh: () => Promise<void>
@@ -21,15 +22,19 @@ export function usePagination<T>(
   const page = ref(1)
   const pageSize = ref(DEFAULT_PAGE_SIZE)
   const loading = ref(false)
+  const error = ref<unknown | null>(null)
 
   async function refresh(): Promise<void> {
     loading.value = true
+    error.value = null
     try {
       const data = await fetchFn({ page: page.value, page_size: pageSize.value })
       list.value = data.list
       total.value = data.total
       page.value = data.page
       pageSize.value = data.page_size
+    } catch (err) {
+      error.value = err
     } finally {
       loading.value = false
     }
@@ -46,5 +51,5 @@ export function usePagination<T>(
     await refresh()
   }
 
-  return { list, total, page, pageSize, loading, changePage, changePageSize, refresh }
+  return { list, total, page, pageSize, loading, error, changePage, changePageSize, refresh }
 }

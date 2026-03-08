@@ -11,11 +11,12 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { Flag, Inbox, UsersRound } from 'lucide-vue-next'
+import { AlertTriangle, Flag, Inbox, UsersRound } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 type IconComp = Component
 const iconRegistry: Record<string, Component> = {
+  AlertTriangle,
   Inbox,
   Flag,
   UsersRound,
