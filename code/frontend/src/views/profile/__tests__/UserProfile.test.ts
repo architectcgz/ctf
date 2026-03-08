@@ -89,7 +89,7 @@ describe('UserProfile', () => {
 
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('Class A')
-    expect(wrapper.text()).toContain('密码修改接口')
+    expect(wrapper.text()).toContain('生成个人报告')
 
     const createButton = wrapper
       .findAll('button')

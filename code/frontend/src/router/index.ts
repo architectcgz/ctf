@@ -76,6 +76,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: '个人资料', icon: 'User' },
       },
       {
+        path: 'settings/security',
+        name: 'SecuritySettings',
+        component: () => import('@/views/profile/SecuritySettings.vue'),
+        meta: { requiresAuth: true, title: '安全设置', icon: 'Settings' },
+      },
+      {
         path: 'notifications',
         name: 'Notifications',
         component: () => import('@/views/notifications/NotificationList.vue'),
