@@ -4,7 +4,6 @@ import { CalendarClock, CircleCheckBig, Play, Send } from 'lucide-vue-next'
 
 import type { TimelineEvent } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
-import MetricCard from '@/components/common/MetricCard.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import { formatDate, formatTime } from '@/utils/format'
 
@@ -27,18 +26,71 @@ const groupedTimeline = computed(() => {
   })
   return Array.from(groups.entries()).map(([date, events]) => ({ date, events }))
 })
+
+function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
+  if (tone === 'success') {
+    return 'border-color: rgba(63,185,80,0.18); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(63,185,80,0.14), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
+  }
+
+  if (tone === 'warning') {
+    return 'border-color: rgba(210,153,34,0.18); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(210,153,34,0.13), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
+  }
+
+  return 'border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(34,211,238,0.14), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 md:grid-cols-3">
-      <MetricCard label="成功解题" :value="solveCount" hint="近期成功提交记录" accent="success" />
-      <MetricCard label="提交次数" :value="submitCount" hint="近期 Flag 提交动作" accent="warning" />
-      <MetricCard label="实例操作" :value="instanceCount" hint="启动、销毁等实例相关动作" accent="primary" />
+      <AppCard
+        variant="metric"
+        accent="success"
+        eyebrow="成功解题"
+        :title="String(solveCount)"
+        :style="statCardStyle('success')"
+      >
+        <template #header>
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/18 bg-emerald-500/12 text-emerald-300">
+            <CircleCheckBig class="h-5 w-5" />
+          </div>
+        </template>
+        <div class="text-sm leading-6 text-text-secondary">近期成功提交记录</div>
+      </AppCard>
+
+      <AppCard
+        variant="metric"
+        accent="warning"
+        eyebrow="提交次数"
+        :title="String(submitCount)"
+        :style="statCardStyle('warning')"
+      >
+        <template #header>
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/18 bg-amber-500/12 text-amber-300">
+            <Send class="h-5 w-5" />
+          </div>
+        </template>
+        <div class="text-sm leading-6 text-text-secondary">近期 Flag 提交动作</div>
+      </AppCard>
+
+      <AppCard
+        variant="metric"
+        accent="primary"
+        eyebrow="实例操作"
+        :title="String(instanceCount)"
+        :style="statCardStyle('primary')"
+      >
+        <template #header>
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/18 bg-primary/12 text-primary">
+            <Play class="h-5 w-5" />
+          </div>
+        </template>
+        <div class="text-sm leading-6 text-text-secondary">启动、销毁等实例相关动作</div>
+      </AppCard>
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-      <SectionCard title="训练时间线" subtitle="按时间顺序还原最近训练过程，不再复用主页里的简版卡片。">
+      <SectionCard title="训练时间线" subtitle="按时间顺序还原最近训练过程，帮助你看清最近的训练节奏。">
         <div v-if="groupedTimeline.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary">
           当前还没有训练动态。
         </div>
@@ -115,7 +167,7 @@ const groupedTimeline = computed(() => {
 
         <SectionCard title="阅读方式" subtitle="时间线页只关注过程，不再混入总览卡片。">
           <AppCard variant="action" accent="primary">
-            这页的结构被单独设计成“时间顺序 + 节奏解读”，目的就是让你看清训练过程，而不是像主页那样只看摘要。
+            把时间顺序和节奏解读放在一起，更容易看清最近的训练过程，而不只是结果摘要。
           </AppCard>
           <div class="mt-3 flex items-center gap-2 text-sm text-text-primary">
             <CalendarClock class="h-4 w-4 text-primary" />
