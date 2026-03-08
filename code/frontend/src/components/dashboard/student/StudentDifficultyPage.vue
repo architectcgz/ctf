@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { Flame, Layers2, ShieldCheck } from 'lucide-vue-next'
 
+import AppCard from '@/components/common/AppCard.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import { difficultyLabel } from '@/utils/challenge'
 
@@ -18,13 +19,6 @@ const props = defineProps<{
 }>()
 
 const difficultyOrder = ['beginner', 'easy', 'medium', 'hard', 'hell']
-const toneMap: Record<string, string> = {
-  beginner: 'border-emerald-500/20 bg-emerald-500/10',
-  easy: 'border-sky-500/20 bg-sky-500/10',
-  medium: 'border-amber-500/20 bg-amber-500/10',
-  hard: 'border-orange-500/20 bg-orange-500/10',
-  hell: 'border-rose-500/20 bg-rose-500/10',
-}
 const barMap: Record<string, string> = {
   beginner: 'bg-emerald-400',
   easy: 'bg-sky-400',
@@ -48,24 +42,32 @@ const nextFocus = computed(() =>
     .filter((item) => item.total > 0)
     .sort((left, right) => left.rate - right.rate)[0] || null,
 )
+
+function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warning' | 'danger' | 'violet' {
+  if (difficulty === 'beginner') return 'success'
+  if (difficulty === 'easy') return 'primary'
+  if (difficulty === 'medium') return 'warning'
+  if (difficulty === 'hard') return 'danger'
+  return 'violet'
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
-      <article
+      <AppCard
         v-for="item in orderedStats"
         :key="item.difficulty"
-        class="rounded-[26px] border p-5 shadow-[0_18px_40px_var(--color-shadow-soft)]"
-        :class="toneMap[item.difficulty] || 'border-border bg-surface/88'"
+        variant="metric"
+        :accent="accentForDifficulty(item.difficulty)"
+        :eyebrow="difficultyLabel(item.difficulty)"
+        :title="`${item.rate}%`"
+        :subtitle="`${item.solved} / ${item.total}`"
       >
-        <div class="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">{{ difficultyLabel(item.difficulty) }}</div>
-        <div class="mt-3 text-3xl font-semibold tracking-tight text-text-primary">{{ item.rate }}%</div>
-        <div class="mt-2 text-sm text-text-secondary">{{ item.solved }} / {{ item.total }}</div>
-        <div class="mt-4 h-2.5 rounded-full bg-black/20">
+        <div class="h-2.5 rounded-full bg-black/20">
           <div class="h-2.5 rounded-full" :class="barMap[item.difficulty]" :style="{ width: `${item.rate}%` }" />
         </div>
-      </article>
+      </AppCard>
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
@@ -75,10 +77,11 @@ const nextFocus = computed(() =>
         </div>
 
         <div v-else class="space-y-4">
-          <article
+          <AppCard
             v-for="item in orderedStats"
             :key="item.difficulty"
-            class="rounded-[24px] border border-border bg-base/70 px-5 py-5"
+            variant="action"
+            :accent="accentForDifficulty(item.difficulty)"
           >
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -93,13 +96,13 @@ const nextFocus = computed(() =>
             <div class="mt-4 h-3 rounded-full bg-[var(--color-bg-base)]">
               <div class="h-3 rounded-full" :class="barMap[item.difficulty]" :style="{ width: `${item.rate}%` }" />
             </div>
-          </article>
+          </AppCard>
         </div>
       </SectionCard>
 
       <div class="grid gap-4">
         <SectionCard title="下一阶段建议" subtitle="根据当前难度覆盖情况给出训练方向。">
-          <div class="rounded-[24px] border border-border bg-base/70 px-4 py-4">
+          <AppCard variant="action" accent="warning">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
               <Flame class="h-4 w-4 text-amber-300" />
               建议优先处理
@@ -112,9 +115,9 @@ const nextFocus = computed(() =>
                   : '先完成几道题，系统才能给出更清晰的难度结构判断。'
               }}
             </div>
-          </div>
+          </AppCard>
 
-          <div class="rounded-[24px] border border-border bg-base/70 px-4 py-4">
+          <AppCard variant="action" accent="primary">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
               <Layers2 class="h-4 w-4 text-sky-300" />
               这页关注什么
@@ -122,9 +125,9 @@ const nextFocus = computed(() =>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
               主页看的是总览，这页看的是难度分层。如果你只做简单题，总分和解题数会涨，但结构不会健康。
             </div>
-          </div>
+          </AppCard>
 
-          <div class="rounded-[24px] border border-border bg-base/70 px-4 py-4">
+          <AppCard variant="action" accent="success">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
               <ShieldCheck class="h-4 w-4 text-emerald-300" />
               目标状态
@@ -132,7 +135,7 @@ const nextFocus = computed(() =>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
               目标不是所有难度都平均，而是从当前能力台阶稳定上探，逐步形成“简单稳定、中等推进、困难试探”的结构。
             </div>
-          </div>
+          </AppCard>
         </SectionCard>
       </div>
     </section>

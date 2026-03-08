@@ -15,6 +15,7 @@ declare module 'vue' {
     AdminContestTable: typeof import('./components/admin/contest/AdminContestTable.vue')['default']
     AdminDashboardPage: typeof import('./components/admin/dashboard/AdminDashboardPage.vue')['default']
     AdminUserFormDialog: typeof import('./components/admin/user/AdminUserFormDialog.vue')['default']
+    AppCard: typeof import('./components/common/AppCard.vue')['default']
     AppEmpty: typeof import('./components/common/AppEmpty.vue')['default']
     AppLayout: typeof import('./components/layout/AppLayout.vue')['default']
     AppLoading: typeof import('./components/common/AppLoading.vue')['default']

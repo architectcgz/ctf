@@ -22,30 +22,55 @@
         />
       </div>
 
-      <div
+      <AppEmpty
         v-else-if="list.length === 0"
-        class="rounded-2xl border border-dashed border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-8 text-center text-[var(--color-text-muted)]"
-      >
-        暂无通知
-      </div>
+        icon="Inbox"
+        title="暂无通知"
+        description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
+      />
 
       <div v-else class="space-y-3">
-        <button
+        <AppCard
           v-for="item in list"
           :key="item.id"
-          type="button"
-          class="w-full rounded-[24px] border p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-primary)]/40"
-          :class="
-            item.unread
-              ? 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/6 shadow-[0_18px_36px_var(--color-shadow-soft)]'
-              : 'border-[var(--color-border-default)] bg-[var(--color-bg-base)]'
-          "
+          as="button"
+          variant="action"
+          :accent="typeAccent(item.type)"
+          interactive
+          class="cursor-pointer"
           @click="handleMarkAsRead(item)"
         >
           <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0 space-y-2">
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+                :class="
+                  typeAccent(item.type) === 'warning'
+                    ? 'border-amber-500/20 bg-amber-500/10 text-amber-300'
+                    : typeAccent(item.type) === 'success'
+                      ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                      : typeAccent(item.type) === 'violet'
+                        ? 'border-violet-500/20 bg-violet-500/10 text-violet-300'
+                        : 'border-primary/20 bg-primary/10 text-primary'
+                "
+              >
+                <component :is="typeIcon(item.type)" class="h-4 w-4" />
+              </div>
+
+              <div class="min-w-0 space-y-2">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="rounded-full border px-2.5 py-1 text-xs font-medium" :class="typeClass(item.type)">
+                <span
+                  class="rounded-full border px-2.5 py-1 text-xs font-medium"
+                  :class="
+                    typeAccent(item.type) === 'warning'
+                      ? 'border-amber-500/20 bg-amber-500/10 text-amber-300'
+                      : typeAccent(item.type) === 'success'
+                        ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                        : typeAccent(item.type) === 'violet'
+                          ? 'border-violet-500/20 bg-violet-500/10 text-violet-300'
+                          : 'border-primary/20 bg-primary/10 text-primary'
+                  "
+                >
                   {{ typeLabel(item.type) }}
                 </span>
                 <span
@@ -60,6 +85,7 @@
                 {{ item.content }}
               </div>
             </div>
+            </div>
             <div class="shrink-0 text-right">
               <div class="text-xs text-[var(--color-text-muted)]">
                 {{ formatDate(item.created_at) }}
@@ -69,7 +95,7 @@
               </div>
             </div>
           </div>
-        </button>
+        </AppCard>
       </div>
 
       <div v-if="!loading && total > 0" class="mt-6 flex flex-col gap-3 border-t border-border-subtle pt-4 sm:flex-row sm:items-center sm:justify-between">
@@ -97,9 +123,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { Flag, GraduationCap, Info, Trophy } from 'lucide-vue-next'
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
@@ -123,18 +152,25 @@ const { list, total, page, pageSize, loading, changePage, refresh } =
   usePagination<NotificationItem>(fetchNotifications)
 const unreadOnPage = computed(() => list.value.filter((item) => item.unread).length)
 
-function typeClass(type: string): string {
-  if (type === 'contest') return 'border-[#f59e0b]/30 bg-[#f59e0b]/12 text-[#f59e0b]'
-  if (type === 'challenge') return 'border-[#10b981]/30 bg-[#10b981]/12 text-[#10b981]'
-  if (type === 'team') return 'border-[#8b5cf6]/30 bg-[#8b5cf6]/12 text-[#8b5cf6]'
-  return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/12 text-[var(--color-primary)]'
-}
-
 function typeLabel(type: string): string {
   if (type === 'contest') return '竞赛'
   if (type === 'challenge') return '训练'
   if (type === 'team') return '团队'
   return '系统'
+}
+
+function typeIcon(type: string) {
+  if (type === 'contest') return Trophy
+  if (type === 'challenge') return Flag
+  if (type === 'team') return GraduationCap
+  return Info
+}
+
+function typeAccent(type: string): 'primary' | 'success' | 'warning' | 'violet' {
+  if (type === 'contest') return 'warning'
+  if (type === 'challenge') return 'success'
+  if (type === 'team') return 'violet'
+  return 'primary'
 }
 
 async function handleMarkAsRead(item: NotificationItem): Promise<void> {
