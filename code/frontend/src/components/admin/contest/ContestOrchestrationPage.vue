@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { CalendarClock, Flag, RefreshCw, ShieldCheck, Trophy, UserPlus } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -60,74 +61,59 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <div class="overflow-hidden rounded-[30px] border border-amber-500/20 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.14),transparent_42%),linear-gradient(145deg,rgba(2,6,23,0.98),rgba(15,23,42,0.92))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-100/80">
-          <span>Contest Timeline</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
-        </div>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-white">当前赛事编排视角</h2>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-200/78">
-          这里主要看赛事窗口和状态流转。创建、编辑和状态筛选都接真实接口，但删除能力仍然保持关闭，不再留假按钮。
-        </p>
+      <AppCard
+        variant="hero"
+        accent="warning"
+        eyebrow="Contest Timeline"
+        title="当前赛事编排视角"
+        subtitle="这里主要看赛事窗口和状态流转。创建、编辑和状态筛选都接真实接口，但删除能力仍然保持关闭，不再留假按钮。"
+      >
+        <template #header>
+          <span
+            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+            style="border-color: rgba(210,153,34,0.24); background-color: rgba(210,153,34,0.12); color: var(--color-warning);"
+          >
+            真实接口
+          </span>
+        </template>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">当前页赛事</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">当前筛选结果内的本页赛事数</div>
-          </div>
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">报名中</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ registeringCount }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">便于快速判断当前公开报名窗口</div>
-          </div>
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">进行中</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ runningCount }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">当前正处于比赛中的场次数量</div>
-          </div>
+        <div class="grid gap-3 md:grid-cols-3">
+          <AppCard variant="metric" accent="warning" eyebrow="当前页赛事" :title="String(list.length)" subtitle="当前筛选结果内的本页赛事数。" />
+          <AppCard variant="metric" accent="warning" eyebrow="报名中" :title="String(registeringCount)" subtitle="便于快速判断当前公开报名窗口。" />
+          <AppCard variant="metric" accent="warning" eyebrow="进行中" :title="String(runningCount)" subtitle="当前正处于比赛中的场次数量。" />
         </div>
-      </div>
+      </AppCard>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">赛事总量</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ total }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="warning" eyebrow="赛事总量" :title="String(total)" subtitle="当前筛选条件下的赛事总数。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-300">
               <Trophy class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">当前筛选条件下的赛事总数。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">接入边界</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">显式</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="primary" eyebrow="接入边界" title="显式" subtitle="删除接口未提供，所以页面继续隐藏删除能力。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <ShieldCheck class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">删除接口未提供，所以页面继续隐藏删除能力。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">状态筛选</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ statusFilter === 'all' ? '全部' : statusFilter }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard
+          variant="metric"
+          accent="primary"
+          eyebrow="状态筛选"
+          :title="statusFilter === 'all' ? '全部' : statusFilter"
+          subtitle="用于快速切到某个赛事阶段做编排调整。"
+        >
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <CalendarClock class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">用于快速切到某个赛事阶段做编排调整。</div>
-        </article>
+          </template>
+        </AppCard>
       </div>
     </section>
 
@@ -151,18 +137,15 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
           </label>
 
           <div class="mt-4 grid gap-3">
-            <div class="rounded-2xl border border-emerald-500/25 bg-emerald-500/8 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">已接入</p>
-              <p class="mt-2 text-sm text-slate-200">竞赛列表、创建、编辑都走真实接口。</p>
-            </div>
-            <div class="rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">受后端约束</p>
-              <p class="mt-2 text-sm text-slate-200">状态流转、时间字段可编辑范围与后端规则保持一致。</p>
-            </div>
-            <div class="rounded-2xl border border-slate-500/25 bg-slate-500/8 p-4">
-              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">暂未暴露</p>
-              <p class="mt-2 text-sm text-slate-200">删除接口主线未提供，页面不再展示假删除能力。</p>
-            </div>
+            <AppCard variant="action" accent="success" eyebrow="已接入" subtitle="竞赛列表、创建、编辑都走真实接口。">
+              <template #default />
+            </AppCard>
+            <AppCard variant="action" accent="warning" eyebrow="受后端约束" subtitle="状态流转、时间字段可编辑范围与后端规则保持一致。">
+              <template #default />
+            </AppCard>
+            <AppCard variant="action" accent="neutral" eyebrow="暂未暴露" subtitle="删除接口主线未提供，页面不再展示假删除能力。">
+              <template #default />
+            </AppCard>
           </div>
         </SectionCard>
       </div>

@@ -20,14 +20,15 @@
       <div v-if="open" class="fixed inset-0 z-[120]" @click="close">
         <div
           ref="panel"
-          class="fixed z-[130] overflow-hidden rounded-[28px] border border-border bg-surface/96 shadow-[0_32px_80px_var(--color-shadow-strong)] backdrop-blur-xl"
+          class="fixed z-[130]"
           :style="panelStyle"
           @click.stop
         >
-          <div class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-[linear-gradient(180deg,rgba(8,145,178,0.12),transparent)]" />
-          <div class="pointer-events-none absolute inset-y-0 left-0 w-px bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.08),transparent)]" />
-
-          <div class="relative border-b border-border px-4 py-4">
+          <AppCard
+            variant="panel"
+            accent="primary"
+            class="overflow-hidden rounded-[28px] shadow-[0_32px_80px_var(--color-shadow-strong)] backdrop-blur-xl"
+          >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
                 <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-text-muted">Notification Hub</div>
@@ -56,7 +57,7 @@
               </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap items-center gap-2">
+            <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-subtle pt-4">
               <button
                 type="button"
                 class="rounded-xl border border-border bg-base/70 px-3 py-2 text-xs font-medium text-text-secondary transition hover:border-primary/45 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
@@ -73,79 +74,79 @@
                 查看全部通知
               </button>
             </div>
-          </div>
 
-          <div class="max-h-[min(520px,calc(100vh-7rem))] overflow-auto px-3 py-3">
-            <div v-if="items.length === 0" class="rounded-[24px] border border-dashed border-border bg-base/60 px-5 py-8 text-center">
-              <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Bell class="h-5 w-5" />
-              </div>
-              <div class="mt-3 text-sm font-semibold text-text-primary">暂无通知</div>
-              <div class="mt-1 text-sm leading-6 text-text-secondary">
-                新的系统、训练或竞赛消息会在这里实时出现。
-              </div>
-            </div>
+            <div class="mt-4 max-h-[min(520px,calc(100vh-7rem))] overflow-auto">
+              <AppEmpty
+                v-if="items.length === 0"
+                title="暂无通知"
+                description="新的系统、训练或竞赛消息会在这里实时出现。"
+                icon="Bell"
+              />
 
-            <div v-else class="space-y-3">
-              <button
+              <div v-else class="space-y-3">
+                <AppCard
                 v-for="item in previewItems"
                 :key="item.id"
-                type="button"
-                class="w-full rounded-[24px] border px-4 py-4 text-left transition hover:-translate-y-0.5"
+                as="button"
+                variant="action"
+                :accent="item.unread ? 'primary' : 'neutral'"
+                interactive
+                class="w-full text-left"
                 :style="notificationCardStyle(item.unread)"
                 @click="markAsRead(item.id)"
-              >
-                <div class="flex items-start gap-3">
-                  <div
-                    class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-                    :style="typeMeta(item.type).iconWrapStyle"
-                  >
-                    <component :is="typeMeta(item.type).icon" class="h-4 w-4" :style="{ color: typeMeta(item.type).accentColor }" />
-                  </div>
-
-                  <div class="min-w-0 flex-1">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <span
-                        class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
-                        :style="typeMeta(item.type).badgeStyle"
-                      >
-                        {{ typeMeta(item.type).label }}
-                      </span>
-                      <span
-                        v-if="item.unread"
-                        class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary"
-                      >
-                        未读
-                      </span>
+                >
+                  <div class="flex items-start gap-3">
+                    <div
+                      class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+                      :style="typeMeta(item.type).iconWrapStyle"
+                    >
+                      <component :is="typeMeta(item.type).icon" class="h-4 w-4" :style="{ color: typeMeta(item.type).accentColor }" />
                     </div>
 
-                    <div class="mt-2 flex items-start justify-between gap-3">
-                      <div class="min-w-0">
-                        <div class="break-words text-sm font-semibold text-text-primary">
-                          {{ item.title }}
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span
+                          class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                          :style="typeMeta(item.type).badgeStyle"
+                        >
+                          {{ typeMeta(item.type).label }}
+                        </span>
+                        <span
+                          v-if="item.unread"
+                          class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary"
+                        >
+                          未读
+                        </span>
+                      </div>
+
+                      <div class="mt-2 flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <div class="break-words text-sm font-semibold text-text-primary">
+                            {{ item.title }}
+                          </div>
+                          <div v-if="item.content" class="mt-1 line-clamp-2 break-words text-sm leading-6 text-text-secondary">
+                            {{ item.content }}
+                          </div>
                         </div>
-                        <div v-if="item.content" class="mt-1 line-clamp-2 break-words text-sm leading-6 text-text-secondary">
-                          {{ item.content }}
+                        <span
+                          v-if="item.unread"
+                          class="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
+                          :style="{ backgroundColor: typeMeta(item.type).accentColor }"
+                        />
+                      </div>
+
+                      <div class="mt-3 flex items-center justify-between gap-3">
+                        <div class="text-xs text-text-muted">{{ formatDate(item.created_at) }}</div>
+                        <div class="text-xs font-medium text-text-secondary">
+                          {{ item.unread ? '点击标记已读' : '已读消息' }}
                         </div>
                       </div>
-                      <span
-                        v-if="item.unread"
-                        class="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full"
-                        :style="{ backgroundColor: typeMeta(item.type).accentColor }"
-                      />
-                    </div>
-
-                    <div class="mt-3 flex items-center justify-between gap-3">
-                      <div class="text-xs text-text-muted">{{ formatDate(item.created_at) }}</div>
-                      <div class="text-xs font-medium text-text-secondary">
-                        {{ item.unread ? '点击标记已读' : '已读消息' }}
-                      </div>
                     </div>
                   </div>
-                </div>
-              </button>
+                </AppCard>
+              </div>
             </div>
-          </div>
+          </AppCard>
         </div>
       </div>
     </Teleport>
@@ -159,6 +160,8 @@ import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { markAsRead as markAsReadApi } from '@/api/notification'
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useToast } from '@/composables/useToast'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
 import { useNotificationStore } from '@/stores/notification'

@@ -3,6 +3,7 @@ import { computed, useTemplateRef } from 'vue'
 import { FileUp, RefreshCw, ShieldCheck, UserPlus, UsersRound, UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -102,74 +103,77 @@ async function handleImportChange(event: Event): Promise<void> {
     />
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <div class="overflow-hidden rounded-[30px] border border-emerald-500/20 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.16),transparent_42%),linear-gradient(145deg,rgba(2,6,23,0.98),rgba(15,23,42,0.92))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100/80">
-          <span>Governance Deck</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">实时列表</span>
-        </div>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-white">当前治理视角</h2>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-200/78">
-          先收敛筛选条件，再决定是治理单个账号还是走批量导入。导入结果和列表状态都聚合在同一页，不再分散成说明型卡片。
-        </p>
+      <AppCard
+        variant="hero"
+        accent="success"
+        eyebrow="Governance Deck"
+        title="当前治理视角"
+        subtitle="先收敛筛选条件，再决定是治理单个账号还是走批量导入。导入结果和列表状态都聚合在同一页，不再分散成说明型卡片。"
+      >
+        <template #header>
+          <span
+            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+            style="border-color: rgba(63,185,80,0.24); background-color: rgba(63,185,80,0.12); color: var(--color-success);"
+          >
+            实时列表
+          </span>
+        </template>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">当前页用户</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">当前筛选结果内的本页样本数</div>
-          </div>
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">活跃账号</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ activeCount }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">当前页处于 active 状态的用户数</div>
-          </div>
-          <div class="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">教师角色</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ teacherCount }}</div>
-            <div class="mt-2 text-sm text-slate-200/70">用于快速判断教学侧用户分布</div>
-          </div>
+        <div class="grid gap-3 md:grid-cols-3">
+          <AppCard
+            variant="metric"
+            accent="success"
+            eyebrow="当前页用户"
+            :title="String(list.length)"
+            subtitle="当前筛选结果内的本页样本数。"
+          />
+          <AppCard
+            variant="metric"
+            accent="success"
+            eyebrow="活跃账号"
+            :title="String(activeCount)"
+            subtitle="当前页处于 active 状态的用户数。"
+          />
+          <AppCard
+            variant="metric"
+            accent="success"
+            eyebrow="教师角色"
+            :title="String(teacherCount)"
+            subtitle="用于快速判断教学侧用户分布。"
+          />
         </div>
-      </div>
+      </AppCard>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">用户总量</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ total }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="primary" eyebrow="用户总量" :title="String(total)" subtitle="当前筛选条件下的用户总数。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <UsersRound class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">当前筛选条件下的用户总数。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">导入回执</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ importResult ? `${importResult.created}/${importResult.updated}` : '--' }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard
+          variant="metric"
+          accent="primary"
+          eyebrow="导入回执"
+          :title="importResult ? `${importResult.created}/${importResult.updated}` : '--'"
+          subtitle="创建数 / 更新数。失败行会在左下方导入回执内展示。"
+        >
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <FileUp class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">创建数 / 更新数。失败行会在左下方导入回执内展示。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">治理状态</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">稳定</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="success" eyebrow="治理状态" title="稳定" subtitle="创建、编辑、删除与导入都已经切到真实接口。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
               <ShieldCheck class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">创建、编辑、删除与导入都已经切到真实接口。</div>
-        </article>
+          </template>
+        </AppCard>
       </div>
     </section>
 
@@ -272,10 +276,11 @@ async function handleImportChange(event: Event): Promise<void> {
         </AppEmpty>
 
         <div v-else class="space-y-4">
-          <article
+          <AppCard
             v-for="user in list"
             :key="user.id"
-            class="rounded-[24px] border border-border bg-[linear-gradient(180deg,rgba(15,23,42,0.9),rgba(8,15,32,0.76))] px-5 py-5"
+            variant="action"
+            accent="neutral"
           >
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
@@ -319,30 +324,32 @@ async function handleImportChange(event: Event): Promise<void> {
                 </button>
               </div>
             </div>
-          </article>
+          </AppCard>
 
-          <div class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
-            <span>共 {{ total }} 个用户</span>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="page <= 1"
-                @click="emit('changePage', page - 1)"
-              >
-                上一页
-              </button>
-              <span>{{ page }} / {{ totalPages }}</span>
-              <button
-                type="button"
-                class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="page >= totalPages"
-                @click="emit('changePage', page + 1)"
-              >
-                下一页
-              </button>
+          <AppCard variant="panel" accent="neutral">
+            <div class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+              <span>共 {{ total }} 个用户</span>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="page <= 1"
+                  @click="emit('changePage', page - 1)"
+                >
+                  上一页
+                </button>
+                <span>{{ page }} / {{ totalPages }}</span>
+                <button
+                  type="button"
+                  class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  :disabled="page >= totalPages"
+                  @click="emit('changePage', page + 1)"
+                >
+                  下一页
+                </button>
+              </div>
             </div>
-          </div>
+          </AppCard>
         </div>
       </SectionCard>
     </section>

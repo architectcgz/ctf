@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
@@ -32,38 +34,55 @@ function openChallenge(challengeId: string): void {
 
 <template>
   <div class="space-y-6">
-    <div
+    <AppEmpty
       v-if="!student && !loading"
-      class="rounded-[26px] border border-dashed border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-6 py-12 text-center text-sm text-[var(--color-text-secondary)]"
-    >
-      {{ emptyText || '请先选择学员。' }}
-    </div>
+      title="尚未选择学员"
+      :description="emptyText || '请先选择学员。'"
+      icon="GraduationCap"
+    />
 
     <template v-else>
       <div v-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <div class="rounded-[26px] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        <AppCard variant="panel" accent="neutral">
           <div class="h-6 w-36 animate-pulse rounded bg-[var(--color-bg-base)]" />
           <div class="mt-6 space-y-3">
             <div class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]" />
             <div class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]" />
           </div>
-        </div>
-        <div class="rounded-[26px] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+        </AppCard>
+        <AppCard variant="panel" accent="neutral">
           <div class="h-[280px] animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
-        </div>
+        </AppCard>
       </div>
 
       <template v-else-if="student">
         <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <SectionCard title="当前学员" subtitle="聚合进度、难度完成情况和薄弱维度。">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 class="mt-1 text-2xl font-semibold text-[var(--color-text-primary)]">
-                  {{ student.name || student.username }}
-                </h3>
-                <p class="mt-1 text-sm text-[var(--color-text-secondary)]">@{{ student.username }}</p>
-              </div>
+            <AppCard
+              variant="hero"
+              accent="primary"
+              eyebrow="Student Snapshot"
+              :title="student.name || student.username"
+              subtitle="当前学员的主视图。这里优先展示完成率、关键指标和可介入的训练方向。"
+            >
+              <template #header>
+                <span
+                  class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+                  style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
+                >
+                  @{{ student.username }}
+                </span>
+              </template>
 
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <MetricCard label="总题量" :value="progress?.total_challenges ?? 0" hint="该学员当前纳入统计的挑战总数" accent="primary" />
+                <MetricCard label="已完成" :value="progress?.solved_challenges ?? 0" hint="已成功完成的挑战数量" accent="success" />
+                <MetricCard label="薄弱维度" :value="weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无'" hint="基于能力画像提炼的风险点" accent="warning" />
+                <MetricCard label="推荐题目" :value="recommendations.length" hint="可立即布置的补强任务数量" accent="primary" />
+              </div>
+            </AppCard>
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div class="rounded-2xl bg-[var(--color-bg-base)] px-5 py-4 text-center">
                 <p class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">Solved Rate</p>
                 <p class="mt-2 text-3xl font-semibold text-[var(--color-primary)]">
@@ -72,16 +91,8 @@ function openChallenge(challengeId: string): void {
               </div>
             </div>
 
-            <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard label="总题量" :value="progress?.total_challenges ?? 0" hint="该学员当前纳入统计的挑战总数" accent="primary" />
-              <MetricCard label="已完成" :value="progress?.solved_challenges ?? 0" hint="已成功完成的挑战数量" accent="success" />
-              <MetricCard label="薄弱维度" :value="weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无'" hint="基于能力画像提炼的风险点" accent="warning" />
-              <MetricCard label="推荐题目" :value="recommendations.length" hint="可立即布置的补强任务数量" accent="primary" />
-            </div>
-
             <div class="mt-6 grid gap-4 xl:grid-cols-2">
-              <div class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4">
-                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">分类进度</h4>
+              <AppCard variant="panel" accent="primary" eyebrow="分类进度" subtitle="按知识方向查看当前完成覆盖率。">
                 <div class="mt-4 space-y-3">
                   <div
                     v-for="(value, key) in progress?.by_category || {}"
@@ -100,10 +111,9 @@ function openChallenge(challengeId: string): void {
                     </div>
                   </div>
                 </div>
-              </div>
+              </AppCard>
 
-              <div class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4">
-                <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">难度进度</h4>
+              <AppCard variant="panel" accent="warning" eyebrow="难度进度" subtitle="按题目难度查看学员当前突破情况。">
                 <div class="mt-4 space-y-3">
                   <div
                     v-for="(value, key) in progress?.by_difficulty || {}"
@@ -114,7 +124,7 @@ function openChallenge(challengeId: string): void {
                     <span class="text-[var(--color-text-secondary)]">{{ value.solved }} / {{ value.total }}</span>
                   </div>
                 </div>
-              </div>
+              </AppCard>
             </div>
           </SectionCard>
 
@@ -126,16 +136,22 @@ function openChallenge(challengeId: string): void {
         </div>
 
         <SectionCard title="推荐训练任务" subtitle="根据当前能力薄弱维度筛出的优先训练题目。">
-          <div v-if="recommendations.length === 0" class="mt-5 rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-8 text-center text-sm text-[var(--color-text-secondary)]">
-            暂无推荐题目。
-          </div>
+          <AppEmpty
+            v-if="recommendations.length === 0"
+            title="暂无推荐题目"
+            description="当前画像还没有生成新的推荐训练任务。"
+            icon="BookOpen"
+          />
 
           <div v-else class="mt-5 grid gap-3 lg:grid-cols-2">
-            <button
+            <AppCard
               v-for="item in recommendations"
               :key="item.challenge_id"
-              type="button"
-              class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4 text-left transition hover:border-[var(--color-primary)]/60 hover:shadow-sm"
+              as="button"
+              variant="action"
+              accent="primary"
+              interactive
+              class="text-left"
               @click="openChallenge(item.challenge_id)"
             >
               <div class="flex items-start justify-between gap-3">
@@ -151,7 +167,7 @@ function openChallenge(challengeId: string): void {
                 打开挑战
                 <ArrowRight class="h-4 w-4" />
               </div>
-            </button>
+            </AppCard>
           </div>
         </SectionCard>
       </template>
