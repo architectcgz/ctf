@@ -246,6 +246,7 @@ export interface TeacherClassItem {
 export interface TeacherStudentItem {
   id: ID
   username: string
+  student_no?: string
   name?: string
   progress?: MyProgressData
 }
@@ -309,6 +310,8 @@ export interface AdminUserListItem {
   id: ID
   username: string
   email?: string
+  student_no?: string
+  teacher_no?: string
   name?: string
   class_name?: string
   status: UserStatus

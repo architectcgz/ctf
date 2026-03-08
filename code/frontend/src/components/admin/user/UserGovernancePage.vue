@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
-import { FileUp, RefreshCw, ShieldCheck, UserPlus, UsersRound, UserRoundCheck } from 'lucide-vue-next'
+import {
+  FileUp,
+  RefreshCw,
+  ShieldCheck,
+  UserPlus,
+  UsersRound,
+  UserRoundCheck,
+} from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
@@ -20,6 +27,8 @@ const props = defineProps<{
   pageSize: number
   loading: boolean
   keyword: string
+  studentNo: string
+  teacherNo: string
   roleFilter: UserFilterRole
   statusFilter: UserFilterStatus
   importResult: AdminUserImportData | null
@@ -28,6 +37,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   refresh: []
   updateKeyword: [value: string]
+  updateStudentNo: [value: string]
+  updateTeacherNo: [value: string]
   updateRoleFilter: [value: UserFilterRole]
   updateStatusFilter: [value: UserFilterStatus]
   openCreateDialog: []
@@ -40,7 +51,9 @@ const emit = defineEmits<{
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const activeCount = computed(() => props.list.filter((item) => item.status === 'active').length)
-const teacherCount = computed(() => props.list.filter((item) => item.roles.includes('teacher')).length)
+const teacherCount = computed(
+  () => props.list.filter((item) => item.roles.includes('teacher')).length
+)
 
 function triggerImport(): void {
   importInput.value?.click()
@@ -64,7 +77,7 @@ async function handleImportChange(event: Event): Promise<void> {
     <PageHeader
       eyebrow="User Governance"
       title="用户治理台"
-      description="这里不再是通用表格页，而是围绕筛选、导入、状态治理和用户编排单独设计的管理员工作台。"
+      description="查看用户状态、筛选结果和导入回执。"
     >
       <div class="flex flex-wrap items-center gap-3">
         <button
@@ -103,8 +116,12 @@ async function handleImportChange(event: Event): Promise<void> {
     />
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <div class="rounded-[30px] border border-emerald-500/20 bg-[linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/75">
+      <div
+        class="rounded-[30px] border border-emerald-500/20 bg-[linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+      >
+        <div
+          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/75"
+        >
           <span>Governance Deck</span>
           <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">实时列表</span>
         </div>
@@ -115,7 +132,9 @@ async function handleImportChange(event: Event): Promise<void> {
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
           <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">当前页用户</div>
+            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">
+              当前页用户
+            </div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
             <div class="mt-2 text-sm text-emerald-50/70">当前筛选结果内的本页样本数。</div>
           </div>
@@ -133,9 +152,17 @@ async function handleImportChange(event: Event): Promise<void> {
       </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard variant="metric" accent="primary" eyebrow="用户总量" :title="String(total)" subtitle="当前筛选条件下的用户总数。">
+        <AppCard
+          variant="metric"
+          accent="primary"
+          eyebrow="用户总量"
+          :title="String(total)"
+          subtitle="当前筛选条件下的用户总数。"
+        >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
+            >
               <UsersRound class="h-5 w-5" />
             </div>
           </template>
@@ -149,15 +176,25 @@ async function handleImportChange(event: Event): Promise<void> {
           subtitle="创建数 / 更新数。失败行会在左下方导入回执内展示。"
         >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
+            >
               <FileUp class="h-5 w-5" />
             </div>
           </template>
         </AppCard>
 
-        <AppCard variant="metric" accent="success" eyebrow="治理状态" title="稳定" subtitle="创建、编辑、删除与导入都已经切到真实接口。">
+        <AppCard
+          variant="metric"
+          accent="success"
+          eyebrow="治理状态"
+          title="稳定"
+          subtitle="创建、编辑、删除与导入都已经切到真实接口。"
+        >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+            >
               <ShieldCheck class="h-5 w-5" />
             </div>
           </template>
@@ -175,10 +212,34 @@ async function handleImportChange(event: Event): Promise<void> {
                 :value="keyword"
                 type="text"
                 class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
-                placeholder="用户名 / 邮箱 / 班级"
+                placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
                 @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
               />
             </label>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="space-y-2">
+                <span class="text-sm text-slate-300">学生学号</span>
+                <input
+                  :value="studentNo"
+                  type="text"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  placeholder="按学号精确筛选"
+                  @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
+                />
+              </label>
+
+              <label class="space-y-2">
+                <span class="text-sm text-slate-300">教师工号</span>
+                <input
+                  :value="teacherNo"
+                  type="text"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  placeholder="按工号精确筛选"
+                  @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
+                />
+              </label>
+            </div>
 
             <div class="grid gap-4 md:grid-cols-2">
               <label class="space-y-2">
@@ -186,7 +247,12 @@ async function handleImportChange(event: Event): Promise<void> {
                 <select
                   :value="roleFilter"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
-                  @change="emit('updateRoleFilter', ($event.target as HTMLSelectElement).value as UserFilterRole)"
+                  @change="
+                    emit(
+                      'updateRoleFilter',
+                      ($event.target as HTMLSelectElement).value as UserFilterRole
+                    )
+                  "
                 >
                   <option value="all">全部角色</option>
                   <option value="student">student</option>
@@ -200,7 +266,12 @@ async function handleImportChange(event: Event): Promise<void> {
                 <select
                   :value="statusFilter"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
-                  @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as UserFilterStatus)"
+                  @change="
+                    emit(
+                      'updateStatusFilter',
+                      ($event.target as HTMLSelectElement).value as UserFilterStatus
+                    )
+                  "
                 >
                   <option value="all">全部状态</option>
                   <option value="active">active</option>
@@ -213,11 +284,11 @@ async function handleImportChange(event: Event): Promise<void> {
           </div>
         </SectionCard>
 
-        <SectionCard title="导入回执" subtitle="CSV 导入结果直接留在治理页，不再跳到别处查看。">
+        <SectionCard title="导入回执" subtitle="查看最近一次 CSV 导入结果。">
           <div class="rounded-2xl border border-border bg-surface-alt/60 p-5">
             <p class="text-sm font-medium text-slate-100">CSV 格式</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              按列顺序上传：`username,password,email,class_name,role,status`。首行可带表头；已存在用户名会执行更新。
+              按列顺序上传：`username,password,email,class_name,role,status,student_no,teacher_no`。首行可带表头；已存在用户名会执行更新。
             </p>
           </div>
 
@@ -225,7 +296,10 @@ async function handleImportChange(event: Event): Promise<void> {
             v-if="importResult"
             class="mt-4 rounded-2xl border border-border bg-surface px-4 py-4 text-sm text-slate-300"
           >
-            <p>创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败 {{ importResult.failed }}</p>
+            <p>
+              创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
+              {{ importResult.failed }}
+            </p>
             <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-rose-300">
               <li
                 v-for="item in importResult.errors.slice(0, 5)"
@@ -235,13 +309,19 @@ async function handleImportChange(event: Event): Promise<void> {
               </li>
             </ul>
           </div>
-          <div v-else class="mt-4 rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-text-secondary">
+          <div
+            v-else
+            class="mt-4 rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-text-secondary"
+          >
             还没有导入记录，执行一次 CSV 导入后会在这里看到回执。
           </div>
         </SectionCard>
       </div>
 
-      <SectionCard title="用户编排" subtitle="当前页保留创建、编辑、删除和分页；布局改成治理视角下的用户卡片清单。">
+      <SectionCard
+        title="用户编排"
+        subtitle="当前页保留创建、编辑、删除和分页；布局改成治理视角下的用户卡片清单。"
+      >
         <div v-if="loading && list.length === 0" class="flex justify-center py-10">
           <AppLoading>正在同步用户列表...</AppLoading>
         </div>
@@ -264,19 +344,25 @@ async function handleImportChange(event: Event): Promise<void> {
         </AppEmpty>
 
         <div v-else class="space-y-4">
-          <AppCard
-            v-for="user in list"
-            :key="user.id"
-            variant="action"
-            accent="neutral"
-          >
+          <AppCard v-for="user in list" :key="user.id" variant="action" accent="neutral">
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <p class="font-semibold text-slate-100">{{ user.username }}</p>
-                  <span class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-slate-200">{{ user.status }}</span>
+                  <span
+                    class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-slate-200"
+                    >{{ user.status }}</span
+                  >
                 </div>
                 <p class="mt-2 text-sm text-slate-400">{{ user.email || '未填写邮箱' }}</p>
+                <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                  <span class="rounded-full border border-border px-3 py-1">
+                    学号：{{ user.student_no || '未设置' }}
+                  </span>
+                  <span class="rounded-full border border-border px-3 py-1">
+                    工号：{{ user.teacher_no || '未设置' }}
+                  </span>
+                </div>
               </div>
               <div class="text-right text-sm text-slate-400">
                 <div>{{ user.class_name || '未分配班级' }}</div>
@@ -315,7 +401,9 @@ async function handleImportChange(event: Event): Promise<void> {
           </AppCard>
 
           <AppCard variant="panel" accent="neutral">
-            <div class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+            >
               <span>共 {{ total }} 个用户</span>
               <div class="flex items-center gap-2">
                 <button

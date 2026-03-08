@@ -14,6 +14,8 @@ const {
   refresh,
   changePage,
   keyword,
+  studentNo,
+  teacherNo,
   roleFilter,
   statusFilter,
   dialogOpen,
@@ -39,6 +41,14 @@ function updateKeyword(value: string) {
 
 function updateRoleFilter(value: typeof roleFilter.value) {
   roleFilter.value = value
+}
+
+function updateStudentNo(value: string) {
+  studentNo.value = value
+}
+
+function updateTeacherNo(value: string) {
+  teacherNo.value = value
 }
 
 function updateStatusFilter(value: typeof statusFilter.value) {
@@ -69,11 +79,15 @@ function handleDialogOpenChange(value: boolean) {
       :page-size="pageSize"
       :loading="loading"
       :keyword="keyword"
+      :student-no="studentNo"
+      :teacher-no="teacherNo"
       :role-filter="roleFilter"
       :status-filter="statusFilter"
       :import-result="importResult"
       @refresh="refresh"
       @update-keyword="updateKeyword"
+      @update-student-no="updateStudentNo"
+      @update-teacher-no="updateTeacherNo"
       @update-role-filter="updateRoleFilter"
       @update-status-filter="updateStatusFilter"
       @open-create-dialog="openCreateDialog"

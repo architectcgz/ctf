@@ -21,6 +21,8 @@ export interface AdminUserFormDraft {
   username: string
   password: string
   email: string
+  student_no: string
+  teacher_no: string
   class_name: string
   role: UserRole
   status: UserStatus
@@ -31,6 +33,8 @@ function createEmptyDraft(): AdminUserFormDraft {
     username: '',
     password: '',
     email: '',
+    student_no: '',
+    teacher_no: '',
     class_name: '',
     role: 'student',
     status: 'active',
@@ -40,6 +44,8 @@ function createEmptyDraft(): AdminUserFormDraft {
 export function useAdminUsers() {
   const toast = useToast()
   const keyword = ref('')
+  const studentNo = ref('')
+  const teacherNo = ref('')
   const roleFilter = ref<UserFilterRole>('all')
   const statusFilter = ref<UserFilterStatus>('all')
   const dialogOpen = ref(false)
@@ -53,6 +59,8 @@ export function useAdminUsers() {
       page,
       page_size,
       keyword: keyword.value.trim() || undefined,
+      student_no: studentNo.value.trim() || undefined,
+      teacher_no: teacherNo.value.trim() || undefined,
       role: roleFilter.value === 'all' ? undefined : roleFilter.value,
       status: statusFilter.value === 'all' ? undefined : statusFilter.value,
     })
@@ -60,7 +68,7 @@ export function useAdminUsers() {
 
   const dialogMode = computed<'create' | 'edit'>(() => (editingUserId.value ? 'edit' : 'create'))
 
-  watch([keyword, roleFilter, statusFilter], async () => {
+  watch([keyword, studentNo, teacherNo, roleFilter, statusFilter], async () => {
     await pagination.changePage(1)
   })
 
@@ -76,6 +84,8 @@ export function useAdminUsers() {
       username: user.username,
       password: '',
       email: user.email || '',
+      student_no: user.student_no || '',
+      teacher_no: user.teacher_no || '',
       class_name: user.class_name || '',
       role: user.roles[0] || 'student',
       status: user.status,
@@ -93,6 +103,8 @@ export function useAdminUsers() {
       if (editingUserId.value) {
         const payload: AdminUserUpdatePayload = {
           email: draft.email.trim() || undefined,
+          student_no: draft.student_no.trim() || undefined,
+          teacher_no: draft.teacher_no.trim() || undefined,
           class_name: draft.class_name.trim() || undefined,
           role: draft.role,
           status: draft.status,
@@ -105,6 +117,8 @@ export function useAdminUsers() {
           username: draft.username.trim(),
           password: draft.password,
           email: draft.email.trim() || undefined,
+          student_no: draft.student_no.trim() || undefined,
+          teacher_no: draft.teacher_no.trim() || undefined,
           class_name: draft.class_name.trim() || undefined,
           role: draft.role,
           status: draft.status,
@@ -135,6 +149,8 @@ export function useAdminUsers() {
   return {
     ...pagination,
     keyword,
+    studentNo,
+    teacherNo,
     roleFilter,
     statusFilter,
     dialogOpen,
