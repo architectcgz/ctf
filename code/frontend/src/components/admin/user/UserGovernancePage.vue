@@ -103,46 +103,34 @@ async function handleImportChange(event: Event): Promise<void> {
     />
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <AppCard
-        variant="hero"
-        accent="success"
-        eyebrow="Governance Deck"
-        title="当前治理视角"
-        subtitle="先收敛筛选条件，再决定是治理单个账号还是走批量导入。导入结果和列表状态都聚合在同一页，不再分散成说明型卡片。"
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: rgba(63,185,80,0.24); background-color: rgba(63,185,80,0.12); color: var(--color-success);"
-          >
-            实时列表
-          </span>
-        </template>
-
-        <div class="grid gap-3 md:grid-cols-3">
-          <AppCard
-            variant="metric"
-            accent="success"
-            eyebrow="当前页用户"
-            :title="String(list.length)"
-            subtitle="当前筛选结果内的本页样本数。"
-          />
-          <AppCard
-            variant="metric"
-            accent="success"
-            eyebrow="活跃账号"
-            :title="String(activeCount)"
-            subtitle="当前页处于 active 状态的用户数。"
-          />
-          <AppCard
-            variant="metric"
-            accent="success"
-            eyebrow="教师角色"
-            :title="String(teacherCount)"
-            subtitle="用于快速判断教学侧用户分布。"
-          />
+      <div class="rounded-[30px] border border-emerald-500/20 bg-[linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/75">
+          <span>Governance Deck</span>
+          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">实时列表</span>
         </div>
-      </AppCard>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前治理视角</h2>
+        <p class="mt-3 text-sm leading-7 text-emerald-50/80">
+          先收敛筛选条件，再决定是处理单个账号还是走批量导入，并及时观察当前治理状态。
+        </p>
+
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">当前页用户</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
+            <div class="mt-2 text-sm text-emerald-50/70">当前筛选结果内的本页样本数。</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">活跃账号</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ activeCount }}</div>
+            <div class="mt-2 text-sm text-emerald-50/70">当前页处于 active 状态的用户数。</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">教师角色</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ teacherCount }}</div>
+            <div class="mt-2 text-sm text-emerald-50/70">用于快速判断教学侧用户分布。</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
         <AppCard variant="metric" accent="primary" eyebrow="用户总量" :title="String(total)" subtitle="当前筛选条件下的用户总数。">

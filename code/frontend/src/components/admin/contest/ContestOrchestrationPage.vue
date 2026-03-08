@@ -61,28 +61,34 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <AppCard
-        variant="hero"
-        accent="warning"
-        eyebrow="Contest Timeline"
-        title="当前赛事编排视角"
-        subtitle="这里主要看赛事窗口和状态流转。创建、编辑和状态筛选都接真实接口，但删除能力仍然保持关闭，不再留假按钮。"
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: rgba(210,153,34,0.24); background-color: rgba(210,153,34,0.12); color: var(--color-warning);"
-          >
-            真实接口
-          </span>
-        </template>
-
-        <div class="grid gap-3 md:grid-cols-3">
-          <AppCard variant="metric" accent="warning" eyebrow="当前页赛事" :title="String(list.length)" subtitle="当前筛选结果内的本页赛事数。" />
-          <AppCard variant="metric" accent="warning" eyebrow="报名中" :title="String(registeringCount)" subtitle="便于快速判断当前公开报名窗口。" />
-          <AppCard variant="metric" accent="warning" eyebrow="进行中" :title="String(runningCount)" subtitle="当前正处于比赛中的场次数量。" />
+      <div class="rounded-[30px] border border-amber-500/20 bg-[linear-gradient(145deg,rgba(120,53,15,0.48),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-100/75">
+          <span>Contest Timeline</span>
+          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
         </div>
-      </AppCard>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前赛事编排视角</h2>
+        <p class="mt-3 text-sm leading-7 text-amber-50/80">
+          重点关注赛事窗口和状态流转，便于快速判断当前哪些比赛需要创建、调整或持续跟进。
+        </p>
+
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">当前页赛事</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
+            <div class="mt-2 text-sm text-amber-50/70">当前筛选结果内的本页赛事数。</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">报名中</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ registeringCount }}</div>
+            <div class="mt-2 text-sm text-amber-50/70">便于快速判断当前公开报名窗口。</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-amber-100/60">进行中</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ runningCount }}</div>
+            <div class="mt-2 text-sm text-amber-50/70">当前正处于比赛中的场次数量。</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
         <AppCard variant="metric" accent="warning" eyebrow="赛事总量" :title="String(total)" subtitle="当前筛选条件下的赛事总数。">

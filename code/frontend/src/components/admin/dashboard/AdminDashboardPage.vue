@@ -94,32 +94,44 @@ function usageTone(value: number | undefined): string {
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-      <AppCard
-        variant="hero"
-        :accent="healthSummary.accent === 'danger' ? 'danger' : healthSummary.accent === 'warning' ? 'warning' : 'success'"
-        eyebrow="Operations Pulse"
-        :title="`当前平台运行${healthSummary.label}`"
-        subtitle="这个页面只围绕“值守”展开。先判断平台是否稳定，再沿着资源热点和告警卡片往下看，而不是继续使用普通表格式后台总览。"
+      <div
+        class="rounded-[30px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+        :style="{
+          borderColor: healthSummary.accent === 'danger' ? 'rgba(248,81,73,0.22)' : healthSummary.accent === 'warning' ? 'rgba(210,153,34,0.22)' : 'rgba(63,185,80,0.22)',
+          background: healthSummary.accent === 'danger'
+            ? 'linear-gradient(145deg,rgba(127,29,29,0.55),rgba(15,23,42,0.94))'
+            : healthSummary.accent === 'warning'
+              ? 'linear-gradient(145deg,rgba(120,53,15,0.48),rgba(15,23,42,0.94))'
+              : 'linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))',
+        }"
       >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            :style="{
-              borderColor: healthSummary.accent === 'danger' ? 'rgba(248,81,73,0.22)' : healthSummary.accent === 'warning' ? 'rgba(210,153,34,0.22)' : 'rgba(63,185,80,0.22)',
-              backgroundColor: healthSummary.accent === 'danger' ? 'rgba(248,81,73,0.1)' : healthSummary.accent === 'warning' ? 'rgba(210,153,34,0.1)' : 'rgba(63,185,80,0.1)',
-              color: healthSummary.accent === 'danger' ? 'var(--color-danger)' : healthSummary.accent === 'warning' ? 'var(--color-warning)' : 'var(--color-success)',
-            }"
-          >
-            状态：{{ healthSummary.label }}
-          </span>
-        </template>
-
-        <div class="grid gap-3 md:grid-cols-3">
-          <AppCard variant="metric" accent="primary" eyebrow="在线用户" :title="String(dashboard?.online_users ?? 0)" subtitle="当前仍在平台活动的用户数" />
-          <AppCard variant="metric" accent="success" eyebrow="活跃容器" :title="String(dashboard?.active_containers ?? 0)" subtitle="正在运行的靶场与竞赛容器" />
-          <AppCard variant="metric" :accent="healthSummary.accent" eyebrow="资源告警" :title="String(alertCount)" subtitle="需要管理员优先处理的异常数量" />
+        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/72">
+          <span>Operations Pulse</span>
+          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">状态：{{ healthSummary.label }}</span>
         </div>
-      </AppCard>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前平台运行{{ healthSummary.label }}</h2>
+        <p class="mt-3 text-sm leading-7 text-white/78">
+          先判断平台是否稳定，再沿着资源热点和告警信号定位当前最需要处理的问题。
+        </p>
+
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">在线用户</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ dashboard?.online_users ?? 0 }}</div>
+            <div class="mt-2 text-sm text-white/70">当前仍在平台活动的用户数</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">活跃容器</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ dashboard?.active_containers ?? 0 }}</div>
+            <div class="mt-2 text-sm text-white/70">正在运行的靶场与竞赛容器</div>
+          </div>
+          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">资源告警</div>
+            <div class="mt-2 text-2xl font-semibold text-white">{{ alertCount }}</div>
+            <div class="mt-2 text-sm text-white/70">需要管理员优先处理的异常数量</div>
+          </div>
+        </div>
+      </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
         <AppCard
