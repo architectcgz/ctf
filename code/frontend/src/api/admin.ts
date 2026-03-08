@@ -30,6 +30,8 @@ interface UserListParams {
   page?: number
   page_size?: number
   keyword?: string
+  student_no?: string
+  teacher_no?: string
   role?: UserRole
   status?: UserStatus
   class_name?: string
@@ -39,6 +41,8 @@ export interface AdminUserCreatePayload {
   username: string
   password: string
   email?: string
+  student_no?: string
+  teacher_no?: string
   class_name?: string
   role: UserRole
   status?: UserStatus
@@ -47,6 +51,8 @@ export interface AdminUserCreatePayload {
 export interface AdminUserUpdatePayload {
   password?: string
   email?: string
+  student_no?: string
+  teacher_no?: string
   class_name?: string
   role?: UserRole
   status?: UserStatus
@@ -69,6 +75,8 @@ interface RawAdminUser {
   id: string | number
   username: string
   email?: string | null
+  student_no?: string | null
+  teacher_no?: string | null
   class_name?: string | null
   status: UserStatus
   roles: UserRole[]
@@ -165,6 +173,8 @@ function normalizeAdminUser(item: RawAdminUser): AdminUserListItem {
     id: String(item.id),
     username: item.username,
     email: item.email || undefined,
+    student_no: item.student_no || undefined,
+    teacher_no: item.teacher_no || undefined,
     class_name: item.class_name || undefined,
     status: item.status,
     roles: item.roles,
@@ -196,6 +206,8 @@ export async function getUsers(params?: UserListParams): Promise<PageResult<Admi
       page: params?.page,
       size: params?.page_size,
       keyword: params?.keyword,
+      student_no: params?.student_no,
+      teacher_no: params?.teacher_no,
       role: params?.role,
       status: params?.status,
       class_name: params?.class_name,

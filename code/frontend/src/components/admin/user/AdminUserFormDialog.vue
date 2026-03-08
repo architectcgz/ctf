@@ -20,6 +20,8 @@ const localDraft = reactive<AdminUserFormDraft>({
   username: '',
   password: '',
   email: '',
+  student_no: '',
+  teacher_no: '',
   class_name: '',
   role: 'student',
   status: 'active',
@@ -73,6 +75,8 @@ function handleSubmit() {
     username: localDraft.username,
     password: localDraft.password,
     email: localDraft.email,
+    student_no: localDraft.student_no,
+    teacher_no: localDraft.teacher_no,
     class_name: localDraft.class_name,
     role: localDraft.role,
     status: localDraft.status,
@@ -136,6 +140,29 @@ function handleSubmit() {
         </div>
 
         <div class="space-y-2">
+          <label
+            class="text-sm font-medium text-slate-200"
+            :for="localDraft.role === 'teacher' ? 'user-teacher-no' : 'user-student-no'"
+          >
+            {{ localDraft.role === 'teacher' ? '教师工号' : '学生学号' }}
+          </label>
+          <input
+            :id="localDraft.role === 'teacher' ? 'user-teacher-no' : 'user-student-no'"
+            :value="localDraft.role === 'teacher' ? localDraft.teacher_no : localDraft.student_no"
+            type="text"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            :placeholder="localDraft.role === 'teacher' ? '例如：T2024001' : '例如：20240001'"
+            @input="
+              localDraft.role === 'teacher'
+                ? (localDraft.teacher_no = ($event.target as HTMLInputElement).value)
+                : (localDraft.student_no = ($event.target as HTMLInputElement).value)
+            "
+          />
+        </div>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="space-y-2">
           <label class="text-sm font-medium text-slate-200" for="user-class-name">班级</label>
           <input
             id="user-class-name"
@@ -159,6 +186,9 @@ function handleSubmit() {
               {{ role }}
             </option>
           </select>
+          <p class="text-xs text-slate-500">
+            `student` 仅保留学号，`teacher` 仅保留工号，其他角色会忽略这两个字段。
+          </p>
         </div>
 
         <div class="space-y-2">
