@@ -59,12 +59,15 @@ func (r *Repository) ListClasses(ctx context.Context) ([]dto.TeacherClassItem, e
 	return items, nil
 }
 
-func (r *Repository) ListStudentsByClass(ctx context.Context, className string) ([]dto.TeacherStudentItem, error) {
+func (r *Repository) ListStudentsByClass(ctx context.Context, className, studentNo string) ([]dto.TeacherStudentItem, error) {
 	items := make([]dto.TeacherStudentItem, 0)
-	if err := r.db.WithContext(ctx).Model(&model.User{}).
-		Select("id, username").
-		Where("role = ? AND class_name = ? AND deleted_at IS NULL", model.RoleStudent, className).
-		Order("username ASC").
+	query := r.db.WithContext(ctx).Model(&model.User{}).
+		Select("id, username, NULLIF(student_no, '') AS student_no").
+		Where("role = ? AND class_name = ? AND deleted_at IS NULL", model.RoleStudent, className)
+	if studentNo != "" {
+		query = query.Where("student_no = ?", studentNo)
+	}
+	if err := query.Order("COALESCE(NULLIF(student_no, ''), username) ASC, username ASC").
 		Scan(&items).Error; err != nil {
 		return nil, fmt.Errorf("list students by class: %w", err)
 	}

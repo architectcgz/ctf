@@ -65,7 +65,7 @@ func (s *Service) ListClasses(ctx context.Context, requesterID int64, requesterR
 	}}, nil
 }
 
-func (s *Service) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string) ([]dto.TeacherStudentItem, error) {
+func (s *Service) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error) {
 	normalized := strings.TrimSpace(className)
 	if normalized == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
@@ -75,7 +75,12 @@ func (s *Service) ListClassStudents(ctx context.Context, requesterID int64, requ
 		return nil, err
 	}
 
-	items, err := s.repo.ListStudentsByClass(ctx, normalized)
+	studentNo := ""
+	if query != nil {
+		studentNo = strings.TrimSpace(query.StudentNo)
+	}
+
+	items, err := s.repo.ListStudentsByClass(ctx, normalized, studentNo)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

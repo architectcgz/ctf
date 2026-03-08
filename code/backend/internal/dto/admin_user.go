@@ -4,6 +4,8 @@ import "time"
 
 type AdminUserQuery struct {
 	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
+	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
+	TeacherNo string `form:"teacher_no" binding:"omitempty,max=64"`
 	Role      string `form:"role" binding:"omitempty,oneof=student teacher admin"`
 	Status    string `form:"status" binding:"omitempty,oneof=active inactive locked banned"`
 	ClassName string `form:"class_name" binding:"omitempty,max=128"`
@@ -15,6 +17,8 @@ type AdminUserResp struct {
 	ID        int64      `json:"id"`
 	Username  string     `json:"username"`
 	Email     *string    `json:"email,omitempty"`
+	StudentNo *string    `json:"student_no,omitempty"`
+	TeacherNo *string    `json:"teacher_no,omitempty"`
 	ClassName *string    `json:"class_name,omitempty"`
 	Status    string     `json:"status"`
 	Roles     []string   `json:"roles"`
@@ -26,6 +30,8 @@ type CreateAdminUserReq struct {
 	Username  string `json:"username" binding:"required,min=3,max=64,ctf_username"`
 	Password  string `json:"password" binding:"required,min=8,max=72"`
 	Email     string `json:"email" binding:"omitempty,email,max=255"`
+	StudentNo string `json:"student_no" binding:"omitempty,max=64"`
+	TeacherNo string `json:"teacher_no" binding:"omitempty,max=64"`
 	ClassName string `json:"class_name" binding:"omitempty,max=128"`
 	Role      string `json:"role" binding:"required,oneof=student teacher admin"`
 	Status    string `json:"status" binding:"omitempty,oneof=active inactive locked banned"`
@@ -34,6 +40,8 @@ type CreateAdminUserReq struct {
 type UpdateAdminUserReq struct {
 	Password  *string `json:"password" binding:"omitempty,min=8,max=72"`
 	Email     *string `json:"email" binding:"omitempty,email,max=255"`
+	StudentNo *string `json:"student_no" binding:"omitempty,max=64"`
+	TeacherNo *string `json:"teacher_no" binding:"omitempty,max=64"`
 	ClassName *string `json:"class_name" binding:"omitempty,max=128"`
 	Role      *string `json:"role" binding:"omitempty,oneof=student teacher admin"`
 	Status    *string `json:"status" binding:"omitempty,oneof=active inactive locked banned"`

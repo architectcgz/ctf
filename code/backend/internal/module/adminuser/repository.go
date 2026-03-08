@@ -15,15 +15,21 @@ import (
 const (
 	uniqueUsernameConstraint = "uk_users_username"
 	uniqueEmailConstraint    = "uk_users_email"
+	uniqueStudentNoIndex     = "uk_users_student_no"
+	uniqueTeacherNoIndex     = "uk_users_teacher_no"
 )
 
 var ErrUserNotFound = errors.New("admin user not found")
 var ErrUsernameExists = errors.New("admin username already exists")
 var ErrEmailExists = errors.New("admin email already exists")
+var ErrStudentNoExists = errors.New("admin student no already exists")
+var ErrTeacherNoExists = errors.New("admin teacher no already exists")
 var ErrRoleNotFound = errors.New("admin role not found")
 
 type UserListFilter struct {
 	Keyword   string
+	StudentNo string
+	TeacherNo string
 	Role      string
 	Status    string
 	ClassName string
@@ -43,7 +49,13 @@ func (r *Repository) List(ctx context.Context, filter UserListFilter) ([]*model.
 	query := r.db.WithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
 	if filter.Keyword != "" {
 		keyword := "%" + strings.TrimSpace(filter.Keyword) + "%"
-		query = query.Where("(username LIKE ? OR email LIKE ? OR class_name LIKE ?)", keyword, keyword, keyword)
+		query = query.Where("(username LIKE ? OR email LIKE ? OR class_name LIKE ? OR student_no LIKE ? OR teacher_no LIKE ?)", keyword, keyword, keyword, keyword, keyword)
+	}
+	if filter.StudentNo != "" {
+		query = query.Where("student_no = ?", strings.TrimSpace(filter.StudentNo))
+	}
+	if filter.TeacherNo != "" {
+		query = query.Where("teacher_no = ?", strings.TrimSpace(filter.TeacherNo))
 	}
 	if filter.Role != "" {
 		query = query.Where("role = ?", filter.Role)
@@ -108,6 +120,8 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 			Updates(map[string]any{
 				"password_hash": user.PasswordHash,
 				"email":         user.Email,
+				"student_no":    user.StudentNo,
+				"teacher_no":    user.TeacherNo,
 				"role":          user.Role,
 				"class_name":    user.ClassName,
 				"status":        user.Status,
@@ -160,6 +174,10 @@ func mapUserWriteError(err error) error {
 		return ErrUsernameExists
 	case strings.Contains(message, uniqueEmailConstraint):
 		return ErrEmailExists
+	case strings.Contains(message, uniqueStudentNoIndex):
+		return ErrStudentNoExists
+	case strings.Contains(message, uniqueTeacherNoIndex):
+		return ErrTeacherNoExists
 	default:
 		return err
 	}

@@ -58,6 +58,8 @@ var (
 	ErrLoginTooFrequent    = New(11010, "登录失败次数过多，账户临时锁定", http.StatusTooManyRequests)
 	ErrOldPasswordInvalid  = New(11011, "原密码错误", http.StatusBadRequest)
 	ErrPasswordUnchanged   = New(11012, "新密码不能与原密码相同", http.StatusBadRequest)
+	ErrStudentNoExists     = New(11013, "学号已存在", http.StatusConflict)
+	ErrTeacherNoExists     = New(11014, "工号已存在", http.StatusConflict)
 )
 
 // 容器相关错误码 (12000-12999)
