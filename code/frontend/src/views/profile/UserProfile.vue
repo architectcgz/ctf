@@ -4,6 +4,10 @@ import { computed, onMounted, ref } from 'vue'
 import { downloadReport, exportPersonalReport } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SectionCard from '@/components/common/SectionCard.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -86,19 +90,11 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <section
-      class="rounded-[28px] border border-[var(--color-border-default)] bg-[linear-gradient(135deg,rgba(14,116,144,0.10),rgba(59,130,246,0.10))] p-7 shadow-sm"
-    >
-      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-primary)]/85">
-        My Account
-      </p>
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]">
-        个人资料
-      </h1>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
-        查看当前账号信息，并生成你的个人训练报告用于复盘和归档。
-      </p>
-    </section>
+    <PageHeader
+      eyebrow="My Account"
+      title="个人资料"
+      description="查看当前账号信息，并生成你的个人训练报告用于复盘和归档。"
+    />
 
     <div
       v-if="error"
@@ -108,21 +104,17 @@ onMounted(() => {
     </div>
 
     <div v-if="loading" class="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-      <div class="h-72 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"></div>
-      <div class="h-72 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"></div>
+      <AppCard variant="panel" accent="neutral">
+        <div class="h-72 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"></div>
+      </AppCard>
+      <AppCard variant="panel" accent="neutral">
+        <div class="h-72 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"></div>
+      </AppCard>
     </div>
 
     <div v-else class="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-      <section
-        class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6 shadow-sm"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">账号信息</h2>
-            <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-              当前展示的是后端返回的用户资料。
-            </p>
-          </div>
+      <SectionCard title="账号信息" subtitle="当前展示的是后端返回的用户资料。">
+        <template #header>
           <button
             type="button"
             class="rounded-xl border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)]"
@@ -130,46 +122,78 @@ onMounted(() => {
           >
             刷新
           </button>
-        </div>
+        </template>
 
-        <div
-          v-if="!profile"
-          class="mt-5 rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-8 text-center text-sm text-[var(--color-text-secondary)]"
+        <AppCard
+          v-if="profile"
+          variant="hero"
+          accent="primary"
+          eyebrow="Profile Snapshot"
+          :title="profile.name || profile.username"
+          subtitle="账号基础信息、角色和班级都收进同一块个人视图，避免再拆成松散的信息盒。"
         >
-          当前没有可展示的用户信息。
-        </div>
+          <template #header>
+            <span
+              class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
+            >
+              {{ profile.role }}
+            </span>
+          </template>
 
-        <div v-else class="mt-5 grid gap-4 sm:grid-cols-2">
-          <div
-            v-for="item in profileFields"
-            :key="item.label"
-            class="rounded-xl bg-[var(--color-bg-base)] px-4 py-4"
-          >
-            <p class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
-              {{ item.label }}
-            </p>
-            <p class="mt-2 text-base font-medium text-[var(--color-text-primary)]">
-              {{ item.value }}
-            </p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <AppCard
+              v-for="item in profileFields"
+              :key="item.label"
+              variant="metric"
+              accent="primary"
+              :eyebrow="item.label"
+              :title="item.value"
+            />
           </div>
-        </div>
+        </AppCard>
 
-        <div
-          class="mt-5 rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-4 text-sm leading-6 text-[var(--color-text-secondary)]"
-        >
+        <AppEmpty
+          v-else
+          title="暂无用户信息"
+          description="当前没有可展示的用户信息。"
+          icon="UsersRound"
+        />
+
+        <AppCard variant="action" accent="neutral">
           当前后端尚未开放密码修改接口，本页不展示不可提交的表单，避免产生误导操作。
-        </div>
-      </section>
+        </AppCard>
+      </SectionCard>
 
-      <section
-        class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6 shadow-sm"
-      >
-        <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">个人报告导出</h2>
-        <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-          生成 PDF 或 Excel 报告，便于训练复盘和归档。
-        </p>
+      <SectionCard title="个人报告导出" subtitle="生成 PDF 或 Excel 报告，便于训练复盘和归档。">
+        <AppCard
+          variant="hero"
+          accent="primary"
+          eyebrow="Report Export"
+          title="最近一次导出任务"
+          :subtitle="latestReport ? '导出状态会在这里汇总，准备就绪后可直接下载。' : '先选择导出格式，再创建本次个人报告。'"
+        >
+          <template #header>
+            <span
+              class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+              :style="latestReport?.status === 'ready'
+                ? 'border-color: rgba(63,185,80,0.24); background-color: rgba(63,185,80,0.12); color: var(--color-success);'
+                : latestReport?.status === 'failed'
+                  ? 'border-color: rgba(248,81,73,0.24); background-color: rgba(248,81,73,0.12); color: var(--color-danger);'
+                  : 'border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);'"
+            >
+              {{
+                latestReport?.status === 'ready'
+                  ? '可下载'
+                  : latestReport?.status === 'failed'
+                    ? '失败'
+                    : latestReport?.status === 'processing'
+                      ? '生成中'
+                      : '待创建'
+              }}
+            </span>
+          </template>
 
-        <div class="mt-5 space-y-4">
           <label class="block text-sm font-medium text-[var(--color-text-primary)]">
             导出格式
             <select
@@ -189,66 +213,67 @@ onMounted(() => {
           >
             {{ exportLoading ? '正在创建报告...' : '生成个人报告' }}
           </button>
-        </div>
 
-        <div
-          v-if="exportError"
-          class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600"
-        >
-          {{ exportError }}
-        </div>
-
-        <div
-          v-if="latestReport"
-          class="mt-5 rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-4"
-        >
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="font-medium text-[var(--color-text-primary)]">最近一次导出任务</p>
-              <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                报告 ID：{{ latestReport.report_id }}
-              </p>
-              <p
-                v-if="latestReport.expires_at"
-                class="mt-1 text-sm text-[var(--color-text-secondary)]"
-              >
-                下载有效期至：{{ formatDate(latestReport.expires_at) }}
-              </p>
-            </div>
-            <span
-              class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700"
-            >
-              {{
-                latestReport.status === 'ready'
-                  ? '可下载'
-                  : latestReport.status === 'failed'
-                    ? '失败'
-                    : '生成中'
-              }}
-            </span>
+          <div
+            v-if="exportError"
+            class="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600"
+          >
+            {{ exportError }}
           </div>
 
-          <p v-if="latestReport.error_message" class="mt-3 text-sm text-rose-400">
-            {{ latestReport.error_message }}
-          </p>
+          <AppCard v-if="latestReport" variant="panel" accent="primary">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="font-medium text-[var(--color-text-primary)]">最近一次导出任务</p>
+                <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  报告 ID：{{ latestReport.report_id }}
+                </p>
+                <p
+                  v-if="latestReport.expires_at"
+                  class="mt-1 text-sm text-[var(--color-text-secondary)]"
+                >
+                  下载有效期至：{{ formatDate(latestReport.expires_at) }}
+                </p>
+              </div>
+              <span
+                class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700"
+              >
+                {{
+                  latestReport.status === 'ready'
+                    ? '可下载'
+                    : latestReport.status === 'failed'
+                      ? '失败'
+                      : '生成中'
+                }}
+              </span>
+            </div>
 
-          <button
-            type="button"
-            class="mt-4 w-full rounded-xl border border-[var(--color-border-default)] px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-            :disabled="latestReport.status !== 'ready'"
-            @click="handleDownload"
-          >
-            下载最近报告
-          </button>
+            <p v-if="latestReport.error_message" class="text-sm text-rose-400">
+              {{ latestReport.error_message }}
+            </p>
 
-          <p
-            v-if="latestReport.status === 'processing'"
-            class="mt-3 text-sm text-[var(--color-text-secondary)]"
-          >
-            {{ polling ? '正在自动刷新导出状态...' : '等待生成完成...' }}
-          </p>
-        </div>
-      </section>
+            <button
+              type="button"
+              class="w-full rounded-xl border border-[var(--color-border-default)] px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="latestReport.status !== 'ready'"
+              @click="handleDownload"
+            >
+              下载最近报告
+            </button>
+
+            <p
+              v-if="latestReport.status === 'processing'"
+              class="text-sm text-[var(--color-text-secondary)]"
+            >
+              {{ polling ? '正在自动刷新导出状态...' : '等待生成完成...' }}
+            </p>
+          </AppCard>
+
+          <AppCard v-else variant="action" accent="neutral">
+            创建报告后，这里会显示最近一次导出任务的状态和下载入口。
+          </AppCard>
+        </AppCard>
+      </SectionCard>
     </div>
   </div>
 </template>

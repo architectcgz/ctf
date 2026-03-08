@@ -9,6 +9,7 @@ import type {
   TeacherClassItem,
   TeacherStudentItem,
 } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
@@ -54,19 +55,23 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <div class="overflow-hidden rounded-[30px] border border-cyan-400/20 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_42%),linear-gradient(145deg,rgba(15,23,42,0.96),rgba(8,47,73,0.84))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/80">
-          <span>Class Control</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">{{ selectedClassName || '未选择班级' }}</span>
-        </div>
-        <h2 class="mt-4 text-3xl font-semibold tracking-tight text-white">
-          {{ selectedClassName ? `${selectedClassName} 的样本编排` : '先选择一个班级' }}
-        </h2>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-cyan-50/78">
-          这页专门服务老师做班级运营决策。左侧负责筛班级和找人，右侧保留学员详情与推荐任务，不再走通用管理页布局。
-        </p>
+      <AppCard
+        variant="hero"
+        accent="primary"
+        eyebrow="Class Control"
+        :title="selectedClassName ? `${selectedClassName} 的样本编排` : '先选择一个班级'"
+        subtitle="这页专门服务老师做班级运营决策。左侧负责筛班级和找人，右侧保留学员详情与推荐任务，不再走通用管理页布局。"
+      >
+        <template #header>
+          <span
+            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
+            style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
+          >
+            {{ selectedClassName || '未选择班级' }}
+          </span>
+        </template>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-2">
+        <div class="grid gap-3 md:grid-cols-2">
           <label class="space-y-2">
             <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/60">当前班级</span>
             <select
@@ -94,47 +99,32 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
             </div>
           </label>
         </div>
-      </div>
+      </AppCard>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">班级数量</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ classes.length }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="primary" eyebrow="班级数量" :title="String(classes.length)" subtitle="当前教师权限下可访问的班级总数。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <BookOpenCheck class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">当前教师权限下可访问的班级总数。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">匹配样本</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ filteredStudents.length }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="primary" eyebrow="匹配样本" :title="String(filteredStudents.length)" subtitle="当前班级和搜索条件下可见的学员数量。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
               <Users class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">当前班级和搜索条件下可见的学员数量。</div>
-        </article>
+          </template>
+        </AppCard>
 
-        <article class="rounded-[24px] border border-border bg-surface/88 px-5 py-5 shadow-[0_18px_40px_var(--color-shadow-soft)]">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-text-muted">当前样本</div>
-              <div class="mt-2 text-2xl font-semibold text-text-primary">{{ selectedStudent?.name || selectedStudent?.username || '未选择' }}</div>
-            </div>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <AppCard variant="metric" accent="warning" eyebrow="当前样本" :title="selectedStudent?.name || selectedStudent?.username || '未选择'" subtitle="选中后右侧会同步显示画像、进度和推荐任务。">
+          <template #header>
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-300">
               <GraduationCap class="h-5 w-5" />
             </div>
-          </div>
-          <div class="mt-3 text-sm leading-6 text-text-secondary">选中后右侧会同步显示画像、进度和推荐任务。</div>
-        </article>
+          </template>
+        </AppCard>
       </div>
     </section>
 
@@ -155,14 +145,14 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
           </div>
 
           <div v-else class="grid gap-3">
-            <button
+            <AppCard
               v-for="student in filteredStudents"
               :key="student.id"
-              type="button"
-              class="w-full rounded-[24px] border px-4 py-4 text-left transition"
-              :class="student.id === selectedStudentId
-                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/8'
-                : 'border-[var(--color-border-default)] bg-[var(--color-bg-base)] hover:border-[var(--color-primary)]/50'"
+              as="button"
+              variant="action"
+              :accent="student.id === selectedStudentId ? 'primary' : 'neutral'"
+              interactive
+              class="w-full text-left"
               @click="emit('selectStudent', student.id)"
             >
               <div class="flex items-center justify-between gap-3">
@@ -177,7 +167,7 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
                   已选择
                 </span>
               </div>
-            </button>
+            </AppCard>
           </div>
         </SectionCard>
 
@@ -187,11 +177,14 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
           </div>
 
           <div v-else class="grid gap-3">
-            <button
+            <AppCard
               v-for="student in focusStudents"
               :key="student.id"
-              type="button"
-              class="flex items-center justify-between gap-3 rounded-[24px] border border-border bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(8,15,32,0.72))] px-4 py-4 text-left transition hover:border-primary/60"
+              as="button"
+              variant="action"
+              accent="primary"
+              interactive
+              class="text-left"
               @click="emit('selectStudent', student.id)"
             >
               <div class="flex items-center gap-3">
@@ -204,7 +197,7 @@ const focusStudents = computed(() => props.filteredStudents.slice(0, 3))
                 </div>
               </div>
               <LayoutDashboard class="h-4 w-4 text-primary" />
-            </button>
+            </AppCard>
           </div>
         </SectionCard>
       </div>

@@ -4,6 +4,10 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin'
 import type { AuditLogItem } from '@/api/contracts'
+import AppCard from '@/components/common/AppCard.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SectionCard from '@/components/common/SectionCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -112,15 +116,15 @@ onMounted(() => {
 
 <template>
   <div class="space-y-6">
-    <section class="rounded-[28px] border border-[var(--color-border-default)] bg-[linear-gradient(135deg,rgba(15,23,42,0.08),rgba(8,145,178,0.12))] p-7 shadow-sm">
-      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--color-primary)]/85">Audit Trail</p>
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--color-text-primary)]">审计日志</h1>
-      <p class="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-secondary)]">
-        按动作、资源类型和执行人快速检索关键管理操作与提交流水。
-      </p>
-    </section>
+    <PageHeader eyebrow="Audit Trail" title="审计日志" description="按动作、资源类型和执行人快速检索关键管理操作与提交流水。" />
 
-    <section class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
+    <AppCard
+      variant="hero"
+      accent="primary"
+      eyebrow="Audit Filters"
+      title="筛选审计轨迹"
+      subtitle="这里统一收纳动作、资源类型和执行人三个检索入口，先缩小范围，再看详细流水。"
+    >
       <div class="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
         <select
           v-model="filters.action"
@@ -167,21 +171,26 @@ onMounted(() => {
           重置
         </button>
       </div>
+    </AppCard>
 
-      <div v-if="error" class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600">
+    <SectionCard title="操作流水" subtitle="按时间顺序展示匹配结果，明细字段做了摘要收敛，便于快速扫读。">
+      <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600">
         {{ error }}
         <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
       </div>
 
-      <div v-else-if="loading" class="mt-6 space-y-3">
+      <div v-else-if="loading" class="space-y-3">
         <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-xl bg-[var(--color-bg-base)]"></div>
       </div>
 
-      <div v-else-if="list.length === 0" class="mt-6 rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-10 text-center text-sm text-[var(--color-text-secondary)]">
-        当前筛选条件下没有日志记录。
-      </div>
+      <AppEmpty
+        v-else-if="list.length === 0"
+        icon="Inbox"
+        title="当前筛选条件下没有日志记录"
+        description="可以放宽动作、资源类型或执行人条件，再重新检索。"
+      />
 
-      <div v-else class="mt-6 overflow-hidden rounded-xl border border-[var(--color-border-default)]">
+      <div v-else class="overflow-hidden rounded-xl border border-[var(--color-border-default)]">
         <table class="min-w-full divide-y divide-[var(--color-border-default)] text-sm">
           <thead class="bg-[var(--color-bg-base)]">
             <tr>
@@ -232,6 +241,6 @@ onMounted(() => {
           </button>
         </div>
       </div>
-    </section>
+    </SectionCard>
   </div>
 </template>
