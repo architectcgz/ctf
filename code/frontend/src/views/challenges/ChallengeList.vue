@@ -1,18 +1,27 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">靶场训练</h1>
-      <div class="flex gap-3">
+    <PageHeader eyebrow="Training Range" title="靶场训练" description="按分类和难度浏览训练题目，空状态和错误状态都会明确反馈，不再显示空白区域。">
+      <button
+        type="button"
+        class="rounded-xl border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)]"
+        @click="refresh"
+      >
+        刷新列表
+      </button>
+    </PageHeader>
+
+    <section class="rounded-[28px] border border-border bg-surface/82 p-5 shadow-[0_20px_50px_var(--color-shadow-soft)]">
+      <div class="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_repeat(2,minmax(0,220px))]">
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="搜索挑战..."
-          class="w-64 rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none"
+          placeholder="搜索挑战标题或标签..."
+          class="min-h-11 rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none"
           @input="onSearch"
         />
         <select
           v-model="categoryFilter"
-          class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
+          class="min-h-11 rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
           @change="onFilterChange"
         >
           <option value="">全部分类</option>
@@ -25,7 +34,7 @@
         </select>
         <select
           v-model="difficultyFilter"
-          class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-2 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
+          class="min-h-11 rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none"
           @change="onFilterChange"
         >
           <option value="">全部难度</option>
@@ -36,11 +45,46 @@
           <option value="hell">地狱</option>
         </select>
       </div>
-    </div>
+    </section>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
     </div>
+
+    <AppEmpty
+      v-else-if="hasLoadError"
+      icon="AlertTriangle"
+      title="挑战列表加载失败"
+      :description="errorMessage"
+    >
+      <template #action>
+        <button
+          type="button"
+          class="rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90"
+          @click="refresh"
+        >
+          重新加载
+        </button>
+      </template>
+    </AppEmpty>
+
+    <AppEmpty
+      v-else-if="list.length === 0"
+      icon="Flag"
+      :title="emptyTitle"
+      :description="emptyDescription"
+    >
+      <template #action>
+        <button
+          v-if="hasActiveFilters"
+          type="button"
+          class="rounded-xl border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)]"
+          @click="resetFilters"
+        >
+          清空筛选
+        </button>
+      </template>
+    </AppEmpty>
 
     <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <div
@@ -117,9 +161,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getChallenges } from '@/api/challenge'
+import { ApiError } from '@/api/request'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { usePagination } from '@/composables/usePagination'
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
 
@@ -128,7 +175,7 @@ const searchQuery = ref('')
 const categoryFilter = ref<ChallengeCategory | ''>('')
 const difficultyFilter = ref<ChallengeDifficulty | ''>('')
 
-const { list, total, page, pageSize, loading, changePage, changePageSize, refresh } = usePagination((params) => {
+const { list, total, page, pageSize, loading, error, changePage, refresh } = usePagination((params) => {
   const filters: Record<string, unknown> = { ...params }
   if (searchQuery.value) filters.search = searchQuery.value
   if (categoryFilter.value) filters.category = categoryFilter.value
@@ -136,14 +183,34 @@ const { list, total, page, pageSize, loading, changePage, changePageSize, refres
   return getChallenges(filters)
 })
 
+const hasActiveFilters = computed(() => Boolean(searchQuery.value || categoryFilter.value || difficultyFilter.value))
+const hasLoadError = computed(() => Boolean(error.value) && list.value.length === 0)
+const errorMessage = computed(() => {
+  if (error.value instanceof ApiError) return error.value.message
+  if (error.value instanceof Error) return error.value.message
+  return '挑战列表暂时无法加载，请稍后重试。'
+})
+const emptyTitle = computed(() => (hasActiveFilters.value ? '没有匹配的题目' : '目前还没有题目'))
+const emptyDescription = computed(() =>
+  hasActiveFilters.value ? '当前筛选条件下没有找到可训练的题目，建议放宽分类、难度或搜索词。' : '管理员还没有发布训练题目，稍后再来查看即可。'
+)
+
 function onSearch() {
   page.value = 1
-  refresh()
+  void refresh()
 }
 
 function onFilterChange() {
   page.value = 1
-  refresh()
+  void refresh()
+}
+
+function resetFilters() {
+  searchQuery.value = ''
+  categoryFilter.value = ''
+  difficultyFilter.value = ''
+  page.value = 1
+  void refresh()
 }
 
 function goToDetail(id: string) {
@@ -201,6 +268,6 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
 }
 
 onMounted(() => {
-  refresh()
+  void refresh()
 })
 </script>

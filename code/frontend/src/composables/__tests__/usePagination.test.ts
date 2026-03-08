@@ -65,4 +65,15 @@ describe('usePagination', () => {
     expect(page.value).toBe(1)
     expect(mockFetch).toHaveBeenCalledWith({ page: 1, page_size: 50 })
   })
+
+  it('应该暴露加载错误', async () => {
+    const expectedError = new Error('加载失败')
+    const mockFetch = vi.fn().mockRejectedValue(expectedError)
+
+    const { refresh, error, loading } = usePagination(mockFetch)
+
+    await refresh()
+    expect(error.value).toBe(expectedError)
+    expect(loading.value).toBe(false)
+  })
 })
