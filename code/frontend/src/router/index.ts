@@ -107,6 +107,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/teacher/ReportExport.vue'),
         meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '报告导出', icon: 'FileDown' },
       },
+      {
+        path: 'teacher/instances',
+        name: 'TeacherInstanceManagement',
+        component: () => import('@/views/teacher/InstanceManagement.vue'),
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '实例管理', icon: 'Server' },
+      },
 
       // Admin
       {
@@ -182,4 +188,3 @@ setupRouterGuards(router)
 
 export default router
 export { routes }
-

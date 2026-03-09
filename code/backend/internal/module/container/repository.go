@@ -1,19 +1,29 @@
 package container
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
 type Repository struct {
 	db *gorm.DB
+}
+
+type TeacherInstanceFilter struct {
+	ClassName string
+	Keyword   string
+	StudentNo string
 }
 
 func NewRepository(db *gorm.DB) *Repository {
@@ -31,6 +41,17 @@ func (r *Repository) FindByID(id int64) (*model.Instance, error) {
 		return nil, err
 	}
 	return &instance, nil
+}
+
+func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
+	var user model.User
+	if err := r.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("find user by id: %w", err)
+	}
+	return &user, nil
 }
 
 func (r *Repository) FindByUserID(userID int64) ([]*model.Instance, error) {
@@ -80,6 +101,49 @@ func (r *Repository) FindExpired() ([]*model.Instance, error) {
 		model.InstanceStatusRunning, time.Now()).
 		Find(&instances).Error
 	return instances, err
+}
+
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]dto.TeacherInstanceItem, error) {
+	items := make([]dto.TeacherInstanceItem, 0)
+
+	query := r.db.WithContext(ctx).
+		Table("instances AS i").
+		Select(strings.Join([]string{
+			"i.id",
+			"u.id AS student_id",
+			"u.username AS student_name",
+			"u.username AS student_username",
+			"NULLIF(u.student_no, '') AS student_no",
+			"u.class_name",
+			"i.challenge_id",
+			"c.title AS challenge_title",
+			"i.status",
+			"i.access_url",
+			"i.expires_at",
+			"i.extend_count",
+			"i.max_extends",
+			"i.created_at",
+		}, ", ")).
+		Joins("JOIN users u ON u.id = i.user_id").
+		Joins("JOIN challenges c ON c.id = i.challenge_id").
+		Where("i.status <> ?", model.InstanceStatusStopped).
+		Where("u.role = ? AND u.deleted_at IS NULL", model.RoleStudent)
+
+	if filter.ClassName != "" {
+		query = query.Where("u.class_name = ?", filter.ClassName)
+	}
+	if filter.StudentNo != "" {
+		query = query.Where("u.student_no = ?", filter.StudentNo)
+	}
+	if filter.Keyword != "" {
+		pattern := "%" + strings.ToLower(filter.Keyword) + "%"
+		query = query.Where("LOWER(u.username) LIKE ?", pattern)
+	}
+
+	if err := query.Order("i.created_at DESC").Scan(&items).Error; err != nil {
+		return nil, fmt.Errorf("list teacher instances: %w", err)
+	}
+	return items, nil
 }
 
 func (r *Repository) UpdateExtend(id int64, expiresAt time.Time, extendCount int) error {
