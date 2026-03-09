@@ -251,6 +251,24 @@ export interface TeacherStudentItem {
   progress?: MyProgressData
 }
 
+export interface TeacherInstanceItem {
+  id: ID
+  student_id: ID
+  student_name: string
+  student_username: string
+  student_no?: string
+  class_name: string
+  challenge_id: ID
+  challenge_title: string
+  status: string
+  access_url?: string
+  expires_at: ISODateTime
+  remaining_time: number
+  extend_count: number
+  max_extends: number
+  created_at: ISODateTime
+}
+
 export interface SkillDimensionScore {
   key: string
   name: string

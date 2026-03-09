@@ -475,6 +475,15 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/classes", teacherHandler.ListClasses)
 	teacherOrAbove.GET("/classes/:name/students", teacherHandler.ListClassStudents)
+	teacherOrAbove.GET("/instances", containerHandler.ListTeacherInstances)
+	teacherOrAbove.DELETE("/instances/:id",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "instance",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		containerHandler.DestroyTeacherInstance,
+	)
 	teacherOrAbove.GET("/students/:id/progress", teacherHandler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/students/:id/recommendations", teacherHandler.GetStudentRecommendations)
