@@ -288,7 +288,7 @@ async function handleImportChange(event: Event): Promise<void> {
           <div class="rounded-2xl border border-border bg-surface-alt/60 p-5">
             <p class="text-sm font-medium text-slate-100">CSV 格式</p>
             <p class="mt-2 text-sm leading-6 text-slate-400">
-              按列顺序上传：`username,password,email,class_name,role,status,student_no,teacher_no`。首行可带表头；已存在用户名会执行更新。
+              按列顺序上传：`username,password,email,class_name,role,status,student_no,teacher_no,name`。首行可带表头；已存在用户名会执行更新。
             </p>
           </div>
 
@@ -348,12 +348,13 @@ async function handleImportChange(event: Event): Promise<void> {
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <p class="font-semibold text-slate-100">{{ user.username }}</p>
+                  <p class="font-semibold text-slate-100">{{ user.name || user.username }}</p>
                   <span
                     class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-slate-200"
                     >{{ user.status }}</span
                   >
                 </div>
+                <p class="mt-1 text-sm text-slate-400">@{{ user.username }}</p>
                 <p class="mt-2 text-sm text-slate-400">{{ user.email || '未填写邮箱' }}</p>
                 <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
                   <span class="rounded-full border border-border px-3 py-1">

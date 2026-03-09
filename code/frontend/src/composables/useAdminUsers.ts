@@ -19,6 +19,7 @@ type UserFilterStatus = UserStatus | 'all'
 
 export interface AdminUserFormDraft {
   username: string
+  name: string
   password: string
   email: string
   student_no: string
@@ -31,6 +32,7 @@ export interface AdminUserFormDraft {
 function createEmptyDraft(): AdminUserFormDraft {
   return {
     username: '',
+    name: '',
     password: '',
     email: '',
     student_no: '',
@@ -82,6 +84,7 @@ export function useAdminUsers() {
     editingUserId.value = user.id
     formDraft.value = {
       username: user.username,
+      name: user.name || '',
       password: '',
       email: user.email || '',
       student_no: user.student_no || '',
@@ -103,6 +106,7 @@ export function useAdminUsers() {
       if (editingUserId.value) {
         const payload: AdminUserUpdatePayload = {
           email: draft.email.trim() || undefined,
+          name: draft.name.trim() || undefined,
           student_no: draft.student_no.trim() || undefined,
           teacher_no: draft.teacher_no.trim() || undefined,
           class_name: draft.class_name.trim() || undefined,
@@ -115,6 +119,7 @@ export function useAdminUsers() {
       } else {
         const payload: AdminUserCreatePayload = {
           username: draft.username.trim(),
+          name: draft.name.trim() || undefined,
           password: draft.password,
           email: draft.email.trim() || undefined,
           student_no: draft.student_no.trim() || undefined,

@@ -286,3 +286,23 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 		t.Fatalf("expected invalid credentials, got %v", err)
 	}
 }
+
+func TestBuildAuthUserIncludesName(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{
+		ID:        1,
+		Username:  "alice_1",
+		Name:      "Alice Zhang",
+		Role:      model.RoleStudent,
+		ClassName: "Class A",
+	}
+
+	profile := buildAuthUser(user)
+	if profile.Name == nil || *profile.Name != "Alice Zhang" {
+		t.Fatalf("expected profile name, got %+v", profile)
+	}
+	if profile.ClassName == nil || *profile.ClassName != "Class A" {
+		t.Fatalf("expected class name, got %+v", profile)
+	}
+}

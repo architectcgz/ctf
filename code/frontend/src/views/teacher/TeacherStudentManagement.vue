@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getClasses, getClassStudents } from '@/api/teacher'
@@ -18,17 +18,7 @@ const studentNoQuery = ref('')
 const loadingClasses = ref(false)
 const loadingStudents = ref(false)
 const error = ref<string | null>(null)
-
-const filteredStudents = computed(() => {
-  const keyword = searchQuery.value.trim().toLowerCase()
-  if (!keyword) return students.value
-
-  return students.value.filter((student) => {
-    const label =
-      `${student.name || ''} ${student.username} ${student.student_no || ''}`.toLowerCase()
-    return label.includes(keyword)
-  })
-})
+let latestStudentRequestID = 0
 
 async function loadClasses(): Promise<void> {
   loadingClasses.value = true
@@ -41,25 +31,38 @@ async function loadClasses(): Promise<void> {
 
 async function loadStudents(className: string): Promise<void> {
   if (!className) {
+    latestStudentRequestID += 1
     students.value = []
     selectedClassName.value = ''
+    loadingStudents.value = false
     return
   }
 
+  const requestID = ++latestStudentRequestID
   loadingStudents.value = true
   error.value = null
   selectedClassName.value = className
 
   try {
-    students.value = await getClassStudents(className, {
+    const nextStudents = await getClassStudents(className, {
+      keyword: searchQuery.value.trim() || undefined,
       student_no: studentNoQuery.value.trim() || undefined,
     })
+    if (requestID !== latestStudentRequestID) {
+      return
+    }
+    students.value = nextStudents
   } catch (err) {
+    if (requestID !== latestStudentRequestID) {
+      return
+    }
     console.error('加载学生列表失败:', err)
     error.value = '加载学生列表失败，请稍后重试'
     students.value = []
   } finally {
-    loadingStudents.value = false
+    if (requestID === latestStudentRequestID) {
+      loadingStudents.value = false
+    }
   }
 }
 
@@ -94,10 +97,8 @@ function updateStudentNoQuery(value: string): void {
   studentNoQuery.value = value
 }
 
-watch(studentNoQuery, async () => {
-  if (!selectedClassName.value) {
-    return
-  }
+watch([searchQuery, studentNoQuery], async () => {
+  if (!selectedClassName.value) return
   await loadStudents(selectedClassName.value)
 })
 
@@ -112,8 +113,8 @@ onMounted(() => {
     :selected-class-name="selectedClassName"
     :search-query="searchQuery"
     :student-no-query="studentNoQuery"
-    :filtered-students="filteredStudents"
-    :total-students="students.length"
+    :filtered-students="students"
+    :total-students="classes.find((item) => item.name === selectedClassName)?.student_count || students.length"
     :loading-classes="loadingClasses"
     :loading-students="loadingStudents"
     :error="error"

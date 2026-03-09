@@ -1,74 +1,49 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { getClasses } from '@/api/teacher'
+import type { TeacherClassItem } from '@/api/contracts'
 import ClassManagementPage from '@/components/teacher/class-management/ClassManagementPage.vue'
-import { useTeacherWorkspace } from '@/composables/useTeacherWorkspace'
 
 const router = useRouter()
-const searchQuery = ref('')
 
-const {
-  classes,
-  students,
-  selectedClassName,
-  selectedStudentId,
-  selectedStudent,
-  loadingClasses,
-  loadingStudents,
-  loadingDetails,
-  error,
-  progress,
-  skillProfile,
-  recommendations,
-  initialize,
-  loadStudents,
-  loadStudentDetails,
-} = useTeacherWorkspace()
+const classes = ref<TeacherClassItem[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
 
-const filteredStudents = computed(() => {
-  const keyword = searchQuery.value.trim().toLowerCase()
-  if (!keyword) return students.value
-  return students.value.filter((student) => {
-    const label = `${student.name || ''} ${student.username}`.toLowerCase()
-    return label.includes(keyword)
-  })
-})
+async function loadClasses(): Promise<void> {
+  loading.value = true
+  error.value = null
 
-function openChallenge(challengeId: string): void {
-  router.push(`/challenges/${challengeId}`)
+  try {
+    classes.value = await getClasses()
+  } catch (err) {
+    console.error('加载班级列表失败:', err)
+    error.value = '加载班级列表失败，请稍后重试'
+    classes.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
-function updateSearchQuery(value: string): void {
-  searchQuery.value = value
+function openClass(className: string): void {
+  router.push({ name: 'TeacherClassStudents', params: { className } })
 }
 
 onMounted(() => {
-  initialize()
+  loadClasses()
 })
 </script>
 
 <template>
   <ClassManagementPage
     :classes="classes"
-    :selected-class-name="selectedClassName"
-    :search-query="searchQuery"
-    :filtered-students="filteredStudents"
-    :selected-student-id="selectedStudentId"
-    :selected-student="selectedStudent"
-    :loading-classes="loadingClasses"
-    :loading-students="loadingStudents"
-    :loading-details="loadingDetails"
+    :loading="loading"
     :error="error"
-    :progress="progress"
-    :skill-profile="skillProfile"
-    :recommendations="recommendations"
-    @retry="initialize"
-    @update-search-query="updateSearchQuery"
-    @select-class="loadStudents"
-    @select-student="loadStudentDetails"
-    @open-challenge="openChallenge"
+    @retry="loadClasses"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
     @open-report-export="router.push({ name: 'ReportExport' })"
+    @open-class="openClass"
   />
 </template>

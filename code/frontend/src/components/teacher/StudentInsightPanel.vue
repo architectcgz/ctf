@@ -63,7 +63,7 @@ function openChallenge(challengeId: string): void {
               accent="primary"
               eyebrow="Student Snapshot"
               :title="student.name || student.username"
-              subtitle="当前学员的主视图。这里优先展示完成率、关键指标和可介入的训练方向。"
+              subtitle="查看当前学员的关键指标和推荐方向。"
             >
               <template #header>
                 <span

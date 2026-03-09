@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 
@@ -59,11 +60,15 @@ func (r *Repository) ListClasses(ctx context.Context) ([]dto.TeacherClassItem, e
 	return items, nil
 }
 
-func (r *Repository) ListStudentsByClass(ctx context.Context, className, studentNo string) ([]dto.TeacherStudentItem, error) {
+func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string) ([]dto.TeacherStudentItem, error) {
 	items := make([]dto.TeacherStudentItem, 0)
 	query := r.db.WithContext(ctx).Model(&model.User{}).
-		Select("id, username, NULLIF(student_no, '') AS student_no").
+		Select("id, username, NULLIF(name, '') AS name, NULLIF(student_no, '') AS student_no").
 		Where("role = ? AND class_name = ? AND deleted_at IS NULL", model.RoleStudent, className)
+	if keyword != "" {
+		likeKeyword := "%" + strings.ToLower(keyword) + "%"
+		query = query.Where("(LOWER(username) LIKE ? OR LOWER(name) LIKE ?)", likeKeyword, likeKeyword)
+	}
 	if studentNo != "" {
 		query = query.Where("student_no = ?", studentNo)
 	}

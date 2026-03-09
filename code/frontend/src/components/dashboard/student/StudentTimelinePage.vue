@@ -165,7 +165,7 @@ function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
           </div>
         </SectionCard>
 
-        <SectionCard title="阅读方式" subtitle="时间线页只关注过程，不再混入总览卡片。">
+        <SectionCard title="阅读方式" subtitle="按时间顺序查看近期训练记录。">
           <AppCard variant="action" accent="primary">
             把时间顺序和节奏解读放在一起，更容易看清最近的训练过程，而不只是结果摘要。
           </AppCard>

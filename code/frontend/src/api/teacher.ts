@@ -15,7 +15,7 @@ export async function getClasses(): Promise<TeacherClassItem[]> {
   return request<TeacherClassItem[]>({ method: 'GET', url: '/teacher/classes' })
 }
 
-export async function getClassStudents(name: string, params?: { student_no?: string }) {
+export async function getClassStudents(name: string, params?: { keyword?: string; student_no?: string }) {
   const payload = await request<
     Array<{
       id: string | number
@@ -27,6 +27,7 @@ export async function getClassStudents(name: string, params?: { student_no?: str
     method: 'GET',
     url: `/teacher/classes/${encodeURIComponent(name)}/students`,
     params: {
+      keyword: params?.keyword,
       student_no: params?.student_no,
     },
   })

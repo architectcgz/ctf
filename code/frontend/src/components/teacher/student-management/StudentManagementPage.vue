@@ -72,7 +72,7 @@ const emit = defineEmits<{
           <span class="text-sm text-text-secondary">班级</span>
           <select
             :value="selectedClassName"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="teacher-filter-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="loadingClasses"
             @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
           >
@@ -83,14 +83,14 @@ const emit = defineEmits<{
         </label>
 
         <label class="space-y-2">
-          <span class="text-sm text-text-secondary">搜索学生</span>
-          <div class="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+          <span class="text-sm text-text-secondary">搜索姓名或用户名</span>
+          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
             <Search class="h-4 w-4 text-text-muted" />
             <input
               :value="searchQuery"
               type="text"
               placeholder="搜索姓名或用户名"
-              class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-text-muted"
+              class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
               @input="emit('updateSearchQuery', ($event.target as HTMLInputElement).value)"
             />
           </div>
@@ -98,13 +98,13 @@ const emit = defineEmits<{
 
         <label class="space-y-2">
           <span class="text-sm text-text-secondary">按学号查询</span>
-          <div class="flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
             <Search class="h-4 w-4 text-text-muted" />
             <input
               :value="studentNoQuery"
               type="text"
               placeholder="输入学号精确查询"
-              class="w-full bg-transparent text-sm text-slate-100 outline-none placeholder:text-text-muted"
+              class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
               @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
             />
           </div>
@@ -170,6 +170,20 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+:deep(.teacher-filter-field) {
+  color: var(--color-text-primary);
+}
+
+:deep(.teacher-filter-field option) {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+:deep(.teacher-filter-field select),
+:deep(.teacher-filter-field input) {
+  color: var(--color-text-primary);
+}
+
 :deep(.teacher-student-table) {
   --el-table-bg-color: transparent;
   --el-table-tr-bg-color: transparent;

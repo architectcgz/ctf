@@ -123,7 +123,7 @@ onMounted(() => {
       accent="primary"
       eyebrow="Audit Filters"
       title="筛选审计轨迹"
-      subtitle="这里统一收纳动作、资源类型和执行人三个检索入口，先缩小范围，再看详细流水。"
+      subtitle="按动作、资源类型和执行人筛选日志。"
     >
       <div class="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
         <select

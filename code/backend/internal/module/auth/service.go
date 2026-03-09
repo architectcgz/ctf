@@ -169,6 +169,10 @@ func (s *service) issueLoginResp(user *model.User) (*dto.LoginResp, *TokenPair, 
 }
 
 func buildAuthUser(user *model.User) dto.AuthUser {
+	var name *string
+	if user.Name != "" {
+		name = &user.Name
+	}
 	var className *string
 	if user.ClassName != "" {
 		className = &user.ClassName
@@ -178,6 +182,7 @@ func buildAuthUser(user *model.User) dto.AuthUser {
 		ID:        user.ID,
 		Username:  user.Username,
 		Role:      user.Role,
+		Name:      name,
 		ClassName: className,
 	}
 }

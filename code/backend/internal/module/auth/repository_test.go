@@ -96,8 +96,11 @@ func newTestRepository(t *testing.T) Repository {
 		`CREATE TABLE users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			username TEXT NOT NULL,
+			name TEXT,
 			password_hash TEXT NOT NULL,
 			email TEXT,
+			student_no TEXT,
+			teacher_no TEXT,
 			role TEXT NOT NULL DEFAULT 'student',
 			class_name TEXT,
 			status TEXT NOT NULL DEFAULT 'active',

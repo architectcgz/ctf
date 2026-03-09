@@ -76,11 +76,13 @@ func (s *Service) ListClassStudents(ctx context.Context, requesterID int64, requ
 	}
 
 	studentNo := ""
+	keyword := ""
 	if query != nil {
 		studentNo = strings.TrimSpace(query.StudentNo)
+		keyword = strings.TrimSpace(query.Keyword)
 	}
 
-	items, err := s.repo.ListStudentsByClass(ctx, normalized, studentNo)
+	items, err := s.repo.ListStudentsByClass(ctx, normalized, keyword, studentNo)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}

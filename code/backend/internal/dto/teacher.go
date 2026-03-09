@@ -15,6 +15,7 @@ type TeacherStudentItem struct {
 }
 
 type TeacherStudentQuery struct {
+	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
 	StudentNo string `form:"student_no" binding:"omitempty,max=64"`
 }
 

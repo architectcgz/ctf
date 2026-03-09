@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader eyebrow="Training Range" title="靶场训练" description="按分类和难度浏览训练题目，空状态和错误状态都会明确反馈，不再显示空白区域。">
+    <PageHeader eyebrow="Training Range" title="靶场训练" description="按分类和难度浏览训练题目。">
       <button
         type="button"
         class="rounded-xl border border-[var(--color-border-default)] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)]"

@@ -2,10 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import TeacherDashboard from '../TeacherDashboard.vue'
-import { useAuthStore } from '@/stores/auth'
+import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
 
 const pushMock = vi.fn()
+const routeMock = {
+  params: {
+    className: 'Class A',
+    studentId: 'stu-1',
+  },
+}
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -20,16 +25,19 @@ vi.mock('vue-router', async () => {
   return {
     ...actual,
     useRouter: () => ({ push: pushMock }),
+    useRoute: () => routeMock,
   }
 })
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
-describe('TeacherDashboard', () => {
+describe('TeacherStudentAnalysis', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
+    routeMock.params.className = 'Class A'
+    routeMock.params.studentId = 'stu-1'
 
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
@@ -39,33 +47,21 @@ describe('TeacherDashboard', () => {
       { id: 'stu-2', username: 'bob' },
     ])
     teacherApiMocks.getStudentProgress.mockResolvedValue({
-      total_challenges: 6,
-      solved_challenges: 3,
-      by_category: { web: { total: 3, solved: 2 } },
-      by_difficulty: { easy: { total: 2, solved: 1 } },
+      total_challenges: 4,
+      solved_challenges: 2,
+      by_category: {},
+      by_difficulty: {},
     })
     teacherApiMocks.getStudentSkillProfile.mockResolvedValue({
-      dimensions: [
-        { key: 'web', name: 'Web', value: 75 },
-        { key: 'crypto', name: '密码', value: 40 },
-      ],
-      updated_at: '2026-03-07T12:00:00Z',
+      dimensions: [{ key: 'crypto', name: '密码', value: 35 }],
     })
     teacherApiMocks.getStudentRecommendations.mockResolvedValue([
       { challenge_id: '12', title: 'crypto-lab', category: 'crypto', difficulty: 'medium', reason: '针对薄弱维度：密码' },
     ])
-
-    const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'teacher-1',
-      username: 'teacher',
-      role: 'teacher',
-      class_name: 'Class A',
-    }, 'token')
   })
 
-  it('应该展示教师概览且不加载学员详情接口', async () => {
-    const wrapper = mount(TeacherDashboard, {
+  it('应该展示当前学员分析内容', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
       global: {
         stubs: {
           SkillRadar: true,
@@ -75,13 +71,8 @@ describe('TeacherDashboard', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('教学介入台')
-    expect(wrapper.text()).toContain('Class A')
-    expect(wrapper.text()).toContain('班级管理')
-    expect(wrapper.text()).toContain('导出报告')
-    expect(wrapper.text()).not.toContain('当前样本')
-    expect(teacherApiMocks.getStudentProgress).not.toHaveBeenCalled()
-    expect(teacherApiMocks.getStudentSkillProfile).not.toHaveBeenCalled()
-    expect(teacherApiMocks.getStudentRecommendations).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('alice')
+    expect(wrapper.text()).toContain('50%')
+    expect(wrapper.text()).toContain('crypto-lab')
   })
 })
