@@ -15,9 +15,10 @@ const selectedClassName = ref('')
 const loadingStudents = ref(false)
 const error = ref<string | null>(null)
 const studentNoQuery = ref('')
+let latestStudentRequestID = 0
 
 function classNameFromRoute(): string {
-  return decodeURIComponent(String(route.params.className || ''))
+  return String(route.params.className || '')
 }
 
 async function loadClasses(): Promise<void> {
@@ -30,25 +31,37 @@ async function loadClasses(): Promise<void> {
 
 async function loadStudents(className = classNameFromRoute()): Promise<void> {
   if (!className) {
+    latestStudentRequestID += 1
     students.value = []
     selectedClassName.value = ''
+    loadingStudents.value = false
     return
   }
 
+  const requestID = ++latestStudentRequestID
   loadingStudents.value = true
   error.value = null
   selectedClassName.value = className
 
   try {
-    students.value = await getClassStudents(className, {
+    const nextStudents = await getClassStudents(className, {
       student_no: studentNoQuery.value.trim() || undefined,
     })
+    if (requestID !== latestStudentRequestID) {
+      return
+    }
+    students.value = nextStudents
   } catch (err) {
+    if (requestID !== latestStudentRequestID) {
+      return
+    }
     console.error('加载班级学生失败:', err)
     error.value = '加载班级学生失败，请稍后重试'
     students.value = []
   } finally {
-    loadingStudents.value = false
+    if (requestID === latestStudentRequestID) {
+      loadingStudents.value = false
+    }
   }
 }
 

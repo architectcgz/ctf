@@ -44,7 +44,7 @@ const solvedRate = computed(() => {
 const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
 
 function classNameFromRoute(): string {
-  return decodeURIComponent(String(route.params.className || ''))
+  return String(route.params.className || '')
 }
 
 function studentIdFromRoute(): string {
