@@ -28,6 +28,14 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve
+  })
+  return { promise, resolve }
+}
+
 describe('TeacherClassStudents', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -67,5 +75,64 @@ describe('TeacherClassStudents', () => {
       name: 'TeacherStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
+  })
+
+  it('应该保留已解码的班级名并使用原值请求学生列表', async () => {
+    routeMock.params.className = '100% 班级'
+
+    mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级', {
+      student_no: undefined,
+    })
+  })
+
+  it('应该忽略过期学号搜索请求的返回结果', async () => {
+    const slowRequest = deferred<Array<{ id: string; username: string; name?: string }>>()
+    const fastRequest = deferred<Array<{ id: string; username: string; name?: string }>>()
+
+    teacherApiMocks.getClassStudents.mockReset()
+    teacherApiMocks.getClassStudents
+      .mockResolvedValueOnce([
+        { id: 'stu-1', username: 'alice', name: 'Alice Zhang' },
+        { id: 'stu-2', username: 'bob' },
+      ])
+      .mockImplementationOnce(() => slowRequest.promise)
+      .mockImplementationOnce(() => fastRequest.promise)
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const studentNoInput = wrapper.find('input[placeholder="输入学号后实时查询"]')
+    await studentNoInput.setValue('20260001')
+    await studentNoInput.setValue('20260002')
+
+    fastRequest.resolve([{ id: 'stu-1', username: 'alice', name: 'Alice Zhang' }])
+    await flushPromises()
+
+    slowRequest.resolve([{ id: 'stu-2', username: 'bob' }])
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('alice')
+    expect(wrapper.text()).not.toContain('bob')
   })
 })

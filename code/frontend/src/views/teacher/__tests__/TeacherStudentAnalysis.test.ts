@@ -75,4 +75,20 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('50%')
     expect(wrapper.text()).toContain('crypto-lab')
   })
+
+  it('应该支持包含百分号的班级名路由参数', async () => {
+    routeMock.params.className = '100% 班级'
+
+    mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级')
+  })
 })
