@@ -19,7 +19,6 @@
           </div>
           <div>
             <div class="text-sm font-semibold text-text-primary">攻防实训平台</div>
-            <div class="text-xs text-text-muted">{{ roleLabel }}</div>
           </div>
         </div>
         <button
@@ -110,7 +109,6 @@
           </div>
           <div v-if="!collapsed" class="min-w-0">
             <div class="truncate text-sm font-semibold text-text-primary">攻防实训平台</div>
-            <div class="truncate text-xs text-text-muted">{{ roleLabel }}</div>
           </div>
         </button>
       </div>
@@ -184,15 +182,6 @@
         </nav>
       </div>
 
-      <div class="mt-4 px-1">
-        <div
-          class="rounded-2xl border border-border bg-elevated/70 px-3 py-3 text-xs text-text-secondary"
-          :class="collapsed ? 'px-0 text-center' : ''"
-        >
-          <div class="font-semibold text-text-primary">{{ collapsed ? roleInitial : roleLabel }}</div>
-          <div v-if="!collapsed" class="mt-1 text-text-muted">实时通知、竞赛与教学数据统一收敛在此。</div>
-        </div>
-      </div>
     </aside>
   </div>
 </template>
@@ -283,15 +272,6 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const expandedMenus = ref<Record<string, boolean>>({})
-
-const roleNameMap: Record<string, string> = {
-  admin: '管理员视图',
-  teacher: '教师视图',
-  student: '学员视图',
-}
-
-const roleLabel = computed(() => roleNameMap[authStore.user?.role || ''] || '未识别角色')
-const roleInitial = computed(() => roleLabel.value.slice(0, 1))
 
 function resolveIcon(name?: string): IconComp {
   if (!name) return Circle
