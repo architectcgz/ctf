@@ -43,6 +43,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 
 	assertHasRoute(t, router, "GET", "/api/v1/challenges")
 	assertHasRoute(t, router, "GET", "/api/v1/challenges/:id")
+	assertHasRoute(t, router, "GET", "/api/v1/teacher/instances")
+	assertHasRoute(t, router, "DELETE", "/api/v1/teacher/instances/:id")
 }
 
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {

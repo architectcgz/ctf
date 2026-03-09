@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -169,7 +170,7 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 		zap.Int64("instance_id", instanceID),
 		zap.Int64("user_id", userID))
 
-	return s.repo.UpdateStatus(instanceID, model.InstanceStatusStopped)
+	return s.destroyManagedInstance(instance)
 }
 
 func (s *Service) ExtendInstance(instanceID, userID int64) error {
@@ -208,6 +209,78 @@ func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 		result[i] = toInstanceInfo(inst)
 	}
 	return result, nil
+}
+
+func (s *Service) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+	filter := TeacherInstanceFilter{}
+	if query != nil {
+		filter.ClassName = strings.TrimSpace(query.ClassName)
+		filter.Keyword = strings.TrimSpace(query.Keyword)
+		filter.StudentNo = strings.TrimSpace(query.StudentNo)
+	}
+
+	if requesterRole != model.RoleAdmin {
+		requester, err := s.repo.FindUserByID(ctx, requesterID)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		if requester == nil {
+			return nil, errcode.ErrUnauthorized
+		}
+
+		className := strings.TrimSpace(requester.ClassName)
+		if className == "" {
+			return []dto.TeacherInstanceItem{}, nil
+		}
+		if filter.ClassName != "" && filter.ClassName != className {
+			return nil, errcode.ErrForbidden
+		}
+		filter.ClassName = className
+	}
+
+	items, err := s.repo.ListTeacherInstances(ctx, filter)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	now := time.Now()
+	for idx := range items {
+		items[idx].RemainingTime = calculateRemainingTime(items[idx].ExpiresAt, now)
+	}
+
+	return items, nil
+}
+
+func (s *Service) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
+	instance, err := s.repo.FindByID(instanceID)
+	if err != nil {
+		return errcode.ErrInstanceNotFound
+	}
+
+	if requesterRole != model.RoleAdmin {
+		requester, err := s.repo.FindUserByID(ctx, requesterID)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		if requester == nil {
+			return errcode.ErrUnauthorized
+		}
+
+		owner, err := s.repo.FindUserByID(ctx, instance.UserID)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		if owner == nil || strings.TrimSpace(owner.ClassName) == "" || owner.ClassName != requester.ClassName {
+			return errcode.ErrForbidden
+		}
+	}
+
+	s.logger.Info("教师销毁实例",
+		zap.Int64("instance_id", instanceID),
+		zap.Int64("requester_id", requesterID),
+		zap.String("requester_role", requesterRole))
+
+	return s.destroyManagedInstance(instance)
 }
 
 func (s *Service) CleanExpiredInstances(ctx context.Context) error {
@@ -352,19 +425,40 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 }
 
 func toInstanceInfo(inst *model.Instance) *dto.InstanceInfo {
-	remaining := int64(time.Until(inst.ExpiresAt).Seconds())
-	if remaining < 0 {
-		remaining = 0
-	}
 	return &dto.InstanceInfo{
 		ID:            inst.ID,
 		ChallengeID:   inst.ChallengeID,
 		Status:        inst.Status,
 		AccessURL:     inst.AccessURL,
 		ExpiresAt:     inst.ExpiresAt,
-		RemainingTime: remaining,
+		RemainingTime: calculateRemainingTime(inst.ExpiresAt, time.Now()),
 		ExtendCount:   inst.ExtendCount,
 		MaxExtends:    inst.MaxExtends,
 		CreatedAt:     inst.CreatedAt,
 	}
+}
+
+func (s *Service) destroyManagedInstance(instance *model.Instance) error {
+	if instance.ContainerID != "" {
+		if err := s.RemoveContainer(instance.ContainerID); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+	}
+	if instance.NetworkID != "" {
+		if err := s.RemoveNetwork(instance.NetworkID); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+	}
+	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusStopped); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
+}
+
+func calculateRemainingTime(expiresAt, now time.Time) int64 {
+	remaining := int64(expiresAt.Sub(now).Seconds())
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
 }

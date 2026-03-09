@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
@@ -76,4 +77,37 @@ func (h *Handler) ListInstances(c *gin.Context) {
 	}
 
 	response.Success(c, instances)
+}
+
+func (h *Handler) ListTeacherInstances(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherInstanceQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	items, err := h.service.ListTeacherInstances(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, items)
+}
+
+func (h *Handler) DestroyTeacherInstance(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	instanceID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	if err := h.service.DestroyTeacherInstance(c.Request.Context(), instanceID, currentUser.UserID, currentUser.Role); err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, nil)
 }
