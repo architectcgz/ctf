@@ -38,7 +38,7 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
     <PageHeader
       eyebrow="Contest Orchestration"
       title="赛事编排台"
-      description="这页不再只是竞赛列表，而是把状态窗口、接入边界和赛事编排动作收进同一个管理员工作台。"
+      description="查看赛事状态、筛选条件和当前赛事列表。"
     >
       <div class="flex flex-wrap items-center gap-3">
         <button
@@ -125,7 +125,7 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
 
     <section class="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
       <div class="space-y-6">
-        <SectionCard title="状态窗口" subtitle="状态筛选和接入边界合在一起，先收敛当前编排范围。">
+        <SectionCard title="状态窗口" subtitle="查看当前筛选条件和状态说明。">
           <label class="space-y-2">
             <span class="text-sm text-slate-300">状态筛选</span>
             <select
@@ -149,7 +149,7 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
             <AppCard variant="action" accent="warning" eyebrow="受后端约束" subtitle="状态流转、时间字段可编辑范围与后端规则保持一致。">
               <template #default />
             </AppCard>
-            <AppCard variant="action" accent="neutral" eyebrow="暂未暴露" subtitle="删除接口主线未提供，页面不再展示假删除能力。">
+            <AppCard variant="action" accent="neutral" eyebrow="暂未暴露" subtitle="删除接口主线未提供。">
               <template #default />
             </AppCard>
           </div>

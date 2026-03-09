@@ -39,6 +39,7 @@ interface UserListParams {
 
 export interface AdminUserCreatePayload {
   username: string
+  name?: string
   password: string
   email?: string
   student_no?: string
@@ -49,6 +50,7 @@ export interface AdminUserCreatePayload {
 }
 
 export interface AdminUserUpdatePayload {
+  name?: string
   password?: string
   email?: string
   student_no?: string
@@ -74,6 +76,7 @@ interface RawContestItem {
 interface RawAdminUser {
   id: string | number
   username: string
+  name?: string | null
   email?: string | null
   student_no?: string | null
   teacher_no?: string | null
@@ -172,6 +175,7 @@ function normalizeAdminUser(item: RawAdminUser): AdminUserListItem {
   return {
     id: String(item.id),
     username: item.username,
+    name: item.name || undefined,
     email: item.email || undefined,
     student_no: item.student_no || undefined,
     teacher_no: item.teacher_no || undefined,

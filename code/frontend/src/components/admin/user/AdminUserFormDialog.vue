@@ -18,6 +18,7 @@ const emit = defineEmits<{
 
 const localDraft = reactive<AdminUserFormDraft>({
   username: '',
+  name: '',
   password: '',
   email: '',
   student_no: '',
@@ -40,6 +41,7 @@ watch(
 
 function resetErrors() {
   fieldErrors.username = ''
+  fieldErrors.name = ''
   fieldErrors.password = ''
   fieldErrors.email = ''
 }
@@ -55,6 +57,10 @@ function validate(): boolean {
     fieldErrors.username = '请填写用户名'
   }
 
+  if (localDraft.name.trim().length > 64) {
+    fieldErrors.name = '姓名不能超过 64 个字符'
+  }
+
   if (props.mode === 'create' && !localDraft.password.trim()) {
     fieldErrors.password = '创建用户时必须设置初始密码'
   }
@@ -63,7 +69,7 @@ function validate(): boolean {
     fieldErrors.email = '邮箱格式不正确'
   }
 
-  return !fieldErrors.username && !fieldErrors.password && !fieldErrors.email
+  return !fieldErrors.username && !fieldErrors.name && !fieldErrors.password && !fieldErrors.email
 }
 
 function handleSubmit() {
@@ -73,6 +79,7 @@ function handleSubmit() {
 
   emit('save', {
     username: localDraft.username,
+    name: localDraft.name,
     password: localDraft.password,
     email: localDraft.email,
     student_no: localDraft.student_no,
@@ -110,6 +117,20 @@ function handleSubmit() {
         </div>
 
         <div class="space-y-2">
+          <label class="text-sm font-medium text-slate-200" for="user-name">姓名</label>
+          <input
+            id="user-name"
+            v-model="localDraft.name"
+            type="text"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            placeholder="例如：Alice Zhang"
+          />
+          <p v-if="fieldErrors.name" class="text-xs text-rose-400">
+            {{ fieldErrors.name }}
+          </p>
+        </div>
+
+        <div class="space-y-2 sm:col-span-2">
           <label class="text-sm font-medium text-slate-200" for="user-password">
             {{ mode === 'create' ? '初始密码' : '重置密码（可选）' }}
           </label>

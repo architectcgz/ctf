@@ -49,7 +49,15 @@ func (r *Repository) List(ctx context.Context, filter UserListFilter) ([]*model.
 	query := r.db.WithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
 	if filter.Keyword != "" {
 		keyword := "%" + strings.TrimSpace(filter.Keyword) + "%"
-		query = query.Where("(username LIKE ? OR email LIKE ? OR class_name LIKE ? OR student_no LIKE ? OR teacher_no LIKE ?)", keyword, keyword, keyword, keyword, keyword)
+		query = query.Where(
+			"(username LIKE ? OR name LIKE ? OR email LIKE ? OR class_name LIKE ? OR student_no LIKE ? OR teacher_no LIKE ?)",
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+			keyword,
+		)
 	}
 	if filter.StudentNo != "" {
 		query = query.Where("student_no = ?", strings.TrimSpace(filter.StudentNo))
@@ -119,6 +127,7 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 			Where("id = ? AND deleted_at IS NULL", user.ID).
 			Updates(map[string]any{
 				"password_hash": user.PasswordHash,
+				"name":          user.Name,
 				"email":         user.Email,
 				"student_no":    user.StudentNo,
 				"teacher_no":    user.TeacherNo,

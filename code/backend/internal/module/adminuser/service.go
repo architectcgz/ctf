@@ -71,6 +71,7 @@ func (s *Service) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (
 	identity := normalizeIdentityNumbers(req.Role, req.StudentNo, req.TeacherNo)
 	user := &model.User{
 		Username:  strings.TrimSpace(req.Username),
+		Name:      strings.TrimSpace(req.Name),
 		Email:     strings.TrimSpace(req.Email),
 		StudentNo: identity.StudentNo,
 		TeacherNo: identity.TeacherNo,
@@ -98,6 +99,9 @@ func (s *Service) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateA
 		if err := user.SetPassword(strings.TrimSpace(*req.Password)); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
+	}
+	if req.Name != nil {
+		user.Name = strings.TrimSpace(*req.Name)
 	}
 	if req.Email != nil {
 		user.Email = strings.TrimSpace(*req.Email)
@@ -190,6 +194,7 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 	status := strings.TrimSpace(getCSVValue(record, 5))
 	studentNo := strings.TrimSpace(getCSVValue(record, 6))
 	teacherNo := strings.TrimSpace(getCSVValue(record, 7))
+	name := strings.TrimSpace(getCSVValue(record, 8))
 
 	if username == "" {
 		return false, fmt.Errorf("username 不能为空")
@@ -212,6 +217,7 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 		}
 		_, createErr := s.CreateUser(ctx, &dto.CreateAdminUserReq{
 			Username:  username,
+			Name:      name,
 			Password:  password,
 			Email:     email,
 			StudentNo: studentNo,
@@ -227,6 +233,7 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 	}
 
 	req := &dto.UpdateAdminUserReq{
+		Name:      &name,
 		Email:     &email,
 		StudentNo: &studentNo,
 		TeacherNo: &teacherNo,
@@ -242,6 +249,10 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 }
 
 func toAdminUserResp(user *model.User) dto.AdminUserResp {
+	var name *string
+	if strings.TrimSpace(user.Name) != "" {
+		name = &user.Name
+	}
 	var email *string
 	if strings.TrimSpace(user.Email) != "" {
 		email = &user.Email
@@ -262,6 +273,7 @@ func toAdminUserResp(user *model.User) dto.AdminUserResp {
 	return dto.AdminUserResp{
 		ID:        user.ID,
 		Username:  user.Username,
+		Name:      name,
 		Email:     email,
 		StudentNo: studentNo,
 		TeacherNo: teacherNo,

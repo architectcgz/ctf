@@ -52,6 +52,7 @@ func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 
 	resp, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
 		Username:  "student-1",
+		Name:      "Alice",
 		Password:  "Password123",
 		Role:      model.RoleStudent,
 		StudentNo: "20240001",
@@ -64,6 +65,9 @@ func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 	if resp.StudentNo == nil || *resp.StudentNo != "20240001" {
 		t.Fatalf("expected student no in response, got %+v", resp)
 	}
+	if resp.Name == nil || *resp.Name != "Alice" {
+		t.Fatalf("expected name in response, got %+v", resp)
+	}
 	if resp.TeacherNo != nil {
 		t.Fatalf("expected teacher no to be cleared for student, got %+v", resp)
 	}
@@ -72,7 +76,7 @@ func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 	if err := db.First(&user, resp.ID).Error; err != nil {
 		t.Fatalf("load created user: %v", err)
 	}
-	if user.StudentNo != "20240001" || user.TeacherNo != "" {
+	if user.Name != "Alice" || user.StudentNo != "20240001" || user.TeacherNo != "" {
 		t.Fatalf("unexpected stored identity numbers: %+v", user)
 	}
 }
@@ -84,6 +88,7 @@ func TestServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 		{
 			ID:           1,
 			Username:     "student-1",
+			Name:         "Alice",
 			PasswordHash: "hash",
 			StudentNo:    "20240001",
 			Role:         model.RoleStudent,
@@ -94,6 +99,7 @@ func TestServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 		{
 			ID:           2,
 			Username:     "teacher-1",
+			Name:         "Bob",
 			PasswordHash: "hash",
 			TeacherNo:    "T-1001",
 			Role:         model.RoleTeacher,
@@ -120,6 +126,9 @@ func TestServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 	}
 	if list[0].StudentNo == nil || *list[0].StudentNo != "20240001" {
 		t.Fatalf("expected student no in response, got %+v", list[0])
+	}
+	if list[0].Name == nil || *list[0].Name != "Alice" {
+		t.Fatalf("expected name in response, got %+v", list[0])
 	}
 	if list[0].TeacherNo != nil {
 		t.Fatalf("expected teacher no to be empty, got %+v", list[0])

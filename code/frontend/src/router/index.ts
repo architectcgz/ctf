@@ -93,7 +93,12 @@ const routes: RouteRecordRaw[] = [
         path: 'teacher/dashboard',
         name: 'TeacherDashboard',
         component: () => import('@/views/teacher/TeacherDashboard.vue'),
-        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '教学概览', icon: 'GraduationCap' },
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '教学概览',
+          icon: 'GraduationCap',
+        },
       },
       {
         path: 'teacher/classes',
@@ -102,10 +107,38 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '班级管理', icon: 'Users' },
       },
       {
+        path: 'teacher/students',
+        name: 'TeacherStudentManagement',
+        component: () => import('@/views/teacher/TeacherStudentManagement.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '学生管理',
+          icon: 'GraduationCap',
+        },
+      },
+      {
+        path: 'teacher/classes/:className',
+        name: 'TeacherClassStudents',
+        component: () => import('@/views/teacher/TeacherClassStudents.vue'),
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '班级学生' },
+      },
+      {
+        path: 'teacher/classes/:className/students/:studentId',
+        name: 'TeacherStudentAnalysis',
+        component: () => import('@/views/teacher/TeacherStudentAnalysis.vue'),
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '学员分析' },
+      },
+      {
         path: 'teacher/reports',
         name: 'ReportExport',
         component: () => import('@/views/teacher/ReportExport.vue'),
-        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '报告导出', icon: 'FileDown' },
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '报告导出',
+          icon: 'FileDown',
+        },
       },
       {
         path: 'teacher/instances',

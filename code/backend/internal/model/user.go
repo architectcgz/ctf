@@ -17,6 +17,7 @@ const (
 type User struct {
 	ID           int64          `gorm:"column:id;primaryKey"`
 	Username     string         `gorm:"column:username"`
+	Name         string         `gorm:"column:name"`
 	PasswordHash string         `gorm:"column:password_hash"`
 	Email        string         `gorm:"column:email"`
 	StudentNo    string         `gorm:"column:student_no"`

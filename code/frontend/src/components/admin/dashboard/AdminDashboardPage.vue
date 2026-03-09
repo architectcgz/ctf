@@ -87,7 +87,7 @@ function usageTone(value: number | undefined): string {
     <PageHeader
       eyebrow="Control Plane"
       title="系统值守台"
-      description="这里不再是通用后台概览，而是围绕平台风险、资源热点和立即动作单独设计的管理员值守页面。"
+      description="查看平台状态、资源告警和待处理事项。"
     >
       <ElButton plain @click="emit('openAuditLog')">审计日志</ElButton>
       <ElButton type="primary" @click="emit('openCheatDetection')">风险研判</ElButton>
@@ -111,7 +111,7 @@ function usageTone(value: number | undefined): string {
         </div>
         <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前平台运行{{ healthSummary.label }}</h2>
         <p class="mt-3 text-sm leading-7 text-white/78">
-          先判断平台是否稳定，再沿着资源热点和告警信号定位当前最需要处理的问题。
+          查看平台运行状态，并定位当前需要处理的告警与热点。
         </p>
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
@@ -240,7 +240,7 @@ function usageTone(value: number | undefined): string {
           </SectionCard>
         </div>
 
-        <SectionCard title="资源热点" subtitle="把容器按热点程度重排，不再继续使用普通资源表格。">
+      <SectionCard title="资源热点" subtitle="按负载查看当前容器资源情况。">
           <div v-if="sortedContainers.length === 0" class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
             暂无容器运行数据。
           </div>

@@ -16,6 +16,7 @@ type AdminUserQuery struct {
 type AdminUserResp struct {
 	ID        int64      `json:"id"`
 	Username  string     `json:"username"`
+	Name      *string    `json:"name,omitempty"`
 	Email     *string    `json:"email,omitempty"`
 	StudentNo *string    `json:"student_no,omitempty"`
 	TeacherNo *string    `json:"teacher_no,omitempty"`
@@ -28,6 +29,7 @@ type AdminUserResp struct {
 
 type CreateAdminUserReq struct {
 	Username  string `json:"username" binding:"required,min=3,max=64,ctf_username"`
+	Name      string `json:"name" binding:"omitempty,max=64"`
 	Password  string `json:"password" binding:"required,min=8,max=72"`
 	Email     string `json:"email" binding:"omitempty,email,max=255"`
 	StudentNo string `json:"student_no" binding:"omitempty,max=64"`
@@ -39,6 +41,7 @@ type CreateAdminUserReq struct {
 
 type UpdateAdminUserReq struct {
 	Password  *string `json:"password" binding:"omitempty,min=8,max=72"`
+	Name      *string `json:"name" binding:"omitempty,max=64"`
 	Email     *string `json:"email" binding:"omitempty,email,max=255"`
 	StudentNo *string `json:"student_no" binding:"omitempty,max=64"`
 	TeacherNo *string `json:"teacher_no" binding:"omitempty,max=64"`

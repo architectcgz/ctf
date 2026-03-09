@@ -1,18 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import ClassManagement from '../ClassManagement.vue'
-import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
-  getClassStudents: vi.fn(),
-  getStudentProgress: vi.fn(),
-  getStudentSkillProfile: vi.fn(),
-  getStudentRecommendations: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -30,49 +26,35 @@ describe('ClassManagement', () => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
-    Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
-
-    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
-    teacherApiMocks.getClassStudents.mockResolvedValue([
-      { id: 'stu-1', username: 'alice' },
-      { id: 'stu-2', username: 'bob' },
+    teacherApiMocks.getClasses.mockReset()
+    teacherApiMocks.getClasses.mockResolvedValue([
+      { name: 'Class A', student_count: 2 },
+      { name: 'Class B', student_count: 3 },
     ])
-    teacherApiMocks.getStudentProgress.mockResolvedValue({
-      total_challenges: 4,
-      solved_challenges: 1,
-      by_category: {},
-      by_difficulty: {},
-    })
-    teacherApiMocks.getStudentSkillProfile.mockResolvedValue({
-      dimensions: [{ key: 'web', name: 'Web', value: 25 }],
-    })
-    teacherApiMocks.getStudentRecommendations.mockResolvedValue([])
-
-    const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'teacher-1',
-      username: 'teacher',
-      role: 'teacher',
-      class_name: 'Class A',
-    }, 'token')
   })
 
-  it('应该支持按关键字筛选学员', async () => {
+  it('应该展示班级列表并支持进入班级学生页', async () => {
     const wrapper = mount(ClassManagement, {
       global: {
-        stubs: {
-          SkillRadar: true,
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
         },
       },
     })
 
     await flushPromises()
 
-    const searchInput = wrapper.find('input[placeholder="搜索学员用户名..."]')
-    await searchInput.setValue('alice')
-    await flushPromises()
+    expect(wrapper.text()).toContain('班级管理')
+    expect(wrapper.text()).toContain('Class A')
+    expect(wrapper.text()).toContain('Class B')
 
-    expect(wrapper.text()).toContain('alice')
-    expect(wrapper.text()).not.toContain('bob')
+    await wrapper.findAll('button').find((node) => node.text().includes('进入'))?.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'TeacherClassStudents',
+      params: { className: 'Class A' },
+    })
   })
 })
