@@ -41,6 +41,8 @@ func Error(c *gin.Context, err *errcode.AppError) {
 }
 
 func FromError(c *gin.Context, err error) {
+	recordError(c, err)
+
 	var appErr *errcode.AppError
 	if errors.As(err, &appErr) {
 		Error(c, appErr)
@@ -50,6 +52,8 @@ func FromError(c *gin.Context, err error) {
 }
 
 func ValidationError(c *gin.Context, err error) {
+	recordError(c, err)
+
 	var validationErrors validator.ValidationErrors
 	if errors.As(err, &validationErrors) {
 		fields := make([]FieldError, 0, len(validationErrors))
@@ -95,4 +99,18 @@ func NewEnvelope(c *gin.Context, err *errcode.AppError, fieldErrors []FieldError
 
 func requestID(c *gin.Context) string {
 	return c.GetString("request_id")
+}
+
+func recordError(c *gin.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	var appErr *errcode.AppError
+	if errors.As(err, &appErr) && appErr.Cause != nil {
+		_ = c.Error(appErr.Cause)
+		return
+	}
+
+	_ = c.Error(err)
 }
