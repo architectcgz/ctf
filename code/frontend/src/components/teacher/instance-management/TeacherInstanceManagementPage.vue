@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { AlarmClock, RefreshCcw, Search, Server, ShieldAlert, Trash2, Users } from 'lucide-vue-next'
+import { RefreshCcw, Search, Trash2 } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppCard from '@/components/common/AppCard.vue'
+import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 
@@ -95,107 +97,25 @@ function remainingExtends(item: TeacherInstanceItem): number {
       </button>
     </PageHeader>
 
-    <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <AppCard
-        variant="hero"
+    <section class="grid gap-4 md:grid-cols-3">
+      <MetricCard
+        label="当前可见"
+        :value="totalCount"
+        hint="符合当前筛选条件的实例数量"
         accent="primary"
-        eyebrow="Instance Filters"
-        :title="`${selectedClassLabel} 的实例视图`"
-        subtitle="支持按班级、用户名关键字、学号精确筛选。销毁后列表会立即移除对应实例。"
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
-          >
-            {{ selectedClassLabel }}
-          </span>
-        </template>
-
-        <form class="grid gap-3 md:grid-cols-3" @submit.prevent="emit('submit')">
-          <label class="space-y-2">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/60">班级</span>
-            <select
-              :value="className"
-              class="w-full rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/60"
-              :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
-              @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
-            >
-              <option v-if="isAdmin" value="" class="text-black">全部班级</option>
-              <option v-for="item in classes" :key="item.name" :value="item.name" class="text-black">
-                {{ item.name }} · {{ item.student_count || 0 }}
-              </option>
-            </select>
-          </label>
-
-          <label class="space-y-2">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/60">用户名关键字</span>
-            <div class="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-white">
-              <Search class="h-4 w-4 text-cyan-100/70" />
-              <input
-                :value="keyword"
-                type="text"
-                placeholder="按用户名关键字搜索"
-                class="w-full bg-transparent text-sm text-white outline-none placeholder:text-cyan-100/50"
-                @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-              />
-            </div>
-          </label>
-
-          <label class="space-y-2">
-            <span class="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/60">学号</span>
-            <input
-              :value="studentNo"
-              type="text"
-              placeholder="按学号精确匹配"
-              class="w-full rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-sm text-white outline-none transition placeholder:text-cyan-100/50 focus:border-cyan-300/60"
-              @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-            />
-          </label>
-
-          <div class="md:col-span-3 flex flex-wrap items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              class="rounded-2xl border border-white/10 px-4 py-2 text-sm font-medium text-white transition hover:border-white/20 hover:bg-white/10"
-              @click="emit('reset')"
-            >
-              重置筛选
-            </button>
-            <button
-              type="submit"
-              class="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-cyan-50"
-            >
-              查询实例
-            </button>
-          </div>
-        </form>
-      </AppCard>
-
-      <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard variant="metric" accent="primary" eyebrow="当前可见" :title="String(totalCount)" subtitle="符合筛选条件且仍处于管理视野内的实例数量。">
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
-              <Users class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard variant="metric" accent="success" eyebrow="运行中" :title="String(runningCount)" subtitle="仍在占用环境资源、需要优先关注的运行中实例。">
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
-              <Server class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard variant="metric" accent="warning" eyebrow="即将到期" :title="String(expiringSoonCount)" subtitle="剩余时间不足 10 分钟的实例，适合老师快速巡检。">
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-300">
-              <AlarmClock class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-      </div>
+      />
+      <MetricCard
+        label="运行中"
+        :value="runningCount"
+        hint="仍在占用环境资源的实例数量"
+        accent="success"
+      />
+      <MetricCard
+        label="即将到期"
+        :value="expiringSoonCount"
+        hint="剩余时间不足 10 分钟的实例数量"
+        accent="warning"
+      />
     </section>
 
     <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
@@ -203,21 +123,80 @@ function remainingExtends(item: TeacherInstanceItem): number {
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
     </div>
 
+    <SectionCard title="实例筛选" :subtitle="`当前范围：${selectedClassLabel}。支持按班级、用户名关键字、学号精确筛选。`">
+      <form class="grid gap-4 md:grid-cols-[220px_1fr_1fr]" @submit.prevent="emit('submit')">
+        <label class="space-y-2">
+          <span class="text-sm text-text-secondary">班级</span>
+          <select
+            :value="className"
+            class="teacher-filter-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
+            @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
+          >
+            <option v-if="isAdmin" value="">全部班级</option>
+            <option v-for="item in classes" :key="item.name" :value="item.name">
+              {{ item.name }} · {{ item.student_count || 0 }}
+            </option>
+          </select>
+        </label>
+
+        <label class="space-y-2">
+          <span class="text-sm text-text-secondary">用户名关键字</span>
+          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+            <Search class="h-4 w-4 text-text-muted" />
+            <input
+              :value="keyword"
+              type="text"
+              placeholder="按用户名关键字搜索"
+              class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+              @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
+            />
+          </div>
+        </label>
+
+        <label class="space-y-2">
+          <span class="text-sm text-text-secondary">按学号查询</span>
+          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+            <Search class="h-4 w-4 text-text-muted" />
+            <input
+              :value="studentNo"
+              type="text"
+              placeholder="输入学号精确查询"
+              class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+              @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
+            />
+          </div>
+        </label>
+
+        <div class="md:col-span-3 flex flex-wrap items-center justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary/40"
+            @click="emit('reset')"
+          >
+            重置筛选
+          </button>
+          <button
+            type="submit"
+            class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+          >
+            查询实例
+          </button>
+        </div>
+      </form>
+    </SectionCard>
+
     <SectionCard title="实例列表" subtitle="按创建时间倒序展示，便于直接处理最近产生的问题实例。">
       <div v-if="loadingInstances" class="space-y-3">
         <div v-for="index in 4" :key="index" class="h-36 animate-pulse rounded-[24px] bg-[var(--color-bg-base)]" />
       </div>
 
-      <div
+      <AppEmpty
         v-else-if="instances.length === 0"
-        class="rounded-[24px] border border-dashed border-border px-5 py-10 text-center"
-      >
-        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <ShieldAlert class="h-6 w-6" />
-        </div>
-        <p class="mt-4 text-base font-medium text-text-primary">当前没有匹配到实例</p>
-        <p class="mt-2 text-sm text-text-secondary">可以调整筛选条件，或等待学员创建新的训练环境后再查看。</p>
-      </div>
+        icon="Inbox"
+        title="当前没有匹配到实例"
+        description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
+      />
 
       <div v-else class="grid gap-4">
         <AppCard
@@ -292,3 +271,19 @@ function remainingExtends(item: TeacherInstanceItem): number {
     </SectionCard>
   </div>
 </template>
+
+<style scoped>
+:deep(.teacher-filter-field) {
+  color: var(--color-text-primary);
+}
+
+:deep(.teacher-filter-field option) {
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+:deep(.teacher-filter-field select),
+:deep(.teacher-filter-field input) {
+  color: var(--color-text-primary);
+}
+</style>
