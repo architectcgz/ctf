@@ -130,6 +130,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '学员分析' },
       },
       {
+        path: 'teacher/instances',
+        name: 'TeacherInstanceManagement',
+        component: () => import('@/views/teacher/InstanceManagement.vue'),
+        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '实例管理', icon: 'Server' },
+      },
+      {
         path: 'teacher/reports',
         name: 'ReportExport',
         component: () => import('@/views/teacher/ReportExport.vue'),
@@ -139,12 +145,6 @@ const routes: RouteRecordRaw[] = [
           title: '报告导出',
           icon: 'FileDown',
         },
-      },
-      {
-        path: 'teacher/instances',
-        name: 'TeacherInstanceManagement',
-        component: () => import('@/views/teacher/InstanceManagement.vue'),
-        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '实例管理', icon: 'Server' },
       },
 
       // Admin

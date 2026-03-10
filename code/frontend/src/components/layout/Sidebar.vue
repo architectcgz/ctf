@@ -322,8 +322,9 @@ const navGroups = computed<NavGroup[]>(() => {
     if (!role) return false
     return required.includes(role)
   })
+  const sidebarVisible = visible.filter((r) => !(role === 'teacher' && r.name === 'TeacherDashboard'))
 
-  const items: NavItem[] = visible.map((r) => ({
+  const items: NavItem[] = sidebarVisible.map((r) => ({
     name: String(r.name || r.path),
     path: r.path.startsWith('/') ? r.path : `/${r.path}`,
     title: String(r.meta?.title || r.name || r.path),
