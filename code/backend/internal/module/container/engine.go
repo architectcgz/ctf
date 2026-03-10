@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	networktypes "github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 
@@ -109,6 +110,16 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 	}
 
 	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
+	if err != nil {
+		return "", err
+	}
+	return resp.ID, nil
+}
+
+func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string) (string, error) {
+	resp, err := e.cli.NetworkCreate(ctx, name, networktypes.CreateOptions{
+		Labels: labels,
+	})
 	if err != nil {
 		return "", err
 	}
