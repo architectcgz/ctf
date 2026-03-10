@@ -96,6 +96,30 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// UnlockHint 解锁题目提示
+// POST /api/v1/challenges/:id/hints/:level/unlock
+func (h *Handler) UnlockHint(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	level, err := strconv.Atoi(c.Param("level"))
+	if err != nil || level <= 0 {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	resp, err := h.service.UnlockHint(userID, challengeID, level)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
+}
+
 // GetProgress 获取个人解题进度
 // GET /api/v1/users/me/progress
 func (h *Handler) GetProgress(c *gin.Context) {

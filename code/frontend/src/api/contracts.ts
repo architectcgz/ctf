@@ -377,6 +377,14 @@ export interface AdminCheatDetectionData {
 
 export type ChallengeStatus = 'draft' | 'published' | 'archived'
 
+export interface AdminChallengeHint {
+  id?: ID
+  level: number
+  title?: string
+  cost_points?: number
+  content: string
+}
+
 export interface AdminChallengeListItem {
   id: ID
   title: string
@@ -388,6 +396,8 @@ export interface AdminChallengeListItem {
   updated_at?: ISODateTime
   description?: string
   image_id?: string
+  attachment_url?: string
+  hints?: AdminChallengeHint[]
   flag_config?: {
     configured: boolean
     flag_type?: Extract<FlagType, 'static' | 'dynamic'>

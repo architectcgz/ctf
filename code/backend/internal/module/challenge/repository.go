@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -20,6 +21,21 @@ func (r *Repository) Create(challenge *model.Challenge) error {
 	return r.db.Create(challenge).Error
 }
 
+func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(challenge).Error; err != nil {
+			return err
+		}
+		if len(hints) == 0 {
+			return nil
+		}
+		for _, hint := range hints {
+			hint.ChallengeID = challenge.ID
+		}
+		return tx.Create(&hints).Error
+	})
+}
+
 func (r *Repository) FindByID(id int64) (*model.Challenge, error) {
 	var challenge model.Challenge
 	err := r.db.Where("id = ?", id).First(&challenge).Error
@@ -28,6 +44,27 @@ func (r *Repository) FindByID(id int64) (*model.Challenge, error) {
 
 func (r *Repository) Update(challenge *model.Challenge) error {
 	return r.db.Save(challenge).Error
+}
+
+func (r *Repository) UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(challenge).Error; err != nil {
+			return err
+		}
+		if !replaceHints {
+			return nil
+		}
+		if err := tx.Where("challenge_id = ?", challenge.ID).Delete(&model.ChallengeHint{}).Error; err != nil {
+			return err
+		}
+		if len(hints) == 0 {
+			return nil
+		}
+		for _, hint := range hints {
+			hint.ChallengeID = challenge.ID
+		}
+		return tx.Create(&hints).Error
+	})
 }
 
 func (r *Repository) Delete(id int64) error {
@@ -82,6 +119,41 @@ func (r *Repository) CountByImageID(imageID int64) (int64, error) {
 		Where("image_id = ?", imageID).
 		Count(&count).Error
 	return count, err
+}
+
+func (r *Repository) ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error) {
+	var hints []*model.ChallengeHint
+	err := r.db.Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
+	return hints, err
+}
+
+func (r *Repository) FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error) {
+	var hint model.ChallengeHint
+	err := r.db.Where("challenge_id = ? AND level = ?", challengeID, level).First(&hint).Error
+	return &hint, err
+}
+
+func (r *Repository) GetUnlockedHintIDs(userID, challengeID int64) (map[int64]bool, error) {
+	var unlocks []model.ChallengeHintUnlock
+	err := r.db.
+		Where("user_id = ? AND challenge_id = ?", userID, challengeID).
+		Find(&unlocks).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[int64]bool, len(unlocks))
+	for _, unlock := range unlocks {
+		result[unlock.ChallengeHintID] = true
+	}
+	return result, nil
+}
+
+func (r *Repository) CreateHintUnlock(unlock *model.ChallengeHintUnlock) error {
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "challenge_hint_id"}},
+		DoNothing: true,
+	}).Create(unlock).Error
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）

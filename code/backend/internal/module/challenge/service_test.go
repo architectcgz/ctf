@@ -100,3 +100,43 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 		t.Fatalf("expected not published error, got %v", err)
 	}
 }
+
+func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
+	db := setupTestDB(t)
+
+	challenge := &model.Challenge{
+		Title:         "Hint Challenge",
+		Description:   "desc",
+		Category:      "web",
+		Difficulty:    model.ChallengeDifficultyEasy,
+		Points:        100,
+		ImageID:       1,
+		AttachmentURL: "https://example.com/files/hint.zip",
+		Status:        model.ChallengeStatusDraft,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.ChallengeHint{
+		ChallengeID: challenge.ID,
+		Level:       1,
+		Title:       "第一条提示",
+		Content:     "从登录入口开始",
+	}).Error; err != nil {
+		t.Fatalf("create hint: %v", err)
+	}
+
+	repo := NewRepository(db)
+	service := newTestService(repo, nil)
+
+	resp, err := service.GetChallenge(challenge.ID)
+	if err != nil {
+		t.Fatalf("GetChallenge() error = %v", err)
+	}
+	if resp.AttachmentURL != challenge.AttachmentURL {
+		t.Fatalf("unexpected attachment url: %s", resp.AttachmentURL)
+	}
+	if len(resp.Hints) != 1 || resp.Hints[0].Content != "从登录入口开始" {
+		t.Fatalf("unexpected hints: %+v", resp.Hints)
+	}
+}

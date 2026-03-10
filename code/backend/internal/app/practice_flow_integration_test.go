@@ -90,9 +90,15 @@ type flowChallengeDetail struct {
 	Category      string `json:"category"`
 	Difficulty    string `json:"difficulty"`
 	Points        int    `json:"points"`
-	SolvedCount   int64  `json:"solved_count"`
-	TotalAttempts int64  `json:"total_attempts"`
-	IsSolved      bool   `json:"is_solved"`
+	AttachmentURL string `json:"attachment_url"`
+	Hints         []struct {
+		Level      int    `json:"level"`
+		IsUnlocked bool   `json:"is_unlocked"`
+		Content    string `json:"content"`
+	} `json:"hints"`
+	SolvedCount   int64 `json:"solved_count"`
+	TotalAttempts int64 `json:"total_attempts"`
+	IsSolved      bool  `json:"is_solved"`
 }
 
 type flowSubmissionResponse struct {
@@ -144,12 +150,20 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		http.MethodPost,
 		"/api/v1/admin/challenges",
 		map[string]any{
-			"title":       "Web SQLi 101",
-			"description": "basic sql injection challenge",
-			"category":    model.DimensionWeb,
-			"difficulty":  model.ChallengeDifficultyEasy,
-			"points":      100,
-			"image_id":    env.image.ID,
+			"title":          "Web SQLi 101",
+			"description":    "basic sql injection challenge",
+			"category":       model.DimensionWeb,
+			"difficulty":     model.ChallengeDifficultyEasy,
+			"points":         100,
+			"image_id":       env.image.ID,
+			"attachment_url": "https://example.com/files/web-sqli-101.zip",
+			"hints": []map[string]any{
+				{
+					"level":   1,
+					"title":   "入口提示",
+					"content": "先观察登录表单的参数。",
+				},
+			},
 		},
 		bearerHeaders(adminToken),
 		nil,
@@ -227,6 +241,43 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	detail := decodeFlowJSON[flowChallengeDetail](t, detailBody.Data)
 	if detail.IsSolved {
 		t.Fatalf("expected challenge detail to be unsolved before submission")
+	}
+	if detail.AttachmentURL != "https://example.com/files/web-sqli-101.zip" {
+		t.Fatalf("unexpected attachment_url: %s", detail.AttachmentURL)
+	}
+	if len(detail.Hints) != 1 || detail.Hints[0].IsUnlocked || detail.Hints[0].Content != "" {
+		t.Fatalf("expected locked hint before unlock, got %+v", detail.Hints)
+	}
+
+	unlockResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/hints/1/unlock",
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if unlockResp.Code != http.StatusOK {
+		t.Fatalf("unexpected unlock hint status: %d body=%s", unlockResp.Code, unlockResp.Body.String())
+	}
+
+	detailAfterUnlockResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10),
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if detailAfterUnlockResp.Code != http.StatusOK {
+		t.Fatalf("unexpected challenge detail after unlock status: %d body=%s", detailAfterUnlockResp.Code, detailAfterUnlockResp.Body.String())
+	}
+	detailAfterUnlockBody := decodeFlowEnvelope(t, detailAfterUnlockResp)
+	detailAfterUnlock := decodeFlowJSON[flowChallengeDetail](t, detailAfterUnlockBody.Data)
+	if len(detailAfterUnlock.Hints) != 1 || !detailAfterUnlock.Hints[0].IsUnlocked || detailAfterUnlock.Hints[0].Content == "" {
+		t.Fatalf("expected unlocked hint after unlock, got %+v", detailAfterUnlock.Hints)
 	}
 
 	wrongSubmitResp := performFlowJSONRequest(
@@ -515,6 +566,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.AuditLog{},
 		&model.Image{},
 		&model.Challenge{},
+		&model.ChallengeHint{},
+		&model.ChallengeHintUnlock{},
 		&model.Submission{},
 		&model.Instance{},
 		&model.SkillProfile{},
@@ -605,6 +658,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		}, logger),
 		practiceHandler.SubmitFlag,
 	)
+	protected.POST("/challenges/:id/hints/:level/unlock", practiceHandler.UnlockHint)
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)

@@ -144,6 +144,48 @@
         <ElFormItem label="描述">
           <ElInput v-model="form.description" type="textarea" :rows="3" placeholder="靶机描述" />
         </ElFormItem>
+        <ElFormItem label="附件地址">
+          <ElInput v-model="form.attachment_url" placeholder="可选，例如：https://example.com/files/challenge.zip" />
+        </ElFormItem>
+        <ElFormItem label="提示系统">
+          <div class="w-full space-y-3">
+            <div
+              v-for="(hint, index) in form.hints"
+              :key="`${hint.id || 'new'}-${index}`"
+              class="rounded-lg border border-[var(--color-border-default)] p-3"
+            >
+              <div class="mb-3 flex items-center justify-between">
+                <span class="text-sm font-medium text-[var(--color-text-primary)]">提示 {{ index + 1 }}</span>
+                <button
+                  type="button"
+                  class="text-xs text-red-500 transition-colors hover:text-red-400"
+                  @click="removeHint(index)"
+                >
+                  删除
+                </button>
+              </div>
+              <div class="grid gap-3 md:grid-cols-3">
+                <ElInputNumber v-model="hint.level" :min="1" controls-position="right" />
+                <ElInput v-model="hint.title" placeholder="提示标题（可选）" />
+                <ElInputNumber v-model="hint.cost_points" :min="0" controls-position="right" />
+              </div>
+              <ElInput
+                v-model="hint.content"
+                class="mt-3"
+                type="textarea"
+                :rows="3"
+                placeholder="提示内容"
+              />
+            </div>
+            <button
+              type="button"
+              class="rounded border border-dashed border-[var(--color-border-default)] px-3 py-2 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+              @click="addHint"
+            >
+              添加提示
+            </button>
+          </div>
+        </ElFormItem>
         <ElFormItem label="Flag 类型">
           <ElSelect v-model="form.flag_type">
             <ElOption label="静态 Flag" value="static" />
@@ -200,6 +242,7 @@ import {
   configureChallengeFlag,
   createChallenge,
   deleteChallenge,
+  getChallengeDetail,
   getChallengeFlagConfig,
   getChallenges,
   getImages,
@@ -209,6 +252,7 @@ import {
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import type {
+  AdminChallengeHint,
   AdminChallengeListItem,
   AdminImageListItem,
   ChallengeCategory,
@@ -229,7 +273,9 @@ const form = reactive({
   difficulty: 'easy' as EditableDifficulty,
   points: 100,
   description: '',
+  attachment_url: '',
   image_id: '',
+  hints: [] as AdminChallengeHint[],
   flag_type: 'static' as 'static' | 'dynamic',
   flag: '',
   flag_prefix: '',
@@ -242,17 +288,25 @@ const { list, total, page, pageSize, loading, changePage, refresh } = usePaginat
 async function openDialog(row?: AdminChallengeListItem) {
   if (row) {
     editingId.value = row.id
+    let detail = row
+    try {
+      detail = await getChallengeDetail(row.id)
+    } catch {
+      toast.error('加载挑战详情失败，已回退到基础信息')
+    }
     Object.assign(form, {
-      title: row.title,
-      category: row.category,
-      difficulty: normalizeDifficulty(row.difficulty),
-      points: row.points,
-      description: row.description || '',
-      image_id: row.image_id || '',
-      flag_type: row.flag_config?.flag_type || 'static',
+      title: detail.title,
+      category: detail.category,
+      difficulty: normalizeDifficulty(detail.difficulty),
+      points: detail.points,
+      description: detail.description || '',
+      attachment_url: detail.attachment_url || '',
+      image_id: detail.image_id || '',
+      hints: normalizeAdminHints(detail.hints),
+      flag_type: detail.flag_config?.flag_type || 'static',
       flag: '',
-      flag_prefix: row.flag_config?.flag_prefix || '',
-      current_status: row.status,
+      flag_prefix: detail.flag_config?.flag_prefix || '',
+      current_status: detail.status,
       publish_after_save: false,
     })
 
@@ -272,7 +326,9 @@ async function openDialog(row?: AdminChallengeListItem) {
       difficulty: 'easy',
       points: 100,
       description: '',
+      attachment_url: '',
       image_id: '',
+      hints: [],
       flag_type: 'static',
       flag: '',
       flag_prefix: '',
@@ -297,6 +353,9 @@ async function handleSave() {
     toast.error('请选择镜像')
     return
   }
+  if (!validateHints()) {
+    return
+  }
   if (!editingId.value && form.flag_type === 'static' && !form.flag.trim()) {
     toast.error('静态 Flag 不能为空')
     return
@@ -311,6 +370,8 @@ async function handleSave() {
       difficulty: form.difficulty,
       points: form.points,
       image_id: form.image_id,
+      attachment_url: form.attachment_url.trim() || undefined,
+      hints: normalizeAdminHints(form.hints),
     }
 
     const challengeId = editingId.value
@@ -347,6 +408,49 @@ async function handleSave() {
   } finally {
     saving.value = false
   }
+}
+
+function normalizeAdminHints(hints?: AdminChallengeHint[]): AdminChallengeHint[] {
+  return (hints ?? []).map((hint) => ({
+    id: hint.id,
+    level: hint.level,
+    title: hint.title || '',
+    cost_points: hint.cost_points,
+    content: hint.content,
+  }))
+}
+
+function addHint() {
+  form.hints.push({
+    level: form.hints.length + 1,
+    title: '',
+    cost_points: 0,
+    content: '',
+  })
+}
+
+function removeHint(index: number) {
+  form.hints.splice(index, 1)
+}
+
+function validateHints() {
+  const levels = new Set<number>()
+  for (const hint of form.hints) {
+    if (!hint.level || hint.level < 1) {
+      toast.error('提示级别必须大于 0')
+      return false
+    }
+    if (levels.has(hint.level)) {
+      toast.error('提示级别不能重复')
+      return false
+    }
+    levels.add(hint.level)
+    if (!hint.content.trim()) {
+      toast.error('提示内容不能为空')
+      return false
+    }
+  }
+  return true
 }
 
 async function handlePublish(row: AdminChallengeListItem) {

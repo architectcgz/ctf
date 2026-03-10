@@ -46,6 +46,51 @@
         </button>
       </div>
 
+      <div
+        v-if="challenge.hints.length > 0"
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
+        <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">提示系统</h2>
+        <div class="space-y-4">
+          <div
+            v-for="hint in challenge.hints"
+            :key="hint.id"
+            class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4"
+          >
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <div class="text-sm font-medium text-[var(--color-text-primary)]">
+                  Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
+                </div>
+                <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--color-text-secondary)]">
+                  解锁消耗：{{ hint.cost_points }} 分
+                </div>
+              </div>
+              <button
+                v-if="!hint.is_unlocked"
+                :disabled="unlockingLevel === hint.level"
+                class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
+                @click="unlockHintHandler(hint.level)"
+              >
+                {{ unlockingLevel === hint.level ? '解锁中...' : '解锁提示' }}
+              </button>
+              <span
+                v-else
+                class="rounded bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-500"
+              >
+                已解锁
+              </span>
+            </div>
+            <div v-if="hint.is_unlocked" class="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+              {{ hint.content }}
+            </div>
+            <div v-else class="mt-3 text-sm text-[var(--color-text-muted)]">
+              解锁后显示提示内容
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
         <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">Flag 提交</h2>
         <div class="space-y-4">
@@ -93,7 +138,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getChallengeDetail, submitFlag, createInstance } from '@/api/challenge'
+import { createInstance, getChallengeDetail, submitFlag, unlockHint } from '@/api/challenge'
 import { useSanitize } from '@/composables/useSanitize'
 import { useToast } from '@/composables/useToast'
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeDetailData } from '@/api/contracts'
@@ -109,6 +154,7 @@ const creating = ref(false)
 const submitting = ref(false)
 const flagInput = ref('')
 const submitResult = ref<{ success: boolean; message: string } | null>(null)
+const unlockingLevel = ref<number | null>(null)
 
 const sanitizedDescription = computed(() => {
   return challenge.value ? sanitizeHtml(challenge.value.description) : ''
@@ -158,6 +204,22 @@ async function submitFlagHandler() {
     submitResult.value = { success: false, message: '提交失败，请重试' }
   } finally {
     submitting.value = false
+  }
+}
+
+async function unlockHintHandler(level: number) {
+  if (!challenge.value) return
+  unlockingLevel.value = level
+  try {
+    const result = await unlockHint(challenge.value.id, level)
+    challenge.value.hints = challenge.value.hints.map((hint) =>
+      hint.level === level ? result.hint : hint
+    )
+    toast.success('提示已解锁')
+  } catch {
+    toast.error('解锁提示失败')
+  } finally {
+    unlockingLevel.value = null
   }
 }
 

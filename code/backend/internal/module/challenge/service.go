@@ -8,6 +8,8 @@ import (
 	"ctf-platform/pkg/errcode"
 	"encoding/json"
 	"errors"
+	"sort"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -46,20 +48,26 @@ func (s *Service) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeRe
 	}
 
 	challenge := &model.Challenge{
-		Title:       req.Title,
-		Description: req.Description,
-		Category:    req.Category,
-		Difficulty:  req.Difficulty,
-		Points:      req.Points,
-		ImageID:     req.ImageID,
-		Status:      model.ChallengeStatusDraft,
+		Title:         req.Title,
+		Description:   req.Description,
+		Category:      req.Category,
+		Difficulty:    req.Difficulty,
+		Points:        req.Points,
+		ImageID:       req.ImageID,
+		AttachmentURL: strings.TrimSpace(req.AttachmentURL),
+		Status:        model.ChallengeStatusDraft,
 	}
 
-	if err := s.repo.Create(challenge); err != nil {
+	hints, err := normalizeHintModels(req.Hints)
+	if err != nil {
 		return nil, err
 	}
 
-	return s.toResp(challenge), nil
+	if err := s.repo.CreateWithHints(challenge, hints); err != nil {
+		return nil, err
+	}
+
+	return s.toResp(challenge, hints), nil
 }
 
 func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
@@ -93,8 +101,17 @@ func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 		}
 		challenge.ImageID = req.ImageID
 	}
+	if req.AttachmentURL != nil {
+		challenge.AttachmentURL = strings.TrimSpace(*req.AttachmentURL)
+	}
 
-	return s.repo.Update(challenge)
+	replaceHints := req.Hints != nil
+	hints, err := normalizeHintModels(req.Hints)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.UpdateWithHints(challenge, hints, replaceHints)
 }
 
 func (s *Service) DeleteChallenge(id int64) error {
@@ -114,7 +131,11 @@ func (s *Service) GetChallenge(id int64) (*dto.ChallengeResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return s.toResp(challenge), nil
+	hints, err := s.repo.ListHintsByChallengeID(id)
+	if err != nil {
+		return nil, err
+	}
+	return s.toResp(challenge, hints), nil
 }
 
 func (s *Service) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error) {
@@ -125,7 +146,7 @@ func (s *Service) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, er
 
 	list := make([]*dto.ChallengeResp, len(challenges))
 	for i, c := range challenges {
-		list[i] = s.toResp(c)
+		list[i] = s.toResp(c, nil)
 	}
 
 	page := query.Page
@@ -159,18 +180,31 @@ func (s *Service) PublishChallenge(id int64) error {
 	return s.repo.Update(challenge)
 }
 
-func (s *Service) toResp(c *model.Challenge) *dto.ChallengeResp {
+func (s *Service) toResp(c *model.Challenge, hints []*model.ChallengeHint) *dto.ChallengeResp {
+	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
+	for _, hint := range hints {
+		adminHints = append(adminHints, &dto.ChallengeHintAdminResp{
+			ID:         hint.ID,
+			Level:      hint.Level,
+			Title:      hint.Title,
+			CostPoints: hint.CostPoints,
+			Content:    hint.Content,
+		})
+	}
+
 	return &dto.ChallengeResp{
-		ID:          c.ID,
-		Title:       c.Title,
-		Description: c.Description,
-		Category:    c.Category,
-		Difficulty:  c.Difficulty,
-		Points:      c.Points,
-		ImageID:     c.ImageID,
-		Status:      c.Status,
-		CreatedAt:   c.CreatedAt,
-		UpdatedAt:   c.UpdatedAt,
+		ID:            c.ID,
+		Title:         c.Title,
+		Description:   c.Description,
+		Category:      c.Category,
+		Difficulty:    c.Difficulty,
+		Points:        c.Points,
+		ImageID:       c.ImageID,
+		AttachmentURL: c.AttachmentURL,
+		Hints:         adminHints,
+		Status:        c.Status,
+		CreatedAt:     c.CreatedAt,
+		UpdatedAt:     c.UpdatedAt,
 	}
 }
 
@@ -271,6 +305,30 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 		attempts = 0
 	}
 
+	hints, err := s.repo.ListHintsByChallengeID(challengeID)
+	if err != nil {
+		return nil, err
+	}
+	unlockedHintIDs, err := s.repo.GetUnlockedHintIDs(userID, challengeID)
+	if err != nil {
+		return nil, err
+	}
+
+	hintList := make([]*dto.ChallengeHintResp, 0, len(hints))
+	for _, hint := range hints {
+		hintResp := &dto.ChallengeHintResp{
+			ID:         hint.ID,
+			Level:      hint.Level,
+			Title:      hint.Title,
+			CostPoints: hint.CostPoints,
+			IsUnlocked: unlockedHintIDs[hint.ID],
+		}
+		if hintResp.IsUnlocked {
+			hintResp.Content = hint.Content
+		}
+		hintList = append(hintList, hintResp)
+	}
+
 	return &dto.ChallengeDetailResp{
 		ID:            challenge.ID,
 		Title:         challenge.Title,
@@ -278,6 +336,8 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 		Category:      challenge.Category,
 		Difficulty:    challenge.Difficulty,
 		Points:        challenge.Points,
+		AttachmentURL: challenge.AttachmentURL,
+		Hints:         hintList,
 		SolvedCount:   solvedCount,
 		TotalAttempts: attempts,
 		IsSolved:      isSolved,
@@ -287,6 +347,10 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 
 // getSolvedCountCached 获取完成人数（带缓存）
 func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
+	if s.redis == nil {
+		return s.repo.GetSolvedCount(challengeID)
+	}
+
 	ctx := context.Background()
 	cacheKey := cache.ChallengeSolvedCountKey(challengeID)
 
@@ -309,4 +373,34 @@ func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
 	s.redis.Set(ctx, cacheKey, data, s.config.SolvedCountCacheTTL)
 
 	return count, nil
+}
+
+func normalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHint, error) {
+	if reqHints == nil {
+		return nil, nil
+	}
+
+	hints := make([]*model.ChallengeHint, 0, len(reqHints))
+	seenLevels := make(map[int]struct{}, len(reqHints))
+	for _, reqHint := range reqHints {
+		content := strings.TrimSpace(reqHint.Content)
+		if content == "" {
+			return nil, errcode.ErrInvalidParams.WithCause(errors.New("提示内容不能为空"))
+		}
+		if _, exists := seenLevels[reqHint.Level]; exists {
+			return nil, errcode.ErrInvalidParams.WithCause(errors.New("提示级别不能重复"))
+		}
+		seenLevels[reqHint.Level] = struct{}{}
+		hints = append(hints, &model.ChallengeHint{
+			Level:      reqHint.Level,
+			Title:      strings.TrimSpace(reqHint.Title),
+			CostPoints: reqHint.CostPoints,
+			Content:    content,
+		})
+	}
+
+	sort.Slice(hints, func(i, j int) bool {
+		return hints[i].Level < hints[j].Level
+	})
+	return hints, nil
 }
