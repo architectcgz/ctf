@@ -33,7 +33,7 @@ export interface AuthUser {
 }
 
 export type ChallengeCategory = 'web' | 'pwn' | 'reverse' | 'crypto' | 'misc' | 'forensics'
-export type ChallengeDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'hell'
+export type ChallengeDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
 
 export interface ChallengeListItem {
   id: ID
@@ -375,7 +375,7 @@ export interface AdminCheatDetectionData {
   shared_ips: AdminCheatDetectionIPGroup[]
 }
 
-export type ChallengeStatus = 'draft' | 'review' | 'active' | 'archived'
+export type ChallengeStatus = 'draft' | 'published' | 'archived'
 
 export interface AdminChallengeListItem {
   id: ID
@@ -383,16 +383,16 @@ export interface AdminChallengeListItem {
   category: ChallengeCategory
   difficulty: ChallengeDifficulty
   status: ChallengeStatus
-  base_score: number
-  solve_count: number
+  points: number
   created_at: ISODateTime
+  updated_at?: ISODateTime
   description?: string
-  hints?: string[]
   image_id?: string
-  image_name?: string
-  flag?: string
-  resource_limits?: { cpu: number; memory: number }
-  tags?: string[]
+  flag_config?: {
+    configured: boolean
+    flag_type?: Extract<FlagType, 'static' | 'dynamic'>
+    flag_prefix?: string
+  }
 }
 
 export interface AdminChallengeUpsertData {
@@ -400,16 +400,17 @@ export interface AdminChallengeUpsertData {
 }
 
 export type ImageSourceType = 'registry' | 'dockerfile' | 'upload'
-export type ImageStatus = 'pending' | 'building' | 'ready' | 'failed' | 'deprecated'
+export type ImageStatus = 'pending' | 'building' | 'available' | 'failed'
 
 export interface AdminImageListItem {
   id: ID
   name: string
   tag: string
-  source_type: ImageSourceType
   status: ImageStatus
+  description?: string
   size_bytes?: number
   created_at: ISODateTime
+  updated_at?: ISODateTime
 }
 
 export interface AdminImageCreateData {

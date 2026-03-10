@@ -197,7 +197,7 @@ function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
     easy: '简单',
     medium: '中等',
     hard: '困难',
-    hell: '地狱',
+    insane: '地狱',
   }
   return labels[difficulty]
 }
@@ -208,7 +208,7 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
     easy: '#3b82f6',
     medium: '#f59e0b',
     hard: '#ef4444',
-    hell: '#7c3aed',
+    insane: '#7c3aed',
   }
   return colors[difficulty]
 }

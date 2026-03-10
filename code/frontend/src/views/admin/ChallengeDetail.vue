@@ -25,23 +25,21 @@
           </div>
           <div>
             <span class="text-[var(--color-text-secondary)]">分值：</span>
-            <span class="text-[var(--color-text-primary)]">{{ challenge.base_score }}</span>
+            <span class="text-[var(--color-text-primary)]">{{ challenge.points }}</span>
           </div>
           <div>
             <span class="text-[var(--color-text-secondary)]">状态：</span>
             <span class="text-[var(--color-text-primary)]">{{ challenge.status }}</span>
           </div>
-          <div v-if="challenge.image_name" class="col-span-2">
+          <div v-if="challenge.image_id" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">镜像：</span>
-            <span class="font-mono text-[var(--color-text-primary)]">{{ challenge.image_name }}</span>
+            <span class="font-mono text-[var(--color-text-primary)]">ID #{{ challenge.image_id }}</span>
           </div>
-          <div v-if="challenge.flag" class="col-span-2">
-            <span class="text-[var(--color-text-secondary)]">Flag：</span>
-            <span class="font-mono text-[var(--color-text-primary)]">{{ challenge.flag }}</span>
-          </div>
-          <div v-if="challenge.tags?.length" class="col-span-2">
-            <span class="text-[var(--color-text-secondary)]">标签：</span>
-            <span v-for="tag in challenge.tags" :key="tag" class="ml-2 rounded bg-[var(--color-primary)]/20 px-2 py-1 text-xs text-[var(--color-primary)]">{{ tag }}</span>
+          <div v-if="challenge.flag_config" class="col-span-2">
+            <span class="text-[var(--color-text-secondary)]">Flag 配置：</span>
+            <span class="font-mono text-[var(--color-text-primary)]">
+              {{ challenge.flag_config.configured ? `${challenge.flag_config.flag_type || 'unknown'} / ${challenge.flag_config.flag_prefix || 'flag'}` : '未配置' }}
+            </span>
           </div>
         </div>
         <div v-if="challenge.description" class="mt-4">

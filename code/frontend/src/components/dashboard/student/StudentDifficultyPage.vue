@@ -18,13 +18,13 @@ const props = defineProps<{
   difficultyStats: DifficultyStat[]
 }>()
 
-const difficultyOrder = ['beginner', 'easy', 'medium', 'hard', 'hell']
+const difficultyOrder = ['beginner', 'easy', 'medium', 'hard', 'insane']
 const barMap: Record<string, string> = {
   beginner: 'bg-emerald-400',
   easy: 'bg-sky-400',
   medium: 'bg-amber-400',
   hard: 'bg-orange-400',
-  hell: 'bg-rose-400',
+  insane: 'bg-rose-400',
 }
 
 const orderedStats = computed(() =>
