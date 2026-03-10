@@ -3,9 +3,7 @@ import { request } from './request'
 import type {
   AdminChallengeListItem,
   AdminCheatDetectionData,
-  AdminChallengeUpsertData,
   AdminDashboardData,
-  AdminImageCreateData,
   AdminImageListItem,
   AdminUserImportData,
   AdminUserListItem,
@@ -69,6 +67,36 @@ interface RawContestItem {
   end_time: string
   freeze_time?: string | null
   status: 'draft' | 'registration' | 'running' | 'frozen' | 'ended'
+  created_at: string
+  updated_at: string
+}
+
+interface RawAdminChallengeItem {
+  id: string | number
+  title: string
+  description?: string
+  category: AdminChallengeListItem['category']
+  difficulty: AdminChallengeListItem['difficulty']
+  points: number
+  image_id?: string | number | null
+  status: 'draft' | 'published' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+interface RawChallengeFlagConfig {
+  flag_type: 'static' | 'dynamic'
+  flag_prefix?: string
+  configured: boolean
+}
+
+interface RawImageItem {
+  id: string | number
+  name: string
+  tag: string
+  description?: string
+  size?: number
+  status: AdminImageListItem['status']
   created_at: string
   updated_at: string
 }
@@ -157,6 +185,41 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
     starts_at: item.start_time,
     ends_at: item.end_time,
     scoreboard_frozen: Boolean(item.freeze_time),
+  }
+}
+
+function normalizeChallenge(item: RawAdminChallengeItem, flagConfig?: RawChallengeFlagConfig): AdminChallengeListItem {
+  return {
+    id: String(item.id),
+    title: item.title,
+    description: item.description,
+    category: item.category,
+    difficulty: item.difficulty,
+    points: item.points,
+    status: item.status,
+    image_id: item.image_id == null ? undefined : String(item.image_id),
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    flag_config: flagConfig
+      ? {
+          configured: flagConfig.configured,
+          flag_type: flagConfig.flag_type,
+          flag_prefix: flagConfig.flag_prefix,
+        }
+      : undefined,
+  }
+}
+
+function normalizeImage(item: RawImageItem): AdminImageListItem {
+  return {
+    id: String(item.id),
+    name: item.name,
+    tag: item.tag,
+    description: item.description,
+    status: item.status,
+    size_bytes: item.size,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
   }
 }
 
@@ -265,29 +328,81 @@ export async function importUsers(file: File) {
 }
 
 export async function getChallenges(params?: Record<string, unknown>) {
-  return request<PageResult<AdminChallengeListItem>>({
+  const response = await request<PageResult<RawAdminChallengeItem>>({
     method: 'GET',
     url: '/admin/challenges',
     params,
   })
+  return {
+    ...response,
+    list: response.list.map((item) => normalizeChallenge(item)),
+  }
 }
 
 export async function getChallengeDetail(id: string) {
-  return request<AdminChallengeListItem>({
-    method: 'GET',
-    url: `/admin/challenges/${encodeURIComponent(id)}`,
-  })
+  const [challenge, flagConfig] = await Promise.all([
+    request<RawAdminChallengeItem>({
+      method: 'GET',
+      url: `/admin/challenges/${encodeURIComponent(id)}`,
+    }),
+    request<RawChallengeFlagConfig>({
+      method: 'GET',
+      url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+    }).catch(() => undefined),
+  ])
+
+  return normalizeChallenge(challenge, flagConfig)
 }
 
-export async function createChallenge(data: Record<string, unknown>) {
-  return request<AdminChallengeUpsertData>({ method: 'POST', url: '/admin/challenges', data })
+export interface AdminChallengePayload {
+  title: string
+  description?: string
+  category: AdminChallengeListItem['category']
+  difficulty: Extract<AdminChallengeListItem['difficulty'], 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'>
+  points: number
+  image_id: string
 }
 
-export async function updateChallenge(id: string, data: Record<string, unknown>) {
-  return request<AdminChallengeUpsertData>({
+export interface AdminChallengeFlagPayload {
+  flag_type: 'static' | 'dynamic'
+  flag?: string
+  flag_prefix?: string
+}
+
+export async function createChallenge(data: AdminChallengePayload) {
+  const response = await request<RawAdminChallengeItem>({ method: 'POST', url: '/admin/challenges', data })
+  return {
+    challenge: normalizeChallenge(response),
+  }
+}
+
+export async function updateChallenge(id: string, data: Partial<AdminChallengePayload>) {
+  await request<void>({
     method: 'PUT',
     url: `/admin/challenges/${encodeURIComponent(id)}`,
     data,
+  })
+}
+
+export async function configureChallengeFlag(id: string, data: AdminChallengeFlagPayload) {
+  return request<{ message: string }>({
+    method: 'PUT',
+    url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+    data,
+  })
+}
+
+export async function getChallengeFlagConfig(id: string) {
+  return request<RawChallengeFlagConfig>({
+    method: 'GET',
+    url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+  })
+}
+
+export async function publishChallenge(id: string) {
+  return request<void>({
+    method: 'PUT',
+    url: `/admin/challenges/${encodeURIComponent(id)}/publish`,
   })
 }
 
@@ -296,11 +411,24 @@ export async function deleteChallenge(id: string) {
 }
 
 export async function getImages(params?: Record<string, unknown>) {
-  return request<PageResult<AdminImageListItem>>({ method: 'GET', url: '/admin/images', params })
+  const response = await request<PageResult<RawImageItem>>({ method: 'GET', url: '/admin/images', params })
+  return {
+    ...response,
+    list: response.list.map(normalizeImage),
+  }
 }
 
-export async function createImage(data: Record<string, unknown>) {
-  return request<AdminImageCreateData>({ method: 'POST', url: '/admin/images', data })
+export interface AdminImagePayload {
+  name: string
+  tag: string
+  description?: string
+}
+
+export async function createImage(data: AdminImagePayload) {
+  const response = await request<RawImageItem>({ method: 'POST', url: '/admin/images', data })
+  return {
+    image: normalizeImage(response),
+  }
 }
 
 export async function deleteImage(id: string) {

@@ -42,7 +42,7 @@
           <option value="easy">简单</option>
           <option value="medium">中等</option>
           <option value="hard">困难</option>
-          <option value="hell">地狱</option>
+          <option value="insane">地狱</option>
         </select>
       </div>
     </AppCard>
@@ -257,7 +257,7 @@ function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
     easy: '简单',
     medium: '中等',
     hard: '困难',
-    hell: '地狱',
+    insane: '地狱',
   }
   return labels[difficulty]
 }
@@ -268,7 +268,7 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
     easy: '#3b82f6',
     medium: '#f59e0b',
     hard: '#ef4444',
-    hell: '#7c3aed',
+    insane: '#7c3aed',
   }
   return colors[difficulty]
 }

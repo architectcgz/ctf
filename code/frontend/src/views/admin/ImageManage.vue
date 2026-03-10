@@ -71,12 +71,8 @@
         <ElFormItem label="标签" required>
           <ElInput v-model="form.tag" placeholder="例如：22.04" />
         </ElFormItem>
-        <ElFormItem label="来源类型" required>
-          <ElSelect v-model="form.source_type" placeholder="选择来源类型">
-            <ElOption label="镜像仓库" value="registry" />
-            <ElOption label="Dockerfile" value="dockerfile" />
-            <ElOption label="上传" value="upload" />
-          </ElSelect>
+        <ElFormItem label="描述">
+          <ElInput v-model="form.description" type="textarea" :rows="3" placeholder="镜像说明（可选）" />
         </ElFormItem>
       </ElForm>
       <template #footer>
@@ -109,7 +105,7 @@ const creating = ref(false)
 const form = reactive({
   name: '',
   tag: '',
-  source_type: 'registry' as 'registry' | 'dockerfile' | 'upload',
+  description: '',
 })
 
 const { list, total, page, pageSize, loading, changePage, changePageSize, refresh } = usePagination(getImages)
@@ -126,7 +122,7 @@ async function handleCreate() {
     await createImage(form)
     toast.success('镜像创建成功')
     dialogVisible.value = false
-    Object.assign(form, { name: '', tag: '', source_type: 'registry' })
+    Object.assign(form, { name: '', tag: '', description: '' })
     refresh()
   } catch (error) {
     toast.error('创建失败')
@@ -149,11 +145,11 @@ async function handleDelete(id: string) {
 }
 
 function getStatusLabel(status: ImageStatus): string {
-  return { pending: '等待中', building: '构建中', ready: '就绪', failed: '失败', deprecated: '已弃用' }[status]
+  return { pending: '等待中', building: '构建中', available: '可用', failed: '失败' }[status]
 }
 
 function getStatusColor(status: ImageStatus): string {
-  return { pending: '#8b949e', building: '#f59e0b', ready: '#10b981', failed: '#ef4444', deprecated: '#6e7681' }[status]
+  return { pending: '#8b949e', building: '#f59e0b', available: '#10b981', failed: '#ef4444' }[status]
 }
 
 onMounted(() => {

@@ -10,9 +10,22 @@ vi.mock('@/api/admin', () => ({
         title: 'Test Challenge',
         category: 'web',
         difficulty: 'easy',
-        status: 'active',
-        base_score: 100,
-        solve_count: 5,
+        status: 'draft',
+        points: 100,
+        created_at: '2024-01-01T00:00:00Z',
+      },
+    ],
+    total: 1,
+    page: 1,
+    page_size: 20,
+  }),
+  getImages: vi.fn().mockResolvedValue({
+    list: [
+      {
+        id: 'img-1',
+        name: 'php-sqli',
+        tag: 'latest',
+        status: 'available',
         created_at: '2024-01-01T00:00:00Z',
       },
     ],
@@ -22,6 +35,12 @@ vi.mock('@/api/admin', () => ({
   }),
   createChallenge: vi.fn(),
   updateChallenge: vi.fn(),
+  configureChallengeFlag: vi.fn(),
+  getChallengeFlagConfig: vi.fn().mockResolvedValue({
+    flag_type: 'static',
+    configured: false,
+  }),
+  publishChallenge: vi.fn(),
   deleteChallenge: vi.fn(),
 }))
 
