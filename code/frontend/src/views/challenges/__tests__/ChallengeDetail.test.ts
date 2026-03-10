@@ -13,9 +13,19 @@ vi.mock('@/api/challenge', () => ({
     tags: ['test'],
     points: 100,
     is_solved: false,
-    hints: [],
+    attachment_url: 'https://example.com/file.zip',
+    hints: [
+      {
+        id: 'hint-1',
+        level: 1,
+        title: '入口',
+        cost_points: 0,
+        is_unlocked: false,
+      },
+    ],
   }),
   submitFlag: vi.fn(),
+  unlockHint: vi.fn(),
   createInstance: vi.fn(),
 }))
 
@@ -43,5 +53,6 @@ describe('ChallengeDetail', () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.text()).toContain('Test Challenge')
+    expect(wrapper.text()).toContain('提示系统')
   })
 })

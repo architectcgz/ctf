@@ -41,10 +41,39 @@
               {{ challenge.flag_config.configured ? `${challenge.flag_config.flag_type || 'unknown'} / ${challenge.flag_config.flag_prefix || 'flag'}` : '未配置' }}
             </span>
           </div>
+          <div v-if="challenge.attachment_url" class="col-span-2">
+            <span class="text-[var(--color-text-secondary)]">附件：</span>
+            <a
+              :href="challenge.attachment_url"
+              target="_blank"
+              rel="noreferrer"
+              class="break-all text-[var(--color-primary)] underline"
+            >
+              {{ challenge.attachment_url }}
+            </a>
+          </div>
         </div>
         <div v-if="challenge.description" class="mt-4">
           <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
           <div class="mt-2 text-sm text-[var(--color-text-primary)]">{{ challenge.description }}</div>
+        </div>
+        <div v-if="challenge.hints?.length" class="mt-4">
+          <div class="text-sm text-[var(--color-text-secondary)]">提示：</div>
+          <div class="mt-2 space-y-3">
+            <div
+              v-for="hint in challenge.hints"
+              :key="hint.id || hint.level"
+              class="rounded-lg border border-[var(--color-border-default)] p-3"
+            >
+              <div class="text-sm font-medium text-[var(--color-text-primary)]">
+                Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
+              </div>
+              <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--color-text-secondary)]">
+                解锁消耗：{{ hint.cost_points }} 分
+              </div>
+              <div class="mt-2 text-sm text-[var(--color-text-primary)]">{{ hint.content }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

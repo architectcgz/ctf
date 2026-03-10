@@ -446,6 +446,15 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		}, auditLogger),
 		practiceHandler.SubmitFlag,
 	)
+	protected.POST("/challenges/:id/hints/:level/unlock",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "challenge_hint_unlock",
+			ResourceIDParam: "id",
+			DetailBuilder:   middleware.DetailFromParams("id", "level"),
+		}, auditLogger),
+		practiceHandler.UnlockHint,
+	)
 	protected.GET("/instances", practiceHandler.ListUserInstances)
 	protected.GET("/instances/:id", practiceHandler.GetInstance)
 

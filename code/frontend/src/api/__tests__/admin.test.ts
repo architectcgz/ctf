@@ -300,6 +300,16 @@ describe('admin contest api contract', () => {
         difficulty: 'medium',
         points: 200,
         image_id: 15,
+        attachment_url: 'https://example.com/files/rce.zip',
+        hints: [
+          {
+            id: 31,
+            level: 1,
+            title: '入口提示',
+            cost_points: 0,
+            content: '先观察回显位置',
+          },
+        ],
         status: 'published',
         created_at: '2026-03-10T10:00:00.000Z',
         updated_at: '2026-03-10T10:05:00.000Z',
@@ -325,6 +335,16 @@ describe('admin contest api contract', () => {
       flag_prefix: 'ctf',
       configured: true,
     })
+    expect(result.attachment_url).toBe('https://example.com/files/rce.zip')
+    expect(result.hints).toEqual([
+      {
+        id: '31',
+        level: 1,
+        title: '入口提示',
+        cost_points: 0,
+        content: '先观察回显位置',
+      },
+    ])
   })
 
   it('应该按后端当前挑战创建契约发送请求并归一化返回值', async () => {
@@ -348,6 +368,15 @@ describe('admin contest api contract', () => {
       difficulty: 'hard',
       points: 300,
       image_id: '6',
+      attachment_url: 'https://example.com/files/lfi.zip',
+      hints: [
+        {
+          level: 1,
+          title: '提示一',
+          cost_points: 0,
+          content: '检查文件包含点',
+        },
+      ],
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -360,6 +389,15 @@ describe('admin contest api contract', () => {
         difficulty: 'hard',
         points: 300,
         image_id: '6',
+        attachment_url: 'https://example.com/files/lfi.zip',
+        hints: [
+          {
+            level: 1,
+            title: '提示一',
+            cost_points: 0,
+            content: '检查文件包含点',
+          },
+        ],
       },
     })
     expect(result.challenge).toEqual({

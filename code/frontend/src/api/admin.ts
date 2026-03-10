@@ -1,6 +1,7 @@
 import { request } from './request'
 
 import type {
+  AdminChallengeHint,
   AdminChallengeListItem,
   AdminCheatDetectionData,
   AdminDashboardData,
@@ -79,6 +80,14 @@ interface RawAdminChallengeItem {
   difficulty: AdminChallengeListItem['difficulty']
   points: number
   image_id?: string | number | null
+  attachment_url?: string
+  hints?: Array<{
+    id: string | number
+    level: number
+    title?: string
+    cost_points?: number
+    content: string
+  }>
   status: 'draft' | 'published' | 'archived'
   created_at: string
   updated_at: string
@@ -189,6 +198,14 @@ function normalizeContest(item: RawContestItem): ContestDetailData {
 }
 
 function normalizeChallenge(item: RawAdminChallengeItem, flagConfig?: RawChallengeFlagConfig): AdminChallengeListItem {
+  const hints: AdminChallengeHint[] | undefined = item.hints?.map((hint) => ({
+    id: String(hint.id),
+    level: hint.level,
+    title: hint.title,
+    cost_points: hint.cost_points,
+    content: hint.content,
+  }))
+
   return {
     id: String(item.id),
     title: item.title,
@@ -198,6 +215,8 @@ function normalizeChallenge(item: RawAdminChallengeItem, flagConfig?: RawChallen
     points: item.points,
     status: item.status,
     image_id: item.image_id == null ? undefined : String(item.image_id),
+    attachment_url: item.attachment_url,
+    hints,
     created_at: item.created_at,
     updated_at: item.updated_at,
     flag_config: flagConfig
@@ -361,6 +380,8 @@ export interface AdminChallengePayload {
   difficulty: Extract<AdminChallengeListItem['difficulty'], 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'>
   points: number
   image_id: string
+  attachment_url?: string
+  hints?: AdminChallengeHint[]
 }
 
 export interface AdminChallengeFlagPayload {

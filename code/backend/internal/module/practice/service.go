@@ -220,6 +220,47 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 	return resp, nil
 }
 
+func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockHintResp, error) {
+	challengeItem, err := s.challengeRepo.FindByID(challengeID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if challengeItem.Status != model.ChallengeStatusPublished {
+		return nil, errcode.ErrChallengeNotPublish
+	}
+
+	hint, err := s.challengeRepo.FindHintByLevel(challengeID, level)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	if err := s.challengeRepo.CreateHintUnlock(&model.ChallengeHintUnlock{
+		UserID:          userID,
+		ChallengeID:     challengeID,
+		ChallengeHintID: hint.ID,
+		UnlockedAt:      time.Now(),
+	}); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	return &dto.UnlockHintResp{
+		Hint: &dto.ChallengeHintResp{
+			ID:         hint.ID,
+			Level:      hint.Level,
+			Title:      hint.Title,
+			CostPoints: hint.CostPoints,
+			IsUnlocked: true,
+			Content:    hint.Content,
+		},
+	}, nil
+}
+
 func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
 	ctx := context.Background()
 	cacheKey := constants.UserProgressKey(userID)
