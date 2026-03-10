@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -101,6 +102,80 @@ func TestManagedContainerLabels(t *testing.T) {
 	}
 	if labels[challengeInstanceLabelKey] != challengeInstanceLabelValue {
 		t.Fatalf("expected component label, got %v", labels)
+	}
+}
+
+func TestManagedNetworkLabels(t *testing.T) {
+	t.Parallel()
+
+	labels := managedNetworkLabels()
+	if labels[managedByLabelKey] != managedByLabelValue {
+		t.Fatalf("expected managed-by label, got %v", labels)
+	}
+	if labels[challengeInstanceLabelKey] != challengeInstanceLabelValue {
+		t.Fatalf("expected component label, got %v", labels)
+	}
+}
+
+func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:   "net-123",
+		containerID: "ctr-123",
+	}
+	service := NewService(repo, engine, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+	}, nil)
+
+	containerID, networkID, port, err := service.CreateContainer(context.Background(), "ctf/web:v1", map[string]string{"FLAG": "flag{1}"})
+	if err != nil {
+		t.Fatalf("CreateContainer() error = %v", err)
+	}
+	if containerID != "ctr-123" {
+		t.Fatalf("unexpected container id: %s", containerID)
+	}
+	if networkID != "net-123" {
+		t.Fatalf("unexpected network id: %s", networkID)
+	}
+	if port != 30000 {
+		t.Fatalf("unexpected port: %d", port)
+	}
+	if engine.createdNetworkName == "" {
+		t.Fatalf("expected isolated network to be created")
+	}
+	if engine.createdContainerCfg == nil || engine.createdContainerCfg.Network != engine.createdNetworkName {
+		t.Fatalf("expected container to join created network, cfg=%+v network=%s", engine.createdContainerCfg, engine.createdNetworkName)
+	}
+}
+
+func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		networkID:   "net-456",
+		containerID: "ctr-456",
+		startErr:    errors.New("start failed"),
+	}
+	service := NewService(repo, engine, &config.ContainerConfig{
+		PortRangeStart:     30000,
+		PortRangeEnd:       30010,
+		DefaultExposedPort: 8080,
+	}, nil)
+
+	_, _, _, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil)
+	if err == nil {
+		t.Fatal("expected CreateContainer() to fail")
+	}
+	if engine.removedContainerID != "ctr-456" {
+		t.Fatalf("expected container cleanup, got %s", engine.removedContainerID)
+	}
+	if engine.removedNetworkID != "net-456" {
+		t.Fatalf("expected network cleanup, got %s", engine.removedNetworkID)
 	}
 }
 
@@ -210,6 +285,50 @@ func newTestService(repo *Repository) *Service {
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}, nil)
+}
+
+type fakeRuntimeEngine struct {
+	networkID           string
+	containerID         string
+	startErr            error
+	createdNetworkName  string
+	createdNetworkLabel map[string]string
+	createdContainerCfg *model.ContainerConfig
+	removedContainerID  string
+	removedNetworkID    string
+}
+
+func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string) (string, error) {
+	f.createdNetworkName = name
+	f.createdNetworkLabel = labels
+	return f.networkID, nil
+}
+
+func (f *fakeRuntimeEngine) CreateContainer(_ context.Context, cfg *model.ContainerConfig) (string, error) {
+	f.createdContainerCfg = cfg
+	return f.containerID, nil
+}
+
+func (f *fakeRuntimeEngine) StartContainer(_ context.Context, _ string) error {
+	return f.startErr
+}
+
+func (f *fakeRuntimeEngine) StopContainer(_ context.Context, _ string, _ time.Duration) error {
+	return nil
+}
+
+func (f *fakeRuntimeEngine) RemoveContainer(_ context.Context, containerID string, _ bool) error {
+	f.removedContainerID = containerID
+	return nil
+}
+
+func (f *fakeRuntimeEngine) RemoveNetwork(_ context.Context, networkID string) error {
+	f.removedNetworkID = networkID
+	return nil
+}
+
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context, _ string) ([]ManagedContainer, error) {
+	return nil, nil
 }
 
 func seedInstance(t *testing.T, db *gorm.DB, instance *model.Instance) {

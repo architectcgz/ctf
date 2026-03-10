@@ -17,7 +17,7 @@ import (
 
 type Service struct {
 	repo   *Repository
-	engine *Engine
+	engine runtimeEngine
 	config *config.ContainerConfig
 	logger *zap.Logger
 }
@@ -28,9 +28,20 @@ const (
 	challengeInstanceLabelKey   = "ctf-component"
 	challengeInstanceLabelValue = "challenge-instance"
 	managedContainerNamePrefix  = "ctf-instance-"
+	managedNetworkNamePrefix    = "ctf-net-"
 )
 
-func NewService(repo *Repository, engine *Engine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+type runtimeEngine interface {
+	CreateNetwork(ctx context.Context, name string, labels map[string]string) (string, error)
+	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
+	StartContainer(ctx context.Context, containerID string) error
+	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
+	RemoveContainer(ctx context.Context, containerID string, force bool) error
+	RemoveNetwork(ctx context.Context, networkID string) error
+	ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error)
+}
+
+func NewService(repo *Repository, engine runtimeEngine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -59,6 +70,12 @@ func (s *Service) CreateContainer(ctx context.Context, imageName string, env map
 		return containerID, "", port, nil
 	}
 
+	networkName := buildManagedNetworkName()
+	networkID, err = s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels())
+	if err != nil {
+		return "", "", 0, err
+	}
+
 	containerID, err = s.engine.CreateContainer(ctx, &model.ContainerConfig{
 		Image: imageName,
 		Name:  buildManagedContainerName(),
@@ -66,17 +83,20 @@ func (s *Service) CreateContainer(ctx context.Context, imageName string, env map
 		Ports: map[string]string{
 			strconv.Itoa(s.config.DefaultExposedPort): strconv.Itoa(port),
 		},
-		Labels: managedContainerLabels(),
+		Labels:  managedContainerLabels(),
+		Network: networkName,
 	})
 	if err != nil {
+		_ = s.engine.RemoveNetwork(context.Background(), networkID)
 		return "", "", 0, err
 	}
 	if err := s.engine.StartContainer(ctx, containerID); err != nil {
 		_ = s.engine.RemoveContainer(context.Background(), containerID, true)
+		_ = s.engine.RemoveNetwork(context.Background(), networkID)
 		return "", "", 0, err
 	}
 
-	return containerID, "", port, nil
+	return containerID, networkID, port, nil
 }
 
 // RemoveContainer 删除容器
@@ -386,6 +406,17 @@ func managedContainerLabels() map[string]string {
 		managedByLabelKey:         managedByLabelValue,
 		challengeInstanceLabelKey: challengeInstanceLabelValue,
 	}
+}
+
+func managedNetworkLabels() map[string]string {
+	return map[string]string{
+		managedByLabelKey:         managedByLabelValue,
+		challengeInstanceLabelKey: challengeInstanceLabelValue,
+	}
+}
+
+func buildManagedNetworkName() string {
+	return fmt.Sprintf("%s%d", managedNetworkNamePrefix, time.Now().UnixNano())
 }
 
 func managedByFilter() string {
