@@ -1,8 +1,15 @@
 package container
 
 import (
+	"archive/tar"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"path"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types/container"
@@ -64,7 +71,7 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 			ReadonlyRootfs: e.containerCfg.ReadonlyRootfs,
 			CapDrop:        []string{"ALL"},
 			CapAdd:         e.containerCfg.AllowedCapabilities,
-			SecurityOpt:    []string{fmt.Sprintf("seccomp=%s", e.containerCfg.Seccomp), "no-new-privileges:true"},
+			SecurityOpt:    buildSecurityOpts(e.containerCfg.Seccomp),
 			User:           e.containerCfg.RunAsUser,
 		}
 	}
@@ -116,9 +123,22 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 	return resp.ID, nil
 }
 
-func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string) (string, error) {
+func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error) {
+	resp, _, err := e.cli.ImageInspectWithRaw(ctx, imageRef)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Config == nil {
+		return preferredPort, nil
+	}
+
+	return selectServicePort(resp.Config.ExposedPorts, preferredPort), nil
+}
+
+func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error) {
 	resp, err := e.cli.NetworkCreate(ctx, name, networktypes.CreateOptions{
-		Labels: labels,
+		Labels:   labels,
+		Internal: internal,
 	})
 	if err != nil {
 		return "", err
@@ -126,8 +146,30 @@ func (e *Engine) CreateNetwork(ctx context.Context, name string, labels map[stri
 	return resp.ID, nil
 }
 
+func (e *Engine) ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error {
+	return e.cli.NetworkConnect(ctx, networkName, containerID, nil)
+}
+
 func (e *Engine) StartContainer(ctx context.Context, containerID string) error {
 	return e.cli.ContainerStart(ctx, containerID, container.StartOptions{})
+}
+
+func (e *Engine) InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error) {
+	resp, err := e.cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]string)
+	if resp.NetworkSettings == nil {
+		return result, nil
+	}
+	for networkName, settings := range resp.NetworkSettings.Networks {
+		if settings == nil || settings.IPAddress == "" {
+			continue
+		}
+		result[networkName] = settings.IPAddress
+	}
+	return result, nil
 }
 
 func (e *Engine) StopContainer(ctx context.Context, containerID string, timeout time.Duration) error {
@@ -141,6 +183,40 @@ func (e *Engine) RemoveContainer(ctx context.Context, containerID string, force 
 
 func (e *Engine) RemoveNetwork(ctx context.Context, networkID string) error {
 	return e.cli.NetworkRemove(ctx, networkID)
+}
+
+func (e *Engine) ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+	return applyACLRules(ctx, rules)
+}
+
+func (e *Engine) RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+	return removeACLRules(ctx, rules)
+}
+
+func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
+	dir := path.Dir(filePath)
+	if dir == "." || dir == "" {
+		dir = "/"
+	}
+
+	var archive bytes.Buffer
+	tw := tar.NewWriter(&archive)
+	header := &tar.Header{
+		Name: path.Base(filePath),
+		Mode: 0o644,
+		Size: int64(len(content)),
+	}
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+	if _, err := tw.Write(content); err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	return e.cli.CopyToContainer(ctx, containerID, dir, io.NopCloser(bytes.NewReader(archive.Bytes())), container.CopyToContainerOptions{})
 }
 
 func (e *Engine) ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error) {
@@ -174,7 +250,54 @@ func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
 		ReadonlyRootfs: cfg.ReadonlyRootfs,
 		CapDrop:        []string{"ALL"},
 		CapAdd:         cfg.AllowedCapabilities,
-		SecurityOpt:    []string{fmt.Sprintf("seccomp=%s", cfg.Seccomp), "no-new-privileges:true"},
+		SecurityOpt:    buildSecurityOpts(cfg.Seccomp),
 		User:           cfg.RunAsUser,
 	}
+}
+
+func buildSecurityOpts(seccomp string) []string {
+	opts := []string{"no-new-privileges:true"}
+
+	normalized := strings.TrimSpace(seccomp)
+	switch normalized {
+	case "", "default":
+		return opts
+	default:
+		return append([]string{fmt.Sprintf("seccomp=%s", normalized)}, opts...)
+	}
+}
+
+func selectServicePort(exposedPorts nat.PortSet, preferredPort int) int {
+	if len(exposedPorts) == 0 {
+		return preferredPort
+	}
+
+	available := make([]int, 0, len(exposedPorts))
+	preferredKey := strconv.Itoa(preferredPort) + "/tcp"
+	for port := range exposedPorts {
+		if string(port) == preferredKey {
+			return preferredPort
+		}
+
+		if port.Proto() != "tcp" {
+			continue
+		}
+		portValue, err := strconv.Atoi(port.Port())
+		if err != nil || portValue <= 0 {
+			continue
+		}
+		available = append(available, portValue)
+	}
+
+	if len(available) == 0 {
+		return preferredPort
+	}
+
+	sort.Ints(available)
+	for _, candidate := range available {
+		if candidate == 80 || candidate == 443 {
+			return candidate
+		}
+	}
+	return available[0]
 }

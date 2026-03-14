@@ -38,6 +38,30 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 	response.Success(c, instance)
 }
 
+// StartContestChallenge 启动竞赛靶机实例
+// POST /api/v1/contests/:id/challenges/:cid/instances
+func (h *Handler) StartContestChallenge(c *gin.Context) {
+	userID := authctx.MustCurrentUser(c).UserID
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+	challengeID, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	instance, err := h.service.StartContestChallenge(c.Request.Context(), userID, contestID, challengeID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, instance)
+}
+
 // GetInstance 获取实例详情
 // GET /api/v1/instances/:id
 func (h *Handler) GetInstance(c *gin.Context) {

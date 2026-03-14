@@ -44,6 +44,13 @@
                 >
                   复制
                 </button>
+                <button
+                  v-if="instance.access_url"
+                  @click="openTarget(instance.id)"
+                  class="rounded px-2 py-1 text-xs text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
+                >
+                  打开目标
+                </button>
               </div>
             </div>
             <div class="flex items-center justify-between">
@@ -59,7 +66,7 @@
               v-if="instance.status === 'running'"
               @click="extendTime(instance.id)"
               :disabled="instance.remaining_extends <= 0"
-              class="rounded-lg border border-[var(--color-border-default)] bg-[#21262d] px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition-colors duration-150 hover:bg-[#30363d] disabled:opacity-50 disabled:cursor-not-allowed"
+              class="rounded-lg border border-sky-400/40 bg-sky-500/12 px-4 py-2 text-sm font-medium text-sky-950 transition-colors duration-150 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)]"
             >
               延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
             </button>
@@ -113,7 +120,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { getMyInstances, destroyInstance as apiDestroyInstance, extendInstance } from '@/api/instance'
+import {
+  getMyInstances,
+  destroyInstance as apiDestroyInstance,
+  extendInstance,
+  requestInstanceAccess,
+} from '@/api/instance'
 import { useClipboard } from '@/composables/useClipboard'
 import { useToast } from '@/composables/useToast'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
@@ -141,6 +153,14 @@ const warnedInstances = new Set<string>()
 let timer: number | null = null
 
 const runningCount = computed(() => instances.value.filter(i => i.status === 'running').length)
+
+async function loadInstances() {
+  const data = await getMyInstances()
+  instances.value = data.map(item => ({
+    ...item,
+    remaining: calculateRemaining(item.expires_at)
+  }))
+}
 
 function getStatusLabel(status: InstanceStatus): string {
   const labels: Record<InstanceStatus, string> = {
@@ -185,15 +205,29 @@ async function copyAddress(address: string) {
 async function extendTime(id: string) {
   try {
     const result = await extendInstance(id)
-    const instance = instances.value.find(i => i.id === id)
-    if (instance) {
-      instance.remaining = calculateRemaining(result.expires_at)
-      instance.remaining_extends = result.remaining_extends
-      warnedInstances.delete(id)
+    if (result) {
+      const instance = instances.value.find(i => i.id === id)
+      if (instance) {
+        instance.remaining = calculateRemaining(result.expires_at)
+        instance.remaining_extends = result.remaining_extends
+        warnedInstances.delete(id)
+      }
+    } else {
+      await loadInstances()
     }
   } catch (error) {
     console.error('延时失败:', error)
     toast.error('延时失败，请稍后重试')
+  }
+}
+
+async function openTarget(id: string) {
+  try {
+    const result = await requestInstanceAccess(id)
+    window.open(result.access_url, '_blank', 'noopener,noreferrer')
+  } catch (error) {
+    console.error('打开目标失败:', error)
+    toast.error('打开目标失败，请稍后重试')
   }
 }
 
@@ -246,11 +280,7 @@ function updateCountdown() {
 onMounted(async () => {
   loading.value = true
   try {
-    const data = await getMyInstances()
-    instances.value = data.map(item => ({
-      ...item,
-      remaining: calculateRemaining(item.expires_at)
-    }))
+    await loadInstances()
   } catch (error) {
     console.error('加载实例失败:', error)
     toast.error('加载实例失败，请刷新重试')

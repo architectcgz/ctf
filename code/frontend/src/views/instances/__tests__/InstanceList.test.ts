@@ -20,6 +20,7 @@ vi.mock('@/api/instance', () => ({
   ]),
   destroyInstance: vi.fn(),
   extendInstance: vi.fn(),
+  requestInstanceAccess: vi.fn(),
 }))
 
 describe('InstanceList', () => {
