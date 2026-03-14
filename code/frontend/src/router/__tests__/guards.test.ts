@@ -153,6 +153,19 @@ describe('router guards', () => {
     expect(authStore.user?.role).toBe('teacher')
     expect(next).toHaveBeenCalledWith()
   })
+
+  it('应该允许未登录用户访问 CAS 回调页', async () => {
+    const { runBeforeEach } = createRouterMock()
+
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/login/cas/callback',
+        fullPath: '/login/cas/callback?ticket=ST-1',
+      })
+    )
+
+    expect(next).toHaveBeenCalledWith()
+  })
 })
 
 describe('guard helpers', () => {

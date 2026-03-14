@@ -222,8 +222,13 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	}
 	tokenService := authModule.NewTokenService(authCfg, wsCfg, cache, jwtManager)
 	authRepo := authModule.NewRepository(db)
-	authService := authModule.NewService(authRepo, tokenService, zap.NewNop())
-	authHandler := authModule.NewHandler(authService, tokenService, authModule.CookieConfig{
+	authService := authModule.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+		Enabled:      true,
+		Limit:        10,
+		Window:       time.Minute,
+		LockDuration: 15 * time.Minute,
+	}, zap.NewNop())
+	authHandler := authModule.NewHandler(authService, tokenService, authModule.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil), authModule.CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
