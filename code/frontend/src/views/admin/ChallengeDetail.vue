@@ -2,18 +2,43 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">靶场详情</h1>
-      <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="$router.back()">
-        返回
-      </button>
+      <div class="flex items-center gap-3">
+        <button
+          v-if="route.params.id"
+          class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--color-primary)]/90"
+          @click="router.push(`/admin/challenges/${String(route.params.id)}/writeup`)"
+        >
+          题解管理
+        </button>
+        <button
+          v-if="route.params.id"
+          class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--color-primary)]/90"
+          @click="router.push(`/admin/challenges/${String(route.params.id)}/topology`)"
+        >
+          拓扑编排
+        </button>
+        <button
+          class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]"
+          @click="$router.back()"
+        >
+          返回
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
+      ></div>
     </div>
 
     <div v-else-if="challenge" class="space-y-4">
-      <div class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
-        <h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">{{ challenge.title }}</h2>
+      <div
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
+        <h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">
+          {{ challenge.title }}
+        </h2>
         <div class="grid grid-cols-2 gap-4 text-sm">
           <div>
             <span class="text-[var(--color-text-secondary)]">分类：</span>
@@ -33,12 +58,18 @@
           </div>
           <div v-if="challenge.image_id" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">镜像：</span>
-            <span class="font-mono text-[var(--color-text-primary)]">ID #{{ challenge.image_id }}</span>
+            <span class="font-mono text-[var(--color-text-primary)]"
+              >ID #{{ challenge.image_id }}</span
+            >
           </div>
           <div v-if="challenge.flag_config" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">Flag 配置：</span>
             <span class="font-mono text-[var(--color-text-primary)]">
-              {{ challenge.flag_config.configured ? `${challenge.flag_config.flag_type || 'unknown'} / ${challenge.flag_config.flag_prefix || 'flag'}` : '未配置' }}
+              {{
+                challenge.flag_config.configured
+                  ? `${challenge.flag_config.flag_type || 'unknown'} / ${challenge.flag_config.flag_prefix || 'flag'}`
+                  : '未配置'
+              }}
             </span>
           </div>
           <div v-if="challenge.attachment_url" class="col-span-2">
@@ -55,7 +86,9 @@
         </div>
         <div v-if="challenge.description" class="mt-4">
           <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
-          <div class="mt-2 text-sm text-[var(--color-text-primary)]">{{ challenge.description }}</div>
+          <div class="mt-2 text-sm text-[var(--color-text-primary)]">
+            {{ challenge.description }}
+          </div>
         </div>
         <div v-if="challenge.hints?.length" class="mt-4">
           <div class="text-sm text-[var(--color-text-secondary)]">提示：</div>
