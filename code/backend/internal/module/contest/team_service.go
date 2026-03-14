@@ -36,6 +36,9 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 	if contest.Status != model.ContestStatusRegistration && contest.Status != model.ContestStatusRunning {
 		return nil, errcode.ErrContestTeamUnavailable
 	}
+	if err := s.ensureApprovedRegistration(contestID, captainID); err != nil {
+		return nil, err
+	}
 
 	// 检查用户是否已在该竞赛的队伍中
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(captainID, contestID)
@@ -79,6 +82,9 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 		if IsUniqueViolation(err, "uk_team_members_contest_user") {
 			return nil, errcode.ErrAlreadyInTeam
 		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotRegistered
+		}
 		if !strings.Contains(err.Error(), "duplicate") && !strings.Contains(err.Error(), "unique") {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
@@ -101,6 +107,9 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 	}
 	if contest.Status != model.ContestStatusRegistration && contest.Status != model.ContestStatusRunning {
 		return nil, errcode.ErrContestTeamUnavailable
+	}
+	if err := s.ensureApprovedRegistration(contestID, userID); err != nil {
+		return nil, err
 	}
 
 	team, err := s.teamRepo.FindByID(teamID)
@@ -132,11 +141,28 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		if IsUniqueViolation(err, "uk_team_members_contest_user") {
 			return nil, errcode.ErrAlreadyInTeam
 		}
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotRegistered
+		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	count, _ := s.teamRepo.GetMemberCount(team.ID)
 	return s.toTeamResp(team, int(count)), nil
+}
+
+func (s *TeamService) ensureApprovedRegistration(contestID, userID int64) error {
+	registration, err := s.teamRepo.FindContestRegistration(contestID, userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrNotRegistered
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if err := registrationStatusError(registration.Status); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *TeamService) LeaveTeam(_ context.Context, contestID, userID, teamID int64) error {

@@ -177,3 +177,11 @@ contest:
   min_score: 100
   decay: 0.9
   first_blood_bonus: 0.1
+  awd:
+    scheduler_interval: 30s
+    scheduler_batch_size: 200
+    round_interval: 5m
+    round_lock_ttl: 30s
+    previous_round_grace: 30s
+    checker_timeout: 3s
+    checker_health_path: /health

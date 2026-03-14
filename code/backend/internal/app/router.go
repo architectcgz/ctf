@@ -339,12 +339,16 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	scoreboardService := contestModule.NewScoreboardService(contestRepo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
 	contestHandler := contestModule.NewHandler(contestService, scoreboardService)
+	awdService := contestModule.NewAWDService(db, contestRepo, cache, cfg.Container.FlagGlobalSecret, cfg.Contest.AWD, log.Named("contest_awd_service"))
+	awdHandler := contestModule.NewAWDHandler(awdService)
 	contestChallengeRepo := contestModule.NewChallengeRepository(db)
 	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challengeRepo, contestRepo)
 	contestChallengeHandler := contestModule.NewChallengeHandler(contestChallengeService)
 	teamRepo := contestModule.NewTeamRepository(db)
 	teamService := contestModule.NewTeamService(teamRepo, contestRepo)
 	teamHandler := contestModule.NewTeamHandler(teamService)
+	participationService := contestModule.NewParticipationService(db, contestRepo, teamRepo)
+	participationHandler := contestModule.NewParticipationHandler(participationService)
 	submissionService := contestModule.NewSubmissionService(db, cache, flagService, teamRepo, scoreboardService, cfg)
 	submissionHandler := contestModule.NewSubmissionHandler(submissionService)
 
@@ -410,12 +414,118 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		}, auditLogger),
 		contestChallengeHandler.RemoveChallenge,
 	)
+	adminOnly.GET("/contests/:id/registrations", participationHandler.ListRegistrations)
+	adminOnly.PUT("/contests/:id/registrations/:rid",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "contest_registration",
+			ResourceIDParam: "rid",
+			DetailBuilder:   middleware.DetailFromParams("id", "rid"),
+		}, auditLogger),
+		participationHandler.ReviewRegistration,
+	)
+	adminOnly.GET("/contests/:id/announcements", participationHandler.ListAnnouncements)
+	adminOnly.POST("/contests/:id/announcements",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_announcement",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}, auditLogger),
+		participationHandler.CreateAnnouncement,
+	)
+	adminOnly.DELETE("/contests/:id/announcements/:aid",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "contest_announcement",
+			ResourceIDParam: "aid",
+			DetailBuilder:   middleware.DetailFromParams("id", "aid"),
+		}, auditLogger),
+		participationHandler.DeleteAnnouncement,
+	)
+	adminOnly.GET("/contests/:id/awd/rounds",
+		middleware.ParseInt64Param("id"),
+		awdHandler.ListRounds,
+	)
+	adminOnly.GET("/contests/:id/scoreboard/live", contestHandler.GetLiveScoreboard)
+	adminOnly.POST("/contests/:id/awd/rounds",
+		middleware.ParseInt64Param("id"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "awd_round",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}, auditLogger),
+		awdHandler.CreateRound,
+	)
+	adminOnly.POST("/contests/:id/awd/current-round/check",
+		middleware.ParseInt64Param("id"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "awd_checker_run",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}, auditLogger),
+		awdHandler.RunCurrentRoundChecks,
+	)
+	adminOnly.POST("/contests/:id/awd/rounds/:rid/check",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "awd_checker_run",
+			DetailBuilder: middleware.DetailFromParams("id", "rid"),
+		}, auditLogger),
+		awdHandler.RunRoundChecks,
+	)
+	adminOnly.GET("/contests/:id/awd/rounds/:rid/services",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		awdHandler.ListServices,
+	)
+	adminOnly.POST("/contests/:id/awd/rounds/:rid/services/check",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "awd_service_check",
+			DetailBuilder: middleware.DetailFromParams("id", "rid"),
+		}, auditLogger),
+		awdHandler.UpsertServiceCheck,
+	)
+	adminOnly.GET("/contests/:id/awd/rounds/:rid/attacks",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		awdHandler.ListAttackLogs,
+	)
+	adminOnly.POST("/contests/:id/awd/rounds/:rid/attacks",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "awd_attack_log",
+			DetailBuilder: middleware.DetailFromParams("id", "rid"),
+		}, auditLogger),
+		awdHandler.CreateAttackLog,
+	)
+	adminOnly.GET("/contests/:id/awd/rounds/:rid/summary",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		awdHandler.GetRoundSummary,
+	)
 
 	contestGroup := apiV1.Group("/contests")
 	contestGroup.GET("", contestHandler.ListContests)
 	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
 	contestGroup.GET("/:id/scoreboard", contestHandler.GetScoreboard)
+	contestGroup.GET("/:id/announcements", participationHandler.ListAnnouncements)
+	protected.POST("/contests/:id/register",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:        model.AuditActionCreate,
+			ResourceType:  "contest_registration",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}, auditLogger),
+		participationHandler.RegisterContest,
+	)
 	protected.GET("/contests/:id/challenges", contestChallengeHandler.ListChallenges)
+	protected.GET("/contests/:id/my-progress", participationHandler.GetMyProgress)
 	protected.POST("/contests/:id/challenges/:cid/submissions",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,
@@ -424,6 +534,17 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
 		}, auditLogger),
 		submissionHandler.SubmitFlag,
+	)
+	protected.POST("/contests/:id/awd/challenges/:cid/submissions",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("cid"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionSubmit,
+			ResourceType:    "awd_attack_submission",
+			ResourceIDParam: "cid",
+			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
+		}, auditLogger),
+		awdHandler.SubmitAttack,
 	)
 	protected.GET("/contests/:id/teams", teamHandler.ListTeams)
 	protected.GET("/contests/:id/my-team", teamHandler.GetMyTeam)

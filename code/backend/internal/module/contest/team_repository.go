@@ -37,7 +37,10 @@ func (r *TeamRepository) CreateWithMember(team *model.Team, captainID int64) err
 			UserID:    captainID,
 			JoinedAt:  time.Now(),
 		}
-		return tx.Create(member).Error
+		if err := tx.Create(member).Error; err != nil {
+			return err
+		}
+		return bindContestRegistrationTeam(tx, team.ContestID, captainID, &team.ID)
 	})
 }
 
@@ -59,8 +62,27 @@ func (r *TeamRepository) Delete(id int64) error {
 
 func (r *TeamRepository) DeleteWithMembers(id int64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		var team model.Team
+		if err := tx.Where("id = ?", id).First(&team).Error; err != nil {
+			return err
+		}
+
+		var userIDs []int64
+		if err := tx.Model(&model.TeamMember{}).Where("team_id = ?", id).Pluck("user_id", &userIDs).Error; err != nil {
+			return err
+		}
 		if err := tx.Where("team_id = ?", id).Delete(&model.TeamMember{}).Error; err != nil {
 			return err
+		}
+		if len(userIDs) > 0 {
+			if err := tx.Model(&model.ContestRegistration{}).
+				Where("contest_id = ? AND user_id IN ?", team.ContestID, userIDs).
+				Updates(map[string]any{
+					"team_id":    nil,
+					"updated_at": time.Now(),
+				}).Error; err != nil {
+				return err
+			}
 		}
 		return tx.Delete(&model.Team{}, id).Error
 	})
@@ -103,12 +125,30 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 			UserID:    userID,
 			JoinedAt:  time.Now(),
 		}
-		return tx.Create(member).Error
+		if err := tx.Create(member).Error; err != nil {
+			return err
+		}
+		return bindContestRegistrationTeam(tx, contestID, userID, &teamID)
 	})
 }
 
 func (r *TeamRepository) RemoveMember(teamID, userID int64) error {
-	return r.db.Where("team_id = ? AND user_id = ?", teamID, userID).Delete(&model.TeamMember{}).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var team model.Team
+		if err := tx.Where("id = ?", teamID).First(&team).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("team_id = ? AND user_id = ?", teamID, userID).Delete(&model.TeamMember{}).Error; err != nil {
+			return err
+		}
+		return bindContestRegistrationTeam(tx, team.ContestID, userID, nil)
+	})
+}
+
+func (r *TeamRepository) FindContestRegistration(contestID, userID int64) (*model.ContestRegistration, error) {
+	var registration model.ContestRegistration
+	err := r.db.Where("contest_id = ? AND user_id = ?", contestID, userID).First(&registration).Error
+	return &registration, err
 }
 
 func (r *TeamRepository) GetMembers(teamID int64) ([]*model.TeamMember, error) {
@@ -172,4 +212,20 @@ func IsUniqueViolation(err error, constraint string) bool {
 		return pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, constraint)
 	}
 	return false
+}
+
+func bindContestRegistrationTeam(tx *gorm.DB, contestID, userID int64, teamID *int64) error {
+	result := tx.Model(&model.ContestRegistration{}).
+		Where("contest_id = ? AND user_id = ?", contestID, userID).
+		Updates(map[string]any{
+			"team_id":    teamID,
+			"updated_at": time.Now(),
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

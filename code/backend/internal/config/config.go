@@ -140,6 +140,8 @@ type ContainerConfig struct {
 	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
 	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
 	PublicHost           string        `mapstructure:"public_host"`
+	ProxyTicketTTL       time.Duration `mapstructure:"proxy_ticket_ttl"`
+	ProxyBodyPreviewSize int           `mapstructure:"proxy_body_preview_size"`
 }
 
 type PaginationConfig struct {
@@ -202,12 +204,23 @@ type WebSocketConfig struct {
 }
 
 type ContestConfig struct {
-	StatusUpdateInterval  time.Duration `mapstructure:"status_update_interval"`
-	StatusUpdateBatchSize int           `mapstructure:"status_update_batch_size"`
-	BaseScore             float64       `mapstructure:"base_score"`
-	MinScore              float64       `mapstructure:"min_score"`
-	Decay                 float64       `mapstructure:"decay"`
-	FirstBloodBonus       float64       `mapstructure:"first_blood_bonus"`
+	StatusUpdateInterval  time.Duration    `mapstructure:"status_update_interval"`
+	StatusUpdateBatchSize int              `mapstructure:"status_update_batch_size"`
+	BaseScore             float64          `mapstructure:"base_score"`
+	MinScore              float64          `mapstructure:"min_score"`
+	Decay                 float64          `mapstructure:"decay"`
+	FirstBloodBonus       float64          `mapstructure:"first_blood_bonus"`
+	AWD                   ContestAWDConfig `mapstructure:"awd"`
+}
+
+type ContestAWDConfig struct {
+	SchedulerInterval  time.Duration `mapstructure:"scheduler_interval"`
+	SchedulerBatchSize int           `mapstructure:"scheduler_batch_size"`
+	RoundInterval      time.Duration `mapstructure:"round_interval"`
+	RoundLockTTL       time.Duration `mapstructure:"round_lock_ttl"`
+	PreviousRoundGrace time.Duration `mapstructure:"previous_round_grace"`
+	CheckerTimeout     time.Duration `mapstructure:"checker_timeout"`
+	CheckerHealthPath  string        `mapstructure:"checker_health_path"`
 }
 
 func Load(env string) (*Config, error) {
@@ -269,6 +282,12 @@ func (c *Config) Validate() error {
 	if c.Container.OrphanGracePeriod <= 0 {
 		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
 	}
+	if c.Container.ProxyTicketTTL <= 0 {
+		return fmt.Errorf("container.proxy_ticket_ttl must be greater than 0")
+	}
+	if c.Container.ProxyBodyPreviewSize <= 0 {
+		return fmt.Errorf("container.proxy_body_preview_size must be greater than 0")
+	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
 		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
 	}
@@ -325,6 +344,30 @@ func (c *Config) Validate() error {
 	}
 	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
+	}
+	if c.Contest.StatusUpdateInterval <= 0 {
+		return fmt.Errorf("contest.status_update_interval must be greater than 0")
+	}
+	if c.Contest.StatusUpdateBatchSize <= 0 {
+		return fmt.Errorf("contest.status_update_batch_size must be greater than 0")
+	}
+	if c.Contest.AWD.SchedulerInterval <= 0 {
+		return fmt.Errorf("contest.awd.scheduler_interval must be greater than 0")
+	}
+	if c.Contest.AWD.SchedulerBatchSize <= 0 {
+		return fmt.Errorf("contest.awd.scheduler_batch_size must be greater than 0")
+	}
+	if c.Contest.AWD.RoundInterval <= 0 {
+		return fmt.Errorf("contest.awd.round_interval must be greater than 0")
+	}
+	if c.Contest.AWD.RoundLockTTL <= 0 {
+		return fmt.Errorf("contest.awd.round_lock_ttl must be greater than 0")
+	}
+	if c.Contest.AWD.PreviousRoundGrace < 0 {
+		return fmt.Errorf("contest.awd.previous_round_grace must be greater than or equal to 0")
+	}
+	if c.Contest.AWD.CheckerTimeout <= 0 {
+		return fmt.Errorf("contest.awd.checker_timeout must be greater than 0")
 	}
 	if c.Auth.CAS.Enabled {
 		if strings.TrimSpace(c.Auth.CAS.BaseURL) == "" {
@@ -418,6 +461,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.create_timeout", 30*time.Second)
 	v.SetDefault("container.flag_global_secret", "")
 	v.SetDefault("container.public_host", "localhost")
+	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
+	v.SetDefault("container.proxy_body_preview_size", 1024)
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
@@ -456,4 +501,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("contest.min_score", 100.0)
 	v.SetDefault("contest.decay", 0.9)
 	v.SetDefault("contest.first_blood_bonus", 0.1)
+	v.SetDefault("contest.awd.scheduler_interval", 30*time.Second)
+	v.SetDefault("contest.awd.scheduler_batch_size", 200)
+	v.SetDefault("contest.awd.round_interval", 5*time.Minute)
+	v.SetDefault("contest.awd.round_lock_ttl", 30*time.Second)
+	v.SetDefault("contest.awd.previous_round_grace", 30*time.Second)
+	v.SetDefault("contest.awd.checker_timeout", 3*time.Second)
+	v.SetDefault("contest.awd.checker_health_path", "/health")
 }

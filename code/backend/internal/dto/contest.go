@@ -77,3 +77,50 @@ type TeamRankResp struct {
 type FreezeReq struct {
 	MinutesBeforeEnd int `json:"minutes_before_end" binding:"required,min=1"`
 }
+
+type CreateContestAnnouncementReq struct {
+	Title   string `json:"title" binding:"required,min=1,max=200"`
+	Content string `json:"content" binding:"max=5000"`
+}
+
+type ContestRegistrationQuery struct {
+	Status *string `form:"status" binding:"omitempty,oneof=pending approved rejected"`
+	Page   int     `form:"page" binding:"omitempty,min=1"`
+	Size   int     `form:"size" binding:"omitempty,min=1,max=100"`
+}
+
+type ReviewContestRegistrationReq struct {
+	Status string `json:"status" binding:"required,oneof=approved rejected"`
+}
+
+type ContestRegistrationResp struct {
+	ID         int64      `json:"id"`
+	ContestID  int64      `json:"contest_id"`
+	UserID     int64      `json:"user_id"`
+	Username   string     `json:"username"`
+	TeamID     *int64     `json:"team_id,omitempty"`
+	Status     string     `json:"status"`
+	ReviewedBy *int64     `json:"reviewed_by,omitempty"`
+	ReviewedAt *time.Time `json:"reviewed_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+}
+
+type ContestAnnouncementResp struct {
+	ID        int64     `json:"id"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type ContestSolvedProgressItem struct {
+	ContestChallengeID int64     `json:"contest_challenge_id"`
+	SolvedAt           time.Time `json:"solved_at"`
+	PointsEarned       int       `json:"points_earned"`
+}
+
+type ContestMyProgressResp struct {
+	ContestID int64                        `json:"contest_id"`
+	TeamID    *int64                       `json:"team_id,omitempty"`
+	Solved    []*ContestSolvedProgressItem `json:"solved"`
+}

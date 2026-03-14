@@ -3,7 +3,6 @@ package contest
 import (
 	"context"
 	"fmt"
-	"math"
 	"strconv"
 	"time"
 
@@ -45,7 +44,44 @@ func (s *ScoreboardService) UpdateScore(ctx context.Context, contestID, teamID i
 	return s.redis.ZIncrBy(ctx, key, points, teamIDToMember(teamID)).Err()
 }
 
+func (s *ScoreboardService) RebuildScoreboard(ctx context.Context, contestID int64) error {
+	teams, err := s.repo.FindTeamsByContest(ctx, contestID)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+
+	key := rediskeys.RankContestTeamKey(contestID)
+	pipe := s.redis.TxPipeline()
+	pipe.Del(ctx, key)
+
+	entries := make([]redislib.Z, 0, len(teams))
+	for _, team := range teams {
+		if team == nil || team.TotalScore <= 0 {
+			continue
+		}
+		entries = append(entries, redislib.Z{
+			Score:  float64(team.TotalScore),
+			Member: teamIDToMember(team.ID),
+		})
+	}
+	if len(entries) > 0 {
+		pipe.ZAdd(ctx, key, entries...)
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
+}
+
 func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error) {
+	return s.getScoreboard(ctx, contestID, page, pageSize, false)
+}
+
+func (s *ScoreboardService) GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error) {
+	return s.getScoreboard(ctx, contestID, page, pageSize, true)
+}
+
+func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, page, pageSize int, live bool) (*dto.ScoreboardResp, error) {
 	contest, err := s.repo.FindByID(ctx, contestID)
 	if err != nil {
 		if err == ErrContestNotFound {
@@ -64,7 +100,7 @@ func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, 
 		pageSize = 100
 	}
 
-	frozen := isFrozenContest(contest, time.Now())
+	frozen := !live && isFrozenContest(contest, time.Now())
 	key := rediskeys.RankContestTeamKey(contestID)
 	if frozen {
 		key = rediskeys.RankContestFrozenKey(contestID)
@@ -100,6 +136,10 @@ func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+	statsMap, err := s.repo.FindScoreboardTeamStats(ctx, contestID, contest.Mode, teamIDs)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 	teamMap := make(map[int64]*model.Team, len(teams))
 	for _, team := range teams {
 		teamMap[team.ID] = team
@@ -109,11 +149,14 @@ func (s *ScoreboardService) GetScoreboard(ctx context.Context, contestID int64, 
 	for idx, item := range results {
 		teamID := teamIDs[idx]
 		team := teamMap[teamID]
+		stats := statsMap[teamID]
 		items = append(items, &dto.ScoreboardItem{
-			Rank:     int(start) + idx + 1,
-			TeamID:   teamID,
-			Score:    item.Score,
-			TeamName: teamName(team),
+			Rank:             int(start) + idx + 1,
+			TeamID:           teamID,
+			Score:            item.Score,
+			TeamName:         teamName(team),
+			SolvedCount:      stats.SolvedCount,
+			LastSubmissionAt: stats.LastSubmissionAt,
 		})
 	}
 
@@ -158,8 +201,14 @@ func (s *ScoreboardService) GetTeamRank(ctx context.Context, contestID, teamID i
 }
 
 func (s *ScoreboardService) CalculateDynamicScore(solveCount int) float64 {
-	score := s.baseScore * math.Pow(s.decay, float64(solveCount))
-	return math.Max(s.minScore, score)
+	return float64(s.CalculateDynamicScoreWithBase(s.baseScore, int64(solveCount)))
+}
+
+func (s *ScoreboardService) CalculateDynamicScoreWithBase(baseScore float64, solveCount int64) int {
+	if baseScore <= 0 {
+		baseScore = s.baseScore
+	}
+	return calculateDynamicScore(baseScore, s.minScore, s.decay, solveCount)
 }
 
 func (s *ScoreboardService) FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error {
