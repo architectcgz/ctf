@@ -90,6 +90,54 @@
         </div>
       </div>
 
+      <!-- 竞赛公告 -->
+      <div
+        class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-xl font-bold text-[var(--color-text-primary)]">公告</h2>
+          <span class="text-sm text-[var(--color-text-muted)]">{{ announcements.length }} 条</span>
+        </div>
+
+        <div
+          v-if="announcementsError"
+          class="mt-4 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600"
+        >
+          {{ announcementsError }}
+        </div>
+        <div
+          v-else-if="announcements.length === 0"
+          class="mt-4 text-center text-[var(--color-text-muted)]"
+        >
+          暂无公告
+        </div>
+        <div v-else class="mt-4 space-y-3">
+          <article
+            v-for="announcement in announcements"
+            :key="announcement.id"
+            class="rounded border border-[var(--color-border-default)] p-4"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="text-base font-semibold text-[var(--color-text-primary)]">
+                {{ announcement.title }}
+              </h3>
+              <time
+                class="shrink-0 text-xs text-[var(--color-text-muted)]"
+                :datetime="announcement.created_at"
+              >
+                {{ formatTime(announcement.created_at) }}
+              </time>
+            </div>
+            <p
+              v-if="announcement.content"
+              class="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--color-text-secondary)]"
+            >
+              {{ announcement.content }}
+            </p>
+          </article>
+        </div>
+      </div>
+
       <!-- 题目列表 -->
       <div
         class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
@@ -228,6 +276,7 @@ import { useRoute } from 'vue-router'
 import {
   getContestDetail,
   getContestChallenges,
+  getAnnouncements,
   getMyTeam,
   createTeam,
   joinTeam,
@@ -235,6 +284,7 @@ import {
   submitContestFlag,
 } from '@/api/contest'
 import type {
+  ContestAnnouncement,
   ContestDetailData,
   ContestChallengeItem,
   TeamData,
@@ -251,6 +301,8 @@ const toast = useToast()
 const contest = ref<ContestDetailData | null>(null)
 const team = ref<TeamData | null>(null)
 const challenges = ref<ContestChallengeItem[]>([])
+const announcements = ref<ContestAnnouncement[]>([])
+const announcementsError = ref('')
 const loading = ref(false)
 const countdown = ref('')
 const selectedChallenge = ref<ContestChallengeItem | null>(null)
@@ -276,13 +328,21 @@ onMounted(async () => {
     const contestId = route.params.id as string
     contest.value = await getContestDetail(contestId)
 
-    const [teamData, challengesData] = await Promise.all([
+    const [teamData, challengesData, announcementsData] = await Promise.all([
       getMyTeam(contestId).catch(() => null),
       getContestChallenges(contestId).catch(() => []),
+      getAnnouncements(contestId).catch(() => null),
     ])
 
     team.value = teamData
     challenges.value = challengesData
+    if (announcementsData) {
+      announcements.value = announcementsData
+      announcementsError.value = ''
+    } else {
+      announcements.value = []
+      announcementsError.value = '公告加载失败，请稍后刷新重试'
+    }
 
     startCountdown()
   } finally {
