@@ -7,7 +7,7 @@ MIGRATE ?= $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v
 MIGRATIONS_DIR ?= ./migrations
 MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:5432/ctf?sslmode=disable
 
-.PHONY: run build test fmt tidy infra-up infra-down migrate-up migrate-down migrate-create
+.PHONY: run build test fmt tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges
 
 run:
 	APP_ENV=$(APP_ENV) $(GO) run ./cmd/server
@@ -41,6 +41,9 @@ migrate-create:
 	@test -n "$(name)" || (echo "usage: make migrate-create name=add_users_table" && exit 1)
 	mkdir -p $(MIGRATIONS_DIR)
 	$(MIGRATE) create -ext sql -dir $(MIGRATIONS_DIR) -seq $(name)
+
+seed-demo-challenges:
+	APP_ENV=$(APP_ENV) $(GO) run ./cmd/seed-demo-challenges
 
 infra-up-shared:
 	$(MAKE) -C ../.. infra-up
