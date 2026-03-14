@@ -1,6 +1,15 @@
-import { request } from './request'
+import { ApiError, request } from './request'
+import { normalizeInstanceData } from './instance'
 
-import type { ChallengeDetailData, ChallengeListItem, InstanceData, PageResult, SubmitFlagData, UnlockHintData } from './contracts'
+import type {
+  ChallengeDetailData,
+  ChallengeListItem,
+  ChallengeWriteupData,
+  InstanceData,
+  PageResult,
+  SubmitFlagData,
+  UnlockHintData,
+} from './contracts'
 
 export type GetChallengesData = PageResult<ChallengeListItem>
 
@@ -13,6 +22,11 @@ interface RawChallengeDetailData extends Omit<ChallengeDetailData, 'id' | 'tags'
   id: string | number
   tags?: string[]
   hints?: ChallengeDetailData['hints']
+}
+
+interface RawChallengeWriteupData extends Omit<ChallengeWriteupData, 'id' | 'challenge_id'> {
+  id: string | number
+  challenge_id: string | number
 }
 
 function normalizeChallengeListItem(item: RawChallengeListItem): ChallengeListItem {
@@ -32,6 +46,14 @@ function normalizeChallengeDetail(item: RawChallengeDetailData): ChallengeDetail
   }
 }
 
+function normalizeChallengeWriteup(item: RawChallengeWriteupData): ChallengeWriteupData {
+  return {
+    ...item,
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+  }
+}
+
 export async function getChallenges(params?: Record<string, unknown>): Promise<GetChallengesData> {
   const payload = await request<PageResult<RawChallengeListItem>>({ method: 'GET', url: '/challenges', params })
   return {
@@ -45,6 +67,26 @@ export async function getChallengeDetail(id: string): Promise<ChallengeDetailDat
   return normalizeChallengeDetail(payload)
 }
 
+export async function getChallengeWriteup(id: string): Promise<ChallengeWriteupData | null> {
+  try {
+    const payload = await request<RawChallengeWriteupData>({
+      method: 'GET',
+      url: `/challenges/${encodeURIComponent(id)}/writeup`,
+      suppressErrorToast: true,
+    })
+    return normalizeChallengeWriteup(payload)
+  } catch (error) {
+    if (
+      (error instanceof ApiError && error.status === 404) ||
+      ((error as { name?: string; status?: number } | undefined)?.name === 'ApiError' &&
+        (error as { status?: number }).status === 404)
+    ) {
+      return null
+    }
+    throw error
+  }
+}
+
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {
   return request<SubmitFlagData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/submit`, data: { flag } })
 }
@@ -54,5 +96,9 @@ export async function unlockHint(id: string, level: number): Promise<UnlockHintD
 }
 
 export async function createInstance(id: string): Promise<InstanceData> {
-  return request<InstanceData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/instances` })
+  const payload = await request<InstanceData & { id: string | number; challenge_id: string | number }>({
+    method: 'POST',
+    url: `/challenges/${encodeURIComponent(id)}/instances`,
+  })
+  return normalizeInstanceData(payload)
 }
