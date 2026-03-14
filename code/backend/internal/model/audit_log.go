@@ -5,6 +5,7 @@ import "time"
 const (
 	AuditActionLogin   = "login"
 	AuditActionLogout  = "logout"
+	AuditActionRead    = "read"
 	AuditActionCreate  = "create"
 	AuditActionUpdate  = "update"
 	AuditActionDelete  = "delete"
