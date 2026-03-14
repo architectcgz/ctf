@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -107,6 +108,12 @@ type flowSubmissionResponse struct {
 	Points    int    `json:"points"`
 }
 
+type flowInstanceResponse struct {
+	ID        int64  `json:"id"`
+	AccessURL string `json:"access_url"`
+	Status    string `json:"status"`
+}
+
 type flowPageResponse[T any] struct {
 	List     []T   `json:"list"`
 	Total    int64 `json:"total"`
@@ -127,6 +134,7 @@ type flowTimelineResponse struct {
 		Title       string `json:"title"`
 		IsCorrect   *bool  `json:"is_correct"`
 		Points      *int   `json:"points"`
+		Detail      string `json:"detail"`
 	} `json:"events"`
 }
 
@@ -280,6 +288,105 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("expected unlocked hint after unlock, got %+v", detailAfterUnlock.Hints)
 	}
 
+	instanceCreateResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/instances",
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if instanceCreateResp.Code != http.StatusOK {
+		t.Fatalf("unexpected create instance status: %d body=%s", instanceCreateResp.Code, instanceCreateResp.Body.String())
+	}
+	instanceCreateBody := decodeFlowEnvelope(t, instanceCreateResp)
+	instance := decodeFlowJSON[flowInstanceResponse](t, instanceCreateBody.Data)
+	if instance.ID <= 0 || instance.AccessURL == "" {
+		t.Fatalf("expected instance to expose access url, got %+v", instance)
+	}
+
+	targetServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/submit" {
+			w.WriteHeader(http.StatusCreated)
+			_, _ = w.Write([]byte("submitted"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("target ok"))
+	}))
+	defer targetServer.Close()
+	if err := env.db.Model(&model.Instance{}).
+		Where("id = ?", instance.ID).
+		Update("access_url", targetServer.URL).Error; err != nil {
+		t.Fatalf("update instance access url: %v", err)
+	}
+
+	instanceAccessResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/instances/"+strconv.FormatInt(instance.ID, 10)+"/access",
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if instanceAccessResp.Code != http.StatusOK {
+		t.Fatalf("unexpected instance access status: %d body=%s", instanceAccessResp.Code, instanceAccessResp.Body.String())
+	}
+	instanceAccessBody := decodeFlowEnvelope(t, instanceAccessResp)
+	proxyAccess := decodeFlowJSON[flowInstanceResponse](t, instanceAccessBody.Data)
+	if !strings.Contains(proxyAccess.AccessURL, "/api/v1/instances/"+strconv.FormatInt(instance.ID, 10)+"/proxy/") {
+		t.Fatalf("expected proxied instance access url, got %+v", proxyAccess)
+	}
+
+	proxyBootstrapResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		proxyAccess.AccessURL,
+		nil,
+		nil,
+		nil,
+	)
+	if proxyBootstrapResp.Code != http.StatusFound {
+		t.Fatalf("expected proxy bootstrap redirect, got %d body=%s", proxyBootstrapResp.Code, proxyBootstrapResp.Body.String())
+	}
+	location := proxyBootstrapResp.Header().Get("Location")
+	if location == "" || strings.Contains(location, "ticket=") {
+		t.Fatalf("expected sanitized proxy redirect location, got %q", location)
+	}
+	proxyCookies := proxyBootstrapResp.Result().Cookies()
+	if len(proxyCookies) == 0 {
+		t.Fatal("expected proxy bootstrap to issue cookie")
+	}
+
+	proxyPageResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		location,
+		nil,
+		nil,
+		proxyCookies,
+	)
+	if proxyPageResp.Code != http.StatusOK || !strings.Contains(proxyPageResp.Body.String(), "target ok") {
+		t.Fatalf("expected proxied page response, got %d body=%s", proxyPageResp.Code, proxyPageResp.Body.String())
+	}
+
+	proxySubmitResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/instances/"+strconv.FormatInt(instance.ID, 10)+"/proxy/submit",
+		map[string]any{"payload": "' OR 1=1 --"},
+		nil,
+		proxyCookies,
+	)
+	if proxySubmitResp.Code != http.StatusCreated {
+		t.Fatalf("expected proxied submit response, got %d body=%s", proxySubmitResp.Code, proxySubmitResp.Body.String())
+	}
+
 	wrongSubmitResp := performFlowJSONRequest(
 		t,
 		env.router,
@@ -405,6 +512,10 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	if len(timeline.Events) < 2 {
 		t.Fatalf("expected at least two timeline events, got %+v", timeline.Events)
 	}
+	assertTimelineHasChallengeDetailView(t, timeline.Events, challenge.ID)
+	assertTimelineHasInstanceAccess(t, timeline.Events, challenge.ID)
+	assertTimelineHasProxyTrace(t, timeline.Events, challenge.ID)
+	assertTimelineHasHintUnlock(t, timeline.Events, challenge.ID)
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, false, 0)
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, true, 100)
 
@@ -564,10 +675,15 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.User{},
 		&model.UserRole{},
 		&model.AuditLog{},
+		&model.Team{},
+		&model.TeamMember{},
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeHint{},
 		&model.ChallengeHintUnlock{},
+		&model.ChallengeWriteup{},
+		&model.ChallengeTopology{},
+		&model.EnvironmentTemplate{},
 		&model.Submission{},
 		&model.Instance{},
 		&model.SkillProfile{},
@@ -585,10 +701,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}
 	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
 	authRepo := authModule.NewRepository(db)
-	authService := authModule.NewService(authRepo, tokenService, logger)
+	authService := authModule.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, cfg.Pagination, logger)
-	authHandler := authModule.NewHandler(authService, tokenService, authModule.CookieConfig{
+	authHandler := authModule.NewHandler(authService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
 		Secure:   cfg.Auth.RefreshCookieSecure,
@@ -613,12 +729,15 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := containerModule.NewRepository(db)
+	containerService := containerModule.NewService(instanceRepo, nil, &cfg.Container, logger)
+	proxyTicketService := containerModule.NewProxyTicketService(cache, &cfg.Container)
 	practiceService := practiceModule.NewService(
+		db,
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		nil,
+		containerService,
 		nil,
 		nil,
 		cache,
@@ -626,6 +745,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		logger,
 	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
+	containerHandler := containerModule.NewHandler(containerService, proxyTicketService, auditService, containerModule.ProxyCookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)
@@ -649,7 +769,14 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
-	protected.GET("/challenges/:id", challengeHandler.GetPublishedChallenge)
+	protected.GET("/challenges/:id",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionRead,
+			ResourceType:    "challenge_detail",
+			ResourceIDParam: "id",
+		}, logger),
+		challengeHandler.GetPublishedChallenge,
+	)
 	protected.POST("/challenges/:id/submit",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,
@@ -659,6 +786,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		practiceHandler.SubmitFlag,
 	)
 	protected.POST("/challenges/:id/hints/:level/unlock", practiceHandler.UnlockHint)
+	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
+	protected.POST("/instances/:id/access", containerHandler.AccessInstance)
+	apiV1.GET("/instances/:id/proxy", containerHandler.ProxyInstance)
+	apiV1.Any("/instances/:id/proxy/*proxyPath", containerHandler.ProxyInstance)
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
@@ -717,7 +848,18 @@ func newPracticeFlowTestConfig(t *testing.T) *config.Config {
 			ProgressTTL: time.Minute,
 		},
 		Container: config.ContainerConfig{
-			FlagGlobalSecret: "12345678901234567890123456789012",
+			FlagGlobalSecret:     "12345678901234567890123456789012",
+			MaxConcurrentPerUser: 3,
+			MaxExtends:           2,
+			DefaultTTL:           2 * time.Hour,
+			ExtendDuration:       30 * time.Minute,
+			CreateTimeout:        5 * time.Second,
+			PublicHost:           "127.0.0.1",
+			DefaultExposedPort:   80,
+			PortRangeStart:       30000,
+			PortRangeEnd:         30100,
+			ProxyTicketTTL:       15 * time.Minute,
+			ProxyBodyPreviewSize: 1024,
 		},
 		Assessment: config.AssessmentConfig{
 			IncrementalUpdateDelay:   10 * time.Millisecond,
@@ -904,6 +1046,7 @@ func assertTimelineHasSubmit(t *testing.T, events []struct {
 	Title       string `json:"title"`
 	IsCorrect   *bool  `json:"is_correct"`
 	Points      *int   `json:"points"`
+	Detail      string `json:"detail"`
 }, challengeID int64, isCorrect bool, points int) {
 	t.Helper()
 
@@ -916,8 +1059,103 @@ func assertTimelineHasSubmit(t *testing.T, events []struct {
 				t.Fatalf("expected correct timeline event to include %d points, got %+v", points, event)
 			}
 		}
+		if event.Detail == "" {
+			t.Fatalf("expected timeline submit event to include detail, got %+v", event)
+		}
 		return
 	}
 
 	t.Fatalf("expected timeline to contain submit event challenge_id=%d is_correct=%t", challengeID, isCorrect)
+}
+
+func assertTimelineHasHintUnlock(t *testing.T, events []struct {
+	Type        string `json:"type"`
+	ChallengeID int64  `json:"challenge_id"`
+	Title       string `json:"title"`
+	IsCorrect   *bool  `json:"is_correct"`
+	Points      *int   `json:"points"`
+	Detail      string `json:"detail"`
+}, challengeID int64) {
+	t.Helper()
+
+	for _, event := range events {
+		if event.Type != "hint_unlock" || event.ChallengeID != challengeID {
+			continue
+		}
+		if event.Detail == "" {
+			t.Fatalf("expected hint unlock event to include detail, got %+v", event)
+		}
+		return
+	}
+
+	t.Fatalf("expected timeline to contain hint unlock event challenge_id=%d", challengeID)
+}
+
+func assertTimelineHasChallengeDetailView(t *testing.T, events []struct {
+	Type        string `json:"type"`
+	ChallengeID int64  `json:"challenge_id"`
+	Title       string `json:"title"`
+	IsCorrect   *bool  `json:"is_correct"`
+	Points      *int   `json:"points"`
+	Detail      string `json:"detail"`
+}, challengeID int64) {
+	t.Helper()
+
+	for _, event := range events {
+		if event.Type != "challenge_detail_view" || event.ChallengeID != challengeID {
+			continue
+		}
+		if event.Detail == "" {
+			t.Fatalf("expected challenge detail view to include detail, got %+v", event)
+		}
+		return
+	}
+
+	t.Fatalf("expected timeline to contain challenge detail view event challenge_id=%d", challengeID)
+}
+
+func assertTimelineHasInstanceAccess(t *testing.T, events []struct {
+	Type        string `json:"type"`
+	ChallengeID int64  `json:"challenge_id"`
+	Title       string `json:"title"`
+	IsCorrect   *bool  `json:"is_correct"`
+	Points      *int   `json:"points"`
+	Detail      string `json:"detail"`
+}, challengeID int64) {
+	t.Helper()
+
+	for _, event := range events {
+		if event.Type != "instance_access" || event.ChallengeID != challengeID {
+			continue
+		}
+		if event.Detail == "" {
+			t.Fatalf("expected instance access event to include detail, got %+v", event)
+		}
+		return
+	}
+
+	t.Fatalf("expected timeline to contain instance access event challenge_id=%d", challengeID)
+}
+
+func assertTimelineHasProxyTrace(t *testing.T, events []struct {
+	Type        string `json:"type"`
+	ChallengeID int64  `json:"challenge_id"`
+	Title       string `json:"title"`
+	IsCorrect   *bool  `json:"is_correct"`
+	Points      *int   `json:"points"`
+	Detail      string `json:"detail"`
+}, challengeID int64) {
+	t.Helper()
+
+	for _, event := range events {
+		if event.Type != "instance_proxy_request" || event.ChallengeID != challengeID {
+			continue
+		}
+		if !strings.Contains(event.Detail, "经平台代理发起") {
+			t.Fatalf("expected proxy trace event detail, got %+v", event)
+		}
+		return
+	}
+
+	t.Fatalf("expected timeline to contain proxy trace event challenge_id=%d", challengeID)
 }
