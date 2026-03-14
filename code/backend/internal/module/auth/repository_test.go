@@ -104,6 +104,9 @@ func newTestRepository(t *testing.T) Repository {
 			role TEXT NOT NULL DEFAULT 'student',
 			class_name TEXT,
 			status TEXT NOT NULL DEFAULT 'active',
+			failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+			last_failed_login_at DATETIME,
+			locked_until DATETIME,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			deleted_at DATETIME

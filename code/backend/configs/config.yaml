@@ -73,6 +73,13 @@ auth:
   private_key_path: configs/keys/dev_private.pem
   public_key_path: configs/keys/dev_public.pem
   token_blacklist_prefix: ctf:auth:blacklist
+  cas:
+    enabled: false
+    base_url: ""
+    login_path: /login
+    validate_path: /serviceValidate
+    service_url: ""
+    auto_provision: false
 
 rate_limit:
   redis_key_prefix: ctf:ratelimit
@@ -84,6 +91,7 @@ rate_limit:
     enabled: true
     limit: 10
     window: 1m
+    lock_duration: 15m
   flag_submit:
     enabled: true
     limit: 5
