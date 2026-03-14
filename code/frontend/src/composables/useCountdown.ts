@@ -1,8 +1,8 @@
-import { computed, onUnmounted, ref, watchEffect } from 'vue'
+import { computed, onUnmounted, ref, toValue, watchEffect, type MaybeRefOrGetter } from 'vue'
 
 import { formatDurationHms } from '@/utils/format'
 
-export function useCountdown(expiresAtIso: string | undefined) {
+export function useCountdown(expiresAtIso: MaybeRefOrGetter<string | undefined>) {
   const remainingSeconds = ref(0)
 
   let timer: number | undefined
@@ -14,12 +14,13 @@ export function useCountdown(expiresAtIso: string | undefined) {
     if (timer) window.clearInterval(timer)
     timer = undefined
 
-    if (!expiresAtIso) {
+    const currentExpiresAtIso = toValue(expiresAtIso)
+    if (!currentExpiresAtIso) {
       remainingSeconds.value = 0
       return
     }
 
-    const expiresAt = new Date(expiresAtIso).getTime()
+    const expiresAt = new Date(currentExpiresAtIso).getTime()
     if (Number.isNaN(expiresAt)) {
       remainingSeconds.value = 0
       return
@@ -38,4 +39,3 @@ export function useCountdown(expiresAtIso: string | undefined) {
 
   return { remainingSeconds, formatted, isExpired, isUrgent }
 }
-

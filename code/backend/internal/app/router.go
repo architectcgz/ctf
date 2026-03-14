@@ -597,14 +597,18 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := containerModule.NewRepository(db)
 	var containerEngine *containerModule.Engine
-	if engine, err := containerModule.NewEngine(&cfg.Container); err != nil {
+	if cfg.App.Env == "test" {
+		log.Info("container_engine_disabled_in_test_env")
+	} else if engine, err := containerModule.NewEngine(&cfg.Container); err != nil {
 		log.Warn("container_engine_init_failed", zap.Error(err))
 	} else {
 		containerEngine = engine
 	}
 	containerService := containerModule.NewService(instanceRepo, containerEngine, &cfg.Container, log.Named("container_service"))
+	proxyTicketService := containerModule.NewProxyTicketService(cache, &cfg.Container)
 	scoreService := practiceModule.NewScoreService(db, cache, log.Named("score_service"), &cfg.Score)
 	practiceService := practiceModule.NewService(
+		db,
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
@@ -618,7 +622,15 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
-	protected.GET("/challenges/:id", challengeHandler.GetPublishedChallenge)
+	protected.GET("/challenges/:id",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionRead,
+			ResourceType:    "challenge_detail",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		challengeHandler.GetPublishedChallenge,
+	)
+	protected.GET("/challenges/:id/writeup", writeupHandler.GetPublished)
 	protected.POST("/challenges/:id/instances",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:        model.AuditActionCreate,
@@ -626,6 +638,17 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}, auditLogger),
 		practiceHandler.StartChallenge,
+	)
+	protected.POST("/contests/:id/challenges/:cid/instances",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("cid"),
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "contest_instance",
+			ResourceIDParam: "cid",
+			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
+		}, auditLogger),
+		practiceHandler.StartContestChallenge,
 	)
 	protected.POST("/challenges/:id/submit",
 		middleware.Audit(auditService, middleware.AuditOptions{
@@ -647,7 +670,10 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	protected.GET("/instances", practiceHandler.ListUserInstances)
 	protected.GET("/instances/:id", practiceHandler.GetInstance)
 
-	containerHandler := containerModule.NewHandler(containerService)
+	containerHandler := containerModule.NewHandler(containerService, proxyTicketService, auditService, containerModule.ProxyCookieConfig{
+		Secure:   cfg.Auth.RefreshCookieSecure,
+		SameSite: cfg.Auth.CookieSameSite(),
+	})
 	protected.DELETE("/instances/:id",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
@@ -664,6 +690,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		}, auditLogger),
 		containerHandler.ExtendInstance,
 	)
+	protected.POST("/instances/:id/access", containerHandler.AccessInstance)
+	apiV1.GET("/instances/:id/proxy", containerHandler.ProxyInstance)
+	apiV1.Any("/instances/:id/proxy/*proxyPath", containerHandler.ProxyInstance)
 
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceHandler.GetProgress)

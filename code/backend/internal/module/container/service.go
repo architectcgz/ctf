@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +23,41 @@ type Service struct {
 	logger *zap.Logger
 }
 
+type TopologyCreateNode struct {
+	Key          string
+	Image        string
+	Env          map[string]string
+	ServicePort  int
+	IsEntryPoint bool
+	NetworkKeys  []string
+	Resources    *model.ResourceLimits
+}
+
+type TopologyCreateNetwork struct {
+	Key      string
+	Internal bool
+}
+
+type TopologyCreateRequest struct {
+	Networks []TopologyCreateNetwork
+	Nodes    []TopologyCreateNode
+	Policies []model.TopologyTrafficPolicy
+}
+
+type TopologyCreateResult struct {
+	PrimaryContainerID string
+	NetworkID          string
+	AccessURL          string
+	RuntimeDetails     model.InstanceRuntimeDetails
+}
+
+type createdTopologyNetwork struct {
+	key      string
+	name     string
+	id       string
+	internal bool
+}
+
 const (
 	managedByLabelKey           = "managed-by"
 	managedByLabelValue         = "ctf-platform"
@@ -32,18 +68,27 @@ const (
 )
 
 type runtimeEngine interface {
-	CreateNetwork(ctx context.Context, name string, labels map[string]string) (string, error)
+	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
 	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
+	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
+	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
+	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
 	StartContainer(ctx context.Context, containerID string) error
 	StopContainer(ctx context.Context, containerID string, timeout time.Duration) error
 	RemoveContainer(ctx context.Context, containerID string, force bool) error
 	RemoveNetwork(ctx context.Context, networkID string) error
+	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
+	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
 	ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error)
 }
 
 func NewService(repo *Repository, engine runtimeEngine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
+	}
+	if isNilRuntimeEngine(engine) {
+		engine = nil
 	}
 	return &Service{
 		repo:   repo,
@@ -53,50 +98,234 @@ func NewService(repo *Repository, engine runtimeEngine, cfg *config.ContainerCon
 	}
 }
 
-func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, port int, err error) {
-	port, err = s.allocatePort()
+func isNilRuntimeEngine(engine runtimeEngine) bool {
+	if engine == nil {
+		return true
+	}
+	value := reflect.ValueOf(engine)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
+func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, hostPort, servicePort int, err error) {
+	servicePort, err = s.resolveServicePort(ctx, imageName)
 	if err != nil {
-		return "", "", 0, err
+		return "", "", 0, 0, err
+	}
+
+	result, err := s.CreateTopology(ctx, &TopologyCreateRequest{
+		Networks: []TopologyCreateNetwork{
+			{Key: model.TopologyDefaultNetworkKey},
+		},
+		Nodes: []TopologyCreateNode{
+			{
+				Key:          "default",
+				Image:        imageName,
+				Env:          env,
+				ServicePort:  servicePort,
+				IsEntryPoint: true,
+				NetworkKeys:  []string{model.TopologyDefaultNetworkKey},
+			},
+		},
+	})
+	if err != nil {
+		return "", "", 0, 0, err
+	}
+	hostPort = 0
+	for _, item := range result.RuntimeDetails.Containers {
+		if item.IsEntryPoint {
+			hostPort = item.HostPort
+			break
+		}
+	}
+	return result.PrimaryContainerID, result.NetworkID, hostPort, servicePort, nil
+}
+
+func (s *Service) resolveServicePort(ctx context.Context, imageRef string) (int, error) {
+	preferredPort := s.config.DefaultExposedPort
+	if preferredPort <= 0 {
+		preferredPort = 8080
+	}
+	if s.engine == nil {
+		return preferredPort, nil
+	}
+
+	resolvedPort, err := s.engine.ResolveServicePort(ctx, imageRef, preferredPort)
+	if err != nil {
+		return 0, err
+	}
+	if resolvedPort <= 0 {
+		return preferredPort, nil
+	}
+	return resolvedPort, nil
+}
+
+func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error) {
+	if req == nil || len(req.Nodes) == 0 {
+		return nil, fmt.Errorf("topology nodes are required")
+	}
+	networks := normalizedCreateNetworks(req.Networks)
+
+	entryNodeIndex := -1
+	for idx, node := range req.Nodes {
+		if node.IsEntryPoint {
+			entryNodeIndex = idx
+			break
+		}
+	}
+	if entryNodeIndex < 0 {
+		return nil, fmt.Errorf("entry node is required")
+	}
+
+	hostPort, err := s.allocatePort()
+	if err != nil {
+		return nil, err
 	}
 
 	if s.engine == nil {
 		select {
 		case <-ctx.Done():
-			return "", "", 0, ctx.Err()
+			return nil, ctx.Err()
 		case <-time.After(100 * time.Millisecond):
 		}
 
-		containerID = fmt.Sprintf("ctf-%d", time.Now().UnixNano())
-		return containerID, "", port, nil
+		details := model.InstanceRuntimeDetails{
+			Networks:   make([]model.InstanceRuntimeNetwork, 0, len(networks)),
+			Containers: make([]model.InstanceRuntimeContainer, 0, len(req.Nodes)),
+		}
+		for _, network := range networks {
+			details.Networks = append(details.Networks, model.InstanceRuntimeNetwork{
+				Key:       network.Key,
+				Name:      network.Key,
+				NetworkID: fmt.Sprintf("net-%d-%s", time.Now().UnixNano(), network.Key),
+				Internal:  network.Internal,
+			})
+		}
+		for idx, node := range req.Nodes {
+			containerID := fmt.Sprintf("ctf-%d-%d", time.Now().UnixNano(), idx)
+			item := model.InstanceRuntimeContainer{
+				NodeKey:      node.Key,
+				ContainerID:  containerID,
+				ServicePort:  node.ServicePort,
+				IsEntryPoint: node.IsEntryPoint,
+				NetworkKeys:  append([]string(nil), normalizedNodeNetworkKeys(node.NetworkKeys, networks)...),
+			}
+			if node.IsEntryPoint {
+				item.HostPort = hostPort
+			}
+			details.Containers = append(details.Containers, item)
+		}
+		return &TopologyCreateResult{
+			PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
+			NetworkID:          details.Networks[0].NetworkID,
+			AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
+			RuntimeDetails:     details,
+		}, nil
 	}
 
-	networkName := buildManagedNetworkName()
-	networkID, err = s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels())
+	createdNetworks := make([]createdTopologyNetwork, 0, len(networks))
+	networkByKey := make(map[string]createdTopologyNetwork, len(networks))
+	for _, network := range networks {
+		networkName := buildManagedNetworkName(network.Key)
+		networkID, createErr := s.engine.CreateNetwork(ctx, networkName, managedNetworkLabels(), network.Internal)
+		if createErr != nil {
+			s.cleanupTopologyResources(nil, collectCreatedNetworkIDs(createdNetworks))
+			return nil, createErr
+		}
+		item := createdTopologyNetwork{
+			key:      network.Key,
+			name:     networkName,
+			id:       networkID,
+			internal: network.Internal,
+		}
+		createdNetworks = append(createdNetworks, item)
+		networkByKey[network.Key] = item
+	}
+
+	details := model.InstanceRuntimeDetails{
+		Networks:   make([]model.InstanceRuntimeNetwork, 0, len(createdNetworks)),
+		Containers: make([]model.InstanceRuntimeContainer, 0, len(req.Nodes)),
+	}
+	for _, network := range createdNetworks {
+		details.Networks = append(details.Networks, model.InstanceRuntimeNetwork{
+			Key:       network.key,
+			Name:      network.name,
+			NetworkID: network.id,
+			Internal:  network.internal,
+		})
+	}
+	createdContainerIDs := make([]string, 0, len(req.Nodes))
+	for _, node := range req.Nodes {
+		nodeNetworkKeys := normalizedNodeNetworkKeys(node.NetworkKeys, networks)
+		primaryNetwork := networkByKey[nodeNetworkKeys[0]]
+		ports := map[string]string(nil)
+		if node.IsEntryPoint {
+			ports = map[string]string{
+				strconv.Itoa(node.ServicePort): strconv.Itoa(hostPort),
+			}
+		}
+		containerID, createErr := s.engine.CreateContainer(ctx, &model.ContainerConfig{
+			Image:     node.Image,
+			Name:      buildManagedContainerName(),
+			Env:       envMapToList(node.Env),
+			Ports:     ports,
+			Labels:    managedContainerLabels(),
+			Resources: node.Resources,
+			Network:   primaryNetwork.name,
+		})
+		if createErr != nil {
+			s.cleanupTopologyResources(createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			return nil, createErr
+		}
+		if startErr := s.engine.StartContainer(ctx, containerID); startErr != nil {
+			createdContainerIDs = append(createdContainerIDs, containerID)
+			s.cleanupTopologyResources(createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			return nil, startErr
+		}
+		for _, networkKey := range nodeNetworkKeys[1:] {
+			if connectErr := s.engine.ConnectContainerToNetwork(ctx, containerID, networkByKey[networkKey].name); connectErr != nil {
+				createdContainerIDs = append(createdContainerIDs, containerID)
+				s.cleanupTopologyResources(createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+				return nil, connectErr
+			}
+		}
+		createdContainerIDs = append(createdContainerIDs, containerID)
+		runtimeItem := model.InstanceRuntimeContainer{
+			NodeKey:      node.Key,
+			ContainerID:  containerID,
+			ServicePort:  node.ServicePort,
+			IsEntryPoint: node.IsEntryPoint,
+			NetworkKeys:  append([]string(nil), nodeNetworkKeys...),
+		}
+		if node.IsEntryPoint {
+			runtimeItem.HostPort = hostPort
+		}
+		details.Containers = append(details.Containers, runtimeItem)
+	}
+
+	resolvedACLRules, err := s.resolveTopologyACLRules(ctx, req, details)
 	if err != nil {
-		return "", "", 0, err
+		s.cleanupTopologyResources(createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+		return nil, err
+	}
+	if len(resolvedACLRules) > 0 {
+		if err := s.engine.ApplyACLRules(ctx, resolvedACLRules); err != nil {
+			s.cleanupTopologyResources(createdContainerIDs, collectCreatedNetworkIDs(createdNetworks))
+			return nil, err
+		}
+		details.ACLRules = resolvedACLRules
 	}
 
-	containerID, err = s.engine.CreateContainer(ctx, &model.ContainerConfig{
-		Image: imageName,
-		Name:  buildManagedContainerName(),
-		Env:   envMapToList(env),
-		Ports: map[string]string{
-			strconv.Itoa(s.config.DefaultExposedPort): strconv.Itoa(port),
-		},
-		Labels:  managedContainerLabels(),
-		Network: networkName,
-	})
-	if err != nil {
-		_ = s.engine.RemoveNetwork(context.Background(), networkID)
-		return "", "", 0, err
-	}
-	if err := s.engine.StartContainer(ctx, containerID); err != nil {
-		_ = s.engine.RemoveContainer(context.Background(), containerID, true)
-		_ = s.engine.RemoveNetwork(context.Background(), networkID)
-		return "", "", 0, err
-	}
-
-	return containerID, networkID, port, nil
+	return &TopologyCreateResult{
+		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
+		NetworkID:          details.Networks[0].NetworkID,
+		AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
+		RuntimeDetails:     details,
+	}, nil
 }
 
 // RemoveContainer 删除容器
@@ -117,6 +346,16 @@ func (s *Service) RemoveContainer(containerID string) error {
 	return nil
 }
 
+func (s *Service) removeACLRules(rules []model.InstanceRuntimeACLRule) error {
+	if len(rules) == 0 || s.engine == nil {
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return s.engine.RemoveACLRules(ctx, rules)
+}
+
 // RemoveNetwork 删除网络
 func (s *Service) RemoveNetwork(networkID string) error {
 	if networkID == "" {
@@ -135,6 +374,14 @@ func (s *Service) RemoveNetwork(networkID string) error {
 
 	s.logger.Info("删除网络", zap.String("network_id", networkID))
 	return nil
+}
+
+func (s *Service) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
+	if s.engine == nil {
+		s.logger.Info("写入容器文件（降级跳过）", zap.String("container_id", containerID), zap.String("path", filePath))
+		return nil
+	}
+	return s.engine.WriteFileToContainer(ctx, containerID, filePath, content)
 }
 
 func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, error) {
@@ -178,11 +425,11 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 }
 
 func (s *Service) DestroyInstance(instanceID, userID int64) error {
-	instance, err := s.repo.FindByID(instanceID)
+	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
 	if err != nil {
-		return errcode.ErrInstanceNotFound
+		return errcode.ErrInternal.WithCause(err)
 	}
-	if instance.UserID != userID {
+	if instance == nil {
 		return errcode.ErrForbidden
 	}
 
@@ -193,21 +440,29 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 	return s.destroyManagedInstance(instance)
 }
 
-func (s *Service) ExtendInstance(instanceID, userID int64) error {
-	instance, err := s.repo.FindByID(instanceID)
+func (s *Service) ExtendInstance(instanceID, userID int64) (*dto.InstanceResp, error) {
+	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
 	if err != nil {
-		return errcode.ErrInstanceNotFound
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if instance.UserID != userID {
-		return errcode.ErrForbidden
+	if instance == nil {
+		return nil, errcode.ErrForbidden
 	}
 	if instance.Status != model.InstanceStatusRunning {
-		return errcode.ErrInstanceExpired
+		return nil, errcode.ErrInstanceExpired
 	}
 
 	// 使用原子更新避免并发竞争
-	if err := s.repo.AtomicExtend(instanceID, userID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
-		return err
+	if err := s.repo.AtomicExtendByID(instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
+		return nil, err
+	}
+
+	updatedInstance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if updatedInstance == nil {
+		return nil, errcode.ErrForbidden
 	}
 
 	s.logger.Info("延时实例",
@@ -215,11 +470,11 @@ func (s *Service) ExtendInstance(instanceID, userID int64) error {
 		zap.Int("extend_count", instance.ExtendCount+1),
 		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
 
-	return nil
+	return toInstanceResp(updatedInstance), nil
 }
 
 func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	instances, err := s.repo.FindByUserID(userID)
+	instances, err := s.repo.FindVisibleByUser(context.Background(), userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -229,6 +484,20 @@ func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 		result[i] = toInstanceInfo(inst)
 	}
 	return result, nil
+}
+
+func (s *Service) GetAccessURL(instanceID, userID int64) (string, error) {
+	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	if err != nil {
+		return "", errcode.ErrInternal.WithCause(err)
+	}
+	if instance == nil {
+		return "", errcode.ErrForbidden
+	}
+	if instance.Status != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
+		return "", errcode.ErrInstanceExpired
+	}
+	return instance.AccessURL, nil
 }
 
 func (s *Service) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
@@ -312,13 +581,17 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	for _, inst := range instances {
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", inst.ID))
 
-		if inst.ContainerID != "" {
-			if err := s.RemoveContainer(inst.ContainerID); err != nil {
+		if err := s.removeACLRules(managedACLRules(inst)); err != nil {
+			s.logger.Warn("删除过期 ACL 规则失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+		}
+
+		for _, containerID := range managedContainerIDs(inst) {
+			if err := s.RemoveContainer(containerID); err != nil {
 				s.logger.Warn("删除过期容器失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
 			}
 		}
-		if inst.NetworkID != "" {
-			if err := s.RemoveNetwork(inst.NetworkID); err != nil {
+		for _, networkID := range managedNetworkIDs(inst) {
+			if err := s.RemoveNetwork(networkID); err != nil {
 				s.logger.Warn("删除过期网络失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
 			}
 		}
@@ -415,8 +688,12 @@ func managedNetworkLabels() map[string]string {
 	}
 }
 
-func buildManagedNetworkName() string {
-	return fmt.Sprintf("%s%d", managedNetworkNamePrefix, time.Now().UnixNano())
+func buildManagedNetworkName(key string) string {
+	trimmed := strings.TrimSpace(key)
+	if trimmed == "" {
+		trimmed = model.TopologyDefaultNetworkKey
+	}
+	return fmt.Sprintf("%s%s-%d", managedNetworkNamePrefix, trimmed, time.Now().UnixNano())
 }
 
 func managedByFilter() string {
@@ -442,41 +719,63 @@ func selectOrphanContainers(
 	return orphanContainers
 }
 
+func (s *Service) cleanupTopologyResources(containerIDs []string, networkIDs []string) {
+	for idx := len(containerIDs) - 1; idx >= 0; idx-- {
+		_ = s.engine.RemoveContainer(context.Background(), containerIDs[idx], true)
+	}
+	for idx := len(networkIDs) - 1; idx >= 0; idx-- {
+		_ = s.engine.RemoveNetwork(context.Background(), networkIDs[idx])
+	}
+}
+
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 	return &dto.InstanceResp{
-		ID:          inst.ID,
-		ChallengeID: inst.ChallengeID,
-		Status:      inst.Status,
-		AccessURL:   inst.AccessURL,
-		ExpiresAt:   inst.ExpiresAt,
-		ExtendCount: inst.ExtendCount,
-		MaxExtends:  inst.MaxExtends,
-		CreatedAt:   inst.CreatedAt,
+		ID:               inst.ID,
+		ChallengeID:      inst.ChallengeID,
+		Status:           inst.Status,
+		AccessURL:        inst.AccessURL,
+		ExpiresAt:        inst.ExpiresAt,
+		ExtendCount:      inst.ExtendCount,
+		MaxExtends:       inst.MaxExtends,
+		RemainingExtends: remainingExtends(inst),
+		CreatedAt:        inst.CreatedAt,
 	}
 }
 
 func toInstanceInfo(inst *model.Instance) *dto.InstanceInfo {
 	return &dto.InstanceInfo{
-		ID:            inst.ID,
-		ChallengeID:   inst.ChallengeID,
-		Status:        inst.Status,
-		AccessURL:     inst.AccessURL,
-		ExpiresAt:     inst.ExpiresAt,
-		RemainingTime: calculateRemainingTime(inst.ExpiresAt, time.Now()),
-		ExtendCount:   inst.ExtendCount,
-		MaxExtends:    inst.MaxExtends,
-		CreatedAt:     inst.CreatedAt,
+		ID:               inst.ID,
+		ChallengeID:      inst.ChallengeID,
+		Status:           inst.Status,
+		AccessURL:        inst.AccessURL,
+		ExpiresAt:        inst.ExpiresAt,
+		RemainingTime:    calculateRemainingTime(inst.ExpiresAt, time.Now()),
+		ExtendCount:      inst.ExtendCount,
+		MaxExtends:       inst.MaxExtends,
+		RemainingExtends: remainingExtends(inst),
+		CreatedAt:        inst.CreatedAt,
 	}
 }
 
+func remainingExtends(inst *model.Instance) int {
+	remaining := inst.MaxExtends - inst.ExtendCount
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
+}
+
 func (s *Service) destroyManagedInstance(instance *model.Instance) error {
-	if instance.ContainerID != "" {
-		if err := s.RemoveContainer(instance.ContainerID); err != nil {
+	if err := s.removeACLRules(managedACLRules(instance)); err != nil {
+		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+	for _, containerID := range managedContainerIDs(instance) {
+		if err := s.RemoveContainer(containerID); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
-	if instance.NetworkID != "" {
-		if err := s.RemoveNetwork(instance.NetworkID); err != nil {
+	for _, networkID := range managedNetworkIDs(instance) {
+		if err := s.RemoveNetwork(networkID); err != nil {
 			return errcode.ErrInternal.WithCause(err)
 		}
 	}
@@ -484,6 +783,101 @@ func (s *Service) destroyManagedInstance(instance *model.Instance) error {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
+}
+
+func managedContainerIDs(instance *model.Instance) []string {
+	if instance == nil {
+		return nil
+	}
+	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err != nil || len(details.Containers) == 0 {
+		if instance.ContainerID == "" {
+			return nil
+		}
+		return []string{instance.ContainerID}
+	}
+	result := make([]string, 0, len(details.Containers))
+	seen := make(map[string]struct{}, len(details.Containers))
+	for _, item := range details.Containers {
+		if item.ContainerID == "" {
+			continue
+		}
+		if _, exists := seen[item.ContainerID]; exists {
+			continue
+		}
+		seen[item.ContainerID] = struct{}{}
+		result = append(result, item.ContainerID)
+	}
+	if len(result) == 0 && instance.ContainerID != "" {
+		return []string{instance.ContainerID}
+	}
+	return result
+}
+
+func managedNetworkIDs(instance *model.Instance) []string {
+	if instance == nil {
+		return nil
+	}
+	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err == nil && len(details.Networks) > 0 {
+		result := make([]string, 0, len(details.Networks))
+		seen := make(map[string]struct{}, len(details.Networks))
+		for _, item := range details.Networks {
+			if item.NetworkID == "" {
+				continue
+			}
+			if _, exists := seen[item.NetworkID]; exists {
+				continue
+			}
+			seen[item.NetworkID] = struct{}{}
+			result = append(result, item.NetworkID)
+		}
+		if len(result) > 0 {
+			return result
+		}
+	}
+	if instance.NetworkID == "" {
+		return nil
+	}
+	return []string{instance.NetworkID}
+}
+
+func managedACLRules(instance *model.Instance) []model.InstanceRuntimeACLRule {
+	if instance == nil {
+		return nil
+	}
+	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
+	if err != nil {
+		return nil
+	}
+	if len(details.ACLRules) == 0 {
+		return nil
+	}
+	return append([]model.InstanceRuntimeACLRule(nil), details.ACLRules...)
+}
+
+func normalizedCreateNetworks(networks []TopologyCreateNetwork) []TopologyCreateNetwork {
+	if len(networks) == 0 {
+		return []TopologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
+	}
+	return networks
+}
+
+func normalizedNodeNetworkKeys(keys []string, networks []TopologyCreateNetwork) []string {
+	if len(keys) > 0 {
+		return append([]string(nil), keys...)
+	}
+	return []string{normalizedCreateNetworks(networks)[0].Key}
+}
+
+func collectCreatedNetworkIDs(networks []createdTopologyNetwork) []string {
+	result := make([]string, 0, len(networks))
+	for _, network := range networks {
+		if network.id != "" {
+			result = append(result, network.id)
+		}
+	}
+	return result
 }
 
 func calculateRemainingTime(expiresAt, now time.Time) int64 {

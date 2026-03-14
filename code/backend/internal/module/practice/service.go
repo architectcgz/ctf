@@ -3,6 +3,7 @@ package practice
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -26,6 +27,7 @@ type AssessmentService interface {
 }
 
 type Service struct {
+	db                *gorm.DB
 	repo              *Repository
 	challengeRepo     *challenge.Repository
 	imageRepo         *challenge.ImageRepository
@@ -39,6 +41,7 @@ type Service struct {
 }
 
 func NewService(
+	db *gorm.DB,
 	repo *Repository,
 	challengeRepo *challenge.Repository,
 	imageRepo *challenge.ImageRepository,
@@ -51,6 +54,7 @@ func NewService(
 	logger *zap.Logger,
 ) *Service {
 	return &Service{
+		db:                db,
 		repo:              repo,
 		challengeRepo:     challengeRepo,
 		imageRepo:         imageRepo,
@@ -65,6 +69,29 @@ func NewService(
 }
 
 func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, error) {
+	return s.startPersonalChallenge(context.Background(), userID, challengeID)
+}
+
+func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error) {
+	scope, existingInstance, runningCount, err := s.resolveContestInstanceScope(ctx, userID, contestID, challengeID)
+	if err != nil {
+		return nil, err
+	}
+	if existingInstance != nil {
+		return toInstanceResp(existingInstance), nil
+	}
+	if runningCount >= s.config.Container.MaxConcurrentPerUser {
+		s.logger.Warn("竞赛实例数量超限",
+			zap.Int64("user_id", userID),
+			zap.Int64("contest_id", contestID),
+			zap.Int("current", runningCount),
+			zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
+		return nil, errcode.ErrInstanceLimitExceeded
+	}
+	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
+}
+
+func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
 	existingInstance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeID)
 	if err == nil && existingInstance != nil {
 		return toInstanceResp(existingInstance), nil
@@ -81,7 +108,18 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 			zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
 		return nil, errcode.ErrInstanceLimitExceeded
 	}
+	return s.startChallengeWithScope(ctx, userID, challengeID, instanceScope{
+		flagSubjectID: userID,
+	})
+}
 
+type instanceScope struct {
+	contestID     *int64
+	teamID        *int64
+	flagSubjectID int64
+}
+
+func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope instanceScope) (*dto.InstanceResp, error) {
 	chal, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -93,13 +131,15 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
-	flag, nonce, err := s.buildInstanceFlag(userID, challengeID, chal)
+	flag, nonce, err := s.buildInstanceFlag(scope.flagSubjectID, challengeID, chal)
 	if err != nil {
 		return nil, err
 	}
 
 	instance := &model.Instance{
 		UserID:      userID,
+		ContestID:   scope.contestID,
+		TeamID:      scope.teamID,
 		ChallengeID: challengeID,
 		Status:      model.InstanceStatusCreating,
 		Nonce:       nonce,
@@ -111,10 +151,10 @@ func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), s.config.Container.CreateTimeout)
+	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
-	if err := s.createContainer(ctx, instance, chal, flag); err != nil {
+	if err := s.createContainer(createCtx, instance, chal, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
 		if instance.NetworkID != "" {
 			_ = s.containerService.RemoveNetwork(instance.NetworkID)
@@ -261,6 +301,91 @@ func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockH
 	}, nil
 }
 
+func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (instanceScope, *model.Instance, int, error) {
+	if s.db == nil {
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(fmt.Errorf("contest instance db is nil"))
+	}
+
+	var contest model.Contest
+	if err := s.db.WithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return instanceScope{}, nil, 0, errcode.ErrContestNotFound
+		}
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+	}
+	switch contest.Status {
+	case model.ContestStatusRunning, model.ContestStatusFrozen:
+	default:
+		if contest.Status == model.ContestStatusEnded {
+			return instanceScope{}, nil, 0, errcode.ErrContestEnded
+		}
+		return instanceScope{}, nil, 0, errcode.ErrContestNotRunning
+	}
+
+	var contestChallenge model.ContestChallenge
+	if err := s.db.WithContext(ctx).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		First(&contestChallenge).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return instanceScope{}, nil, 0, errcode.ErrChallengeNotInContest
+		}
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+	}
+	if !contestChallenge.IsVisible {
+		return instanceScope{}, nil, 0, errcode.ErrContestChallengeVisible
+	}
+
+	var registration model.ContestRegistration
+	if err := s.db.WithContext(ctx).
+		Where("contest_id = ? AND user_id = ?", contestID, userID).
+		First(&registration).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return instanceScope{}, nil, 0, errcode.ErrNotRegistered
+		}
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+	}
+	switch registration.Status {
+	case model.ContestRegistrationStatusApproved:
+	case model.ContestRegistrationStatusPending:
+		return instanceScope{}, nil, 0, errcode.ErrContestRegistrationPending
+	default:
+		return instanceScope{}, nil, 0, errcode.ErrRegistrationNotApproved
+	}
+
+	contestIDCopy := contestID
+	scope := instanceScope{
+		contestID:     &contestIDCopy,
+		flagSubjectID: userID,
+	}
+	if contest.Mode == model.ContestModeAWD {
+		if registration.TeamID == nil || *registration.TeamID <= 0 {
+			return instanceScope{}, nil, 0, errcode.ErrAWDTeamRequired
+		}
+		teamID := *registration.TeamID
+		scope.teamID = &teamID
+		scope.flagSubjectID = teamID
+		existing, err := s.instanceRepo.FindByContestTeamAndChallenge(contestID, teamID, challengeID)
+		if err != nil {
+			return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+		}
+		instances, err := s.instanceRepo.FindByContestTeamID(contestID, teamID)
+		if err != nil {
+			return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+		}
+		return scope, existing, len(instances), nil
+	}
+
+	existing, err := s.instanceRepo.FindByContestUserAndChallenge(contestID, userID, challengeID)
+	if err != nil {
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+	}
+	instances, err := s.instanceRepo.FindByContestUserID(contestID, userID)
+	if err != nil {
+		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+	}
+	return scope, existing, len(instances), nil
+}
+
 func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
 	ctx := context.Background()
 	cacheKey := constants.UserProgressKey(userID)
@@ -340,25 +465,26 @@ func (s *Service) GetTimeline(userID int64, limit, offset int) (*dto.TimelineRes
 			Timestamp:   event.Timestamp,
 			IsCorrect:   event.IsCorrect,
 			Points:      event.Points,
+			Detail:      event.Detail,
 		}
 	}
 	return resp, nil
 }
 
 func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, error) {
-	instance, err := s.instanceRepo.FindByID(instanceID)
+	instance, err := s.instanceRepo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
 	if err != nil {
-		return nil, errcode.ErrInstanceNotFound
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if instance.UserID != userID {
-		return nil, errcode.ErrForbidden
+	if instance == nil {
+		return nil, errcode.ErrInstanceNotFound
 	}
 
 	return toInstanceInfo(instance), nil
 }
 
 func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	instances, err := s.instanceRepo.FindByUserID(userID)
+	instances, err := s.instanceRepo.FindVisibleByUser(context.Background(), userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -373,7 +499,7 @@ func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 	return result, nil
 }
 
-func (s *Service) buildInstanceFlag(userID, challengeID int64, chal *model.Challenge) (string, string, error) {
+func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Challenge) (string, string, error) {
 	switch chal.FlagType {
 	case model.FlagTypeDynamic:
 		nonce, err := crypto.GenerateNonce()
@@ -383,7 +509,7 @@ func (s *Service) buildInstanceFlag(userID, challengeID int64, chal *model.Chall
 		if s.config.Container.FlagGlobalSecret == "" {
 			return "", "", errcode.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
 		}
-		flag := crypto.GenerateDynamicFlag(userID, challengeID, s.config.Container.FlagGlobalSecret, nonce, chal.FlagPrefix)
+		flag := crypto.GenerateDynamicFlag(subjectID, challengeID, s.config.Container.FlagGlobalSecret, nonce, chal.FlagPrefix)
 		return flag, nonce, nil
 	case model.FlagTypeStatic:
 		return chal.FlagHash, "", nil
@@ -414,6 +540,40 @@ func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Chall
 }
 
 func (s *Service) createContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+	topology, err := s.challengeRepo.FindChallengeTopologyByChallengeID(chal.ID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+
+	if topology == nil {
+		return s.createSingleContainer(ctx, instance, chal, flag)
+	}
+
+	spec, err := model.DecodeTopologySpec(topology.Spec)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+
+	request, err := s.buildTopologyCreateRequest(chal, topology.EntryNodeKey, spec, flag)
+	if err != nil {
+		return err
+	}
+	result, err := s.containerService.CreateTopology(ctx, request)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(result.RuntimeDetails)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	instance.ContainerID = result.PrimaryContainerID
+	instance.NetworkID = result.NetworkID
+	instance.RuntimeDetails = runtimeDetails
+	instance.AccessURL = result.AccessURL
+	return nil
+}
+
+func (s *Service) createSingleContainer(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
 	imageItem, err := s.imageRepo.FindByID(chal.ImageID)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
@@ -427,15 +587,104 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	}
 
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
-	containerID, networkID, port, err := s.containerService.CreateContainer(ctx, imageRef, env)
+	containerID, networkID, hostPort, servicePort, err := s.containerService.CreateContainer(ctx, imageRef, env)
+	if err != nil {
+		return errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+
+	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
+		Containers: []model.InstanceRuntimeContainer{
+			{
+				NodeKey:      "default",
+				ContainerID:  containerID,
+				ServicePort:  servicePort,
+				HostPort:     hostPort,
+				IsEntryPoint: true,
+			},
+		},
+	})
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 
 	instance.ContainerID = containerID
 	instance.NetworkID = networkID
-	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, port)
+	instance.RuntimeDetails = runtimeDetails
+	instance.AccessURL = fmt.Sprintf("http://%s:%d", s.config.Container.PublicHost, hostPort)
 	return nil
+}
+
+func (s *Service) buildTopologyCreateRequest(
+	chal *model.Challenge,
+	entryNodeKey string,
+	spec model.TopologySpec,
+	flag string,
+) (*container.TopologyCreateRequest, error) {
+	if len(spec.Nodes) == 0 {
+		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
+	}
+
+	defaultImageRef, err := s.resolveAvailableImageRef(chal.ImageID)
+	if err != nil {
+		return nil, err
+	}
+
+	request := &container.TopologyCreateRequest{
+		Networks: make([]container.TopologyCreateNetwork, 0),
+		Nodes:    make([]container.TopologyCreateNode, 0, len(spec.Nodes)),
+		Policies: append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
+	}
+	runtimePlan := buildRuntimeTopologyPlan(spec)
+	request.Networks = append(request.Networks, runtimePlan.Networks...)
+	for _, node := range spec.Nodes {
+		imageRef := defaultImageRef
+		if node.ImageID > 0 {
+			imageRef, err = s.resolveAvailableImageRef(node.ImageID)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		env := make(map[string]string, len(node.Env)+1)
+		for key, value := range node.Env {
+			env[key] = value
+		}
+		if node.InjectFlag {
+			env["FLAG"] = flag
+		}
+
+		var resources *model.ResourceLimits
+		if node.Resources != nil {
+			resources = &model.ResourceLimits{
+				CPUQuota:  node.Resources.CPUQuota,
+				Memory:    node.Resources.MemoryMB * 1024 * 1024,
+				PidsLimit: node.Resources.PidsLimit,
+			}
+		}
+
+		request.Nodes = append(request.Nodes, container.TopologyCreateNode{
+			Key:          node.Key,
+			Image:        imageRef,
+			Env:          env,
+			ServicePort:  node.ServicePort,
+			IsEntryPoint: node.Key == entryNodeKey,
+			NetworkKeys:  append([]string(nil), runtimePlan.NodeNetworkKeys[node.Key]...),
+			Resources:    resources,
+		})
+	}
+
+	return request, nil
+}
+
+func (s *Service) resolveAvailableImageRef(imageID int64) (string, error) {
+	imageItem, err := s.imageRepo.FindByID(imageID)
+	if err != nil {
+		return "", errcode.ErrContainerCreateFailed.WithCause(err)
+	}
+	if imageItem.Status != model.ImageStatusAvailable {
+		return "", errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("image %d is not available", imageItem.ID))
+	}
+	return fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag), nil
 }
 
 func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
@@ -463,14 +712,15 @@ func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 	return &dto.InstanceResp{
-		ID:          inst.ID,
-		ChallengeID: inst.ChallengeID,
-		Status:      inst.Status,
-		AccessURL:   inst.AccessURL,
-		ExpiresAt:   inst.ExpiresAt,
-		ExtendCount: inst.ExtendCount,
-		MaxExtends:  inst.MaxExtends,
-		CreatedAt:   inst.CreatedAt,
+		ID:               inst.ID,
+		ChallengeID:      inst.ChallengeID,
+		Status:           inst.Status,
+		AccessURL:        inst.AccessURL,
+		ExpiresAt:        inst.ExpiresAt,
+		ExtendCount:      inst.ExtendCount,
+		MaxExtends:       inst.MaxExtends,
+		RemainingExtends: remainingExtends(inst),
+		CreatedAt:        inst.CreatedAt,
 	}
 }
 
@@ -480,14 +730,23 @@ func toInstanceInfo(inst *model.Instance) *dto.InstanceInfo {
 		remaining = 0
 	}
 	return &dto.InstanceInfo{
-		ID:            inst.ID,
-		ChallengeID:   inst.ChallengeID,
-		Status:        inst.Status,
-		AccessURL:     inst.AccessURL,
-		ExpiresAt:     inst.ExpiresAt,
-		RemainingTime: remaining,
-		ExtendCount:   inst.ExtendCount,
-		MaxExtends:    inst.MaxExtends,
-		CreatedAt:     inst.CreatedAt,
+		ID:               inst.ID,
+		ChallengeID:      inst.ChallengeID,
+		Status:           inst.Status,
+		AccessURL:        inst.AccessURL,
+		ExpiresAt:        inst.ExpiresAt,
+		RemainingTime:    remaining,
+		ExtendCount:      inst.ExtendCount,
+		MaxExtends:       inst.MaxExtends,
+		RemainingExtends: remainingExtends(inst),
+		CreatedAt:        inst.CreatedAt,
 	}
+}
+
+func remainingExtends(inst *model.Instance) int {
+	remaining := inst.MaxExtends - inst.ExtendCount
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
 }

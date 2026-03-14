@@ -32,9 +32,13 @@
           <div v-if="instance.access_url" class="space-y-2">
             <div class="text-sm">
               <span class="text-gray-600">访问地址：</span>
-              <a :href="instance.access_url" target="_blank" class="text-primary hover:underline">
+              <button
+                type="button"
+                class="text-primary hover:underline"
+                @click="openTarget(instance.id)"
+              >
                 {{ instance.access_url }}
-              </a>
+              </button>
             </div>
           </div>
 
@@ -42,6 +46,9 @@
             <ElButton
               v-if="instance.remaining_extends > 0"
               size="small"
+              type="primary"
+              plain
+              class="!border-sky-300 !bg-sky-50 !text-sky-900 hover:!bg-sky-100"
               @click="extend(instance.id)"
             >
               延时 (剩余 {{ instance.remaining_extends }} 次)
@@ -64,7 +71,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 
-import { getMyInstances, destroyInstance, extendInstance } from '@/api/instance'
+import { getMyInstances, destroyInstance, extendInstance, requestInstanceAccess } from '@/api/instance'
 import { useToast } from '@/composables/useToast'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
 
@@ -101,6 +108,15 @@ async function extend(id: string) {
     refresh()
   } catch (error) {
     toast.error('延时失败')
+  }
+}
+
+async function openTarget(id: string) {
+  try {
+    const result = await requestInstanceAccess(id)
+    window.open(result.access_url, '_blank', 'noopener,noreferrer')
+  } catch (error) {
+    toast.error('打开目标失败')
   }
 }
 
