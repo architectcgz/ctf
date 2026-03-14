@@ -1,4 +1,10 @@
-import axios, { AxiosError, AxiosHeaders, type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import axios, {
+  AxiosError,
+  AxiosHeaders,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type InternalAxiosRequestConfig,
+} from 'axios'
 import NProgress from 'nprogress'
 
 import { useAuthStore } from '@/stores/auth'
@@ -11,6 +17,10 @@ export interface ApiEnvelope<T> {
   data: T
   request_id: string
   errors?: Array<{ field: string; message: string }>
+}
+
+export interface RequestConfig extends AxiosRequestConfig {
+  suppressErrorToast?: boolean
 }
 
 export class ApiError extends Error {
@@ -70,10 +80,9 @@ async function refreshTokens(): Promise<{ access_token: string }> {
     headers: { 'Content-Type': 'application/json' },
   })
 
-  const resp = await refreshClient.post<ApiEnvelope<{ access_token: string; token_type?: string; expires_in?: number }>>(
-    '/auth/refresh',
-    {}
-  )
+  const resp = await refreshClient.post<
+    ApiEnvelope<{ access_token: string; token_type?: string; expires_in?: number }>
+  >('/auth/refresh', {})
   if (resp.data?.code !== 0) {
     throw new ApiError(mapErrorCode(resp.data?.code) || '登录已过期，请重新登录', {
       code: resp.data?.code,
@@ -98,7 +107,11 @@ function humanizeError(err: unknown): string {
   return '请求失败'
 }
 
-function resolveApiMessage(code: number | undefined, message: string | undefined, fallbackMessage: string): string {
+function resolveApiMessage(
+  code: number | undefined,
+  message: string | undefined,
+  fallbackMessage: string
+): string {
   const normalizedMessage = typeof message === 'string' ? message.trim() : ''
   return normalizedMessage || mapErrorCode(code) || fallbackMessage
 }
@@ -121,6 +134,10 @@ function getToast() {
   return useToast()
 }
 
+function shouldToast(config?: AxiosRequestConfig): boolean {
+  return !(config as RequestConfig | undefined)?.suppressErrorToast
+}
+
 instance.interceptors.response.use(
   (response) => {
     const toast = getToast()
@@ -128,8 +145,16 @@ instance.interceptors.response.use(
     const envelope = response.data as ApiEnvelope<unknown>
     if (typeof envelope?.code === 'number') {
       if (envelope.code === 0) return response
-      const apiError = toApiError(envelope.code, envelope.request_id, response.status, '请求失败', envelope.message)
-      toast.error(apiError.message)
+      const apiError = toApiError(
+        envelope.code,
+        envelope.request_id,
+        response.status,
+        '请求失败',
+        envelope.message
+      )
+      if (shouldToast(response.config)) {
+        toast.error(apiError.message)
+      }
       return Promise.reject(apiError)
     }
     // Non-envelope response, pass through.
@@ -143,7 +168,11 @@ instance.interceptors.response.use(
     const status = error.response?.status
     const code = error.response?.data?.code
 
-    if (status === 401 && code === AUTH_ERROR_CODES.ACCESS_TOKEN_EXPIRED && !isRefreshRequest(error.config)) {
+    if (
+      status === 401 &&
+      code === AUTH_ERROR_CODES.ACCESS_TOKEN_EXPIRED &&
+      !isRefreshRequest(error.config)
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingRequests.push({ resolve, reject, config: error.config || {} })
@@ -177,31 +206,54 @@ instance.interceptors.response.use(
 
     if (status === 429) {
       const retryAfter = error.response?.headers?.['retry-after']
-      const retryMessage = retryAfter ? `请求过于频繁，请 ${retryAfter} 秒后重试` : '请求过于频繁，请稍后再试'
-      toast.warning(retryMessage)
+      const retryMessage = retryAfter
+        ? `请求过于频繁，请 ${retryAfter} 秒后重试`
+        : '请求过于频繁，请稍后再试'
+      if (shouldToast(error.config)) {
+        toast.warning(retryMessage)
+      }
       return Promise.reject(error)
     }
 
     const mapped = mapErrorCode(code)
     if (mapped) {
-      const apiError = toApiError(code, error.response?.data?.request_id, status, mapped, error.response?.data?.message)
-      toast.error(apiError.message)
+      const apiError = toApiError(
+        code,
+        error.response?.data?.request_id,
+        status,
+        mapped,
+        error.response?.data?.message
+      )
+      if (shouldToast(error.config)) {
+        toast.error(apiError.message)
+      }
       return Promise.reject(apiError)
     }
 
     if (!error.response) {
-      toast.error('网络连接失败')
+      if (shouldToast(error.config)) {
+        toast.error('网络连接失败')
+      }
       return Promise.reject(error)
     }
 
-    const fallbackMessage = status && status >= 500 ? '服务暂时不可用，请稍后重试' : '请求失败，请稍后重试'
-    const apiError = toApiError(code, error.response?.data?.request_id, status, fallbackMessage, error.response?.data?.message)
-    toast.error(apiError.message)
+    const fallbackMessage =
+      status && status >= 500 ? '服务暂时不可用，请稍后重试' : '请求失败，请稍后重试'
+    const apiError = toApiError(
+      code,
+      error.response?.data?.request_id,
+      status,
+      fallbackMessage,
+      error.response?.data?.message
+    )
+    if (shouldToast(error.config)) {
+      toast.error(apiError.message)
+    }
     return Promise.reject(apiError)
   }
 )
 
-export async function request<T>(config: AxiosRequestConfig): Promise<T> {
+export async function request<T>(config: RequestConfig): Promise<T> {
   const resp = await instance.request<ApiEnvelope<T>>({
     ...config,
     signal: config.signal,

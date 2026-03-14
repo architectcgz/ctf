@@ -71,6 +71,19 @@ export interface ChallengeDetailData {
   hints: ChallengeHint[]
 }
 
+export interface ChallengeWriteupData {
+  id: ID
+  challenge_id: ID
+  title: string
+  content: string
+  visibility: 'private' | 'public' | 'scheduled'
+  release_at?: ISODateTime
+  is_released: boolean
+  requires_spoiler_warning: boolean
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
 export type InstanceStatus =
   | 'pending'
   | 'creating'
@@ -138,6 +151,7 @@ export interface TimelineEvent {
   id: ID
   type: 'solve' | 'submit' | 'instance' | 'hint' | string
   title: string
+  detail?: string
   created_at: ISODateTime
   challenge_id?: ID
   is_correct?: boolean
@@ -226,6 +240,122 @@ export interface ContestMyProgressData {
   solved: Array<{ contest_challenge_id: ID; solved_at: ISODateTime; points_earned: number }>
 }
 
+export type AWDRoundStatus = 'pending' | 'running' | 'finished'
+export type AWDServiceStatus = 'up' | 'down' | 'compromised'
+export type AWDAttackType = 'flag_capture' | 'service_exploit'
+export type AWDAttackSource = 'legacy' | 'manual_attack_log' | 'submission'
+
+export interface AWDRoundData {
+  id: ID
+  contest_id: ID
+  round_number: number
+  status: AWDRoundStatus
+  started_at?: ISODateTime
+  ended_at?: ISODateTime
+  attack_score: number
+  defense_score: number
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface AWDTeamServiceData {
+  id: ID
+  round_id: ID
+  team_id: ID
+  team_name: string
+  challenge_id: ID
+  service_status: AWDServiceStatus
+  check_result: Record<string, unknown>
+  attack_received: number
+  defense_score: number
+  attack_score: number
+  updated_at: ISODateTime
+}
+
+export interface AWDAttackLogData {
+  id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team: string
+  victim_team_id: ID
+  victim_team: string
+  challenge_id: ID
+  attack_type: AWDAttackType
+  source: AWDAttackSource
+  submitted_flag?: string
+  is_success: boolean
+  score_gained: number
+  created_at: ISODateTime
+}
+
+export interface AWDRoundSummaryItemData {
+  team_id: ID
+  team_name: string
+  service_up_count: number
+  service_down_count: number
+  service_compromised_count: number
+  defense_score: number
+  attack_score: number
+  successful_attack_count: number
+  successful_breach_count: number
+  unique_attackers_against: number
+  total_score: number
+}
+
+export interface AWDRoundMetricsData {
+  total_service_count: number
+  service_up_count: number
+  service_down_count: number
+  service_compromised_count: number
+  attacked_service_count: number
+  defense_success_count: number
+  total_attack_count: number
+  successful_attack_count: number
+  failed_attack_count: number
+  scheduler_check_count: number
+  manual_current_round_check_count: number
+  manual_selected_round_check_count: number
+  manual_service_check_count: number
+  submission_attack_count: number
+  manual_attack_log_count: number
+  legacy_attack_log_count: number
+}
+
+export interface AWDRoundSummaryData {
+  round: AWDRoundData
+  metrics?: AWDRoundMetricsData
+  items: AWDRoundSummaryItemData[]
+}
+
+export interface AWDCheckerRunData {
+  round: AWDRoundData
+  services: AWDTeamServiceData[]
+}
+
+export interface AdminContestTeamData {
+  id: ID
+  contest_id: ID
+  name: string
+  captain_id: ID
+  invite_code?: string
+  max_members: number
+  member_count: number
+  created_at: ISODateTime
+}
+
+export interface AdminContestChallengeData {
+  id: ID
+  contest_id: ID
+  challenge_id: ID
+  title?: string
+  category?: ChallengeCategory
+  difficulty?: ChallengeDifficulty
+  points: number
+  order: number
+  is_visible: boolean
+  created_at: ISODateTime
+}
+
 export type NotificationType = 'system' | 'contest' | 'challenge' | 'team'
 
 export interface NotificationItem {
@@ -243,11 +373,56 @@ export interface TeacherClassItem {
   student_count?: number
 }
 
+export interface TeacherClassSummaryData {
+  class_name: string
+  student_count: number
+  average_solved: number
+  active_student_count: number
+  active_rate: number
+  recent_event_count: number
+}
+
+export interface TeacherClassTrendPoint {
+  date: string
+  active_student_count: number
+  event_count: number
+  solve_count: number
+}
+
+export interface TeacherClassTrendData {
+  class_name: string
+  points: TeacherClassTrendPoint[]
+}
+
+export interface TeacherReviewStudentRef {
+  id: ID
+  username: string
+  name?: string
+}
+
+export interface TeacherClassReviewItemData {
+  key: string
+  title: string
+  detail: string
+  accent: 'danger' | 'warning' | 'success' | 'primary'
+  students?: TeacherReviewStudentRef[]
+  recommendation?: RecommendationItem
+}
+
+export interface TeacherClassReviewData {
+  class_name: string
+  items: TeacherClassReviewItemData[]
+}
+
 export interface TeacherStudentItem {
   id: ID
   username: string
   student_no?: string
   name?: string
+  solved_count?: number
+  total_score?: number
+  recent_event_count?: number
+  weak_dimension?: string
   progress?: MyProgressData
 }
 
@@ -376,6 +551,7 @@ export interface AdminCheatDetectionData {
 }
 
 export type ChallengeStatus = 'draft' | 'published' | 'archived'
+export type WriteupVisibility = 'private' | 'public' | 'scheduled'
 
 export interface AdminChallengeHint {
   id?: ID
@@ -383,6 +559,87 @@ export interface AdminChallengeHint {
   title?: string
   cost_points?: number
   content: string
+}
+
+export interface AdminChallengeWriteupData {
+  id: ID
+  challenge_id: ID
+  title: string
+  content: string
+  visibility: WriteupVisibility
+  release_at?: ISODateTime
+  created_by?: ID
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export type TopologyTier = 'public' | 'service' | 'internal'
+export type TopologyPolicyAction = 'allow' | 'deny'
+export type TopologyPolicyProtocol = 'tcp' | 'udp' | 'any'
+
+export interface TopologyNetworkData {
+  key: string
+  name: string
+  cidr?: string
+  internal?: boolean
+}
+
+export interface TopologyNodeResourcesData {
+  cpu_quota?: number
+  memory_mb?: number
+  pids_limit?: number
+}
+
+export interface TopologyNodeData {
+  key: string
+  name: string
+  image_id?: ID
+  service_port?: number
+  inject_flag?: boolean
+  tier?: TopologyTier
+  network_keys?: string[]
+  env?: Record<string, string>
+  resources?: TopologyNodeResourcesData
+}
+
+export interface TopologyLinkData {
+  from_node_key: string
+  to_node_key: string
+}
+
+export interface TopologyTrafficPolicyData {
+  source_node_key: string
+  target_node_key: string
+  action: TopologyPolicyAction
+  protocol?: TopologyPolicyProtocol
+  ports?: number[]
+}
+
+export interface ChallengeTopologyData {
+  id: ID
+  challenge_id: ID
+  template_id?: ID
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: TopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface EnvironmentTemplateData {
+  id: ID
+  name: string
+  description: string
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: TopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+  usage_count: number
+  created_at: ISODateTime
+  updated_at: ISODateTime
 }
 
 export interface AdminChallengeListItem {
