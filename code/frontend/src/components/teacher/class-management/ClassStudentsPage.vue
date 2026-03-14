@@ -1,16 +1,31 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
-import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
+import { computed } from 'vue'
+
+import type {
+  TeacherClassItem,
+  TeacherClassReviewData,
+  TeacherClassSummaryData,
+  TeacherClassTrendData,
+  TeacherStudentItem,
+} from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
+import TeacherInterventionPanel from '@/components/teacher/TeacherInterventionPanel.vue'
+import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
+import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
   selectedClassName: string
   students: TeacherStudentItem[]
+  review: TeacherClassReviewData | null
+  summary: TeacherClassSummaryData | null
+  trend: TeacherClassTrendData | null
   studentNoQuery: string
   loadingStudents: boolean
   error: string | null
@@ -24,6 +39,16 @@ const emit = defineEmits<{
   updateStudentNoQuery: [value: string]
   openStudent: [studentId: string]
 }>()
+
+const averageSolvedText = computed(() => {
+  if (!props.summary) return '--'
+  return props.summary.average_solved.toFixed(1)
+})
+
+const activeRateText = computed(() => {
+  if (!props.summary) return '--'
+  return `${Math.round(props.summary.active_rate)}%`
+})
 </script>
 
 <template>
@@ -47,18 +72,33 @@ const emit = defineEmits<{
           accent="primary"
         />
         <MetricCard
-          label="当前学生"
-          :value="students.length"
-          hint="当前班级已加载学生数"
+          label="班级人数"
+          :value="props.summary?.student_count ?? students.length"
+          hint="当前班级纳入统计的学生数"
           accent="success"
         />
         <MetricCard
-          label="浏览模式"
-          value="班级 → 学生"
-          hint="选择学生后进入分析页面"
+          label="平均解题"
+          :value="averageSolvedText"
+          hint="当前班级学生的人均解题数"
           accent="warning"
         />
       </div>
+    </section>
+
+    <section class="grid gap-4 md:grid-cols-2">
+      <MetricCard
+        label="近 7 天活跃率"
+        :value="activeRateText"
+        hint="近 7 天至少有一次训练动作的学生占比"
+        accent="primary"
+      />
+      <MetricCard
+        label="近 7 天训练事件"
+        :value="props.summary?.recent_event_count ?? '--'"
+        hint="提交、实例启动与销毁等动作总数"
+        accent="success"
+      />
     </section>
 
     <div
@@ -70,6 +110,21 @@ const emit = defineEmits<{
     </div>
 
     <section class="grid gap-6">
+      <TeacherClassTrendPanel
+        :trend="trend"
+        title="班级近 7 天训练趋势"
+        subtitle="先看整体节奏，再下钻到具体学生。"
+      />
+
+      <TeacherClassReviewPanel
+        :review="review"
+        :class-name="selectedClassName"
+      />
+
+      <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
+
+      <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
+
       <SectionCard title="学生名单" subtitle="选择学生后进入学员分析。">
         <div class="mb-4 flex items-center justify-between">
           <div class="text-sm text-text-secondary">共 {{ students.length }} 名学生</div>
@@ -134,6 +189,28 @@ const emit = defineEmits<{
             <ElTableColumn label="学号" min-width="180">
               <template #default="{ row }">
                 <span class="text-sm text-text-secondary">{{ row.student_no || '未设置' }}</span>
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn label="解题数" width="120" align="center">
+              <template #default="{ row }">
+                <span class="text-sm font-medium text-text-primary">{{
+                  row.solved_count ?? 0
+                }}</span>
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn label="得分" width="120" align="center">
+              <template #default="{ row }">
+                <span class="text-sm font-medium text-text-primary">{{
+                  row.total_score ?? 0
+                }}</span>
+              </template>
+            </ElTableColumn>
+
+            <ElTableColumn label="薄弱项" min-width="160">
+              <template #default="{ row }">
+                <span class="text-sm text-text-secondary">{{ row.weak_dimension || '暂无' }}</span>
               </template>
             </ElTableColumn>
 

@@ -488,6 +488,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/classes", teacherHandler.ListClasses)
 	teacherOrAbove.GET("/classes/:name/students", teacherHandler.ListClassStudents)
+	teacherOrAbove.GET("/classes/:name/summary", teacherHandler.GetClassSummary)
+	teacherOrAbove.GET("/classes/:name/trend", teacherHandler.GetClassTrend)
+	teacherOrAbove.GET("/classes/:name/review", teacherHandler.GetClassReview)
 	teacherOrAbove.GET("/instances", containerHandler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		middleware.Audit(auditService, middleware.AuditOptions{
@@ -500,6 +503,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	teacherOrAbove.GET("/students/:id/progress", teacherHandler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/students/:id/recommendations", teacherHandler.GetStudentRecommendations)
+	teacherOrAbove.GET("/students/:id/timeline", teacherHandler.GetStudentTimeline)
 	protected.POST("/reports/personal", reportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", reportHandler.GetReportStatus)
 	protected.GET("/reports/:id/download", reportHandler.DownloadReport)

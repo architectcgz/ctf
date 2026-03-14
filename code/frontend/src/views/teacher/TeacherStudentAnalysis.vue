@@ -8,6 +8,7 @@ import {
   getStudentProgress,
   getStudentRecommendations,
   getStudentSkillProfile,
+  getStudentTimeline,
 } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -15,6 +16,7 @@ import type {
   SkillProfileData,
   TeacherClassItem,
   TeacherStudentItem,
+  TimelineEvent,
 } from '@/api/contracts'
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
 import { getWeakDimensions } from '@/utils/skillProfile'
@@ -35,6 +37,7 @@ const error = ref<string | null>(null)
 const progress = ref<MyProgressData | null>(null)
 const skillProfile = ref<SkillProfileData | null>(null)
 const recommendations = ref<RecommendationItem[]>([])
+const timeline = ref<TimelineEvent[]>([])
 
 const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
 const solvedRate = computed(() => {
@@ -82,6 +85,7 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     progress.value = null
     skillProfile.value = null
     recommendations.value = []
+    timeline.value = []
     selectedStudentId.value = ''
     return
   }
@@ -90,15 +94,17 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
   selectedStudentId.value = studentId
 
   try {
-    const [nextProgress, nextProfile, nextRecommendations] = await Promise.all([
+    const [nextProgress, nextProfile, nextRecommendations, nextTimeline] = await Promise.all([
       getStudentProgress(studentId),
       getStudentSkillProfile(studentId),
       getStudentRecommendations(studentId),
+      getStudentTimeline(studentId),
     ])
 
     progress.value = nextProgress
     skillProfile.value = nextProfile
     recommendations.value = nextRecommendations
+    timeline.value = nextTimeline
   } finally {
     loadingDetails.value = false
   }
@@ -164,6 +170,7 @@ onMounted(() => {
     :progress="progress"
     :skill-profile="skillProfile"
     :recommendations="recommendations"
+    :timeline="timeline"
     :solved-rate="solvedRate"
     :weak-dimensions="weakDimensions"
     @retry="initialize"

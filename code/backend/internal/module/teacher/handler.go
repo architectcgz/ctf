@@ -47,6 +47,42 @@ func (h *Handler) ListClassStudents(c *gin.Context) {
 	response.Success(c, items)
 }
 
+func (h *Handler) GetClassSummary(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+
+	summary, err := h.service.GetClassSummary(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, summary)
+}
+
+func (h *Handler) GetClassTrend(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+
+	trend, err := h.service.GetClassTrend(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, trend)
+}
+
+func (h *Handler) GetClassReview(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+
+	review, err := h.service.GetClassReview(c.Request.Context(), currentUser.UserID, currentUser.Role, c.Param("name"))
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, review)
+}
+
 func (h *Handler) GetStudentProgress(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
 	studentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -87,4 +123,33 @@ func (h *Handler) GetStudentRecommendations(c *gin.Context) {
 	}
 
 	response.Success(c, items)
+}
+
+func (h *Handler) GetStudentTimeline(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	studentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || studentID <= 0 {
+		response.InvalidParams(c, "无效的学员ID")
+		return
+	}
+
+	var req struct {
+		Limit  int `form:"limit" binding:"omitempty,min=1,max=100"`
+		Offset int `form:"offset" binding:"omitempty,min=0"`
+	}
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	if req.Limit == 0 {
+		req.Limit = 100
+	}
+
+	timeline, err := h.service.GetStudentTimeline(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID, req.Limit, req.Offset)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, timeline)
 }

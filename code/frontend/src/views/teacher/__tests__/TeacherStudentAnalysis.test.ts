@@ -18,6 +18,7 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentProgress: vi.fn(),
   getStudentSkillProfile: vi.fn(),
   getStudentRecommendations: vi.fn(),
+  getStudentTimeline: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -58,6 +59,64 @@ describe('TeacherStudentAnalysis', () => {
     teacherApiMocks.getStudentRecommendations.mockResolvedValue([
       { challenge_id: '12', title: 'crypto-lab', category: 'crypto', difficulty: 'medium', reason: '针对薄弱维度：密码' },
     ])
+    teacherApiMocks.getStudentTimeline.mockResolvedValue([
+      {
+        id: 'challenge_detail_view-11-2026-03-11T09:00:00Z',
+        type: 'challenge_detail_view',
+        title: 'web-1',
+        detail: '查看题目详情，开始分析题面与环境线索',
+        created_at: '2026-03-11T09:00:00Z',
+        challenge_id: '11',
+        meta: {
+          raw_type: 'challenge_detail_view',
+        },
+      },
+      {
+        id: 'hint_unlock-11-2026-03-11T09:30:00Z',
+        type: 'hint',
+        title: 'web-1',
+        detail: '解锁第 1 级提示：先看回显',
+        created_at: '2026-03-11T09:30:00Z',
+        challenge_id: '11',
+        meta: {
+          raw_type: 'hint_unlock',
+        },
+      },
+      {
+        id: 'instance_access-11-2026-03-11T09:40:00Z',
+        type: 'instance_access',
+        title: 'web-1',
+        detail: '访问攻击目标，开始与靶机进行实际交互',
+        created_at: '2026-03-11T09:40:00Z',
+        challenge_id: '11',
+        meta: {
+          raw_type: 'instance_access',
+        },
+      },
+      {
+        id: 'instance_extend-11-2026-03-11T09:45:00Z',
+        type: 'instance_extend',
+        title: 'web-1',
+        detail: '延长实例有效期，继续当前利用过程',
+        created_at: '2026-03-11T09:45:00Z',
+        challenge_id: '11',
+        meta: {
+          raw_type: 'instance_extend',
+        },
+      },
+      {
+        id: 'flag_submit-11-2026-03-11T10:00:00Z',
+        type: 'solve',
+        title: 'web-1',
+        detail: '第 2 次提交命中 Flag，获得 100 分',
+        created_at: '2026-03-11T10:00:00Z',
+        challenge_id: '11',
+        points: 100,
+        meta: {
+          raw_type: 'flag_submit',
+        },
+      },
+    ])
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -74,6 +133,12 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('50%')
     expect(wrapper.text()).toContain('crypto-lab')
+    expect(wrapper.text()).toContain('web-1')
+    expect(wrapper.text()).toContain('查看题目详情')
+    expect(wrapper.text()).toContain('解锁第 1 级提示')
+    expect(wrapper.text()).toContain('访问攻击目标')
+    expect(wrapper.text()).toContain('延长实例有效期')
+    expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
   })
 
   it('应该支持包含百分号的班级名路由参数', async () => {

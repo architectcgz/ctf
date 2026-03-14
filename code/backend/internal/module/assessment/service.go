@@ -7,10 +7,13 @@ import (
 	"ctf-platform/internal/model"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	"ctf-platform/pkg/errcode"
 )
 
 type Service struct {
@@ -215,6 +218,31 @@ func (s *Service) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
 		Dimensions: dimensions,
 		UpdatedAt:  latestUpdate.Format(time.RFC3339),
 	}, nil
+}
+
+func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {
+	student, err := s.repo.FindUserByID(studentID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if student == nil || student.Role != model.RoleStudent {
+		return nil, errcode.ErrNotFound
+	}
+
+	if requesterRole != model.RoleAdmin {
+		requester, findErr := s.repo.FindUserByID(requesterID)
+		if findErr != nil {
+			return nil, errcode.ErrInternal.WithCause(findErr)
+		}
+		if requester == nil {
+			return nil, errcode.ErrUnauthorized
+		}
+		if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != student.ClassName {
+			return nil, errcode.ErrForbidden
+		}
+	}
+
+	return s.GetSkillProfile(studentID)
 }
 
 func (s *Service) tryLock(ctx context.Context, key string) (bool, error) {

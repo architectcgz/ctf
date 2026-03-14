@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
+import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import InstanceManagement from '../InstanceManagement.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -64,7 +65,15 @@ describe('InstanceManagement', () => {
   })
 
   it('应该按教师所属班级加载实例', async () => {
-    const wrapper = mount(InstanceManagement)
+    const wrapper = mount(InstanceManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
 
     await flushPromises()
 
@@ -78,7 +87,15 @@ describe('InstanceManagement', () => {
   })
 
   it('应该支持筛选并销毁实例', async () => {
-    const wrapper = mount(InstanceManagement)
+    const wrapper = mount(InstanceManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
     await flushPromises()
 
     const inputs = wrapper.findAll('input')

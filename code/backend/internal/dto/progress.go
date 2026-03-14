@@ -33,6 +33,7 @@ type TimelineEvent struct {
 	Timestamp   time.Time `json:"timestamp"`            // 事件时间
 	IsCorrect   *bool     `json:"is_correct,omitempty"` // Flag 是否正确（仅 flag_submit）
 	Points      *int      `json:"points,omitempty"`     // 获得分数（仅正确提交）
+	Detail      string    `json:"detail,omitempty"`     // 更细颗粒度的步骤描述
 }
 
 // TimelineResp 时间线响应

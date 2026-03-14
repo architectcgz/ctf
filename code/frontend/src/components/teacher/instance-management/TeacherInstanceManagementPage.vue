@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RefreshCcw, Search, Trash2 } from 'lucide-vue-next'
+import { Search, Trash2 } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppCard from '@/components/common/AppCard.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
@@ -188,7 +187,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
     <SectionCard title="实例列表" subtitle="按创建时间倒序展示，便于直接处理最近产生的问题实例。">
       <div v-if="loadingInstances" class="space-y-3">
-        <div v-for="index in 4" :key="index" class="h-36 animate-pulse rounded-[24px] bg-[var(--color-bg-base)]" />
+        <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
       </div>
 
       <AppEmpty
@@ -198,75 +197,88 @@ function remainingExtends(item: TeacherInstanceItem): number {
         description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
       />
 
-      <div v-else class="grid gap-4">
-        <AppCard
-          v-for="item in instances"
-          :key="item.id"
-          variant="action"
-          accent="neutral"
-          class="overflow-visible"
+      <div v-else>
+        <ElTable
+          :data="instances"
+          row-key="id"
+          class="teacher-instance-table"
+          empty-text="没有匹配实例"
         >
-          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div class="space-y-4">
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="rounded-full border px-3 py-1 text-xs font-semibold" :class="statusMeta(item.status).chipClass">
-                  {{ statusMeta(item.status).label }}
-                </span>
-                <span class="text-xs font-medium uppercase tracking-[0.18em] text-text-muted">
-                  {{ item.class_name }}
-                </span>
-              </div>
-
-              <div class="space-y-1">
-                <h3 class="text-lg font-semibold text-text-primary">{{ item.challenge_title }}</h3>
-                <p class="text-sm text-text-secondary">
-                  {{ item.student_name || item.student_username }}
+          <ElTableColumn label="学生 / 班级" min-width="220">
+            <template #default="{ row }">
+              <div class="py-1">
+                <div class="font-semibold text-text-primary">{{ row.student_name || row.student_username }}</div>
+                <div class="mt-1 text-sm text-text-secondary">
+                  @{{ row.student_username }}
                   <span class="mx-1 text-text-muted">·</span>
-                  @{{ item.student_username }}
-                  <span v-if="item.student_no" class="mx-1 text-text-muted">·</span>
-                  <span v-if="item.student_no">学号 {{ item.student_no }}</span>
-                </p>
-              </div>
-
-              <div class="grid gap-3 text-sm text-text-secondary md:grid-cols-2 xl:grid-cols-4">
-                <div class="rounded-2xl border border-border-subtle bg-elevated/60 px-4 py-3">
-                  <div class="text-[11px] uppercase tracking-[0.18em] text-text-muted">访问地址</div>
-                  <div class="mt-2 break-all font-mono text-text-primary">{{ item.access_url || '暂未分配' }}</div>
-                </div>
-                <div class="rounded-2xl border border-border-subtle bg-elevated/60 px-4 py-3">
-                  <div class="text-[11px] uppercase tracking-[0.18em] text-text-muted">到期时间</div>
-                  <div class="mt-2 font-medium text-text-primary">{{ formatDateTime(item.expires_at) }}</div>
-                </div>
-                <div class="rounded-2xl border border-border-subtle bg-elevated/60 px-4 py-3">
-                  <div class="text-[11px] uppercase tracking-[0.18em] text-text-muted">剩余时间</div>
-                  <div class="mt-2 font-mono text-text-primary">{{ formatRemainingTime(item.remaining_time) }}</div>
-                </div>
-                <div class="rounded-2xl border border-border-subtle bg-elevated/60 px-4 py-3">
-                  <div class="text-[11px] uppercase tracking-[0.18em] text-text-muted">剩余延期</div>
-                  <div class="mt-2 font-medium text-text-primary">{{ remainingExtends(item) }} / {{ item.max_extends }}</div>
+                  {{ row.class_name }}
+                  <span v-if="row.student_no" class="mx-1 text-text-muted">·</span>
+                  <span v-if="row.student_no">学号 {{ row.student_no }}</span>
                 </div>
               </div>
-            </div>
+            </template>
+          </ElTableColumn>
 
-            <div class="flex shrink-0 items-center gap-3 lg:flex-col lg:items-end">
-              <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-300 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
-                :disabled="destroyingId === item.id"
-                :data-instance-id="item.id"
-                @click="emit('destroy', item.id)"
+          <ElTableColumn label="题目" min-width="220">
+            <template #default="{ row }">
+              <div class="py-1">
+                <div class="font-semibold text-text-primary">{{ row.challenge_title }}</div>
+                <div class="mt-1">
+                  <span class="rounded-full border px-3 py-1 text-xs font-semibold" :class="statusMeta(row.status).chipClass">
+                    {{ statusMeta(row.status).label }}
+                  </span>
+                </div>
+              </div>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="访问地址" min-width="260">
+            <template #default="{ row }">
+              <div class="break-all py-1 font-mono text-sm text-text-primary">
+                {{ row.access_url || '暂未分配' }}
+              </div>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="到期时间" width="180">
+            <template #default="{ row }">
+              <span class="text-sm text-text-secondary">{{ formatDateTime(row.expires_at) }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="剩余时间" width="130" align="center">
+            <template #default="{ row }">
+              <span class="font-mono text-sm font-medium text-text-primary">{{ formatRemainingTime(row.remaining_time) }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="延期" width="120" align="center">
+            <template #default="{ row }">
+              <span class="text-sm font-medium text-text-primary">{{ remainingExtends(row) }} / {{ row.max_extends }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="创建时间" width="180">
+            <template #default="{ row }">
+              <span class="text-sm text-text-secondary">{{ formatDateTime(row.created_at) }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="操作" width="160" align="right">
+            <template #default="{ row }">
+              <ElButton
+                plain
+                type="danger"
+                :disabled="destroyingId === row.id"
+                :data-instance-id="row.id"
+                @click="emit('destroy', row.id)"
               >
-                <Trash2 class="h-4 w-4" />
-                {{ destroyingId === item.id ? '销毁中...' : '销毁实例' }}
-              </button>
-
-              <div class="inline-flex items-center gap-2 text-xs text-text-muted">
-                <RefreshCcw class="h-3.5 w-3.5" />
-                创建于 {{ formatDateTime(item.created_at) }}
-              </div>
-            </div>
-          </div>
-        </AppCard>
+                <Trash2 class="mr-1 h-4 w-4" />
+                {{ destroyingId === row.id ? '销毁中...' : '销毁实例' }}
+              </ElButton>
+            </template>
+          </ElTableColumn>
+        </ElTable>
       </div>
     </SectionCard>
   </div>
@@ -285,5 +297,37 @@ function remainingExtends(item: TeacherInstanceItem): number {
 :deep(.teacher-filter-field select),
 :deep(.teacher-filter-field input) {
   color: var(--color-text-primary);
+}
+
+:deep(.teacher-instance-table) {
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-expanded-cell-bg-color: transparent;
+  --el-table-header-bg-color: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --el-table-border-color: var(--color-border-default);
+  --el-table-row-hover-bg-color: color-mix(
+    in srgb,
+    var(--color-primary) 8%,
+    var(--color-bg-surface)
+  );
+  --el-table-text-color: var(--color-text-primary);
+  --el-table-header-text-color: var(--color-text-secondary);
+}
+
+:deep(.teacher-instance-table th.el-table__cell) {
+  background: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+:deep(.teacher-instance-table td.el-table__cell),
+:deep(.teacher-instance-table th.el-table__cell) {
+  border-bottom-color: var(--color-border-default);
+}
+
+:deep(.teacher-instance-table .el-table__inner-wrapper::before) {
+  display: none;
 }
 </style>

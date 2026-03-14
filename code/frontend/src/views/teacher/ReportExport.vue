@@ -1,13 +1,29 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
-import { exportClassReport } from '@/api/teacher'
-import type { ReportExportData } from '@/api/contracts'
+import {
+  exportClassReport,
+  getClassReview,
+  getClassStudents,
+  getClassSummary,
+  getClassTrend,
+} from '@/api/teacher'
+import type {
+  ReportExportData,
+  TeacherClassReviewData,
+  TeacherClassSummaryData,
+  TeacherClassTrendData,
+  TeacherStudentItem,
+} from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
+import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
+import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
@@ -34,6 +50,13 @@ const form = ref({
 const submitting = ref(false)
 const downloading = ref(false)
 const latestExport = ref<ExportRecord | null>(null)
+const previewLoading = ref(false)
+const previewError = ref<string | null>(null)
+const previewClassName = ref('')
+const previewStudents = ref<TeacherStudentItem[]>([])
+const previewReview = ref<TeacherClassReviewData | null>(null)
+const previewSummary = ref<TeacherClassSummaryData | null>(null)
+const previewTrend = ref<TeacherClassTrendData | null>(null)
 
 const classNamePlaceholder = computed(() =>
   authStore.user?.class_name ? `默认班级：${authStore.user.class_name}` : '请输入要导出的班级名称'
@@ -50,8 +73,57 @@ const derivedDownloadHint = computed(() => {
   return '正在轮询导出状态，生成完成后会自动更新为可下载。'
 })
 
+const averageSolvedText = computed(() => {
+  if (!previewSummary.value) return '--'
+  return previewSummary.value.average_solved.toFixed(1)
+})
+
+const activeRateText = computed(() => {
+  if (!previewSummary.value) return '--'
+  return `${Math.round(previewSummary.value.active_rate)}%`
+})
+
 function normalizeClassName(): string {
   return form.value.className.trim() || authStore.user?.class_name?.trim() || ''
+}
+
+async function loadPreview(): Promise<void> {
+  const className = normalizeClassName()
+  if (!className) {
+    previewClassName.value = ''
+    previewStudents.value = []
+    previewReview.value = null
+    previewSummary.value = null
+    previewTrend.value = null
+    previewError.value = '请先填写班级名称'
+    return
+  }
+
+  previewLoading.value = true
+  previewError.value = null
+  previewClassName.value = className
+
+  try {
+    const [students, review, summary, trend] = await Promise.all([
+      getClassStudents(className),
+      getClassReview(className),
+      getClassSummary(className),
+      getClassTrend(className),
+    ])
+    previewStudents.value = students
+    previewReview.value = review
+    previewSummary.value = summary
+    previewTrend.value = trend
+  } catch (err) {
+    console.error('加载报告预览失败:', err)
+    previewStudents.value = []
+    previewReview.value = null
+    previewSummary.value = null
+    previewTrend.value = null
+    previewError.value = '加载当前班级预览失败，请稍后重试'
+  } finally {
+    previewLoading.value = false
+  }
 }
 
 async function handleExport(): Promise<void> {
@@ -115,6 +187,12 @@ async function handleDownload(): Promise<void> {
     downloading.value = false
   }
 }
+
+onMounted(() => {
+  if (normalizeClassName()) {
+    void loadPreview()
+  }
+})
 </script>
 
 <template>
@@ -122,7 +200,7 @@ async function handleDownload(): Promise<void> {
     <PageHeader
       eyebrow="Teacher"
       title="报告导出"
-      description="为指定班级生成训练报告。当前后端支持创建导出任务、状态查询与按报告 ID 下载文件。"
+      description="先查看当前班级报告预览，再决定是否创建导出任务下载 PDF 或 Excel 文件。"
     >
       <AppCard variant="action" accent="neutral">
         当前账号：<span class="font-medium text-[var(--color-text-primary)]">{{
@@ -132,13 +210,13 @@ async function handleDownload(): Promise<void> {
     </PageHeader>
 
     <section class="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
-      <SectionCard title="创建导出任务" subtitle="先创建任务，再根据返回的报告 ID 下载 PDF 或 Excel 文件。">
+      <SectionCard title="创建导出任务" subtitle="预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。">
         <AppCard
           variant="hero"
           accent="primary"
           eyebrow="Export Task"
           title="班级报告生成器"
-          subtitle="先确定班级和导出格式，再把任务交给后端。生成完成后右侧会自动切到可下载状态。"
+          subtitle="先确定班级和导出格式，再把任务交给后端。下载变为可选动作，不影响当前页面预览。"
         >
           <label class="block">
             <span class="mb-2 block text-sm font-medium text-[var(--color-text-primary)]"
@@ -197,14 +275,25 @@ async function handleDownload(): Promise<void> {
             如果当前账号已绑定班级，可直接留空使用默认班级；管理员也可手动输入其他班级名称。
           </AppCard>
 
-          <button
-            type="button"
-            :disabled="submitting"
-            class="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-            @click="handleExport"
-          >
-            {{ submitting ? '提交中...' : '生成报告' }}
-          </button>
+          <div class="flex flex-wrap gap-3">
+            <button
+              type="button"
+              :disabled="previewLoading"
+              class="inline-flex items-center rounded-xl border border-[var(--color-border-default)] px-5 py-3 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              @click="loadPreview"
+            >
+              {{ previewLoading ? '加载预览中...' : '查看当前预览' }}
+            </button>
+
+            <button
+              type="button"
+              :disabled="submitting"
+              class="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              @click="handleExport"
+            >
+              {{ submitting ? '提交中...' : '创建导出任务' }}
+            </button>
+          </div>
         </AppCard>
       </SectionCard>
 
@@ -272,12 +361,81 @@ async function handleDownload(): Promise<void> {
 
         <SectionCard title="使用说明" subtitle="导出链路和当前后端能力边界。">
           <ol class="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
-            <li>1. 选择班级和导出格式，提交后会创建后台导出任务。</li>
-            <li>2. 若状态为“已就绪”，可直接下载；若为“生成中”，页面会自动轮询状态。</li>
-            <li>3. 若状态变为“失败”，可根据错误信息重新发起导出任务。</li>
+            <li>1. 先点击“查看当前预览”，直接在页面内查看当前班级报告内容。</li>
+            <li>2. 确认需要留档时，再创建后台导出任务。</li>
+            <li>3. 若状态为“已就绪”，可直接下载；若为“生成中”，页面会自动轮询状态。</li>
           </ol>
         </SectionCard>
       </div>
+    </section>
+
+    <section class="space-y-6">
+      <PageHeader
+        eyebrow="Live Preview"
+        title="当前报告预览"
+        description="不下载也能直接查看当前班级的关键报告内容。"
+      >
+        <AppCard variant="action" accent="neutral">
+          预览班级：<span class="font-medium text-[var(--color-text-primary)]">{{
+            previewClassName || '未选择'
+          }}</span>
+        </AppCard>
+      </PageHeader>
+
+      <div
+        v-if="previewError"
+        class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700"
+      >
+        {{ previewError }}
+      </div>
+
+      <div v-if="previewLoading" class="grid gap-4 md:grid-cols-3">
+        <div
+          v-for="index in 3"
+          :key="index"
+          class="h-28 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"
+        />
+      </div>
+
+      <template v-else-if="previewSummary">
+        <section class="grid gap-4 md:grid-cols-3">
+          <MetricCard
+            label="班级人数"
+            :value="previewSummary.student_count"
+            hint="当前预览班级纳入统计的学生数"
+            accent="success"
+          />
+          <MetricCard
+            label="平均解题"
+            :value="averageSolvedText"
+            hint="当前班级学生的人均解题数"
+            accent="warning"
+          />
+          <MetricCard
+            label="近 7 天活跃率"
+            :value="activeRateText"
+            hint="近 7 天至少有一次训练动作的学生占比"
+            accent="primary"
+          />
+        </section>
+
+        <TeacherClassTrendPanel
+          :trend="previewTrend"
+          title="班级近 7 天训练趋势"
+          subtitle="直接查看当前班级训练事件、成功解题和活跃学生走势。"
+        />
+
+        <TeacherClassReviewPanel :review="previewReview" :class-name="previewClassName" />
+
+        <TeacherClassInsightsPanel :students="previewStudents" :class-name="previewClassName" />
+      </template>
+
+      <AppEmpty
+        v-else
+        title="还没有可用预览"
+        description="先选择班级并加载一次预览，这里会展示当前报告内容。"
+        icon="FileChartColumnIncreasing"
+      />
     </section>
   </div>
 </template>

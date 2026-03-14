@@ -42,24 +42,27 @@ describe('TeacherStudentManagement', () => {
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
     teacherApiMocks.getClassStudents.mockImplementation(async (_className, params) => {
       if (params?.keyword === 'alice') {
-        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang' }]
+        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 }]
       }
       if (params?.keyword === 'Alice') {
-        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang' }]
+        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 }]
       }
       return [
-        { id: 'stu-1', username: 'alice', name: 'Alice Zhang' },
-        { id: 'stu-2', username: 'bob' },
+        { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2 },
       ]
     })
 
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'teacher-1',
-      username: 'teacher',
-      role: 'teacher',
-      class_name: 'Class A',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
   })
 
   it('应该支持搜索学生并进入学员分析页', async () => {
@@ -99,14 +102,20 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该忽略过期搜索请求的返回结果', async () => {
-    const slowRequest = deferred<Array<{ id: string; username: string; name?: string }>>()
-    const fastRequest = deferred<Array<{ id: string; username: string; name?: string }>>()
+    const slowRequest =
+      deferred<
+        Array<{ id: string; username: string; name?: string; recent_event_count?: number }>
+      >()
+    const fastRequest =
+      deferred<
+        Array<{ id: string; username: string; name?: string; recent_event_count?: number }>
+      >()
 
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassStudents
       .mockResolvedValueOnce([
-        { id: 'stu-1', username: 'alice', name: 'Alice Zhang' },
-        { id: 'stu-2', username: 'bob' },
+        { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2 },
       ])
       .mockImplementationOnce(() => slowRequest.promise)
       .mockImplementationOnce(() => fastRequest.promise)
@@ -127,10 +136,12 @@ describe('TeacherStudentManagement', () => {
     await searchInput.setValue('A')
     await searchInput.setValue('Ali')
 
-    fastRequest.resolve([{ id: 'stu-1', username: 'alice', name: 'Alice Zhang' }])
+    fastRequest.resolve([
+      { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
+    ])
     await flushPromises()
 
-    slowRequest.resolve([{ id: 'stu-2', username: 'bob' }])
+    slowRequest.resolve([{ id: 'stu-2', username: 'bob', recent_event_count: 2 }])
     await flushPromises()
 
     expect(wrapper.text()).toContain('alice')
