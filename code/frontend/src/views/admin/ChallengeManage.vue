@@ -11,28 +11,49 @@
     </div>
 
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
+      ></div>
     </div>
 
     <div v-else class="overflow-hidden rounded-lg border border-[var(--color-border-default)]">
       <table class="w-full">
         <thead class="bg-[var(--color-bg-surface)]">
           <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">标题</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">分类</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">难度</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">分值</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">状态</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">操作</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              标题
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              分类
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              难度
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              分值
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              状态
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
+              操作
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-[#30363d]">
-          <tr v-for="row in list" :key="row.id" class="transition-colors hover:bg-[var(--color-bg-elevated)]">
+          <tr
+            v-for="row in list"
+            :key="row.id"
+            class="transition-colors hover:bg-[var(--color-bg-elevated)]"
+          >
             <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">{{ row.title }}</td>
             <td class="px-4 py-3">
               <span
                 class="rounded px-2 py-1 text-xs font-medium"
-                :style="{ backgroundColor: getCategoryColor(row.category) + '20', color: getCategoryColor(row.category) }"
+                :style="{
+                  backgroundColor: getCategoryColor(row.category) + '20',
+                  color: getCategoryColor(row.category),
+                }"
               >
                 {{ getCategoryLabel(row.category) }}
               </span>
@@ -40,7 +61,10 @@
             <td class="px-4 py-3">
               <span
                 class="rounded px-2 py-1 text-xs font-medium"
-                :style="{ backgroundColor: getDifficultyColor(row.difficulty) + '20', color: getDifficultyColor(row.difficulty) }"
+                :style="{
+                  backgroundColor: getDifficultyColor(row.difficulty) + '20',
+                  color: getDifficultyColor(row.difficulty),
+                }"
               >
                 {{ getDifficultyLabel(row.difficulty) }}
               </span>
@@ -49,7 +73,10 @@
             <td class="px-4 py-3">
               <span
                 class="rounded px-2 py-1 text-xs font-medium"
-                :style="{ backgroundColor: getStatusColor(row.status) + '20', color: getStatusColor(row.status) }"
+                :style="{
+                  backgroundColor: getStatusColor(row.status) + '20',
+                  color: getStatusColor(row.status),
+                }"
               >
                 {{ getStatusLabel(row.status) }}
               </span>
@@ -61,6 +88,18 @@
                   @click="$router.push(`/admin/challenges/${row.id}`)"
                 >
                   查看
+                </button>
+                <button
+                  class="rounded border border-[var(--color-primary)]/40 px-3 py-1 text-xs text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
+                  @click="$router.push(`/admin/challenges/${row.id}/topology`)"
+                >
+                  编排
+                </button>
+                <button
+                  class="rounded border border-[var(--color-primary)]/40 px-3 py-1 text-xs text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
+                  @click="$router.push(`/admin/challenges/${row.id}/writeup`)"
+                >
+                  题解
                 </button>
                 <button
                   class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90"
@@ -98,7 +137,9 @@
         >
           上一页
         </button>
-        <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+        <span class="text-sm text-[var(--color-text-secondary)]"
+          >{{ page }} / {{ Math.ceil(total / pageSize) }}</span
+        >
         <button
           :disabled="page >= Math.ceil(total / pageSize)"
           class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
@@ -138,14 +179,22 @@
         </ElFormItem>
         <ElFormItem label="镜像" required>
           <ElSelect v-model="form.image_id" placeholder="选择镜像">
-            <ElOption v-for="img in images" :key="img.id" :label="`${img.name}:${img.tag}`" :value="img.id" />
+            <ElOption
+              v-for="img in images"
+              :key="img.id"
+              :label="`${img.name}:${img.tag}`"
+              :value="img.id"
+            />
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="描述">
           <ElInput v-model="form.description" type="textarea" :rows="3" placeholder="靶机描述" />
         </ElFormItem>
         <ElFormItem label="附件地址">
-          <ElInput v-model="form.attachment_url" placeholder="可选，例如：https://example.com/files/challenge.zip" />
+          <ElInput
+            v-model="form.attachment_url"
+            placeholder="可选，例如：https://example.com/files/challenge.zip"
+          />
         </ElFormItem>
         <ElFormItem label="提示系统">
           <div class="w-full space-y-3">
@@ -155,7 +204,9 @@
               class="rounded-lg border border-[var(--color-border-default)] p-3"
             >
               <div class="mb-3 flex items-center justify-between">
-                <span class="text-sm font-medium text-[var(--color-text-primary)]">提示 {{ index + 1 }}</span>
+                <span class="text-sm font-medium text-[var(--color-text-primary)]"
+                  >提示 {{ index + 1 }}</span
+                >
                 <button
                   type="button"
                   class="text-xs text-red-500 transition-colors hover:text-red-400"
@@ -202,7 +253,9 @@
           <ElInput v-model="form.flag_prefix" placeholder="默认 flag" />
         </ElFormItem>
         <ElFormItem label="当前状态">
-          <div class="text-sm text-[var(--color-text-secondary)]">{{ getStatusLabel(form.current_status) }}</div>
+          <div class="text-sm text-[var(--color-text-secondary)]">
+            {{ getStatusLabel(form.current_status) }}
+          </div>
         </ElFormItem>
         <ElFormItem>
           <label class="flex items-center gap-2 text-sm text-[var(--color-text-primary)]">
@@ -260,7 +313,10 @@ import type {
   ChallengeStatus,
 } from '@/api/contracts'
 
-type EditableDifficulty = Extract<ChallengeDifficulty, 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'>
+type EditableDifficulty = Extract<
+  ChallengeDifficulty,
+  'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
+>
 
 const toast = useToast()
 const dialogVisible = ref(false)

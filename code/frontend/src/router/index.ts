@@ -139,7 +139,12 @@ const routes: RouteRecordRaw[] = [
         path: 'teacher/instances',
         name: 'TeacherInstanceManagement',
         component: () => import('@/views/teacher/InstanceManagement.vue'),
-        meta: { requiresAuth: true, roles: ['teacher', 'admin'], title: '实例管理', icon: 'Server' },
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '实例管理',
+          icon: 'Server',
+        },
       },
       {
         path: 'teacher/reports',
@@ -171,6 +176,24 @@ const routes: RouteRecordRaw[] = [
         name: 'AdminChallengeDetail',
         component: () => import('@/views/admin/ChallengeDetail.vue'),
         meta: { requiresAuth: true, roles: ['admin'], title: '靶场详情' },
+      },
+      {
+        path: 'admin/challenges/:id/topology',
+        name: 'AdminChallengeTopologyStudio',
+        component: () => import('@/views/admin/ChallengeTopologyStudio.vue'),
+        meta: { requiresAuth: true, roles: ['admin'], title: '拓扑编排' },
+      },
+      {
+        path: 'admin/environment-templates',
+        name: 'AdminEnvironmentTemplateLibrary',
+        component: () => import('@/views/admin/EnvironmentTemplateLibrary.vue'),
+        meta: { requiresAuth: true, roles: ['admin'], title: '环境模板', icon: 'Server' },
+      },
+      {
+        path: 'admin/challenges/:id/writeup',
+        name: 'AdminChallengeWriteup',
+        component: () => import('@/views/admin/ChallengeWriteup.vue'),
+        meta: { requiresAuth: true, roles: ['admin'], title: '题解管理' },
       },
       {
         path: 'admin/contests',
