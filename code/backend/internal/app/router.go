@@ -154,6 +154,11 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	}
 	challengeService := challengeModule.NewService(challengeRepo, imageRepo, cache, challengeConfig, log.Named("challenge_service"))
 	challengeHandler := challengeModule.NewHandler(challengeService)
+	writeupService := challengeModule.NewWriteupService(challengeRepo)
+	writeupHandler := challengeModule.NewWriteupHandler(writeupService)
+	templateRepo := challengeModule.NewTemplateRepository(db)
+	topologyService := challengeModule.NewTopologyService(challengeRepo, templateRepo, imageRepo)
+	topologyHandler := challengeModule.NewTopologyHandler(topologyService)
 	adminOnly.POST("/challenges",
 		middleware.Audit(auditService, middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
@@ -186,6 +191,65 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 			ResourceIDParam: "id",
 		}, auditLogger),
 		challengeHandler.PublishChallenge,
+	)
+	adminOnly.GET("/challenges/:id/writeup", writeupHandler.GetAdmin)
+	adminOnly.PUT("/challenges/:id/writeup",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "challenge_writeup",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		writeupHandler.Upsert,
+	)
+	adminOnly.DELETE("/challenges/:id/writeup",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "challenge_writeup",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		writeupHandler.Delete,
+	)
+	adminOnly.GET("/challenges/:id/topology", topologyHandler.GetChallengeTopology)
+	adminOnly.PUT("/challenges/:id/topology",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "challenge_topology",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		topologyHandler.SaveChallengeTopology,
+	)
+	adminOnly.DELETE("/challenges/:id/topology",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "challenge_topology",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		topologyHandler.DeleteChallengeTopology,
+	)
+	adminOnly.GET("/environment-templates", topologyHandler.ListTemplates)
+	adminOnly.POST("/environment-templates",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "environment_template",
+		}, auditLogger),
+		topologyHandler.CreateTemplate,
+	)
+	adminOnly.GET("/environment-templates/:id", topologyHandler.GetTemplate)
+	adminOnly.PUT("/environment-templates/:id",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "environment_template",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		topologyHandler.UpdateTemplate,
+	)
+	adminOnly.DELETE("/environment-templates/:id",
+		middleware.Audit(auditService, middleware.AuditOptions{
+			Action:          model.AuditActionDelete,
+			ResourceType:    "environment_template",
+			ResourceIDParam: "id",
+		}, auditLogger),
+		topologyHandler.DeleteTemplate,
 	)
 
 	flagService, err := challengeModule.NewFlagService(db)
