@@ -60,9 +60,42 @@ describe('DashboardView', () => {
     })
     assessmentApiMocks.getMyTimeline.mockResolvedValue([
       {
+        id: 'read-1',
+        type: 'challenge_detail_view',
+        title: 'web-basic',
+        detail: '查看题目详情，开始分析题面与环境线索',
+        created_at: '2026-03-07T09:00:00Z',
+        meta: { raw_type: 'challenge_detail_view' },
+      },
+      {
+        id: 'hint-1',
+        type: 'hint',
+        title: 'web-basic',
+        detail: '解锁第 1 级提示：先看回显',
+        created_at: '2026-03-07T09:30:00Z',
+        meta: { raw_type: 'hint_unlock' },
+      },
+      {
+        id: 'access-1',
+        type: 'instance_access',
+        title: 'web-basic',
+        detail: '访问攻击目标，开始与靶机进行实际交互',
+        created_at: '2026-03-07T09:40:00Z',
+        meta: { raw_type: 'instance_access' },
+      },
+      {
+        id: 'extend-1',
+        type: 'instance_extend',
+        title: 'web-basic',
+        detail: '延长实例有效期，继续当前利用过程',
+        created_at: '2026-03-07T09:45:00Z',
+        meta: { raw_type: 'instance_extend' },
+      },
+      {
         id: 'solve-1',
         type: 'solve',
         title: 'web-basic',
+        detail: '第 2 次提交命中 Flag，获得 100 分',
         created_at: '2026-03-07T10:00:00Z',
         points: 100,
         meta: { raw_type: 'flag_submit' },
@@ -97,6 +130,9 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
     expect(wrapper.text()).toContain('优先训练队列')
+    expect(wrapper.text()).toContain('查看题目详情')
+    expect(wrapper.text()).toContain('访问攻击目标')
+    expect(wrapper.text()).toContain('解锁第 1 级提示')
   })
 
   it('应该在 recommendation 子菜单下展示训练建议', async () => {

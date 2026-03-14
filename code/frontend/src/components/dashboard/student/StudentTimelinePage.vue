@@ -16,7 +16,16 @@ const props = defineProps<{
 const solveCount = computed(() => props.timeline.filter((item) => item.type === 'solve').length)
 const submitCount = computed(() => props.timeline.filter((item) => item.type === 'submit').length)
 const instanceCount = computed(() =>
-  props.timeline.filter((item) => item.type === 'instance' || typeof item.meta?.raw_type === 'string').length,
+  props.timeline.filter(
+    (item) =>
+      item.type === 'instance' ||
+      item.type === 'instance_access' ||
+      item.type === 'instance_proxy_request' ||
+      item.type === 'instance_extend' ||
+      (item.meta?.raw_type as string | undefined) === 'instance_access' ||
+      (item.meta?.raw_type as string | undefined) === 'instance_proxy_request' ||
+      (item.meta?.raw_type as string | undefined) === 'instance_extend',
+  ).length,
 )
 const groupedTimeline = computed(() => {
   const groups = new Map<string, TimelineEvent[]>()

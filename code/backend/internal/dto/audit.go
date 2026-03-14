@@ -5,7 +5,7 @@ import "time"
 type AuditLogQuery struct {
 	UserID       *int64 `form:"user_id" binding:"omitempty,min=1"`
 	ActorUserID  *int64 `form:"actor_user_id" binding:"omitempty,min=1"`
-	Action       string `form:"action" binding:"omitempty,oneof=login logout create update delete submit admin_op"`
+	Action       string `form:"action" binding:"omitempty,oneof=login logout read create update delete submit admin_op"`
 	ResourceType string `form:"resource_type"`
 	ResourceID   *int64 `form:"resource_id" binding:"omitempty,min=1"`
 	StartTime    string `form:"start_time"`

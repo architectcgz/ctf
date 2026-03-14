@@ -6,8 +6,9 @@ import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
-import type { MyProgressData, RecommendationItem, SkillProfileData, TeacherStudentItem } from '@/api/contracts'
+import type { MyProgressData, RecommendationItem, SkillProfileData, TeacherStudentItem, TimelineEvent } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { getWeakDimensions, toRadarScores } from '@/utils/skillProfile'
 
@@ -16,6 +17,7 @@ const props = defineProps<{
   progress: MyProgressData | null
   profile: SkillProfileData | null
   recommendations: RecommendationItem[]
+  timeline: TimelineEvent[]
   loading: boolean
   emptyText?: string
 }>()
@@ -170,6 +172,8 @@ function openChallenge(challengeId: string): void {
             </AppCard>
           </div>
         </SectionCard>
+
+        <StudentTimelinePage :timeline="timeline" />
       </template>
     </template>
   </div>

@@ -102,6 +102,9 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	if className == "" {
 		return nil, errcode.New(errcode.ErrInvalidParams.Code, "class_name 不能为空", errcode.ErrInvalidParams.HTTPStatus)
 	}
+	if err := validateClassReportAccess(requester, className); err != nil {
+		return nil, err
+	}
 
 	format := s.normalizeFormat(req.Format)
 	report := &model.Report{
@@ -124,6 +127,19 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
+func validateClassReportAccess(requester *ReportUser, className string) error {
+	if requester == nil || requester.ID <= 0 {
+		return errcode.ErrUnauthorized
+	}
+	if requester.Role == model.RoleAdmin {
+		return nil
+	}
+	if strings.TrimSpace(requester.ClassName) == "" || strings.TrimSpace(requester.ClassName) != className {
+		return errcode.ErrForbidden
+	}
+	return nil
 }
 
 func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*reportDownload, error) {

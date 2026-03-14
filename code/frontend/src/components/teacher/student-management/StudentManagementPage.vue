@@ -84,7 +84,9 @@ const emit = defineEmits<{
 
         <label class="space-y-2">
           <span class="text-sm text-text-secondary">搜索姓名或用户名</span>
-          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+          <div
+            class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
+          >
             <Search class="h-4 w-4 text-text-muted" />
             <input
               :value="searchQuery"
@@ -98,7 +100,9 @@ const emit = defineEmits<{
 
         <label class="space-y-2">
           <span class="text-sm text-text-secondary">按学号查询</span>
-          <div class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3">
+          <div
+            class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
+          >
             <Search class="h-4 w-4 text-text-muted" />
             <input
               :value="studentNoQuery"
@@ -153,6 +157,24 @@ const emit = defineEmits<{
           <ElTableColumn label="学号" min-width="180">
             <template #default="{ row }">
               <span class="text-sm text-text-secondary">{{ row.student_no || '未设置' }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="解题数" width="120" align="center">
+            <template #default="{ row }">
+              <span class="text-sm font-medium text-text-primary">{{ row.solved_count ?? 0 }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="得分" width="120" align="center">
+            <template #default="{ row }">
+              <span class="text-sm font-medium text-text-primary">{{ row.total_score ?? 0 }}</span>
+            </template>
+          </ElTableColumn>
+
+          <ElTableColumn label="薄弱项" min-width="160">
+            <template #default="{ row }">
+              <span class="text-sm text-text-secondary">{{ row.weak_dimension || '暂无' }}</span>
             </template>
           </ElTableColumn>
 

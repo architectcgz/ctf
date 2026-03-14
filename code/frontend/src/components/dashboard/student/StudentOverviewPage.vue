@@ -171,7 +171,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
                 动态概览
               </div>
               <div class="mt-3 text-2xl font-semibold text-text-primary">{{ timeline.length }}</div>
-              <div class="mt-2 text-sm text-text-secondary">最近实例与提交动作的浓缩视图</div>
+              <div class="mt-2 text-sm text-text-secondary">最近训练动作的浓缩视图</div>
             </AppCard>
             <AppCard variant="action" accent="violet">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">

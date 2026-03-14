@@ -2,6 +2,8 @@ package assessment
 
 import (
 	"ctf-platform/internal/model"
+	"errors"
+	"fmt"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -13,6 +15,17 @@ type Repository struct {
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
+	var user model.User
+	if err := r.db.Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("find user by id: %w", err)
+	}
+	return &user, nil
 }
 
 // Upsert 插入或更新能力画像

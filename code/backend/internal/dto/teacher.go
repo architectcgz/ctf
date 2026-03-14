@@ -7,11 +7,56 @@ type TeacherClassItem struct {
 	StudentCount int64  `json:"student_count"`
 }
 
+type TeacherClassSummaryResp struct {
+	ClassName          string  `json:"class_name"`
+	StudentCount       int64   `json:"student_count"`
+	AverageSolved      float64 `json:"average_solved"`
+	ActiveStudentCount int64   `json:"active_student_count"`
+	ActiveRate         float64 `json:"active_rate"`
+	RecentEventCount   int64   `json:"recent_event_count"`
+}
+
+type TeacherClassTrendPoint struct {
+	Date               string `json:"date"`
+	ActiveStudentCount int64  `json:"active_student_count"`
+	EventCount         int64  `json:"event_count"`
+	SolveCount         int64  `json:"solve_count"`
+}
+
+type TeacherClassTrendResp struct {
+	ClassName string                   `json:"class_name"`
+	Points    []TeacherClassTrendPoint `json:"points"`
+}
+
+type TeacherReviewStudentRef struct {
+	ID       int64   `json:"id"`
+	Username string  `json:"username"`
+	Name     *string `json:"name,omitempty"`
+}
+
+type TeacherClassReviewItem struct {
+	Key            string                     `json:"key"`
+	Title          string                     `json:"title"`
+	Detail         string                     `json:"detail"`
+	Accent         string                     `json:"accent"`
+	Students       []TeacherReviewStudentRef  `json:"students,omitempty"`
+	Recommendation *TeacherRecommendationItem `json:"recommendation,omitempty"`
+}
+
+type TeacherClassReviewResp struct {
+	ClassName string                   `json:"class_name"`
+	Items     []TeacherClassReviewItem `json:"items"`
+}
+
 type TeacherStudentItem struct {
-	ID        int64   `json:"id"`
-	Username  string  `json:"username"`
-	StudentNo *string `json:"student_no,omitempty"`
-	Name      *string `json:"name,omitempty"`
+	ID               int64   `json:"id"`
+	Username         string  `json:"username"`
+	StudentNo        *string `json:"student_no,omitempty"`
+	Name             *string `json:"name,omitempty"`
+	SolvedCount      int     `json:"solved_count"`
+	TotalScore       int     `json:"total_score"`
+	RecentEventCount int     `json:"recent_event_count"`
+	WeakDimension    *string `json:"weak_dimension,omitempty"`
 }
 
 type TeacherStudentQuery struct {

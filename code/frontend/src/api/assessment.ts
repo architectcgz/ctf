@@ -26,6 +26,7 @@ interface RawTimelineItem {
   type: string
   challenge_id: string | number
   title: string
+  detail?: string
   timestamp: string
   is_correct?: boolean
   points?: number
@@ -69,12 +70,15 @@ export async function getMyTimeline(): Promise<TimelineEvent[]> {
     type:
       item.type === 'instance_start' || item.type === 'instance_destroy'
         ? 'instance'
+        : item.type === 'hint_unlock'
+          ? 'hint'
         : item.type === 'flag_submit' && item.is_correct
           ? 'solve'
           : item.type === 'flag_submit'
             ? 'submit'
             : item.type,
     title: item.title,
+    detail: item.detail,
     created_at: item.timestamp,
     challenge_id: String(item.challenge_id),
     is_correct: item.is_correct,

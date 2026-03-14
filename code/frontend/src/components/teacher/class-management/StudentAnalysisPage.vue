@@ -7,6 +7,7 @@ import type {
   SkillProfileData,
   TeacherClassItem,
   TeacherStudentItem,
+  TimelineEvent,
 } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
 import MetricCard from '@/components/common/MetricCard.vue'
@@ -27,6 +28,7 @@ const props = defineProps<{
   progress: MyProgressData | null
   skillProfile: SkillProfileData | null
   recommendations: RecommendationItem[]
+  timeline: TimelineEvent[]
   solvedRate: number
   weakDimensions: string[]
 }>()
@@ -198,6 +200,7 @@ const emit = defineEmits<{
         :progress="progress"
         :profile="skillProfile"
         :recommendations="recommendations"
+        :timeline="timeline"
         :loading="loadingDetails"
         empty-text="请先从左侧选择一名学生。"
         @open-challenge="emit('openChallenge', $event)"

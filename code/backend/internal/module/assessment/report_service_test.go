@@ -1,13 +1,18 @@
 package assessment
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
@@ -131,6 +136,77 @@ func TestReportDownloadFileNameUsesRealExtension(t *testing.T) {
 
 	if got := reportDownloadFileName(report); got != "class-report-7.xlsx" {
 		t.Fatalf("expected xlsx download filename, got %s", got)
+	}
+}
+
+func TestValidateClassReportAccess(t *testing.T) {
+	t.Parallel()
+
+	teacher := &ReportUser{ID: 1, Role: model.RoleTeacher, ClassName: "class-a"}
+	admin := &ReportUser{ID: 2, Role: model.RoleAdmin, ClassName: ""}
+
+	if err := validateClassReportAccess(teacher, "class-a"); err != nil {
+		t.Fatalf("expected same-class teacher access, got %v", err)
+	}
+	if err := validateClassReportAccess(admin, "class-b"); err != nil {
+		t.Fatalf("expected admin access, got %v", err)
+	}
+
+	err := validateClassReportAccess(teacher, "class-b")
+	appErr, ok := err.(*errcode.AppError)
+	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %#v", err)
+	}
+}
+
+func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
+	t.Parallel()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+
+	teacher := &model.User{
+		ID:        1,
+		Username:  "teacher-a",
+		Role:      model.RoleTeacher,
+		ClassName: "class-a",
+		Status:    model.UserStatusActive,
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("seed teacher: %v", err)
+	}
+
+	service := NewReportService(
+		NewReportRepository(db),
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	_, err = service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
+		ClassName: "class-b",
+		Format:    model.ReportFormatPDF,
+	})
+	appErr, ok := err.(*errcode.AppError)
+	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %#v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Report{}).Count(&count).Error; err != nil {
+		t.Fatalf("count reports: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no report rows to be created, got %d", count)
 	}
 }
 

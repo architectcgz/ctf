@@ -42,7 +42,8 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 		return
 	}
 
-	profile, err := h.service.GetSkillProfile(studentID)
+	currentUser := authctx.MustCurrentUser(c)
+	profile, err := h.service.GetStudentSkillProfile(c.Request.Context(), currentUser.UserID, currentUser.Role, studentID)
 	if err != nil {
 		response.FromError(c, err)
 		return

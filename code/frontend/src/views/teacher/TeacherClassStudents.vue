@@ -2,8 +2,14 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getClasses, getClassStudents } from '@/api/teacher'
-import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
+import { getClasses, getClassReview, getClassStudents, getClassSummary, getClassTrend } from '@/api/teacher'
+import type {
+  TeacherClassItem,
+  TeacherClassReviewData,
+  TeacherClassSummaryData,
+  TeacherClassTrendData,
+  TeacherStudentItem,
+} from '@/api/contracts'
 import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
 
 const route = useRoute()
@@ -11,6 +17,9 @@ const router = useRouter()
 
 const classes = ref<TeacherClassItem[]>([])
 const students = ref<TeacherStudentItem[]>([])
+const review = ref<TeacherClassReviewData | null>(null)
+const summary = ref<TeacherClassSummaryData | null>(null)
+const trend = ref<TeacherClassTrendData | null>(null)
 const selectedClassName = ref('')
 const loadingStudents = ref(false)
 const error = ref<string | null>(null)
@@ -33,6 +42,9 @@ async function loadStudents(className = classNameFromRoute()): Promise<void> {
   if (!className) {
     latestStudentRequestID += 1
     students.value = []
+    review.value = null
+    summary.value = null
+    trend.value = null
     selectedClassName.value = ''
     loadingStudents.value = false
     return
@@ -44,13 +56,21 @@ async function loadStudents(className = classNameFromRoute()): Promise<void> {
   selectedClassName.value = className
 
   try {
-    const nextStudents = await getClassStudents(className, {
-      student_no: studentNoQuery.value.trim() || undefined,
-    })
+    const [nextStudents, nextReview, nextSummary, nextTrend] = await Promise.all([
+      getClassStudents(className, {
+        student_no: studentNoQuery.value.trim() || undefined,
+      }),
+      getClassReview(className),
+      getClassSummary(className),
+      getClassTrend(className),
+    ])
     if (requestID !== latestStudentRequestID) {
       return
     }
     students.value = nextStudents
+    review.value = nextReview
+    summary.value = nextSummary
+    trend.value = nextTrend
   } catch (err) {
     if (requestID !== latestStudentRequestID) {
       return
@@ -58,6 +78,9 @@ async function loadStudents(className = classNameFromRoute()): Promise<void> {
     console.error('加载班级学生失败:', err)
     error.value = '加载班级学生失败，请稍后重试'
     students.value = []
+    review.value = null
+    summary.value = null
+    trend.value = null
   } finally {
     if (requestID === latestStudentRequestID) {
       loadingStudents.value = false
@@ -113,6 +136,9 @@ onMounted(() => {
     :classes="classes"
     :selected-class-name="selectedClassName"
     :students="students"
+    :review="review"
+    :summary="summary"
+    :trend="trend"
     :student-no-query="studentNoQuery"
     :loading-students="loadingStudents"
     :error="error"
