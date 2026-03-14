@@ -73,6 +73,9 @@ func (s *Service) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeRe
 func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 	challenge, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrChallengeNotFound
+		}
 		return err
 	}
 
@@ -115,6 +118,13 @@ func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 }
 
 func (s *Service) DeleteChallenge(id int64) error {
+	if _, err := s.repo.FindByID(id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrChallengeNotFound
+		}
+		return err
+	}
+
 	hasInstances, err := s.repo.HasRunningInstances(id)
 	if err != nil {
 		return err
@@ -129,6 +139,9 @@ func (s *Service) DeleteChallenge(id int64) error {
 func (s *Service) GetChallenge(id int64) (*dto.ChallengeResp, error) {
 	challenge, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
 		return nil, err
 	}
 	hints, err := s.repo.ListHintsByChallengeID(id)
@@ -169,6 +182,9 @@ func (s *Service) ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, er
 func (s *Service) PublishChallenge(id int64) error {
 	challenge, err := s.repo.FindByID(id)
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrChallengeNotFound
+		}
 		return err
 	}
 
