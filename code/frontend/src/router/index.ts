@@ -10,6 +10,12 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录' },
   },
   {
+    path: '/login/cas/callback',
+    name: 'CASLoginCallback',
+    component: () => import('@/views/auth/CASCallbackView.vue'),
+    meta: { title: 'CAS 登录回调' },
+  },
+  {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/auth/RegisterView.vue'),

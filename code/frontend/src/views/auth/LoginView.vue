@@ -69,6 +69,29 @@
                 <ElButton type="primary" size="large" :loading="loading" @click="onSubmit">登录</ElButton>
               </div>
             </ElForm>
+
+            <div v-if="casLoading || casStatus?.enabled" class="mt-6 rounded-2xl border border-border bg-elevated/72 p-4">
+              <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-text-muted">Campus SSO</div>
+              <div class="mt-2 text-base font-semibold text-text-primary">CAS 统一认证</div>
+              <p class="mt-2 text-sm leading-6 text-text-secondary">
+                {{
+                  casLoading
+                    ? '正在检查学校统一认证入口状态...'
+                    : casReady
+                      ? '当前环境已启用 CAS 登录，可使用校园统一认证直接进入平台。'
+                      : 'CAS 已启用但配置未完成，当前环境暂时无法直接跳转。'
+                }}
+              </p>
+              <ElButton
+                class="mt-4 w-full"
+                size="large"
+                :disabled="!casReady"
+                :loading="casRedirecting"
+                @click="onCASLogin"
+              >
+                使用 CAS 统一认证登录
+              </ElButton>
+            </div>
           </div>
         </section>
       </div>
@@ -78,12 +101,22 @@
 
 <script setup lang="ts">
 import { BellRing, GraduationCap, ShieldCheck } from 'lucide-vue-next'
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+import { sanitizeRedirectPath } from '@/router/guards'
 import { useAuth } from '@/composables/useAuth'
+import { useCASAuth } from '@/composables/useCASAuth'
 
 const { login } = useAuth()
+const {
+  casStatus,
+  casLoading,
+  casReady,
+  casRedirecting,
+  fetchCASStatus,
+  beginCASLogin,
+} = useCASAuth()
 const route = useRoute()
 
 const loading = ref(false)
@@ -111,13 +144,6 @@ const features = [
   },
 ]
 
-function sanitizeRedirectPath(input: unknown): string {
-  if (typeof input !== 'string') return '/dashboard'
-  if (!input.startsWith('/')) return '/dashboard'
-  if (input.startsWith('//')) return '/dashboard'
-  return input
-}
-
 async function onSubmit() {
   if (!form.username || !form.password) return
   loading.value = true
@@ -128,4 +154,13 @@ async function onSubmit() {
     loading.value = false
   }
 }
+
+async function onCASLogin() {
+  const redirectTo = sanitizeRedirectPath(route.query.redirect)
+  await beginCASLogin(redirectTo === '/' ? '/dashboard' : redirectTo)
+}
+
+onMounted(() => {
+  void fetchCASStatus()
+})
 </script>

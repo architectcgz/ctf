@@ -54,6 +54,21 @@ type testLoginResponse struct {
 	} `json:"user"`
 }
 
+type testCASStatusResponse struct {
+	Provider      string `json:"provider"`
+	Enabled       bool   `json:"enabled"`
+	Configured    bool   `json:"configured"`
+	AutoProvision bool   `json:"auto_provision"`
+	LoginPath     string `json:"login_path"`
+	CallbackPath  string `json:"callback_path"`
+}
+
+type testCASLoginResponse struct {
+	Provider    string `json:"provider"`
+	RedirectURL string `json:"redirect_url"`
+	CallbackURL string `json:"callback_url"`
+}
+
 type testProfileResponse struct {
 	ID        int64   `json:"id"`
 	Username  string  `json:"username"`
@@ -431,7 +446,184 @@ func TestHTTP_FailedLoginIsRecordedInAuditLog(t *testing.T) {
 	}
 }
 
+func TestHTTP_LoginIsTemporarilyLockedAfterRepeatedFailures(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+
+	createUser(t, env.db, "locked_user", "Password123", model.RoleStudent, "CTF-1")
+
+	for attempt := 1; attempt <= 3; attempt++ {
+		failedResp := performJSONRequest(
+			t,
+			env.router,
+			http.MethodPost,
+			"/api/v1/auth/login",
+			map[string]any{
+				"username": "locked_user",
+				"password": "wrong-password",
+			},
+			nil,
+			nil,
+		)
+		expectedStatus := http.StatusUnauthorized
+		expectedCode := errcode.ErrInvalidCredentials.Code
+		if attempt == 3 {
+			expectedStatus = http.StatusTooManyRequests
+			expectedCode = errcode.ErrLoginTooFrequent.Code
+		}
+		if failedResp.Code != expectedStatus {
+			t.Fatalf("attempt %d expected status %d, got %d body=%s", attempt, expectedStatus, failedResp.Code, failedResp.Body.String())
+		}
+		failedBody := decodeEnvelope(t, failedResp)
+		if failedBody.Code != expectedCode {
+			t.Fatalf("attempt %d expected code %d, got %d", attempt, expectedCode, failedBody.Code)
+		}
+	}
+
+	lockedResp := performJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/auth/login",
+		map[string]any{
+			"username": "locked_user",
+			"password": "Password123",
+		},
+		nil,
+		nil,
+	)
+	if lockedResp.Code != http.StatusForbidden {
+		t.Fatalf("expected locked login status 403, got %d body=%s", lockedResp.Code, lockedResp.Body.String())
+	}
+	lockedBody := decodeEnvelope(t, lockedResp)
+	if lockedBody.Code != errcode.ErrAccountLocked.Code {
+		t.Fatalf("expected account locked code %d, got %d", errcode.ErrAccountLocked.Code, lockedBody.Code)
+	}
+}
+
+func TestHTTP_CASStatusDisabledByDefault(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+
+	resp := performJSONRequest(t, env.router, http.MethodGet, "/api/v1/auth/cas/status", nil, nil, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("unexpected cas status code: %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := decodeEnvelope(t, resp)
+	data := decodeJSON[testCASStatusResponse](t, body.Data)
+	if data.Provider != "cas" {
+		t.Fatalf("expected provider cas, got %+v", data)
+	}
+	if data.Enabled || data.Configured {
+		t.Fatalf("expected disabled and unconfigured cas, got %+v", data)
+	}
+}
+
+func TestHTTP_CASLoginReturnsConfiguredRedirectURL(t *testing.T) {
+	env := newIntegrationTestEnvWithAuthConfig(t, func(cfg *config.AuthConfig) {
+		cfg.CAS.Enabled = true
+		cfg.CAS.BaseURL = "https://cas.example.edu/cas"
+		cfg.CAS.ServiceURL = "https://ctf.example.edu/api/v1/auth/cas/callback"
+		cfg.CAS.AutoProvision = true
+	})
+
+	resp := performJSONRequest(t, env.router, http.MethodGet, "/api/v1/auth/cas/login", nil, nil, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("unexpected cas login code: %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := decodeEnvelope(t, resp)
+	data := decodeJSON[testCASLoginResponse](t, body.Data)
+	expectedRedirect := "https://cas.example.edu/cas/login?service=https%3A%2F%2Fctf.example.edu%2Fapi%2Fv1%2Fauth%2Fcas%2Fcallback"
+	if data.RedirectURL != expectedRedirect {
+		t.Fatalf("unexpected redirect url: %s", data.RedirectURL)
+	}
+	if data.CallbackURL != "https://ctf.example.edu/api/v1/auth/cas/callback" {
+		t.Fatalf("unexpected callback url: %s", data.CallbackURL)
+	}
+}
+
+func TestHTTP_CASCallbackAutoProvisionsUserAndIssuesCookie(t *testing.T) {
+	casServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/xml")
+		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+<serviceResponse>
+  <authenticationSuccess>
+    <user>cas_http_user</user>
+    <attributes>
+      <displayName>HTTP CAS User</displayName>
+      <mail>cas_http_user@example.edu</mail>
+      <className>CTF-HTTP</className>
+      <studentNo>20269999</studentNo>
+    </attributes>
+  </authenticationSuccess>
+</serviceResponse>`)
+	}))
+	defer casServer.Close()
+
+	env := newIntegrationTestEnvWithAuthConfig(t, func(cfg *config.AuthConfig) {
+		cfg.CAS.Enabled = true
+		cfg.CAS.BaseURL = casServer.URL
+		cfg.CAS.ServiceURL = "https://ctf.example.edu/api/v1/auth/cas/callback"
+		cfg.CAS.AutoProvision = true
+	})
+
+	resp := performJSONRequest(t, env.router, http.MethodGet, "/api/v1/auth/cas/callback?ticket=ST-123", nil, nil, nil)
+	if resp.Code != http.StatusOK {
+		t.Fatalf("unexpected cas callback status: %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := decodeEnvelope(t, resp)
+	if body.Code != 0 {
+		t.Fatalf("unexpected cas callback code %d body=%s", body.Code, resp.Body.String())
+	}
+	data := decodeJSON[testLoginResponse](t, body.Data)
+	if data.User.Username != "cas_http_user" || data.User.Role != model.RoleStudent {
+		t.Fatalf("unexpected cas callback user: %+v", data.User)
+	}
+	if cookieValue(resp.Result().Cookies(), "refresh_token") == "" {
+		t.Fatalf("expected refresh token cookie to be set")
+	}
+
+	var user model.User
+	if err := env.db.Where("username = ?", "cas_http_user").First(&user).Error; err != nil {
+		t.Fatalf("query cas user: %v", err)
+	}
+	if user.Email != "cas_http_user@example.edu" || user.ClassName != "CTF-HTTP" || user.StudentNo != "20269999" {
+		t.Fatalf("unexpected provisioned cas user: %+v", user)
+	}
+}
+
+func TestHTTP_CASCallbackRejectsUserWhenAutoProvisionDisabled(t *testing.T) {
+	casServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/xml")
+		fmt.Fprint(w, `<?xml version="1.0" encoding="UTF-8"?>
+<serviceResponse>
+  <authenticationSuccess>
+    <user>cas_http_user</user>
+  </authenticationSuccess>
+</serviceResponse>`)
+	}))
+	defer casServer.Close()
+
+	env := newIntegrationTestEnvWithAuthConfig(t, func(cfg *config.AuthConfig) {
+		cfg.CAS.Enabled = true
+		cfg.CAS.BaseURL = casServer.URL
+		cfg.CAS.ServiceURL = "https://ctf.example.edu/api/v1/auth/cas/callback"
+		cfg.CAS.AutoProvision = false
+	})
+
+	resp := performJSONRequest(t, env.router, http.MethodGet, "/api/v1/auth/cas/callback?ticket=ST-123", nil, nil, nil)
+	if resp.Code != http.StatusForbidden {
+		t.Fatalf("unexpected cas callback status: %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := decodeEnvelope(t, resp)
+	if body.Code != errcode.ErrCASUserNotProvisioned.Code {
+		t.Fatalf("expected cas user not provisioned code %d, got %d", errcode.ErrCASUserNotProvisioned.Code, body.Code)
+	}
+}
+
 func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
+	return newIntegrationTestEnvWithAuthConfig(t, nil)
+}
+
+func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthConfig)) *integrationTestEnv {
 	t.Helper()
 
 	gin.SetMode(gin.TestMode)
@@ -451,6 +643,9 @@ func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
 	seedRoles(t, db)
 
 	authCfg := newTestAuthConfig(t)
+	if mutate != nil {
+		mutate(&authCfg)
+	}
 	jwtManager, err := jwtpkg.NewManager(authCfg, "ctf-platform-test")
 	if err != nil {
 		t.Fatalf("create jwt manager: %v", err)
@@ -460,13 +655,19 @@ func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
 		TicketKeyPrefix: "test:ws:ticket",
 	}, jwtManager)
 	authRepo := NewRepository(db)
-	authService := NewService(authRepo, tokenService, zap.NewNop())
+	authService := NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+		Enabled:      true,
+		Limit:        3,
+		Window:       time.Minute,
+		LockDuration: 15 * time.Minute,
+	}, zap.NewNop())
+	casProvider := NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
-	authHandler := NewHandler(authService, tokenService, CookieConfig{
+	authHandler := NewHandler(authService, tokenService, casProvider, CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
@@ -483,6 +684,9 @@ func newIntegrationTestEnv(t *testing.T) *integrationTestEnv {
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/refresh", authHandler.Refresh)
+	authGroup.GET("/cas/status", authHandler.CASStatus)
+	authGroup.GET("/cas/login", authHandler.CASLogin)
+	authGroup.GET("/cas/callback", authHandler.CASCallback)
 
 	protected := apiV1.Group("")
 	protected.Use(testAuthMiddleware(tokenService))

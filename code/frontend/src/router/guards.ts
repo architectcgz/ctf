@@ -12,6 +12,10 @@ import { resolveRouteTitle } from '@/utils/routeTitle'
 NProgress.configure({ showSpinner: false })
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {
+  return to.path === '/login' || to.path === '/register' || to.path === '/login/cas/callback'
+}
+
+function isAuthLandingRoute(to: RouteLocationNormalized): boolean {
   return to.path === '/login' || to.path === '/register'
 }
 
@@ -54,7 +58,7 @@ export function setupRouterGuards(router: Router): void {
 
     try {
       if (isPublicRoute(to)) {
-        if (authStore.isLoggedIn) {
+        if (isAuthLandingRoute(to) && authStore.isLoggedIn) {
           const redirectTo = sanitizeRedirectPath(to.query.redirect)
           next(redirectTo)
           return

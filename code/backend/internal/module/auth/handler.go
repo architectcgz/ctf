@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
@@ -18,6 +19,7 @@ import (
 type Handler struct {
 	service       Service
 	tokenService  TokenService
+	casProvider   CASProvider
 	cookieConfig  CookieConfig
 	log           *zap.Logger
 	auditRecorder auditlog.Recorder
@@ -32,14 +34,18 @@ type CookieConfig struct {
 	MaxAge   time.Duration
 }
 
-func NewHandler(service Service, tokenService TokenService, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
+func NewHandler(service Service, tokenService TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
+	}
+	if casProvider == nil {
+		casProvider = NewCASProvider(config.CASConfig{}, nil, nil, log.Named("cas_provider"), nil)
 	}
 
 	return &Handler{
 		service:       service,
 		tokenService:  tokenService,
+		casProvider:   casProvider,
 		cookieConfig:  cookieConfig,
 		log:           log,
 		auditRecorder: auditRecorder,
@@ -227,6 +233,62 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 		Ticket:    ticket.Ticket,
 		ExpiresAt: ticket.ExpiresAt.Format(time.RFC3339),
 	})
+}
+
+func (h *Handler) CASStatus(c *gin.Context) {
+	response.Success(c, h.casProvider.Status())
+}
+
+func (h *Handler) CASLogin(c *gin.Context) {
+	resp, err := h.casProvider.BuildLogin(c.Request.Context())
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *Handler) CASCallback(c *gin.Context) {
+	ticket := c.Query("ticket")
+	if ticket == "" {
+		response.Error(c, errcode.ErrInvalidParams)
+		return
+	}
+
+	resp, tokens, err := h.casProvider.Authenticate(c.Request.Context(), ticket)
+	if err != nil {
+		h.recordAudit(c, auditlog.Entry{
+			Action:       model.AuditActionLogin,
+			ResourceType: "auth_cas",
+			Detail: map[string]any{
+				"provider":   casProviderName,
+				"result":     "failed",
+				"error":      err.Error(),
+				"request_id": c.GetString("request_id"),
+			},
+			IPAddress: c.ClientIP(),
+			UserAgent: userAgentPtr(c.Request.UserAgent()),
+		})
+		response.FromError(c, err)
+		return
+	}
+
+	h.writeRefreshCookie(c, tokens.RefreshToken)
+	userID := resp.User.ID
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       &userID,
+		Action:       model.AuditActionLogin,
+		ResourceType: "auth_cas",
+		Detail: map[string]any{
+			"provider":   casProviderName,
+			"username":   resp.User.Username,
+			"result":     "success",
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: userAgentPtr(c.Request.UserAgent()),
+	})
+	response.Success(c, resp)
 }
 
 func (h *Handler) writeRefreshCookie(c *gin.Context, value string) {

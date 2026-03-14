@@ -15,19 +15,22 @@ const (
 )
 
 type User struct {
-	ID           int64          `gorm:"column:id;primaryKey"`
-	Username     string         `gorm:"column:username"`
-	Name         string         `gorm:"column:name"`
-	PasswordHash string         `gorm:"column:password_hash"`
-	Email        string         `gorm:"column:email"`
-	StudentNo    string         `gorm:"column:student_no"`
-	TeacherNo    string         `gorm:"column:teacher_no"`
-	Role         string         `gorm:"column:role"`
-	ClassName    string         `gorm:"column:class_name"`
-	Status       string         `gorm:"column:status"`
-	CreatedAt    time.Time      `gorm:"column:created_at"`
-	UpdatedAt    time.Time      `gorm:"column:updated_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID                  int64          `gorm:"column:id;primaryKey"`
+	Username            string         `gorm:"column:username"`
+	Name                string         `gorm:"column:name"`
+	PasswordHash        string         `gorm:"column:password_hash"`
+	Email               string         `gorm:"column:email"`
+	StudentNo           string         `gorm:"column:student_no"`
+	TeacherNo           string         `gorm:"column:teacher_no"`
+	Role                string         `gorm:"column:role"`
+	ClassName           string         `gorm:"column:class_name"`
+	Status              string         `gorm:"column:status"`
+	FailedLoginAttempts int            `gorm:"column:failed_login_attempts"`
+	LastFailedLoginAt   *time.Time     `gorm:"column:last_failed_login_at"`
+	LockedUntil         *time.Time     `gorm:"column:locked_until"`
+	CreatedAt           time.Time      `gorm:"column:created_at"`
+	UpdatedAt           time.Time      `gorm:"column:updated_at"`
+	DeletedAt           gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 func (User) TableName() string {

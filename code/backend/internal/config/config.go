@@ -94,6 +94,16 @@ type AuthConfig struct {
 	PrivateKeyPath        string        `mapstructure:"private_key_path"`
 	PublicKeyPath         string        `mapstructure:"public_key_path"`
 	TokenBlacklistPrefix  string        `mapstructure:"token_blacklist_prefix"`
+	CAS                   CASConfig     `mapstructure:"cas"`
+}
+
+type CASConfig struct {
+	Enabled       bool   `mapstructure:"enabled"`
+	BaseURL       string `mapstructure:"base_url"`
+	LoginPath     string `mapstructure:"login_path"`
+	ValidatePath  string `mapstructure:"validate_path"`
+	ServiceURL    string `mapstructure:"service_url"`
+	AutoProvision bool   `mapstructure:"auto_provision"`
 }
 
 type RateLimitConfig struct {
@@ -104,9 +114,10 @@ type RateLimitConfig struct {
 }
 
 type RateLimitPolicyConfig struct {
-	Enabled bool          `mapstructure:"enabled"`
-	Limit   int           `mapstructure:"limit"`
-	Window  time.Duration `mapstructure:"window"`
+	Enabled      bool          `mapstructure:"enabled"`
+	Limit        int           `mapstructure:"limit"`
+	Window       time.Duration `mapstructure:"window"`
+	LockDuration time.Duration `mapstructure:"lock_duration"`
 }
 
 type ContainerConfig struct {
@@ -315,6 +326,14 @@ func (c *Config) Validate() error {
 	if c.WebSocket.RetryMaxDelay < c.WebSocket.RetryInitialDelay {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
+	if c.Auth.CAS.Enabled {
+		if strings.TrimSpace(c.Auth.CAS.BaseURL) == "" {
+			return fmt.Errorf("auth.cas.base_url must not be empty when CAS is enabled")
+		}
+		if strings.TrimSpace(c.Auth.CAS.ServiceURL) == "" {
+			return fmt.Errorf("auth.cas.service_url must not be empty when CAS is enabled")
+		}
+	}
 	return nil
 }
 
@@ -365,6 +384,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.refresh_cookie_http_only", true)
 	v.SetDefault("auth.refresh_cookie_same_site", "lax")
 	v.SetDefault("auth.token_blacklist_prefix", "ctf:auth:blacklist")
+	v.SetDefault("auth.cas.enabled", false)
+	v.SetDefault("auth.cas.login_path", "/login")
+	v.SetDefault("auth.cas.validate_path", "/serviceValidate")
+	v.SetDefault("auth.cas.auto_provision", false)
 	v.SetDefault("rate_limit.redis_key_prefix", "ctf:ratelimit")
 	v.SetDefault("rate_limit.global.enabled", true)
 	v.SetDefault("rate_limit.global.limit", 120)
@@ -372,6 +395,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("rate_limit.login.enabled", true)
 	v.SetDefault("rate_limit.login.limit", 10)
 	v.SetDefault("rate_limit.login.window", time.Minute)
+	v.SetDefault("rate_limit.login.lock_duration", 15*time.Minute)
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)

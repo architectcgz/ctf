@@ -59,11 +59,12 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 
 	authRepository := authModule.NewRepository(db)
 	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
-	authService := authModule.NewService(authRepository, tokenService, log.Named("auth_service"))
+	authService := authModule.NewService(authRepository, tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
+	casProvider := authModule.NewCASProvider(cfg.Auth.CAS, authRepository, tokenService, log.Named("cas_provider"), nil)
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
 	wsManager := websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager"))
-	authHandler := authModule.NewHandler(authService, tokenService, authModule.CookieConfig{
+	authHandler := authModule.NewHandler(authService, tokenService, casProvider, authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
 		Secure:   cfg.Auth.RefreshCookieSecure,
@@ -84,6 +85,9 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	authGroup.POST("/register", authHandler.Register)
 	authGroup.POST("/login", authHandler.Login)
 	authGroup.POST("/refresh", authHandler.Refresh)
+	authGroup.GET("/cas/status", authHandler.CASStatus)
+	authGroup.GET("/cas/login", authHandler.CASLogin)
+	authGroup.GET("/cas/callback", authHandler.CASCallback)
 
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(tokenService))

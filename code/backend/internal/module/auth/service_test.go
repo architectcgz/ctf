@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/config"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
@@ -16,10 +17,12 @@ import (
 )
 
 type mockRepository struct {
-	createFn         func(ctx context.Context, user *model.User) error
-	findByUsernameFn func(ctx context.Context, username string) (*model.User, error)
-	findByIDFn       func(ctx context.Context, userID int64) (*model.User, error)
-	updatePasswordFn func(ctx context.Context, userID int64, newHash string) error
+	createFn           func(ctx context.Context, user *model.User) error
+	findByUsernameFn   func(ctx context.Context, username string) (*model.User, error)
+	findByIDFn         func(ctx context.Context, userID int64) (*model.User, error)
+	updatePasswordFn   func(ctx context.Context, userID int64, newHash string) error
+	updateLoginStateFn func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error
+	updateCASProfileFn func(ctx context.Context, user *model.User) error
 }
 
 func (m *mockRepository) Create(ctx context.Context, user *model.User) error {
@@ -48,6 +51,20 @@ func (m *mockRepository) UpdatePassword(ctx context.Context, userID int64, newHa
 		return nil
 	}
 	return m.updatePasswordFn(ctx, userID, newHash)
+}
+
+func (m *mockRepository) UpdateLoginState(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
+	if m.updateLoginStateFn == nil {
+		return nil
+	}
+	return m.updateLoginStateFn(ctx, userID, failedAttempts, lastFailedAt, lockedUntil, status)
+}
+
+func (m *mockRepository) UpdateCASProfile(ctx context.Context, user *model.User) error {
+	if m.updateCASProfileFn == nil {
+		return nil
+	}
+	return m.updateCASProfileFn(ctx, user)
 }
 
 func TestServiceChangePasswordSuccess(t *testing.T) {
@@ -79,7 +96,7 @@ func TestServiceChangePasswordSuccess(t *testing.T) {
 			updatedHash = newHash
 			return nil
 		},
-	}, &mockTokenService{}, zap.NewNop())
+	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
 
 	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
 		OldPassword: "Password123",
@@ -112,7 +129,7 @@ func TestServiceChangePasswordOldPasswordInvalid(t *testing.T) {
 			t.Fatalf("UpdatePassword() should not be called")
 			return nil
 		},
-	}, &mockTokenService{}, zap.NewNop())
+	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
 
 	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
 		OldPassword: "wrong-password",
@@ -139,7 +156,7 @@ func TestServiceChangePasswordRejectsSamePassword(t *testing.T) {
 			t.Fatalf("UpdatePassword() should not be called")
 			return nil
 		},
-	}, &mockTokenService{}, zap.NewNop())
+	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
 
 	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
 		OldPassword: "Password123",
@@ -214,7 +231,7 @@ func TestServiceRegisterSuccess(t *testing.T) {
 		},
 	}
 
-	service := NewService(repo, tokenService, zap.NewNop())
+	service := NewService(repo, tokenService, config.RateLimitPolicyConfig{}, zap.NewNop())
 	resp, tokens, err := service.Register(context.Background(), &dto.RegisterReq{
 		Username:  "alice_1",
 		Password:  "Password123",
@@ -243,7 +260,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
 			return nil, errors.New("should not be called")
 		},
-	}, zap.NewNop())
+	}, config.RateLimitPolicyConfig{}, zap.NewNop())
 
 	_, _, err := service.Register(context.Background(), &dto.RegisterReq{
 		Username: "alice_1",
@@ -272,11 +289,21 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
 			return user, nil
 		},
+		updateLoginStateFn: func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
+			if userID != user.ID {
+				t.Fatalf("unexpected user id: %d", userID)
+			}
+			user.FailedLoginAttempts = failedAttempts
+			user.LastFailedLoginAt = lastFailedAt
+			user.LockedUntil = lockedUntil
+			user.Status = status
+			return nil
+		},
 	}, &mockTokenService{
 		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
 			return nil, errors.New("should not be called")
 		},
-	}, zap.NewNop())
+	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
 
 	_, _, err := service.Login(context.Background(), &dto.LoginReq{
 		Username: "alice_1",
@@ -284,6 +311,100 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 	})
 	if !errors.Is(err, errcode.ErrInvalidCredentials) {
 		t.Fatalf("expected invalid credentials, got %v", err)
+	}
+}
+
+func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{
+		ID:                  2,
+		Username:            "alice_2",
+		Role:                model.RoleStudent,
+		Status:              model.UserStatusActive,
+		FailedLoginAttempts: 2,
+	}
+	if err := user.SetPassword("Password123"); err != nil {
+		t.Fatalf("SetPassword() error = %v", err)
+	}
+	lastFailedAt := time.Now().Add(-10 * time.Second)
+	user.LastFailedLoginAt = &lastFailedAt
+
+	service := NewService(&mockRepository{
+		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
+			return user, nil
+		},
+		updateLoginStateFn: func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
+			user.FailedLoginAttempts = failedAttempts
+			user.LastFailedLoginAt = lastFailedAt
+			user.LockedUntil = lockedUntil
+			user.Status = status
+			return nil
+		},
+	}, &mockTokenService{
+		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+			t.Fatal("IssueTokens() should not be called")
+			return nil, nil
+		},
+	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
+
+	_, _, err := service.Login(context.Background(), &dto.LoginReq{
+		Username: "alice_2",
+		Password: "wrong-password",
+	})
+	if !errors.Is(err, errcode.ErrLoginTooFrequent) {
+		t.Fatalf("expected ErrLoginTooFrequent, got %v", err)
+	}
+	if user.Status != model.UserStatusLocked || user.LockedUntil == nil {
+		t.Fatalf("expected locked user state, got %+v", user)
+	}
+}
+
+func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
+	t.Parallel()
+
+	user := &model.User{
+		ID:                  3,
+		Username:            "alice_3",
+		Role:                model.RoleStudent,
+		Status:              model.UserStatusLocked,
+		FailedLoginAttempts: 3,
+	}
+	if err := user.SetPassword("Password123"); err != nil {
+		t.Fatalf("SetPassword() error = %v", err)
+	}
+	lockedUntil := time.Now().Add(-time.Minute)
+	user.LockedUntil = &lockedUntil
+
+	service := NewService(&mockRepository{
+		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
+			return user, nil
+		},
+		updateLoginStateFn: func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
+			user.FailedLoginAttempts = failedAttempts
+			user.LastFailedLoginAt = lastFailedAt
+			user.LockedUntil = lockedUntil
+			user.Status = status
+			return nil
+		},
+	}, &mockTokenService{
+		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+			return &TokenPair{AccessToken: "access", RefreshToken: "refresh", AccessTokenTTL: time.Minute}, nil
+		},
+	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
+
+	resp, _, err := service.Login(context.Background(), &dto.LoginReq{
+		Username: "alice_3",
+		Password: "Password123",
+	})
+	if err != nil {
+		t.Fatalf("Login() error = %v", err)
+	}
+	if resp == nil || resp.AccessToken == "" {
+		t.Fatalf("expected login response, got %+v", resp)
+	}
+	if user.Status != model.UserStatusActive || user.FailedLoginAttempts != 0 || user.LockedUntil != nil {
+		t.Fatalf("expected reset login tracking, got %+v", user)
 	}
 }
 
