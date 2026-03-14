@@ -4,6 +4,7 @@ slug: web-sqli-login-01
 title: "Web-02 SQL Injection: Login Bypass"
 category: web
 difficulty: easy
+points: 100
 tags:
   - vuln:sqli
   - stack:sqlite
@@ -23,23 +24,13 @@ hints:
 attachments: []
 
 flag:
-  mode: dynamic # static | dynamic | manual
+  mode: dynamic
+  prefix: flag
 
 runtime:
-  type: container
   image:
-    source: dockerfile # registry | dockerfile | tar
+    ref: "registry.example.edu/ctf/web-sqli-login-01:20260312"
+  build:
+    source: dockerfile
     context_dir: docker
     dockerfile: Dockerfile
-  expose:
-    - container_port: 8080
-      protocol: tcp
-
-instance:
-  ttl: "2h"
-  max_per_user: 1
-
-resources:
-  cpu: 0.5
-  memory: "256m"
-  pids: 100

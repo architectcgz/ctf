@@ -4,6 +4,7 @@ slug: web-hello-01
 title: "Web-01 Hello Container"
 category: web
 difficulty: easy
+points: 100
 tags:
   - kp:container-basics
   - stack:python
@@ -19,23 +20,13 @@ hints:
 attachments: []
 
 flag:
-  mode: dynamic # static | dynamic | manual
+  mode: dynamic
+  prefix: flag
 
 runtime:
-  type: container # container | none
   image:
-    source: dockerfile # registry | dockerfile | tar
+    ref: "registry.example.edu/ctf/web-hello-01:20260312"
+  build:
+    source: dockerfile
     context_dir: docker
     dockerfile: Dockerfile
-  expose:
-    - container_port: 8080
-      protocol: tcp
-
-instance:
-  ttl: "2h"
-  max_per_user: 1
-
-resources:
-  cpu: 0.5
-  memory: "256m"
-  pids: 100

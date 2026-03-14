@@ -4,7 +4,7 @@
 >
 > 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0），应与本文保持一致。
 >
-> 最后更新：2026-03-03
+> 最后更新：2026-03-10
 
 ---
 
@@ -88,6 +88,8 @@ export interface LoginData {
 }
 ```
 
+> 说明：账号在连续输错密码达到阈值后会被临时锁定；触发锁定的那次登录返回 `429`，锁定期内再次尝试返回 `403`。
+
 ### 2.2 POST `/api/v1/auth/register`
 
 `data`：同 `LoginData`（注册成功即登录）。
@@ -128,6 +130,44 @@ export interface WsTicketData {
   expires_at: ISODateTime
 }
 ```
+
+### 2.8 GET `/api/v1/auth/cas/status`
+
+`data`：
+
+```ts
+export interface CasStatusData {
+  provider: 'cas'
+  enabled: boolean
+  configured: boolean
+  auto_provision: boolean
+  login_path: string
+  callback_path: string
+}
+```
+
+> 说明：一期仅预留 CAS 接口层，默认 `enabled=false`；仅用于前端发现平台是否启用了 CAS 登录能力。
+
+### 2.9 GET `/api/v1/auth/cas/login`
+
+`data`：
+
+```ts
+export interface CasLoginData {
+  provider: 'cas'
+  redirect_url: string
+  callback_url: string
+}
+```
+
+> 说明：当 CAS 配置完整且已启用时，后端返回 CAS 登录跳转地址；前端可据此跳转到学校统一认证入口。
+
+### 2.10 GET `/api/v1/auth/cas/callback`
+
+`data`：预期为 `LoginData`
+
+> 说明：后端会使用 `ticket + auth.cas.service_url` 调用 CAS `serviceValidate` 完成票据校验；校验成功后按 CAS 用户名映射平台 `username`。
+> 若用户已存在，则自动回填 `name/email/class_name/student_no/teacher_no` 等资料，并清理已过期的登录锁定状态；若用户不存在，则按 `auth.cas.auto_provision` 决定自动创建 `student` 角色账号或返回 `403`。
 
 ---
 
@@ -212,9 +252,13 @@ export interface InstanceData {
 }
 ```
 
+> 说明：若挑战绑定了带 `protocol` / `ports` 的链路策略，实例启动会按 `source_node_key -> target_node_key` 方向把规则下发到宿主机 `DOCKER-USER` 链；其中细粒度 `allow` 会进入 allow-list 模式，未命中的同方向流量会被兜底拒绝。
+
 ### 3.4 DELETE `/api/v1/instances/:id`
 
 `data`：`null`
+
+> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可销毁。
 
 ### 3.5 POST `/api/v1/instances/:id/extend`
 
@@ -227,6 +271,23 @@ export interface InstanceExtendData {
   remaining_extends: number
 }
 ```
+
+> 说明：若该实例是 AWD 队伍共享实例，则当前队伍成员均可续期。
+
+### 3.5.1 POST `/api/v1/instances/:id/access`
+
+`data`：
+
+```ts
+export interface InstanceAccessData {
+  access_url: string
+}
+```
+
+> 说明：
+> - 返回的是平台代理入口地址，不再直接暴露容器真实访问入口给浏览器新窗口。
+> - 浏览器首次打开该地址时，会以短时票据换取平台代理 Cookie；后续同窗口内对靶机的 HTTP 请求将继续经平台代理转发。
+> - 平台会记录请求方法、路径、状态码和有限请求摘要，用于训练时间线和教学复盘。
 
 ### 3.6 GET `/api/v1/instances`
 
@@ -241,6 +302,8 @@ export interface InstanceListItem extends InstanceData {
 
 export type InstanceListData = InstanceListItem[]
 ```
+
+> 说明：列表会返回“当前用户可见”的运行中实例；除个人练习实例外，也会包含当前用户在 AWD 竞赛中所属队伍的共享实例。
 
 ### 3.7 POST `/api/v1/challenges/:id/submissions`
 
@@ -306,6 +369,29 @@ export interface TimelineEvent {
 export type MyTimelineData = TimelineEvent[]
 ```
 
+### 3.11 GET `/api/v1/challenges/:id/writeup`
+
+`data`：
+
+```ts
+export type ChallengeWriteupVisibility = 'private' | 'public' | 'scheduled'
+
+export interface ChallengeWriteupData {
+  id: ID
+  challenge_id: ID
+  title: string
+  content: string
+  visibility: ChallengeWriteupVisibility
+  release_at?: ISODateTime
+  is_released: true
+  requires_spoiler_warning: boolean
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+> 说明：当前后端仅在 Writeup 已公开或已到定时公开时间时返回该资源；`requires_spoiler_warning=true` 表示学员尚未解出题目，前端应先展示剧透提示。
+
 ---
 
 ## 4. 竞赛（`/contests/*`）
@@ -348,6 +434,8 @@ export interface ContestDetailData extends ContestListItem {
 
 `data`：`null`
 
+> 说明：当前实现为学员自助报名后写入 `pending` 状态；若管理员已审核通过，则重复报名按幂等成功处理并保持 `approved`。被驳回后再次报名会重新进入 `pending`。竞赛组队、入队和提交 Flag 均要求报名状态为 `approved`。
+
 ### 4.4 GET `/api/v1/contests/:id/challenges`
 
 `data`（缺少示例，需确认）：
@@ -371,9 +459,32 @@ export type ContestChallengeListData = ContestChallengeItem[]
 
 `data`：同 `SubmitFlagData`
 
+> 说明：当前后端会在正确提交时按 `contest_score -> contest_challenges.points -> contest.base_score(兜底)` 作为基础分，结合 `solve_count`、`contest.min_score`、`contest.decay` 实时结算本次得分；首血仍按当前结算分追加 `contest.first_blood_bonus`。同一队伍同一题只允许首次正确提交计分；未组队参赛者仍按个人维度去重。当后续有新的正确提交出现时，系统会按最新 `solve_count` 回溯重算该题全部历史正确提交，并同步修正队伍总分与 live 排行榜。
+
 ### 4.6 POST `/api/v1/contests/:id/challenges/:cid/instances`
 
-`data`：同 `InstanceData`（但应额外校验竞赛状态/报名/队伍关系）。
+`data`：同 `InstanceData`
+
+> 说明：
+> - 当前要求竞赛已进入 `running/frozen` 且当前用户报名状态为 `approved`。
+> - `mode=awd` 时必须已加入队伍，并按 `contest_id + team_id + challenge_id` 复用同队共享实例；同队成员再次启动会直接拿到同一实例。
+> - 非 AWD 竞赛仍按用户维度创建竞赛实例，不影响练习模式实例。
+
+### 4.6.1 POST `/api/v1/admin/contests/:id/awd/current-round/check`
+
+`data`：
+
+```ts
+export interface AWDCheckerRunData {
+  round: AWDRound
+  services: AWDTeamService[]
+}
+```
+
+> 说明：
+> - 仅管理员可调用。
+> - 会立即对当前运行中的 AWD 轮次执行一次服务检查，并刷新该轮各队伍各题的服务状态。
+> - 适用于运维修复后手动复查，不需要等待后台调度周期。
 
 ### 4.7 GET `/api/v1/contests/:id/scoreboard`（分页）
 
@@ -718,7 +829,253 @@ export type AuditLogListData = PageResult<AuditLogItem>
 
 `data`：`PageResult<ContestListItem>`（管理视图可扩展更多字段；需确认）。
 
-### 8.14 POST `/api/v1/admin/contests` / PUT `/api/v1/admin/contests/:id`
+### 8.14 GET `/api/v1/admin/challenges/:id/writeup` / PUT `/api/v1/admin/challenges/:id/writeup` / DELETE `/api/v1/admin/challenges/:id/writeup`
+
+`data`：
+
+```ts
+export type ChallengeWriteupVisibility = 'private' | 'public' | 'scheduled'
+
+export interface AdminChallengeWriteupData {
+  id: ID
+  challenge_id: ID
+  title: string
+  content: string
+  visibility: ChallengeWriteupVisibility
+  release_at?: ISODateTime
+  created_by?: ID
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+### 8.15 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
+
+`data`：
+
+```ts
+export type TopologyTier = 'public' | 'service' | 'internal'
+export type TopologyPolicyAction = 'allow' | 'deny'
+export type TopologyPolicyProtocol = 'tcp' | 'udp' | 'any'
+
+export interface TopologyNetworkData {
+  key: string
+  name: string
+  cidr?: string
+  internal?: boolean
+}
+
+export interface TopologyNodeData {
+  key: string
+  name: string
+  image_id?: ID
+  service_port?: number
+  inject_flag?: boolean
+  tier?: TopologyTier
+  network_keys?: string[]
+  env?: Record<string, string>
+  resources?: {
+    cpu_quota?: number
+    memory_mb?: number
+    pids_limit?: number
+  }
+}
+
+export interface TopologyLinkData {
+  from_node_key: string
+  to_node_key: string
+}
+
+export interface TopologyTrafficPolicyData {
+  source_node_key: string
+  target_node_key: string
+  action: TopologyPolicyAction
+  protocol?: TopologyPolicyProtocol
+  ports?: number[]
+}
+
+export interface ChallengeTopologyData {
+  id: ID
+  challenge_id: ID
+  template_id?: ID
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: TopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+> 说明：当前后端已支持在拓扑/模板配置中描述多网络分段与节点间链路策略；未显式提供 `networks` 时，后端会自动补一个默认网络并把所有节点挂到该网络。实例启动时会按 `network_keys` 创建并挂载多个 Docker Network，对“无端口/协议限定”的 `policies` 做节点级粗粒度隔离，并对带 `protocol` / `ports` 的策略按 `source_node_key -> target_node_key` 方向下发细粒度 ACL。
+
+### 8.16 GET `/api/v1/admin/environment-templates` / POST `/api/v1/admin/environment-templates` / GET `/api/v1/admin/environment-templates/:id` / PUT `/api/v1/admin/environment-templates/:id` / DELETE `/api/v1/admin/environment-templates/:id`
+
+`data`：
+
+```ts
+export interface EnvironmentTemplateData {
+  id: ID
+  name: string
+  description: string
+  entry_node_key: string
+  networks?: TopologyNetworkData[]
+  nodes: TopologyNodeData[]
+  links?: TopologyLinkData[]
+  policies?: TopologyTrafficPolicyData[]
+  usage_count: number
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+> 说明：`TopologyTrafficPolicyData.protocol` 支持 `any` / `tcp` / `udp`，`ports` 表示目标端口列表；细粒度 `allow` 会把对应方向切换到 allow-list 模式，未命中的同方向流量会被拒绝。
+
+### 8.17 GET `/api/v1/admin/contests/:id/announcements` / POST `/api/v1/admin/contests/:id/announcements` / DELETE `/api/v1/admin/contests/:id/announcements/:aid`
+
+`data`：
+
+```ts
+export interface ContestAnnouncementData {
+  id: ID
+  title: string
+  content?: string
+  created_at: ISODateTime
+}
+
+export type ContestAnnouncementListData = ContestAnnouncementData[]
+```
+
+### 8.18 GET `/api/v1/admin/contests/:id/registrations` / PUT `/api/v1/admin/contests/:id/registrations/:rid`
+
+`data`：
+
+```ts
+export type ContestRegistrationStatus = 'pending' | 'approved' | 'rejected'
+
+export interface ContestRegistrationData {
+  id: ID
+  contest_id: ID
+  user_id: ID
+  username: string
+  team_id?: ID
+  status: ContestRegistrationStatus
+  reviewed_by?: ID
+  reviewed_at?: ISODateTime
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export type ContestRegistrationListData = PageResult<ContestRegistrationData>
+```
+
+`PUT` 请求体：
+
+```ts
+export interface ReviewContestRegistrationReq {
+  status: 'approved' | 'rejected'
+}
+```
+
+### 8.19 GET `/api/v1/admin/contests/:id/awd/rounds` / POST `/api/v1/admin/contests/:id/awd/rounds` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/services` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/services/check` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / POST `/api/v1/admin/contests/:id/awd/rounds/:rid/attacks` / GET `/api/v1/admin/contests/:id/awd/rounds/:rid/summary`
+
+`data`：
+
+```ts
+export type AwdRoundStatus = 'pending' | 'running' | 'finished'
+export type AwdServiceStatus = 'up' | 'down' | 'compromised'
+export type AwdAttackType = 'flag_capture' | 'service_exploit'
+
+export interface AwdRoundData {
+  id: ID
+  contest_id: ID
+  round_number: number
+  status: AwdRoundStatus
+  started_at?: ISODateTime
+  ended_at?: ISODateTime
+  attack_score: number
+  defense_score: number
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface AwdTeamServiceData {
+  id: ID
+  round_id: ID
+  team_id: ID
+  team_name: string
+  challenge_id: ID
+  service_status: AwdServiceStatus
+  check_result: Record<string, unknown>
+  attack_received: number
+  defense_score: number
+  attack_score: number
+  updated_at: ISODateTime
+}
+
+> 说明：
+> - `attack_received` 表示该轮该服务被成功打穿的次数。
+> - `attack_score` 表示攻击方从该服务累计获取的分值。
+> - 成功攻击发生后，服务状态会被回写为 `compromised`，同时该服务当前轮防守分清零；后续若管理员手动触发或后台再次执行服务检查，状态可按最新检查结果恢复。
+
+export interface AwdAttackLogData {
+  id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team: string
+  victim_team_id: ID
+  victim_team: string
+  challenge_id: ID
+  attack_type: AwdAttackType
+  submitted_flag?: string
+  is_success: boolean
+  score_gained: number
+  created_at: ISODateTime
+}
+
+export interface AwdRoundSummaryItem {
+  team_id: ID
+  team_name: string
+  service_up_count: number
+  service_down_count: number
+  service_compromised_count: number
+  defense_score: number
+  attack_score: number
+  successful_attack_count: number
+  successful_breach_count: number
+  unique_attackers_against: number
+  total_score: number
+}
+
+export interface AwdRoundSummaryData {
+  round: AwdRoundData
+  items: AwdRoundSummaryItem[]
+}
+```
+
+> 说明：当前已补齐 AWD 轮次调度、最小版实例健康 Checker、真实容器 Flag 注入、基于当前轮 Flag 的真实攻击提交流程、短窗口的上一轮 Flag 兼容，以及队伍级共享实例模型。
+
+### 8.19.1 POST `/api/v1/contests/:id/awd/challenges/:cid/submissions`
+
+`data`：`AwdAttackLogData`
+
+请求体：
+
+```ts
+export interface SubmitAwdAttackReq {
+  victim_team_id: ID
+  flag: string
+}
+```
+
+> 规则：
+> - 仅 `mode=awd` 且 `status=running` 的竞赛允许提交。
+> - 攻击方队伍从当前登录用户的已审核报名记录中解析，必须已加入队伍。
+> - 默认校验当前轮 Flag；在 `contest.awd.previous_round_grace` 宽限期内，同时接受上一轮 Flag。
+> - 同一轮内同一 `attacker_team -> victim_team -> challenge` 首次成功提交得分，之后同队成员重复成功提交仅记日志不重复得分。
+
+### 8.20 POST `/api/v1/admin/contests` / PUT `/api/v1/admin/contests/:id`
 
 `data`（缺少示例，需确认）：
 
@@ -728,7 +1085,7 @@ export interface AdminContestUpsertData {
 }
 ```
 
-### 8.15 DELETE `/api/v1/admin/contests/:id`
+### 8.21 DELETE `/api/v1/admin/contests/:id`
 
 `data`：`null`
 
@@ -770,4 +1127,3 @@ export type InstanceStatusMsg = WsMessage<{ instance_id: ID; status: InstanceSta
 ```
 
 ---
-

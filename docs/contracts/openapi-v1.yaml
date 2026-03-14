@@ -8,7 +8,7 @@ info:
     - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
     - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
     - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
-  x-last-updated: "2026-03-03"
+  x-last-updated: "2026-03-10"
 
 servers:
   - url: /api/v1
@@ -166,6 +166,45 @@ components:
           properties:
             data: { $ref: "#/components/schemas/WsTicketData" }
 
+    CASStatusData:
+      type: object
+      required: [provider, enabled, configured, auto_provision, login_path, callback_path]
+      properties:
+        provider:
+          type: string
+          enum: [cas]
+        enabled: { type: boolean }
+        configured: { type: boolean }
+        auto_provision: { type: boolean }
+        login_path: { type: string }
+        callback_path: { type: string }
+
+    ApiEnvelopeCASStatusData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/CASStatusData" }
+
+    CASLoginData:
+      type: object
+      required: [provider, redirect_url, callback_url]
+      properties:
+        provider:
+          type: string
+          enum: [cas]
+        redirect_url: { type: string }
+        callback_url: { type: string }
+
+    ApiEnvelopeCASLoginData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/CASLoginData" }
+
     ChallengeCategory:
       type: string
       enum: [web, pwn, reverse, crypto, misc, forensics]
@@ -307,6 +346,20 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/InstanceExtendData" }
+
+    InstanceAccessData:
+      type: object
+      required: [access_url]
+      properties:
+        access_url: { type: string }
+
+    ApiEnvelopeInstanceAccessData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/InstanceAccessData" }
 
     InstanceListItem:
       allOf:
@@ -566,6 +619,185 @@ components:
           properties:
             data: { $ref: "#/components/schemas/ContestScoreboardData" }
 
+    TopologyTier:
+      type: string
+      enum: [public, service, internal]
+
+    TopologyPolicyAction:
+      type: string
+      enum: [allow, deny]
+
+    TopologyPolicyProtocol:
+      type: string
+      enum: [tcp, udp, any]
+
+    TopologyNetwork:
+      type: object
+      required: [key, name]
+      properties:
+        key: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 128 }
+        cidr: { type: string, nullable: true }
+        internal: { type: boolean }
+
+    TopologyNode:
+      type: object
+      required: [key, name]
+      properties:
+        key: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 128 }
+        image_id: { $ref: "#/components/schemas/ID", nullable: true }
+        service_port: { type: integer, minimum: 1, maximum: 65535, nullable: true }
+        inject_flag: { type: boolean }
+        tier: { $ref: "#/components/schemas/TopologyTier", nullable: true }
+        network_keys:
+          type: array
+          items: { type: string, maxLength: 64 }
+        env:
+          type: object
+          additionalProperties: { type: string }
+        resources:
+          type: object
+          properties:
+            cpu_quota: { type: number, format: float, minimum: 0, exclusiveMinimum: true }
+            memory_mb: { type: integer, minimum: 64, maximum: 16384 }
+            pids_limit: { type: integer, minimum: 1, maximum: 10000 }
+
+    TopologyLink:
+      type: object
+      required: [from_node_key, to_node_key]
+      properties:
+        from_node_key: { type: string, maxLength: 64 }
+        to_node_key: { type: string, maxLength: 64 }
+
+    TopologyTrafficPolicy:
+      type: object
+      required: [source_node_key, target_node_key, action]
+      properties:
+        source_node_key: { type: string, maxLength: 64 }
+        target_node_key: { type: string, maxLength: 64 }
+        action: { $ref: "#/components/schemas/TopologyPolicyAction" }
+        protocol:
+          allOf:
+            - $ref: "#/components/schemas/TopologyPolicyProtocol"
+          nullable: true
+          description: 细粒度 ACL 协议维度，支持 any / tcp / udp
+        ports:
+          type: array
+          description: 细粒度 ACL 的目标端口列表；为空时表示匹配对应协议的全部端口
+          items: { type: integer, minimum: 1, maximum: 65535 }
+
+    ChallengeTopologyData:
+      type: object
+      required: [id, challenge_id, entry_node_key, nodes, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        template_id: { $ref: "#/components/schemas/ID", nullable: true }
+        entry_node_key: { type: string, maxLength: 64 }
+        networks:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNetwork" }
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNode" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyLink" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyTrafficPolicy" }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    EnvironmentTemplateData:
+      type: object
+      required: [id, name, description, entry_node_key, nodes, usage_count, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        name: { type: string, maxLength: 128 }
+        description: { type: string }
+        entry_node_key: { type: string, maxLength: 64 }
+        networks:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNetwork" }
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNode" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyLink" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyTrafficPolicy" }
+        usage_count: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    SaveChallengeTopologyRequest:
+      type: object
+      properties:
+        template_id: { $ref: "#/components/schemas/ID", nullable: true }
+        entry_node_key: { type: string, maxLength: 64, nullable: true }
+        networks:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNetwork" }
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNode" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyLink" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyTrafficPolicy" }
+
+    UpsertEnvironmentTemplateRequest:
+      type: object
+      required: [name, entry_node_key, nodes]
+      properties:
+        name: { type: string, maxLength: 128 }
+        description: { type: string, nullable: true }
+        entry_node_key: { type: string, maxLength: 64 }
+        networks:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNetwork" }
+        nodes:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyNode" }
+        links:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyLink" }
+        policies:
+          type: array
+          items: { $ref: "#/components/schemas/TopologyTrafficPolicy" }
+
+    ApiEnvelopeChallengeTopologyData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ChallengeTopologyData" }
+
+    ApiEnvelopeEnvironmentTemplateData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/EnvironmentTemplateData" }
+
+    ApiEnvelopeEnvironmentTemplateListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/EnvironmentTemplateData" }
+
     ContestAnnouncement:
       type: object
       required: [id, title, created_at]
@@ -584,6 +816,272 @@ components:
             data:
               type: array
               items: { $ref: "#/components/schemas/ContestAnnouncement" }
+
+    ApiEnvelopeContestAnnouncementData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestAnnouncement" }
+
+    ContestRegistrationStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    ContestRegistration:
+      type: object
+      required: [id, contest_id, user_id, username, status, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        user_id: { $ref: "#/components/schemas/ID" }
+        username: { type: string }
+        team_id: { $ref: "#/components/schemas/ID", nullable: true }
+        status: { $ref: "#/components/schemas/ContestRegistrationStatus" }
+        reviewed_by: { $ref: "#/components/schemas/ID", nullable: true }
+        reviewed_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ContestRegistrationListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/ContestRegistration" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeContestRegistrationListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestRegistrationListData" }
+
+    ApiEnvelopeContestRegistrationData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ContestRegistration" }
+
+    AWDRoundStatus:
+      type: string
+      enum: [pending, running, finished]
+
+    AwdServiceStatus:
+      type: string
+      enum: [up, down, compromised]
+
+    AwdAttackType:
+      type: string
+      enum: [flag_capture, service_exploit]
+
+    AwdRound:
+      type: object
+      required: [id, contest_id, round_number, status, attack_score, defense_score, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        round_number: { type: integer, minimum: 1 }
+        status: { $ref: "#/components/schemas/AWDRoundStatus" }
+        started_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        ended_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        attack_score: { type: integer, minimum: 0 }
+        defense_score: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAwdRound:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdRound" }
+
+    ApiEnvelopeAwdRoundListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/AwdRound" }
+
+    AwdTeamService:
+      type: object
+      required: [id, round_id, team_id, team_name, challenge_id, service_status, check_result, attack_received, defense_score, attack_score, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        round_id: { $ref: "#/components/schemas/ID" }
+        team_id: { $ref: "#/components/schemas/ID" }
+        team_name: { type: string }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        service_status: { $ref: "#/components/schemas/AwdServiceStatus" }
+        check_result:
+          type: object
+          additionalProperties: true
+        attack_received: { type: integer, minimum: 0 }
+        defense_score: { type: integer, minimum: 0 }
+        attack_score: { type: integer, minimum: 0 }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAwdTeamServiceData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdTeamService" }
+
+    ApiEnvelopeAwdTeamServiceListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/AwdTeamService" }
+
+    AwdAttackLog:
+      type: object
+      required: [id, round_id, attacker_team_id, attacker_team, victim_team_id, victim_team, challenge_id, attack_type, is_success, score_gained, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        round_id: { $ref: "#/components/schemas/ID" }
+        attacker_team_id: { $ref: "#/components/schemas/ID" }
+        attacker_team: { type: string }
+        victim_team_id: { $ref: "#/components/schemas/ID" }
+        victim_team: { type: string }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        attack_type: { $ref: "#/components/schemas/AwdAttackType" }
+        submitted_flag: { type: string, nullable: true }
+        is_success: { type: boolean }
+        score_gained: { type: integer, minimum: 0 }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAwdAttackLogData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdAttackLog" }
+
+    ApiEnvelopeAwdAttackLogListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/AwdAttackLog" }
+
+    AwdRoundSummaryItem:
+      type: object
+      required: [team_id, team_name, service_up_count, service_down_count, service_compromised_count, defense_score, attack_score, successful_attack_count, successful_breach_count, unique_attackers_against, total_score]
+      properties:
+        team_id: { $ref: "#/components/schemas/ID" }
+        team_name: { type: string }
+        service_up_count: { type: integer, minimum: 0 }
+        service_down_count: { type: integer, minimum: 0 }
+        service_compromised_count: { type: integer, minimum: 0 }
+        defense_score: { type: integer }
+        attack_score: { type: integer }
+        successful_attack_count: { type: integer, minimum: 0 }
+        successful_breach_count: { type: integer, minimum: 0 }
+        unique_attackers_against: { type: integer, minimum: 0 }
+        total_score: { type: integer }
+
+    AwdRoundSummaryData:
+      type: object
+      required: [round, items]
+      properties:
+        round: { $ref: "#/components/schemas/AwdRound" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AwdRoundSummaryItem" }
+
+    ApiEnvelopeAwdRoundSummaryData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdRoundSummaryData" }
+
+    AwdCheckerRunData:
+      type: object
+      required: [round, services]
+      properties:
+        round: { $ref: "#/components/schemas/AwdRound" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTeamService" }
+
+    ApiEnvelopeAwdCheckerRunData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdCheckerRunData" }
+
+    ReviewContestRegistrationRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+
+    CreateAwdRoundRequest:
+      type: object
+      required: [round_number]
+      properties:
+        round_number: { type: integer, minimum: 1 }
+        status: { $ref: "#/components/schemas/AWDRoundStatus", nullable: true }
+        attack_score: { type: integer, minimum: 0, nullable: true }
+        defense_score: { type: integer, minimum: 0, nullable: true }
+
+    UpsertAwdServiceCheckRequest:
+      type: object
+      required: [team_id, challenge_id, service_status]
+      properties:
+        team_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        service_status: { $ref: "#/components/schemas/AwdServiceStatus" }
+        check_result:
+          type: object
+          additionalProperties: true
+
+    CreateAwdAttackLogRequest:
+      type: object
+      required: [attacker_team_id, victim_team_id, challenge_id, attack_type, is_success]
+      properties:
+        attacker_team_id: { $ref: "#/components/schemas/ID" }
+        victim_team_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        attack_type: { $ref: "#/components/schemas/AwdAttackType" }
+        submitted_flag: { type: string, nullable: true }
+        is_success: { type: boolean }
+
+    SubmitAwdAttackRequest:
+      type: object
+      required: [victim_team_id, flag]
+      properties:
+        victim_team_id: { $ref: "#/components/schemas/ID" }
+        flag: { type: string, maxLength: 512 }
 
     TeamMember:
       type: object
@@ -1081,8 +1579,18 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeLoginData" }
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+        "429":
+          description: Too Many Requests
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
@@ -1209,6 +1717,69 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeWsTicketData" }
 
+  /auth/cas/status:
+    get:
+      tags: [Auth]
+      summary: 获取 CAS 认证接入状态
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeCASStatusData" }
+
+  /auth/cas/login:
+    get:
+      tags: [Auth]
+      summary: 获取 CAS 登录跳转地址
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeCASLoginData" }
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /auth/cas/callback:
+    get:
+      tags: [Auth]
+      summary: CAS 登录回调入口
+      parameters:
+        - in: query
+          name: ticket
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeLoginData" }
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
   /challenges:
     get:
       tags: [Challenges]
@@ -1262,6 +1833,7 @@ paths:
     post:
       tags: [Instances]
       summary: 启动靶机实例
+      description: 如果挑战拓扑包含细粒度 ports/protocol 策略，接口会按 source_node_key -> target_node_key 方向下发容器间 ACL。
       security:
         - bearerAuth: []
       parameters:
@@ -1311,6 +1883,80 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceExtendData" }
+
+  /instances/{id}/access:
+    post:
+      tags: [Instances]
+      summary: 获取实例平台代理入口
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceAccessData" }
+
+  /instances/{id}/proxy:
+    get:
+      tags: [Instances]
+      summary: 通过平台代理访问实例根路径
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: ticket
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Proxied target response
+        "302":
+          description: Bootstrap redirect after proxy ticket exchange
+
+  /instances/{id}/proxy/{proxyPath}:
+    get:
+      tags: [Instances]
+      summary: 通过平台代理访问实例子路径
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: proxyPath
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Proxied target response
+    post:
+      tags: [Instances]
+      summary: 通过平台代理向实例子路径发起写请求
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: proxyPath
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          description: Proxied target response
 
   /instances:
     get:
@@ -1443,6 +2089,7 @@ paths:
     post:
       tags: [Contests]
       summary: 报名竞赛
+      description: 提交后默认进入待审核状态；已审核通过的重复报名按幂等成功处理。
       security:
         - bearerAuth: []
       parameters:
@@ -1479,6 +2126,7 @@ paths:
     post:
       tags: [Contests]
       summary: 竞赛中提交 Flag
+      description: 按动态计分规则结算本次提交；同一队伍同一题仅首次正确提交计分，未组队参赛者按个人维度去重。若该题随后出现新的正确提交，系统会按最新 solve_count 回溯重算该题全部历史正确提交，并同步修正队伍总分与 live 排行榜。
       security:
         - bearerAuth: []
       parameters:
@@ -1502,10 +2150,39 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
 
+  /contests/{id}/awd/challenges/{cid}/submissions:
+    post:
+      tags: [Contests]
+      summary: AWD 模式提交攻击 Flag
+      description: 从当前登录用户的已审核报名记录解析攻击方队伍，按当前轮 Flag 校验提交结果，并写入 AWD 攻击日志；在 `contest.awd.previous_round_grace` 宽限期内同时接受上一轮 Flag。同一轮内同一攻击队对同一受害队同一题仅首次成功提交计分，后续成功重复提交只记日志不重复得分。
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: cid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitAwdAttackRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdAttackLogData" }
+
   /contests/{id}/challenges/{cid}/instances:
     post:
       tags: [Contests]
       summary: 竞赛中启动靶机实例
+      description: AWD 竞赛按队伍复用共享实例，普通竞赛按用户维度创建实例。
       security:
         - bearerAuth: []
       parameters:
@@ -2123,3 +2800,546 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /admin/contests/{id}/announcements:
+    get:
+      tags: [Admin]
+      summary: 管理员查看竞赛公告列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestAnnouncementListData" }
+    post:
+      tags: [Admin]
+      summary: 创建竞赛公告
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: "字段集以实现为准"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestAnnouncementData" }
+
+  /admin/contests/{id}/registrations:
+    get:
+      tags: [Admin]
+      summary: 管理员查看竞赛报名列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: status
+          required: false
+          schema: { $ref: "#/components/schemas/ContestRegistrationStatus" }
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: size
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestRegistrationListData" }
+
+  /admin/contests/{id}/registrations/{rid}:
+    put:
+      tags: [Admin]
+      summary: 审核竞赛报名
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewContestRegistrationRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeContestRegistrationData" }
+
+  /admin/contests/{id}/announcements/{aid}:
+    delete:
+      tags: [Admin]
+      summary: 删除竞赛公告
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: aid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+  /admin/contests/{id}/awd/rounds:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 轮次列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdRoundListData" }
+    post:
+      tags: [Admin]
+      summary: 创建 AWD 轮次
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAwdRoundRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdRound" }
+
+  /admin/contests/{id}/awd/current-round/check:
+    post:
+      tags: [Admin]
+      summary: 手动触发当前轮服务检查
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdCheckerRunData" }
+
+  /admin/contests/{id}/awd/rounds/{rid}/services:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 轮次服务检查结果
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdTeamServiceListData" }
+
+  /admin/contests/{id}/awd/rounds/{rid}/services/check:
+    post:
+      tags: [Admin]
+      summary: 写入 AWD 服务检查结果
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpsertAwdServiceCheckRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdTeamServiceData" }
+
+  /admin/contests/{id}/awd/rounds/{rid}/attacks:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 攻击日志
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdAttackLogListData" }
+    post:
+      tags: [Admin]
+      summary: 写入 AWD 攻击日志
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAwdAttackLogRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdAttackLogData" }
+
+  /admin/contests/{id}/awd/rounds/{rid}/summary:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 轮次统计汇总
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdRoundSummaryData" }
+  /challenges/{id}/writeup:
+    get:
+      tags:
+      - Challenges
+      summary: 'TODO: GET /challenges/{id}/writeup'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+  /admin/challenges/{id}/writeup:
+    get:
+      tags:
+      - Admin
+      summary: 'TODO: GET /admin/challenges/{id}/writeup'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+    put:
+      tags:
+      - Admin
+      summary: 'TODO: PUT /admin/challenges/{id}/writeup'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              description: 'TODO: fill request schema'
+    delete:
+      tags:
+      - Admin
+      summary: 'TODO: DELETE /admin/challenges/{id}/writeup'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+  /admin/challenges/{id}/topology:
+    get:
+      tags:
+      - Admin
+      summary: 获取挑战拓扑
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeChallengeTopologyData'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+    put:
+      tags:
+      - Admin
+      summary: 保存挑战拓扑
+      description: 支持保存多网络拓扑与细粒度 ACL；细粒度规则会在实例启动时真实下发。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeChallengeTopologyData'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveChallengeTopologyRequest'
+    delete:
+      tags:
+      - Admin
+      summary: 删除挑战拓扑
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+  /admin/environment-templates:
+    get:
+      tags:
+      - Admin
+      summary: 获取环境模板列表
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateListData'
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Admin
+      summary: 创建环境模板
+      description: 支持创建带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'
+  /admin/environment-templates/{id}:
+    get:
+      tags:
+      - Admin
+      summary: 获取环境模板详情
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+    put:
+      tags:
+      - Admin
+      summary: 更新环境模板
+      description: 支持更新带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeEnvironmentTemplateData'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'
+    delete:
+      tags:
+      - Admin
+      summary: 删除环境模板
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeNull'
+      security:
+      - bearerAuth: []
+      parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/ID'
