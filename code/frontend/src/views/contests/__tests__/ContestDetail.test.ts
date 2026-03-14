@@ -16,6 +16,14 @@ vi.mock('@/api/contest', () => ({
   }),
   getMyTeam: vi.fn().mockResolvedValue(null),
   getContestChallenges: vi.fn().mockResolvedValue([]),
+  getAnnouncements: vi.fn().mockResolvedValue([
+    {
+      id: 'ann-1',
+      title: '比赛开始',
+      content: '欢迎来到比赛。',
+      created_at: '2024-03-15T09:00:00Z',
+    },
+  ]),
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
@@ -45,5 +53,7 @@ describe('ContestDetail', () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.exists()).toBe(true)
+    expect(wrapper.text()).toContain('公告')
+    expect(wrapper.text()).toContain('比赛开始')
   })
 })
