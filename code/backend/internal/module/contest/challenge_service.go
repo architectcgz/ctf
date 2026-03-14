@@ -85,7 +85,7 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return s.toResp(cc), nil
+	return s.toResp(cc, challenge), nil
 }
 
 func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error {
@@ -170,7 +170,11 @@ func (s *ChallengeService) ListAdminChallenges(ctx context.Context, contestID in
 
 	result := make([]*dto.ContestChallengeResp, len(challenges))
 	for i, c := range challenges {
-		result[i] = s.toResp(c)
+		challenge, err := s.challengeRepo.FindByID(c.ChallengeID)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		result[i] = s.toResp(c, challenge)
 	}
 	return result, nil
 }
@@ -236,8 +240,8 @@ func (s *ChallengeService) isContestImmutable(contest *model.Contest) bool {
 		contest.Status == model.ContestStatusEnded
 }
 
-func (s *ChallengeService) toResp(cc *model.ContestChallenge) *dto.ContestChallengeResp {
-	return &dto.ContestChallengeResp{
+func (s *ChallengeService) toResp(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
+	resp := &dto.ContestChallengeResp{
 		ID:          cc.ID,
 		ContestID:   cc.ContestID,
 		ChallengeID: cc.ChallengeID,
@@ -246,4 +250,10 @@ func (s *ChallengeService) toResp(cc *model.ContestChallenge) *dto.ContestChalle
 		IsVisible:   cc.IsVisible,
 		CreatedAt:   cc.CreatedAt,
 	}
+	if challenge != nil {
+		resp.Title = challenge.Title
+		resp.Category = challenge.Category
+		resp.Difficulty = challenge.Difficulty
+	}
+	return resp
 }

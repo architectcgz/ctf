@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/constants"
@@ -124,8 +125,8 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 	if err := s.db.WithContext(ctx).
 		Where("contest_id = ? AND user_id = ?", contestID, userID).
 		First(&registration).Error; err == nil {
-		if registration.Status != "" && registration.Status != "approved" {
-			return nil, errcode.ErrRegistrationNotApproved
+		if err := registrationStatusError(registration.Status); err != nil {
+			return nil, err
 		}
 		return registration.TeamID, nil
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -149,65 +150,136 @@ func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submiss
 		return 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	baseScore := contestChallenge.Points
-	if contestChallenge.ContestScore != nil {
-		baseScore = *contestChallenge.ContestScore
-	}
-	finalScore := baseScore
+	finalScore := 0
+	teamScoreDeltas := make(map[int64]int)
 
 	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		lockedChallenge := contestChallenge
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("contest_id = ? AND challenge_id = ?", *submission.ContestID, submission.ChallengeID).
+			First(&lockedChallenge).Error; err != nil {
+			return err
+		}
+
+		solvedQuery := tx.Model(&model.Submission{}).
+			Where("contest_id = ? AND challenge_id = ? AND is_correct = ?",
+				*submission.ContestID, submission.ChallengeID, true)
+		if teamID != nil {
+			solvedQuery = solvedQuery.Where("team_id = ?", *teamID)
+		} else {
+			solvedQuery = solvedQuery.Where("team_id IS NULL AND user_id = ?", submission.UserID)
+		}
+
 		var count int64
-		if err := tx.Model(&model.Submission{}).
-			Where("contest_id = ? AND user_id = ? AND challenge_id = ? AND is_correct = ?",
-				*submission.ContestID, submission.UserID, submission.ChallengeID, true).
-			Count(&count).Error; err != nil {
+		if err := solvedQuery.Count(&count).Error; err != nil {
 			return err
 		}
 		if count > 0 {
 			return errcode.ErrContestChallengeSolved
 		}
 
-		if teamID != nil {
-			result := tx.Model(&model.ContestChallenge{}).
-				Where("contest_id = ? AND challenge_id = ? AND first_blood_by IS NULL", *submission.ContestID, submission.ChallengeID).
-				Update("first_blood_by", *teamID)
-			if result.Error != nil {
-				return result.Error
-			}
-			if result.RowsAffected > 0 {
-				finalScore += int(math.Round(float64(baseScore) * s.cfg.Contest.FirstBloodBonus))
-			}
-
-			if err := tx.Model(&model.Team{}).
-				Where("id = ?", *teamID).
-				Updates(map[string]any{
-					"total_score":   gorm.Expr("total_score + ?", finalScore),
-					"last_solve_at": submission.SubmittedAt,
-				}).Error; err != nil {
+		if teamID != nil && lockedChallenge.FirstBloodBy == nil {
+			if err := tx.Model(&model.ContestChallenge{}).
+				Where("contest_id = ? AND challenge_id = ?", *submission.ContestID, submission.ChallengeID).
+				Update("first_blood_by", *teamID).Error; err != nil {
 				return err
 			}
+			lockedChallenge.FirstBloodBy = teamID
 		}
 
 		submission.IsCorrect = true
-		submission.Score = finalScore
+		submission.Score = 0
 		if err := tx.Create(submission).Error; err != nil {
 			if isContestSubmissionUniqueViolation(err) {
 				return errcode.ErrContestChallengeSolved
 			}
 			return err
 		}
+
+		var solvedSubmissions []model.Submission
+		if err := tx.
+			Where("contest_id = ? AND challenge_id = ? AND is_correct = ?", *submission.ContestID, submission.ChallengeID, true).
+			Order("submitted_at ASC, id ASC").
+			Find(&solvedSubmissions).Error; err != nil {
+			return err
+		}
+
+		recalculatedScore := s.calculateContestScore(lockedChallenge, challengeRecord, int64(len(solvedSubmissions)))
+		firstBloodBonus := int(math.Round(float64(recalculatedScore) * s.cfg.Contest.FirstBloodBonus))
+		scoreUpdates, currentScore := buildContestSubmissionScoreUpdates(solvedSubmissions, lockedChallenge.FirstBloodBy, recalculatedScore, firstBloodBonus, submission.ID)
+		for _, update := range scoreUpdates {
+			if update.NewScore == update.OldScore {
+				continue
+			}
+			if err := tx.Model(&model.Submission{}).
+				Where("id = ?", update.SubmissionID).
+				Update("score", update.NewScore).Error; err != nil {
+				return err
+			}
+			if update.TeamID != nil {
+				teamScoreDeltas[*update.TeamID] += update.NewScore - update.OldScore
+			}
+		}
+
+		for affectedTeamID, delta := range teamScoreDeltas {
+			if delta == 0 {
+				continue
+			}
+			updates := map[string]any{
+				"total_score": gorm.Expr("total_score + ?", delta),
+			}
+			if teamID != nil && affectedTeamID == *teamID {
+				updates["last_solve_at"] = submission.SubmittedAt
+			}
+			if err := tx.Model(&model.Team{}).
+				Where("id = ?", affectedTeamID).
+				Updates(updates).Error; err != nil {
+				return err
+			}
+		}
+
+		finalScore = currentScore
 		return nil
 	})
 	if err != nil {
 		return 0, mapSubmissionError(err)
 	}
 
-	if teamID != nil && s.scoreboardService != nil {
-		if err := s.scoreboardService.UpdateScore(ctx, *submission.ContestID, *teamID, float64(finalScore)); err != nil {
-			return 0, err
+	if submission.ContestID != nil && s.scoreboardService != nil {
+		for affectedTeamID, delta := range teamScoreDeltas {
+			if delta == 0 {
+				continue
+			}
+			if err := s.scoreboardService.UpdateScore(ctx, *submission.ContestID, affectedTeamID, float64(delta)); err != nil {
+				if rebuildErr := s.scoreboardService.RebuildScoreboard(ctx, *submission.ContestID); rebuildErr != nil {
+					return 0, rebuildErr
+				}
+				break
+			}
 		}
 	}
 	return finalScore, nil
+}
+
+func (s *SubmissionService) calculateContestScore(contestChallenge model.ContestChallenge, challengeRecord model.Challenge, solveCount int64) int {
+	baseScore := s.resolveContestBaseScore(contestChallenge, challengeRecord)
+	if s.scoreboardService != nil {
+		return s.scoreboardService.CalculateDynamicScoreWithBase(baseScore, solveCount)
+	}
+	return calculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
+}
+
+func (s *SubmissionService) resolveContestBaseScore(contestChallenge model.ContestChallenge, challengeRecord model.Challenge) float64 {
+	switch {
+	case contestChallenge.ContestScore != nil && *contestChallenge.ContestScore > 0:
+		return float64(*contestChallenge.ContestScore)
+	case contestChallenge.Points > 0:
+		return float64(contestChallenge.Points)
+	case challengeRecord.Points > 0:
+		return float64(challengeRecord.Points)
+	default:
+		return s.cfg.Contest.BaseScore
+	}
 }
 
 func mapSubmissionError(err error) error {
@@ -219,5 +291,47 @@ func mapSubmissionError(err error) error {
 
 func isContestSubmissionUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "uk_submissions_contest_user_challenge_correct"
+	if !errors.As(err, &pgErr) || pgErr.Code != "23505" {
+		return false
+	}
+	return pgErr.ConstraintName == "uk_submissions_contest_team_challenge_correct" ||
+		pgErr.ConstraintName == "uk_submissions_contest_user_challenge_correct"
+}
+
+type contestSubmissionScoreUpdate struct {
+	SubmissionID int64
+	TeamID       *int64
+	OldScore     int
+	NewScore     int
+}
+
+func buildContestSubmissionScoreUpdates(submissions []model.Submission, firstBloodBy *int64, recalculatedScore, firstBloodBonus int, currentSubmissionID int64) ([]contestSubmissionScoreUpdate, int) {
+	firstBloodSubmissionID := int64(0)
+	if firstBloodBy != nil {
+		for _, solvedSubmission := range submissions {
+			if solvedSubmission.TeamID != nil && *solvedSubmission.TeamID == *firstBloodBy {
+				firstBloodSubmissionID = solvedSubmission.ID
+				break
+			}
+		}
+	}
+
+	updates := make([]contestSubmissionScoreUpdate, 0, len(submissions))
+	currentScore := 0
+	for _, solvedSubmission := range submissions {
+		newScore := recalculatedScore
+		if firstBloodSubmissionID > 0 && solvedSubmission.ID == firstBloodSubmissionID {
+			newScore += firstBloodBonus
+		}
+		updates = append(updates, contestSubmissionScoreUpdate{
+			SubmissionID: solvedSubmission.ID,
+			TeamID:       solvedSubmission.TeamID,
+			OldScore:     solvedSubmission.Score,
+			NewScore:     newScore,
+		})
+		if solvedSubmission.ID == currentSubmissionID {
+			currentScore = newScore
+		}
+	}
+	return updates, currentScore
 }

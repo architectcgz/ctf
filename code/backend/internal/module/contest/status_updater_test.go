@@ -5,7 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
+
 	"ctf-platform/internal/model"
+	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
 type statusUpdaterRepoStub struct {
@@ -27,6 +31,14 @@ func (s *statusUpdaterRepoStub) Update(context.Context, *model.Contest) error {
 }
 
 func (s *statusUpdaterRepoStub) FindTeamsByIDs(context.Context, []int64) ([]*model.Team, error) {
+	panic("unexpected call")
+}
+
+func (s *statusUpdaterRepoStub) FindTeamsByContest(context.Context, int64) ([]*model.Team, error) {
+	panic("unexpected call")
+}
+
+func (s *statusUpdaterRepoStub) FindScoreboardTeamStats(context.Context, int64, string, []int64) (map[int64]scoreboardTeamStats, error) {
 	panic("unexpected call")
 }
 
@@ -86,5 +98,51 @@ func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 		if repo.receivedStatus[i] != status {
 			t.Fatalf("expected status %q at index %d, got %q", status, i, repo.receivedStatus[i])
 		}
+	}
+}
+
+func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *testing.T) {
+	now := time.Now()
+	repo := &statusUpdaterRepoStub{
+		contests: []*model.Contest{
+			{
+				ID:        11,
+				Status:    model.ContestStatusRunning,
+				StartTime: now.Add(-2 * time.Hour),
+				EndTime:   now.Add(-time.Minute),
+			},
+		},
+	}
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(11), "4", 0).Err(); err != nil {
+		t.Fatalf("seed current round: %v", err)
+	}
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDServiceStatusKey(11), "11:22", model.AWDServiceStatusUp).Err(); err != nil {
+		t.Fatalf("seed service status cache: %v", err)
+	}
+
+	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, nil)
+
+	updater.updateStatuses(context.Background())
+
+	if got := repo.updatedStatus[11]; got != model.ContestStatusEnded {
+		t.Fatalf("expected running contest to end, got %q", got)
+	}
+	if mini.Exists(rediskeys.AWDCurrentRoundKey(11)) {
+		t.Fatalf("expected current round key to be cleared")
+	}
+	if mini.Exists(rediskeys.AWDServiceStatusKey(11)) {
+		t.Fatalf("expected service status key to be cleared")
 	}
 }

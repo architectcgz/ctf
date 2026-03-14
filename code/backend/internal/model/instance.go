@@ -4,19 +4,22 @@ import "time"
 
 // Instance 实例模型
 type Instance struct {
-	ID           int64     `gorm:"primaryKey"`
-	UserID       int64     `gorm:"not null;index"`
-	ChallengeID  int64     `gorm:"not null;index"`
-	ContainerID  string    `gorm:"size:64;not null"`
-	NetworkID    string    `gorm:"size:64"`
-	Status       string    `gorm:"size:16;not null;index"`
-	AccessURL    string    `gorm:"size:255"`
-	Nonce        string    `gorm:"size:64"`
-	ExpiresAt    time.Time `gorm:"not null;index"`
-	ExtendCount  int       `gorm:"default:0"`
-	MaxExtends   int       `gorm:"default:2"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             int64     `gorm:"primaryKey"`
+	UserID         int64     `gorm:"not null;index"`
+	ContestID      *int64    `gorm:"column:contest_id;index"`
+	TeamID         *int64    `gorm:"column:team_id;index"`
+	ChallengeID    int64     `gorm:"not null;index"`
+	ContainerID    string    `gorm:"size:64;not null"`
+	NetworkID      string    `gorm:"size:64"`
+	RuntimeDetails string    `gorm:"column:runtime_details;type:text"`
+	Status         string    `gorm:"size:16;not null;index"`
+	AccessURL      string    `gorm:"size:255"`
+	Nonce          string    `gorm:"size:64"`
+	ExpiresAt      time.Time `gorm:"not null;index"`
+	ExtendCount    int       `gorm:"default:0"`
+	MaxExtends     int       `gorm:"default:2"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 // 状态常量

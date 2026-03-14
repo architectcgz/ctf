@@ -70,6 +70,9 @@ func (u *StatusUpdater) updateStatuses(ctx context.Context) {
 			if err := u.repo.UpdateStatus(ctx, contest.ID, newStatus); err != nil {
 				u.log.Error("update_contest_status_failed", zap.Int64("contest_id", contest.ID), zap.Error(err))
 			} else {
+				if newStatus == model.ContestStatusEnded {
+					u.clearEndedContestRuntimeState(ctx, contest.ID)
+				}
 				u.log.Info("contest_status_updated", zap.Int64("contest_id", contest.ID), zap.String("old_status", contest.Status), zap.String("new_status", newStatus))
 			}
 		}
@@ -107,5 +110,18 @@ func (u *StatusUpdater) createFrozenSnapshot(ctx context.Context, contestID int6
 		Weights: []float64{1},
 	}).Err(); err != nil {
 		u.log.Error("create_frozen_snapshot_failed", zap.Int64("contest_id", contestID), zap.Error(err))
+	}
+}
+
+func (u *StatusUpdater) clearEndedContestRuntimeState(ctx context.Context, contestID int64) {
+	if u.redis == nil || contestID <= 0 {
+		return
+	}
+	if err := u.redis.Del(
+		ctx,
+		rediskeys.AWDCurrentRoundKey(contestID),
+		rediskeys.AWDServiceStatusKey(contestID),
+	).Err(); err != nil {
+		u.log.Error("clear_ended_contest_runtime_state_failed", zap.Int64("contest_id", contestID), zap.Error(err))
 	}
 }

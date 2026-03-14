@@ -193,6 +193,8 @@ const (
 	keyRankContestFrozenPrefix = "rank:contest:%d:frozen"
 	// keyContestFreezeFlagPrefix 竞赛排行榜冻结标记
 	keyContestFreezeFlagPrefix = "contest:freeze_flag:"
+	// keyAWDRoundLockPrefix AWD 轮次推进分布式锁
+	keyAWDRoundLockPrefix = "awd:round:lock:"
 )
 
 // ContestDetailKey 竞赛详情缓存
@@ -237,6 +239,12 @@ func ContestFreezeFlagKey(contestID int64) string {
 	return withNS(fmt.Sprintf("%s%d", keyContestFreezeFlagPrefix, contestID))
 }
 
+// AWDRoundLockKey AWD 轮次推进锁
+// 数据结构: STRING ("1") | TTL: 30s（默认）
+func AWDRoundLockKey(contestID int64, roundNumber int) string {
+	return withNS(fmt.Sprintf("%s%d:%d", keyAWDRoundLockPrefix, contestID, roundNumber))
+}
+
 // ============================================================
 // AWD 实时状态模块
 // ============================================================
@@ -262,6 +270,12 @@ func AWDCurrentRoundKey(contestID int64) string {
 // 数据结构: HASH (field=team_id, value=flag) | TTL: 至轮次结束
 func AWDRoundFlagsKey(contestID int64, roundID int64) string {
 	return withNS(fmt.Sprintf(keyAWDRoundFlagsFmt, contestID, roundID))
+}
+
+// AWDRoundFlagField 每轮 Flag 哈希字段
+// 结构: {team_id}:{challenge_id}
+func AWDRoundFlagField(teamID, challengeID int64) string {
+	return fmt.Sprintf("%d:%d", teamID, challengeID)
 }
 
 // AWDServiceStatusKey 各队服务实时状态

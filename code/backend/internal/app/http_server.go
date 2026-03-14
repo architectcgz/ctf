@@ -20,6 +20,7 @@ type HTTPServer struct {
 	cleaner       *container.Cleaner
 	assessment    *assessment.Cleaner
 	statusUpdater *contest.StatusUpdater
+	awdUpdater    *contest.AWDRoundUpdater
 	updaterCtx    context.Context
 	updaterCancel context.CancelFunc
 	logger        *zap.Logger
@@ -33,7 +34,9 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 
 	containerRepo := container.NewRepository(db)
 	var containerEngine *container.Engine
-	if engine, err := container.NewEngine(&cfg.Container); err != nil {
+	if cfg.App.Env == "test" {
+		log.Info("container_engine_disabled_in_test_env_for_cleaner")
+	} else if engine, err := container.NewEngine(&cfg.Container); err != nil {
 		log.Warn("container_engine_init_failed_for_cleaner", zap.Error(err))
 	} else {
 		containerEngine = engine
@@ -60,8 +63,17 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		cfg.Contest.StatusUpdateBatchSize,
 		log.Named("contest_status_updater"),
 	)
+	awdUpdater := contest.NewAWDRoundUpdater(
+		db,
+		cache,
+		cfg.Contest.AWD,
+		cfg.Container.FlagGlobalSecret,
+		contest.NewDockerAWDFlagInjector(db, containerService, log.Named("awd_flag_injector")),
+		log.Named("awd_round_updater"),
+	)
 	updaterCtx, updaterCancel := context.WithCancel(context.Background())
 	go statusUpdater.Start(updaterCtx)
+	go awdUpdater.Start(updaterCtx)
 
 	return &HTTPServer{
 		server: &http.Server{
@@ -74,6 +86,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		cleaner:       cleaner,
 		assessment:    assessmentCleaner,
 		statusUpdater: statusUpdater,
+		awdUpdater:    awdUpdater,
 		updaterCtx:    updaterCtx,
 		updaterCancel: updaterCancel,
 		logger:        log,
@@ -90,6 +103,7 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	s.logger.Info("停止能力画像任务")
 	s.assessment.Stop()
 	s.logger.Info("停止竞赛状态更新任务")
+	s.logger.Info("停止 AWD 轮次推进任务")
 	s.updaterCancel()
 	return s.server.Shutdown(ctx)
 }
