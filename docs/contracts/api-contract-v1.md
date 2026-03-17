@@ -219,6 +219,7 @@ export interface ChallengeDetailData {
   difficulty: ChallengeDifficulty
   tags: string[]
   points: number
+  need_target: boolean      // false 表示该题目无需启动靶机
   attachment_url?: string
   is_solved: boolean
   solved_at?: ISODateTime

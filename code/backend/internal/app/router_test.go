@@ -14,8 +14,6 @@ import (
 )
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
-	t.Setenv("CTF_FLAG_SECRET", "12345678901234567890123456789012")
-
 	mini, err := miniredis.Run()
 	if err != nil {
 		t.Fatalf("start miniredis: %v", err)

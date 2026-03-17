@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -15,46 +16,81 @@ import (
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/challenge"
 	"ctf-platform/internal/module/container"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 
+const errMsgChallengeNoTarget = "该题目不需要靶机实例"
+
 type AssessmentService interface {
 	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
 }
 
+type ScoreUpdater interface {
+	UpdateUserScoreWithContext(ctx context.Context, userID int64) error
+	lockTimeout() time.Duration
+}
+
+type challengeStore interface {
+	FindByID(id int64) (*model.Challenge, error)
+	FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error)
+	CreateHintUnlock(unlock *model.ChallengeHintUnlock) error
+	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
+}
+
+type imageStore interface {
+	FindByID(id int64) (*model.Image, error)
+}
+
+type instanceStore interface {
+	UpdateRuntime(instance *model.Instance) error
+	UpdateStatusAndReleasePort(id int64, status string) error
+	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
+	FindVisibleByUser(ctx context.Context, userID int64) ([]*model.Instance, error)
+	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
+}
+
+type runtimeService interface {
+	CleanupRuntime(instance *model.Instance) error
+	CreateTopology(ctx context.Context, request *container.TopologyCreateRequest) (*container.TopologyCreateResult, error)
+	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+}
+
 type Service struct {
-	db                *gorm.DB
 	repo              *Repository
-	challengeRepo     *challenge.Repository
-	imageRepo         *challenge.ImageRepository
-	instanceRepo      *container.Repository
-	containerService  *container.Service
-	scoreService      *ScoreService
+	challengeRepo     challengeStore
+	imageRepo         imageStore
+	instanceRepo      instanceStore
+	containerService  runtimeService
+	scoreService      ScoreUpdater
 	assessmentService AssessmentService
 	redis             *redis.Client
 	config            *config.Config
 	logger            *zap.Logger
+	baseCtx           context.Context
+	cancel            context.CancelFunc
+	tasks             sync.WaitGroup
 }
 
 func NewService(
-	db *gorm.DB,
 	repo *Repository,
-	challengeRepo *challenge.Repository,
-	imageRepo *challenge.ImageRepository,
-	instanceRepo *container.Repository,
-	containerService *container.Service,
-	scoreService *ScoreService,
+	challengeRepo challengeStore,
+	imageRepo imageStore,
+	instanceRepo instanceStore,
+	containerService runtimeService,
+	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
 	config *config.Config,
 	logger *zap.Logger,
 ) *Service {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
+	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Service{
-		db:                db,
 		repo:              repo,
 		challengeRepo:     challengeRepo,
 		imageRepo:         imageRepo,
@@ -65,49 +101,31 @@ func NewService(
 		redis:             redis,
 		config:            config,
 		logger:            logger,
+		baseCtx:           baseCtx,
+		cancel:            cancel,
 	}
 }
 
 func (s *Service) StartChallenge(userID, challengeID int64) (*dto.InstanceResp, error) {
-	return s.startPersonalChallenge(context.Background(), userID, challengeID)
+	return s.StartChallengeWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *Service) StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.startPersonalChallenge(ctx, userID, challengeID)
 }
 
 func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error) {
-	scope, existingInstance, runningCount, err := s.resolveContestInstanceScope(ctx, userID, contestID, challengeID)
+	scope, err := s.resolveContestInstanceScope(ctx, userID, contestID, challengeID)
 	if err != nil {
 		return nil, err
-	}
-	if existingInstance != nil {
-		return toInstanceResp(existingInstance), nil
-	}
-	if runningCount >= s.config.Container.MaxConcurrentPerUser {
-		s.logger.Warn("竞赛实例数量超限",
-			zap.Int64("user_id", userID),
-			zap.Int64("contest_id", contestID),
-			zap.Int("current", runningCount),
-			zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
-		return nil, errcode.ErrInstanceLimitExceeded
 	}
 	return s.startChallengeWithScope(ctx, userID, challengeID, scope)
 }
 
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
-	existingInstance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeID)
-	if err == nil && existingInstance != nil {
-		return toInstanceResp(existingInstance), nil
-	}
-
-	instances, err := s.instanceRepo.FindByUserID(userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if len(instances) >= s.config.Container.MaxConcurrentPerUser {
-		s.logger.Warn("用户实例数量超限",
-			zap.Int64("user_id", userID),
-			zap.Int("current", len(instances)),
-			zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
-		return nil, errcode.ErrInstanceLimitExceeded
-	}
 	return s.startChallengeWithScope(ctx, userID, challengeID, instanceScope{
 		flagSubjectID: userID,
 	})
@@ -130,25 +148,75 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if chal.Status != model.ChallengeStatusPublished {
 		return nil, errcode.ErrChallengeNotPublish
 	}
+	if chal.ImageID == 0 {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
+	}
 
 	flag, nonce, err := s.buildInstanceFlag(scope.flagSubjectID, challengeID, chal)
 	if err != nil {
 		return nil, err
 	}
 
-	instance := &model.Instance{
-		UserID:      userID,
-		ContestID:   scope.contestID,
-		TeamID:      scope.teamID,
-		ChallengeID: challengeID,
-		Status:      model.InstanceStatusCreating,
-		Nonce:       nonce,
-		ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
-		MaxExtends:  s.config.Container.MaxExtends,
-	}
+	var (
+		instance *model.Instance
+		reused   bool
+	)
+	if err := s.repo.WithinTransaction(ctx, func(txRepo *Repository) error {
+		if err := txRepo.LockInstanceScope(userID, scope); err != nil {
+			return err
+		}
 
-	if err := s.instanceRepo.Create(instance); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		existingInstance, err := txRepo.FindScopedExistingInstance(userID, challengeID, scope)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		if existingInstance != nil {
+			instance = existingInstance
+			reused = true
+			return nil
+		}
+
+		runningCount, err := txRepo.CountScopedRunningInstances(userID, scope)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		if runningCount >= s.config.Container.MaxConcurrentPerUser {
+			s.logger.Warn("实例数量超限",
+				zap.Int64("user_id", userID),
+				zap.Int64("challenge_id", challengeID),
+				zap.Int("current", runningCount),
+				zap.Int("limit", s.config.Container.MaxConcurrentPerUser))
+			return errcode.ErrInstanceLimitExceeded
+		}
+
+		hostPort, err := txRepo.ReserveAvailablePort(s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+		if err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+
+		instance = &model.Instance{
+			UserID:      userID,
+			ContestID:   scope.contestID,
+			TeamID:      scope.teamID,
+			ChallengeID: challengeID,
+			HostPort:    hostPort,
+			Status:      model.InstanceStatusCreating,
+			Nonce:       nonce,
+			ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
+			MaxExtends:  s.config.Container.MaxExtends,
+		}
+		if err := txRepo.CreateInstance(instance); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		if err := txRepo.BindReservedPort(hostPort, instance.ID); err != nil {
+			return errcode.ErrInternal.WithCause(err)
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	if reused {
+		return toInstanceResp(instance), nil
 	}
 
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
@@ -156,19 +224,14 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 
 	if err := s.createContainer(createCtx, instance, chal, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
-		if instance.NetworkID != "" {
-			_ = s.containerService.RemoveNetwork(instance.NetworkID)
-		}
-		if instance.ContainerID != "" {
-			_ = s.containerService.RemoveContainer(instance.ContainerID)
-		}
-		_ = s.instanceRepo.UpdateStatus(instance.ID, model.InstanceStatusFailed)
+		s.markInstanceFailed(instance)
 		return nil, err
 	}
 
 	instance.Status = model.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err))
+		s.markInstanceFailed(instance)
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -180,7 +243,27 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	return toInstanceResp(instance), nil
 }
 
+func (s *Service) markInstanceFailed(instance *model.Instance) {
+	if instance == nil {
+		return
+	}
+	if err := s.containerService.CleanupRuntime(instance); err != nil {
+		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+	if err := s.instanceRepo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
+	}
+}
+
 func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
+	return s.SubmitFlagWithContext(context.Background(), userID, challengeID, flag)
+}
+
+func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	challengeItem, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -198,7 +281,6 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		return nil, errcode.ErrAlreadySolved
 	}
 
-	ctx := context.Background()
 	rateLimitKey := fmt.Sprintf("%s:submit:%d:%d", s.config.RateLimit.RedisKeyPrefix, userID, challengeID)
 	count, err := s.redis.Incr(ctx, rateLimitKey).Result()
 	if err != nil {
@@ -247,11 +329,7 @@ func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.Submi
 		resp.Message = "恭喜你，Flag 正确！"
 		resp.Points = challengeItem.Points
 		if s.scoreService != nil {
-			go func() {
-				if err := s.scoreService.UpdateUserScore(userID); err != nil {
-					s.logger.Error("更新用户得分失败", zap.Int64("user_id", userID), zap.Error(err))
-				}
-			}()
+			s.triggerScoreUpdate(userID)
 		}
 	} else {
 		resp.Message = "Flag 错误，请重试"
@@ -301,55 +379,51 @@ func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockH
 	}, nil
 }
 
-func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (instanceScope, *model.Instance, int, error) {
-	if s.db == nil {
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(fmt.Errorf("contest instance db is nil"))
+func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (instanceScope, error) {
+	if s.repo == nil {
+		return instanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
 	}
 
-	var contest model.Contest
-	if err := s.db.WithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
+	contest, err := s.repo.FindContestByIDWithContext(ctx, contestID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, nil, 0, errcode.ErrContestNotFound
+			return instanceScope{}, errcode.ErrContestNotFound
 		}
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+		return instanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch contest.Status {
 	case model.ContestStatusRunning, model.ContestStatusFrozen:
 	default:
 		if contest.Status == model.ContestStatusEnded {
-			return instanceScope{}, nil, 0, errcode.ErrContestEnded
+			return instanceScope{}, errcode.ErrContestEnded
 		}
-		return instanceScope{}, nil, 0, errcode.ErrContestNotRunning
+		return instanceScope{}, errcode.ErrContestNotRunning
 	}
 
-	var contestChallenge model.ContestChallenge
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		First(&contestChallenge).Error; err != nil {
+	contestChallenge, err := s.repo.FindContestChallengeWithContext(ctx, contestID, challengeID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, nil, 0, errcode.ErrChallengeNotInContest
+			return instanceScope{}, errcode.ErrChallengeNotInContest
 		}
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+		return instanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	if !contestChallenge.IsVisible {
-		return instanceScope{}, nil, 0, errcode.ErrContestChallengeVisible
+		return instanceScope{}, errcode.ErrContestChallengeVisible
 	}
 
-	var registration model.ContestRegistration
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND user_id = ?", contestID, userID).
-		First(&registration).Error; err != nil {
+	registration, err := s.repo.FindContestRegistrationWithContext(ctx, contestID, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, nil, 0, errcode.ErrNotRegistered
+			return instanceScope{}, errcode.ErrNotRegistered
 		}
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
+		return instanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch registration.Status {
 	case model.ContestRegistrationStatusApproved:
 	case model.ContestRegistrationStatusPending:
-		return instanceScope{}, nil, 0, errcode.ErrContestRegistrationPending
+		return instanceScope{}, errcode.ErrContestRegistrationPending
 	default:
-		return instanceScope{}, nil, 0, errcode.ErrRegistrationNotApproved
+		return instanceScope{}, errcode.ErrRegistrationNotApproved
 	}
 
 	contestIDCopy := contestID
@@ -359,35 +433,26 @@ func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, conte
 	}
 	if contest.Mode == model.ContestModeAWD {
 		if registration.TeamID == nil || *registration.TeamID <= 0 {
-			return instanceScope{}, nil, 0, errcode.ErrAWDTeamRequired
+			return instanceScope{}, errcode.ErrAWDTeamRequired
 		}
 		teamID := *registration.TeamID
 		scope.teamID = &teamID
 		scope.flagSubjectID = teamID
-		existing, err := s.instanceRepo.FindByContestTeamAndChallenge(contestID, teamID, challengeID)
-		if err != nil {
-			return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
-		}
-		instances, err := s.instanceRepo.FindByContestTeamID(contestID, teamID)
-		if err != nil {
-			return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
-		}
-		return scope, existing, len(instances), nil
+		return scope, nil
 	}
 
-	existing, err := s.instanceRepo.FindByContestUserAndChallenge(contestID, userID, challengeID)
-	if err != nil {
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
-	}
-	instances, err := s.instanceRepo.FindByContestUserID(contestID, userID)
-	if err != nil {
-		return instanceScope{}, nil, 0, errcode.ErrInternal.WithCause(err)
-	}
-	return scope, existing, len(instances), nil
+	return scope, nil
 }
 
 func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
-	ctx := context.Background()
+	return s.GetProgressWithContext(context.Background(), userID)
+}
+
+func (s *Service) GetProgressWithContext(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	cacheKey := constants.UserProgressKey(userID)
 
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
@@ -472,7 +537,15 @@ func (s *Service) GetTimeline(userID int64, limit, offset int) (*dto.TimelineRes
 }
 
 func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, error) {
-	instance, err := s.instanceRepo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	return s.GetInstanceWithContext(context.Background(), instanceID, userID)
+}
+
+func (s *Service) GetInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceInfo, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instance, err := s.instanceRepo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -484,7 +557,15 @@ func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, erro
 }
 
 func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	instances, err := s.instanceRepo.FindVisibleByUser(context.Background(), userID)
+	return s.ListUserInstancesWithContext(context.Background(), userID)
+}
+
+func (s *Service) ListUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instances, err := s.instanceRepo.FindVisibleByUser(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -554,7 +635,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
 
-	request, err := s.buildTopologyCreateRequest(chal, topology.EntryNodeKey, spec, flag)
+	request, err := s.buildTopologyCreateRequest(instance.HostPort, chal, topology.EntryNodeKey, spec, flag)
 	if err != nil {
 		return err
 	}
@@ -587,7 +668,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	}
 
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
-	containerID, networkID, hostPort, servicePort, err := s.containerService.CreateContainer(ctx, imageRef, env)
+	containerID, networkID, hostPort, servicePort, err := s.containerService.CreateContainer(ctx, imageRef, env, instance.HostPort)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -615,6 +696,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 }
 
 func (s *Service) buildTopologyCreateRequest(
+	reservedHostPort int,
 	chal *model.Challenge,
 	entryNodeKey string,
 	spec model.TopologySpec,
@@ -630,9 +712,10 @@ func (s *Service) buildTopologyCreateRequest(
 	}
 
 	request := &container.TopologyCreateRequest{
-		Networks: make([]container.TopologyCreateNetwork, 0),
-		Nodes:    make([]container.TopologyCreateNode, 0, len(spec.Nodes)),
-		Policies: append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
+		ReservedHostPort: reservedHostPort,
+		Networks:         make([]container.TopologyCreateNetwork, 0),
+		Nodes:            make([]container.TopologyCreateNode, 0, len(spec.Nodes)),
+		Policies:         append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := buildRuntimeTopologyPlan(spec)
 	request.Networks = append(request.Networks, runtimePlan.Networks...)
@@ -692,21 +775,85 @@ func (s *Service) triggerAssessmentUpdate(userID int64, dimension string) {
 		return
 	}
 
-	go func() {
+	s.runAsyncTask(func(ctx context.Context) {
 		timer := time.NewTimer(s.config.Assessment.IncrementalUpdateDelay)
 		defer timer.Stop()
 
-		<-timer.C
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			return
+		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), s.config.Assessment.IncrementalUpdateTimeout)
+		updateCtx, cancel := context.WithTimeout(ctx, s.config.Assessment.IncrementalUpdateTimeout)
 		defer cancel()
 
-		if err := s.assessmentService.UpdateSkillProfileForDimension(ctx, userID, dimension); err != nil {
+		if err := s.assessmentService.UpdateSkillProfileForDimension(updateCtx, userID, dimension); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Error("更新能力画像失败",
 				zap.Int64("user_id", userID),
 				zap.String("dimension", dimension),
 				zap.Error(err))
 		}
+	})
+}
+
+func (s *Service) Close(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if s.cancel != nil {
+		s.cancel()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		s.tasks.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (s *Service) triggerScoreUpdate(userID int64) {
+	if s.scoreService == nil {
+		return
+	}
+
+	s.runAsyncTask(func(ctx context.Context) {
+		scoreCtx := ctx
+		cancel := func() {}
+		if timeout := s.scoreService.lockTimeout(); timeout > 0 {
+			scoreCtx, cancel = context.WithTimeout(ctx, timeout)
+		}
+		defer cancel()
+
+		if err := s.scoreService.UpdateUserScoreWithContext(scoreCtx, userID); err != nil && !errors.Is(err, context.Canceled) {
+			s.logger.Error("更新用户得分失败", zap.Int64("user_id", userID), zap.Error(err))
+		}
+	})
+}
+
+func (s *Service) runAsyncTask(fn func(context.Context)) {
+	if s.baseCtx == nil {
+		return
+	}
+
+	s.tasks.Add(1)
+	go func() {
+		defer s.tasks.Done()
+
+		select {
+		case <-s.baseCtx.Done():
+			return
+		default:
+		}
+
+		fn(s.baseCtx)
 	}()
 }
 

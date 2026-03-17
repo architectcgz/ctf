@@ -117,6 +117,8 @@ const (
 	keyInstanceFlagPrefix = "instance:flag:"
 	// keyInstanceExpireQueue 实例过期队列
 	keyInstanceExpireQueue = "instance:expire_queue"
+	// keyContainerCleanupLock 容器清理任务分布式锁
+	keyContainerCleanupLock = "container:cleanup:lock"
 )
 
 // InstanceUserKey 用户当前运行实例映射
@@ -141,6 +143,12 @@ func InstanceFlagKey(instanceID int64) string {
 // 数据结构: ZSET (score=expire_timestamp, member=instance_id) | TTL: 无过期
 func InstanceExpireQueueKey() string {
 	return withNS(keyInstanceExpireQueue)
+}
+
+// ContainerCleanupLockKey 容器定时清理锁
+// 数据结构: STRING (UUID token) | TTL: 2m（默认）
+func ContainerCleanupLockKey() string {
+	return withNS(keyContainerCleanupLock)
 }
 
 // ============================================================
@@ -193,6 +201,10 @@ const (
 	keyRankContestFrozenPrefix = "rank:contest:%d:frozen"
 	// keyContestFreezeFlagPrefix 竞赛排行榜冻结标记
 	keyContestFreezeFlagPrefix = "contest:freeze_flag:"
+	// keyContestStatusUpdateLock 竞赛状态更新任务分布式锁
+	keyContestStatusUpdateLock = "contest:status_updater:lock"
+	// keyAWDSchedulerLock AWD 调度器全局分布式锁
+	keyAWDSchedulerLock = "awd:scheduler:lock"
 	// keyAWDRoundLockPrefix AWD 轮次推进分布式锁
 	keyAWDRoundLockPrefix = "awd:round:lock:"
 )
@@ -237,6 +249,18 @@ func RankContestFrozenKey(contestID int64) string {
 // 数据结构: STRING ("1") | TTL: 至竞赛结束
 func ContestFreezeFlagKey(contestID int64) string {
 	return withNS(fmt.Sprintf("%s%d", keyContestFreezeFlagPrefix, contestID))
+}
+
+// ContestStatusUpdateLockKey 竞赛状态更新锁
+// 数据结构: STRING (UUID token) | TTL: 30s（默认）
+func ContestStatusUpdateLockKey() string {
+	return withNS(keyContestStatusUpdateLock)
+}
+
+// AWDSchedulerLockKey AWD 轮次调度器全局锁
+// 数据结构: STRING (UUID token) | TTL: 30s（默认）
+func AWDSchedulerLockKey() string {
+	return withNS(keyAWDSchedulerLock)
 }
 
 // AWDRoundLockKey AWD 轮次推进锁

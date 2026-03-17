@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -21,6 +23,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -53,6 +56,44 @@ type fullRouterTestEnv struct {
 	instance     *model.Instance
 	notification *model.Notification
 	report       *model.Report
+}
+
+var (
+	fullRouterSchemaTemplateOnce sync.Once
+	fullRouterSchemaTemplatePath string
+	fullRouterSchemaTemplateErr  error
+)
+
+var fullRouterTestSchemaModels = []any{
+	&model.Role{},
+	&model.User{},
+	&model.UserRole{},
+	&model.Image{},
+	&model.Challenge{},
+	&model.Tag{},
+	&model.ChallengeTag{},
+	&model.ChallengeHint{},
+	&model.ChallengeHintUnlock{},
+	&model.ChallengeWriteup{},
+	&model.EnvironmentTemplate{},
+	&model.ChallengeTopology{},
+	&model.Submission{},
+	&model.Instance{},
+	&model.PortAllocation{},
+	&model.UserScore{},
+	&model.AuditLog{},
+	&model.Notification{},
+	&model.SkillProfile{},
+	&model.Contest{},
+	&model.ContestChallenge{},
+	&model.ContestRegistration{},
+	&model.ContestAnnouncement{},
+	&model.Team{},
+	&model.TeamMember{},
+	&model.AWDRound{},
+	&model.AWDTeamService{},
+	&model.AWDAttackLog{},
+	&model.Report{},
 }
 
 func TestFullRouter_AccessControlMatrix(t *testing.T) {
@@ -93,21 +134,30 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 	baseEnv := newFullRouterTestEnv(t)
 
 	for _, route := range filteredRouterRoutes(baseEnv.router.Routes()) {
-		env := newFullRouterTestEnv(t)
-		target := materializeRoutePath(route.Path, env)
-		headers := authorizedHeadersForRoute(t, env, route.Method, route.Path)
-		payload := routePayload(route.Method, route.Path)
+		route := route
+		t.Run(route.Method+" "+route.Path, func(t *testing.T) {
+			env := newFullRouterTestEnv(t)
+			target := materializeRoutePath(route.Path, env)
+			headers := authorizedHeadersForRoute(t, env, route.Method, route.Path)
+			payload := routePayload(route.Method, route.Path)
 
-		resp := performFullRouterRequest(t, env.router, route.Method, target, payload, headers)
-		if !isAcceptableSmokeStatus(route.Method, route.Path, resp.Code) {
-			t.Errorf("expected non-5xx for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-			continue
-		}
+			resp := performFullRouterRequest(t, env.router, route.Method, target, payload, headers)
+			if !isAcceptableSmokeStatus(route.Method, route.Path, resp.Code) {
+				t.Errorf("expected non-5xx for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
+				return
+			}
 
-		access := classifyRouteAccess(route.Method, route.Path)
-		if access != routeAccessPublic && resp.Code == http.StatusUnauthorized {
-			t.Errorf("expected authorized request for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
-		}
+			if route.Method == http.MethodPost && route.Path == "/api/v1/reports/class" && resp.Code == http.StatusOK {
+				var report dto.ReportExportData
+				decodeFullRouterData(t, resp, &report)
+				waitForReportStatus(t, env, report.ReportID, headers, model.ReportStatusReady, 5*time.Second)
+			}
+
+			access := classifyRouteAccess(route.Method, route.Path)
+			if access != routeAccessPublic && resp.Code == http.StatusUnauthorized {
+				t.Errorf("expected authorized request for %s %s, got %d body=%s", route.Method, route.Path, resp.Code, resp.Body.String())
+			}
+		})
 	}
 }
 
@@ -288,49 +338,12 @@ func newFullRouterTestEnv(t *testing.T) *fullRouterTestEnv {
 	cache := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
 	t.Cleanup(func() { _ = cache.Close() })
 
-	dbPath := filepath.Join(t.TempDir(), "full-router.sqlite")
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := openFullRouterTestDB(t)
 	t.Cleanup(func() {
 		if sqlDB, sqlErr := db.DB(); sqlErr == nil {
 			_ = sqlDB.Close()
 		}
 	})
-
-	if err := db.AutoMigrate(
-		&model.Role{},
-		&model.User{},
-		&model.UserRole{},
-		&model.Image{},
-		&model.Challenge{},
-		&model.Tag{},
-		&model.ChallengeTag{},
-		&model.ChallengeHint{},
-		&model.ChallengeHintUnlock{},
-		&model.ChallengeWriteup{},
-		&model.EnvironmentTemplate{},
-		&model.ChallengeTopology{},
-		&model.Submission{},
-		&model.Instance{},
-		&model.UserScore{},
-		&model.AuditLog{},
-		&model.Notification{},
-		&model.SkillProfile{},
-		&model.Contest{},
-		&model.ContestChallenge{},
-		&model.ContestRegistration{},
-		&model.ContestAnnouncement{},
-		&model.Team{},
-		&model.TeamMember{},
-		&model.AWDRound{},
-		&model.AWDTeamService{},
-		&model.AWDAttackLog{},
-		&model.Report{},
-	); err != nil {
-		t.Fatalf("auto migrate: %v", err)
-	}
 
 	cfg := newFullRouterTestConfig(t)
 	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
@@ -351,6 +364,89 @@ func newFullRouterTestEnv(t *testing.T) *fullRouterTestEnv {
 
 	seedFullRouterData(t, env)
 	return env
+}
+
+func openFullRouterTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	templatePath, err := ensureFullRouterSchemaTemplate()
+	if err != nil {
+		t.Fatalf("prepare full router schema template: %v", err)
+	}
+
+	dbPath := filepath.Join(t.TempDir(), "full-router.sqlite")
+	if err := copySQLiteTemplate(templatePath, dbPath); err != nil {
+		t.Fatalf("clone sqlite schema template: %v", err)
+	}
+
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	return db
+}
+
+func ensureFullRouterSchemaTemplate() (string, error) {
+	fullRouterSchemaTemplateOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "full-router-schema-*")
+		if err != nil {
+			fullRouterSchemaTemplateErr = fmt.Errorf("create schema temp dir: %w", err)
+			return
+		}
+
+		fullRouterSchemaTemplatePath = filepath.Join(dir, "schema.sqlite")
+		fullRouterSchemaTemplateErr = buildFullRouterSchemaTemplate(fullRouterSchemaTemplatePath)
+	})
+
+	if fullRouterSchemaTemplateErr != nil {
+		return "", fullRouterSchemaTemplateErr
+	}
+	return fullRouterSchemaTemplatePath, nil
+}
+
+func buildFullRouterSchemaTemplate(path string) error {
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
+	if err != nil {
+		return fmt.Errorf("open sqlite template: %w", err)
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return fmt.Errorf("get sqlite template handle: %w", err)
+	}
+	defer func() { _ = sqlDB.Close() }()
+
+	if err := db.AutoMigrate(fullRouterTestSchemaModels...); err != nil {
+		return fmt.Errorf("auto migrate sqlite template: %w", err)
+	}
+
+	return nil
+}
+
+func copySQLiteTemplate(srcPath, dstPath string) error {
+	src, err := os.Open(srcPath)
+	if err != nil {
+		return fmt.Errorf("open sqlite template: %w", err)
+	}
+	defer func() { _ = src.Close() }()
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return fmt.Errorf("create sqlite copy: %w", err)
+	}
+
+	if _, err := io.Copy(dst, src); err != nil {
+		_ = dst.Close()
+		return fmt.Errorf("copy sqlite template: %w", err)
+	}
+	if err := dst.Sync(); err != nil {
+		_ = dst.Close()
+		return fmt.Errorf("sync sqlite copy: %w", err)
+	}
+	if err := dst.Close(); err != nil {
+		return fmt.Errorf("close sqlite copy: %w", err)
+	}
+	return nil
 }
 
 func newFullRouterTestConfig(t *testing.T) *config.Config {
@@ -726,9 +822,7 @@ func createFullRouterUser(t *testing.T, db *gorm.DB, username, password, role, c
 		ClassName: className,
 		Name:      username,
 	}
-	if err := user.SetPassword(password); err != nil {
-		t.Fatalf("set password: %v", err)
-	}
+	setTestPassword(t, user, password)
 	if err := db.Create(user).Error; err != nil {
 		t.Fatalf("create user %s: %v", username, err)
 	}

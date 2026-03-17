@@ -39,9 +39,10 @@ type TopologyCreateNetwork struct {
 }
 
 type TopologyCreateRequest struct {
-	Networks []TopologyCreateNetwork
-	Nodes    []TopologyCreateNode
-	Policies []model.TopologyTrafficPolicy
+	Networks         []TopologyCreateNetwork
+	Nodes            []TopologyCreateNode
+	Policies         []model.TopologyTrafficPolicy
+	ReservedHostPort int
 }
 
 type TopologyCreateResult struct {
@@ -71,6 +72,9 @@ type runtimeEngine interface {
 	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
 	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
+	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
+	RemoveImage(ctx context.Context, imageRef string) error
+	ListManagedContainerStats(ctx context.Context, managedBy string) ([]ManagedContainerStat, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
 	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
 	StartContainer(ctx context.Context, containerID string) error
@@ -111,13 +115,14 @@ func isNilRuntimeEngine(engine runtimeEngine) bool {
 	}
 }
 
-func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string) (containerID, networkID string, hostPort, servicePort int, err error) {
+func (s *Service) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
 	servicePort, err = s.resolveServicePort(ctx, imageName)
 	if err != nil {
 		return "", "", 0, 0, err
 	}
 
 	result, err := s.CreateTopology(ctx, &TopologyCreateRequest{
+		ReservedHostPort: reservedHostPort,
 		Networks: []TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
@@ -164,6 +169,55 @@ func (s *Service) resolveServicePort(ctx context.Context, imageRef string) (int,
 	return resolvedPort, nil
 }
 
+func (s *Service) InspectImageSize(ctx context.Context, imageRef string) (int64, error) {
+	if strings.TrimSpace(imageRef) == "" || s.engine == nil {
+		return 0, nil
+	}
+	return s.engine.InspectImageSize(ctx, imageRef)
+}
+
+func (s *Service) RemoveImage(ctx context.Context, imageRef string) error {
+	if strings.TrimSpace(imageRef) == "" || s.engine == nil {
+		return nil
+	}
+	return s.engine.RemoveImage(ctx, imageRef)
+}
+
+func (s *Service) ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error) {
+	if s.engine == nil {
+		return []ManagedContainerStat{}, nil
+	}
+	return s.engine.ListManagedContainerStats(ctx, managedByFilter())
+}
+
+func (s *Service) CleanupRuntime(instance *model.Instance) error {
+	return s.CleanupRuntimeWithContext(context.Background(), instance)
+}
+
+func (s *Service) CleanupRuntimeWithContext(ctx context.Context, instance *model.Instance) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if instance == nil {
+		return nil
+	}
+	if err := s.removeACLRulesWithContext(ctx, managedACLRules(instance)); err != nil {
+		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+	for _, containerID := range managedContainerIDs(instance) {
+		if err := s.RemoveContainerWithContext(ctx, containerID); err != nil {
+			return err
+		}
+	}
+	for _, networkID := range managedNetworkIDs(instance) {
+		if err := s.RemoveNetworkWithContext(ctx, networkID); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error) {
 	if req == nil || len(req.Nodes) == 0 {
 		return nil, fmt.Errorf("topology nodes are required")
@@ -181,9 +235,13 @@ func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest
 		return nil, fmt.Errorf("entry node is required")
 	}
 
-	hostPort, err := s.allocatePort()
-	if err != nil {
-		return nil, err
+	hostPort := req.ReservedHostPort
+	if hostPort <= 0 {
+		var err error
+		hostPort, err = s.allocatePort()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if s.engine == nil {
@@ -330,12 +388,20 @@ func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest
 
 // RemoveContainer 删除容器
 func (s *Service) RemoveContainer(containerID string) error {
+	return s.RemoveContainerWithContext(context.Background(), containerID)
+}
+
+func (s *Service) RemoveContainerWithContext(ctx context.Context, containerID string) error {
 	if s.engine == nil {
 		s.logger.Info("删除容器（降级模拟）", zap.String("container_id", containerID))
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	_ = s.engine.StopContainer(ctx, containerID, 5*time.Second)
 	if err := s.engine.RemoveContainer(ctx, containerID, true); err != nil {
@@ -347,17 +413,29 @@ func (s *Service) RemoveContainer(containerID string) error {
 }
 
 func (s *Service) removeACLRules(rules []model.InstanceRuntimeACLRule) error {
+	return s.removeACLRulesWithContext(context.Background(), rules)
+}
+
+func (s *Service) removeACLRulesWithContext(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
 	if len(rules) == 0 || s.engine == nil {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	return s.engine.RemoveACLRules(ctx, rules)
 }
 
 // RemoveNetwork 删除网络
 func (s *Service) RemoveNetwork(networkID string) error {
+	return s.RemoveNetworkWithContext(context.Background(), networkID)
+}
+
+func (s *Service) RemoveNetworkWithContext(ctx context.Context, networkID string) error {
 	if networkID == "" {
 		return nil
 	}
@@ -366,7 +444,11 @@ func (s *Service) RemoveNetwork(networkID string) error {
 		return nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := s.engine.RemoveNetwork(ctx, networkID); err != nil {
 		return err
@@ -385,8 +467,16 @@ func (s *Service) WriteFileToContainer(ctx context.Context, containerID, filePat
 }
 
 func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, error) {
+	return s.CreateInstanceWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *Service) CreateInstanceWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	// 检查用户并发实例数
-	instances, err := s.repo.FindByUserID(userID)
+	instances, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -404,13 +494,13 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 		MaxExtends:  s.config.MaxExtends,
 	}
 
-	if err := s.repo.Create(instance); err != nil {
+	if err := s.repo.CreateWithContext(ctx, instance); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	instance.Status = model.InstanceStatusRunning
 	instance.AccessURL = fmt.Sprintf("http://localhost:3%04d", 1000+instance.ID)
-	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusRunning); err != nil {
+	if err := s.repo.UpdateStatusWithContext(ctx, instance.ID, model.InstanceStatusRunning); err != nil {
 		s.logger.Error("更新实例状态失败", zap.Error(err))
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -425,7 +515,15 @@ func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, 
 }
 
 func (s *Service) DestroyInstance(instanceID, userID int64) error {
-	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	return s.DestroyInstanceWithContext(context.Background(), instanceID, userID)
+}
+
+func (s *Service) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
@@ -437,11 +535,19 @@ func (s *Service) DestroyInstance(instanceID, userID int64) error {
 		zap.Int64("instance_id", instanceID),
 		zap.Int64("user_id", userID))
 
-	return s.destroyManagedInstance(instance)
+	return s.destroyManagedInstanceWithContext(ctx, instance)
 }
 
 func (s *Service) ExtendInstance(instanceID, userID int64) (*dto.InstanceResp, error) {
-	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	return s.ExtendInstanceWithContext(context.Background(), instanceID, userID)
+}
+
+func (s *Service) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -453,11 +559,11 @@ func (s *Service) ExtendInstance(instanceID, userID int64) (*dto.InstanceResp, e
 	}
 
 	// 使用原子更新避免并发竞争
-	if err := s.repo.AtomicExtendByID(instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
+	if err := s.repo.AtomicExtendByIDWithContext(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
 		return nil, err
 	}
 
-	updatedInstance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	updatedInstance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -474,7 +580,15 @@ func (s *Service) ExtendInstance(instanceID, userID int64) (*dto.InstanceResp, e
 }
 
 func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	instances, err := s.repo.FindVisibleByUser(context.Background(), userID)
+	return s.GetUserInstancesWithContext(context.Background(), userID)
+}
+
+func (s *Service) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instances, err := s.repo.FindVisibleByUser(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -487,7 +601,15 @@ func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
 }
 
 func (s *Service) GetAccessURL(instanceID, userID int64) (string, error) {
-	instance, err := s.repo.FindAccessibleByIDForUser(context.Background(), instanceID, userID)
+	return s.GetAccessURLWithContext(context.Background(), instanceID, userID)
+}
+
+func (s *Service) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
 	if err != nil {
 		return "", errcode.ErrInternal.WithCause(err)
 	}
@@ -569,7 +691,7 @@ func (s *Service) DestroyTeacherInstance(ctx context.Context, instanceID, reques
 		zap.Int64("requester_id", requesterID),
 		zap.String("requester_role", requesterRole))
 
-	return s.destroyManagedInstance(instance)
+	return s.destroyManagedInstanceWithContext(ctx, instance)
 }
 
 func (s *Service) CleanExpiredInstances(ctx context.Context) error {
@@ -581,22 +703,13 @@ func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	for _, inst := range instances {
 		s.logger.Info("清理过期实例", zap.Int64("instance_id", inst.ID))
 
-		if err := s.removeACLRules(managedACLRules(inst)); err != nil {
-			s.logger.Warn("删除过期 ACL 规则失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+		if err := s.CleanupRuntimeWithContext(ctx, inst); err != nil {
+			s.logger.Warn("清理过期实例运行时失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
+			continue
 		}
-
-		for _, containerID := range managedContainerIDs(inst) {
-			if err := s.RemoveContainer(containerID); err != nil {
-				s.logger.Warn("删除过期容器失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
-			}
+		if err := s.repo.UpdateStatusAndReleasePort(inst.ID, model.InstanceStatusExpired); err != nil {
+			s.logger.Warn("更新过期实例状态并释放端口失败", zap.Int64("instance_id", inst.ID), zap.Int("host_port", inst.HostPort), zap.Error(err))
 		}
-		for _, networkID := range managedNetworkIDs(inst) {
-			if err := s.RemoveNetwork(networkID); err != nil {
-				s.logger.Warn("删除过期网络失败", zap.Int64("instance_id", inst.ID), zap.Error(err))
-			}
-		}
-
-		s.repo.UpdateStatus(inst.ID, model.InstanceStatusExpired)
 	}
 	return nil
 }
@@ -623,7 +736,7 @@ func (s *Service) CleanupOrphans(ctx context.Context) error {
 
 	orphanContainers := selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod, time.Now())
 	for _, orphan := range orphanContainers {
-		if err := s.RemoveContainer(orphan.ID); err != nil {
+		if err := s.RemoveContainerWithContext(ctx, orphan.ID); err != nil {
 			s.logger.Warn("删除孤儿容器失败",
 				zap.String("container_id", orphan.ID),
 				zap.String("container_name", orphan.Name),
@@ -721,10 +834,10 @@ func selectOrphanContainers(
 
 func (s *Service) cleanupTopologyResources(containerIDs []string, networkIDs []string) {
 	for idx := len(containerIDs) - 1; idx >= 0; idx-- {
-		_ = s.engine.RemoveContainer(context.Background(), containerIDs[idx], true)
+		_ = s.RemoveContainer(containerIDs[idx])
 	}
 	for idx := len(networkIDs) - 1; idx >= 0; idx-- {
-		_ = s.engine.RemoveNetwork(context.Background(), networkIDs[idx])
+		_ = s.RemoveNetwork(networkIDs[idx])
 	}
 }
 
@@ -766,20 +879,14 @@ func remainingExtends(inst *model.Instance) int {
 }
 
 func (s *Service) destroyManagedInstance(instance *model.Instance) error {
-	if err := s.removeACLRules(managedACLRules(instance)); err != nil {
-		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	return s.destroyManagedInstanceWithContext(context.Background(), instance)
+}
+
+func (s *Service) destroyManagedInstanceWithContext(ctx context.Context, instance *model.Instance) error {
+	if err := s.CleanupRuntimeWithContext(ctx, instance); err != nil {
+		return errcode.ErrInternal.WithCause(err)
 	}
-	for _, containerID := range managedContainerIDs(instance) {
-		if err := s.RemoveContainer(containerID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-	}
-	for _, networkID := range managedNetworkIDs(instance) {
-		if err := s.RemoveNetwork(networkID); err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-	}
-	if err := s.repo.UpdateStatus(instance.ID, model.InstanceStatusStopped); err != nil {
+	if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusStopped); err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil

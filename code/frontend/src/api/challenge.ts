@@ -43,6 +43,7 @@ function normalizeChallengeDetail(item: RawChallengeDetailData): ChallengeDetail
     id: String(item.id),
     tags: item.tags ?? [],
     hints: item.hints ?? [],
+    need_target: item.need_target ?? true,
   }
 }
 
@@ -99,6 +100,7 @@ export async function createInstance(id: string): Promise<InstanceData> {
   const payload = await request<InstanceData & { id: string | number; challenge_id: string | number }>({
     method: 'POST',
     url: `/challenges/${encodeURIComponent(id)}/instances`,
+    suppressErrorToast: true,
   })
   return normalizeInstanceData(payload)
 }

@@ -124,7 +124,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListPublishedChallenges(authctx.MustCurrentUser(c).UserID, &query)
+	result, err := h.service.ListPublishedChallengesWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -141,7 +141,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	detail, err := h.service.GetPublishedChallenge(authctx.MustCurrentUser(c).UserID, id)
+	detail, err := h.service.GetPublishedChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return

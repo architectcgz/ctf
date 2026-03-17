@@ -2,10 +2,6 @@ package practice
 
 import (
 	"context"
-	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-	"ctf-platform/internal/pkg/cache"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -15,7 +11,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+
+	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
+	"ctf-platform/internal/pkg/cache"
 )
 
 // 难度权重映射
@@ -29,15 +29,18 @@ var difficultyWeights = map[string]float64{
 
 // ScoreService 计分服务
 type ScoreService struct {
-	db     *gorm.DB
+	repo   *Repository
 	redis  *redis.Client
 	logger *zap.Logger
 	config *config.ScoreConfig
 }
 
-func NewScoreService(db *gorm.DB, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+func NewScoreService(repo *Repository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &ScoreService{
-		db:     db,
+		repo:   repo,
 		redis:  redis,
 		logger: logger,
 		config: cfg,
@@ -46,23 +49,33 @@ func NewScoreService(db *gorm.DB, redis *redis.Client, logger *zap.Logger, cfg *
 
 // CalculateScore 计算题目得分
 func (s *ScoreService) CalculateScore(challengeID int64) int {
-	var challenge model.Challenge
-	if err := s.db.Select("points, difficulty").Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+	return s.CalculateScoreWithContext(context.Background(), challengeID)
+}
+
+func (s *ScoreService) CalculateScoreWithContext(ctx context.Context, challengeID int64) int {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	challenge, err := s.repo.FindChallengeScoreWithContext(ctx, challengeID)
+	if err != nil {
 		s.logger.Error("查询题目失败", zap.Int64("challengeID", challengeID), zap.Error(err))
 		return 0
 	}
 
-	weight := difficultyWeights[challenge.Difficulty]
-	if weight == 0 {
-		weight = 1.0
-	}
-
-	return int(float64(challenge.Points) * weight)
+	return calculateChallengeScore(challenge)
 }
 
 // UpdateUserScore 更新用户总分
 func (s *ScoreService) UpdateUserScore(userID int64) error {
-	ctx := context.Background()
+	return s.UpdateUserScoreWithContext(context.Background(), userID)
+}
+
+func (s *ScoreService) UpdateUserScoreWithContext(ctx context.Context, userID int64) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	lockKey := cache.ScoreLockKey(userID)
 
 	// 获取分布式锁（使用唯一 token 防止误删）
@@ -100,35 +113,32 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 	}()
 
 	// 查询用户已解决的题目
-	var submissions []model.Submission
-	err = s.db.Where("user_id = ? AND is_correct = ?", userID, true).
-		Select("DISTINCT challenge_id").
-		Find(&submissions).Error
+	challengeIDs, err := s.repo.ListSolvedChallengeIDsWithContext(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	// 计算总分
-	totalScore := 0
-	for _, sub := range submissions {
-		totalScore += s.CalculateScore(sub.ChallengeID)
+	challenges, err := s.repo.FindChallengesScoresWithContext(ctx, challengeIDs)
+	if err != nil {
+		return err
 	}
 
-	// 更新数据库（使用 GORM Clauses 实现跨数据库兼容）
-	err = s.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"total_score", "solved_count", "updated_at"}),
-	}).Create(&model.UserScore{
+	totalScore := 0
+	for _, challenge := range challenges {
+		totalScore += calculateChallengeScore(&challenge)
+	}
+
+	err = s.repo.UpsertUserScoreWithContext(ctx, &model.UserScore{
 		UserID:      userID,
 		TotalScore:  totalScore,
-		SolvedCount: len(submissions),
+		SolvedCount: len(challengeIDs),
 		UpdatedAt:   time.Now(),
-	}).Error
+	})
 	if err != nil {
 		return err
 	}
 
-	s.logger.Info("更新用户得分", zap.Int64("userID", userID), zap.Int("totalScore", totalScore), zap.Int("solvedCount", len(submissions)))
+	s.logger.Info("更新用户得分", zap.Int64("userID", userID), zap.Int("totalScore", totalScore), zap.Int("solvedCount", len(challengeIDs)))
 
 	// 使用 Pipeline 批量更新 Redis
 	pipe := s.redis.Pipeline()
@@ -138,7 +148,7 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 	info := &dto.UserScoreInfo{
 		UserID:      userID,
 		TotalScore:  totalScore,
-		SolvedCount: len(submissions),
+		SolvedCount: len(challengeIDs),
 	}
 	data, _ := json.Marshal(info)
 	pipe.Set(ctx, cacheKey, data, s.config.CacheTTL)
@@ -158,7 +168,14 @@ func (s *ScoreService) UpdateUserScore(userID int64) error {
 
 // GetUserScore 获取用户得分信息
 func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
-	ctx := context.Background()
+	return s.GetUserScoreWithContext(context.Background(), userID)
+}
+
+func (s *ScoreService) GetUserScoreWithContext(ctx context.Context, userID int64) (*dto.UserScoreInfo, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	cacheKey := cache.UserScoreKey(userID)
 
 	// 尝试从缓存获取
@@ -171,8 +188,7 @@ func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
 	}
 
 	// 查询数据库
-	var userScore model.UserScore
-	err = s.db.Where("user_id = ?", userID).First(&userScore).Error
+	userScore, err := s.repo.FindUserScoreWithContext(ctx, userID)
 
 	if err == gorm.ErrRecordNotFound {
 		// 空结果不缓存，直接返回默认值
@@ -188,12 +204,14 @@ func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
 		return nil, err
 	}
 
-	var user model.User
-	s.db.Select("username").Where("id = ?", userID).First(&user)
+	userMap, userErr := s.getUsernamesWithContext(ctx, []int64{userID})
+	if userErr != nil {
+		s.logger.Warn("查询用户名失败", zap.Int64("userID", userID), zap.Error(userErr))
+	}
 
 	info := &dto.UserScoreInfo{
 		UserID:      userScore.UserID,
-		Username:    user.Username,
+		Username:    userMap[userID],
 		TotalScore:  userScore.TotalScore,
 		SolvedCount: userScore.SolvedCount,
 		Rank:        userScore.Rank,
@@ -208,7 +226,13 @@ func (s *ScoreService) GetUserScore(userID int64) (*dto.UserScoreInfo, error) {
 
 // GetRanking 获取排行榜
 func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
-	ctx := context.Background()
+	return s.GetRankingWithContext(context.Background(), limit)
+}
+
+func (s *ScoreService) GetRankingWithContext(ctx context.Context, limit int) ([]*dto.RankingItem, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	// 限制查询上限
 	if limit <= 0 || limit > s.config.MaxRankingLimit {
@@ -234,7 +258,7 @@ func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
 		}
 
 		// 批量查询用户信息
-		userMap, err := s.getUsernames(userIDs)
+		userMap, err := s.getUsernamesWithContext(ctx, userIDs)
 		if err != nil {
 			s.logger.Error("批量查询用户名失败", zap.Error(err))
 		}
@@ -252,8 +276,7 @@ func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
 	}
 
 	// Redis 失败，从数据库查询
-	var scores []model.UserScore
-	err = s.db.Order("total_score DESC, updated_at ASC").Limit(limit).Find(&scores).Error
+	scores, err := s.repo.ListTopUserScoresWithContext(ctx, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +286,7 @@ func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
 	for i, score := range scores {
 		userIDs[i] = score.UserID
 	}
-	userMap, err := s.getUsernames(userIDs)
+	userMap, err := s.getUsernamesWithContext(ctx, userIDs)
 	if err != nil {
 		s.logger.Error("批量查询用户名失败", zap.Error(err))
 	}
@@ -284,12 +307,19 @@ func (s *ScoreService) GetRanking(limit int) ([]*dto.RankingItem, error) {
 
 // getUsernames 批量查询用户名
 func (s *ScoreService) getUsernames(userIDs []int64) (map[int64]string, error) {
+	return s.getUsernamesWithContext(context.Background(), userIDs)
+}
+
+func (s *ScoreService) getUsernamesWithContext(ctx context.Context, userIDs []int64) (map[int64]string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if len(userIDs) == 0 {
 		return make(map[int64]string), nil
 	}
 
-	var users []model.User
-	err := s.db.Select("id, username").Where("id IN ?", userIDs).Find(&users).Error
+	users, err := s.repo.FindUsersByIDsWithContext(ctx, userIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -308,4 +338,24 @@ func (s *ScoreService) getUsernames(userIDs []int64) (map[int64]string, error) {
 	}
 
 	return result, nil
+}
+
+func calculateChallengeScore(challenge *model.Challenge) int {
+	if challenge == nil {
+		return 0
+	}
+
+	weight := difficultyWeights[challenge.Difficulty]
+	if weight == 0 {
+		weight = 1.0
+	}
+
+	return int(float64(challenge.Points) * weight)
+}
+
+func (s *ScoreService) lockTimeout() time.Duration {
+	if s.config == nil || s.config.LockTimeout <= 0 {
+		return 0
+	}
+	return s.config.LockTimeout
 }

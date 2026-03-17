@@ -739,6 +739,10 @@ func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, 
 }
 
 func (s *memoryTokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+	return s.IssueTokensWithContext(context.Background(), userID, username, role)
+}
+
+func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*TokenPair, error) {
 	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)
@@ -794,6 +798,10 @@ func (s *memoryTokenService) RevokeToken(ctx context.Context, jti string, ttl ti
 	defer s.mu.Unlock()
 
 	s.revoked[jti] = time.Now().Add(ttl)
+	return nil
+}
+
+func (s *memoryTokenService) ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
 	return nil
 }
 

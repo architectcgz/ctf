@@ -19,8 +19,9 @@ func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testin
 
 	db := newContestTestDB(t)
 	contestRepo := NewRepository(db)
+	participationRepo := NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(db, contestRepo, teamRepo)
+	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	if err := db.Create(&model.Contest{
@@ -60,8 +61,9 @@ func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *test
 
 	db := newContestTestDB(t)
 	contestRepo := NewRepository(db)
+	participationRepo := NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(db, contestRepo, teamRepo)
+	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	reviewedBy := int64(9001)
@@ -197,8 +199,9 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 
 	db := newContestTestDB(t)
 	contestRepo := NewRepository(db)
+	participationRepo := NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(db, contestRepo, teamRepo)
+	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -281,8 +284,9 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 
 	db := newContestTestDB(t)
 	contestRepo := NewRepository(db)
+	participationRepo := NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(db, contestRepo, teamRepo)
+	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	if err := db.Create(&model.Contest{

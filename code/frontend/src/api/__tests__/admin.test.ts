@@ -675,7 +675,7 @@ describe('admin contest api contract', () => {
       category: 'web',
       difficulty: 'hard',
       points: 300,
-      image_id: '6',
+      image_id: 6,
       attachment_url: 'https://example.com/files/lfi.zip',
       hints: [
         {
@@ -696,7 +696,7 @@ describe('admin contest api contract', () => {
         category: 'web',
         difficulty: 'hard',
         points: 300,
-        image_id: '6',
+        image_id: 6,
         attachment_url: 'https://example.com/files/lfi.zip',
         hints: [
           {

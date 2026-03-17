@@ -1,7 +1,6 @@
 package app
 
 import (
-	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -27,7 +26,22 @@ import (
 	websocketpkg "ctf-platform/pkg/websocket"
 )
 
+type routerRuntime struct {
+	engine            *gin.Engine
+	closers           []lifecycleComponent
+	containerService  *containerModule.Service
+	assessmentService *assessmentModule.Service
+}
+
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
+	runtime, err := buildRouterRuntime(cfg, log, db, cache)
+	if err != nil {
+		return nil, err
+	}
+	return runtime.engine, nil
+}
+
+func buildRouterRuntime(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*routerRuntime, error) {
 	if cfg.App.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -112,43 +126,23 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
 	auditHandler := systemModule.NewAuditHandler(auditService)
 	auditLogger := log.Named("audit_middleware")
-	dockerClient, dockerErr := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if dockerErr != nil {
-		log.Warn("docker_client_init_failed", zap.Error(dockerErr))
-	}
 
-	// 镜像管理（仅管理员）
+	containerRepo := containerModule.NewRepository(db)
+	var containerEngine *containerModule.Engine
+	if cfg.App.Env == "test" {
+		log.Info("container_engine_disabled_in_test_env_for_router")
+	} else if engine, err := containerModule.NewEngine(&cfg.Container); err != nil {
+		log.Warn("container_engine_init_failed_for_router", zap.Error(err))
+	} else {
+		containerEngine = engine
+	}
+	containerService := containerModule.NewService(containerRepo, containerEngine, &cfg.Container, log.Named("container_service"))
+
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, dockerClient, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, containerService, cfg, log.Named("image_service"))
 	imageHandler := challengeModule.NewImageHandler(imageService)
-	adminOnly.POST("/images",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "image",
-		}, auditLogger),
-		imageHandler.CreateImage,
-	)
-	adminOnly.GET("/images", imageHandler.ListImages)
-	adminOnly.GET("/images/:id", imageHandler.GetImage)
-	adminOnly.PUT("/images/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "image",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		imageHandler.UpdateImage,
-	)
-	adminOnly.DELETE("/images/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "image",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		imageHandler.DeleteImage,
-	)
 
-	// 靶场管理（仅管理员）
 	challengeConfig := &challengeModule.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}
@@ -159,169 +153,28 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	templateRepo := challengeModule.NewTemplateRepository(db)
 	topologyService := challengeModule.NewTopologyService(challengeRepo, templateRepo, imageRepo)
 	topologyHandler := challengeModule.NewTopologyHandler(topologyService)
-	adminOnly.POST("/challenges",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "challenge",
-		}, auditLogger),
-		challengeHandler.CreateChallenge,
-	)
-	adminOnly.GET("/challenges", challengeHandler.ListChallenges)
-	adminOnly.GET("/challenges/:id", challengeHandler.GetChallenge)
-	adminOnly.PUT("/challenges/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "challenge",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		challengeHandler.UpdateChallenge,
-	)
-	adminOnly.DELETE("/challenges/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "challenge",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		challengeHandler.DeleteChallenge,
-	)
-	adminOnly.PUT("/challenges/:id/publish",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
-			ResourceType:    "challenge",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		challengeHandler.PublishChallenge,
-	)
-	adminOnly.GET("/challenges/:id/writeup", writeupHandler.GetAdmin)
-	adminOnly.PUT("/challenges/:id/writeup",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "challenge_writeup",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		writeupHandler.Upsert,
-	)
-	adminOnly.DELETE("/challenges/:id/writeup",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "challenge_writeup",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		writeupHandler.Delete,
-	)
-	adminOnly.GET("/challenges/:id/topology", topologyHandler.GetChallengeTopology)
-	adminOnly.PUT("/challenges/:id/topology",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "challenge_topology",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		topologyHandler.SaveChallengeTopology,
-	)
-	adminOnly.DELETE("/challenges/:id/topology",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "challenge_topology",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		topologyHandler.DeleteChallengeTopology,
-	)
-	adminOnly.GET("/environment-templates", topologyHandler.ListTemplates)
-	adminOnly.POST("/environment-templates",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "environment_template",
-		}, auditLogger),
-		topologyHandler.CreateTemplate,
-	)
-	adminOnly.GET("/environment-templates/:id", topologyHandler.GetTemplate)
-	adminOnly.PUT("/environment-templates/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "environment_template",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		topologyHandler.UpdateTemplate,
-	)
-	adminOnly.DELETE("/environment-templates/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "environment_template",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		topologyHandler.DeleteTemplate,
-	)
 
-	flagService, err := challengeModule.NewFlagService(db)
+	flagService, err := challengeModule.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		return nil, err
 	}
 	flagHandler := challengeModule.NewFlagHandler(flagService)
-	adminOnly.PUT("/challenges/:id/flag",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "challenge_flag",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		flagHandler.ConfigureFlag,
-	)
-	adminOnly.GET("/challenges/:id/flag", flagHandler.GetFlagConfig)
-	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
-	containerRepoForDashboard := containerModule.NewRepository(db)
-	if dockerErr != nil {
-		log.Warn("dashboard_docker_client_unavailable", zap.Error(dockerErr))
-	}
 	dashboardService := systemModule.NewDashboardService(
-		containerRepoForDashboard,
-		dockerClient,
+		containerRepo,
+		containerService,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),
 	)
 	dashboardHandler := systemModule.NewDashboardHandler(dashboardService)
-	adminOnly.GET("/dashboard", dashboardHandler.GetDashboard)
 	riskRepo := systemModule.NewRiskRepository(db)
 	riskService := systemModule.NewRiskService(riskRepo, log.Named("risk_service"))
 	riskHandler := systemModule.NewRiskHandler(riskService)
-	adminOnly.GET("/cheat-detection", riskHandler.GetCheatDetection)
 
 	adminUserRepo := adminUserModule.NewRepository(db)
 	adminUserService := adminUserModule.NewService(adminUserRepo, cfg.Pagination, log.Named("admin_user_service"))
 	adminUserHandler := adminUserModule.NewHandler(adminUserService)
-	adminOnly.GET("/users", adminUserHandler.ListUsers)
-	adminOnly.POST("/users",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "user",
-		}, auditLogger),
-		adminUserHandler.CreateUser,
-	)
-	adminOnly.PUT("/users/:id",
-		middleware.ParseInt64Param("id"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "user",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		adminUserHandler.UpdateUser,
-	)
-	adminOnly.DELETE("/users/:id",
-		middleware.ParseInt64Param("id"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "user",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		adminUserHandler.DeleteUser,
-	)
-	adminOnly.POST("/users/import",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "user_import",
-		}, auditLogger),
-		adminUserHandler.ImportUsers,
-	)
 
 	assessmentRepo := assessmentModule.NewRepository(db)
 	assessmentService := assessmentModule.NewService(assessmentRepo, cache, cfg.Assessment, log.Named("assessment_service"))
@@ -339,7 +192,7 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	scoreboardService := contestModule.NewScoreboardService(contestRepo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestService := contestModule.NewService(contestRepo, log.Named("contest_service"))
 	contestHandler := contestModule.NewHandler(contestService, scoreboardService)
-	awdService := contestModule.NewAWDService(db, contestRepo, cache, cfg.Container.FlagGlobalSecret, cfg.Contest.AWD, log.Named("contest_awd_service"))
+	awdService := contestModule.NewAWDService(contestModule.NewAWDRepository(db), contestRepo, cache, cfg.Container.FlagGlobalSecret, cfg.Contest.AWD, log.Named("contest_awd_service"))
 	awdHandler := contestModule.NewAWDHandler(awdService)
 	contestChallengeRepo := contestModule.NewChallengeRepository(db)
 	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challengeRepo, contestRepo)
@@ -347,268 +200,18 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 	teamRepo := contestModule.NewTeamRepository(db)
 	teamService := contestModule.NewTeamService(teamRepo, contestRepo)
 	teamHandler := contestModule.NewTeamHandler(teamService)
-	participationService := contestModule.NewParticipationService(db, contestRepo, teamRepo)
+	participationRepo := contestModule.NewParticipationRepository(db)
+	participationService := contestModule.NewParticipationService(contestRepo, participationRepo, teamRepo)
 	participationHandler := contestModule.NewParticipationHandler(participationService)
-	submissionService := contestModule.NewSubmissionService(db, cache, flagService, teamRepo, scoreboardService, cfg)
+	submissionRepo := contestModule.NewSubmissionRepository(db)
+	submissionService := contestModule.NewSubmissionService(contestRepo, submissionRepo, cache, flagService, teamRepo, scoreboardService, cfg)
 	submissionHandler := contestModule.NewSubmissionHandler(submissionService)
 
-	adminOnly.POST("/contests",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "contest",
-		}, auditLogger),
-		contestHandler.CreateContest,
-	)
-	adminOnly.PUT("/contests/:id",
-		middleware.ParseInt64Param("id"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "contest",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		contestHandler.UpdateContest,
-	)
-	adminOnly.GET("/contests", contestHandler.ListContests)
-	adminOnly.POST("/contests/:id/freeze",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
-			ResourceType:    "contest",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id"),
-		}, auditLogger),
-		contestHandler.FreezeScoreboard,
-	)
-	adminOnly.POST("/contests/:id/unfreeze",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionAdminOp,
-			ResourceType:    "contest",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id"),
-		}, auditLogger),
-		contestHandler.UnfreezeScoreboard,
-	)
-	adminOnly.GET("/contests/:id/challenges", contestChallengeHandler.ListAdminChallenges)
-	adminOnly.POST("/contests/:id/challenges",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "contest_challenge",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		contestChallengeHandler.AddChallenge,
-	)
-	adminOnly.PUT("/contests/:id/challenges/:cid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "contest_challenge",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}, auditLogger),
-		contestChallengeHandler.UpdatePoints,
-	)
-	adminOnly.DELETE("/contests/:id/challenges/:cid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "contest_challenge",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}, auditLogger),
-		contestChallengeHandler.RemoveChallenge,
-	)
-	adminOnly.GET("/contests/:id/registrations", participationHandler.ListRegistrations)
-	adminOnly.PUT("/contests/:id/registrations/:rid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "contest_registration",
-			ResourceIDParam: "rid",
-			DetailBuilder:   middleware.DetailFromParams("id", "rid"),
-		}, auditLogger),
-		participationHandler.ReviewRegistration,
-	)
-	adminOnly.GET("/contests/:id/announcements", participationHandler.ListAnnouncements)
-	adminOnly.POST("/contests/:id/announcements",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "contest_announcement",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		participationHandler.CreateAnnouncement,
-	)
-	adminOnly.DELETE("/contests/:id/announcements/:aid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "contest_announcement",
-			ResourceIDParam: "aid",
-			DetailBuilder:   middleware.DetailFromParams("id", "aid"),
-		}, auditLogger),
-		participationHandler.DeleteAnnouncement,
-	)
-	adminOnly.GET("/contests/:id/awd/rounds",
-		middleware.ParseInt64Param("id"),
-		awdHandler.ListRounds,
-	)
-	adminOnly.GET("/contests/:id/scoreboard/live", contestHandler.GetLiveScoreboard)
-	adminOnly.POST("/contests/:id/awd/rounds",
-		middleware.ParseInt64Param("id"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "awd_round",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		awdHandler.CreateRound,
-	)
-	adminOnly.POST("/contests/:id/awd/current-round/check",
-		middleware.ParseInt64Param("id"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
-			ResourceType:  "awd_checker_run",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		awdHandler.RunCurrentRoundChecks,
-	)
-	adminOnly.POST("/contests/:id/awd/rounds/:rid/check",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
-			ResourceType:  "awd_checker_run",
-			DetailBuilder: middleware.DetailFromParams("id", "rid"),
-		}, auditLogger),
-		awdHandler.RunRoundChecks,
-	)
-	adminOnly.GET("/contests/:id/awd/rounds/:rid/services",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		awdHandler.ListServices,
-	)
-	adminOnly.POST("/contests/:id/awd/rounds/:rid/services/check",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionUpdate,
-			ResourceType:  "awd_service_check",
-			DetailBuilder: middleware.DetailFromParams("id", "rid"),
-		}, auditLogger),
-		awdHandler.UpsertServiceCheck,
-	)
-	adminOnly.GET("/contests/:id/awd/rounds/:rid/attacks",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		awdHandler.ListAttackLogs,
-	)
-	adminOnly.POST("/contests/:id/awd/rounds/:rid/attacks",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "awd_attack_log",
-			DetailBuilder: middleware.DetailFromParams("id", "rid"),
-		}, auditLogger),
-		awdHandler.CreateAttackLog,
-	)
-	adminOnly.GET("/contests/:id/awd/rounds/:rid/summary",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("rid"),
-		awdHandler.GetRoundSummary,
-	)
-
-	contestGroup := apiV1.Group("/contests")
-	contestGroup.GET("", contestHandler.ListContests)
-	contestGroup.GET("/:id", middleware.ParseInt64Param("id"), contestHandler.GetContest)
-	contestGroup.GET("/:id/scoreboard", contestHandler.GetScoreboard)
-	contestGroup.GET("/:id/announcements", participationHandler.ListAnnouncements)
-	protected.POST("/contests/:id/register",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "contest_registration",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		participationHandler.RegisterContest,
-	)
-	protected.GET("/contests/:id/challenges", contestChallengeHandler.ListChallenges)
-	protected.GET("/contests/:id/my-progress", participationHandler.GetMyProgress)
-	protected.POST("/contests/:id/challenges/:cid/submissions",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
-			ResourceType:    "contest_submission",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}, auditLogger),
-		submissionHandler.SubmitFlag,
-	)
-	protected.POST("/contests/:id/awd/challenges/:cid/submissions",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("cid"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
-			ResourceType:    "awd_attack_submission",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}, auditLogger),
-		awdHandler.SubmitAttack,
-	)
-	protected.GET("/contests/:id/teams", teamHandler.ListTeams)
-	protected.GET("/contests/:id/my-team", teamHandler.GetMyTeam)
-	protected.POST("/contests/:id/teams",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "team",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		teamHandler.CreateTeam,
-	)
-	protected.POST("/contests/:id/teams/:tid/join",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "team_membership",
-			ResourceIDParam: "tid",
-			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
-		}, auditLogger),
-		teamHandler.JoinTeam,
-	)
-	protected.DELETE("/contests/:id/teams/:tid/leave",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "team_membership",
-			ResourceIDParam: "tid",
-			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
-		}, auditLogger),
-		teamHandler.LeaveTeam,
-	)
-	protected.DELETE("/contests/:id/teams/:tid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "team",
-			ResourceIDParam: "tid",
-			DetailBuilder:   middleware.DetailFromParams("id", "tid"),
-		}, auditLogger),
-		teamHandler.DismissTeam,
-	)
-	protected.DELETE("/contests/:id/teams/:tid/members/:uid",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "team_membership",
-			ResourceIDParam: "uid",
-			DetailBuilder:   middleware.DetailFromParams("id", "tid", "uid"),
-		}, auditLogger),
-		teamHandler.KickMember,
-	)
-
-	// 实践模块（学员）
 	practiceRepo := practiceModule.NewRepository(db)
-	instanceRepo := containerModule.NewRepository(db)
-	var containerEngine *containerModule.Engine
-	if cfg.App.Env == "test" {
-		log.Info("container_engine_disabled_in_test_env")
-	} else if engine, err := containerModule.NewEngine(&cfg.Container); err != nil {
-		log.Warn("container_engine_init_failed", zap.Error(err))
-	} else {
-		containerEngine = engine
-	}
-	containerService := containerModule.NewService(instanceRepo, containerEngine, &cfg.Container, log.Named("container_service"))
+	instanceRepo := containerRepo
 	proxyTicketService := containerModule.NewProxyTicketService(cache, &cfg.Container)
-	scoreService := practiceModule.NewScoreService(db, cache, log.Named("score_service"), &cfg.Score)
+	scoreService := practiceModule.NewScoreService(practiceRepo, cache, log.Named("score_service"), &cfg.Score)
 	practiceService := practiceModule.NewService(
-		db,
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
@@ -621,108 +224,54 @@ func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib
 		log.Named("practice_service"),
 	)
 	practiceHandler := practiceModule.NewHandler(practiceService)
-	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
-	protected.GET("/challenges/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionRead,
-			ResourceType:    "challenge_detail",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		challengeHandler.GetPublishedChallenge,
-	)
-	protected.GET("/challenges/:id/writeup", writeupHandler.GetPublished)
-	protected.POST("/challenges/:id/instances",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:        model.AuditActionCreate,
-			ResourceType:  "instance",
-			DetailBuilder: middleware.DetailFromParams("id"),
-		}, auditLogger),
-		practiceHandler.StartChallenge,
-	)
-	protected.POST("/contests/:id/challenges/:cid/instances",
-		middleware.ParseInt64Param("id"),
-		middleware.ParseInt64Param("cid"),
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
-			ResourceType:    "contest_instance",
-			ResourceIDParam: "cid",
-			DetailBuilder:   middleware.DetailFromParams("id", "cid"),
-		}, auditLogger),
-		practiceHandler.StartContestChallenge,
-	)
-	protected.POST("/challenges/:id/submit",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionSubmit,
-			ResourceType:    "challenge_submission",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		practiceHandler.SubmitFlag,
-	)
-	protected.POST("/challenges/:id/hints/:level/unlock",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
-			ResourceType:    "challenge_hint_unlock",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id", "level"),
-		}, auditLogger),
-		practiceHandler.UnlockHint,
-	)
-	protected.GET("/instances", practiceHandler.ListUserInstances)
-	protected.GET("/instances/:id", practiceHandler.GetInstance)
 
 	containerHandler := containerModule.NewHandler(containerService, proxyTicketService, auditService, containerModule.ProxyCookieConfig{
 		Secure:   cfg.Auth.RefreshCookieSecure,
 		SameSite: cfg.Auth.CookieSameSite(),
 	})
-	protected.DELETE("/instances/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "instance",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		containerHandler.DestroyInstance,
-	)
-	protected.POST("/instances/:id/extend",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionUpdate,
-			ResourceType:    "instance",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		containerHandler.ExtendInstance,
-	)
-	protected.POST("/instances/:id/access", containerHandler.AccessInstance)
-	apiV1.GET("/instances/:id/proxy", containerHandler.ProxyInstance)
-	apiV1.Any("/instances/:id/proxy/*proxyPath", containerHandler.ProxyInstance)
+	registerAdminRoutes(adminOnly, adminRouteDeps{
+		auditRecorder:           auditService,
+		auditLogger:             auditLogger,
+		imageHandler:            imageHandler,
+		challengeHandler:        challengeHandler,
+		writeupHandler:          writeupHandler,
+		topologyHandler:         topologyHandler,
+		flagHandler:             flagHandler,
+		auditHandler:            auditHandler,
+		dashboardHandler:        dashboardHandler,
+		riskHandler:             riskHandler,
+		adminUserHandler:        adminUserHandler,
+		contestHandler:          contestHandler,
+		awdHandler:              awdHandler,
+		contestChallengeHandler: contestChallengeHandler,
+		participationHandler:    participationHandler,
+	})
+	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
+		auditRecorder:           auditService,
+		auditLogger:             auditLogger,
+		challengeHandler:        challengeHandler,
+		writeupHandler:          writeupHandler,
+		practiceHandler:         practiceHandler,
+		containerHandler:        containerHandler,
+		assessmentHandler:       assessmentHandler,
+		teacherHandler:          teacherHandler,
+		reportHandler:           reportHandler,
+		contestHandler:          contestHandler,
+		awdHandler:              awdHandler,
+		contestChallengeHandler: contestChallengeHandler,
+		participationHandler:    participationHandler,
+		submissionHandler:       submissionHandler,
+		teamHandler:             teamHandler,
+	})
 
-	usersGroup := protected.Group("/users")
-	usersGroup.GET("/me/progress", practiceHandler.GetProgress)
-	usersGroup.GET("/me/timeline", practiceHandler.GetTimeline)
-	usersGroup.GET("/me/skill-profile", assessmentHandler.GetMySkillProfile)
-	usersGroup.GET("/me/recommendations", assessmentHandler.GetRecommendations)
-	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), assessmentHandler.GetStudentSkillProfile)
-	teacherOrAbove.GET("/classes", teacherHandler.ListClasses)
-	teacherOrAbove.GET("/classes/:name/students", teacherHandler.ListClassStudents)
-	teacherOrAbove.GET("/classes/:name/summary", teacherHandler.GetClassSummary)
-	teacherOrAbove.GET("/classes/:name/trend", teacherHandler.GetClassTrend)
-	teacherOrAbove.GET("/classes/:name/review", teacherHandler.GetClassReview)
-	teacherOrAbove.GET("/instances", containerHandler.ListTeacherInstances)
-	teacherOrAbove.DELETE("/instances/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
-			Action:          model.AuditActionDelete,
-			ResourceType:    "instance",
-			ResourceIDParam: "id",
-		}, auditLogger),
-		containerHandler.DestroyTeacherInstance,
-	)
-	teacherOrAbove.GET("/students/:id/progress", teacherHandler.GetStudentProgress)
-	teacherOrAbove.GET("/students/:id/skill-profile", assessmentHandler.GetStudentSkillProfile)
-	teacherOrAbove.GET("/students/:id/recommendations", teacherHandler.GetStudentRecommendations)
-	teacherOrAbove.GET("/students/:id/timeline", teacherHandler.GetStudentTimeline)
-	protected.POST("/reports/personal", reportHandler.CreatePersonalReport)
-	protected.GET("/reports/:id", reportHandler.GetReportStatus)
-	protected.GET("/reports/:id/download", reportHandler.DownloadReport)
-	protected.POST("/reports/class", middleware.RequireRole(model.RoleTeacher), reportHandler.CreateClassReport)
-	teacherOrAbove.POST("/reports/class", reportHandler.CreateClassReport)
-
-	return engine, nil
+	return &routerRuntime{
+		engine:            engine,
+		containerService:  containerService,
+		assessmentService: assessmentService,
+		closers: []lifecycleComponent{
+			{name: "report_service", closer: reportService},
+			{name: "image_service", closer: imageService},
+			{name: "practice_service", closer: practiceService},
+		},
+	}, nil
 }

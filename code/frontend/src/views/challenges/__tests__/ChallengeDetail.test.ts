@@ -39,6 +39,7 @@ describe('ChallengeDetail', () => {
       difficulty: 'easy',
       tags: ['test'],
       points: 100,
+      need_target: true,
       is_solved: false,
       attachment_url: 'https://example.com/file.zip',
       hints: [
@@ -181,6 +182,36 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('http://127.0.0.1:30000')
     expect(wrapper.text()).toContain('1 次')
     expect(wrapper.text()).not.toContain('挑战信息')
+    expect(wrapper.text()).not.toContain('启动靶机')
+  })
+
+  it('题目不需要靶机时应展示提示文案', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'No Target Challenge',
+      description: '<p>Analyze only</p>',
+      category: 'misc',
+      difficulty: 'easy',
+      tags: ['misc'],
+      points: 50,
+      need_target: false,
+      is_solved: false,
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('该题目不需要靶机')
     expect(wrapper.text()).not.toContain('启动靶机')
   })
 })

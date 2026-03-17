@@ -2,11 +2,11 @@ package challenge
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -16,34 +16,53 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+type ImageRuntime interface {
+	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
+	RemoveImage(ctx context.Context, imageRef string) error
+}
+
 type ImageService struct {
 	repo          *ImageRepository
 	challengeRepo *Repository
-	dockerClient  *client.Client
+	runtime       ImageRuntime
 	config        *config.Config
 	logger        *zap.Logger
+	baseCtx       context.Context
+	cancel        context.CancelFunc
+	tasks         sync.WaitGroup
 }
 
 func NewImageService(
 	repo *ImageRepository,
 	challengeRepo *Repository,
-	dockerClient *client.Client,
+	runtime ImageRuntime,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *ImageService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
+	baseCtx, cancel := context.WithCancel(context.Background())
 	return &ImageService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
-		dockerClient:  dockerClient,
+		runtime:       runtime,
 		config:        cfg,
 		logger:        logger,
+		baseCtx:       baseCtx,
+		cancel:        cancel,
 	}
 }
 
 func (s *ImageService) CreateImage(req *dto.CreateImageReq) (*dto.ImageResp, error) {
+	return s.CreateImageWithContext(context.Background(), req)
+}
+
+func (s *ImageService) CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	// 检查镜像是否已存在
 	existing, err := s.repo.FindByNameTag(req.Name, req.Tag)
 	if err == nil && existing != nil {
@@ -55,9 +74,9 @@ func (s *ImageService) CreateImage(req *dto.CreateImageReq) (*dto.ImageResp, err
 
 	// 验证 Docker 镜像是否存在（如果 Docker 客户端可用）
 	var size int64
-	if s.dockerClient != nil {
+	if s.runtime != nil {
 		imageRef := fmt.Sprintf("%s:%s", req.Name, req.Tag)
-		size, err = s.verifyDockerImage(imageRef)
+		size, err = s.verifyDockerImage(ctx, imageRef)
 		if err != nil {
 			return nil, errcode.ErrImageNotAccessible.WithCause(err)
 		}
@@ -166,31 +185,68 @@ func (s *ImageService) DeleteImage(id int64) error {
 	}
 
 	// 尝试删除 Docker 镜像（非阻塞，仅当客户端可用时）
-	if s.dockerClient != nil {
+	if s.runtime != nil {
 		imageRef := fmt.Sprintf("%s:%s", img.Name, img.Tag)
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-
-			if _, err := s.dockerClient.ImageRemove(ctx, imageRef, image.RemoveOptions{}); err != nil {
-				s.logger.Warn("删除 Docker 镜像失败", zap.String("image", imageRef), zap.Error(err))
-			}
-		}()
+		s.removeImageAsync(imageRef)
 	}
 
 	s.logger.Info("删除镜像", zap.Int64("id", id), zap.String("name", img.Name))
 	return nil
 }
 
-func (s *ImageService) verifyDockerImage(imageRef string) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (s *ImageService) verifyDockerImage(ctx context.Context, imageRef string) (int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	inspect, _, err := s.dockerClient.ImageInspectWithRaw(ctx, imageRef)
-	if err != nil {
-		return 0, err
+	return s.runtime.InspectImageSize(ctx, imageRef)
+}
+
+func (s *ImageService) Close(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return inspect.Size, nil
+	if s.cancel != nil {
+		s.cancel()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		s.tasks.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (s *ImageService) removeImageAsync(imageRef string) {
+	s.tasks.Add(1)
+	go func() {
+		defer s.tasks.Done()
+
+		if err := s.removeImageWithContext(imageRef); err != nil && !errors.Is(err, context.Canceled) {
+			s.logger.Warn("删除 Docker 镜像失败", zap.String("image", imageRef), zap.Error(err))
+		}
+	}()
+}
+
+func (s *ImageService) removeImageWithContext(imageRef string) error {
+	if s.baseCtx == nil {
+		return context.Canceled
+	}
+
+	ctx, cancel := context.WithTimeout(s.baseCtx, 30*time.Second)
+	defer cancel()
+
+	return s.runtime.RemoveImage(ctx, imageRef)
 }
 
 func toImageResp(img *model.Image) *dto.ImageResp {

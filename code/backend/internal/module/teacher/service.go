@@ -16,6 +16,7 @@ import (
 
 type RecommendationProvider interface {
 	Recommend(userID int64, limit int) (*dto.RecommendationResp, error)
+	RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
 }
 
 type Service struct {
@@ -192,7 +193,7 @@ func (s *Service) GetClassReview(ctx context.Context, requesterID int64, request
 		if len(weakStudents) >= 3 {
 			item.Accent = "warning"
 		}
-		if recommendation := s.firstStudentRecommendation(weakStudents, 1); recommendation != nil {
+		if recommendation := s.firstStudentRecommendation(ctx, weakStudents, 1); recommendation != nil {
 			item.Recommendation = recommendation
 		}
 		items = append(items, item)
@@ -206,7 +207,7 @@ func (s *Service) GetClassReview(ctx context.Context, requesterID int64, request
 			Accent:   "primary",
 			Students: toReviewStudentRefs(riskStudents),
 		}
-		if recommendation := s.firstStudentRecommendation(riskStudents, 1); recommendation != nil {
+		if recommendation := s.firstStudentRecommendation(ctx, riskStudents, 1); recommendation != nil {
 			item.Recommendation = recommendation
 		}
 		items = append(items, item)
@@ -262,7 +263,7 @@ func (s *Service) GetStudentRecommendations(ctx context.Context, requesterID int
 		return nil, err
 	}
 
-	result, err := s.recommendationService.Recommend(student.ID, limit)
+	result, err := s.recommendationService.RecommendWithContext(ctx, student.ID, limit)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -458,12 +459,12 @@ func buildTrendReviewItem(trend *dto.TeacherClassTrendResp) *dto.TeacherClassRev
 	return item
 }
 
-func (s *Service) firstStudentRecommendation(students []dto.TeacherStudentItem, limit int) *dto.TeacherRecommendationItem {
+func (s *Service) firstStudentRecommendation(ctx context.Context, students []dto.TeacherStudentItem, limit int) *dto.TeacherRecommendationItem {
 	if s.recommendationService == nil {
 		return nil
 	}
 	for _, student := range students {
-		result, err := s.recommendationService.Recommend(student.ID, limit)
+		result, err := s.recommendationService.RecommendWithContext(ctx, student.ID, limit)
 		if err != nil {
 			s.logger.Warn("recommend_student_for_class_review_failed", zap.Int64("student_id", student.ID), zap.Error(err))
 			continue

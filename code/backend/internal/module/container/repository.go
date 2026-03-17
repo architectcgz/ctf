@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/dto"
@@ -30,8 +31,19 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
+func (r *Repository) WithDB(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+}
+
 func (r *Repository) Create(instance *model.Instance) error {
-	return r.db.Create(instance).Error
+	return r.CreateWithContext(context.Background(), instance)
+}
+
+func (r *Repository) CreateWithContext(ctx context.Context, instance *model.Instance) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx).Create(instance).Error
 }
 
 func (r *Repository) FindByID(id int64) (*model.Instance, error) {
@@ -55,8 +67,16 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 }
 
 func (r *Repository) FindByUserID(userID int64) ([]*model.Instance, error) {
+	return r.FindByUserIDWithContext(context.Background(), userID)
+}
+
+func (r *Repository) FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.Instance, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	var instances []*model.Instance
-	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND status IN ?", userID,
+	err := r.db.WithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND status IN ?", userID,
 		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
@@ -124,9 +144,47 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 }
 
 func (r *Repository) UpdateStatus(id int64, status string) error {
-	return r.db.Model(&model.Instance{}).
+	return r.UpdateStatusWithContext(context.Background(), id, status)
+}
+
+func (r *Repository) UpdateStatusWithContext(ctx context.Context, id int64, status string) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ?", id).
 		Update("status", status).Error
+}
+
+func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
+	if id <= 0 {
+		return nil
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var instance model.Instance
+		if err := tx.Select("id", "host_port").Where("id = ?", id).First(&instance).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&model.Instance{}).
+			Where("id = ?", id).
+			Updates(map[string]any{
+				"status":     status,
+				"updated_at": time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		deleteQuery := tx.Where("instance_id = ?", id)
+		if instance.HostPort > 0 {
+			deleteQuery = deleteQuery.Or("port = ?", instance.HostPort)
+		}
+		if err := deleteQuery.Delete(&model.PortAllocation{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r *Repository) UpdateRuntime(instance *model.Instance) error {
@@ -135,6 +193,7 @@ func (r *Repository) UpdateRuntime(instance *model.Instance) error {
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
 			"team_id":         instance.TeamID,
+			"host_port":       instance.HostPort,
 			"container_id":    instance.ContainerID,
 			"network_id":      instance.NetworkID,
 			"runtime_details": instance.RuntimeDetails,
@@ -253,7 +312,15 @@ func (r *Repository) AtomicExtend(id int64, userID int64, maxExtends int, durati
 }
 
 func (r *Repository) AtomicExtendByID(id int64, maxExtends int, duration time.Duration) error {
-	result := r.db.Model(&model.Instance{}).
+	return r.AtomicExtendByIDWithContext(context.Background(), id, maxExtends, duration)
+}
+
+func (r *Repository) AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	result := r.db.WithContext(ctx).Model(&model.Instance{}).
 		Where("id = ? AND status = ? AND extend_count < ?",
 			id, model.InstanceStatusRunning, maxExtends).
 		Updates(map[string]interface{}{
@@ -275,6 +342,35 @@ func (r *Repository) CountRunning() (int64, error) {
 		Where("status = ?", model.InstanceStatusRunning).
 		Count(&count).Error
 	return count, err
+}
+
+func (r *Repository) ReserveAvailablePort(start, end int) (int, error) {
+	for port := start; port < end; port++ {
+		if err := r.db.Create(&model.PortAllocation{Port: port}).Error; err != nil {
+			if isPortAllocationConflict(err) {
+				continue
+			}
+			return 0, err
+		}
+		return port, nil
+	}
+	return 0, fmt.Errorf("no available port in range %d-%d", start, end)
+}
+
+func (r *Repository) BindReservedPort(port int, instanceID int64) error {
+	return r.db.Model(&model.PortAllocation{}).
+		Where("port = ?", port).
+		Updates(map[string]any{
+			"instance_id": instanceID,
+			"updated_at":  time.Now(),
+		}).Error
+}
+
+func (r *Repository) ReleasePort(port int) error {
+	if port <= 0 {
+		return nil
+	}
+	return r.db.Where("port = ?", port).Delete(&model.PortAllocation{}).Error
 }
 
 func (r *Repository) ListActiveContainerIDs() ([]string, error) {
@@ -313,6 +409,13 @@ func (r *Repository) ListActiveContainerIDs() ([]string, error) {
 }
 
 func (r *Repository) ListAllocatedPorts() ([]int, error) {
+	var ports []int
+	if err := r.db.Model(&model.PortAllocation{}).Pluck("port", &ports).Error; err == nil {
+		return ports, nil
+	} else if !strings.Contains(strings.ToLower(err.Error()), "no such table") && !strings.Contains(strings.ToLower(err.Error()), "does not exist") {
+		return nil, err
+	}
+
 	var accessURLs []string
 	if err := r.db.Model(&model.Instance{}).
 		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
@@ -321,7 +424,7 @@ func (r *Repository) ListAllocatedPorts() ([]int, error) {
 		return nil, err
 	}
 
-	ports := make([]int, 0, len(accessURLs))
+	ports = make([]int, 0, len(accessURLs))
 	for _, rawURL := range accessURLs {
 		parsed, err := url.Parse(rawURL)
 		if err != nil {
@@ -338,4 +441,16 @@ func (r *Repository) ListAllocatedPorts() ([]int, error) {
 		ports = append(ports, port)
 	}
 	return ports, nil
+}
+
+func isPortAllocationConflict(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+
+	lowered := strings.ToLower(err.Error())
+	return strings.Contains(lowered, "unique constraint failed") ||
+		strings.Contains(lowered, "duplicate key value") ||
+		strings.Contains(lowered, "duplicate entry")
 }

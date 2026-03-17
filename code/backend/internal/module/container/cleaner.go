@@ -2,35 +2,52 @@ package container
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
+	redislib "github.com/redis/go-redis/v9"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
+
+	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/pkg/redislock"
 )
 
 type Cleaner struct {
-	service *Service
+	service cleanerService
 	cron    *cron.Cron
 	logger  *zap.Logger
+	redis   *redislib.Client
+	lockTTL time.Duration
+	baseCtx context.Context
+	cancel  context.CancelFunc
 }
 
-func NewCleaner(service *Service, logger *zap.Logger) *Cleaner {
+type cleanerService interface {
+	CleanExpiredInstances(ctx context.Context) error
+	CleanupOrphans(ctx context.Context) error
+}
+
+func NewCleaner(service cleanerService, redis *redislib.Client, lockTTL time.Duration, logger *zap.Logger) *Cleaner {
+	if lockTTL <= 0 {
+		lockTTL = 2 * time.Minute
+	}
+	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Cleaner{
 		service: service,
 		cron:    cron.New(),
 		logger:  logger,
+		redis:   redis,
+		lockTTL: lockTTL,
+		baseCtx: baseCtx,
+		cancel:  cancel,
 	}
 }
 
 func (c *Cleaner) Start(interval string) error {
 	cleanFunc := func() {
-		c.logger.Info("开始清理过期实例")
-		if err := c.service.CleanExpiredInstances(context.Background()); err != nil {
-			c.logger.Error("清理过期实例失败", zap.Error(err))
-		}
-		if err := c.service.CleanupOrphans(context.Background()); err != nil {
-			c.logger.Error("清理孤儿容器失败", zap.Error(err))
-		}
+		c.runOnce()
 	}
 
 	_, err := c.cron.AddFunc(interval, cleanFunc)
@@ -47,7 +64,63 @@ func (c *Cleaner) Start(interval string) error {
 	return nil
 }
 
-func (c *Cleaner) Stop() {
-	c.cron.Stop()
-	c.logger.Info("实例清理定时任务已停止")
+func (c *Cleaner) runOnce() {
+	ctx := c.baseCtx
+	if err := ctx.Err(); err != nil {
+		return
+	}
+
+	lock, acquired, err := redislock.Acquire(ctx, c.redis, rediskeys.ContainerCleanupLockKey(), c.lockTTL)
+	if err != nil {
+		if !errors.Is(err, context.Canceled) {
+			c.logger.Error("获取实例清理任务锁失败", zap.Error(err))
+		}
+		return
+	}
+	if !acquired {
+		c.logger.Debug("实例清理任务已由其他节点执行")
+		return
+	}
+	if lock != nil {
+		defer func() {
+			released, releaseErr := lock.Release(ctx)
+			if releaseErr != nil {
+				if !errors.Is(releaseErr, context.Canceled) {
+					c.logger.Error("释放实例清理任务锁失败", zap.String("lock_key", lock.Key()), zap.Error(releaseErr))
+				}
+				return
+			}
+			if !released && ctx.Err() == nil {
+				c.logger.Warn("实例清理任务锁已过期或被覆盖", zap.String("lock_key", lock.Key()))
+			}
+		}()
+	}
+
+	c.logger.Info("开始清理过期实例")
+	if err := c.service.CleanExpiredInstances(ctx); err != nil {
+		if !errors.Is(err, context.Canceled) {
+			c.logger.Error("清理过期实例失败", zap.Error(err))
+		}
+		return
+	}
+	if err := c.service.CleanupOrphans(ctx); err != nil {
+		if !errors.Is(err, context.Canceled) {
+			c.logger.Error("清理孤儿容器失败", zap.Error(err))
+		}
+	}
+}
+
+func (c *Cleaner) Stop(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	c.cancel()
+	stopped := c.cron.Stop()
+	select {
+	case <-stopped.Done():
+		c.logger.Info("实例清理定时任务已停止")
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

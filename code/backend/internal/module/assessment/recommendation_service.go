@@ -9,7 +9,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
@@ -19,6 +18,7 @@ import (
 
 type ChallengeRepository interface {
 	FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
+	FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
 }
 
 type RecommendationService struct {
@@ -27,7 +27,6 @@ type RecommendationService struct {
 	redis         *redis.Client
 	logger        *zap.Logger
 	config        config.RecommendationConfig
-	db            *gorm.DB
 }
 
 func NewRecommendationService(repo *Repository, challengeRepo ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
@@ -40,12 +39,19 @@ func NewRecommendationService(repo *Repository, challengeRepo ChallengeRepositor
 		redis:         redis,
 		logger:        logger,
 		config:        normalizeRecommendationConfig(cfg),
-		db:            repo.db,
 	}
 }
 
 func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error) {
-	profiles, err := s.repo.FindByUserID(userID)
+	return s.GetWeakDimensionsWithContext(context.Background(), userID)
+}
+
+func (s *RecommendationService) GetWeakDimensionsWithContext(ctx context.Context, userID int64) ([]string, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		s.logger.Error("查询能力画像失败", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
@@ -62,12 +68,16 @@ func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error
 }
 
 func (s *RecommendationService) Recommend(userID int64, limit int) (*dto.RecommendationResp, error) {
-	weakDimensions, err := s.GetWeakDimensions(userID)
+	return s.RecommendWithContext(context.Background(), userID, limit)
+}
+
+func (s *RecommendationService) RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error) {
+	weakDimensions, err := s.GetWeakDimensionsWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	recommendations, err := s.RecommendChallenges(userID, limit)
+	recommendations, err := s.RecommendChallengesWithContext(ctx, userID, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +89,14 @@ func (s *RecommendationService) Recommend(userID int64, limit int) (*dto.Recomme
 }
 
 func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
+	return s.RecommendChallengesWithContext(context.Background(), userID, limit)
+}
+
+func (s *RecommendationService) RecommendChallengesWithContext(ctx context.Context, userID int64, limit int) ([]*dto.ChallengeRecommendation, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if limit <= 0 {
 		limit = s.config.DefaultLimit
 	}
@@ -86,7 +104,6 @@ func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]
 		limit = s.config.MaxLimit
 	}
 
-	ctx := context.Background()
 	cacheKey := rediskeys.RecommendationKey(userID)
 	useCache := limit == s.config.DefaultLimit
 	if useCache && s.redis != nil {
@@ -100,7 +117,7 @@ func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]
 		}
 	}
 
-	weakDimensions, err := s.GetWeakDimensions(userID)
+	weakDimensions, err := s.GetWeakDimensionsWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,13 +125,13 @@ func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]
 		return []*dto.ChallengeRecommendation{}, nil
 	}
 
-	solvedIDs, err := s.getSolvedChallengeIDs(userID)
+	solvedIDs, err := s.getSolvedChallengeIDs(ctx, userID)
 	if err != nil {
 		s.logger.Error("查询已解题目失败", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
 	}
 
-	challenges, err := s.challengeRepo.FindPublishedForRecommendation(limit, weakDimensions, solvedIDs)
+	challenges, err := s.challengeRepo.FindPublishedForRecommendationWithContext(ctx, limit, weakDimensions, solvedIDs)
 	if err != nil {
 		s.logger.Error("查询推荐靶场失败", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
@@ -145,13 +162,11 @@ func (s *RecommendationService) RecommendChallenges(userID int64, limit int) ([]
 	return recommendations, nil
 }
 
-func (s *RecommendationService) getSolvedChallengeIDs(userID int64) ([]int64, error) {
-	var ids []int64
-	err := s.db.Model(&model.Submission{}).
-		Where("user_id = ? AND is_correct = ?", userID, true).
-		Distinct("challenge_id").
-		Pluck("challenge_id", &ids).Error
-	return ids, err
+func (s *RecommendationService) getSolvedChallengeIDs(ctx context.Context, userID int64) ([]int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return s.repo.ListSolvedChallengeIDsWithContext(ctx, userID)
 }
 
 func normalizeRecommendationConfig(cfg config.RecommendationConfig) config.RecommendationConfig {

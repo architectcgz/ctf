@@ -75,6 +75,52 @@ func TestRepositoryListActiveContainerIDs(t *testing.T) {
 	}
 }
 
+func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	instance := &model.Instance{
+		ID:          2001,
+		UserID:      1,
+		ChallengeID: 101,
+		HostPort:    30001,
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	seedInstance(t, repo.db, instance)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30001,
+		InstanceID: &instance.ID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+
+	if err := repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
+		t.Fatalf("UpdateStatusAndReleasePort() error = %v", err)
+	}
+
+	updated, err := repo.FindByID(instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if updated.Status != model.InstanceStatusFailed {
+		t.Fatalf("expected failed status, got %+v", updated)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected port allocation to be removed, count=%d", count)
+	}
+}
+
 func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
 	t.Parallel()
 
@@ -158,7 +204,7 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 		DefaultExposedPort: 8080,
 	}, nil)
 
-	containerID, networkID, hostPort, servicePort, err := service.CreateContainer(context.Background(), "ctf/web:v1", map[string]string{"FLAG": "flag{1}"})
+	containerID, networkID, hostPort, servicePort, err := service.CreateContainer(context.Background(), "ctf/web:v1", map[string]string{"FLAG": "flag{1}"}, 0)
 	if err != nil {
 		t.Fatalf("CreateContainer() error = %v", err)
 	}
@@ -200,7 +246,7 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 		DefaultExposedPort: 8080,
 	}, nil)
 
-	_, _, _, _, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil)
+	_, _, _, _, err := service.CreateContainer(context.Background(), "ctf/web:v1", nil, 0)
 	if err == nil {
 		t.Fatal("expected CreateContainer() to fail")
 	}
@@ -209,6 +255,56 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 	}
 	if engine.removedNetworkID != "net-456" {
 		t.Fatalf("expected network cleanup, got %s", engine.removedNetworkID)
+	}
+}
+
+func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		removeContainerFn: func(ctx context.Context, containerID string, force bool) error {
+			if containerID != "ctr-ctx" || !force {
+				t.Fatalf("unexpected remove container args: id=%s force=%v", containerID, force)
+			}
+			<-ctx.Done()
+			return ctx.Err()
+		},
+	}
+	service := NewService(repo, engine, &config.ContainerConfig{}, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := service.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	engine := &fakeRuntimeEngine{
+		removeContainerFn: func(ctx context.Context, containerID string, force bool) error {
+			if containerID != "ctr-3001" || !force {
+				t.Fatalf("unexpected remove container args: id=%s force=%v", containerID, force)
+			}
+			<-ctx.Done()
+			return ctx.Err()
+		},
+	}
+	service := NewService(repo, engine, &config.ContainerConfig{}, nil)
+
+	instance := &model.Instance{
+		ID:          3001,
+		ContainerID: "ctr-3001",
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := service.CleanupRuntimeWithContext(ctx, instance); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
 
@@ -238,8 +334,8 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   now.Add(time.Hour),
 	})
 
-	if err := service.DestroyInstance(901, 2); err != nil {
-		t.Fatalf("DestroyInstance() error = %v", err)
+	if err := service.DestroyInstanceWithContext(context.Background(), 901, 2); err != nil {
+		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
 	}
 
 	instance, err := repo.FindByID(901)
@@ -278,9 +374,9 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 		ExpiresAt:   initialExpiry,
 	})
 
-	resp, err := service.ExtendInstance(902, 2)
+	resp, err := service.ExtendInstanceWithContext(context.Background(), 902, 2)
 	if err != nil {
-		t.Fatalf("ExtendInstance() error = %v", err)
+		t.Fatalf("ExtendInstanceWithContext() error = %v", err)
 	}
 	if resp == nil {
 		t.Fatal("expected extend response")
@@ -359,6 +455,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		ID:             1,
 		UserID:         1,
 		ChallengeID:    1,
+		HostPort:       30001,
 		ContainerID:    "web-ctr",
 		NetworkID:      "net-1",
 		RuntimeDetails: `{"containers":[{"container_id":"web-ctr"},{"container_id":"db-ctr"}],"acl_rules":[{"comment":"ctf:acl:test","source_ip":"172.30.0.2","target_ip":"172.30.0.3","action":"allow","protocol":"tcp","ports":[3306]}]}`,
@@ -366,6 +463,9 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		ExpiresAt:      time.Now().Add(time.Hour),
 	}
 	seedInstance(t, repo.db, instance)
+	if err := repo.db.Create(&model.PortAllocation{Port: 30001, InstanceID: &instance.ID}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
 
 	if err := service.destroyManagedInstance(instance); err != nil {
 		t.Fatalf("destroyManagedInstance() error = %v", err)
@@ -378,6 +478,77 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 	}
 	if len(engine.removedACLRules) != 1 || engine.removedACLRules[0].Comment != "ctf:acl:test" {
 		t.Fatalf("expected acl rules to be removed, got %+v", engine.removedACLRules)
+	}
+
+	updated, err := repo.FindByID(instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if updated.Status != model.InstanceStatusStopped {
+		t.Fatalf("expected stopped status, got %+v", updated)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30001).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected port allocation to be removed, count=%d", count)
+	}
+}
+
+func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	instance := &model.Instance{
+		ID:          2101,
+		UserID:      1,
+		ChallengeID: 1,
+		HostPort:    30002,
+		ContainerID: "web-ctr",
+		NetworkID:   "net-2",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(-time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	seedInstance(t, repo.db, instance)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30002,
+		InstanceID: &instance.ID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+
+	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
+	service := NewService(repo, engine, &config.ContainerConfig{
+		MaxExtends:        2,
+		ExtendDuration:    30 * time.Minute,
+		OrphanGracePeriod: 5 * time.Minute,
+	}, nil)
+
+	if err := service.CleanExpiredInstances(context.Background()); err != nil {
+		t.Fatalf("CleanExpiredInstances() error = %v", err)
+	}
+
+	updated, err := repo.FindByID(instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if updated.Status != model.InstanceStatusRunning {
+		t.Fatalf("expected instance to remain running for retry, got %+v", updated)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30002).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected port allocation to remain reserved, count=%d", count)
 	}
 }
 
@@ -626,7 +797,7 @@ func newTestRepository(t *testing.T) *Repository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &model.PortAllocation{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
@@ -650,6 +821,8 @@ type fakeRuntimeEngine struct {
 	containerIDs                   []string
 	startErr                       error
 	applyACLErr                    error
+	removeContainerErr             error
+	removeNetworkErr               error
 	resolvedServicePort            int
 	resolveServicePortErr          error
 	createdNetworkName             string
@@ -665,7 +838,15 @@ type fakeRuntimeEngine struct {
 	removedACLRules                []model.InstanceRuntimeACLRule
 	connectedNetworks              map[string][]string
 	writtenFiles                   map[string]map[string]string
+	imageSize                      int64
+	imageInspectErr                error
+	removedImageRef                string
+	managedContainerStats          []ManagedContainerStat
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
+	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
+	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
+	removeNetworkFn                func(ctx context.Context, networkID string) error
+	removeACLRulesFn               func(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 }
 
 func (f *fakeRuntimeEngine) CreateNetwork(_ context.Context, name string, labels map[string]string, _ bool) (string, error) {
@@ -701,6 +882,22 @@ func (f *fakeRuntimeEngine) ResolveServicePort(_ context.Context, _ string, pref
 	return preferredPort, nil
 }
 
+func (f *fakeRuntimeEngine) InspectImageSize(_ context.Context, _ string) (int64, error) {
+	if f.imageInspectErr != nil {
+		return 0, f.imageInspectErr
+	}
+	return f.imageSize, nil
+}
+
+func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) error {
+	f.removedImageRef = imageRef
+	return nil
+}
+
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context, _ string) ([]ManagedContainerStat, error) {
+	return append([]ManagedContainerStat(nil), f.managedContainerStats...), nil
+}
+
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
 	if f.connectedNetworks == nil {
 		f.connectedNetworks = make(map[string][]string)
@@ -720,20 +917,29 @@ func (f *fakeRuntimeEngine) StartContainer(_ context.Context, _ string) error {
 	return f.startErr
 }
 
-func (f *fakeRuntimeEngine) StopContainer(_ context.Context, _ string, _ time.Duration) error {
+func (f *fakeRuntimeEngine) StopContainer(ctx context.Context, containerID string, timeout time.Duration) error {
+	if f.stopContainerFn != nil {
+		return f.stopContainerFn(ctx, containerID, timeout)
+	}
 	return nil
 }
 
-func (f *fakeRuntimeEngine) RemoveContainer(_ context.Context, containerID string, _ bool) error {
+func (f *fakeRuntimeEngine) RemoveContainer(ctx context.Context, containerID string, force bool) error {
 	f.removedContainerID = containerID
 	f.removedContainerIDs = append(f.removedContainerIDs, containerID)
-	return nil
+	if f.removeContainerFn != nil {
+		return f.removeContainerFn(ctx, containerID, force)
+	}
+	return f.removeContainerErr
 }
 
-func (f *fakeRuntimeEngine) RemoveNetwork(_ context.Context, networkID string) error {
+func (f *fakeRuntimeEngine) RemoveNetwork(ctx context.Context, networkID string) error {
 	f.removedNetworkID = networkID
 	f.removedNetworkIDs = append(f.removedNetworkIDs, networkID)
-	return nil
+	if f.removeNetworkFn != nil {
+		return f.removeNetworkFn(ctx, networkID)
+	}
+	return f.removeNetworkErr
 }
 
 func (f *fakeRuntimeEngine) ApplyACLRules(_ context.Context, rules []model.InstanceRuntimeACLRule) error {
@@ -744,7 +950,10 @@ func (f *fakeRuntimeEngine) ApplyACLRules(_ context.Context, rules []model.Insta
 	return nil
 }
 
-func (f *fakeRuntimeEngine) RemoveACLRules(_ context.Context, rules []model.InstanceRuntimeACLRule) error {
+func (f *fakeRuntimeEngine) RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error {
+	if f.removeACLRulesFn != nil {
+		return f.removeACLRulesFn(ctx, rules)
+	}
 	f.removedACLRules = append(f.removedACLRules, rules...)
 	return nil
 }

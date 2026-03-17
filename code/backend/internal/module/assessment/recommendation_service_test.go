@@ -27,6 +27,10 @@ type stubChallengeRecommendationRepo struct {
 }
 
 func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+	return s.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
+}
+
+func (s *stubChallengeRecommendationRepo) FindPublishedForRecommendationWithContext(_ context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	s.calls++
 	s.lastLimit = limit
 	s.lastDims = append([]string(nil), dimensions...)
@@ -175,5 +179,28 @@ func TestRecommendationServiceRecommendReturnsEmptyWhenNoWeakDimension(t *testin
 	}
 	if stubRepo.calls != 0 {
 		t.Fatalf("expected no challenge query when no weak dimension, got %d", stubRepo.calls)
+	}
+}
+
+func TestRecommendationServiceRecommendChallengesWithContextHonorsCancellation(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.SkillProfile{
+		UserID:    11,
+		Dimension: model.DimensionWeb,
+		Score:     0.2,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed profile: %v", err)
+	}
+
+	service := newRecommendationTestService(db, &stubChallengeRecommendationRepo{}, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.RecommendChallengesWithContext(ctx, 11, 0)
+	if err == nil || err != context.Canceled {
+		t.Fatalf("expected context canceled, got %v", err)
 	}
 }

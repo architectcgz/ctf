@@ -24,7 +24,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateImage(&req)
+	resp, err := h.service.CreateImageWithContext(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return

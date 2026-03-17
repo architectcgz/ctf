@@ -1,11 +1,15 @@
 package challenge
 
 import (
+	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"testing"
 	"time"
+
+	miniredis "github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
 )
 
 func newTestService(repo *Repository, imageRepo *ImageRepository) *Service {
@@ -54,6 +58,30 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	}
 }
 
+func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
+	db := setupTestDB(t)
+
+	repo := NewRepository(db)
+	imageRepo := NewImageRepository(db)
+	service := newTestService(repo, imageRepo)
+
+	resp, err := service.CreateChallenge(&dto.CreateChallengeReq{
+		Title:       "No Target Challenge",
+		Description: "No target required",
+		Category:    "misc",
+		Difficulty:  "easy",
+		Points:      50,
+		ImageID:     0,
+	})
+
+	if err != nil {
+		t.Fatalf("CreateChallenge() without image error = %v", err)
+	}
+	if resp.ImageID != 0 {
+		t.Fatalf("expected image_id=0, got %d", resp.ImageID)
+	}
+}
+
 func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	db := setupTestDB(t)
 
@@ -81,8 +109,16 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	service := newTestService(repo, nil)
 
 	err := service.PublishChallenge(challenge.ID)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
-		t.Fatalf("expected no image error, got %v", err)
+	if err != nil {
+		t.Fatalf("PublishChallenge() error = %v", err)
+	}
+
+	published, findErr := repo.FindByID(challenge.ID)
+	if findErr != nil {
+		t.Fatalf("FindByID() error = %v", findErr)
+	}
+	if published.Status != model.ChallengeStatusPublished {
+		t.Fatalf("expected published status, got %s", published.Status)
 	}
 }
 
@@ -138,5 +174,40 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 	}
 	if len(resp.Hints) != 1 || resp.Hints[0].Content != "从登录入口开始" {
 		t.Fatalf("unexpected hints: %+v", resp.Hints)
+	}
+}
+
+func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
+	db := setupTestDB(t)
+
+	challenge := &model.Challenge{
+		Title:  "Published",
+		Status: model.ChallengeStatusPublished,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.Submission{
+		UserID:      1,
+		ChallengeID: challenge.ID,
+		IsCorrect:   true,
+	}).Error; err != nil {
+		t.Fatalf("create submission: %v", err)
+	}
+
+	mini := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := NewService(NewRepository(db), nil, redisClient, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.getSolvedCountCached(ctx, challenge.ID)
+	if err == nil || err != context.Canceled {
+		t.Fatalf("expected context canceled, got %v", err)
 	}
 }

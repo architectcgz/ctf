@@ -25,7 +25,7 @@ func NewHandler(service *Service, recommendationService *RecommendationService) 
 func (h *Handler) GetMySkillProfile(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	profile, err := h.service.GetSkillProfile(userID)
+	profile, err := h.service.GetSkillProfileWithContext(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -63,7 +63,7 @@ func (h *Handler) GetRecommendations(c *gin.Context) {
 		return
 	}
 
-	result, err := h.recommendationService.Recommend(userID, req.Limit)
+	result, err := h.recommendationService.RecommendWithContext(c.Request.Context(), userID, req.Limit)
 	if err != nil {
 		response.FromError(c, err)
 		return

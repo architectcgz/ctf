@@ -19,6 +19,7 @@ import (
 const (
 	TokenTypeAccess  = "access"
 	TokenTypeRefresh = "refresh"
+	tokenLeeway      = time.Second
 )
 
 var (
@@ -80,7 +81,7 @@ func (m *Manager) ParseToken(tokenString string) (*Claims, error) {
 			return nil, ErrInvalidToken
 		}
 		return m.publicKey, nil
-	})
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Alg()}), jwt.WithLeeway(tokenLeeway))
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrExpiredToken

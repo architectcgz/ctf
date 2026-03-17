@@ -16,6 +16,8 @@ type statusUpdaterRepoStub struct {
 	contests       []*model.Contest
 	updatedStatus  map[int64]string
 	receivedStatus []string
+	listCalls      int
+	listCalled     chan struct{}
 }
 
 func (s *statusUpdaterRepoStub) Create(context.Context, *model.Contest) error {
@@ -47,7 +49,11 @@ func (s *statusUpdaterRepoStub) List(context.Context, *string, int, int) ([]*mod
 }
 
 func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, _, _ int) ([]*model.Contest, int64, error) {
+	s.listCalls++
 	s.receivedStatus = append([]string(nil), statuses...)
+	if s.listCalled != nil && s.listCalls == 1 {
+		close(s.listCalled)
+	}
 	return s.contests, int64(len(s.contests)), nil
 }
 
@@ -71,7 +77,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 			},
 		},
 	}
-	updater := NewStatusUpdater(repo, nil, time.Minute, 100, nil)
+	updater := NewStatusUpdater(repo, nil, time.Minute, 100, 30*time.Second, nil)
 
 	updater.updateStatuses(context.Background())
 
@@ -82,7 +88,7 @@ func TestStatusUpdaterUpdateStatuses_EndsFrozenContest(t *testing.T) {
 
 func TestStatusUpdaterUpdateStatuses_RequestsFrozenStatus(t *testing.T) {
 	repo := &statusUpdaterRepoStub{}
-	updater := NewStatusUpdater(repo, nil, time.Minute, 100, nil)
+	updater := NewStatusUpdater(repo, nil, time.Minute, 100, 30*time.Second, nil)
 
 	updater.updateStatuses(context.Background())
 
@@ -132,7 +138,7 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 		t.Fatalf("seed service status cache: %v", err)
 	}
 
-	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, nil)
+	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, 30*time.Second, nil)
 
 	updater.updateStatuses(context.Background())
 
@@ -144,5 +150,67 @@ func TestStatusUpdaterUpdateStatuses_ClearsAWDRuntimeStateWhenContestEnds(t *tes
 	}
 	if mini.Exists(rediskeys.AWDServiceStatusKey(11)) {
 		t.Fatalf("expected service status key to be cleared")
+	}
+}
+
+func TestStatusUpdaterUpdateStatuses_SkipsWhenSchedulerLockHeld(t *testing.T) {
+	repo := &statusUpdaterRepoStub{
+		contests: []*model.Contest{
+			{ID: 1, Status: model.ContestStatusRunning, StartTime: time.Now().Add(-time.Hour), EndTime: time.Now().Add(time.Hour)},
+		},
+	}
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	if err := mini.Set(rediskeys.ContestStatusUpdateLockKey(), "busy"); err != nil {
+		t.Fatalf("seed scheduler lock: %v", err)
+	}
+
+	updater := NewStatusUpdater(repo, redisClient, time.Minute, 100, time.Minute, nil)
+	updater.updateStatuses(context.Background())
+
+	if len(repo.receivedStatus) != 0 {
+		t.Fatalf("expected scheduler to skip when lock held, got statuses %+v", repo.receivedStatus)
+	}
+}
+
+func TestStatusUpdaterStartRunsImmediately(t *testing.T) {
+	repo := &statusUpdaterRepoStub{
+		listCalled: make(chan struct{}),
+	}
+	updater := NewStatusUpdater(repo, nil, time.Hour, 100, 30*time.Second, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		updater.Start(ctx)
+	}()
+
+	select {
+	case <-repo.listCalled:
+		cancel()
+	case <-time.After(time.Second):
+		cancel()
+		t.Fatal("expected updater to run immediately on start")
+	}
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("expected updater goroutine to exit after cancel")
+	}
+
+	if repo.listCalls != 1 {
+		t.Fatalf("expected exactly one immediate update, got %d", repo.listCalls)
 	}
 }

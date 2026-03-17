@@ -151,6 +151,9 @@ func (h *Handler) Logout(c *gin.Context) {
 				refreshExpiry = 0
 			}
 			_ = h.tokenService.RevokeToken(c.Request.Context(), claims.ID, refreshExpiry)
+			if err := h.tokenService.ClearRefreshSession(c.Request.Context(), authUser.UserID, claims.ID); err != nil {
+				h.log.Warn("auth_logout_failed_clear_refresh_session", zap.Int64("user_id", authUser.UserID), zap.Error(err))
+			}
 		}
 	}
 

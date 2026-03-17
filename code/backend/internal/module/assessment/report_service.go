@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -27,6 +28,9 @@ type ReportService struct {
 	config            config.ReportConfig
 	logger            *zap.Logger
 	workerPool        chan struct{}
+	baseCtx           context.Context
+	cancel            context.CancelFunc
+	tasks             sync.WaitGroup
 }
 
 type reportDownload struct {
@@ -56,16 +60,23 @@ func NewReportService(repo *ReportRepository, assessmentService *Service, cfg co
 	}
 
 	cfg = normalizeReportConfig(cfg)
+	baseCtx, cancel := context.WithCancel(context.Background())
 	return &ReportService{
 		repo:              repo,
 		assessmentService: assessmentService,
 		config:            cfg,
 		logger:            logger,
 		workerPool:        make(chan struct{}, cfg.MaxWorkers),
+		baseCtx:           baseCtx,
+		cancel:            cancel,
 	}
 }
 
 func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	format := s.normalizeFormat(req.Format)
 	report := &model.Report{
 		Type:   model.ReportTypePersonal,
@@ -77,16 +88,29 @@ func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	filePath, expiresAt, err := s.generatePersonalReport(ctx, report.ID, userID, format)
+	reportCtx, cancel := s.withPersonalTimeout(ctx)
+	defer cancel()
+
+	filePath, expiresAt, err := s.generatePersonalReport(reportCtx, report.ID, userID, format)
 	if err != nil {
 		s.markFailed(report.ID, err)
 		return nil, err
 	}
-	if err := s.repo.MarkReady(ctx, report.ID, filePath, expiresAt); err != nil {
+	if err := s.repo.MarkReady(reportCtx, report.ID, filePath, expiresAt); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	return buildReportExportData(report.ID, model.ReportStatusReady, expiresAt), nil
+}
+
+func (s *ReportService) withPersonalTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if s.config.PersonalTimeout <= 0 {
+		return context.WithCancel(ctx)
+	}
+	return context.WithTimeout(ctx, s.config.PersonalTimeout)
 }
 
 func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error) {
@@ -118,7 +142,7 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	go s.runAsyncReport(report.ID, func(runCtx context.Context) error {
+	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
 		filePath, expiresAt, genErr := s.generateClassReport(runCtx, report.ID, className, format)
 		if genErr != nil {
 			return genErr
@@ -210,8 +234,16 @@ func (s *ReportService) GetStatus(ctx context.Context, reportID, requesterID int
 }
 
 func (s *ReportService) runAsyncReport(reportID int64, fn func(context.Context) error) {
+	s.tasks.Add(1)
 	go func() {
-		s.workerPool <- struct{}{}
+		defer s.tasks.Done()
+
+		select {
+		case s.workerPool <- struct{}{}:
+		case <-s.baseCtx.Done():
+			s.markFailed(reportID, s.baseCtx.Err())
+			return
+		}
 		defer func() {
 			<-s.workerPool
 			if recovered := recover(); recovered != nil {
@@ -219,13 +251,35 @@ func (s *ReportService) runAsyncReport(reportID int64, fn func(context.Context) 
 			}
 		}()
 
-		ctx, cancel := context.WithTimeout(context.Background(), s.config.ClassTimeout)
+		ctx, cancel := context.WithTimeout(s.baseCtx, s.config.ClassTimeout)
 		defer cancel()
 
 		if err := fn(ctx); err != nil {
 			s.markFailed(reportID, err)
 		}
 	}()
+}
+
+func (s *ReportService) Close(ctx context.Context) error {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if s.cancel != nil {
+		s.cancel()
+	}
+
+	done := make(chan struct{})
+	go func() {
+		s.tasks.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, userID int64, format string) (string, time.Time, error) {
@@ -268,7 +322,7 @@ func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int6
 		return nil, errcode.ErrUnauthorized
 	}
 
-	skillProfileResp, err := s.assessmentService.GetSkillProfile(userID)
+	skillProfileResp, err := s.assessmentService.GetSkillProfileWithContext(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -385,11 +439,17 @@ func reportContentType(format string) string {
 }
 
 func (s *ReportService) markFailed(reportID int64, err error) {
+	if s.repo == nil {
+		return
+	}
+
 	message := "报告生成失败"
 	if err != nil {
 		message = err.Error()
 	}
-	if updateErr := s.repo.MarkFailed(context.Background(), reportID, message); updateErr != nil {
+	markCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if updateErr := s.repo.MarkFailed(markCtx, reportID, message); updateErr != nil {
 		s.logger.Error("report_mark_failed_error", zap.Int64("report_id", reportID), zap.Error(updateErr))
 	}
 }

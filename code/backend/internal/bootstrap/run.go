@@ -40,6 +40,7 @@ func Run() {
 
 	server, err := app.NewHTTPServer(cfg, log, db, cache)
 	if err != nil {
+		closeResources(log, db, cache)
 		log.Fatal("http_server_init_failed", zap.Error(err))
 	}
 
@@ -56,6 +57,7 @@ func Run() {
 	}()
 
 	waitForShutdown(log, server)
+	closeResources(log, db, cache)
 }
 
 func mustOpenPostgres(cfg *config.Config, log *zap.Logger) *gorm.DB {
@@ -77,6 +79,7 @@ func mustOpenRedis(cfg *config.Config, log *zap.Logger) *redislib.Client {
 func waitForShutdown(log *zap.Logger, server *app.HTTPServer) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(stop)
 	<-stop
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -88,4 +91,36 @@ func waitForShutdown(log *zap.Logger, server *app.HTTPServer) {
 	}
 
 	log.Info("http_server_stopped")
+}
+
+func closeResources(log *zap.Logger, db *gorm.DB, cache *redislib.Client) {
+	closePostgres(log, db)
+	closeRedis(log, cache)
+}
+
+func closePostgres(log *zap.Logger, db *gorm.DB) {
+	if db == nil {
+		return
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		log.Warn("postgres_sql_db_unavailable_for_close", zap.Error(err))
+		return
+	}
+	if err := sqlDB.Close(); err != nil {
+		log.Warn("postgres_close_failed", zap.Error(err))
+		return
+	}
+	log.Info("postgres_closed")
+}
+
+func closeRedis(log *zap.Logger, cache *redislib.Client) {
+	if cache == nil {
+		return
+	}
+	if err := cache.Close(); err != nil {
+		log.Warn("redis_close_failed", zap.Error(err))
+		return
+	}
+	log.Info("redis_closed")
 }

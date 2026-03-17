@@ -91,6 +91,7 @@ type flowChallengeDetail struct {
 	Category      string `json:"category"`
 	Difficulty    string `json:"difficulty"`
 	Points        int    `json:"points"`
+	NeedTarget    bool   `json:"need_target"`
 	AttachmentURL string `json:"attachment_url"`
 	Hints         []struct {
 		Level      int    `json:"level"`
@@ -252,6 +253,9 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	}
 	if detail.AttachmentURL != "https://example.com/files/web-sqli-101.zip" {
 		t.Fatalf("unexpected attachment_url: %s", detail.AttachmentURL)
+	}
+	if !detail.NeedTarget {
+		t.Fatalf("expected need_target=true, got false")
 	}
 	if len(detail.Hints) != 1 || detail.Hints[0].IsUnlocked || detail.Hints[0].Content != "" {
 		t.Fatalf("expected locked hint before unlock, got %+v", detail.Hints)
@@ -650,8 +654,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	t.Helper()
 
 	gin.SetMode(gin.TestMode)
-	t.Setenv("CTF_FLAG_SECRET", "12345678901234567890123456789012")
-
 	if err := validation.Register(); err != nil {
 		t.Fatalf("register validator: %v", err)
 	}
@@ -686,6 +688,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.EnvironmentTemplate{},
 		&model.Submission{},
 		&model.Instance{},
+		&model.PortAllocation{},
 		&model.SkillProfile{},
 		&model.UserScore{},
 	); err != nil {
@@ -721,7 +724,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}, logger)
 	challengeHandler := challengeModule.NewHandler(challengeService)
 
-	flagService, err := challengeModule.NewFlagService(db)
+	flagService, err := challengeModule.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		t.Fatalf("create flag service: %v", err)
 	}
@@ -732,7 +735,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	containerService := containerModule.NewService(instanceRepo, nil, &cfg.Container, logger)
 	proxyTicketService := containerModule.NewProxyTicketService(cache, &cfg.Container)
 	practiceService := practiceModule.NewService(
-		db,
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
@@ -923,9 +925,7 @@ func createFlowUser(t *testing.T, db *gorm.DB, username, password, role string) 
 		Role:     role,
 		Status:   model.UserStatusActive,
 	}
-	if err := user.SetPassword(password); err != nil {
-		t.Fatalf("hash password: %v", err)
-	}
+	setTestPassword(t, user, password)
 	if err := db.Create(user).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}

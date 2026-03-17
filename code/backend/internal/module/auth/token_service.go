@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
 )
@@ -38,8 +39,10 @@ type wsTicketPayload struct {
 
 type TokenService interface {
 	IssueTokens(userID int64, username, role string) (*TokenPair, error)
+	IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*TokenPair, error)
 	RefreshAccessToken(ctx context.Context, refreshToken string) (*dtoRefreshPayload, error)
 	RevokeToken(ctx context.Context, jti string, ttl time.Duration) error
+	ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error
 	IsRevoked(ctx context.Context, jti string) (bool, error)
 	ParseToken(tokenString string) (*jwtpkg.Claims, error)
 	IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error)
@@ -68,14 +71,25 @@ func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cac
 }
 
 func (s *tokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+	return s.IssueTokensWithContext(context.Background(), userID, username, role)
+}
+
+func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*TokenPair, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)
 	}
 
-	refreshToken, _, err := s.manager.GenerateRefreshToken(userID, username, role)
+	refreshToken, refreshClaims, err := s.manager.GenerateRefreshToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate refresh token: %w", err)
+	}
+	if err := s.storeRefreshSession(ctx, userID, refreshClaims.ID); err != nil {
+		return nil, fmt.Errorf("store refresh session: %w", err)
 	}
 
 	return &TokenPair{
@@ -102,6 +116,13 @@ func (s *tokenService) RefreshAccessToken(ctx context.Context, refreshToken stri
 	if revoked {
 		return nil, errcode.ErrTokenRevoked
 	}
+	active, err := s.isActiveRefreshSession(ctx, claims.UserID, claims.ID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if !active {
+		return nil, errcode.ErrTokenRevoked
+	}
 
 	accessToken, accessClaims, err := s.manager.GenerateAccessToken(claims.UserID, claims.Username, claims.Role)
 	if err != nil {
@@ -119,6 +140,30 @@ func (s *tokenService) RevokeToken(ctx context.Context, jti string, ttl time.Dur
 		return nil
 	}
 	return s.cache.Set(ctx, s.blacklistKey(jti), "1", ttl).Err()
+}
+
+func (s *tokenService) ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
+	if s.cache == nil || userID <= 0 {
+		return nil
+	}
+
+	key := rediskeys.TokenKey(userID)
+	if refreshJTI == "" {
+		return s.cache.Del(ctx, key).Err()
+	}
+
+	result, err := s.cache.Eval(ctx, `
+		if redis.call("get", KEYS[1]) == ARGV[1] then
+			return redis.call("del", KEYS[1])
+		else
+			return 0
+		end
+	`, []string{key}, refreshJTI).Result()
+	if err != nil {
+		return err
+	}
+	_ = result
+	return nil
 }
 
 func (s *tokenService) IsRevoked(ctx context.Context, jti string) (bool, error) {
@@ -198,6 +243,28 @@ func (s *tokenService) blacklistKey(jti string) string {
 
 func (s *tokenService) wsTicketKey(ticket string) string {
 	return fmt.Sprintf("%s:%s", s.wsConfig.TicketKeyPrefix, ticket)
+}
+
+func (s *tokenService) storeRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
+	if s.cache == nil || userID <= 0 || refreshJTI == "" {
+		return nil
+	}
+	return s.cache.Set(ctx, rediskeys.TokenKey(userID), refreshJTI, s.manager.RefreshTokenTTL()).Err()
+}
+
+func (s *tokenService) isActiveRefreshSession(ctx context.Context, userID int64, refreshJTI string) (bool, error) {
+	if s.cache == nil || userID <= 0 || refreshJTI == "" {
+		return true, nil
+	}
+
+	value, err := s.cache.Get(ctx, rediskeys.TokenKey(userID)).Result()
+	if errors.Is(err, redislib.Nil) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return value == refreshJTI, nil
 }
 
 func generateOpaqueToken(size int) (string, error) {

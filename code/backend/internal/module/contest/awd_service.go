@@ -35,7 +35,7 @@ type AWDService interface {
 }
 
 type awdService struct {
-	db          *gorm.DB
+	repo        *AWDRepository
 	redis       *redislib.Client
 	contestRepo Repository
 	flagSecret  string
@@ -44,7 +44,7 @@ type awdService struct {
 }
 
 func NewAWDService(
-	db *gorm.DB,
+	repo *AWDRepository,
 	contestRepo Repository,
 	redis *redislib.Client,
 	flagSecret string,
@@ -54,7 +54,7 @@ func NewAWDService(
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &awdService{db: db, redis: redis, contestRepo: contestRepo, flagSecret: flagSecret, awdConfig: awdConfig, log: log}
+	return &awdService{repo: repo, redis: redis, contestRepo: contestRepo, flagSecret: flagSecret, awdConfig: awdConfig, log: log}
 }
 
 func (s *awdService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
@@ -78,7 +78,7 @@ func (s *awdService) CreateRound(ctx context.Context, contestID int64, req *dto.
 	if req.DefenseScore != nil {
 		round.DefenseScore = *req.DefenseScore
 	}
-	if err := s.db.WithContext(ctx).Create(round).Error; err != nil {
+	if err := s.repo.CreateRound(ctx, round); err != nil {
 		if isUniqueConstraintError(err) {
 			return nil, errcode.ErrConflict
 		}
@@ -92,11 +92,8 @@ func (s *awdService) ListRounds(ctx context.Context, contestID int64) ([]*dto.AW
 		return nil, err
 	}
 
-	var rounds []model.AWDRound
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ?", contestID).
-		Order("round_number ASC, id ASC").
-		Find(&rounds).Error; err != nil {
+	rounds, err := s.repo.ListRoundsByContest(ctx, contestID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -125,8 +122,7 @@ func (s *awdService) RunCurrentRoundChecks(ctx context.Context, contestID int64)
 		return nil, err
 	}
 
-	checker := NewAWDRoundUpdater(s.db, s.redis, s.awdConfig, s.flagSecret, nil, s.log.Named("awd_manual_checker"))
-	if err := checker.RunRoundServiceChecks(ctx, contest, round, awdCheckSourceManualCurrent); err != nil {
+	if err := s.repo.RunRoundServiceChecks(ctx, s.redis, s.awdConfig, s.flagSecret, contest, round, awdCheckSourceManualCurrent, s.log.Named("awd_manual_checker")); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
@@ -142,8 +138,7 @@ func (s *awdService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 		return nil, err
 	}
 
-	checker := NewAWDRoundUpdater(s.db, s.redis, s.awdConfig, s.flagSecret, nil, s.log.Named("awd_manual_checker"))
-	if err := checker.RunRoundServiceChecks(ctx, contest, round, awdCheckSourceManualSelected); err != nil {
+	if err := s.repo.RunRoundServiceChecks(ctx, s.redis, s.awdConfig, s.flagSecret, contest, round, awdCheckSourceManualSelected, s.log.Named("awd_manual_checker")); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
@@ -187,31 +182,19 @@ func (s *awdService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		defenseScore = round.DefenseScore
 	}
 
-	record := &model.AWDTeamService{
-		RoundID:       roundID,
-		TeamID:        req.TeamID,
-		ChallengeID:   req.ChallengeID,
-		ServiceStatus: req.ServiceStatus,
-		CheckResult:   checkResult,
-		DefenseScore:  defenseScore,
-	}
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.
-			Where("round_id = ? AND team_id = ? AND challenge_id = ?", roundID, req.TeamID, req.ChallengeID).
-			Assign(map[string]any{
-				"service_status": req.ServiceStatus,
-				"check_result":   checkResult,
-				"defense_score":  defenseScore,
-				"updated_at":     time.Now(),
-			}).
-			FirstOrCreate(record).Error; err != nil {
-			return err
+	now := time.Now()
+	var record *model.AWDTeamService
+	if err := s.repo.WithinTransaction(ctx, func(txRepo *AWDRepository) error {
+		var txErr error
+		record, txErr = txRepo.UpsertServiceCheck(ctx, roundID, req.TeamID, req.ChallengeID, req.ServiceStatus, checkResult, defenseScore, now)
+		if txErr != nil {
+			return txErr
 		}
-		return recalculateAWDContestTeamScores(ctx, tx, contestID)
+		return txRepo.RecalculateContestTeamScores(ctx, contestID)
 	}); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	if err := rebuildContestScoreboardCache(ctx, s.db, s.redis, contestID); err != nil {
+	if err := s.repo.RebuildContestScoreboardCache(ctx, s.redis, contestID); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
@@ -230,11 +213,8 @@ func (s *awdService) ListServices(ctx context.Context, contestID, roundID int64)
 		return nil, err
 	}
 
-	var records []model.AWDTeamService
-	if err := s.db.WithContext(ctx).
-		Where("round_id = ?", roundID).
-		Order("team_id ASC, challenge_id ASC").
-		Find(&records).Error; err != nil {
+	records, err := s.repo.ListServicesByRound(ctx, roundID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -285,12 +265,8 @@ func (s *awdService) createAttackLog(
 
 	scoreGained := 0
 	if req.IsSuccess {
-		var count int64
-		if err := s.db.WithContext(ctx).
-			Model(&model.AWDAttackLog{}).
-			Where("round_id = ? AND attacker_team_id = ? AND victim_team_id = ? AND challenge_id = ? AND is_success = ?",
-				roundID, req.AttackerTeamID, req.VictimTeamID, req.ChallengeID, true).
-			Count(&count).Error; err != nil {
+		count, err := s.repo.CountSuccessfulAttacks(ctx, roundID, req.AttackerTeamID, req.VictimTeamID, req.ChallengeID)
+		if err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		if count == 0 {
@@ -309,18 +285,21 @@ func (s *awdService) createAttackLog(
 		IsSuccess:      req.IsSuccess,
 		ScoreGained:    scoreGained,
 	}
-	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(logRecord).Error; err != nil {
+	now := time.Now()
+	if err := s.repo.WithinTransaction(ctx, func(txRepo *AWDRepository) error {
+		if err := txRepo.CreateAttackLog(ctx, logRecord); err != nil {
 			return err
 		}
-		if err := s.applyAttackImpactToVictimService(ctx, tx, round, req, scoreGained); err != nil {
-			return err
+		if req.IsSuccess {
+			if err := txRepo.ApplyAttackImpactToVictimService(ctx, round.ID, req.VictimTeamID, req.ChallengeID, scoreGained, now); err != nil {
+				return err
+			}
 		}
-		return recalculateAWDContestTeamScores(ctx, tx, contestID)
+		return txRepo.RecalculateContestTeamScores(ctx, contestID)
 	}); err != nil {
 		return nil, err
 	}
-	if err := rebuildContestScoreboardCache(ctx, s.db, s.redis, contestID); err != nil {
+	if err := s.repo.RebuildContestScoreboardCache(ctx, s.redis, contestID); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
@@ -390,11 +369,8 @@ func (s *awdService) ListAttackLogs(ctx context.Context, contestID, roundID int6
 		return nil, err
 	}
 
-	var logs []model.AWDAttackLog
-	if err := s.db.WithContext(ctx).
-		Where("round_id = ?", roundID).
-		Order("created_at ASC, id ASC").
-		Find(&logs).Error; err != nil {
+	logs, err := s.repo.ListAttackLogsByRound(ctx, roundID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	teams, err := s.loadContestTeams(ctx, contestID)
@@ -428,12 +404,12 @@ func (s *awdService) GetRoundSummary(ctx context.Context, contestID, roundID int
 		return nil, err
 	}
 
-	var services []model.AWDTeamService
-	if err := s.db.WithContext(ctx).Where("round_id = ?", roundID).Find(&services).Error; err != nil {
+	services, err := s.repo.ListServicesByRound(ctx, roundID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	var attackLogs []model.AWDAttackLog
-	if err := s.db.WithContext(ctx).Where("round_id = ?", roundID).Find(&attackLogs).Error; err != nil {
+	attackLogs, err := s.repo.ListAttackLogsByRound(ctx, roundID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -551,19 +527,19 @@ func (s *awdService) ensureAWDRound(ctx context.Context, contestID, roundID int6
 		return nil, err
 	}
 
-	var round model.AWDRound
-	if err := s.db.WithContext(ctx).Where("id = ? AND contest_id = ?", roundID, contestID).First(&round).Error; err != nil {
+	round, err := s.repo.FindRoundByContestAndID(ctx, contestID, roundID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &round, nil
+	return round, nil
 }
 
 func (s *awdService) loadContestTeams(ctx context.Context, contestID int64) (map[int64]*model.Team, error) {
-	var teams []*model.Team
-	if err := s.db.WithContext(ctx).Where("contest_id = ?", contestID).Find(&teams).Error; err != nil {
+	teams, err := s.repo.FindTeamsByContest(ctx, contestID)
+	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	result := make(map[int64]*model.Team, len(teams))
@@ -574,23 +550,19 @@ func (s *awdService) loadContestTeams(ctx context.Context, contestID int64) (map
 }
 
 func (s *awdService) ensureContestChallenge(ctx context.Context, contestID, challengeID int64) error {
-	var count int64
-	if err := s.db.WithContext(ctx).Model(&model.ContestChallenge{}).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		Count(&count).Error; err != nil {
+	ok, err := s.repo.ContestHasChallenge(ctx, contestID, challengeID)
+	if err != nil {
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if count == 0 {
+	if !ok {
 		return errcode.ErrChallengeNotInContest
 	}
 	return nil
 }
 
 func (s *awdService) resolveUserTeamID(ctx context.Context, userID, contestID int64) (int64, error) {
-	var registration model.ContestRegistration
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND user_id = ?", contestID, userID).
-		First(&registration).Error; err == nil {
+	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
+	if err == nil {
 		if err := registrationStatusError(registration.Status); err != nil {
 			return 0, err
 		}
@@ -598,17 +570,13 @@ func (s *awdService) resolveUserTeamID(ctx context.Context, userID, contestID in
 			return 0, errcode.ErrAWDTeamRequired
 		}
 		return *registration.TeamID, nil
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return 0, errcode.ErrInternal.WithCause(err)
 	}
 
-	var team model.Team
-	if err := s.db.WithContext(ctx).
-		Table("teams AS t").
-		Select("t.*").
-		Joins("JOIN team_members AS tm ON tm.team_id = t.id").
-		Where("t.contest_id = ? AND tm.user_id = ?", contestID, userID).
-		First(&team).Error; err != nil {
+	team, err := s.repo.FindContestTeamByMember(ctx, contestID, userID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return 0, errcode.ErrNotRegistered
 		}
@@ -651,13 +619,11 @@ func (s *awdService) resolveCurrentRoundForContest(ctx context.Context, contest 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	var round model.AWDRound
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND status = ?", contest.ID, model.AWDRoundStatusRunning).
-		Order("round_number DESC, id DESC").
-		First(&round).Error; err == nil {
-		return &round, nil
-	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+	round, err := s.repo.FindRunningRound(ctx, contest.ID)
+	if err == nil {
+		return round, nil
+	}
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -666,10 +632,9 @@ func (s *awdService) resolveCurrentRoundForContest(ctx context.Context, contest 
 		if err == nil {
 			roundNumber, convErr := strconv.Atoi(strings.TrimSpace(roundNumberStr))
 			if convErr == nil && roundNumber > 0 {
-				if err := s.db.WithContext(ctx).
-					Where("contest_id = ? AND round_number = ?", contest.ID, roundNumber).
-					First(&round).Error; err == nil {
-					return &round, nil
+				round, findErr := s.repo.FindRoundByNumber(ctx, contest.ID, roundNumber)
+				if findErr == nil {
+					return round, nil
 				}
 			}
 		} else if !errors.Is(err, redislib.Nil) {
@@ -684,15 +649,10 @@ func (s *awdService) ensureActiveRoundMaterialized(ctx context.Context, contest 
 	if contest == nil {
 		return errcode.ErrContestNotFound
 	}
-	updater := NewAWDRoundUpdater(s.db, s.redis, s.awdConfig, s.flagSecret, nil, s.log.Named("awd_round_materializer"))
-	activeRound, totalRounds, ok := updater.calculateRoundPlan(contest, now)
-	if !ok || activeRound <= 0 {
-		return errcode.ErrAWDRoundNotActive
-	}
-	if err := updater.reconcileRounds(ctx, contest, activeRound, totalRounds); err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if err := updater.syncRoundFlags(ctx, contest, activeRound, now); err != nil {
+	if err := s.repo.EnsureActiveRoundMaterialized(ctx, s.redis, s.awdConfig, s.flagSecret, contest, now, s.log.Named("awd_round_materializer")); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrAWDRoundNotActive
+		}
 		return errcode.ErrInternal.WithCause(err)
 	}
 	return nil
@@ -749,24 +709,18 @@ func (s *awdService) isLiveContestWindow(ctx context.Context, contestID int64) b
 }
 
 func (s *awdService) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
-	var round model.AWDRound
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND round_number = ?", contestID, roundNumber).
-		First(&round).Error; err != nil {
-		return nil, err
-	}
-	return &round, nil
+	return s.repo.FindRoundByNumber(ctx, contestID, roundNumber)
 }
 
 func (s *awdService) loadChallenge(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	var challenge model.Challenge
-	if err := s.db.WithContext(ctx).Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+	challenge, err := s.repo.FindChallengeByID(ctx, challengeID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &challenge, nil
+	return challenge, nil
 }
 
 func (s *awdService) resolveAcceptedRoundFlags(
@@ -828,48 +782,6 @@ func (s *awdService) resolveRoundFlag(ctx context.Context, contestID int64, roun
 		return "", errcode.ErrAWDFlagUnavailable
 	}
 	return buildAWDRoundFlag(contestID, round.RoundNumber, victimTeamID, challenge.ID, s.flagSecret, challenge.FlagPrefix), nil
-}
-
-func (s *awdService) applyAttackImpactToVictimService(
-	ctx context.Context,
-	db *gorm.DB,
-	round *model.AWDRound,
-	req *dto.CreateAWDAttackLogReq,
-	scoreGained int,
-) error {
-	if round == nil || req == nil || !req.IsSuccess {
-		return nil
-	}
-	if db == nil {
-		db = s.db
-	}
-
-	now := time.Now()
-	record := &model.AWDTeamService{
-		RoundID:        round.ID,
-		TeamID:         req.VictimTeamID,
-		ChallengeID:    req.ChallengeID,
-		ServiceStatus:  model.AWDServiceStatusCompromised,
-		CheckResult:    "{}",
-		AttackReceived: 1,
-		DefenseScore:   0,
-		AttackScore:    scoreGained,
-		CreatedAt:      now,
-		UpdatedAt:      now,
-	}
-	if err := db.WithContext(ctx).
-		Where("round_id = ? AND team_id = ? AND challenge_id = ?", round.ID, req.VictimTeamID, req.ChallengeID).
-		Assign(map[string]any{
-			"service_status":  model.AWDServiceStatusCompromised,
-			"attack_received": gorm.Expr("attack_received + ?", 1),
-			"attack_score":    gorm.Expr("attack_score + ?", scoreGained),
-			"defense_score":   0,
-			"updated_at":      now,
-		}).
-		FirstOrCreate(record).Error; err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	return nil
 }
 
 func toAWDRoundResp(round *model.AWDRound) *dto.AWDRoundResp {

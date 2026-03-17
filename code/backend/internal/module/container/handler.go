@@ -51,7 +51,7 @@ func (h *Handler) CreateInstance(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateInstance(userID, challengeID)
+	resp, err := h.service.CreateInstanceWithContext(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -68,7 +68,7 @@ func (h *Handler) DestroyInstance(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DestroyInstance(instanceID, userID); err != nil {
+	if err := h.service.DestroyInstanceWithContext(c.Request.Context(), instanceID, userID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -84,7 +84,7 @@ func (h *Handler) ExtendInstance(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.ExtendInstance(instanceID, userID)
+	resp, err := h.service.ExtendInstanceWithContext(c.Request.Context(), instanceID, userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -101,7 +101,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 
-	_, err = h.service.GetAccessURL(instanceID, currentUser.UserID)
+	_, err = h.service.GetAccessURLWithContext(c.Request.Context(), instanceID, currentUser.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -153,7 +153,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 		return
 	}
 
-	targetURL, err := h.service.GetAccessURL(instanceID, claims.UserID)
+	targetURL, err := h.service.GetAccessURLWithContext(c.Request.Context(), instanceID, claims.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -208,7 +208,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 func (h *Handler) ListInstances(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	instances, err := h.service.GetUserInstances(userID)
+	instances, err := h.service.GetUserInstancesWithContext(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return

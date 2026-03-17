@@ -20,6 +20,10 @@ type stubRecommendationProvider struct {
 }
 
 func (s *stubRecommendationProvider) Recommend(userID int64, _ int) (*dto.RecommendationResp, error) {
+	return s.RecommendWithContext(context.Background(), userID, 0)
+}
+
+func (s *stubRecommendationProvider) RecommendWithContext(_ context.Context, userID int64, _ int) (*dto.RecommendationResp, error) {
 	s.calls = append(s.calls, userID)
 	return s.resp, s.err
 }

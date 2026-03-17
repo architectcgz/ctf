@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	redislib "github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/constants"
@@ -21,7 +20,8 @@ import (
 )
 
 type SubmissionService struct {
-	db                *gorm.DB
+	contestRepo       Repository
+	repo              *SubmissionRepository
 	redis             *redislib.Client
 	flagService       *challenge.FlagService
 	teamRepo          *TeamRepository
@@ -29,9 +29,10 @@ type SubmissionService struct {
 	cfg               *config.Config
 }
 
-func NewSubmissionService(db *gorm.DB, redis *redislib.Client, flagService *challenge.FlagService, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagService *challenge.FlagService, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
-		db:                db,
+		contestRepo:       contestRepo,
+		repo:              repo,
 		redis:             redis,
 		flagService:       flagService,
 		teamRepo:          teamRepo,
@@ -41,9 +42,9 @@ func NewSubmissionService(db *gorm.DB, redis *redislib.Client, flagService *chal
 }
 
 func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
-	var contest model.Contest
-	if err := s.db.WithContext(ctx).First(&contest, contestID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	contest, err := s.contestRepo.FindByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -62,10 +63,8 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 		return nil, err
 	}
 
-	var contestChallenge model.ContestChallenge
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
-		First(&contestChallenge).Error; err != nil {
+	contestChallenge, err := s.repo.FindContestChallenge(ctx, contestID, challengeID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotInContest
 		}
@@ -97,7 +96,7 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 
 	if !isCorrect {
 		_ = s.redis.Set(ctx, rateLimitKey, "1", 5*time.Second).Err()
-		if err := s.db.WithContext(ctx).Create(submission).Error; err != nil {
+		if err := s.repo.CreateSubmission(ctx, submission); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
 		return &dto.SubmissionResp{
@@ -121,10 +120,8 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 }
 
 func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID int64) (*int64, error) {
-	var registration model.ContestRegistration
-	if err := s.db.WithContext(ctx).
-		Where("contest_id = ? AND user_id = ?", contestID, userID).
-		First(&registration).Error; err == nil {
+	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
+	if err == nil {
 		if err := registrationStatusError(registration.Status); err != nil {
 			return nil, err
 		}
@@ -144,34 +141,23 @@ func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID
 	return nil, errcode.ErrNotRegistered
 }
 
-func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submission *model.Submission, contestChallenge model.ContestChallenge, teamID *int64) (int, error) {
-	var challengeRecord model.Challenge
-	if err := s.db.WithContext(ctx).First(&challengeRecord, submission.ChallengeID).Error; err != nil {
+func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submission *model.Submission, contestChallenge *model.ContestChallenge, teamID *int64) (int, error) {
+	challengeRecord, err := s.repo.FindChallengeByID(ctx, submission.ChallengeID)
+	if err != nil {
 		return 0, errcode.ErrInternal.WithCause(err)
 	}
 
 	finalScore := 0
 	teamScoreDeltas := make(map[int64]int)
 
-	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		lockedChallenge := contestChallenge
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("contest_id = ? AND challenge_id = ?", *submission.ContestID, submission.ChallengeID).
-			First(&lockedChallenge).Error; err != nil {
+	err = s.repo.WithinTransaction(ctx, func(txRepo *SubmissionRepository) error {
+		lockedChallenge, err := txRepo.LockContestChallenge(ctx, *submission.ContestID, submission.ChallengeID)
+		if err != nil {
 			return err
 		}
 
-		solvedQuery := tx.Model(&model.Submission{}).
-			Where("contest_id = ? AND challenge_id = ? AND is_correct = ?",
-				*submission.ContestID, submission.ChallengeID, true)
-		if teamID != nil {
-			solvedQuery = solvedQuery.Where("team_id = ?", *teamID)
-		} else {
-			solvedQuery = solvedQuery.Where("team_id IS NULL AND user_id = ?", submission.UserID)
-		}
-
-		var count int64
-		if err := solvedQuery.Count(&count).Error; err != nil {
+		count, err := txRepo.CountCorrectSubmissions(ctx, *submission.ContestID, submission.ChallengeID, teamID, submission.UserID)
+		if err != nil {
 			return err
 		}
 		if count > 0 {
@@ -179,9 +165,7 @@ func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submiss
 		}
 
 		if teamID != nil && lockedChallenge.FirstBloodBy == nil {
-			if err := tx.Model(&model.ContestChallenge{}).
-				Where("contest_id = ? AND challenge_id = ?", *submission.ContestID, submission.ChallengeID).
-				Update("first_blood_by", *teamID).Error; err != nil {
+			if err := txRepo.UpdateFirstBlood(ctx, *submission.ContestID, submission.ChallengeID, *teamID); err != nil {
 				return err
 			}
 			lockedChallenge.FirstBloodBy = teamID
@@ -189,31 +173,26 @@ func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submiss
 
 		submission.IsCorrect = true
 		submission.Score = 0
-		if err := tx.Create(submission).Error; err != nil {
+		if err := txRepo.CreateSubmission(ctx, submission); err != nil {
 			if isContestSubmissionUniqueViolation(err) {
 				return errcode.ErrContestChallengeSolved
 			}
 			return err
 		}
 
-		var solvedSubmissions []model.Submission
-		if err := tx.
-			Where("contest_id = ? AND challenge_id = ? AND is_correct = ?", *submission.ContestID, submission.ChallengeID, true).
-			Order("submitted_at ASC, id ASC").
-			Find(&solvedSubmissions).Error; err != nil {
+		solvedSubmissions, err := txRepo.ListCorrectSubmissions(ctx, *submission.ContestID, submission.ChallengeID)
+		if err != nil {
 			return err
 		}
 
-		recalculatedScore := s.calculateContestScore(lockedChallenge, challengeRecord, int64(len(solvedSubmissions)))
+		recalculatedScore := s.calculateContestScore(*lockedChallenge, *challengeRecord, int64(len(solvedSubmissions)))
 		firstBloodBonus := int(math.Round(float64(recalculatedScore) * s.cfg.Contest.FirstBloodBonus))
 		scoreUpdates, currentScore := buildContestSubmissionScoreUpdates(solvedSubmissions, lockedChallenge.FirstBloodBy, recalculatedScore, firstBloodBonus, submission.ID)
 		for _, update := range scoreUpdates {
 			if update.NewScore == update.OldScore {
 				continue
 			}
-			if err := tx.Model(&model.Submission{}).
-				Where("id = ?", update.SubmissionID).
-				Update("score", update.NewScore).Error; err != nil {
+			if err := txRepo.UpdateSubmissionScore(ctx, update.SubmissionID, update.NewScore); err != nil {
 				return err
 			}
 			if update.TeamID != nil {
@@ -225,15 +204,11 @@ func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submiss
 			if delta == 0 {
 				continue
 			}
-			updates := map[string]any{
-				"total_score": gorm.Expr("total_score + ?", delta),
-			}
+			var lastSolveAt *time.Time
 			if teamID != nil && affectedTeamID == *teamID {
-				updates["last_solve_at"] = submission.SubmittedAt
+				lastSolveAt = &submission.SubmittedAt
 			}
-			if err := tx.Model(&model.Team{}).
-				Where("id = ?", affectedTeamID).
-				Updates(updates).Error; err != nil {
+			if err := txRepo.AddTeamScore(ctx, affectedTeamID, delta, lastSolveAt); err != nil {
 				return err
 			}
 		}
