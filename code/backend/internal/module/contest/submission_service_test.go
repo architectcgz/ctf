@@ -442,8 +442,7 @@ func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.C
 		_ = redisClient.Close()
 	})
 
-	t.Setenv("CTF_FLAG_SECRET", "0123456789abcdef0123456789abcdef")
-	flagService, err := challengeModule.NewFlagService(db)
+	flagService, err := challengeModule.NewFlagService(challengeModule.NewRepository(db), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
@@ -458,7 +457,7 @@ func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.C
 	}
 	contestRepo := NewRepository(db)
 	scoreboardService := NewScoreboardService(contestRepo, redisClient, &cfg.Contest, zap.NewNop())
-	service := NewSubmissionService(db, redisClient, flagService, NewTeamRepository(db), scoreboardService, cfg)
+	service := NewSubmissionService(contestRepo, NewSubmissionRepository(db), redisClient, flagService, NewTeamRepository(db), scoreboardService, cfg)
 	return service, redisClient, db
 }
 
@@ -501,8 +500,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 		t.Fatalf("create contest challenge: %v", err)
 	}
 
-	t.Setenv("CTF_FLAG_SECRET", "0123456789abcdef0123456789abcdef")
-	flagService, err := challengeModule.NewFlagService(db)
+	flagService, err := challengeModule.NewFlagService(challengeModule.NewRepository(db), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}

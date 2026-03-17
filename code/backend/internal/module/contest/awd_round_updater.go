@@ -20,6 +20,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	"ctf-platform/internal/pkg/redislock"
 	"ctf-platform/pkg/crypto"
 )
 
@@ -154,6 +155,27 @@ func (u *AWDRoundUpdater) Start(ctx context.Context) {
 func (u *AWDRoundUpdater) updateRoundsAt(ctx context.Context, now time.Time) {
 	if u.db == nil {
 		return
+	}
+	lock, acquired, err := redislock.Acquire(ctx, u.redis, rediskeys.AWDSchedulerLockKey(), u.cfg.SchedulerLockTTL)
+	if err != nil {
+		u.log.Error("acquire_awd_scheduler_lock_failed", zap.Error(err))
+		return
+	}
+	if !acquired {
+		u.log.Debug("awd_scheduler_lock_held_elsewhere")
+		return
+	}
+	if lock != nil {
+		defer func() {
+			released, releaseErr := lock.Release(ctx)
+			if releaseErr != nil {
+				u.log.Error("release_awd_scheduler_lock_failed", zap.String("lock_key", lock.Key()), zap.Error(releaseErr))
+				return
+			}
+			if !released {
+				u.log.Warn("awd_scheduler_lock_expired_before_release", zap.String("lock_key", lock.Key()))
+			}
+		}()
 	}
 
 	recentCutoff := now.Add(-u.cfg.RoundInterval)

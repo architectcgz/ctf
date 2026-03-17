@@ -180,6 +180,7 @@
 
         <aside class="space-y-6 lg:sticky lg:top-6 lg:self-start">
           <ChallengeInstanceCard
+            v-if="needTarget"
             :instance="instance"
             :loading="instanceLoading"
             :creating="instanceCreating"
@@ -192,6 +193,12 @@
             @extend="extendChallengeInstance"
             @destroy="destroyChallengeInstance"
           />
+          <section
+            v-else
+            class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5 text-sm text-emerald-200"
+          >
+            该题目不需要靶机，可直接分析题面并提交 Flag。
+          </section>
         </aside>
       </div>
     </div>
@@ -253,6 +260,8 @@ const sanitizedDescription = computed(() => {
 const sanitizedWriteup = computed(() => {
   return writeup.value ? sanitizeHtml(writeup.value.content) : ''
 })
+
+const needTarget = computed(() => challenge.value?.need_target ?? true)
 
 async function loadChallenge() {
   const id = challengeId.value

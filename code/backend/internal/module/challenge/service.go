@@ -38,13 +38,15 @@ func NewService(repo *Repository, imageRepo *ImageRepository, redis *redis.Clien
 }
 
 func (s *Service) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
-	// 验证镜像是否存在
-	_, err := s.imageRepo.FindByID(req.ImageID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+	if req.ImageID > 0 {
+		// 验证镜像是否存在
+		_, err := s.imageRepo.FindByID(req.ImageID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+			}
+			return nil, err
 		}
-		return nil, err
 	}
 
 	challenge := &model.Challenge{
@@ -94,15 +96,17 @@ func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 	if req.Points > 0 {
 		challenge.Points = req.Points
 	}
-	if req.ImageID > 0 {
-		_, err := s.imageRepo.FindByID(req.ImageID)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+	if req.ImageID != nil {
+		if *req.ImageID > 0 {
+			_, err := s.imageRepo.FindByID(*req.ImageID)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+				}
+				return err
 			}
-			return err
 		}
-		challenge.ImageID = req.ImageID
+		challenge.ImageID = *req.ImageID
 	}
 	if req.AttachmentURL != nil {
 		challenge.AttachmentURL = strings.TrimSpace(*req.AttachmentURL)
@@ -188,10 +192,6 @@ func (s *Service) PublishChallenge(id int64) error {
 		return err
 	}
 
-	if challenge.ImageID == 0 {
-		return errcode.ErrInvalidParams.WithCause(errors.New(ErrMsgImageNotConfigured))
-	}
-
 	challenge.Status = model.ChallengeStatusPublished
 	return s.repo.Update(challenge)
 }
@@ -226,7 +226,15 @@ func (s *Service) toResp(c *model.Challenge, hints []*model.ChallengeHint) *dto.
 
 // ListPublishedChallenges 查询已发布靶场列表（学员视图）
 func (s *Service) ListPublishedChallenges(userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
-	challenges, total, err := s.repo.ListPublished(query)
+	return s.ListPublishedChallengesWithContext(context.Background(), userID, query)
+}
+
+func (s *Service) ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	challenges, total, err := s.repo.ListPublishedWithContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -248,18 +256,18 @@ func (s *Service) ListPublishedChallenges(userID int64, query *dto.ChallengeQuer
 
 	solvedMap := make(map[int64]bool)
 	if userID > 0 {
-		solvedMap, err = s.repo.BatchGetSolvedStatus(userID, challengeIDs)
+		solvedMap, err = s.repo.BatchGetSolvedStatusWithContext(ctx, userID, challengeIDs)
 		if err != nil {
 			s.log.Error("failed to batch get solved status", zap.Error(err))
 		}
 	}
 
-	solvedCountMap, err := s.repo.BatchGetSolvedCount(challengeIDs)
+	solvedCountMap, err := s.repo.BatchGetSolvedCountWithContext(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get solved count", zap.Error(err))
 	}
 
-	attemptsMap, err := s.repo.BatchGetTotalAttempts(challengeIDs)
+	attemptsMap, err := s.repo.BatchGetTotalAttemptsWithContext(ctx, challengeIDs)
 	if err != nil {
 		s.log.Error("failed to batch get total attempts", zap.Error(err))
 	}
@@ -289,7 +297,15 @@ func (s *Service) ListPublishedChallenges(userID int64, query *dto.ChallengeQuer
 
 // GetPublishedChallenge 获取已发布靶场详情（学员视图）
 func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
-	challenge, err := s.repo.FindByID(challengeID)
+	return s.GetPublishedChallengeWithContext(context.Background(), userID, challengeID)
+}
+
+func (s *Service) GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	challenge, err := s.repo.FindByIDWithContext(ctx, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound
@@ -303,29 +319,29 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 
 	var isSolved bool
 	if userID > 0 {
-		isSolved, err = s.repo.GetSolvedStatus(userID, challengeID)
+		isSolved, err = s.repo.GetSolvedStatusWithContext(ctx, userID, challengeID)
 		if err != nil {
 			s.log.Error("failed to get solved status", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeID), zap.Error(err))
 		}
 	}
 
-	solvedCount, err := s.getSolvedCountCached(challengeID)
+	solvedCount, err := s.getSolvedCountCached(ctx, challengeID)
 	if err != nil {
 		s.log.Warn("failed to get solved count", zap.Int64("challenge_id", challengeID), zap.Error(err))
 		solvedCount = 0
 	}
 
-	attempts, err := s.repo.GetTotalAttempts(challengeID)
+	attempts, err := s.repo.GetTotalAttemptsWithContext(ctx, challengeID)
 	if err != nil {
 		s.log.Error("failed to get total attempts", zap.Int64("challenge_id", challengeID), zap.Error(err))
 		attempts = 0
 	}
 
-	hints, err := s.repo.ListHintsByChallengeID(challengeID)
+	hints, err := s.repo.ListHintsByChallengeIDWithContext(ctx, challengeID)
 	if err != nil {
 		return nil, err
 	}
-	unlockedHintIDs, err := s.repo.GetUnlockedHintIDs(userID, challengeID)
+	unlockedHintIDs, err := s.repo.GetUnlockedHintIDsWithContext(ctx, userID, challengeID)
 	if err != nil {
 		return nil, err
 	}
@@ -352,6 +368,7 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 		Category:      challenge.Category,
 		Difficulty:    challenge.Difficulty,
 		Points:        challenge.Points,
+		NeedTarget:    challenge.ImageID > 0,
 		AttachmentURL: challenge.AttachmentURL,
 		Hints:         hintList,
 		SolvedCount:   solvedCount,
@@ -362,12 +379,15 @@ func (s *Service) GetPublishedChallenge(userID, challengeID int64) (*dto.Challen
 }
 
 // getSolvedCountCached 获取完成人数（带缓存）
-func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
-	if s.redis == nil {
-		return s.repo.GetSolvedCount(challengeID)
+func (s *Service) getSolvedCountCached(ctx context.Context, challengeID int64) (int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
-	ctx := context.Background()
+	if s.redis == nil {
+		return s.repo.GetSolvedCountWithContext(ctx, challengeID)
+	}
+
 	cacheKey := cache.ChallengeSolvedCountKey(challengeID)
 
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
@@ -380,7 +400,7 @@ func (s *Service) getSolvedCountCached(challengeID int64) (int64, error) {
 		s.log.Error("redis get failed, fallback to db", zap.String("key", cacheKey), zap.Error(err))
 	}
 
-	count, err := s.repo.GetSolvedCount(challengeID)
+	count, err := s.repo.GetSolvedCountWithContext(ctx, challengeID)
 	if err != nil {
 		return 0, err
 	}

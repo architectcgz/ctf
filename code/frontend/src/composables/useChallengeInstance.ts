@@ -8,6 +8,7 @@ import {
   requestInstanceAccess,
 } from '@/api/instance'
 import type { InstanceData } from '@/api/contracts'
+import { ApiError } from '@/api/request'
 import { useToast } from '@/composables/useToast'
 
 export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | undefined>) {
@@ -47,6 +48,14 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
       instance.value = await createInstance(currentChallengeId)
       toast.success('实例创建成功')
     } catch (error) {
+      if (error instanceof ApiError && error.message.includes('不需要靶机')) {
+        toast.error('该题目不需要靶机，请直接提交 Flag')
+        return
+      }
+      if (error instanceof ApiError && error.message) {
+        toast.error(error.message)
+        return
+      }
       toast.error('创建实例失败')
     } finally {
       creating.value = false

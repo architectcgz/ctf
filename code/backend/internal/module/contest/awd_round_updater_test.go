@@ -140,6 +140,52 @@ func TestAWDRoundUpdaterSkipsWhenRoundLockHeld(t *testing.T) {
 	}
 }
 
+func TestAWDRoundUpdaterSkipsWhenSchedulerLockHeld(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Date(2026, 3, 10, 12, 6, 0, 0, time.UTC)
+	createAWDContestFixture(t, db, 152, now.Add(-6*time.Minute))
+	if err := db.Model(&model.Contest{}).Where("id = ?", 152).Updates(map[string]any{
+		"start_time": now.Add(-6 * time.Minute),
+		"end_time":   now.Add(24 * time.Minute),
+	}).Error; err != nil {
+		t.Fatalf("update contest time window: %v", err)
+	}
+
+	if err := mini.Set(rediskeys.AWDSchedulerLockKey(), "busy"); err != nil {
+		t.Fatalf("seed scheduler lock: %v", err)
+	}
+
+	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerLockTTL:   time.Minute,
+		SchedulerBatchSize: 10,
+		RoundInterval:      5 * time.Minute,
+		RoundLockTTL:       time.Minute,
+	}, "test-flag-secret", nil, zap.NewNop())
+
+	updater.updateRoundsAt(context.Background(), now)
+
+	var count int64
+	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", 152).Count(&count).Error; err != nil {
+		t.Fatalf("count rounds: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no rounds when scheduler lock held, got %d", count)
+	}
+}
+
 func TestAWDRoundUpdaterReconcileRoundsInheritsPreviousRoundScores(t *testing.T) {
 	db := newAWDTestDB(t)
 

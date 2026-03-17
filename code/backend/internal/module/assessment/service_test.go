@@ -2,6 +2,7 @@ package assessment
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -202,5 +203,31 @@ func TestGetStudentSkillProfileRejectsTeacherFromOtherClass(t *testing.T) {
 	}
 	if appErr.Code != errcode.ErrForbidden.Code {
 		t.Fatalf("expected forbidden code, got %+v", appErr)
+	}
+}
+
+func TestCalculateSkillProfileWithContextHonorsCancellation(t *testing.T) {
+	db := setupAssessmentTestDB(t)
+	service := newAssessmentTestService(db, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.CalculateSkillProfileWithContext(ctx, 1)
+	if err == nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
+	}
+}
+
+func TestGetSkillProfileWithContextHonorsCancellation(t *testing.T) {
+	db := setupAssessmentTestDB(t)
+	service := newAssessmentTestService(db, nil)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	_, err := service.GetSkillProfileWithContext(ctx, 1)
+	if err == nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected context canceled, got %v", err)
 	}
 }

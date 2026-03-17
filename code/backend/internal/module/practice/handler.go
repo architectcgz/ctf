@@ -29,7 +29,7 @@ func (h *Handler) StartChallenge(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.StartChallenge(userID, challengeID)
+	instance, err := h.service.StartChallengeWithContext(c.Request.Context(), userID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -72,7 +72,7 @@ func (h *Handler) GetInstance(c *gin.Context) {
 		return
 	}
 
-	instance, err := h.service.GetInstance(instanceID, userID)
+	instance, err := h.service.GetInstanceWithContext(c.Request.Context(), instanceID, userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -86,7 +86,7 @@ func (h *Handler) GetInstance(c *gin.Context) {
 func (h *Handler) ListUserInstances(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	instances, err := h.service.ListUserInstances(userID)
+	instances, err := h.service.ListUserInstancesWithContext(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -111,7 +111,7 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.SubmitFlag(userID, challengeID, req.Flag)
+	resp, err := h.service.SubmitFlagWithContext(c.Request.Context(), userID, challengeID, req.Flag)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -149,7 +149,7 @@ func (h *Handler) UnlockHint(c *gin.Context) {
 func (h *Handler) GetProgress(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	resp, err := h.service.GetProgress(userID)
+	resp, err := h.service.GetProgressWithContext(c.Request.Context(), userID)
 	if err != nil {
 		response.FromError(c, err)
 		return

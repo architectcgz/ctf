@@ -850,7 +850,7 @@ export interface AdminChallengePayload {
     'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
   >
   points: number
-  image_id: string
+  image_id: number
   attachment_url?: string
   hints?: AdminChallengeHint[]
 }

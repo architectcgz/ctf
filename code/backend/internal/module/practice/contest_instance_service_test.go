@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeModule "ctf-platform/internal/module/challenge"
 	containerModule "ctf-platform/internal/module/container"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.T) {
@@ -59,17 +60,17 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected team scoped instance, got %+v", instance)
 	}
 
-	visible, err := service.ListUserInstances(5002)
+	visible, err := service.ListUserInstancesWithContext(context.Background(), 5002)
 	if err != nil {
-		t.Fatalf("ListUserInstances() error = %v", err)
+		t.Fatalf("ListUserInstancesWithContext() error = %v", err)
 	}
 	if len(visible) != 1 || visible[0].ID != first.ID {
 		t.Fatalf("expected teammate to see shared instance, got %+v", visible)
 	}
 
-	info, err := service.GetInstance(first.ID, 5002)
+	info, err := service.GetInstanceWithContext(context.Background(), first.ID, 5002)
 	if err != nil {
-		t.Fatalf("GetInstance() error = %v", err)
+		t.Fatalf("GetInstanceWithContext() error = %v", err)
 	}
 	if info.ID != first.ID {
 		t.Fatalf("expected teammate to access shared instance, got %+v", info)
@@ -116,6 +117,32 @@ func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T
 	}
 }
 
+func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	if err := db.Create(&model.Challenge{
+		ID:         2201,
+		Title:      "No Target",
+		Category:   model.DimensionMisc,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     20,
+		ImageID:    0,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	service := newContestInstanceTestService(db)
+	_, err := service.StartChallengeWithContext(context.Background(), 5001, 2201)
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
+	}
+}
+
 func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
@@ -136,6 +163,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		&model.Team{},
 		&model.TeamMember{},
 		&model.Instance{},
+		&model.PortAllocation{},
 		&model.Submission{},
 	); err != nil {
 		t.Fatalf("auto migrate contest instance test schema: %v", err)
@@ -158,7 +186,6 @@ func newContestInstanceTestService(db *gorm.DB) *Service {
 		CreateTimeout:        time.Second,
 	}, nil)
 	return NewService(
-		db,
 		NewRepository(db),
 		challengeRepo,
 		imageRepo,

@@ -82,6 +82,7 @@ describe('instance api contract', () => {
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
       url: '/challenges/3/instances',
+      suppressErrorToast: true,
     })
     expect(result).toEqual({
       id: '5',

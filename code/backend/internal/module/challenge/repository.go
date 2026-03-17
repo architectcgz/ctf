@@ -1,6 +1,7 @@
 package challenge
 
 import (
+	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"strings"
@@ -15,6 +16,23 @@ type Repository struct {
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func (r *Repository) WithDB(db *gorm.DB) *Repository {
+	return &Repository{db: db}
+}
+
+func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
+}
+
+func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
 }
 
 func (r *Repository) Create(challenge *model.Challenge) error {
@@ -37,8 +55,12 @@ func (r *Repository) CreateWithHints(challenge *model.Challenge, hints []*model.
 }
 
 func (r *Repository) FindByID(id int64) (*model.Challenge, error) {
+	return r.FindByIDWithContext(context.Background(), id)
+}
+
+func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Challenge, error) {
 	var challenge model.Challenge
-	err := r.db.Where("id = ?", id).First(&challenge).Error
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&challenge).Error
 	return &challenge, err
 }
 
@@ -122,8 +144,12 @@ func (r *Repository) CountByImageID(imageID int64) (int64, error) {
 }
 
 func (r *Repository) ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error) {
+	return r.ListHintsByChallengeIDWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error) {
 	var hints []*model.ChallengeHint
-	err := r.db.Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
+	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
 	return hints, err
 }
 
@@ -134,8 +160,12 @@ func (r *Repository) FindHintByLevel(challengeID int64, level int) (*model.Chall
 }
 
 func (r *Repository) GetUnlockedHintIDs(userID, challengeID int64) (map[int64]bool, error) {
+	return r.GetUnlockedHintIDsWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) GetUnlockedHintIDsWithContext(ctx context.Context, userID, challengeID int64) (map[int64]bool, error) {
 	var unlocks []model.ChallengeHintUnlock
-	err := r.db.
+	err := r.dbWithContext(ctx).
 		Where("user_id = ? AND challenge_id = ?", userID, challengeID).
 		Find(&unlocks).Error
 	if err != nil {
@@ -158,10 +188,14 @@ func (r *Repository) CreateHintUnlock(unlock *model.ChallengeHintUnlock) error {
 
 // ListPublished 查询已发布的靶场列表（学员视图）
 func (r *Repository) ListPublished(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
+	return r.ListPublishedWithContext(context.Background(), query)
+}
+
+func (r *Repository) ListPublishedWithContext(ctx context.Context, query *dto.ChallengeQuery) ([]*model.Challenge, int64, error) {
 	var challenges []*model.Challenge
 	var total int64
 
-	db := r.db.Model(&model.Challenge{}).Where("status = ?", model.ChallengeStatusPublished)
+	db := r.dbWithContext(ctx).Model(&model.Challenge{}).Where("status = ?", model.ChallengeStatusPublished)
 
 	if query.Category != "" {
 		db = db.Where("category = ?", query.Category)
@@ -207,8 +241,12 @@ func (r *Repository) applyPagination(db *gorm.DB, page, size int) *gorm.DB {
 
 // GetSolvedStatus 获取用户是否已完成靶场
 func (r *Repository) GetSolvedStatus(userID, challengeID int64) (bool, error) {
+	return r.GetSolvedStatusWithContext(context.Background(), userID, challengeID)
+}
+
+func (r *Repository) GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error) {
 	var count int64
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		Count(&count).Error
 	return count > 0, err
@@ -216,8 +254,12 @@ func (r *Repository) GetSolvedStatus(userID, challengeID int64) (bool, error) {
 
 // GetSolvedCount 获取靶场完成人数
 func (r *Repository) GetSolvedCount(challengeID int64) (int64, error) {
+	return r.GetSolvedCountWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ? AND is_correct = ?", challengeID, true).
 		Distinct("user_id").
 		Count(&count).Error
@@ -226,8 +268,12 @@ func (r *Repository) GetSolvedCount(challengeID int64) (int64, error) {
 
 // GetTotalAttempts 获取靶场总尝试次数
 func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
+	return r.GetTotalAttemptsWithContext(context.Background(), challengeID)
+}
+
+func (r *Repository) GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error) {
 	var count int64
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Where("challenge_id = ?", challengeID).
 		Count(&count).Error
 	return count, err
@@ -235,6 +281,10 @@ func (r *Repository) GetTotalAttempts(challengeID int64) (int64, error) {
 
 // BatchGetSolvedStatus 批量获取用户完成状态
 func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error) {
+	return r.BatchGetSolvedStatusWithContext(context.Background(), userID, challengeIDs)
+}
+
+func (r *Repository) BatchGetSolvedStatusWithContext(ctx context.Context, userID int64, challengeIDs []int64) (map[int64]bool, error) {
 	if userID == 0 || len(challengeIDs) == 0 {
 		return make(map[int64]bool), nil
 	}
@@ -242,7 +292,7 @@ func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (m
 	var results []struct {
 		ChallengeID int64
 	}
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Select("DISTINCT challenge_id").
 		Where("user_id = ? AND challenge_id IN ? AND is_correct = ?", userID, challengeIDs, true).
 		Find(&results).Error
@@ -256,6 +306,10 @@ func (r *Repository) BatchGetSolvedStatus(userID int64, challengeIDs []int64) (m
 
 // BatchGetSolvedCount 批量获取靶场完成人数
 func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error) {
+	return r.BatchGetSolvedCountWithContext(context.Background(), challengeIDs)
+}
+
+func (r *Repository) BatchGetSolvedCountWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -264,7 +318,7 @@ func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64,
 		ChallengeID int64
 		Count       int64
 	}
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Select("challenge_id, COUNT(DISTINCT user_id) as count").
 		Where("challenge_id IN ? AND is_correct = ?", challengeIDs, true).
 		Group("challenge_id").
@@ -279,6 +333,10 @@ func (r *Repository) BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64,
 
 // BatchGetTotalAttempts 批量获取靶场尝试次数
 func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int64, error) {
+	return r.BatchGetTotalAttemptsWithContext(context.Background(), challengeIDs)
+}
+
+func (r *Repository) BatchGetTotalAttemptsWithContext(ctx context.Context, challengeIDs []int64) (map[int64]int64, error) {
 	if len(challengeIDs) == 0 {
 		return make(map[int64]int64), nil
 	}
@@ -287,7 +345,7 @@ func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int6
 		ChallengeID int64
 		Count       int64
 	}
-	err := r.db.Table("submissions").
+	err := r.dbWithContext(ctx).Table("submissions").
 		Select("challenge_id, COUNT(*) as count").
 		Where("challenge_id IN ?", challengeIDs).
 		Group("challenge_id").
@@ -301,6 +359,10 @@ func (r *Repository) BatchGetTotalAttempts(challengeIDs []int64) (map[int64]int6
 }
 
 func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
+	return r.FindPublishedForRecommendationWithContext(context.Background(), limit, dimensions, excludeSolved)
+}
+
+func (r *Repository) FindPublishedForRecommendationWithContext(ctx context.Context, limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error) {
 	if len(dimensions) == 0 || limit <= 0 {
 		return []*model.Challenge{}, nil
 	}
@@ -323,7 +385,7 @@ func (r *Repository) FindPublishedForRecommendation(limit int, dimensions []stri
 	}
 
 	var challenges []*model.Challenge
-	query := r.db.Model(&model.Challenge{}).
+	query := r.dbWithContext(ctx).Model(&model.Challenge{}).
 		Distinct("challenges.*").
 		Joins("LEFT JOIN challenge_tags ON challenge_tags.challenge_id = challenges.id").
 		Joins("LEFT JOIN tags ON tags.id = challenge_tags.tag_id").

@@ -136,6 +136,7 @@ type ContainerConfig struct {
 	MaxExtends           int           `mapstructure:"max_extends"`
 	ExtendDuration       time.Duration `mapstructure:"extend_duration"`
 	CleanupInterval      string        `mapstructure:"cleanup_interval"`
+	CleanupLockTTL       time.Duration `mapstructure:"cleanup_lock_ttl"`
 	OrphanGracePeriod    time.Duration `mapstructure:"orphan_grace_period"`
 	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
 	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
@@ -206,6 +207,7 @@ type WebSocketConfig struct {
 type ContestConfig struct {
 	StatusUpdateInterval  time.Duration    `mapstructure:"status_update_interval"`
 	StatusUpdateBatchSize int              `mapstructure:"status_update_batch_size"`
+	StatusUpdateLockTTL   time.Duration    `mapstructure:"status_update_lock_ttl"`
 	BaseScore             float64          `mapstructure:"base_score"`
 	MinScore              float64          `mapstructure:"min_score"`
 	Decay                 float64          `mapstructure:"decay"`
@@ -215,6 +217,7 @@ type ContestConfig struct {
 
 type ContestAWDConfig struct {
 	SchedulerInterval  time.Duration `mapstructure:"scheduler_interval"`
+	SchedulerLockTTL   time.Duration `mapstructure:"scheduler_lock_ttl"`
 	SchedulerBatchSize int           `mapstructure:"scheduler_batch_size"`
 	RoundInterval      time.Duration `mapstructure:"round_interval"`
 	RoundLockTTL       time.Duration `mapstructure:"round_lock_ttl"`
@@ -281,6 +284,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.OrphanGracePeriod <= 0 {
 		return fmt.Errorf("container.orphan_grace_period must be greater than 0")
+	}
+	if c.Container.CleanupLockTTL <= 0 {
+		return fmt.Errorf("container.cleanup_lock_ttl must be greater than 0")
 	}
 	if c.Container.ProxyTicketTTL <= 0 {
 		return fmt.Errorf("container.proxy_ticket_ttl must be greater than 0")
@@ -351,8 +357,14 @@ func (c *Config) Validate() error {
 	if c.Contest.StatusUpdateBatchSize <= 0 {
 		return fmt.Errorf("contest.status_update_batch_size must be greater than 0")
 	}
+	if c.Contest.StatusUpdateLockTTL <= 0 {
+		return fmt.Errorf("contest.status_update_lock_ttl must be greater than 0")
+	}
 	if c.Contest.AWD.SchedulerInterval <= 0 {
 		return fmt.Errorf("contest.awd.scheduler_interval must be greater than 0")
+	}
+	if c.Contest.AWD.SchedulerLockTTL <= 0 {
+		return fmt.Errorf("contest.awd.scheduler_lock_ttl must be greater than 0")
 	}
 	if c.Contest.AWD.SchedulerBatchSize <= 0 {
 		return fmt.Errorf("contest.awd.scheduler_batch_size must be greater than 0")
@@ -457,6 +469,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.max_extends", 2)
 	v.SetDefault("container.extend_duration", 1*time.Hour)
 	v.SetDefault("container.cleanup_interval", "*/5 * * * *")
+	v.SetDefault("container.cleanup_lock_ttl", 2*time.Minute)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
 	v.SetDefault("container.create_timeout", 30*time.Second)
 	v.SetDefault("container.flag_global_secret", "")
@@ -497,11 +510,13 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("websocket.retry_max_delay", 30*time.Second)
 	v.SetDefault("contest.status_update_interval", 1*time.Minute)
 	v.SetDefault("contest.status_update_batch_size", 1000)
+	v.SetDefault("contest.status_update_lock_ttl", 30*time.Second)
 	v.SetDefault("contest.base_score", 1000.0)
 	v.SetDefault("contest.min_score", 100.0)
 	v.SetDefault("contest.decay", 0.9)
 	v.SetDefault("contest.first_blood_bonus", 0.1)
 	v.SetDefault("contest.awd.scheduler_interval", 30*time.Second)
+	v.SetDefault("contest.awd.scheduler_lock_ttl", 30*time.Second)
 	v.SetDefault("contest.awd.scheduler_batch_size", 200)
 	v.SetDefault("contest.awd.round_interval", 5*time.Minute)
 	v.SetDefault("contest.awd.round_lock_ttl", 30*time.Second)

@@ -74,7 +74,7 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 	}
 
 	s.log.Info("auth_register_succeeded", zap.String("username", user.Username), zap.Int64("user_id", user.ID))
-	return s.issueLoginResp(user)
+	return s.issueLoginResp(ctx, user)
 }
 
 func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *TokenPair, error) {
@@ -130,7 +130,7 @@ func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp,
 	}
 
 	s.log.Info("auth_login_succeeded", zap.String("username", user.Username), zap.Int64("user_id", user.ID))
-	return s.issueLoginResp(user)
+	return s.issueLoginResp(ctx, user)
 }
 
 func (s *service) GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error) {
@@ -183,8 +183,8 @@ func (s *service) ValidatePassword(user *model.User, password string) bool {
 	return user.CheckPassword(password)
 }
 
-func (s *service) issueLoginResp(user *model.User) (*dto.LoginResp, *TokenPair, error) {
-	tokens, err := s.tokenService.IssueTokens(user.ID, user.Username, user.Role)
+func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *TokenPair, error) {
+	tokens, err := s.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 		return nil, nil, errcode.ErrInternal.WithCause(err)

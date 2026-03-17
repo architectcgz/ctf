@@ -15,7 +15,7 @@ type CreateChallengeReq struct {
 	Category      string             `json:"category" binding:"required"`
 	Difficulty    string             `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
 	Points        int                `json:"points" binding:"required,min=1"`
-	ImageID       int64              `json:"image_id" binding:"required"`
+	ImageID       int64              `json:"image_id"`
 	AttachmentURL string             `json:"attachment_url" binding:"omitempty,max=2048"`
 	Hints         []ChallengeHintReq `json:"hints" binding:"omitempty,dive"`
 }
@@ -26,7 +26,7 @@ type UpdateChallengeReq struct {
 	Category      string             `json:"category"`
 	Difficulty    string             `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
 	Points        int                `json:"points" binding:"omitempty,min=1"`
-	ImageID       int64              `json:"image_id"`
+	ImageID       *int64             `json:"image_id"`
 	AttachmentURL *string            `json:"attachment_url" binding:"omitempty,max=2048"`
 	Hints         []ChallengeHintReq `json:"hints" binding:"omitempty,dive"`
 }
@@ -85,6 +85,7 @@ type ChallengeDetailResp struct {
 	Category      string               `json:"category"`
 	Difficulty    string               `json:"difficulty"`
 	Points        int                  `json:"points"`
+	NeedTarget    bool                 `json:"need_target"`
 	AttachmentURL string               `json:"attachment_url,omitempty"`
 	Hints         []*ChallengeHintResp `json:"hints"`
 	SolvedCount   int64                `json:"solved_count"`

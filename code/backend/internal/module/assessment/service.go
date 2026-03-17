@@ -52,6 +52,9 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 	lockKey := fmt.Sprintf("%s:lock:%d:%s", s.config.RedisKeyPrefix, userID, dimension)
 	locked, err := s.tryLock(ctx, lockKey)
 	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
 		s.logger.Warn("获取分布式锁失败", zap.Int64("userID", userID), zap.String("dimension", dimension), zap.Error(err))
 		return err
 	}
@@ -62,7 +65,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 	defer s.unlock(ctx, lockKey)
 
 	// 查询该维度得分
-	score, err := s.repo.GetDimensionScore(userID, dimension)
+	score, err := s.repo.GetDimensionScoreWithContext(ctx, userID, dimension)
 	if err != nil {
 		return err
 	}
@@ -80,7 +83,7 @@ func (s *Service) UpdateSkillProfileForDimension(ctx context.Context, userID int
 		UpdatedAt: time.Now(),
 	}
 
-	return s.repo.Upsert(profile)
+	return s.repo.UpsertWithContext(ctx, profile)
 }
 
 // CalculateSkillProfileWithContext 带超时控制的画像计算
@@ -94,18 +97,21 @@ func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID i
 	lockKey := fmt.Sprintf("%s:lock:%d", s.config.RedisKeyPrefix, userID)
 	locked, err := s.tryLock(ctx, lockKey)
 	if err != nil {
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
+		}
 		// Redis 故障时返回已有画像，避免进入临界区
 		s.logger.Warn("获取分布式锁失败，返回已有画像", zap.Int64("userID", userID), zap.Error(err))
-		return s.getExistingProfile(userID)
+		return s.getExistingProfileWithContext(ctx, userID)
 	}
 	if !locked {
 		s.logger.Debug("画像正在计算中，跳过", zap.Int64("userID", userID))
-		return s.getExistingProfile(userID)
+		return s.getExistingProfileWithContext(ctx, userID)
 	}
 	defer s.unlock(ctx, lockKey)
 
 	// 调用 Repository 查询维度得分
-	scores, err := s.repo.GetDimensionScores(userID)
+	scores, err := s.repo.GetDimensionScoresWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +146,7 @@ func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID i
 	}
 
 	// 保存到数据库
-	if err := s.repo.BatchUpsert(profiles); err != nil {
+	if err := s.repo.BatchUpsertWithContext(ctx, profiles); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +155,7 @@ func (s *Service) CalculateSkillProfileWithContext(ctx context.Context, userID i
 }
 
 func (s *Service) RebuildAllSkillProfiles(ctx context.Context) error {
-	userIDs, err := s.repo.ListStudentIDs()
+	userIDs, err := s.repo.ListStudentIDsWithContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -168,7 +174,11 @@ func (s *Service) RebuildAllSkillProfiles(ctx context.Context) error {
 
 // getExistingProfile 获取已有画像
 func (s *Service) getExistingProfile(userID int64) ([]*dto.SkillDimension, error) {
-	profiles, err := s.repo.FindByUserID(userID)
+	return s.getExistingProfileWithContext(context.Background(), userID)
+}
+
+func (s *Service) getExistingProfileWithContext(ctx context.Context, userID int64) ([]*dto.SkillDimension, error) {
+	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +195,11 @@ func (s *Service) getExistingProfile(userID int64) ([]*dto.SkillDimension, error
 
 // GetSkillProfile 获取用户能力画像
 func (s *Service) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
-	profiles, err := s.repo.FindByUserID(userID)
+	return s.GetSkillProfileWithContext(context.Background(), userID)
+}
+
+func (s *Service) GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error) {
+	profiles, err := s.repo.FindByUserIDWithContext(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +235,7 @@ func (s *Service) GetSkillProfile(userID int64) (*dto.SkillProfileResp, error) {
 }
 
 func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error) {
-	student, err := s.repo.FindUserByID(studentID)
+	student, err := s.repo.FindUserByIDWithContext(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -230,7 +244,7 @@ func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64,
 	}
 
 	if requesterRole != model.RoleAdmin {
-		requester, findErr := s.repo.FindUserByID(requesterID)
+		requester, findErr := s.repo.FindUserByIDWithContext(ctx, requesterID)
 		if findErr != nil {
 			return nil, errcode.ErrInternal.WithCause(findErr)
 		}
@@ -242,7 +256,7 @@ func (s *Service) GetStudentSkillProfile(ctx context.Context, requesterID int64,
 		}
 	}
 
-	return s.GetSkillProfile(studentID)
+	return s.GetSkillProfileWithContext(ctx, studentID)
 }
 
 func (s *Service) tryLock(ctx context.Context, key string) (bool, error) {

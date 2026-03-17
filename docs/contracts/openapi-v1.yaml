@@ -263,7 +263,7 @@ components:
     ChallengeDetailData:
       type: object
       required:
-        [id, title, description, category, difficulty, tags, points, is_solved, hints]
+        [id, title, description, category, difficulty, tags, points, need_target, is_solved, hints]
       properties:
         id: { $ref: "#/components/schemas/ID" }
         title: { type: string }
@@ -276,6 +276,7 @@ components:
           type: array
           items: { type: string }
         points: { type: integer, minimum: 0 }
+        need_target: { type: boolean, description: "题目是否需要启动靶机实例" }
         attachment_url: { type: string, nullable: true }
         is_solved: { type: boolean }
         solved_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }

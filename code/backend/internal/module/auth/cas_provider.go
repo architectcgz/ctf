@@ -147,7 +147,7 @@ func (p *casProvider) Authenticate(ctx context.Context, ticket string) (*dto.Log
 		return nil, nil, err
 	}
 
-	return p.issueLoginResp(user)
+	return p.issueLoginResp(ctx, user)
 }
 
 func (p *casProvider) validateTicket(ctx context.Context, ticket string) (*casPrincipal, error) {
@@ -289,8 +289,8 @@ func (p *casProvider) mergePrincipal(user *model.User, principal *casPrincipal) 
 	return changed
 }
 
-func (p *casProvider) issueLoginResp(user *model.User) (*dto.LoginResp, *TokenPair, error) {
-	tokens, err := p.tokenService.IssueTokens(user.ID, user.Username, user.Role)
+func (p *casProvider) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *TokenPair, error) {
+	tokens, err := p.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		p.log.Error("auth_cas_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))
 		return nil, nil, errcode.ErrInternal.WithCause(err)

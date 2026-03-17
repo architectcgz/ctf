@@ -2,6 +2,7 @@ package adminuser
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/pkg/errcode"
 )
 
 func setupAdminUserTestDB(t *testing.T) *gorm.DB {
@@ -78,6 +80,30 @@ func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 	}
 	if user.Name != "Alice" || user.StudentNo != "20240001" || user.TeacherNo != "" {
 		t.Fatalf("unexpected stored identity numbers: %+v", user)
+	}
+}
+
+func TestServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
+	db := setupAdminUserTestDB(t)
+	service := newAdminUserServiceForTest(db)
+
+	if _, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
+		Username: "duplicate-user",
+		Password: "Password123",
+		Role:     model.RoleStudent,
+		Status:   model.UserStatusActive,
+	}); err != nil {
+		t.Fatalf("seed CreateUser() error = %v", err)
+	}
+
+	_, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
+		Username: "duplicate-user",
+		Password: "Password123",
+		Role:     model.RoleStudent,
+		Status:   model.UserStatusActive,
+	})
+	if !errors.Is(err, errcode.ErrUsernameExists) {
+		t.Fatalf("expected ErrUsernameExists, got %v", err)
 	}
 }
 

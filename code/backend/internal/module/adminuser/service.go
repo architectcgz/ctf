@@ -68,9 +68,16 @@ func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]d
 }
 
 func (s *Service) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error) {
+	username := strings.TrimSpace(req.Username)
+	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
+		return nil, errcode.ErrUsernameExists
+	} else if err != nil && !errors.Is(err, ErrUserNotFound) {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
 	identity := normalizeIdentityNumbers(req.Role, req.StudentNo, req.TeacherNo)
 	user := &model.User{
-		Username:  strings.TrimSpace(req.Username),
+		Username:  username,
 		Name:      strings.TrimSpace(req.Name),
 		Email:     strings.TrimSpace(req.Email),
 		StudentNo: identity.StudentNo,

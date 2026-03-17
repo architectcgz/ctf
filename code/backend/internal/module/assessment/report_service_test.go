@@ -4,7 +4,9 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -207,6 +209,68 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected no report rows to be created, got %d", count)
+	}
+}
+
+func TestReportServiceCloseCancelsAsyncTasks(t *testing.T) {
+	t.Parallel()
+
+	service := NewReportService(
+		nil,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+			ClassTimeout:  time.Minute,
+		},
+		nil,
+	)
+
+	var started atomic.Int32
+	startedCh := make(chan struct{})
+	service.runAsyncReport(1, func(ctx context.Context) error {
+		started.Add(1)
+		close(startedCh)
+		<-ctx.Done()
+		return ctx.Err()
+	})
+
+	select {
+	case <-startedCh:
+	case <-time.After(time.Second):
+		t.Fatal("expected async task to start")
+	}
+
+	deadlineCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := service.Close(deadlineCtx); err != nil {
+		t.Fatalf("Close() error = %v", err)
+	}
+	if started.Load() != 1 {
+		t.Fatalf("expected async task to start once, got %d", started.Load())
+	}
+}
+
+func TestReportServiceWithPersonalTimeoutUsesConfiguredDeadline(t *testing.T) {
+	t.Parallel()
+
+	service := &ReportService{
+		config: config.ReportConfig{
+			PersonalTimeout: 2 * time.Second,
+		},
+	}
+
+	ctx, cancel := service.withPersonalTimeout(context.Background())
+	defer cancel()
+
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		t.Fatal("expected deadline to be set")
+	}
+	remaining := time.Until(deadline)
+	if remaining <= time.Second || remaining > 2*time.Second+200*time.Millisecond {
+		t.Fatalf("unexpected remaining timeout: %s", remaining)
 	}
 }
 

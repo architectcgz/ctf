@@ -172,6 +172,10 @@ type mockTokenService struct {
 }
 
 func (m *mockTokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+	return m.IssueTokensWithContext(context.Background(), userID, username, role)
+}
+
+func (m *mockTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*TokenPair, error) {
 	if m.issueFn == nil {
 		return nil, errors.New("unexpected call")
 	}
@@ -183,6 +187,10 @@ func (m *mockTokenService) RefreshAccessToken(ctx context.Context, refreshToken 
 }
 
 func (m *mockTokenService) RevokeToken(ctx context.Context, jti string, ttl time.Duration) error {
+	return nil
+}
+
+func (m *mockTokenService) ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error {
 	return nil
 }
 

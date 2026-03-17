@@ -1,34 +1,37 @@
 package challenge
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
+
+	"gorm.io/gorm"
+
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
-	"fmt"
-	"os"
-	"regexp"
-
-	"gorm.io/gorm"
 )
 
 var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[^\{\}\n\r]+\}$`)
 
 type FlagService struct {
-	db           *gorm.DB
+	repo         *Repository
 	globalSecret string
 }
 
-func NewFlagService(db *gorm.DB) (*FlagService, error) {
-	secret := os.Getenv("CTF_FLAG_SECRET")
+func NewFlagService(repo *Repository, globalSecret string) (*FlagService, error) {
+	secret := strings.TrimSpace(globalSecret)
 	if secret == "" {
-		return nil, fmt.Errorf("CTF_FLAG_SECRET 环境变量未配置")
+		return nil, fmt.Errorf("container.flag_global_secret 未配置")
 	}
 	if len(secret) < 32 {
-		return nil, fmt.Errorf("CTF_FLAG_SECRET 长度不足 32 字节，当前长度: %d", len(secret))
+		return nil, fmt.Errorf("container.flag_global_secret 长度不足 32 字节，当前长度: %d", len(secret))
 	}
 	return &FlagService{
-		db:           db,
+		repo:         repo,
 		globalSecret: secret,
 	}, nil
 }
@@ -42,12 +45,10 @@ func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix st
 		return errcode.New(10001, fmt.Sprintf("Flag 长度不能超过 256 字符，当前长度: %d", len(flag)), 400)
 	}
 
-	return s.db.Transaction(func(tx *gorm.DB) error {
-		var challenge model.Challenge
-		if err := tx.First(&challenge, challengeID).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return errcode.ErrNotFound
-			}
+	ctx := context.Background()
+	return s.repo.WithinTransaction(ctx, func(txRepo *Repository) error {
+		challenge, err := s.loadChallengeFromRepo(txRepo, challengeID)
+		if err != nil {
 			return err
 		}
 
@@ -56,39 +57,30 @@ func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix st
 			return err
 		}
 
-		hash := crypto.HashStaticFlag(flag, salt)
-
-		updates := map[string]interface{}{
-			"flag_type": model.FlagTypeStatic,
-			"flag_hash": hash,
-			"flag_salt": salt,
-		}
+		challenge.FlagType = model.FlagTypeStatic
+		challenge.FlagHash = crypto.HashStaticFlag(flag, salt)
+		challenge.FlagSalt = salt
 		if flagPrefix != "" {
-			updates["flag_prefix"] = flagPrefix
+			challenge.FlagPrefix = flagPrefix
 		}
 
-		return tx.Model(&challenge).Updates(updates).Error
+		return txRepo.Update(challenge)
 	})
 }
 
 // ConfigureDynamicFlag 配置动态 Flag
 func (s *FlagService) ConfigureDynamicFlag(challengeID int64, flagPrefix string) error {
-	var challenge model.Challenge
-	if err := s.db.First(&challenge, challengeID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return errcode.ErrNotFound
-		}
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
 		return err
 	}
 
-	updates := map[string]interface{}{
-		"flag_type": model.FlagTypeDynamic,
-	}
+	challenge.FlagType = model.FlagTypeDynamic
 	if flagPrefix != "" {
-		updates["flag_prefix"] = flagPrefix
+		challenge.FlagPrefix = flagPrefix
 	}
 
-	return s.db.Model(&challenge).Updates(updates).Error
+	return s.repo.Update(challenge)
 }
 
 func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce string) (string, error) {
@@ -96,11 +88,8 @@ func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce strin
 		return "", errcode.ErrInvalidParams
 	}
 
-	var challenge model.Challenge
-	if err := s.db.First(&challenge, challengeID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return "", errcode.ErrNotFound
-		}
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
 		return "", err
 	}
 
@@ -109,11 +98,8 @@ func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce strin
 
 // ValidateFlag 验证 Flag
 func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
-	var challenge model.Challenge
-	if err := s.db.First(&challenge, challengeID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, errcode.ErrNotFound
-		}
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
 		return false, err
 	}
 
@@ -132,11 +118,8 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 
 // GetFlagConfig 获取 Flag 配置
 func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
-	var challenge model.Challenge
-	if err := s.db.First(&challenge, challengeID).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errcode.ErrNotFound
-		}
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -152,4 +135,19 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 		FlagPrefix: challenge.FlagPrefix,
 		Configured: configured,
 	}, nil
+}
+
+func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
+	return s.loadChallengeFromRepo(s.repo, challengeID)
+}
+
+func (s *FlagService) loadChallengeFromRepo(repo *Repository, challengeID int64) (*model.Challenge, error) {
+	challenge, err := repo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	return challenge, nil
 }

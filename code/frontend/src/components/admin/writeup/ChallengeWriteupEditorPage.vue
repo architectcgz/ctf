@@ -1,24 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
 import { RefreshCw, Save, Trash2 } from 'lucide-vue-next'
 
-import {
-  deleteChallengeWriteup,
-  getChallengeDetail,
-  getChallengeWriteup,
-  saveChallengeWriteup,
-} from '@/api/admin'
-import type {
-  AdminChallengeListItem,
-  AdminChallengeWriteupData,
-  WriteupVisibility,
-} from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
-import { useToast } from '@/composables/useToast'
+import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
 const props = defineProps<{
   challengeId: string
@@ -28,146 +15,20 @@ const emit = defineEmits<{
   back: []
 }>()
 
-const toast = useToast()
-
-const loading = ref(true)
-const saving = ref(false)
-const deleting = ref(false)
-const challenge = ref<AdminChallengeListItem | null>(null)
-const writeup = ref<AdminChallengeWriteupData | null>(null)
-const form = reactive({
-  title: '',
-  content: '',
-  visibility: 'private' as WriteupVisibility,
-  releaseAt: '',
-})
-
-const hasWriteup = computed(() => writeup.value !== null)
-const visibilityLabel = computed(() => {
-  switch (form.visibility) {
-    case 'public':
-      return '公开后，所有已发布挑战的学员都可查看'
-    case 'scheduled':
-      return '到达发布时间后自动公开'
-    default:
-      return '仅管理员可查看'
-  }
-})
-
-function resetForm(item?: AdminChallengeWriteupData | null) {
-  form.title = item?.title || ''
-  form.content = item?.content || ''
-  form.visibility = item?.visibility || 'private'
-  form.releaseAt = toLocalDateTimeInputValue(item?.release_at)
-}
-
-async function loadPage() {
-  loading.value = true
-  try {
-    const [challengeDetail, writeupDetail] = await Promise.all([
-      getChallengeDetail(props.challengeId),
-      getChallengeWriteup(props.challengeId),
-    ])
-    challenge.value = challengeDetail
-    writeup.value = writeupDetail
-    resetForm(writeupDetail)
-  } catch {
-    toast.error('加载题解管理页失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-function validateForm() {
-  if (!form.title.trim()) {
-    toast.error('题解标题不能为空')
-    return false
-  }
-  if (!form.content.trim()) {
-    toast.error('题解内容不能为空')
-    return false
-  }
-  if (form.visibility === 'scheduled' && !form.releaseAt) {
-    toast.error('定时公开必须设置发布时间')
-    return false
-  }
-  return true
-}
-
-async function handleSave() {
-  if (!validateForm()) {
-    return
-  }
-
-  saving.value = true
-  try {
-    const saved = await saveChallengeWriteup(props.challengeId, {
-      title: form.title.trim(),
-      content: form.content.trim(),
-      visibility: form.visibility,
-      release_at:
-        form.visibility === 'scheduled' ? fromLocalDateTimeInputValue(form.releaseAt) : undefined,
-    })
-    writeup.value = saved
-    resetForm(saved)
-    toast.success('题解已保存')
-  } catch {
-    toast.error('保存题解失败')
-  } finally {
-    saving.value = false
-  }
-}
-
-async function handleDelete() {
-  if (!writeup.value) {
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm('确定删除当前题解吗？删除后学员将无法继续查看。', '确认删除', {
-      type: 'warning',
-    })
-  } catch {
-    return
-  }
-
-  deleting.value = true
-  try {
-    await deleteChallengeWriteup(props.challengeId)
-    writeup.value = null
-    resetForm(null)
-    toast.success('题解已删除')
-  } catch {
-    toast.error('删除题解失败')
-  } finally {
-    deleting.value = false
-  }
-}
-
-function restoreExistingWriteup() {
-  resetForm(writeup.value)
-}
-
-onMounted(() => {
-  void loadPage()
-})
-
-function toLocalDateTimeInputValue(value?: string) {
-  if (!value) {
-    return ''
-  }
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
-}
-
-function fromLocalDateTimeInputValue(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
-}
+const {
+  loading,
+  saving,
+  deleting,
+  challenge,
+  writeup,
+  form,
+  hasWriteup,
+  visibilityLabel,
+  loadPage,
+  handleSave,
+  handleDelete,
+  restoreExistingWriteup,
+} = useChallengeWriteupEditorPage(props.challengeId)
 </script>
 
 <template>
@@ -196,13 +57,28 @@ function fromLocalDateTimeInputValue(value: string) {
       </button>
     </PageHeader>
 
-    <AppLoading v-if="loading">正在加载题解数据...</AppLoading>
+    <AppLoading v-if="loading">
+      正在加载题解数据...
+    </AppLoading>
 
-    <div v-else class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <AppCard accent="neutral" title="挑战信息" subtitle="当前编辑对象" eyebrow="Challenge">
-        <div v-if="challenge" class="space-y-4 text-sm text-[var(--color-text-secondary)]">
+    <div
+      v-else
+      class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]"
+    >
+      <AppCard
+        accent="neutral"
+        title="挑战信息"
+        subtitle="当前编辑对象"
+        eyebrow="Challenge"
+      >
+        <div
+          v-if="challenge"
+          class="space-y-4 text-sm text-[var(--color-text-secondary)]"
+        >
           <div>
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">标题</div>
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              标题
+            </div>
             <div class="mt-2 text-base font-semibold text-[var(--color-text-primary)]">
               {{ challenge.title }}
             </div>
@@ -212,25 +88,33 @@ function fromLocalDateTimeInputValue(value: string) {
               <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                 分类
               </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">{{ challenge.category }}</div>
+              <div class="mt-2 text-[var(--color-text-primary)]">
+                {{ challenge.category }}
+              </div>
             </div>
             <div>
               <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                 状态
               </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">{{ challenge.status }}</div>
+              <div class="mt-2 text-[var(--color-text-primary)]">
+                {{ challenge.status }}
+              </div>
             </div>
             <div>
               <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                 难度
               </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">{{ challenge.difficulty }}</div>
+              <div class="mt-2 text-[var(--color-text-primary)]">
+                {{ challenge.difficulty }}
+              </div>
             </div>
             <div>
               <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                 分值
               </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">{{ challenge.points }}</div>
+              <div class="mt-2 text-[var(--color-text-primary)]">
+                {{ challenge.points }}
+              </div>
             </div>
           </div>
         </div>
@@ -267,7 +151,7 @@ function fromLocalDateTimeInputValue(value: string) {
                 type="text"
                 class="w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
                 placeholder="例如：官方解题思路 / 赛后复盘"
-              />
+              >
             </label>
 
             <label class="space-y-2">
@@ -283,17 +167,22 @@ function fromLocalDateTimeInputValue(value: string) {
             </label>
           </div>
 
-          <div class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)]/70 p-4 text-sm text-[var(--color-text-secondary)]">
+          <div
+            class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)]/70 p-4 text-sm text-[var(--color-text-secondary)]"
+          >
             {{ visibilityLabel }}
           </div>
 
-          <label v-if="form.visibility === 'scheduled'" class="block space-y-2">
+          <label
+            v-if="form.visibility === 'scheduled'"
+            class="block space-y-2"
+          >
             <span class="text-sm font-medium text-[var(--color-text-primary)]">发布时间</span>
             <input
               v-model="form.releaseAt"
               type="datetime-local"
               class="w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
-            />
+            >
           </label>
 
           <label class="block space-y-2">
@@ -345,25 +234,33 @@ function fromLocalDateTimeInputValue(value: string) {
       >
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">标题</div>
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              标题
+            </div>
             <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
               {{ writeup.title }}
             </div>
           </div>
           <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">可见性</div>
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              可见性
+            </div>
             <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
               {{ writeup.visibility }}
             </div>
           </div>
           <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">创建时间</div>
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              创建时间
+            </div>
             <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
               {{ writeup.created_at }}
             </div>
           </div>
           <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">更新时间</div>
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              更新时间
+            </div>
             <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
               {{ writeup.updated_at }}
             </div>
@@ -371,7 +268,11 @@ function fromLocalDateTimeInputValue(value: string) {
         </div>
       </AppCard>
 
-      <AppCard v-else accent="warning" class="xl:col-span-2">
+      <AppCard
+        v-else
+        accent="warning"
+        class="xl:col-span-2"
+      >
         <AppEmpty
           title="当前还没有管理员题解"
           description="填写表单后点击保存，即可创建题解并控制公开范围。"
