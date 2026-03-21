@@ -8,7 +8,7 @@ import (
 
 type AuthModule struct {
 	Handler      *authModule.Handler
-	TokenService *identity.Module
+	TokenService identity.Authenticator
 }
 
 func BuildAuthModule(root *Root, system *SystemModule) (*AuthModule, error) {
