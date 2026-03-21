@@ -16,8 +16,31 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	containermodule "ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/runtime"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
+
+type stubDashboardRuntimeQuery struct {
+	countRunningFn func() (int64, error)
+}
+
+func (s *stubDashboardRuntimeQuery) CountRunning() (int64, error) {
+	if s.countRunningFn == nil {
+		return 0, nil
+	}
+	return s.countRunningFn()
+}
+
+type stubDashboardRuntimeStatsProvider struct {
+	listManagedContainerStatsFn func(ctx context.Context) ([]runtime.ManagedContainerStat, error)
+}
+
+func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]runtime.ManagedContainerStat, error) {
+	if s.listManagedContainerStatsFn == nil {
+		return nil, nil
+	}
+	return s.listManagedContainerStatsFn(ctx)
+}
 
 func setupDashboardTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
@@ -36,7 +59,7 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 	t.Helper()
 
 	return NewDashboardService(
-		containermodule.NewRepository(db),
+		runtime.NewQuery(containermodule.NewRepository(db)),
 		nil,
 		redis,
 		&config.Config{
@@ -157,5 +180,51 @@ func TestDashboardServiceCheckAlertsReturnsCPUAndMemoryAlerts(t *testing.T) {
 	}
 	if alerts[0].ContainerID != "abc123" || alerts[1].ContainerID != "abc123" {
 		t.Fatalf("expected alerts for hot container only, got %+v", alerts)
+	}
+}
+
+func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
+	var newDashboardService func(runtime.RuntimeQuery, runtime.RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+
+	service := newDashboardService(
+		&stubDashboardRuntimeQuery{
+			countRunningFn: func() (int64, error) {
+				return 3, nil
+			},
+		},
+		&stubDashboardRuntimeStatsProvider{
+			listManagedContainerStatsFn: func(ctx context.Context) ([]runtime.ManagedContainerStat, error) {
+				return []runtime.ManagedContainerStat{
+					{
+						ContainerID:   "runtime-1",
+						ContainerName: "runtime-web",
+						CPUPercent:    42.5,
+						MemoryPercent: 63.25,
+						MemoryUsage:   128,
+						MemoryLimit:   256,
+					},
+				}, nil
+			},
+		},
+		nil,
+		&config.Config{
+			Dashboard: config.DashboardConfig{
+				CacheTTL:       time.Minute,
+				AlertThreshold: 80,
+				RedisKeyPrefix: "dashboard:test",
+			},
+		},
+		zap.NewNop(),
+	)
+
+	got, err := service.GetDashboardStats(context.Background())
+	if err != nil {
+		t.Fatalf("GetDashboardStats() error = %v", err)
+	}
+	if got.ActiveContainers != 3 {
+		t.Fatalf("expected active containers from runtime query, got %+v", got)
+	}
+	if len(got.ContainerStats) != 1 || got.ContainerStats[0].ContainerID != "runtime-1" {
+		t.Fatalf("expected runtime stats provider output, got %+v", got.ContainerStats)
 	}
 }

@@ -10,6 +10,7 @@ import (
 type ContainerModule struct {
 	Handler            *container.Handler
 	ProxyTicketService *container.ProxyTicketService
+	Query              runtime.RuntimeQuery
 	Repository         *container.Repository
 	Service            runtime.RuntimeFacade
 
@@ -36,6 +37,7 @@ func BuildContainerModule(root *Root) (*ContainerModule, error) {
 
 	return &ContainerModule{
 		ProxyTicketService: container.NewProxyTicketService(cache, &cfg.Container),
+		Query:              runtime.NewQuery(repo),
 		Repository:         repo,
 		Service:            runtime.NewModule(service),
 		service:            service,

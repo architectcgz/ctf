@@ -10,35 +10,31 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/runtime"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
-type containerStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]container.ManagedContainerStat, error)
-}
-
 type DashboardService struct {
-	containerRepo *container.Repository
-	runtime       containerStatsProvider
-	redis         *redislib.Client
-	config        *config.Config
-	logger        *zap.Logger
+	runtimeQuery runtime.RuntimeQuery
+	runtime      runtime.RuntimeStatsProvider
+	redis        *redislib.Client
+	config       *config.Config
+	logger       *zap.Logger
 }
 
 func NewDashboardService(
-	containerRepo *container.Repository,
-	runtime containerStatsProvider,
+	runtimeQuery runtime.RuntimeQuery,
+	runtimeStats runtime.RuntimeStatsProvider,
 	redis *redislib.Client,
 	cfg *config.Config,
 	logger *zap.Logger,
 ) *DashboardService {
 	return &DashboardService{
-		containerRepo: containerRepo,
-		runtime:       runtime,
-		redis:         redis,
-		config:        cfg,
-		logger:        logger,
+		runtimeQuery: runtimeQuery,
+		runtime:      runtimeStats,
+		redis:        redis,
+		config:       cfg,
+		logger:       logger,
 	}
 }
 
@@ -72,9 +68,12 @@ func (s *DashboardService) GetDashboardStats(ctx context.Context) (*dto.Dashboar
 	stats.OnlineUsers = onlineUsers
 
 	// 统计活跃容器数
-	activeContainers, err := s.containerRepo.CountRunning()
-	if err != nil {
-		return nil, fmt.Errorf("统计活跃容器失败: %w", err)
+	activeContainers := int64(0)
+	if s.runtimeQuery != nil {
+		activeContainers, err = s.runtimeQuery.CountRunning()
+		if err != nil {
+			return nil, fmt.Errorf("统计活跃容器失败: %w", err)
+		}
 	}
 	stats.ActiveContainers = activeContainers
 

@@ -18,6 +18,17 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
+type stubContestFlagValidator struct {
+	validateFlagFn func(userID, challengeID int64, input string, nonce string) (bool, error)
+}
+
+func (s *stubContestFlagValidator) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
+	if s.validateFlagFn == nil {
+		return false, nil
+	}
+	return s.validateFlagFn(userID, challengeID, input, nonce)
+}
+
 func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t *testing.T) {
 	service, redisClient, db := newContestSubmissionTestService(t)
 
@@ -423,6 +434,75 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 	}
 	if len(liveResp.Scoreboard.List) != 2 || liveResp.Scoreboard.List[0].TeamID != 141 {
 		t.Fatalf("unexpected live scoreboard resp: %+v", liveResp)
+	}
+}
+
+func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
+	var newSubmissionService func(Repository, *SubmissionRepository, *redis.Client, challengeModule.FlagValidator, *TeamRepository, *ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
+
+	db := newContestTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+	contestID := int64(91)
+	challengeID := int64(901)
+	teamID := int64(9001)
+	userID := int64(90001)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	createContestTeamRegistration(t, db, contestID, teamID, userID, "Validator", now)
+
+	called := false
+	service := newSubmissionService(
+		NewRepository(db),
+		NewSubmissionRepository(db),
+		redisClient,
+		&stubContestFlagValidator{
+			validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
+				called = true
+				if gotUserID != userID || gotChallengeID != challengeID {
+					t.Fatalf("unexpected validator args: user=%d challenge=%d", gotUserID, gotChallengeID)
+				}
+				if input != "flag{through-contract}" {
+					t.Fatalf("unexpected validator input: %s", input)
+				}
+				if nonce != "" {
+					t.Fatalf("unexpected validator nonce: %s", nonce)
+				}
+				return true, nil
+			},
+		},
+		NewTeamRepository(db),
+		nil,
+		&config.Config{
+			Contest: config.ContestConfig{
+				BaseScore:       1000,
+				MinScore:        100,
+				Decay:           0.9,
+				FirstBloodBonus: 0.1,
+			},
+		},
+	)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{through-contract}")
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if !called {
+		t.Fatal("expected challenge flag validator to be used")
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct submission via contract validator, got %+v", resp)
 	}
 }
 

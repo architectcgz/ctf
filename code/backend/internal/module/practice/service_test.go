@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
@@ -13,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
+	"ctf-platform/internal/module/runtime"
 )
 
 type stubAssessmentService struct {
@@ -40,6 +43,56 @@ func (s *stubScoreUpdater) UpdateUserScoreWithContext(ctx context.Context, userI
 
 func (s *stubScoreUpdater) lockTimeout() time.Duration {
 	return s.lockWait
+}
+
+type stubPracticeChallengeContract struct {
+	findByIDFn func(id int64) (*model.Challenge, error)
+}
+
+func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, error) {
+	if s.findByIDFn == nil {
+		return nil, nil
+	}
+	return s.findByIDFn(id)
+}
+
+func (s *stubPracticeChallengeContract) FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error) {
+	return nil, nil
+}
+
+func (s *stubPracticeChallengeContract) CreateHintUnlock(unlock *model.ChallengeHintUnlock) error {
+	return nil
+}
+
+func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
+	return nil, nil
+}
+
+type stubPracticeInstanceStore struct {
+	findVisibleByUserFn func(ctx context.Context, userID int64) ([]*model.Instance, error)
+}
+
+func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) error {
+	return nil
+}
+
+func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status string) error {
+	return nil
+}
+
+func (s *stubPracticeInstanceStore) FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error) {
+	return nil, nil
+}
+
+func (s *stubPracticeInstanceStore) FindVisibleByUser(ctx context.Context, userID int64) ([]*model.Instance, error) {
+	if s.findVisibleByUserFn == nil {
+		return nil, nil
+	}
+	return s.findVisibleByUserFn(ctx, userID)
+}
+
+func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	return nil, nil
 }
 
 func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
@@ -193,6 +246,51 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	case <-called:
 		t.Fatal("expected closed service to skip async task")
 	case <-time.After(50 * time.Millisecond):
+	}
+}
+
+func TestPracticeServiceUsesChallengeContract(t *testing.T) {
+	var newPracticeService func(*Repository, challenge.PracticeChallengeContract, imageStore, instanceStore, runtime.RuntimeFacade, ScoreUpdater, AssessmentService, *redis.Client, *config.Config, *zap.Logger) *Service = NewService
+
+	challengeContract := &stubPracticeChallengeContract{
+		findByIDFn: func(id int64) (*model.Challenge, error) {
+			return &model.Challenge{
+				ID:    id,
+				Title: "contract-challenge",
+			}, nil
+		},
+	}
+
+	service := newPracticeService(
+		nil,
+		challengeContract,
+		nil,
+		&stubPracticeInstanceStore{
+			findVisibleByUserFn: func(ctx context.Context, userID int64) ([]*model.Instance, error) {
+				return []*model.Instance{
+					{
+						ID:          1,
+						UserID:      userID,
+						ChallengeID: 99,
+						Status:      model.InstanceStatusRunning,
+					},
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	instances, err := service.ListUserInstancesWithContext(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("ListUserInstancesWithContext() error = %v", err)
+	}
+	if len(instances) != 1 || instances[0].ChallengeName != "contract-challenge" {
+		t.Fatalf("expected challenge title from contract, got %+v", instances)
 	}
 }
 
