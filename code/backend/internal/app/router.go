@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
@@ -34,14 +35,24 @@ type routerRuntime struct {
 }
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
-	runtime, err := buildRouterRuntime(cfg, log, db, cache)
+	root, err := composition.BuildRoot(cfg, log, db, cache)
+	if err != nil {
+		return nil, err
+	}
+
+	runtime, err := buildRouterRuntime(root)
 	if err != nil {
 		return nil, err
 	}
 	return runtime.engine, nil
 }
 
-func buildRouterRuntime(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*routerRuntime, error) {
+func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
+	cfg := root.Config()
+	log := root.Logger()
+	db := root.DB()
+	cache := root.Cache()
+
 	if cfg.App.Env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 	}
