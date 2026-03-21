@@ -161,6 +161,48 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 	}
 }
 
+func TestRouterBuildUsesCompositionModules(t *testing.T) {
+	t.Parallel()
+
+	source, err := os.ReadFile("router.go")
+	if err != nil {
+		t.Fatalf("read router.go: %v", err)
+	}
+
+	routerSource := string(source)
+	requiredBuilders := []string{
+		"composition.BuildAuthModule(",
+		"composition.BuildChallengeModule(",
+		"composition.BuildContainerModule(",
+		"composition.BuildContestModule(",
+		"composition.BuildPracticeModule(",
+		"composition.BuildAssessmentModule(",
+		"composition.BuildSystemModule(",
+		"composition.BuildTeacherModule(",
+	}
+	for _, builder := range requiredBuilders {
+		if !strings.Contains(routerSource, builder) {
+			t.Errorf("expected router.go to use %s", builder)
+		}
+	}
+
+	inlineConstructors := []string{
+		"authModule.NewRepository(",
+		"challengeModule.NewRepository(",
+		"containerModule.NewRepository(",
+		"contestModule.NewRepository(",
+		"practiceModule.NewRepository(",
+		"assessmentModule.NewRepository(",
+		"systemModule.NewAuditRepository(",
+		"teacherModule.NewRepository(",
+	}
+	for _, constructor := range inlineConstructors {
+		if strings.Contains(routerSource, constructor) {
+			t.Errorf("expected router.go to stop constructing modules inline: found %s", constructor)
+		}
+	}
+}
+
 func isAcceptableSmokeStatus(method, path string, status int) bool {
 	if status < http.StatusInternalServerError {
 		return true
