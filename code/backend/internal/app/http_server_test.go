@@ -44,3 +44,29 @@ func TestHTTPServerShutdownClosesReportService(t *testing.T) {
 		t.Fatal("expected report service to be closed")
 	}
 }
+
+func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newAppTestDependencies(t)
+	cfg.Contest.StatusUpdateInterval = time.Second
+	cfg.Contest.StatusUpdateBatchSize = 10
+	cfg.Contest.StatusUpdateLockTTL = time.Second
+	cfg.Contest.AWD.SchedulerInterval = time.Second
+	cfg.Contest.AWD.SchedulerLockTTL = time.Second
+	cfg.Contest.AWD.SchedulerBatchSize = 10
+	cfg.Contest.AWD.RoundInterval = time.Second
+	cfg.Contest.AWD.RoundLockTTL = time.Second
+	cfg.Contest.AWD.CheckerTimeout = time.Second
+
+	server, err := NewHTTPServer(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("NewHTTPServer() error = %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+}

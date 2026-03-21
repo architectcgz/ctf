@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/assessment"
 	"ctf-platform/internal/module/container"
@@ -40,7 +41,12 @@ type HTTPServer struct {
 }
 
 func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*HTTPServer, error) {
-	routerRuntime, err := buildRouterRuntime(cfg, log, db, cache)
+	root, err := composition.BuildRoot(cfg, log, db, cache)
+	if err != nil {
+		return nil, err
+	}
+
+	routerRuntime, err := buildRouterRuntime(root)
 	if err != nil {
 		return nil, err
 	}
