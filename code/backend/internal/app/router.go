@@ -25,6 +25,17 @@ type routerRuntime struct {
 	contest    *composition.ContestModule
 }
 
+var (
+	buildAuthModule       = composition.BuildAuthModule
+	buildAssessmentModule = composition.BuildAssessmentModule
+	buildChallengeModule  = composition.BuildChallengeModule
+	buildContainerModule  = composition.BuildContainerModule
+	buildContestModule    = composition.BuildContestModule
+	buildPracticeModule   = composition.BuildPracticeModule
+	buildSystemModule     = composition.BuildSystemModule
+	buildTeacherModule    = composition.BuildTeacherModule
+)
+
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
 	root, err := composition.BuildRoot(cfg, log, db, cache)
 	if err != nil {
@@ -68,13 +79,13 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
 
-	containerModule, err := composition.BuildContainerModule(root)
+	containerModule, err := buildContainerModule(root)
 	if err != nil {
 		return nil, err
 	}
-	systemModule := composition.BuildSystemModule(root, containerModule)
+	systemModule := buildSystemModule(root, containerModule)
 
-	authModule, err := composition.BuildAuthModule(root, systemModule)
+	authModule, err := buildAuthModule(root, systemModule)
 	if err != nil {
 		return nil, err
 	}
@@ -114,14 +125,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
-	challengeModule, err := composition.BuildChallengeModule(root, containerModule)
+	challengeModule, err := buildChallengeModule(root, containerModule)
 	if err != nil {
 		return nil, err
 	}
-	assessmentModule := composition.BuildAssessmentModule(root, challengeModule)
-	teacherModule := composition.BuildTeacherModule(root, assessmentModule)
-	contestModule := composition.BuildContestModule(root, challengeModule)
-	practiceModule := composition.BuildPracticeModule(root, challengeModule, containerModule, assessmentModule)
+	assessmentModule := buildAssessmentModule(root, challengeModule)
+	teacherModule := buildTeacherModule(root, assessmentModule)
+	contestModule := buildContestModule(root, challengeModule)
+	practiceModule := buildPracticeModule(root, challengeModule, containerModule, assessmentModule)
 	containerModule.BuildHandler(root, systemModule)
 
 	adminUserRepo := adminUserModule.NewRepository(db)
