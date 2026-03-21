@@ -11,7 +11,9 @@ type ContainerModule struct {
 	Handler            *container.Handler
 	ProxyTicketService *container.ProxyTicketService
 	Repository         *container.Repository
-	Service            *runtime.Module
+	Service            runtime.RuntimeFacade
+
+	service *container.Service
 }
 
 func BuildContainerModule(root *Root) (*ContainerModule, error) {
@@ -30,12 +32,13 @@ func BuildContainerModule(root *Root) (*ContainerModule, error) {
 		runtimeEngine = engine
 	}
 
-	service := runtime.NewModule(container.NewService(repo, runtimeEngine, &cfg.Container, log.Named("container_service")))
+	service := container.NewService(repo, runtimeEngine, &cfg.Container, log.Named("container_service"))
 
 	return &ContainerModule{
 		ProxyTicketService: container.NewProxyTicketService(cache, &cfg.Container),
 		Repository:         repo,
-		Service:            service,
+		Service:            runtime.NewModule(service),
+		service:            service,
 	}, nil
 }
 
@@ -46,7 +49,7 @@ func (m *ContainerModule) BuildHandler(root *Root, system *SystemModule) {
 
 	cfg := root.Config()
 	m.Handler = container.NewHandler(
-		m.Service.Service,
+		m.service,
 		m.ProxyTicketService,
 		system.AuditService,
 		container.ProxyCookieConfig{

@@ -7,7 +7,7 @@ import (
 
 type TeacherModule struct {
 	Handler *teacherModule.Handler
-	Query   *teachingreadmodel.Module
+	Query   teachingreadmodel.TeachingQuery
 }
 
 func BuildTeacherModule(root *Root, assessment *AssessmentModule) *TeacherModule {

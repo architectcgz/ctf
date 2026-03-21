@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/alicebob/miniredis/v2"
@@ -58,6 +59,7 @@ func TestIdentityModuleContractsCompile(t *testing.T) {
 
 func TestRuntimeModuleContractsCompile(t *testing.T) {
 	var _ runtime.RuntimeStatsProvider = (*runtime.Module)(nil)
+	var _ runtime.RuntimeFacade = (*runtime.Module)(nil)
 }
 
 func TestOpsModuleContractsCompile(t *testing.T) {
@@ -66,6 +68,15 @@ func TestOpsModuleContractsCompile(t *testing.T) {
 
 func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
 	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodel.Module)(nil)
+}
+
+func TestCompositionModulesExposeContracts(t *testing.T) {
+	t.Parallel()
+
+	assertFieldType(t, reflect.TypeOf(composition.AuthModule{}), "TokenService", reflect.TypeOf((*identity.Authenticator)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ContainerModule{}), "Service", reflect.TypeOf((*runtime.RuntimeFacade)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.TeacherModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
 }
 
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
@@ -78,6 +89,18 @@ func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	}
 
 	t.Fatalf("route not found: %s %s", method, path)
+}
+
+func assertFieldType(t *testing.T, structType reflect.Type, fieldName string, want reflect.Type) {
+	t.Helper()
+
+	field, ok := structType.FieldByName(fieldName)
+	if !ok {
+		t.Fatalf("%s missing field %s", structType.Name(), fieldName)
+	}
+	if field.Type != want {
+		t.Fatalf("%s.%s type = %s, want %s", structType.Name(), fieldName, field.Type, want)
+	}
 }
 
 func newAppTestDependencies(t *testing.T) (*config.Config, *gorm.DB, *redislib.Client) {

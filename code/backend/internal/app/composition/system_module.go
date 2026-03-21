@@ -9,7 +9,7 @@ import (
 )
 
 type SystemModule struct {
-	AuditService        *ops.Module
+	AuditService        ops.AuditRecorder
 	AuditHandler        *system.AuditHandler
 	DashboardHandler    *system.DashboardHandler
 	NotificationHandler *system.NotificationHandler
