@@ -50,20 +50,20 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 	if err != nil {
 		return nil, err
 	}
-	if routerRuntime.containerService == nil {
+	if routerRuntime.container == nil || routerRuntime.container.Service == nil {
 		return nil, fmt.Errorf("container service not initialized")
 	}
-	if routerRuntime.assessmentService == nil {
+	if routerRuntime.assessment == nil || routerRuntime.assessment.Service == nil {
 		return nil, fmt.Errorf("assessment service not initialized")
 	}
 
-	cleaner := container.NewCleaner(routerRuntime.containerService, cache, cfg.Container.CleanupLockTTL, log.Named("container_cleaner"))
+	cleaner := container.NewCleaner(routerRuntime.container.Service, cache, cfg.Container.CleanupLockTTL, log.Named("container_cleaner"))
 
 	if err := cleaner.Start(cfg.Container.CleanupInterval); err != nil {
 		return nil, fmt.Errorf("启动清理任务失败: %w", err)
 	}
 
-	assessmentCleaner := assessment.NewCleaner(routerRuntime.assessmentService, log.Named("assessment_cleaner"))
+	assessmentCleaner := assessment.NewCleaner(routerRuntime.assessment.Service, log.Named("assessment_cleaner"))
 	if err := assessmentCleaner.Start(cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout); err != nil {
 		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -71,9 +71,8 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		return nil, fmt.Errorf("启动能力画像任务失败: %w", err)
 	}
 
-	contestRepo := contest.NewRepository(db)
 	statusUpdater := contest.NewStatusUpdater(
-		contestRepo,
+		routerRuntime.contest.Repository,
 		cache,
 		cfg.Contest.StatusUpdateInterval,
 		cfg.Contest.StatusUpdateBatchSize,
@@ -85,7 +84,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 		cache,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
-		contest.NewDockerAWDFlagInjector(db, routerRuntime.containerService, log.Named("awd_flag_injector")),
+		contest.NewDockerAWDFlagInjector(db, routerRuntime.container.Service, log.Named("awd_flag_injector")),
 		log.Named("awd_round_updater"),
 	)
 	updaterCtx, updaterCancel := context.WithCancel(context.Background())

@@ -63,6 +63,9 @@ func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewHTTPServer() error = %v", err)
 	}
+	if server.cleaner == nil || server.assessment == nil || server.statusUpdater == nil || server.awdUpdater == nil {
+		t.Fatal("expected http server background components to be initialized")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
