@@ -23,18 +23,18 @@ type SubmissionService struct {
 	contestRepo       Repository
 	repo              *SubmissionRepository
 	redis             *redislib.Client
-	flagService       *challenge.FlagService
+	flagValidator     challenge.FlagValidator
 	teamRepo          *TeamRepository
 	scoreboardService *ScoreboardService
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagService *challenge.FlagService, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challenge.FlagValidator, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,
 		redis:             redis,
-		flagService:       flagService,
+		flagValidator:     flagValidator,
 		teamRepo:          teamRepo,
 		scoreboardService: scoreboardService,
 		cfg:               cfg,
@@ -77,7 +77,10 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
-	isCorrect, err := s.flagService.ValidateFlag(userID, challengeID, flag, "")
+	if s.flagValidator == nil {
+		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("challenge flag validator is nil"))
+	}
+	isCorrect, err := s.flagValidator.ValidateFlag(userID, challengeID, flag, "")
 	if err != nil {
 		return nil, err
 	}

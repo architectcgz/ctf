@@ -6,6 +6,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeModule "ctf-platform/internal/module/challenge"
 	"ctf-platform/pkg/errcode"
 
 	"gorm.io/gorm"
@@ -13,17 +14,11 @@ import (
 
 type ChallengeService struct {
 	repo          *ChallengeRepository
-	challengeRepo ChallengeRepoInterface
+	challengeRepo challengeModule.ContestChallengeContract
 	contestRepo   Repository
 }
 
-type ChallengeRepoInterface interface {
-	FindByID(id int64) (*model.Challenge, error)
-	BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error)
-	BatchGetSolvedCount(challengeIDs []int64) (map[int64]int64, error)
-}
-
-func NewChallengeService(repo *ChallengeRepository, challengeRepo ChallengeRepoInterface, contestRepo Repository) *ChallengeService {
+func NewChallengeService(repo *ChallengeRepository, challengeRepo challengeModule.ContestChallengeContract, contestRepo Repository) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,

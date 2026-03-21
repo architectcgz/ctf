@@ -26,7 +26,7 @@ func BuildSystemModule(root *Root, container *ContainerModule) *SystemModule {
 	auditRepo := system.NewAuditRepository(db)
 	auditService := system.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
 	dashboardService := system.NewDashboardService(
-		container.Repository,
+		container.Query,
 		container.Service,
 		cache,
 		cfg,

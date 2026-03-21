@@ -16,7 +16,8 @@ import (
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/challenge"
+	"ctf-platform/internal/module/runtime"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -33,13 +34,6 @@ type ScoreUpdater interface {
 	lockTimeout() time.Duration
 }
 
-type challengeStore interface {
-	FindByID(id int64) (*model.Challenge, error)
-	FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error)
-	CreateHintUnlock(unlock *model.ChallengeHintUnlock) error
-	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
-}
-
 type imageStore interface {
 	FindByID(id int64) (*model.Image, error)
 }
@@ -52,18 +46,12 @@ type instanceStore interface {
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
-type runtimeService interface {
-	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, request *container.TopologyCreateRequest) (*container.TopologyCreateResult, error)
-	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
-}
-
 type Service struct {
 	repo              *Repository
-	challengeRepo     challengeStore
+	challengeRepo     challenge.PracticeChallengeContract
 	imageRepo         imageStore
 	instanceRepo      instanceStore
-	containerService  runtimeService
+	containerService  runtime.RuntimeFacade
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
 	redis             *redis.Client
@@ -76,10 +64,10 @@ type Service struct {
 
 func NewService(
 	repo *Repository,
-	challengeRepo challengeStore,
+	challengeRepo challenge.PracticeChallengeContract,
 	imageRepo imageStore,
 	instanceRepo instanceStore,
-	containerService runtimeService,
+	containerService runtime.RuntimeFacade,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
@@ -701,7 +689,7 @@ func (s *Service) buildTopologyCreateRequest(
 	entryNodeKey string,
 	spec model.TopologySpec,
 	flag string,
-) (*container.TopologyCreateRequest, error) {
+) (*runtime.TopologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
 		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
 	}
@@ -711,10 +699,10 @@ func (s *Service) buildTopologyCreateRequest(
 		return nil, err
 	}
 
-	request := &container.TopologyCreateRequest{
+	request := &runtime.TopologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
-		Networks:         make([]container.TopologyCreateNetwork, 0),
-		Nodes:            make([]container.TopologyCreateNode, 0, len(spec.Nodes)),
+		Networks:         make([]runtime.TopologyCreateNetwork, 0),
+		Nodes:            make([]runtime.TopologyCreateNode, 0, len(spec.Nodes)),
 		Policies:         append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := buildRuntimeTopologyPlan(spec)
@@ -745,7 +733,7 @@ func (s *Service) buildTopologyCreateRequest(
 			}
 		}
 
-		request.Nodes = append(request.Nodes, container.TopologyCreateNode{
+		request.Nodes = append(request.Nodes, runtime.TopologyCreateNode{
 			Key:          node.Key,
 			Image:        imageRef,
 			Env:          env,

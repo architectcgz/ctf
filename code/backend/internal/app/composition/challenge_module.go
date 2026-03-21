@@ -4,12 +4,12 @@ import challengeModule "ctf-platform/internal/module/challenge"
 
 type ChallengeModule struct {
 	FlagHandler     *challengeModule.FlagHandler
-	FlagService     *challengeModule.FlagService
+	FlagService     challengeModule.FlagValidator
 	Handler         *challengeModule.Handler
 	ImageHandler    *challengeModule.ImageHandler
 	ImageRepository *challengeModule.ImageRepository
 	ImageService    *challengeModule.ImageService
-	Repository      *challengeModule.Repository
+	Repository      challengeModule.ChallengeContract
 	TopologyHandler *challengeModule.TopologyHandler
 	WriteupHandler  *challengeModule.WriteupHandler
 }
