@@ -4,13 +4,14 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/runtime"
 )
 
 type ContainerModule struct {
 	Handler            *container.Handler
 	ProxyTicketService *container.ProxyTicketService
 	Repository         *container.Repository
-	Service            *container.Service
+	Service            *runtime.Module
 }
 
 func BuildContainerModule(root *Root) (*ContainerModule, error) {
@@ -29,10 +30,12 @@ func BuildContainerModule(root *Root) (*ContainerModule, error) {
 		runtimeEngine = engine
 	}
 
+	service := runtime.NewModule(container.NewService(repo, runtimeEngine, &cfg.Container, log.Named("container_service")))
+
 	return &ContainerModule{
 		ProxyTicketService: container.NewProxyTicketService(cache, &cfg.Container),
 		Repository:         repo,
-		Service:            container.NewService(repo, runtimeEngine, &cfg.Container, log.Named("container_service")),
+		Service:            service,
 	}, nil
 }
 
@@ -43,7 +46,7 @@ func (m *ContainerModule) BuildHandler(root *Root, system *SystemModule) {
 
 	cfg := root.Config()
 	m.Handler = container.NewHandler(
-		m.Service,
+		m.Service.Service,
 		m.ProxyTicketService,
 		system.AuditService,
 		container.ProxyCookieConfig{
