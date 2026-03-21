@@ -2,12 +2,13 @@ package composition
 
 import (
 	authModule "ctf-platform/internal/module/auth"
+	"ctf-platform/internal/module/identity"
 	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type AuthModule struct {
 	Handler      *authModule.Handler
-	TokenService authModule.TokenService
+	TokenService *identity.Module
 }
 
 func BuildAuthModule(root *Root, system *SystemModule) (*AuthModule, error) {
@@ -22,7 +23,7 @@ func BuildAuthModule(root *Root, system *SystemModule) (*AuthModule, error) {
 	}
 
 	authRepository := authModule.NewRepository(db)
-	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
+	tokenService := identity.NewModule(authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
 	authService := authModule.NewService(authRepository, tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
 	casProvider := authModule.NewCASProvider(cfg.Auth.CAS, authRepository, tokenService, log.Named("cas_provider"), nil)
 

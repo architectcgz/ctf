@@ -3,12 +3,13 @@ package composition
 import (
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/module/ops"
 	"ctf-platform/internal/module/system"
 	websocketpkg "ctf-platform/pkg/websocket"
 )
 
 type SystemModule struct {
-	AuditService        *system.AuditService
+	AuditService        *ops.Module
 	AuditHandler        *system.AuditHandler
 	DashboardHandler    *system.DashboardHandler
 	NotificationHandler *system.NotificationHandler
@@ -35,7 +36,7 @@ func BuildSystemModule(root *Root, container *ContainerModule) *SystemModule {
 	riskService := system.NewRiskService(riskRepo, log.Named("risk_service"))
 
 	return &SystemModule{
-		AuditService:     auditService,
+		AuditService:     ops.NewModule(auditService),
 		AuditHandler:     system.NewAuditHandler(auditService),
 		DashboardHandler: system.NewDashboardHandler(dashboardService),
 		RiskHandler:      system.NewRiskHandler(riskService),

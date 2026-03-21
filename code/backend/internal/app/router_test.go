@@ -14,6 +14,10 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/module/identity"
+	"ctf-platform/internal/module/ops"
+	"ctf-platform/internal/module/runtime"
+	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 )
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
@@ -46,6 +50,22 @@ func TestBuildRoot(t *testing.T) {
 	if root.Events == nil {
 		t.Fatal("expected events bus")
 	}
+}
+
+func TestIdentityModuleContractsCompile(t *testing.T) {
+	var _ identity.Authenticator = (*identity.Module)(nil)
+}
+
+func TestRuntimeModuleContractsCompile(t *testing.T) {
+	var _ runtime.RuntimeStatsProvider = (*runtime.Module)(nil)
+}
+
+func TestOpsModuleContractsCompile(t *testing.T) {
+	var _ ops.AuditRecorder = (*ops.Module)(nil)
+}
+
+func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
+	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodel.Module)(nil)
 }
 
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {

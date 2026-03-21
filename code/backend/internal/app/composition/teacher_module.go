@@ -1,9 +1,13 @@
 package composition
 
-import teacherModule "ctf-platform/internal/module/teacher"
+import (
+	teacherModule "ctf-platform/internal/module/teacher"
+	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
+)
 
 type TeacherModule struct {
 	Handler *teacherModule.Handler
+	Query   *teachingreadmodel.Module
 }
 
 func BuildTeacherModule(root *Root, assessment *AssessmentModule) *TeacherModule {
@@ -15,5 +19,6 @@ func BuildTeacherModule(root *Root, assessment *AssessmentModule) *TeacherModule
 
 	return &TeacherModule{
 		Handler: teacherModule.NewHandler(service),
+		Query:   teachingreadmodel.NewModule(repo),
 	}
 }
