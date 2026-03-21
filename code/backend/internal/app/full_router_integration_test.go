@@ -22,6 +22,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -162,43 +163,101 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 }
 
 func TestRouterBuildUsesCompositionModules(t *testing.T) {
-	t.Parallel()
+	cfg, db, cache := newAppTestDependencies(t)
 
-	source, err := os.ReadFile("router.go")
-	if err != nil {
-		t.Fatalf("read router.go: %v", err)
-	}
+	var calls []string
 
-	routerSource := string(source)
-	requiredBuilders := []string{
-		"composition.BuildAuthModule(",
-		"composition.BuildChallengeModule(",
-		"composition.BuildContainerModule(",
-		"composition.BuildContestModule(",
-		"composition.BuildPracticeModule(",
-		"composition.BuildAssessmentModule(",
-		"composition.BuildSystemModule(",
-		"composition.BuildTeacherModule(",
-	}
-	for _, builder := range requiredBuilders {
-		if !strings.Contains(routerSource, builder) {
-			t.Errorf("expected router.go to use %s", builder)
+	originalBuildContainerModule := buildContainerModule
+	originalBuildSystemModule := buildSystemModule
+	originalBuildAuthModule := buildAuthModule
+	originalBuildChallengeModule := buildChallengeModule
+	originalBuildAssessmentModule := buildAssessmentModule
+	originalBuildTeacherModule := buildTeacherModule
+	originalBuildContestModule := buildContestModule
+	originalBuildPracticeModule := buildPracticeModule
+	defer func() {
+		buildContainerModule = originalBuildContainerModule
+		buildSystemModule = originalBuildSystemModule
+		buildAuthModule = originalBuildAuthModule
+		buildChallengeModule = originalBuildChallengeModule
+		buildAssessmentModule = originalBuildAssessmentModule
+		buildTeacherModule = originalBuildTeacherModule
+		buildContestModule = originalBuildContestModule
+		buildPracticeModule = originalBuildPracticeModule
+	}()
+
+	buildContainerModule = func(root *composition.Root) (*composition.ContainerModule, error) {
+		if root == nil {
+			t.Fatal("expected root for container module builder")
 		}
+		calls = append(calls, "container")
+		return originalBuildContainerModule(root)
+	}
+	buildSystemModule = func(root *composition.Root, container *composition.ContainerModule) *composition.SystemModule {
+		if root == nil || container == nil {
+			t.Fatal("expected root and container for system module builder")
+		}
+		calls = append(calls, "system")
+		return originalBuildSystemModule(root, container)
+	}
+	buildAuthModule = func(root *composition.Root, system *composition.SystemModule) (*composition.AuthModule, error) {
+		if root == nil || system == nil {
+			t.Fatal("expected root and system for auth module builder")
+		}
+		calls = append(calls, "auth")
+		return originalBuildAuthModule(root, system)
+	}
+	buildChallengeModule = func(root *composition.Root, container *composition.ContainerModule) (*composition.ChallengeModule, error) {
+		if root == nil || container == nil {
+			t.Fatal("expected root and container for challenge module builder")
+		}
+		calls = append(calls, "challenge")
+		return originalBuildChallengeModule(root, container)
+	}
+	buildAssessmentModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.AssessmentModule {
+		if root == nil || challenge == nil {
+			t.Fatal("expected root and challenge for assessment module builder")
+		}
+		calls = append(calls, "assessment")
+		return originalBuildAssessmentModule(root, challenge)
+	}
+	buildTeacherModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeacherModule {
+		if root == nil || assessment == nil {
+			t.Fatal("expected root and assessment for teacher module builder")
+		}
+		calls = append(calls, "teacher")
+		return originalBuildTeacherModule(root, assessment)
+	}
+	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.ContestModule {
+		if root == nil || challenge == nil {
+			t.Fatal("expected root and challenge for contest module builder")
+		}
+		calls = append(calls, "contest")
+		return originalBuildContestModule(root, challenge)
+	}
+	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, container *composition.ContainerModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
+		if root == nil || challenge == nil || container == nil || assessment == nil {
+			t.Fatal("expected root, challenge, container, and assessment for practice module builder")
+		}
+		calls = append(calls, "practice")
+		return originalBuildPracticeModule(root, challenge, container, assessment)
 	}
 
-	inlineConstructors := []string{
-		"authModule.NewRepository(",
-		"challengeModule.NewRepository(",
-		"containerModule.NewRepository(",
-		"contestModule.NewRepository(",
-		"practiceModule.NewRepository(",
-		"assessmentModule.NewRepository(",
-		"systemModule.NewAuditRepository(",
-		"teacherModule.NewRepository(",
+	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("NewRouter() error = %v", err)
 	}
-	for _, constructor := range inlineConstructors {
-		if strings.Contains(routerSource, constructor) {
-			t.Errorf("expected router.go to stop constructing modules inline: found %s", constructor)
+	if router == nil {
+		t.Fatal("expected router")
+	}
+
+	expectedCalls := []string{"container", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice"}
+	if len(calls) != len(expectedCalls) {
+		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
+	}
+	for i, expected := range expectedCalls {
+		if calls[i] != expected {
+			t.Fatalf("expected builder call %d to be %q, got %q (%v)", i, expected, calls[i], calls)
 		}
 	}
 }
