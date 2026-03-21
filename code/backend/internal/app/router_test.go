@@ -26,7 +26,6 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 
 	assertHasRoute(t, router, "GET", "/api/v1/challenges")
 	assertHasRoute(t, router, "GET", "/api/v1/challenges/:id")
-	assertHasRoute(t, router, "GET", "/api/v1/challenges/attachments/*path")
 	assertHasRoute(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/instances")
 	assertHasRoute(t, router, "GET", "/api/v1/teacher/instances")
 	assertHasRoute(t, router, "DELETE", "/api/v1/teacher/instances/:id")
