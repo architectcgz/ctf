@@ -16,7 +16,6 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
-	"ctf-platform/internal/module/runtime"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -39,7 +38,7 @@ type imageStore interface {
 
 type runtimeInstanceService interface {
 	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, req *runtime.TopologyCreateRequest) (*runtime.TopologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *topologyCreateRequest) (*topologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
@@ -585,7 +584,7 @@ func (s *Service) buildTopologyCreateRequest(
 	entryNodeKey string,
 	spec model.TopologySpec,
 	flag string,
-) (*runtime.TopologyCreateRequest, error) {
+) (*topologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
 		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
 	}
@@ -595,10 +594,10 @@ func (s *Service) buildTopologyCreateRequest(
 		return nil, err
 	}
 
-	request := &runtime.TopologyCreateRequest{
+	request := &topologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
-		Networks:         make([]runtime.TopologyCreateNetwork, 0),
-		Nodes:            make([]runtime.TopologyCreateNode, 0, len(spec.Nodes)),
+		Networks:         make([]topologyCreateNetwork, 0),
+		Nodes:            make([]topologyCreateNode, 0, len(spec.Nodes)),
 		Policies:         append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := buildRuntimeTopologyPlan(spec)
@@ -629,7 +628,7 @@ func (s *Service) buildTopologyCreateRequest(
 			}
 		}
 
-		request.Nodes = append(request.Nodes, runtime.TopologyCreateNode{
+		request.Nodes = append(request.Nodes, topologyCreateNode{
 			Key:          node.Key,
 			Image:        imageRef,
 			Env:          env,

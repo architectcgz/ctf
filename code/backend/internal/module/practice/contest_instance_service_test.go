@@ -200,7 +200,7 @@ func newContestInstanceTestService(db *gorm.DB) *Service {
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		runtimeService,
+		NewRuntimeInstanceServiceAdapter(runtimeService),
 		nil,
 		nil,
 		nil,
