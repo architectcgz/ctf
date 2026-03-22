@@ -1,4 +1,4 @@
-package container
+package runtime
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -182,7 +183,7 @@ func TestNewServiceTreatsTypedNilEngineAsNil(t *testing.T) {
 		CreateTimeout:        time.Second,
 	}
 
-	var typedNil *Engine
+	var typedNil *runtimeinfra.Engine
 	service := NewService(repo, typedNil, cfg, nil)
 	if service.engine != nil {
 		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", service.engine)

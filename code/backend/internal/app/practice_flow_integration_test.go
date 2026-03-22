@@ -31,7 +31,6 @@ import (
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
-	containerModule "ctf-platform/internal/module/container"
 	practiceModule "ctf-platform/internal/module/practice"
 	practiceReadmodel "ctf-platform/internal/module/practice_readmodel"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
@@ -736,10 +735,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	flagHandler := challengeModule.NewFlagHandler(flagService)
 
 	practiceRepo := practiceModule.NewRepository(db)
-	instanceRepo := containerModule.NewRepository(db)
-	containerService := containerModule.NewService(instanceRepo, nil, &cfg.Container, logger)
+	instanceRepo := runtimeModule.NewRepository(db)
+	runtimeBaseService := runtimeModule.NewService(instanceRepo, nil, &cfg.Container, logger)
 	runtimeService := runtimeModule.NewModule(
-		containerService,
+		runtimeBaseService,
 		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
 		cfg.Container.ProxyBodyPreviewSize,
 	)
@@ -748,7 +747,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		containerService,
+		runtimeBaseService,
 		nil,
 		nil,
 		cache,

@@ -153,9 +153,9 @@ flowchart LR
 
 - 当前实现以 `internal/app/buildRouterRuntime` 作为统一 composition root，负责集中装配 repository、service、handler 与共享基础设施依赖。
 - HTTP 路由与后台任务共享同一套关键运行时组件，当前已确认：
-  - `containerService` 由路由层创建一次，同时复用于：
+  - `runtimeService` 由路由层创建一次，同时复用于：
     - HTTP Handler 链路
-    - 容器清理任务 `container.Cleaner`
+    - 运行时清理任务 `runtimeinfra.Cleaner`
     - AWD Flag 注入器 `contest.DockerAWDFlagInjector`
   - `assessmentService` 由路由层创建一次，同时复用于：
     - HTTP Handler 链路
@@ -183,15 +183,19 @@ flowchart TD
         practice["practice\n攻防演练\n实例管理\nFlag 提交"]
         contest["contest\n竞赛管理\n组队/排行\nAWD 模式"]
         assessment["assessment\n技能评估\n能力画像\n评估报告"]
+        runtime["runtime\n实例运行时\n访问代理\n资源治理"]
         system["system\n系统管理\n仪表盘\n审计日志"]
     end
 
-    subgraph Infra["container 模块（共享基础设施模块）"]
-        container["容器生命周期 · 网络隔离 · 资源限制 · 镜像管理"]
+    subgraph Infra["runtimeinfra（基础设施适配层）"]
+        runtimeinfra["Docker Engine · ACL 下发 · 清理任务 · 运行指标采集"]
     end
 
-    practice --> container
-    contest --> container
+    challenge --> runtime
+    practice --> runtime
+    contest --> runtime
+    system --> runtime
+    runtime --> runtimeinfra
 ```
 
 ### 3.2 各模块职责
@@ -216,7 +220,7 @@ flowchart TD
 | Flag 策略 | 静态：管理员手动设置（只存哈希+盐）；动态：`HMAC-SHA256(global_secret + contest_salt, user_id + ":" + challenge_id + ":" + instance_nonce)`（三层密钥分离，详见 ADR-004） |
 | 分类体系 | Web、Pwn、Reverse、Crypto、Misc、Forensics（可扩展） |
 | 数据表 | `challenges`、`challenge_categories`、`challenge_tags`、`challenge_attachments` |
-| 依赖模块 | container（获取靶机镜像信息） |
+| 依赖模块 | runtime（获取镜像信息与运行时资源操作） |
 
 #### practice 模块 — 攻防演练
 
@@ -228,7 +232,7 @@ flowchart TD
 | Flag 提交 | 防刷机制：同一题目 60 秒内限提交 5 次（Redis 滑动窗口）；提交记录全量入库用于分析 |
 | 积分规则 | 静态积分 或 动态积分（首血加成、解题人数衰减），由 challenge 配置决定 |
 | 数据表 | `practice_instances`、`submissions`、`user_scores`、`first_blood_records` |
-| 依赖模块 | challenge（题目信息、Flag 校验）、container（实例创建/销毁）、auth（用户信息） |
+| 依赖模块 | challenge（题目信息、Flag 校验）、runtime（实例创建/销毁与访问代理）、auth（用户信息） |
 
 #### contest 模块 — 竞赛管理
 
@@ -241,7 +245,7 @@ flowchart TD
 | 排行榜 | Redis Sorted Set 实时排名 + WebSocket 推送；冻结机制（赛前 N 分钟冻结榜单） |
 | AWD 模式 | 每轮自动检测存活（checker）、攻击得分/防守失分、轮次定时推进 |
 | 数据表 | `contests`、`contest_challenges`、`teams`、`team_members`、`submissions`、`contest_announcements`、`cheat_reports` |
-| 依赖模块 | challenge（题目池）、container（AWD 靶机编排）、practice（Flag 提交复用） |
+| 依赖模块 | challenge（题目池）、runtime（AWD 靶机编排）、practice（Flag 提交复用） |
 
 #### assessment 模块 — 技能评估
 
@@ -255,19 +259,20 @@ flowchart TD
 | 数据表 | `assessments`、`assessment_tasks`、`assessment_results`、`user_skill_profiles` |
 | 依赖模块 | challenge（题目元数据）、practice（解题记录与积分） |
 
-#### container 模块 — 容器管理（共享基础设施）
+#### runtime 模块 — 实例运行时与资源治理
 
 | 项目 | 说明 |
 |------|------|
-| 核心职责 | Docker 容器全生命周期管理、网络隔离、资源限制、镜像管理 |
+| 核心职责 | 实例查询、访问代理、运行时拓扑编排、容器/网络/ACL 生命周期治理 |
 | 容器生命周期 | 创建 → 启动 → 运行中 → 停止 → 删除；异常状态自动检测与清理 |
 | 网络隔离 | 每个靶机实例分配独立 Docker Network，禁止容器间互访（AWD 模式除外） |
 | 资源限制 | CPU（默认 0.5 核）、内存（默认 256MB）、磁盘（默认 1GB）、网络带宽，均可按题目配置 |
 | 端口映射 | 动态分配宿主机端口（范围可配置，默认 30000-39999），映射到容器服务端口 |
-| 镜像管理 | 本地镜像仓库、镜像预拉取、镜像大小限制、镜像安全扫描（可选） |
+| 镜像管理 | 题目镜像元数据由 challenge 模块持有，runtime 负责运行时镜像探测与删除 |
 | 健康检查 | 定时探活（TCP/HTTP），连续失败 N 次标记为异常并通知用户 |
-| 数据表 | `instances`、`instance_ports`、`images` |
-| 依赖模块 | 无上游依赖，被 practice / contest 模块调用 |
+| 运行时基础设施 | `runtimeinfra` 提供 Docker Engine、ACL 下发、清理任务和运行指标采集 |
+| 数据表 | `instances`、`port_allocations` |
+| 依赖模块 | 无业务上游依赖，被 challenge / practice / contest / system 模块调用 |
 
 #### system 模块 — 系统管理
 
@@ -279,7 +284,7 @@ flowchart TD
 | 通知机制 | 站内通知（WebSocket 推送）：竞赛开始/结束、靶机到期提醒、系统公告 |
 | 全局配置 | 平台名称、注册开关、容器资源默认值、端口范围等运行时可调参数 |
 | 数据表 | `audit_logs`、`notifications`、`system_configs` |
-| 依赖模块 | auth（操作人信息）、container（资源监控数据） |
+| 依赖模块 | auth（操作人信息）、runtime（资源监控数据） |
 
 ### 3.3 模块间通信方式
 
@@ -432,12 +437,15 @@ ctf-platform/
 │   │   │   ├── handler.go
 │   │   │   ├── service.go
 │   │   │   └── repository.go
-│   │   ├── container/
-│   │   │   ├── handler.go           # 容器管理 API（仅管理员）
-│   │   │   ├── service.go           # 容器生命周期 Service
-│   │   │   ├── engine.go            # Docker SDK 封装层
-│   │   │   ├── network.go           # 网络隔离管理
+│   │   ├── runtime/
+│   │   │   ├── handler.go           # 实例访问与运行时 API
+│   │   │   ├── service.go           # 实例运行时编排 Service
 │   │   │   └── repository.go
+│   │   ├── runtimeinfra/
+│   │   │   ├── engine.go            # Docker SDK 封装层
+│   │   │   ├── cleaner.go           # 运行时清理任务
+│   │   │   ├── acl.go               # ACL 下发
+│   │   │   └── runtime_metrics.go   # 运行指标采集
 │   │   └── system/
 │   │       ├── handler.go
 │   │       ├── service.go

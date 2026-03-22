@@ -16,7 +16,6 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
-	containerModule "ctf-platform/internal/module/container"
 	"ctf-platform/internal/module/identity"
 	"ctf-platform/internal/module/ops"
 	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
@@ -84,7 +83,8 @@ func TestIdentityModuleContractsCompile(t *testing.T) {
 func TestRuntimeModuleContractsCompile(t *testing.T) {
 	var _ runtime.RuntimeStatsProvider = (*runtime.Module)(nil)
 	var _ runtime.RuntimeFacade = (*runtime.Module)(nil)
-	var _ runtime.InstanceRepository = (*containerModule.Repository)(nil)
+	var _ runtime.InstanceRepository = (*runtime.Repository)(nil)
+	var _ runtime.RuntimeFacade = (*runtime.Service)(nil)
 }
 
 func TestOpsModuleContractsCompile(t *testing.T) {

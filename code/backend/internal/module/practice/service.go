@@ -48,7 +48,7 @@ type Service struct {
 	challengeRepo     challenge.PracticeChallengeContract
 	imageRepo         imageStore
 	instanceRepo      instanceStore
-	containerService  runtime.RuntimeFacade
+	runtimeService    runtime.RuntimeFacade
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
 	redis             *redis.Client
@@ -73,7 +73,7 @@ func NewService(
 	challengeRepo challenge.PracticeChallengeContract,
 	imageRepo imageStore,
 	instanceRepo instanceStore,
-	containerService runtime.RuntimeFacade,
+	runtimeService runtime.RuntimeFacade,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
@@ -89,7 +89,7 @@ func NewService(
 		challengeRepo:     challengeRepo,
 		imageRepo:         imageRepo,
 		instanceRepo:      instanceRepo,
-		containerService:  containerService,
+		runtimeService:    runtimeService,
 		scoreService:      scoreService,
 		assessmentService: assessmentService,
 		redis:             redis,
@@ -241,7 +241,7 @@ func (s *Service) markInstanceFailed(instance *model.Instance) {
 	if instance == nil {
 		return
 	}
-	if err := s.containerService.CleanupRuntime(instance); err != nil {
+	if err := s.runtimeService.CleanupRuntime(instance); err != nil {
 		s.logger.Warn("清理失败实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
 	if err := s.instanceRepo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
@@ -517,7 +517,7 @@ func (s *Service) createContainer(ctx context.Context, instance *model.Instance,
 	if err != nil {
 		return err
 	}
-	result, err := s.containerService.CreateTopology(ctx, request)
+	result, err := s.runtimeService.CreateTopology(ctx, request)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}
@@ -546,7 +546,7 @@ func (s *Service) createSingleContainer(ctx context.Context, instance *model.Ins
 	}
 
 	imageRef := fmt.Sprintf("%s:%s", imageItem.Name, imageItem.Tag)
-	containerID, networkID, hostPort, servicePort, err := s.containerService.CreateContainer(ctx, imageRef, env, instance.HostPort)
+	containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, instance.HostPort)
 	if err != nil {
 		return errcode.ErrContainerCreateFailed.WithCause(err)
 	}

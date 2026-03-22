@@ -5,11 +5,11 @@ import (
 	"sort"
 
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/container"
+	"ctf-platform/internal/module/runtime"
 )
 
 type runtimeTopologyPlan struct {
-	Networks        []container.TopologyCreateNetwork
+	Networks        []runtime.TopologyCreateNetwork
 	NodeNetworkKeys map[string][]string
 }
 
@@ -41,7 +41,7 @@ func buildRuntimeTopologyPlan(spec model.TopologySpec) *runtimeTopologyPlan {
 
 	policies := indexRuntimeConnectivityPolicies(spec.Policies)
 	plan := &runtimeTopologyPlan{
-		Networks:        make([]container.TopologyCreateNetwork, 0, len(logicalNetworks)),
+		Networks:        make([]runtime.TopologyCreateNetwork, 0, len(logicalNetworks)),
 		NodeNetworkKeys: make(map[string][]string, len(spec.Nodes)),
 	}
 	addedNetworkKeys := make(map[string]struct{})
@@ -170,7 +170,7 @@ func orderedNodePair(left, right string, order map[string]int) (string, string) 
 
 func attachNetwork(plan *runtimeTopologyPlan, addedNetworkKeys map[string]struct{}, networkKey string, internal bool, nodeKeys ...string) {
 	if _, exists := addedNetworkKeys[networkKey]; !exists {
-		plan.Networks = append(plan.Networks, container.TopologyCreateNetwork{
+		plan.Networks = append(plan.Networks, runtime.TopologyCreateNetwork{
 			Key:      networkKey,
 			Internal: internal,
 		})

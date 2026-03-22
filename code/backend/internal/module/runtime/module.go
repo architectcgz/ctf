@@ -1,14 +1,12 @@
 package runtime
 
-import "ctf-platform/internal/module/container"
-
 type Module struct {
-	*container.Service
+	*Service
 	proxyTickets         *ProxyTicketService
 	proxyBodyPreviewSize int
 }
 
-func NewModule(service *container.Service, proxyTickets *ProxyTicketService, proxyBodyPreviewSize int) *Module {
+func NewModule(service *Service, proxyTickets *ProxyTicketService, proxyBodyPreviewSize int) *Module {
 	return &Module{
 		Service:              service,
 		proxyTickets:         proxyTickets,

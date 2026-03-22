@@ -21,7 +21,6 @@ type routerRuntime struct {
 	engine     *gin.Engine
 	closers    []lifecycleComponent
 	assessment *composition.AssessmentModule
-	container  *composition.ContainerModule
 	contest    *composition.ContestModule
 	runtime    *composition.RuntimeModule
 }
@@ -30,10 +29,10 @@ var (
 	buildAuthModule              = composition.BuildAuthModule
 	buildAssessmentModule        = composition.BuildAssessmentModule
 	buildChallengeModule         = composition.BuildChallengeModule
-	buildContainerModule         = composition.BuildContainerModule
 	buildContestModule           = composition.BuildContestModule
 	buildPracticeModule          = composition.BuildPracticeModule
 	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
+	buildRuntimeInfraModule      = composition.BuildRuntimeInfraModule
 	buildRuntimeModule           = composition.BuildRuntimeModule
 	buildSystemModule            = composition.BuildSystemModule
 	buildTeacherModule           = composition.BuildTeacherModule
@@ -82,11 +81,11 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
 
-	containerModule, err := buildContainerModule(root)
+	runtimeInfraModule, err := buildRuntimeInfraModule(root)
 	if err != nil {
 		return nil, err
 	}
-	runtimeModule := buildRuntimeModule(root, containerModule)
+	runtimeModule := buildRuntimeModule(root, runtimeInfraModule)
 	systemModule := buildSystemModule(root, runtimeModule)
 
 	authModule, err := buildAuthModule(root, systemModule)
@@ -167,7 +166,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	return &routerRuntime{
 		engine:     engine,
 		assessment: assessmentModule,
-		container:  containerModule,
 		contest:    contestModule,
 		runtime:    runtimeModule,
 		closers: []lifecycleComponent{
