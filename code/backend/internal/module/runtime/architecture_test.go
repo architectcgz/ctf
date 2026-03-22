@@ -5,6 +5,7 @@ import (
 	"go/token"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -64,10 +65,25 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 	}
 }
 
-func TestServiceDoesNotDependOnDTO(t *testing.T) {
+func TestRootPackageKeepsOnlyDocFile(t *testing.T) {
 	t.Parallel()
 
-	assertFileDoesNotImport(t, "service.go", "ctf-platform/internal/dto")
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("glob runtime root files: %v", err)
+	}
+
+	nonTestFiles := make([]string, 0, len(files))
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		nonTestFiles = append(nonTestFiles, file)
+	}
+
+	if len(nonTestFiles) != 1 || nonTestFiles[0] != "doc.go" {
+		t.Fatalf("runtime root package should keep only doc.go, got %v", nonTestFiles)
+	}
 }
 
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {

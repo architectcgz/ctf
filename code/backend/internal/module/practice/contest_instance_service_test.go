@@ -1,4 +1,4 @@
-package practice
+package practice_test
 
 import (
 	"context"
@@ -15,9 +15,10 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeModule "ctf-platform/internal/module/challenge"
-	runtimeModule "ctf-platform/internal/module/runtime"
+	practiceModule "ctf-platform/internal/module/practice"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -62,11 +63,8 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected team scoped instance, got %+v", instance)
 	}
 
-	runtimeService := runtimeModule.NewService(runtimeinfrarepo.NewRepository(db), nil, &config.ContainerConfig{
-		MaxExtends:     2,
-		ExtendDuration: 30 * time.Minute,
-	}, nil)
-	instanceService := runtimeapp.NewInstanceService(runtimeinfrarepo.NewRepository(db), runtimeService, &config.ContainerConfig{
+	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
+	instanceService := runtimeapp.NewInstanceService(runtimeinfrarepo.NewRepository(db), runtimeCleanupService, &config.ContainerConfig{
 		MaxExtends:     2,
 		ExtendDuration: 30 * time.Minute,
 	}, nil)
@@ -181,11 +179,12 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newContestInstanceTestService(db *gorm.DB) *Service {
+func newContestInstanceTestService(db *gorm.DB) *practiceModule.Service {
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeService := runtimeModule.NewService(instanceRepo, nil, &config.ContainerConfig{
+	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
+	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
 		PortRangeStart:       30000,
 		PortRangeEnd:         30010,
 		DefaultExposedPort:   8080,
@@ -195,12 +194,12 @@ func newContestInstanceTestService(db *gorm.DB) *Service {
 		MaxExtends:           2,
 		CreateTimeout:        time.Second,
 	}, nil)
-	return NewService(
-		NewRepository(db),
+	return practiceModule.NewService(
+		practiceModule.NewRepository(db),
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		newRuntimeInstanceServiceAdapterForTest(runtimeService),
+		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
 		nil,
 		nil,
 		nil,

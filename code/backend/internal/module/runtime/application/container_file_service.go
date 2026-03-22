@@ -21,6 +21,9 @@ func NewContainerFileService(runtime containerFileRuntime, logger *zap.Logger) *
 	if logger == nil {
 		logger = zap.NewNop()
 	}
+	if isNilApplicationDependency(runtime) {
+		runtime = nil
+	}
 	return &ContainerFileService{
 		runtime: runtime,
 		logger:  logger,

@@ -1,11 +1,22 @@
 package ops
 
-import "ctf-platform/internal/module/system"
+import (
+	"context"
+
+	"ctf-platform/internal/auditlog"
+)
 
 type Module struct {
-	*system.AuditService
+	recorder AuditRecorder
 }
 
-func NewModule(auditService *system.AuditService) *Module {
-	return &Module{AuditService: auditService}
+func NewModule(recorder AuditRecorder) *Module {
+	return &Module{recorder: recorder}
+}
+
+func (m *Module) Record(ctx context.Context, entry auditlog.Entry) error {
+	if m == nil || m.recorder == nil {
+		return nil
+	}
+	return m.recorder.Record(ctx, entry)
 }

@@ -15,7 +15,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	. "ctf-platform/internal/module/runtime"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
@@ -134,7 +133,7 @@ func TestServiceCreateContainerCreatesIsolatedNetwork(t *testing.T) {
 		containerID:         "ctr-123",
 		resolvedServicePort: 80,
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart:     30000,
 		PortRangeEnd:       30010,
 		DefaultExposedPort: 8080,
@@ -176,7 +175,7 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 		containerID: "ctr-456",
 		startErr:    errors.New("start failed"),
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart:     30000,
 		PortRangeEnd:       30010,
 		DefaultExposedPort: 8080,
@@ -197,7 +196,6 @@ func TestServiceCreateContainerRemovesNetworkWhenStartFails(t *testing.T) {
 func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
-	repo := newTestRepository(t)
 	engine := &fakeRuntimeEngine{
 		removeContainerFn: func(ctx context.Context, containerID string, force bool) error {
 			if containerID != "ctr-ctx" || !force {
@@ -207,12 +205,12 @@ func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{}, nil)
+	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := service.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.RemoveContainerWithContext(ctx, "ctr-ctx"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
@@ -220,7 +218,6 @@ func TestServiceRemoveContainerWithContextHonorsCancellation(t *testing.T) {
 func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
-	repo := newTestRepository(t)
 	engine := &fakeRuntimeEngine{
 		removeContainerFn: func(ctx context.Context, containerID string, force bool) error {
 			if containerID != "ctr-3001" || !force {
@@ -230,7 +227,7 @@ func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 			return ctx.Err()
 		},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{}, nil)
+	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, nil)
 
 	instance := &model.Instance{
 		ID:          3001,
@@ -239,7 +236,7 @@ func TestServiceCleanupRuntimeWithContextHonorsCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	if err := service.CleanupRuntimeWithContext(ctx, instance); !errors.Is(err, context.Canceled) {
+	if err := cleanupService.CleanupRuntimeWithContext(ctx, instance); !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
 }
@@ -467,7 +464,7 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 		networkID:    "net-789",
 		containerIDs: []string{"web-ctr", "db-ctr"},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart: 30000,
 		PortRangeEnd:   30010,
 		PublicHost:     "127.0.0.1",
@@ -583,7 +580,8 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 
 	engine := &fakeRuntimeEngine{removeContainerErr: errors.New("remove failed")}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, nil)
+	service := runtimeapp.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
@@ -618,7 +616,7 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 		networkIDs:   []string{"net-public", "net-backend"},
 		containerIDs: []string{"web-ctr", "db-ctr"},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart: 30000,
 		PortRangeEnd:   30010,
 		PublicHost:     "127.0.0.1",
@@ -675,7 +673,7 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 			}
 		},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart: 30000,
 		PortRangeEnd:   30010,
 		PublicHost:     "127.0.0.1",
@@ -732,7 +730,7 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 			}
 		},
 	}
-	service := NewService(repo, engine, &config.ContainerConfig{
+	service := runtimeapp.NewProvisioningService(repo, engine, &config.ContainerConfig{
 		PortRangeStart: 30000,
 		PortRangeEnd:   30010,
 		PublicHost:     "127.0.0.1",
@@ -872,23 +870,14 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	}
 }
 
-func newTestService(repo *runtimeTestRepository) *Service {
-	return NewService(repo, nil, &config.ContainerConfig{
-		MaxExtends:        2,
-		ExtendDuration:    30 * time.Minute,
-		OrphanGracePeriod: 5 * time.Minute,
-	}, nil)
-}
-
-func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *Module {
+func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *runtimeapp.InstanceService {
 	cfg := &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}
-	service := NewService(repo, engine, cfg, nil)
-	instanceService := runtimeapp.NewInstanceService(repo, service, cfg, nil)
-	return NewModule(service, repo, instanceService, nil, 0)
+	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, nil)
+	return runtimeapp.NewInstanceService(repo, cleanupService, cfg, nil)
 }
 
 type fakeRuntimeEngine struct {

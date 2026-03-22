@@ -36,11 +36,11 @@ import (
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
-	runtimeModule "ctf-platform/internal/module/runtime"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	systemModule "ctf-platform/internal/module/system"
+	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -739,12 +739,11 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeBaseService := runtimeModule.NewService(instanceRepo, nil, &cfg.Container, logger)
-	runtimeInstanceService := runtimeapp.NewInstanceService(instanceRepo, runtimeBaseService, &cfg.Container, logger)
+	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, logger)
+	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
+	runtimeInstanceService := runtimeapp.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeProxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
-	runtimeService := runtimeModule.NewModule(
-		runtimeBaseService,
-		instanceRepo,
+	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceService,
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
@@ -754,7 +753,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		newPracticeRuntimeInstanceServiceAdapterForTest(runtimeBaseService),
+		runtimeadapters.NewPracticeRuntimeService(runtimeCleanupService, runtimeProvisioningService),
 		nil,
 		nil,
 		cache,

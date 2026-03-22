@@ -38,6 +38,13 @@ type ManagedContainerStat struct {
 	MemoryLimit   int64
 }
 
+// ManagedContainer 表示 runtime application 层暴露的受管容器元数据。
+type ManagedContainer struct {
+	ID        string
+	Name      string
+	CreatedAt time.Time
+}
+
 // TeacherInstanceFilter 定义教师端实例列表筛选条件。
 type TeacherInstanceFilter struct {
 	ClassName string

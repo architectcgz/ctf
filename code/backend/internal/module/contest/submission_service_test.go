@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeModule "ctf-platform/internal/module/challenge"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
@@ -438,7 +439,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 }
 
 func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
-	var newSubmissionService func(Repository, *SubmissionRepository, *redis.Client, challengeModule.FlagValidator, *TeamRepository, *ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
+	var newSubmissionService func(Repository, *SubmissionRepository, *redis.Client, challengecontracts.FlagValidator, *TeamRepository, *ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
 
 	db := newContestTestDB(t)
 

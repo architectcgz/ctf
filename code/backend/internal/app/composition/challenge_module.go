@@ -1,15 +1,18 @@
 package composition
 
-import challengeModule "ctf-platform/internal/module/challenge"
+import (
+	challengeModule "ctf-platform/internal/module/challenge"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+)
 
 type ChallengeModule struct {
 	FlagHandler     *challengeModule.FlagHandler
-	FlagService     challengeModule.FlagValidator
+	FlagService     challengecontracts.FlagValidator
 	Handler         *challengeModule.Handler
 	ImageHandler    *challengeModule.ImageHandler
 	ImageRepository *challengeModule.ImageRepository
 	ImageService    *challengeModule.ImageService
-	Repository      challengeModule.ChallengeContract
+	Repository      challengecontracts.ChallengeContract
 	TopologyHandler *challengeModule.TopologyHandler
 	WriteupHandler  *challengeModule.WriteupHandler
 }
@@ -22,7 +25,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.imageRuntimeService, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.challenge.imageRuntime, cfg, log.Named("image_service"))
 	challengeService := challengeModule.NewService(
 		challengeRepo,
 		imageRepo,

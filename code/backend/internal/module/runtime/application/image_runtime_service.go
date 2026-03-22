@@ -17,6 +17,9 @@ type ImageRuntimeService struct {
 
 // NewImageRuntimeService 创建镜像运行时服务。
 func NewImageRuntimeService(runtime imageRuntime) *ImageRuntimeService {
+	if isNilApplicationDependency(runtime) {
+		runtime = nil
+	}
 	return &ImageRuntimeService{runtime: runtime}
 }
 
