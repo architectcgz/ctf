@@ -8,15 +8,22 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	"ctf-platform/pkg/errcode"
 )
 
 type Module struct {
 	*Service
-	instanceRepository   InstanceRepository
+	instanceRepository   instanceRepository
 	instanceService      instanceHTTPService
 	proxyTickets         proxyTicketService
 	proxyBodyPreviewSize int
+}
+
+type instanceRepository interface {
+	UpdateRuntime(instance *model.Instance) error
+	UpdateStatusAndReleasePort(id int64, status string) error
+	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
 type instanceHTTPService interface {
@@ -30,21 +37,11 @@ type instanceHTTPService interface {
 
 type proxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
+	ResolveTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error)
 	MaxAge() int
 }
 
-func NewModule(service *Service, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
-	return &Module{
-		Service:              service,
-		instanceRepository:   nil,
-		instanceService:      instanceService,
-		proxyTickets:         proxyTickets,
-		proxyBodyPreviewSize: proxyBodyPreviewSize,
-	}
-}
-
-func NewModuleWithRepository(service *Service, instanceRepository InstanceRepository, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
+func NewModule(service *Service, instanceRepository instanceRepository, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
 	return &Module{
 		Service:              service,
 		instanceRepository:   instanceRepository,
@@ -126,7 +123,7 @@ func (m *Module) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser,
 	return ticket, err
 }
 
-func (m *Module) ResolveProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error) {
+func (m *Module) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error) {
 	if m == nil || m.proxyTickets == nil {
 		return nil, errProxyTicketServiceUnavailable()
 	}

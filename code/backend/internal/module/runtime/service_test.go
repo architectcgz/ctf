@@ -18,6 +18,7 @@ import (
 	. "ctf-platform/internal/module/runtime"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -887,7 +888,7 @@ func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine
 	}
 	service := NewService(repo, engine, cfg, nil)
 	instanceService := runtimeapp.NewInstanceService(repo, service, cfg, nil)
-	return NewModule(service, instanceService, nil, 0)
+	return NewModule(service, repo, instanceService, nil, 0)
 }
 
 type fakeRuntimeEngine struct {
@@ -917,7 +918,7 @@ type fakeRuntimeEngine struct {
 	imageSize                      int64
 	imageInspectErr                error
 	removedImageRef                string
-	managedContainerStats          []ManagedContainerStat
+	managedContainerStats          []runtimeinfra.ManagedContainerStat
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -970,8 +971,8 @@ func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) erro
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context, _ string) ([]ManagedContainerStat, error) {
-	return append([]ManagedContainerStat(nil), f.managedContainerStats...), nil
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context, _ string) ([]runtimeinfra.ManagedContainerStat, error) {
+	return append([]runtimeinfra.ManagedContainerStat(nil), f.managedContainerStats...), nil
 }
 
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
@@ -1045,7 +1046,7 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context, _ string) ([]ManagedContainer, error) {
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context, _ string) ([]runtimeinfra.ManagedContainer, error) {
 	return nil, nil
 }
 

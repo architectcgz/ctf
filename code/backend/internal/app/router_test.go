@@ -19,9 +19,7 @@ import (
 	"ctf-platform/internal/module/identity"
 	"ctf-platform/internal/module/ops"
 	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
-	"ctf-platform/internal/module/runtime"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 )
 
@@ -80,11 +78,6 @@ func TestBuildRoot(t *testing.T) {
 
 func TestIdentityModuleContractsCompile(t *testing.T) {
 	var _ identity.Authenticator = (*identity.Module)(nil)
-}
-
-func TestRuntimeModuleContractsCompile(t *testing.T) {
-	var _ runtime.InstanceRepository = (*runtime.Module)(nil)
-	var _ runtime.InstanceRepository = (*runtimeinfrarepo.Repository)(nil)
 }
 
 func TestOpsModuleContractsCompile(t *testing.T) {

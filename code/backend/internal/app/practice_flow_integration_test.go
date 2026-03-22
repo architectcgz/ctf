@@ -744,6 +744,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	runtimeProxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeModule.NewModule(
 		runtimeBaseService,
+		instanceRepo,
 		runtimeInstanceService,
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,

@@ -12,7 +12,7 @@ func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	managedContainers := []ManagedContainer{
+	managedContainers := []runtimeinfra.ManagedContainer{
 		{ID: "active", Name: "ctf-instance-active", CreatedAt: now.Add(-10 * time.Minute)},
 		{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: now.Add(-2 * time.Minute)},
 		{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: now.Add(-12 * time.Minute)},

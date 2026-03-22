@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
 
 type Service struct {
@@ -80,7 +81,7 @@ type runtimeEngine interface {
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
 	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
 	RemoveImage(ctx context.Context, imageRef string) error
-	ListManagedContainerStats(ctx context.Context, managedBy string) ([]ManagedContainerStat, error)
+	ListManagedContainerStats(ctx context.Context, managedBy string) ([]runtimeinfra.ManagedContainerStat, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
 	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
 	StartContainer(ctx context.Context, containerID string) error
@@ -90,7 +91,7 @@ type runtimeEngine interface {
 	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
-	ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error)
+	ListManagedContainers(ctx context.Context, managedBy string) ([]runtimeinfra.ManagedContainer, error)
 }
 
 func NewService(repo runtimeRepository, engine runtimeEngine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
@@ -189,9 +190,9 @@ func (s *Service) RemoveImage(ctx context.Context, imageRef string) error {
 	return s.engine.RemoveImage(ctx, imageRef)
 }
 
-func (s *Service) ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error) {
+func (s *Service) ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
 	if s.engine == nil {
-		return []ManagedContainerStat{}, nil
+		return []runtimeinfra.ManagedContainerStat{}, nil
 	}
 	return s.engine.ListManagedContainerStats(ctx, managedByFilter())
 }
@@ -610,12 +611,12 @@ func managedByFilter() string {
 }
 
 func selectOrphanContainers(
-	managedContainers []ManagedContainer,
+	managedContainers []runtimeinfra.ManagedContainer,
 	activeContainerIDs map[string]struct{},
 	gracePeriod time.Duration,
 	now time.Time,
-) []ManagedContainer {
-	orphanContainers := make([]ManagedContainer, 0, len(managedContainers))
+) []runtimeinfra.ManagedContainer {
+	orphanContainers := make([]runtimeinfra.ManagedContainer, 0, len(managedContainers))
 	for _, container := range managedContainers {
 		if _, exists := activeContainerIDs[container.ID]; exists {
 			continue

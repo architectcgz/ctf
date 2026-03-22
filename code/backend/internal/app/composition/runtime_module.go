@@ -35,7 +35,7 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 		cleaner.Stop,
 	))
 
-	service := runtimeModule.NewModuleWithRepository(
+	service := runtimeModule.NewModule(
 		baseService,
 		repo,
 		instanceService,
