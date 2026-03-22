@@ -2,7 +2,6 @@ package practice
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -459,98 +458,6 @@ func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, conte
 	}
 
 	return scope, nil
-}
-
-func (s *Service) GetProgress(userID int64) (*dto.ProgressResp, error) {
-	return s.GetProgressWithContext(context.Background(), userID)
-}
-
-func (s *Service) GetProgressWithContext(ctx context.Context, userID int64) (*dto.ProgressResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	cacheKey := constants.UserProgressKey(userID)
-
-	cached, err := s.redis.Get(ctx, cacheKey).Result()
-	if err == nil {
-		var resp dto.ProgressResp
-		if json.Unmarshal([]byte(cached), &resp) == nil {
-			return &resp, nil
-		}
-		s.logger.Warn("进度缓存反序列化失败", zap.Int64("user_id", userID))
-	}
-
-	totalScore, totalSolved, err := s.repo.GetUserProgress(userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	rank, err := s.repo.GetUserRank(userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	categoryStats, err := s.repo.GetCategoryStats(userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	difficultyStats, err := s.repo.GetDifficultyStats(userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	resp := &dto.ProgressResp{
-		TotalScore:      totalScore,
-		TotalSolved:     totalSolved,
-		Rank:            rank,
-		CategoryStats:   make([]dto.CategoryStat, len(categoryStats)),
-		DifficultyStats: make([]dto.DifficultyStat, len(difficultyStats)),
-	}
-	for i, stat := range categoryStats {
-		resp.CategoryStats[i] = dto.CategoryStat{
-			Category: stat.Category,
-			Solved:   stat.Solved,
-			Total:    stat.Total,
-		}
-	}
-	for i, stat := range difficultyStats {
-		resp.DifficultyStats[i] = dto.DifficultyStat{
-			Difficulty: stat.Difficulty,
-			Solved:     stat.Solved,
-			Total:      stat.Total,
-		}
-	}
-
-	if data, err := json.Marshal(resp); err == nil {
-		_ = s.redis.Set(ctx, cacheKey, data, s.config.Cache.ProgressTTL).Err()
-	}
-
-	return resp, nil
-}
-
-func (s *Service) GetTimeline(userID int64, limit, offset int) (*dto.TimelineResp, error) {
-	events, err := s.repo.GetUserTimeline(userID, limit, offset)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	resp := &dto.TimelineResp{
-		Events: make([]dto.TimelineEvent, len(events)),
-	}
-	for i, event := range events {
-		resp.Events[i] = dto.TimelineEvent{
-			Type:        event.Type,
-			ChallengeID: event.ChallengeID,
-			Title:       event.Title,
-			Timestamp:   event.Timestamp,
-			IsCorrect:   event.IsCorrect,
-			Points:      event.Points,
-			Detail:      event.Detail,
-		}
-	}
-	return resp, nil
 }
 
 func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, error) {

@@ -26,14 +26,15 @@ type routerRuntime struct {
 }
 
 var (
-	buildAuthModule       = composition.BuildAuthModule
-	buildAssessmentModule = composition.BuildAssessmentModule
-	buildChallengeModule  = composition.BuildChallengeModule
-	buildContainerModule  = composition.BuildContainerModule
-	buildContestModule    = composition.BuildContestModule
-	buildPracticeModule   = composition.BuildPracticeModule
-	buildSystemModule     = composition.BuildSystemModule
-	buildTeacherModule    = composition.BuildTeacherModule
+	buildAuthModule              = composition.BuildAuthModule
+	buildAssessmentModule        = composition.BuildAssessmentModule
+	buildChallengeModule         = composition.BuildChallengeModule
+	buildContainerModule         = composition.BuildContainerModule
+	buildContestModule           = composition.BuildContestModule
+	buildPracticeModule          = composition.BuildPracticeModule
+	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
+	buildSystemModule            = composition.BuildSystemModule
+	buildTeacherModule           = composition.BuildTeacherModule
 )
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
@@ -133,6 +134,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	teacherModule := buildTeacherModule(root, assessmentModule)
 	contestModule := buildContestModule(root, challengeModule, containerModule)
 	practiceModule := buildPracticeModule(root, challengeModule, containerModule, assessmentModule)
+	practiceReadmodelModule := buildPracticeReadmodelModule(root)
 	containerModule.BuildHandler(root, systemModule)
 
 	adminUserRepo := adminUserModule.NewRepository(db)
@@ -148,14 +150,15 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		system:           systemModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
-		auditLogger:   composition.NamedAuditLogger(log),
-		auditRecorder: systemModule.AuditService,
-		assessment:    assessmentModule,
-		challenge:     challengeModule,
-		container:     containerModule,
-		contest:       contestModule,
-		practice:      practiceModule,
-		teacher:       teacherModule,
+		auditLogger:       composition.NamedAuditLogger(log),
+		auditRecorder:     systemModule.AuditService,
+		assessment:        assessmentModule,
+		challenge:         challengeModule,
+		container:         containerModule,
+		contest:           contestModule,
+		practice:          practiceModule,
+		practiceReadmodel: practiceReadmodelModule,
+		teacher:           teacherModule,
 	})
 
 	return &routerRuntime{

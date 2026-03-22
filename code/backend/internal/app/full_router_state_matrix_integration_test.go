@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -61,6 +62,39 @@ func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
 	}
 	if !called {
 		t.Fatal("expected teacher module builder to be called")
+	}
+}
+
+func TestStudentPracticeReadRoutesAreServedByPracticeReadmodel(t *testing.T) {
+	cfg, db, cache := newAppTestDependencies(t)
+
+	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
+	t.Cleanup(func() {
+		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
+	})
+
+	called := false
+	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
+		module := originalBuildPracticeReadmodelModule(root)
+		called = true
+		if module == nil || module.Handler == nil {
+			t.Fatal("expected practice readmodel module handler")
+		}
+		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&practicereadmodelhttp.Handler{}); got != want {
+			t.Fatalf("practice readmodel handler type = %v, want %v", got, want)
+		}
+		return module
+	}
+
+	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("NewRouter() error = %v", err)
+	}
+	if router == nil {
+		t.Fatal("expected router")
+	}
+	if !called {
+		t.Fatal("expected practice readmodel module builder to be called")
 	}
 }
 

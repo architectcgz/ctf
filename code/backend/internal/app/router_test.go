@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/identity"
 	"ctf-platform/internal/module/ops"
+	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
 	"ctf-platform/internal/module/runtime"
 	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 )
@@ -34,6 +35,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertHasRoute(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/instances")
 	assertHasRoute(t, router, "GET", "/api/v1/teacher/instances")
 	assertHasRoute(t, router, "DELETE", "/api/v1/teacher/instances/:id")
+	assertHasRoute(t, router, "GET", "/api/v1/users/me/progress")
+	assertHasRoute(t, router, "GET", "/api/v1/users/me/timeline")
 }
 
 func TestBuildRoot(t *testing.T) {
@@ -70,11 +73,16 @@ func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
 	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodel.Module)(nil)
 }
 
+func TestPracticeReadmodelModuleContractsCompile(t *testing.T) {
+	var _ practicereadmodel.PracticeQuery = (*practicereadmodel.Module)(nil)
+}
+
 func TestCompositionModulesExposeContracts(t *testing.T) {
 	t.Parallel()
 
 	assertFieldType(t, reflect.TypeOf(composition.AuthModule{}), "TokenService", reflect.TypeOf((*identity.Authenticator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ContainerModule{}), "Service", reflect.TypeOf((*runtime.RuntimeFacade)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodel.PracticeQuery)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.TeacherModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
 }

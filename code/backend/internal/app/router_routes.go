@@ -21,14 +21,15 @@ type adminRouteDeps struct {
 }
 
 type userRouteDeps struct {
-	auditRecorder auditlog.Recorder
-	auditLogger   *zap.Logger
-	assessment    *composition.AssessmentModule
-	challenge     *composition.ChallengeModule
-	container     *composition.ContainerModule
-	contest       *composition.ContestModule
-	practice      *composition.PracticeModule
-	teacher       *composition.TeacherModule
+	auditRecorder     auditlog.Recorder
+	auditLogger       *zap.Logger
+	assessment        *composition.AssessmentModule
+	challenge         *composition.ChallengeModule
+	container         *composition.ContainerModule
+	contest           *composition.ContestModule
+	practice          *composition.PracticeModule
+	practiceReadmodel *composition.PracticeReadmodelModule
+	teacher           *composition.TeacherModule
 }
 
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
@@ -524,8 +525,8 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.container.Handler.ProxyInstance)
 
 	usersGroup := protected.Group("/users")
-	usersGroup.GET("/me/progress", deps.practice.Handler.GetProgress)
-	usersGroup.GET("/me/timeline", deps.practice.Handler.GetTimeline)
+	usersGroup.GET("/me/progress", deps.practiceReadmodel.Handler.GetProgress)
+	usersGroup.GET("/me/timeline", deps.practiceReadmodel.Handler.GetTimeline)
 	usersGroup.GET("/me/skill-profile", deps.assessment.Handler.GetMySkillProfile)
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
