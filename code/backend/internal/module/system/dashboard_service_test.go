@@ -17,6 +17,7 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/runtime"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -59,7 +60,7 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 	t.Helper()
 
 	return NewDashboardService(
-		runtimeapp.NewQueryService(runtime.NewRepository(db)),
+		runtimeapp.NewQueryService(runtimeinfrarepo.NewRepository(db)),
 		nil,
 		redis,
 		&config.Config{

@@ -1,4 +1,4 @@
-package runtime
+package infrastructure
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtime "ctf-platform/internal/module/runtime"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -21,13 +21,7 @@ type Repository struct {
 	db *gorm.DB
 }
 
-type TeacherInstanceFilter struct {
-	ClassName string
-	Keyword   string
-	StudentNo string
-}
-
-type UserVisibleInstanceRow struct {
+type userVisibleInstanceRow struct {
 	ID             int64     `gorm:"column:id"`
 	ChallengeID    int64     `gorm:"column:challenge_id"`
 	ChallengeTitle string    `gorm:"column:challenge_title"`
@@ -40,6 +34,23 @@ type UserVisibleInstanceRow struct {
 	ExtendCount    int       `gorm:"column:extend_count"`
 	MaxExtends     int       `gorm:"column:max_extends"`
 	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
+type teacherInstanceRow struct {
+	ID              int64     `gorm:"column:id"`
+	StudentID       int64     `gorm:"column:student_id"`
+	StudentName     string    `gorm:"column:student_name"`
+	StudentUsername string    `gorm:"column:student_username"`
+	StudentNo       *string   `gorm:"column:student_no"`
+	ClassName       string    `gorm:"column:class_name"`
+	ChallengeID     int64     `gorm:"column:challenge_id"`
+	ChallengeTitle  string    `gorm:"column:challenge_title"`
+	Status          string    `gorm:"column:status"`
+	AccessURL       string    `gorm:"column:access_url"`
+	ExpiresAt       time.Time `gorm:"column:expires_at"`
+	ExtendCount     int       `gorm:"column:extend_count"`
+	MaxExtends      int       `gorm:"column:max_extends"`
+	CreatedAt       time.Time `gorm:"column:created_at"`
 }
 
 func NewRepository(db *gorm.DB) *Repository {
@@ -249,8 +260,8 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 	return instances, err
 }
 
-func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error) {
-	items := make([]UserVisibleInstanceRow, 0)
+func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtime.UserVisibleInstanceRow, error) {
+	rows := make([]userVisibleInstanceRow, 0)
 	err := r.db.WithContext(ctx).
 		Table("instances AS inst").
 		Select(strings.Join([]string{
@@ -272,8 +283,29 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]Use
 		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
 		Order("inst.created_at DESC").
-		Scan(&items).Error
-	return items, err
+		Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]runtime.UserVisibleInstanceRow, len(rows))
+	for idx, row := range rows {
+		items[idx] = runtime.UserVisibleInstanceRow{
+			ID:             row.ID,
+			ChallengeID:    row.ChallengeID,
+			ChallengeTitle: row.ChallengeTitle,
+			Category:       row.Category,
+			Difficulty:     row.Difficulty,
+			FlagType:       row.FlagType,
+			Status:         row.Status,
+			AccessURL:      row.AccessURL,
+			ExpiresAt:      row.ExpiresAt,
+			ExtendCount:    row.ExtendCount,
+			MaxExtends:     row.MaxExtends,
+			CreatedAt:      row.CreatedAt,
+		}
+	}
+	return items, nil
 }
 
 func (r *Repository) FindExpired() ([]*model.Instance, error) {
@@ -284,8 +316,8 @@ func (r *Repository) FindExpired() ([]*model.Instance, error) {
 	return instances, err
 }
 
-func (r *Repository) ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]dto.TeacherInstanceItem, error) {
-	items := make([]dto.TeacherInstanceItem, 0)
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtime.TeacherInstanceFilter) ([]runtime.TeacherInstanceRow, error) {
+	rows := make([]teacherInstanceRow, 0)
 
 	query := r.db.WithContext(ctx).
 		Table("instances AS i").
@@ -321,8 +353,28 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter TeacherIns
 		query = query.Where("LOWER(u.username) LIKE ?", pattern)
 	}
 
-	if err := query.Order("i.created_at DESC").Scan(&items).Error; err != nil {
+	if err := query.Order("i.created_at DESC").Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("list teacher instances: %w", err)
+	}
+
+	items := make([]runtime.TeacherInstanceRow, len(rows))
+	for idx, row := range rows {
+		items[idx] = runtime.TeacherInstanceRow{
+			ID:              row.ID,
+			StudentID:       row.StudentID,
+			StudentName:     row.StudentName,
+			StudentUsername: row.StudentUsername,
+			StudentNo:       row.StudentNo,
+			ClassName:       row.ClassName,
+			ChallengeID:     row.ChallengeID,
+			ChallengeTitle:  row.ChallengeTitle,
+			Status:          row.Status,
+			AccessURL:       row.AccessURL,
+			ExpiresAt:       row.ExpiresAt,
+			ExtendCount:     row.ExtendCount,
+			MaxExtends:      row.MaxExtends,
+			CreatedAt:       row.CreatedAt,
+		}
 	}
 	return items, nil
 }

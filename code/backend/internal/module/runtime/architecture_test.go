@@ -35,6 +35,19 @@ func TestAPIHTTPDoesNotDependOnGORMOrRuntimeInfra(t *testing.T) {
 	}
 }
 
+func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("infrastructure", "*.go"))
+	if err != nil {
+		t.Fatalf("glob infrastructure files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+	}
+}
+
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
 	t.Helper()
 
