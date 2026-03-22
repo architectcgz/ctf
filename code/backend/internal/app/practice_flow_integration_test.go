@@ -754,7 +754,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		runtimeBaseService,
+		practiceModule.NewRuntimeInstanceServiceAdapter(runtimeBaseService),
 		nil,
 		nil,
 		cache,
