@@ -7,11 +7,13 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
 
 type ManagedContainer = runtimeinfra.ManagedContainer
 type ManagedContainerStat = runtimeinfra.ManagedContainerStat
+type ProxyTicketClaims = runtimeapp.ProxyTicketClaims
 
 type ProxyCookieConfig struct {
 	Secure   bool

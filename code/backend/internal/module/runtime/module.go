@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
@@ -12,7 +13,7 @@ import (
 type Module struct {
 	*Service
 	instanceService      instanceHTTPService
-	proxyTickets         *ProxyTicketService
+	proxyTickets         proxyTicketService
 	proxyBodyPreviewSize int
 }
 
@@ -25,7 +26,13 @@ type instanceHTTPService interface {
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
-func NewModule(service *Service, instanceService instanceHTTPService, proxyTickets *ProxyTicketService, proxyBodyPreviewSize int) *Module {
+type proxyTicketService interface {
+	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
+	ResolveTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
+	MaxAge() int
+}
+
+func NewModule(service *Service, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
 	return &Module{
 		Service:              service,
 		instanceService:      instanceService,
@@ -93,10 +100,10 @@ func (m *Module) ResolveProxyTicket(ctx context.Context, ticket string) (*ProxyT
 }
 
 func (m *Module) ProxyTicketMaxAge() int {
-	if m == nil || m.proxyTickets == nil || m.proxyTickets.cfg == nil {
+	if m == nil || m.proxyTickets == nil {
 		return 0
 	}
-	return int(m.proxyTickets.cfg.ProxyTicketTTL.Seconds())
+	return m.proxyTickets.MaxAge()
 }
 
 func (m *Module) ProxyBodyPreviewSize() int {

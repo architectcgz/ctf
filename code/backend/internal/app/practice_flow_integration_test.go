@@ -741,10 +741,11 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	runtimeBaseService := runtimeModule.NewService(instanceRepo, nil, &cfg.Container, logger)
 	runtimeInstanceService := runtimeapp.NewInstanceService(instanceRepo, runtimeBaseService, &cfg.Container, logger)
+	runtimeProxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeModule.NewModule(
 		runtimeBaseService,
 		runtimeInstanceService,
-		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
+		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 	practiceService := practiceModule.NewService(

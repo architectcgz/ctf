@@ -27,6 +27,7 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	repo := runtimeinfrarepo.NewRepository(db)
 	baseService := runtimeModule.NewService(repo, infra.Engine, &cfg.Container, log.Named("runtime_service"))
 	instanceService := runtimeapp.NewInstanceService(repo, baseService, &cfg.Container, log.Named("runtime_instance_service"))
+	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	cleaner := runtimeinfra.NewCleaner(baseService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"runtime_cleaner",
@@ -39,7 +40,7 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	service := runtimeModule.NewModule(
 		baseService,
 		instanceService,
-		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
+		proxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 

@@ -162,7 +162,7 @@ flowchart LR
   - `runtime.Module` 作为 facade，统一组合：
     - `runtimeBaseService` 的运行时编排能力
     - `runtimeInstanceService` 的 HTTP 用例能力
-    - 代理票据能力
+    - 代理票据应用服务
   - `assessmentService` 由路由层创建一次，同时复用于：
     - HTTP Handler 链路
     - 能力画像后台任务 `assessment.Cleaner`
@@ -449,7 +449,8 @@ ctf-platform/
 │   │   │   ├── contracts.go         # 模块对外 contract
 │   │   │   ├── domain/              # 运行时 ACL 与实例资源规则
 │   │   │   ├── infrastructure/
-│   │   │   │   └── repository.go    # GORM 持久化实现
+│   │   │   │   ├── repository.go    # GORM 持久化实现
+│   │   │   │   └── proxy_ticket_store.go # 代理票据 Redis 存储
 │   │   │   ├── module.go            # 组合 facade（编排 + HTTP 用例 + 代理票据）
 │   │   │   └── service.go           # 运行时拓扑编排 Service
 │   │   ├── runtimeinfra/
