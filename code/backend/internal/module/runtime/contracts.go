@@ -20,14 +20,6 @@ type ProxyCookieConfig struct {
 	SameSite http.SameSite
 }
 
-type RuntimeQuery interface {
-	CountRunning() (int64, error)
-}
-
-type RuntimeStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)
-}
-
 type RuntimeHTTPService interface {
 	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
 	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)

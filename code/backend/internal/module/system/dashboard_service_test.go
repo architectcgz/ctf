@@ -15,9 +15,9 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/runtime"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -33,10 +33,10 @@ func (s *stubDashboardRuntimeQuery) CountRunning() (int64, error) {
 }
 
 type stubDashboardRuntimeStatsProvider struct {
-	listManagedContainerStatsFn func(ctx context.Context) ([]runtime.ManagedContainerStat, error)
+	listManagedContainerStatsFn func(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error)
 }
 
-func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]runtime.ManagedContainerStat, error) {
+func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
 	if s.listManagedContainerStatsFn == nil {
 		return nil, nil
 	}
@@ -185,7 +185,7 @@ func TestDashboardServiceCheckAlertsReturnsCPUAndMemoryAlerts(t *testing.T) {
 }
 
 func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
-	var newDashboardService func(runtime.RuntimeQuery, runtime.RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+	var newDashboardService func(runtimeQuery, runtimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
 
 	service := newDashboardService(
 		&stubDashboardRuntimeQuery{
@@ -194,8 +194,8 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 			},
 		},
 		&stubDashboardRuntimeStatsProvider{
-			listManagedContainerStatsFn: func(ctx context.Context) ([]runtime.ManagedContainerStat, error) {
-				return []runtime.ManagedContainerStat{
+			listManagedContainerStatsFn: func(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
+				return []runtimeinfra.ManagedContainerStat{
 					{
 						ContainerID:   "runtime-1",
 						ContainerName: "runtime-web",
