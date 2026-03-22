@@ -11,10 +11,9 @@ import (
 )
 
 type RuntimeModule struct {
-	Handler    *runtimehttp.Handler
-	Query      runtimeModule.RuntimeQuery
-	Repository runtimeModule.InstanceRepository
-	Service    runtimeModule.RuntimeFacade
+	Handler *runtimehttp.Handler
+	Query   runtimeModule.RuntimeQuery
+	Service runtimeModule.RuntimeFacade
 
 	service *runtimeModule.Module
 }
@@ -37,18 +36,18 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 		cleaner.Stop,
 	))
 
-	service := runtimeModule.NewModule(
+	service := runtimeModule.NewModuleWithRepository(
 		baseService,
+		repo,
 		instanceService,
 		proxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 
 	return &RuntimeModule{
-		Query:      runtimeapp.NewQueryService(repo),
-		Repository: repo,
-		Service:    service,
-		service:    service,
+		Query:   runtimeapp.NewQueryService(repo),
+		Service: service,
+		service: service,
 	}
 }
 

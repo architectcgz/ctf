@@ -19,7 +19,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 		repo,
 		challenge.Repository,
 		challenge.ImageRepository,
-		runtime.Repository,
+		runtime.service,
 		runtime.Service,
 		scoreService,
 		assessment.Service,
