@@ -8,7 +8,7 @@ import (
 )
 
 type runtimeTopologyPlan struct {
-	Networks        []topologyCreateNetwork
+	Networks        []TopologyCreateNetwork
 	NodeNetworkKeys map[string][]string
 }
 
@@ -40,7 +40,7 @@ func buildRuntimeTopologyPlan(spec model.TopologySpec) *runtimeTopologyPlan {
 
 	policies := indexRuntimeConnectivityPolicies(spec.Policies)
 	plan := &runtimeTopologyPlan{
-		Networks:        make([]topologyCreateNetwork, 0, len(logicalNetworks)),
+		Networks:        make([]TopologyCreateNetwork, 0, len(logicalNetworks)),
 		NodeNetworkKeys: make(map[string][]string, len(spec.Nodes)),
 	}
 	addedNetworkKeys := make(map[string]struct{})
@@ -169,7 +169,7 @@ func orderedNodePair(left, right string, order map[string]int) (string, string) 
 
 func attachNetwork(plan *runtimeTopologyPlan, addedNetworkKeys map[string]struct{}, networkKey string, internal bool, nodeKeys ...string) {
 	if _, exists := addedNetworkKeys[networkKey]; !exists {
-		plan.Networks = append(plan.Networks, topologyCreateNetwork{
+		plan.Networks = append(plan.Networks, TopologyCreateNetwork{
 			Key:      networkKey,
 			Internal: internal,
 		})

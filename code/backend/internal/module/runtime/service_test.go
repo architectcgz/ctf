@@ -473,11 +473,11 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &TopologyCreateRequest{
-		Networks: []TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
+		Networks: []runtimeapp.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeapp.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},
@@ -624,12 +624,12 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &TopologyCreateRequest{
-		Networks: []TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
+		Networks: []runtimeapp.TopologyCreateNetwork{
 			{Key: "public"},
 			{Key: "backend", Internal: true},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeapp.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{"public", "backend"}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{"backend"}},
 		},
@@ -681,11 +681,11 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &TopologyCreateRequest{
-		Networks: []TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
+		Networks: []runtimeapp.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeapp.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},
@@ -738,11 +738,11 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &TopologyCreateRequest{
-		Networks: []TopologyCreateNetwork{
+	_, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
+		Networks: []runtimeapp.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeapp.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},

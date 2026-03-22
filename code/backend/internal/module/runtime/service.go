@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
@@ -30,34 +31,10 @@ type runtimeRepository interface {
 	ListAllocatedPorts() ([]int, error)
 }
 
-type TopologyCreateNode struct {
-	Key          string
-	Image        string
-	Env          map[string]string
-	ServicePort  int
-	IsEntryPoint bool
-	NetworkKeys  []string
-	Resources    *model.ResourceLimits
-}
-
-type TopologyCreateNetwork struct {
-	Key      string
-	Internal bool
-}
-
-type TopologyCreateRequest struct {
-	Networks         []TopologyCreateNetwork
-	Nodes            []TopologyCreateNode
-	Policies         []model.TopologyTrafficPolicy
-	ReservedHostPort int
-}
-
-type TopologyCreateResult struct {
-	PrimaryContainerID string
-	NetworkID          string
-	AccessURL          string
-	RuntimeDetails     model.InstanceRuntimeDetails
-}
+type topologyCreateNode = runtimeapp.TopologyCreateNode
+type topologyCreateNetwork = runtimeapp.TopologyCreateNetwork
+type topologyCreateRequest = runtimeapp.TopologyCreateRequest
+type topologyCreateResult = runtimeapp.TopologyCreateResult
 
 type createdTopologyNetwork struct {
 	key      string
@@ -128,12 +105,12 @@ func (s *Service) CreateContainer(ctx context.Context, imageName string, env map
 		return "", "", 0, 0, err
 	}
 
-	result, err := s.CreateTopology(ctx, &TopologyCreateRequest{
+	result, err := s.CreateTopology(ctx, &runtimeapp.TopologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
-		Networks: []TopologyCreateNetwork{
+		Networks: []runtimeapp.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeapp.TopologyCreateNode{
 			{
 				Key:          "default",
 				Image:        imageName,
@@ -226,7 +203,7 @@ func (s *Service) CleanupRuntimeWithContext(ctx context.Context, instance *model
 	return nil
 }
 
-func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error) {
+func (s *Service) CreateTopology(ctx context.Context, req *runtimeapp.TopologyCreateRequest) (*runtimeapp.TopologyCreateResult, error) {
 	if req == nil || len(req.Nodes) == 0 {
 		return nil, fmt.Errorf("topology nodes are required")
 	}
@@ -285,7 +262,7 @@ func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest
 			}
 			details.Containers = append(details.Containers, item)
 		}
-		return &TopologyCreateResult{
+		return &runtimeapp.TopologyCreateResult{
 			PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 			NetworkID:          details.Networks[0].NetworkID,
 			AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
@@ -386,7 +363,7 @@ func (s *Service) CreateTopology(ctx context.Context, req *TopologyCreateRequest
 		details.ACLRules = resolvedACLRules
 	}
 
-	return &TopologyCreateResult{
+	return &runtimeapp.TopologyCreateResult{
 		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 		NetworkID:          details.Networks[0].NetworkID,
 		AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
@@ -420,7 +397,7 @@ func (s *Service) RemoveContainerWithContext(ctx context.Context, containerID st
 	return nil
 }
 
-func (s *Service) resolveTopologyACLRules(ctx context.Context, req *TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
+func (s *Service) resolveTopologyACLRules(ctx context.Context, req *runtimeapp.TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
 	if s.engine == nil || req == nil || len(req.Policies) == 0 {
 		return nil, nil
 	}
@@ -638,14 +615,14 @@ func (s *Service) cleanupTopologyResources(containerIDs []string, networkIDs []s
 	}
 }
 
-func normalizedCreateNetworks(networks []TopologyCreateNetwork) []TopologyCreateNetwork {
+func normalizedCreateNetworks(networks []topologyCreateNetwork) []topologyCreateNetwork {
 	if len(networks) == 0 {
-		return []TopologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
+		return []topologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
 	}
 	return networks
 }
 
-func normalizedNodeNetworkKeys(keys []string, networks []TopologyCreateNetwork) []string {
+func normalizedNodeNetworkKeys(keys []string, networks []topologyCreateNetwork) []string {
 	if len(keys) > 0 {
 		return append([]string(nil), keys...)
 	}
