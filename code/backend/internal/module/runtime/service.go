@@ -17,10 +17,27 @@ import (
 )
 
 type Service struct {
-	repo   *Repository
+	repo   runtimeRepository
 	engine runtimeEngine
 	config *config.ContainerConfig
 	logger *zap.Logger
+}
+
+type runtimeRepository interface {
+	CreateWithContext(ctx context.Context, instance *model.Instance) error
+	FindByID(id int64) (*model.Instance, error)
+	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
+	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.Instance, error)
+	UpdateStatusWithContext(ctx context.Context, id int64, status string) error
+	UpdateStatusAndReleasePort(id int64, status string) error
+	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
+	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
+	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
+	AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
+	FindExpired() ([]*model.Instance, error)
+	ListActiveContainerIDs() ([]string, error)
+	ListAllocatedPorts() ([]int, error)
+	CountRunning() (int64, error)
 }
 
 type TopologyCreateNode struct {
@@ -87,7 +104,7 @@ type runtimeEngine interface {
 	ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error)
 }
 
-func NewService(repo *Repository, engine runtimeEngine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
+func NewService(repo runtimeRepository, engine runtimeEngine, cfg *config.ContainerConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -655,11 +672,28 @@ func (s *Service) ListTeacherInstances(ctx context.Context, requesterID int64, r
 	}
 
 	now := time.Now()
-	for idx := range items {
-		items[idx].RemainingTime = calculateRemainingTime(items[idx].ExpiresAt, now)
+	result := make([]dto.TeacherInstanceItem, len(items))
+	for idx, item := range items {
+		result[idx] = dto.TeacherInstanceItem{
+			ID:              item.ID,
+			StudentID:       item.StudentID,
+			StudentName:     item.StudentName,
+			StudentUsername: item.StudentUsername,
+			StudentNo:       item.StudentNo,
+			ClassName:       item.ClassName,
+			ChallengeID:     item.ChallengeID,
+			ChallengeTitle:  item.ChallengeTitle,
+			Status:          item.Status,
+			AccessURL:       item.AccessURL,
+			ExpiresAt:       item.ExpiresAt,
+			RemainingTime:   calculateRemainingTime(item.ExpiresAt, now),
+			ExtendCount:     item.ExtendCount,
+			MaxExtends:      item.MaxExtends,
+			CreatedAt:       item.CreatedAt,
+		}
 	}
 
-	return items, nil
+	return result, nil
 }
 
 func (s *Service) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {

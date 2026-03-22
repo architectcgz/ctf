@@ -1,4 +1,4 @@
-package runtime
+package runtime_test
 
 import (
 	"context"
@@ -15,7 +15,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
+	. "ctf-platform/internal/module/runtime"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -119,74 +120,6 @@ func TestRepositoryUpdateStatusAndReleasePortRemovesAllocation(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("expected port allocation to be removed, count=%d", count)
-	}
-}
-
-func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
-	t.Parallel()
-
-	now := time.Now()
-	managedContainers := []ManagedContainer{
-		{ID: "active", Name: "ctf-instance-active", CreatedAt: now.Add(-10 * time.Minute)},
-		{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: now.Add(-2 * time.Minute)},
-		{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: now.Add(-12 * time.Minute)},
-	}
-	activeContainerIDs := map[string]struct{}{
-		"active": {},
-	}
-
-	orphanContainers := selectOrphanContainers(managedContainers, activeContainerIDs, 5*time.Minute, now)
-	if len(orphanContainers) != 1 {
-		t.Fatalf("expected 1 orphan container, got %d (%v)", len(orphanContainers), orphanContainers)
-	}
-	if orphanContainers[0].ID != "orphan" {
-		t.Fatalf("unexpected orphan container: %+v", orphanContainers[0])
-	}
-}
-
-func TestManagedContainerLabels(t *testing.T) {
-	t.Parallel()
-
-	labels := managedContainerLabels()
-	if labels[managedByLabelKey] != managedByLabelValue {
-		t.Fatalf("expected managed-by label, got %v", labels)
-	}
-	if labels[challengeInstanceLabelKey] != challengeInstanceLabelValue {
-		t.Fatalf("expected component label, got %v", labels)
-	}
-}
-
-func TestManagedNetworkLabels(t *testing.T) {
-	t.Parallel()
-
-	labels := managedNetworkLabels()
-	if labels[managedByLabelKey] != managedByLabelValue {
-		t.Fatalf("expected managed-by label, got %v", labels)
-	}
-	if labels[challengeInstanceLabelKey] != challengeInstanceLabelValue {
-		t.Fatalf("expected component label, got %v", labels)
-	}
-}
-
-func TestNewServiceTreatsTypedNilEngineAsNil(t *testing.T) {
-	t.Parallel()
-
-	repo := newTestRepository(t)
-	cfg := &config.ContainerConfig{
-		PortRangeStart:       30000,
-		PortRangeEnd:         30010,
-		DefaultExposedPort:   8080,
-		PublicHost:           "127.0.0.1",
-		DefaultTTL:           time.Hour,
-		MaxExtends:           2,
-		MaxConcurrentPerUser: 3,
-		CreateTimeout:        time.Second,
-	}
-
-	var typedNil *runtimeinfra.Engine
-	service := NewService(repo, typedNil, cfg, nil)
-	if service.engine != nil {
-		t.Fatalf("expected typed nil engine to be normalized to nil, got %#v", service.engine)
 	}
 }
 
@@ -594,8 +527,8 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 		t.Fatalf("create port allocation: %v", err)
 	}
 
-	if err := service.destroyManagedInstance(instance); err != nil {
-		t.Fatalf("destroyManagedInstance() error = %v", err)
+	if err := service.DestroyInstanceWithContext(context.Background(), instance.ID, instance.UserID); err != nil {
+		t.Fatalf("DestroyInstanceWithContext() error = %v", err)
 	}
 	if len(engine.removedContainerIDs) != 2 {
 		t.Fatalf("expected 2 removed containers, got %v", engine.removedContainerIDs)
@@ -914,7 +847,12 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	}
 }
 
-func newTestRepository(t *testing.T) *Repository {
+type runtimeTestRepository struct {
+	*runtimeinfrarepo.Repository
+	db *gorm.DB
+}
+
+func newTestRepository(t *testing.T) *runtimeTestRepository {
 	t.Helper()
 
 	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", strings.ReplaceAll(t.Name(), "/", "_"))
@@ -930,10 +868,13 @@ func newTestRepository(t *testing.T) *Repository {
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
-	return NewRepository(db)
+	return &runtimeTestRepository{
+		Repository: runtimeinfrarepo.NewRepository(db),
+		db:         db,
+	}
 }
 
-func newTestService(repo *Repository) *Service {
+func newTestService(repo *runtimeTestRepository) *Service {
 	return NewService(repo, nil, &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,

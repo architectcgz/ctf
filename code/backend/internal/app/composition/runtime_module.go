@@ -6,6 +6,7 @@ import (
 	runtimeModule "ctf-platform/internal/module/runtime"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
 
@@ -23,7 +24,7 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	log := root.Logger()
 	db := root.DB()
 	cache := root.Cache()
-	repo := runtimeModule.NewRepository(db)
+	repo := runtimeinfrarepo.NewRepository(db)
 	baseService := runtimeModule.NewService(repo, infra.Engine, &cfg.Container, log.Named("runtime_service"))
 	cleaner := runtimeinfra.NewCleaner(baseService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(

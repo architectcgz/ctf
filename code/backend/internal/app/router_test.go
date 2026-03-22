@@ -21,6 +21,7 @@ import (
 	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
 	"ctf-platform/internal/module/runtime"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 )
 
@@ -85,7 +86,7 @@ func TestRuntimeModuleContractsCompile(t *testing.T) {
 	var _ runtime.RuntimeStatsProvider = (*runtime.Module)(nil)
 	var _ runtime.RuntimeFacade = (*runtime.Module)(nil)
 	var _ runtime.RuntimeHTTPService = (*runtime.Module)(nil)
-	var _ runtime.InstanceRepository = (*runtime.Repository)(nil)
+	var _ runtime.InstanceRepository = (*runtimeinfrarepo.Repository)(nil)
 	var _ runtime.RuntimeFacade = (*runtime.Service)(nil)
 }
 
