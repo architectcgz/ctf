@@ -1,5 +1,69 @@
 # CTF 项目 Codex 规范
 
+## 后端架构规范（强制）
+
+后端开发默认参考并遵守以下文档：
+
+1. `docs/architecture/01-backend-architecture-style-decision.md`
+2. `docs/architecture/02-backend-code-style-guide.md`
+
+如果改动涉及：
+
+- 模块拆分
+- 读写分离
+- composition 装配
+- backend Makefile / 校验命令
+- 跨模块 contracts
+- handler / service / repository 重构
+
+那么必须先阅读这两份文档，再开始实现。
+
+### 当前后端目标形态
+
+CTF 后端不是多服务单仓，但要吸收 `zhi-file-service-go` 的规范精神，固定采用：
+
+- `模块化单体`
+- `Clean-ish`
+- `DDD-lite`
+- `CQRS-lite`
+
+这里的“服务边界”在 CTF 中统一映射成“模块边界”，不是物理微服务边界。
+
+### 不允许的后端方向
+
+后端当前阶段不允许：
+
+- 把模块重新揉成全局 `internal/domain` / `internal/app` / `internal/infra` 大分层
+- 引入全局 CommandBus / QueryBus
+- 引入全局 Generic Repository
+- 为了抽象而把所有实现都套接口
+- 继续无边界扩写单个超大 `service.go`
+
+### 新增与重构模块的默认结构
+
+新增模块或较大重构时，优先采用：
+
+```text
+internal/module/<name>/
+  contracts.go
+  module.go
+  api/http/
+  application/
+  infrastructure/
+```
+
+旧平铺模块可以渐进迁移，但新提取的 readmodel / query 模块不应再回退到大平铺模式。
+
+### 后端评审硬约束
+
+Code review 默认检查：
+
+1. 业务规则是否被塞进 handler
+2. 事务边界是否散落在 HTTP 层
+3. 是否跨模块依赖了对方内部实现
+4. 查询聚合逻辑是否该抽成 readmodel 却仍留在命令模块
+5. cache key、TTL、外部依赖是否显式且集中
+
 ## 前端 UI 规范（强制）
 
 ### 去卡片化优先

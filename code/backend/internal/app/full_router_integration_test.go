@@ -175,6 +175,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildTeacherModule := buildTeacherModule
 	originalBuildContestModule := buildContestModule
 	originalBuildPracticeModule := buildPracticeModule
+	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
 		buildContainerModule = originalBuildContainerModule
 		buildSystemModule = originalBuildSystemModule
@@ -184,6 +185,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildTeacherModule = originalBuildTeacherModule
 		buildContestModule = originalBuildContestModule
 		buildPracticeModule = originalBuildPracticeModule
+		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
 	}()
 
 	buildContainerModule = func(root *composition.Root) (*composition.ContainerModule, error) {
@@ -242,6 +244,13 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "practice")
 		return originalBuildPracticeModule(root, challenge, container, assessment)
 	}
+	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
+		if root == nil {
+			t.Fatal("expected root for practice readmodel module builder")
+		}
+		calls = append(calls, "practice_readmodel")
+		return originalBuildPracticeReadmodelModule(root)
+	}
 
 	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -251,7 +260,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"container", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice"}
+	expectedCalls := []string{"container", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice", "practice_readmodel"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

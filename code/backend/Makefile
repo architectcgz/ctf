@@ -1,13 +1,14 @@
 APP_ENV ?= dev
 APP_NAME ?= ctf-api
 GO ?= go
+GOIMPORTS ?= goimports
 MIGRATE_VERSION ?= v4.18.3
 MIGRATE_TAGS ?= postgres
 MIGRATE ?= $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v4/cmd/migrate@$(MIGRATE_VERSION)
 MIGRATIONS_DIR ?= ./migrations
 MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:5432/ctf?sslmode=disable
 
-.PHONY: run build test fmt tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges import-challenge-packs
+.PHONY: run build test fmt imports check tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges import-challenge-packs
 
 run:
 	APP_ENV=$(APP_ENV) $(GO) run ./cmd/server
@@ -21,6 +22,15 @@ test:
 
 fmt:
 	$(GO) fmt ./...
+
+imports:
+	@command -v $(GOIMPORTS) >/dev/null 2>&1 || (echo "goimports not found; install with: go install golang.org/x/tools/cmd/goimports@latest" && exit 1)
+	$(GOIMPORTS) -w .
+
+check:
+	$(MAKE) fmt
+	$(MAKE) imports
+	$(MAKE) test
 
 tidy:
 	$(GO) mod tidy
