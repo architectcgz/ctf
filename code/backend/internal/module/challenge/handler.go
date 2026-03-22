@@ -3,8 +3,12 @@ package challenge
 import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -148,4 +152,53 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 	}
 
 	response.Success(c, detail)
+}
+
+// DownloadAttachment 下载导入题包中的附件文件。
+func (h *Handler) DownloadAttachment(c *gin.Context) {
+	relativePath := strings.TrimSpace(strings.TrimPrefix(c.Param("path"), "/"))
+	if relativePath == "" {
+		response.InvalidParams(c, "无效的附件路径")
+		return
+	}
+
+	cleanPath := filepath.ToSlash(filepath.Clean(relativePath))
+	if cleanPath == "." || strings.HasPrefix(cleanPath, "../") || strings.Contains(cleanPath, "/../") {
+		response.InvalidParams(c, "无效的附件路径")
+		return
+	}
+
+	baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
+	if baseDir == "" {
+		baseDir = "../../docs/challenges/packs"
+	}
+
+	baseAbs, err := filepath.Abs(baseDir)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	target := filepath.Clean(filepath.Join(baseAbs, filepath.FromSlash(cleanPath)))
+	prefix := baseAbs + string(os.PathSeparator)
+	if target != baseAbs && !strings.HasPrefix(target, prefix) {
+		response.InvalidParams(c, "无效的附件路径")
+		return
+	}
+
+	info, err := os.Stat(target)
+	if err != nil {
+		if os.IsNotExist(err) {
+			response.Error(c, errcode.ErrNotFound)
+			return
+		}
+		response.FromError(c, err)
+		return
+	}
+	if info.IsDir() {
+		response.Error(c, errcode.ErrNotFound)
+		return
+	}
+
+	c.FileAttachment(target, filepath.Base(target))
 }

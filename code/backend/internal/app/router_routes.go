@@ -463,6 +463,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.challenge.Handler.GetPublishedChallenge,
 	)
+	protected.GET("/challenges/attachments/*path", deps.challenge.Handler.DownloadAttachment)
 	protected.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetPublished)
 	protected.POST("/challenges/:id/instances",
 		audit(middleware.AuditOptions{
