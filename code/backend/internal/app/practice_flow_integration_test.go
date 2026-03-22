@@ -37,6 +37,7 @@ import (
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimeModule "ctf-platform/internal/module/runtime"
+	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	systemModule "ctf-platform/internal/module/system"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -759,7 +760,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelModule := practiceReadmodel.NewModule(practiceReadmodelService)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelModule)
-	runtimeHandler := runtimeModule.NewHandler(runtimeService, auditService, runtimeModule.ProxyCookieConfig{})
+	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditService, runtimeModule.ProxyCookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)

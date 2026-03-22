@@ -1,9 +1,9 @@
-package runtime
+package http
 
 import (
 	"bytes"
 	"io"
-	"net/http"
+	stdhttp "net/http"
 	"net/http/httputil"
 	"net/url"
 	"path"
@@ -16,24 +16,20 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtime "ctf-platform/internal/module/runtime"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
 
-type ProxyCookieConfig struct {
-	Secure   bool
-	SameSite http.SameSite
-}
-
 type Handler struct {
-	service       *Module
+	service       runtime.RuntimeHTTPService
 	auditRecorder auditlog.Recorder
-	cookieConfig  ProxyCookieConfig
+	cookieConfig  runtime.ProxyCookieConfig
 }
 
-func NewHandler(service *Module, auditRecorder auditlog.Recorder, cookieConfig ProxyCookieConfig) *Handler {
+func NewHandler(service runtime.RuntimeHTTPService, auditRecorder auditlog.Recorder, cookieConfig runtime.ProxyCookieConfig) *Handler {
 	return &Handler{
 		service:       service,
 		auditRecorder: auditRecorder,
@@ -88,7 +84,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 
-	ticket, _, err := h.service.proxyTickets.IssueTicket(c.Request.Context(), currentUser, instanceID)
+	ticket, err := h.service.IssueProxyTicket(c.Request.Context(), currentUser, instanceID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -130,7 +126,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 		return
 	}
 	if redirectURL != "" {
-		c.Redirect(http.StatusFound, redirectURL)
+		c.Redirect(stdhttp.StatusFound, redirectURL)
 		return
 	}
 
@@ -154,13 +150,13 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 	rawQuery := c.Request.URL.Query()
 	rawQuery.Del("ticket")
 
-	bodyPreview, bodyCaptured, bodyTruncated := captureProxyBodyPreview(c.Request, h.service.proxyBodyPreviewSize)
+	bodyPreview, bodyCaptured, bodyTruncated := captureProxyBodyPreview(c.Request, h.service.ProxyBodyPreviewSize())
 	shouldAudit := shouldAuditProxyRequest(c.Request.Method, joinedPath)
 	requestID := c.GetString("request_id")
 	username := claims.Username
 
 	proxy := httputil.NewSingleHostReverseProxy(parsedTarget)
-	proxy.Director = func(req *http.Request) {
+	proxy.Director = func(req *stdhttp.Request) {
 		req.URL.Scheme = parsedTarget.Scheme
 		req.URL.Host = parsedTarget.Host
 		req.URL.Path = joinedPath
@@ -170,15 +166,15 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 		req.Header.Del("Authorization")
 		req.Header.Del("Cookie")
 	}
-	proxy.ModifyResponse = func(resp *http.Response) error {
+	proxy.ModifyResponse = func(resp *stdhttp.Response) error {
 		if shouldAudit {
 			h.recordProxyAudit(c, claims, instanceID, username, requestID, joinedPath, resp.StatusCode, bodyPreview, bodyCaptured, bodyTruncated)
 		}
 		return nil
 	}
-	proxy.ErrorHandler = func(writer http.ResponseWriter, req *http.Request, proxyErr error) {
+	proxy.ErrorHandler = func(writer stdhttp.ResponseWriter, req *stdhttp.Request, proxyErr error) {
 		if shouldAudit {
-			h.recordProxyAudit(c, claims, instanceID, username, requestID, joinedPath, http.StatusBadGateway, bodyPreview, bodyCaptured, bodyTruncated)
+			h.recordProxyAudit(c, claims, instanceID, username, requestID, joinedPath, stdhttp.StatusBadGateway, bodyPreview, bodyCaptured, bodyTruncated)
 		}
 		response.FromError(c, errcode.ErrServiceUnavailable.WithCause(proxyErr))
 	}
@@ -242,13 +238,13 @@ func buildProxyAccessURL(instanceID int64, ticket string) string {
 	return "/api/v1/instances/" + strconv.FormatInt(instanceID, 10) + "/proxy/?ticket=" + url.QueryEscape(ticket)
 }
 
-func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTicketClaims, string, error) {
-	if h.service == nil || h.service.proxyTickets == nil {
+func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime.ProxyTicketClaims, string, error) {
+	if h.service == nil {
 		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
 	}
 
 	if ticket := strings.TrimSpace(c.Query("ticket")); ticket != "" {
-		claims, err := h.service.proxyTickets.ResolveTicket(c.Request.Context(), ticket)
+		claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticket)
 		if err != nil {
 			return nil, "", err
 		}
@@ -256,7 +252,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTi
 			return nil, "", errcode.ErrForbidden
 		}
 
-		setProxyAccessCookie(c, ticket, instanceID, h.service.proxyTicketMaxAge(), h.cookieConfig)
+		setProxyAccessCookie(c, ticket, instanceID, h.service.ProxyTicketMaxAge(), h.cookieConfig)
 		return claims, sanitizedProxyRedirectURL(c), nil
 	}
 
@@ -264,7 +260,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTi
 	if err != nil {
 		return nil, "", errcode.ErrProxyTicketInvalid
 	}
-	claims, err := h.service.proxyTickets.ResolveTicket(c.Request.Context(), ticketCookie)
+	claims, err := h.service.ResolveProxyTicket(c.Request.Context(), ticketCookie)
 	if err != nil {
 		return nil, "", err
 	}
@@ -274,8 +270,8 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTi
 	return claims, "", nil
 }
 
-func setProxyAccessCookie(c *gin.Context, ticket string, instanceID int64, maxAge int, cfg ProxyCookieConfig) {
-	http.SetCookie(c.Writer, &http.Cookie{
+func setProxyAccessCookie(c *gin.Context, ticket string, instanceID int64, maxAge int, cfg runtime.ProxyCookieConfig) {
+	stdhttp.SetCookie(c.Writer, &stdhttp.Cookie{
 		Name:     proxyAccessCookieName,
 		Value:    ticket,
 		Path:     "/api/v1/instances/" + strconv.FormatInt(instanceID, 10) + "/proxy",
@@ -313,7 +309,7 @@ func joinProxyPath(basePath, proxyPath string) string {
 	return path.Clean(strings.TrimRight(basePath, "/") + "/" + strings.TrimLeft(proxyPath, "/"))
 }
 
-func captureProxyBodyPreview(req *http.Request, limit int) (string, bool, bool) {
+func captureProxyBodyPreview(req *stdhttp.Request, limit int) (string, bool, bool) {
 	if req == nil || req.Body == nil || limit <= 0 {
 		return "", false, false
 	}
@@ -339,7 +335,7 @@ func isTextualContentType(contentType string) bool {
 }
 
 func shouldAuditProxyRequest(method, requestPath string) bool {
-	if method != http.MethodGet && method != http.MethodHead {
+	if method != stdhttp.MethodGet && method != stdhttp.MethodHead {
 		return true
 	}
 
@@ -354,7 +350,7 @@ func shouldAuditProxyRequest(method, requestPath string) bool {
 
 func (h *Handler) recordProxyAudit(
 	c *gin.Context,
-	claims *ProxyTicketClaims,
+	claims *runtime.ProxyTicketClaims,
 	instanceID int64,
 	username string,
 	requestID string,
@@ -398,11 +394,11 @@ func (h *Handler) recordProxyAudit(
 
 func proxyAuditAction(method string) string {
 	switch strings.ToUpper(strings.TrimSpace(method)) {
-	case http.MethodPost:
+	case stdhttp.MethodPost:
 		return model.AuditActionSubmit
-	case http.MethodPut, http.MethodPatch:
+	case stdhttp.MethodPut, stdhttp.MethodPatch:
 		return model.AuditActionUpdate
-	case http.MethodDelete:
+	case stdhttp.MethodDelete:
 		return model.AuditActionDelete
 	default:
 		return model.AuditActionRead
@@ -413,7 +409,7 @@ type proxyResponseWriter struct {
 	gin.ResponseWriter
 }
 
-func newProxyResponseWriter(writer gin.ResponseWriter) http.ResponseWriter {
+func newProxyResponseWriter(writer gin.ResponseWriter) stdhttp.ResponseWriter {
 	return proxyResponseWriter{ResponseWriter: writer}
 }
 

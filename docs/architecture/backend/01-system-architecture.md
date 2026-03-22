@@ -438,9 +438,12 @@ ctf-platform/
 │   │   │   ├── service.go
 │   │   │   └── repository.go
 │   │   ├── runtime/
-│   │   │   ├── handler.go           # 实例访问与运行时 API
+│   │   │   ├── api/http/handler.go  # 实例访问与运行时 HTTP API
+│   │   │   ├── application/         # Query / UseCase 入口（分层迁移中）
+│   │   │   ├── contracts.go         # 模块对外 contract
+│   │   │   ├── module.go            # 模块 facade
 │   │   │   ├── service.go           # 实例运行时编排 Service
-│   │   │   └── repository.go
+│   │   │   └── repository.go        # 旧 persistence，后续继续内聚到 infrastructure
 │   │   ├── runtimeinfra/
 │   │   │   ├── engine.go            # Docker SDK 封装层
 │   │   │   ├── cleaner.go           # 运行时清理任务
