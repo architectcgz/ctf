@@ -15,17 +15,18 @@ const props = defineProps<{
 
 const solveCount = computed(() => props.timeline.filter((item) => item.type === 'solve').length)
 const submitCount = computed(() => props.timeline.filter((item) => item.type === 'submit').length)
-const instanceCount = computed(() =>
-  props.timeline.filter(
-    (item) =>
-      item.type === 'instance' ||
-      item.type === 'instance_access' ||
-      item.type === 'instance_proxy_request' ||
-      item.type === 'instance_extend' ||
-      (item.meta?.raw_type as string | undefined) === 'instance_access' ||
-      (item.meta?.raw_type as string | undefined) === 'instance_proxy_request' ||
-      (item.meta?.raw_type as string | undefined) === 'instance_extend',
-  ).length,
+const instanceCount = computed(
+  () =>
+    props.timeline.filter(
+      (item) =>
+        item.type === 'instance' ||
+        item.type === 'instance_access' ||
+        item.type === 'instance_proxy_request' ||
+        item.type === 'instance_extend' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_access' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_proxy_request' ||
+        (item.meta?.raw_type as string | undefined) === 'instance_extend'
+    ).length
 )
 const groupedTimeline = computed(() => {
   const groups = new Map<string, TimelineEvent[]>()
@@ -35,78 +36,69 @@ const groupedTimeline = computed(() => {
   })
   return Array.from(groups.entries()).map(([date, events]) => ({ date, events }))
 })
-
-function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
-  if (tone === 'success') {
-    return 'border-color: rgba(63,185,80,0.18); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(63,185,80,0.14), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
-  }
-
-  if (tone === 'warning') {
-    return 'border-color: rgba(210,153,34,0.18); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(210,153,34,0.13), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
-  }
-
-  return 'border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background: linear-gradient(180deg, rgba(255,255,255,0.018), rgba(255,255,255,0)), radial-gradient(circle at top left, rgba(34,211,238,0.14), transparent 48%), color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));'
-}
 </script>
 
 <template>
   <div class="space-y-6">
-    <section class="grid gap-4 md:grid-cols-3">
-      <AppCard
-        variant="metric"
-        accent="success"
-        eyebrow="成功解题"
-        :title="String(solveCount)"
-        :style="statCardStyle('success')"
-      >
-        <template #header>
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/18 bg-emerald-500/12 text-emerald-300">
-            <CircleCheckBig class="h-5 w-5" />
-          </div>
-        </template>
-        <div class="text-sm leading-6 text-text-secondary">近期成功提交记录</div>
-      </AppCard>
+    <AppCard
+      variant="hero"
+      accent="primary"
+      eyebrow="Training Timeline"
+      title="训练节奏总览"
+      subtitle="把成功解题、提交动作和实例操作放在同一视图里，更容易看清最近一段训练是否顺畅。"
+    >
+      <div class="grid gap-4 md:grid-cols-3">
+        <AppCard variant="metric" accent="success" eyebrow="成功解题" :title="String(solveCount)">
+          <template #header>
+            <div class="timeline-stat-icon timeline-stat-icon--success">
+              <CircleCheckBig class="h-5 w-5" />
+            </div>
+          </template>
+          <div class="text-sm leading-6 text-text-secondary">近期成功提交记录</div>
+        </AppCard>
 
-      <AppCard
-        variant="metric"
-        accent="warning"
-        eyebrow="提交次数"
-        :title="String(submitCount)"
-        :style="statCardStyle('warning')"
-      >
-        <template #header>
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/18 bg-amber-500/12 text-amber-300">
-            <Send class="h-5 w-5" />
-          </div>
-        </template>
-        <div class="text-sm leading-6 text-text-secondary">近期 Flag 提交动作</div>
-      </AppCard>
+        <AppCard variant="metric" accent="warning" eyebrow="提交次数" :title="String(submitCount)">
+          <template #header>
+            <div class="timeline-stat-icon timeline-stat-icon--warning">
+              <Send class="h-5 w-5" />
+            </div>
+          </template>
+          <div class="text-sm leading-6 text-text-secondary">近期 Flag 提交动作</div>
+        </AppCard>
 
-      <AppCard
-        variant="metric"
-        accent="primary"
-        eyebrow="实例操作"
-        :title="String(instanceCount)"
-        :style="statCardStyle('primary')"
-      >
-        <template #header>
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/18 bg-primary/12 text-primary">
-            <Play class="h-5 w-5" />
-          </div>
-        </template>
-        <div class="text-sm leading-6 text-text-secondary">启动、销毁等实例相关动作</div>
-      </AppCard>
-    </section>
+        <AppCard
+          variant="metric"
+          accent="primary"
+          eyebrow="实例操作"
+          :title="String(instanceCount)"
+        >
+          <template #header>
+            <div class="timeline-stat-icon timeline-stat-icon--primary">
+              <Play class="h-5 w-5" />
+            </div>
+          </template>
+          <div class="text-sm leading-6 text-text-secondary">启动、销毁等实例相关动作</div>
+        </AppCard>
+      </div>
+    </AppCard>
 
     <section class="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-      <SectionCard title="训练时间线" subtitle="按时间顺序还原最近训练过程，帮助你看清最近的训练节奏。">
-        <div v-if="groupedTimeline.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary">
+      <SectionCard
+        title="训练时间线"
+        subtitle="按时间顺序还原最近训练过程，帮助你看清最近的训练节奏。"
+      >
+        <div
+          v-if="groupedTimeline.length === 0"
+          class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary"
+        >
           当前还没有训练动态。
         </div>
 
         <div v-else class="space-y-6">
           <section v-for="group in groupedTimeline" :key="group.date" class="space-y-4">
-            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">{{ group.date }}</div>
+            <div class="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
+              {{ group.date }}
+            </div>
             <div class="space-y-4">
               <AppCard
                 v-for="event in group.events"
@@ -117,13 +109,19 @@ function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
                 <div class="grid gap-3 md:grid-cols-[auto_1fr]">
                   <div class="flex items-start gap-3">
                     <div class="mt-1 h-3 w-3 rounded-full bg-primary" />
-                    <div class="text-sm font-medium text-text-primary">{{ formatTime(event.created_at) }}</div>
+                    <div class="text-sm font-medium text-text-primary">
+                      {{ formatTime(event.created_at) }}
+                    </div>
                   </div>
                   <div class="space-y-3">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div class="text-base font-semibold text-text-primary">{{ event.title }}</div>
-                        <div class="mt-1 text-sm text-text-secondary">{{ timelineSummary(event) }}</div>
+                        <div class="text-base font-semibold text-text-primary">
+                          {{ event.title }}
+                        </div>
+                        <div class="mt-1 text-sm text-text-secondary">
+                          {{ timelineSummary(event) }}
+                        </div>
                       </div>
                       <span
                         class="rounded-full border px-2.5 py-1 text-xs font-medium"
@@ -132,7 +130,9 @@ function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
                         {{ timelineTypeLabel(event) }}
                       </span>
                     </div>
-                    <div class="text-xs uppercase tracking-[0.16em] text-text-muted">记录时间：{{ formatDate(event.created_at) }}</div>
+                    <div class="text-xs uppercase tracking-[0.16em] text-text-muted">
+                      记录时间：{{ formatDate(event.created_at) }}
+                    </div>
                   </div>
                 </div>
               </AppCard>
@@ -146,25 +146,28 @@ function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
           <div class="space-y-3">
             <AppCard variant="action" accent="success">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <CircleCheckBig class="h-4 w-4 text-emerald-300" />
+                <CircleCheckBig class="h-4 w-4 text-[var(--color-success)]" />
                 成功信号
               </div>
               <div class="mt-2 text-sm leading-6 text-text-secondary">
-                最近 {{ solveCount }} 次成功解题记录。若数量偏低，建议回到“训练建议”页选更适合当前阶段的题目。
+                最近
+                {{ solveCount }}
+                次成功解题记录。若数量偏低，建议回到“训练建议”页选更适合当前阶段的题目。
               </div>
             </AppCard>
             <AppCard variant="action" accent="warning">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <Send class="h-4 w-4 text-amber-300" />
+                <Send class="h-4 w-4 text-[var(--color-warning)]" />
                 提交密度
               </div>
               <div class="mt-2 text-sm leading-6 text-text-secondary">
-                最近 {{ submitCount }} 次提交动作。若提交多但成功少，说明方向可能跑偏，需要回看能力画像。
+                最近
+                {{ submitCount }} 次提交动作。若提交多但成功少，说明方向可能跑偏，需要回看能力画像。
               </div>
             </AppCard>
             <AppCard variant="action" accent="primary">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <Play class="h-4 w-4 text-sky-300" />
+                <Play class="h-4 w-4 text-primary" />
                 实例节奏
               </div>
               <div class="mt-2 text-sm leading-6 text-text-secondary">
@@ -187,3 +190,34 @@ function statCardStyle(tone: 'success' | 'warning' | 'primary'): string {
     </section>
   </div>
 </template>
+
+<style scoped>
+.timeline-stat-icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+}
+
+.timeline-stat-icon--success {
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 18%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-surface));
+}
+
+.timeline-stat-icon--warning {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 18%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
+}
+
+.timeline-stat-icon--primary {
+  color: var(--color-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
+}
+</style>

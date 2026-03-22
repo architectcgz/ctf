@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth'
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
 const routeState = {
+  params: {} as Record<string, string>,
   query: {} as Record<string, string>,
 }
 
@@ -32,12 +33,28 @@ vi.mock('vue-router', async () => {
 
 vi.mock('@/api/assessment', () => assessmentApiMocks)
 
+function mountDashboard() {
+  return mount(DashboardView, {
+    global: {
+      stubs: {
+        RouterLink: {
+          template: '<a><slot /></a>',
+        },
+        RadarChart: {
+          template: '<div data-test="radar-chart">Radar</div>',
+        },
+      },
+    },
+  })
+}
+
 describe('DashboardView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
     replaceMock.mockReset()
+    routeState.params = {}
     routeState.query = {}
 
     assessmentApiMocks.getMyProgress.mockReset()
@@ -121,15 +138,15 @@ describe('DashboardView', () => {
       class_name: 'Class A',
     }, 'token')
 
-    const wrapper = mount(DashboardView)
+    const wrapper = mountDashboard()
 
     await flushPromises()
 
     expect(wrapper.text()).toContain('alice 的训练仪表盘')
-    expect(wrapper.text()).toContain('为 alice 定制的训练概览')
+    expect(wrapper.text()).toContain('alice 的极简训练面板')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
-    expect(wrapper.text()).toContain('优先训练队列')
+    expect(wrapper.text()).toContain('推荐训练队列')
     expect(wrapper.text()).toContain('查看题目详情')
     expect(wrapper.text()).toContain('访问攻击目标')
     expect(wrapper.text()).toContain('解锁第 1 级提示')
@@ -146,7 +163,7 @@ describe('DashboardView', () => {
       class_name: 'Class A',
     }, 'token')
 
-    const wrapper = mount(DashboardView)
+    const wrapper = mountDashboard()
 
     await flushPromises()
 
@@ -154,6 +171,26 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('补短板计划')
     expect(wrapper.text()).toContain('crypto-lab')
     expect(wrapper.text()).toContain('优先修复的能力维度')
+  })
+
+  it('应该根据路由参数展示第二套风格', async () => {
+    routeState.params = { variant: '2' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth({
+      id: 'student-1',
+      username: 'alice',
+      role: 'student',
+      class_name: 'Class A',
+    }, 'token')
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Clean SaaS')
+    expect(wrapper.text()).toContain('alice 的极简训练面板')
+    expect(wrapper.text()).toContain('推荐训练队列')
   })
 
   it('应该把教师用户重定向到教师首页', async () => {
@@ -165,7 +202,7 @@ describe('DashboardView', () => {
       class_name: 'Class A',
     }, 'token')
 
-    mount(DashboardView)
+    mountDashboard()
     await flushPromises()
 
     expect(replaceMock).toHaveBeenCalledWith({ name: 'TeacherDashboard' })

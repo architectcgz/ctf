@@ -28,5 +28,5 @@ type ImageQuery struct {
 	Name   string `form:"name"`
 	Status string `form:"status"`
 	Page   int    `form:"page" binding:"omitempty,min=1"`
-	Size   int    `form:"size" binding:"omitempty,min=1,max=100"`
+	Size   int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 }

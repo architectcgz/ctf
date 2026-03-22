@@ -22,6 +22,7 @@
     "echarts": "^6.0.0",
     "element-plus": "^2.11.4",
     "lucide-vue-next": "^0.575.0",
+    "marked": "^15.0.12",
     "nprogress": "^0.2.0",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.2.1",

@@ -36,10 +36,10 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-      <div class="rounded-[30px] border border-cyan-500/20 bg-[linear-gradient(145deg,rgba(8,47,73,0.82),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+      <div class="border-b border-cyan-500/25 bg-[linear-gradient(145deg,rgba(8,47,73,0.35),rgba(15,23,42,0.55))] pb-6">
         <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">
           <span>Student Workspace</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">
+          <span class="border-l border-white/20 px-2 py-1">
             {{ className || '自由训练' }}
           </span>
         </div>
@@ -49,17 +49,17 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
         </p>
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+          <div class="border-l border-white/20 px-4 py-4">
             <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">当前排名</div>
             <div class="mt-2 text-2xl font-semibold text-white">#{{ progress.rank ?? '-' }}</div>
             <div class="mt-2 text-sm text-cyan-50/70">综合全站训练表现计算</div>
           </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+          <div class="border-l border-white/20 px-4 py-4">
             <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">完成率</div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ completionRate }}%</div>
             <div class="mt-2 text-sm text-cyan-50/70">按当前题量估算的覆盖程度</div>
           </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+          <div class="border-l border-white/20 px-4 py-4">
             <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">待加强维度</div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ weakDimensions[0] || '暂无明显短板' }}</div>
             <div class="mt-2 text-sm text-cyan-50/70">建议从左侧“训练建议”进入细看</div>
@@ -100,7 +100,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
 
     <section class="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
       <SectionCard title="优先训练队列" subtitle="主页保留最值得立刻动手的题目，完整列表请从左侧“训练建议”进入。">
-        <div v-if="quickRecommendations.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-text-secondary">
+        <div v-if="quickRecommendations.length === 0" class="border border-dashed border-border px-4 py-10 text-center text-sm text-text-secondary">
           当前没有推荐题目，直接去挑战列表挑一道新题即可。
         </div>
 
@@ -185,7 +185,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
         </SectionCard>
 
         <SectionCard title="近期速览" subtitle="只保留最近三条关键动作。">
-          <div v-if="recentTimeline.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-text-secondary">
+          <div v-if="recentTimeline.length === 0" class="border border-dashed border-border px-4 py-10 text-center text-sm text-text-secondary">
             当前还没有训练动态。
           </div>
 

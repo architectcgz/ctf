@@ -1,0 +1,7 @@
+bin
+storage
+tmp
+.git
+.gitignore
+*.log
+docker-compose.dev.yml

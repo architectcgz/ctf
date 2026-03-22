@@ -207,8 +207,10 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { marked } from 'marked'
 import { useRoute, useRouter } from 'vue-router'
 import {
+  downloadAttachment as downloadChallengeAttachment,
   getChallengeDetail,
   getChallengeWriteup,
   submitFlag,
@@ -254,7 +256,12 @@ const {
 } = useChallengeInstance(challengeId)
 
 const sanitizedDescription = computed(() => {
-  return challenge.value ? sanitizeHtml(challenge.value.description) : ''
+  if (!challenge.value) return ''
+  const html = marked.parse(challenge.value.description, {
+    gfm: true,
+    breaks: true,
+  })
+  return sanitizeHtml(typeof html === 'string' ? html : challenge.value.description)
 })
 
 const sanitizedWriteup = computed(() => {
@@ -339,9 +346,31 @@ async function unlockHintHandler(level: number) {
   }
 }
 
-function downloadAttachment() {
-  if (challenge.value?.attachment_url) {
-    window.open(challenge.value.attachment_url, '_blank')
+async function downloadAttachment() {
+  if (!challenge.value?.attachment_url) return
+  const attachmentURL = challenge.value.attachment_url
+  try {
+    const parsed = new URL(attachmentURL, window.location.origin)
+    if (parsed.origin !== window.location.origin) {
+      window.open(attachmentURL, '_blank', 'noopener')
+      return
+    }
+  } catch {
+    // keep axios fallback for relative urls
+  }
+
+  try {
+    const { blob, filename } = await downloadChallengeAttachment(attachmentURL)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } catch {
+    toast.error('下载附件失败')
   }
 }
 

@@ -758,7 +758,7 @@ export async function getUsers(params?: UserListParams): Promise<PageResult<Admi
     url: '/admin/users',
     params: {
       page: params?.page,
-      size: params?.page_size,
+      page_size: params?.page_size,
       keyword: params?.keyword,
       student_no: params?.student_no,
       teacher_no: params?.teacher_no,
@@ -1135,7 +1135,7 @@ export async function getContests(
     url: '/admin/contests',
     params: {
       page: params?.page,
-      size: params?.page_size,
+      page_size: params?.page_size,
       status: serializeContestStatus(params?.status),
     },
   })

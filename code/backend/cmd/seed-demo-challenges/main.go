@@ -57,7 +57,7 @@ func main() {
 		env = "dev"
 	}
 	if strings.TrimSpace(os.Getenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET")) == "" {
-		if err := os.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "dev-integration-secret"); err != nil {
+		if err := os.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "dev-integration-secret-123456789"); err != nil {
 			panic(fmt.Errorf("set default CTF_CONTAINER_FLAG_GLOBAL_SECRET: %w", err))
 		}
 	}

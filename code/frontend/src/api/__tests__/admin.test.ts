@@ -72,7 +72,7 @@ describe('admin contest api contract', () => {
       url: '/admin/contests',
       params: {
         page: 2,
-        size: 5,
+        page_size: 5,
         status: 'registration',
       },
     })
@@ -498,7 +498,7 @@ describe('admin contest api contract', () => {
       url: '/admin/users',
       params: {
         page: 1,
-        size: 20,
+        page_size: 20,
         keyword: 'alice',
         student_no: '20240001',
         teacher_no: 'T-1001',
@@ -576,12 +576,12 @@ describe('admin contest api contract', () => {
       page_size: 20,
     })
 
-    const result = await getChallenges({ page: 1, size: 20 })
+    const result = await getChallenges({ page: 1, page_size: 20 })
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
       url: '/admin/challenges',
-      params: { page: 1, size: 20 },
+      params: { page: 1, page_size: 20 },
     })
     expect(result.list[0]).toEqual({
       id: '11',
@@ -742,12 +742,12 @@ describe('admin contest api contract', () => {
       page_size: 20,
     })
 
-    const result = await getImages({ page: 1, size: 20 })
+    const result = await getImages({ page: 1, page_size: 20 })
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
       url: '/admin/images',
-      params: { page: 1, size: 20 },
+      params: { page: 1, page_size: 20 },
     })
     expect(result.list[0]).toEqual({
       id: '5',

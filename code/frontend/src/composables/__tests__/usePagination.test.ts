@@ -76,4 +76,19 @@ describe('usePagination', () => {
     expect(error.value).toBe(expectedError)
     expect(loading.value).toBe(false)
   })
+
+  it('应该在响应缺少合法 page_size 时报错', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      list: [],
+      total: 3,
+      page: 1,
+      page_size: 0,
+    })
+
+    const { refresh, error } = usePagination(mockFetch)
+    await refresh()
+
+    expect(error.value).toBeInstanceOf(Error)
+    expect((error.value as Error).message).toContain('page_size')
+  })
 })

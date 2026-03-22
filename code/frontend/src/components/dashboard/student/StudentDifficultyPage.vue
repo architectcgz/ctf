@@ -34,16 +34,19 @@ const orderedStats = computed(() =>
     .map((item) => ({
       ...item,
       rate: progressRate(item.total, item.solved),
-    })),
+    }))
 )
 
-const nextFocus = computed(() =>
-  [...orderedStats.value]
-    .filter((item) => item.total > 0)
-    .sort((left, right) => left.rate - right.rate)[0] || null,
+const nextFocus = computed(
+  () =>
+    [...orderedStats.value]
+      .filter((item) => item.total > 0)
+      .sort((left, right) => left.rate - right.rate)[0] || null
 )
 
-function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warning' | 'danger' | 'violet' {
+function accentForDifficulty(
+  difficulty: string
+): 'success' | 'primary' | 'warning' | 'danger' | 'violet' {
   if (difficulty === 'beginner') return 'success'
   if (difficulty === 'easy') return 'primary'
   if (difficulty === 'medium') return 'warning'
@@ -54,25 +57,43 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
 
 <template>
   <div class="space-y-6">
-    <section class="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
-      <AppCard
-        v-for="item in orderedStats"
-        :key="item.difficulty"
-        variant="metric"
-        :accent="accentForDifficulty(item.difficulty)"
-        :eyebrow="difficultyLabel(item.difficulty)"
-        :title="`${item.rate}%`"
-        :subtitle="`${item.solved} / ${item.total}`"
-      >
-        <div class="h-2.5 rounded-full bg-black/20">
-          <div class="h-2.5 rounded-full" :class="barMap[item.difficulty]" :style="{ width: `${item.rate}%` }" />
-        </div>
-      </AppCard>
-    </section>
+    <AppCard
+      variant="hero"
+      accent="warning"
+      eyebrow="Difficulty Ladder"
+      title="难度层级总览"
+      subtitle="观察不同难度的覆盖情况，判断训练是否长期停留在舒适区，并给出下一阶段更适合推进的台阶。"
+    >
+      <div class="grid gap-4 lg:grid-cols-2 xl:grid-cols-5">
+        <AppCard
+          v-for="item in orderedStats"
+          :key="item.difficulty"
+          variant="metric"
+          :accent="accentForDifficulty(item.difficulty)"
+          :eyebrow="difficultyLabel(item.difficulty)"
+          :title="`${item.rate}%`"
+          :subtitle="`${item.solved} / ${item.total}`"
+        >
+          <div class="difficulty-progress-track h-2.5 rounded-full">
+            <div
+              class="h-2.5 rounded-full"
+              :class="barMap[item.difficulty]"
+              :style="{ width: `${item.rate}%` }"
+            />
+          </div>
+        </AppCard>
+      </div>
+    </AppCard>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <SectionCard title="难度层级视图" subtitle="观察不同难度的覆盖情况，判断训练是否长期停留在舒适区。">
-        <div v-if="orderedStats.length === 0" class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary">
+      <SectionCard
+        title="难度层级视图"
+        subtitle="观察不同难度的覆盖情况，判断训练是否长期停留在舒适区。"
+      >
+        <div
+          v-if="orderedStats.length === 0"
+          class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary"
+        >
           暂无难度统计数据。
         </div>
 
@@ -85,16 +106,24 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
           >
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div class="text-sm font-medium text-text-primary">{{ difficultyLabel(item.difficulty) }}</div>
-                <div class="mt-2 text-sm text-text-secondary">当前完成 {{ item.solved }} 题，共 {{ item.total }} 题</div>
+                <div class="text-sm font-medium text-text-primary">
+                  {{ difficultyLabel(item.difficulty) }}
+                </div>
+                <div class="mt-2 text-sm text-text-secondary">
+                  当前完成 {{ item.solved }} 题，共 {{ item.total }} 题
+                </div>
               </div>
               <div class="text-right">
                 <div class="text-2xl font-semibold text-text-primary">{{ item.rate }}%</div>
                 <div class="mt-1 text-xs uppercase tracking-[0.14em] text-text-muted">覆盖比例</div>
               </div>
             </div>
-            <div class="mt-4 h-3 rounded-full bg-[var(--color-bg-base)]">
-              <div class="h-3 rounded-full" :class="barMap[item.difficulty]" :style="{ width: `${item.rate}%` }" />
+            <div class="difficulty-progress-track mt-4 h-3 rounded-full">
+              <div
+                class="h-3 rounded-full"
+                :class="barMap[item.difficulty]"
+                :style="{ width: `${item.rate}%` }"
+              />
             </div>
           </AppCard>
         </div>
@@ -104,10 +133,12 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
         <SectionCard title="下一阶段建议" subtitle="根据当前难度覆盖情况给出训练方向。">
           <AppCard variant="action" accent="warning">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-              <Flame class="h-4 w-4 text-amber-300" />
+              <Flame class="h-4 w-4 text-[var(--color-warning)]" />
               建议优先处理
             </div>
-            <div class="mt-3 text-2xl font-semibold text-text-primary">{{ nextFocus ? difficultyLabel(nextFocus.difficulty) : '暂无数据' }}</div>
+            <div class="mt-3 text-2xl font-semibold text-text-primary">
+              {{ nextFocus ? difficultyLabel(nextFocus.difficulty) : '暂无数据' }}
+            </div>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
               {{
                 nextFocus
@@ -119,7 +150,7 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
 
           <AppCard variant="action" accent="primary">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-              <Layers2 class="h-4 w-4 text-sky-300" />
+              <Layers2 class="h-4 w-4 text-primary" />
               难度结构
             </div>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
@@ -129,7 +160,7 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
 
           <AppCard variant="action" accent="success">
             <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-              <ShieldCheck class="h-4 w-4 text-emerald-300" />
+              <ShieldCheck class="h-4 w-4 text-[var(--color-success)]" />
               目标状态
             </div>
             <div class="mt-2 text-sm leading-6 text-text-secondary">
@@ -141,3 +172,9 @@ function accentForDifficulty(difficulty: string): 'success' | 'primary' | 'warni
     </section>
   </div>
 </template>
+
+<style scoped>
+.difficulty-progress-track {
+  background: color-mix(in srgb, var(--color-border-subtle) 60%, transparent);
+}
+</style>

@@ -10,6 +10,7 @@ const challengeApiMocks = vi.hoisted(() => ({
   submitFlag: vi.fn(),
   unlockHint: vi.fn(),
   createInstance: vi.fn(),
+  downloadAttachment: vi.fn(),
 }))
 
 const instanceApiMocks = vi.hoisted(() => ({
@@ -75,6 +76,7 @@ describe('ChallengeDetail', () => {
       remaining_extends: 2,
       created_at: '2026-03-12T00:00:00.000Z',
     })
+    challengeApiMocks.downloadAttachment.mockReset()
 
     instanceApiMocks.getMyInstances.mockResolvedValue([])
     instanceApiMocks.destroyInstance.mockReset()
@@ -213,5 +215,37 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).toContain('该题目不需要靶机')
     expect(wrapper.text()).not.toContain('启动靶机')
+  })
+
+  it('应将 markdown 描述渲染为 HTML', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Markdown Challenge',
+      description: '# 一级标题\n\n## 二级标题\n\n- item-1',
+      category: 'misc',
+      difficulty: 'easy',
+      tags: ['misc'],
+      points: 50,
+      need_target: false,
+      is_solved: false,
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const content = wrapper.find('.prose')
+    expect(content.html()).toContain('<h1')
+    expect(content.html()).toContain('<h2')
+    expect(content.html()).toContain('<li')
   })
 })

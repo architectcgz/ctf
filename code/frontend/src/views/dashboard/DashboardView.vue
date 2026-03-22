@@ -4,10 +4,15 @@ import { useRoute, useRouter } from 'vue-router'
 import { FileChartColumnIncreasing, Rocket, ShieldAlert } from 'lucide-vue-next'
 
 import { getMyProgress, getMyTimeline, getRecommendations, getSkillProfile } from '@/api/assessment'
-import type { MyProgressData, RecommendationItem, SkillProfileData, TimelineEvent } from '@/api/contracts'
+import type {
+  MyProgressData,
+  RecommendationItem,
+  SkillProfileData,
+  TimelineEvent,
+} from '@/api/contracts'
 import StudentCategoryProgressPage from '@/components/dashboard/student/StudentCategoryProgressPage.vue'
 import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficultyPage.vue'
-import StudentOverviewPage from '@/components/dashboard/student/StudentOverviewPage.vue'
+import StudentOverviewVariantSwitcher from '@/components/dashboard/student/StudentOverviewVariantSwitcher.vue'
 import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -28,8 +33,15 @@ const recommendations = ref<RecommendationItem[]>([])
 const skillProfile = ref<SkillProfileData | null>(null)
 
 type DashboardPanelKey = 'category' | 'recommendation' | 'timeline' | 'difficulty'
+type DashboardVariantKey = '1' | '2' | '3'
 
-const validPanelKeys = new Set<DashboardPanelKey>(['category', 'recommendation', 'timeline', 'difficulty'])
+const validPanelKeys = new Set<DashboardPanelKey>([
+  'category',
+  'recommendation',
+  'timeline',
+  'difficulty',
+])
+const validVariantKeys = new Set<DashboardVariantKey>(['1', '2', '3'])
 
 const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
 const weakDimensions = computed(() => getWeakDimensions(skillProfile.value).slice(0, 3))
@@ -53,7 +65,10 @@ const highlightItems = computed<DashboardHighlightItem[]>(() => [
   {
     label: '推荐任务',
     value: `${recommendationCount.value} 项`,
-    description: weakDimensions.value.length > 0 ? `优先补强 ${weakDimensions.value.join(' / ')}` : '当前没有明显短板',
+    description:
+      weakDimensions.value.length > 0
+        ? `优先补强 ${weakDimensions.value.join(' / ')}`
+        : '当前没有明显短板',
     icon: ShieldAlert,
   },
   {
@@ -69,6 +84,13 @@ const activePanel = computed<DashboardPanelKey | null>(() => {
     return panel as DashboardPanelKey
   }
   return null
+})
+const activeVariant = computed<DashboardVariantKey>(() => {
+  const variant = route.params.variant
+  if (typeof variant === 'string' && validVariantKeys.has(variant as DashboardVariantKey)) {
+    return variant as DashboardVariantKey
+  }
+  return '2'
 })
 const isOverview = computed(() => activePanel.value === null)
 const panelCopyMap: Record<DashboardPanelKey, { title: string; description: string }> = {
@@ -108,12 +130,8 @@ async function loadDashboard(): Promise<void> {
   loading.value = true
   error.value = null
   try {
-    const [progressPayload, timelinePayload, recommendationPayload, profilePayload] = await Promise.all([
-      getMyProgress(),
-      getMyTimeline(),
-      getRecommendations(),
-      getSkillProfile(),
-    ])
+    const [progressPayload, timelinePayload, recommendationPayload, profilePayload] =
+      await Promise.all([getMyProgress(), getMyTimeline(), getRecommendations(), getSkillProfile()])
 
     progress.value = progressPayload
     timeline.value = timelinePayload.slice(0, 6)
@@ -145,30 +163,47 @@ function openChallenge(challengeId: string): void {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="dashboard-view space-y-6">
     <PageHeader
+      class="dashboard-view__header"
       eyebrow="Student Workspace"
-      :title="isOverview ? `${displayName} 的训练仪表盘` : (panelHeader?.title || `${displayName} 的训练仪表盘`)"
-      :description="isOverview
-        ? '汇总当前得分、解题进度、近期训练动态与推荐靶场，方便你快速决定下一步训练重点。'
-        : panelHeader?.description || ''"
+      :title="
+        isOverview
+          ? `${displayName} 的训练仪表盘`
+          : panelHeader?.title || `${displayName} 的训练仪表盘`
+      "
+      :description="
+        isOverview
+          ? '汇总当前得分、解题进度、近期训练动态与推荐靶场，帮助你快速判断下一步训练重点。'
+          : panelHeader?.description || ''
+      "
     >
-      <ElButton plain @click="router.push({ name: 'SkillProfile' })">能力画像</ElButton>
-      <ElButton type="primary" @click="router.push({ name: 'Challenges' })">继续训练</ElButton>
+      <template v-if="isOverview">
+        <ElButton plain @click="router.push({ name: 'SkillProfile' })">能力画像</ElButton>
+        <ElButton type="primary" @click="router.push({ name: 'Challenges' })">继续训练</ElButton>
+      </template>
     </PageHeader>
 
-    <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+    <div
+      v-if="error"
+      class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600"
+    >
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="loadDashboard">重试</button>
     </div>
 
     <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <div v-for="index in 4" :key="index" class="h-32 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]" />
+      <div
+        v-for="index in 4"
+        :key="index"
+        class="h-32 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"
+      />
     </div>
 
     <template v-else-if="progress">
-      <StudentOverviewPage
+      <StudentOverviewVariantSwitcher
         v-if="isOverview"
+        :variant="activeVariant"
         :display-name="displayName"
         :class-name="authStore.user?.class_name"
         :progress="progress"
@@ -177,6 +212,7 @@ function openChallenge(challengeId: string): void {
         :recommendations="recommendations"
         :timeline="timeline"
         :weak-dimensions="weakDimensions"
+        :skill-dimensions="skillProfile?.dimensions ?? []"
         @open-challenge="openChallenge"
         @open-challenges="openChallenges"
         @open-skill-profile="openSkillProfile"
@@ -196,14 +232,67 @@ function openChallenge(challengeId: string): void {
         @open-challenges="openChallenges"
         @open-skill-profile="openSkillProfile"
       />
-      <StudentTimelinePage
-        v-else-if="activePanel === 'timeline'"
-        :timeline="timeline"
-      />
-      <StudentDifficultyPage
-        v-else
-        :difficulty-stats="difficultyStats"
-      />
+      <StudentTimelinePage v-else-if="activePanel === 'timeline'" :timeline="timeline" />
+      <StudentDifficultyPage v-else :difficulty-stats="difficultyStats" />
     </template>
   </div>
 </template>
+
+<style scoped>
+.dashboard-view :deep(.journal-hero),
+.dashboard-view :deep(.journal-brief),
+.dashboard-view :deep(.journal-panel),
+.dashboard-view :deep(.journal-metric),
+.dashboard-view :deep(.journal-note),
+.dashboard-view :deep(.journal-rec-item),
+.dashboard-view :deep(.journal-log),
+.dashboard-view :deep(.command-hero),
+.dashboard-view :deep(.command-highlight),
+.dashboard-view :deep(.command-panel),
+.dashboard-view :deep(.command-metric),
+.dashboard-view :deep(.command-status-card),
+.dashboard-view :deep(.command-rec-item),
+.dashboard-view :deep(.signal-hero),
+.dashboard-view :deep(.signal-panel),
+.dashboard-view :deep(.signal-stat),
+.dashboard-view :deep(.signal-rec-item),
+.dashboard-view :deep(.signal-log),
+.dashboard-view :deep(.signal-summary) {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+:global([data-theme='light']) .dashboard-view :deep(.journal-hero),
+:global([data-theme='light']) .dashboard-view :deep(.journal-brief),
+:global([data-theme='light']) .dashboard-view :deep(.journal-panel),
+:global([data-theme='light']) .dashboard-view :deep(.journal-metric),
+:global([data-theme='light']) .dashboard-view :deep(.journal-note),
+:global([data-theme='light']) .dashboard-view :deep(.journal-rec-item),
+:global([data-theme='light']) .dashboard-view :deep(.journal-log) {
+  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
+}
+
+@media (max-width: 767px) {
+  .dashboard-view :deep(.journal-hero),
+  .dashboard-view :deep(.journal-brief),
+  .dashboard-view :deep(.journal-panel),
+  .dashboard-view :deep(.journal-metric),
+  .dashboard-view :deep(.journal-note),
+  .dashboard-view :deep(.journal-rec-item),
+  .dashboard-view :deep(.journal-log),
+  .dashboard-view :deep(.command-hero),
+  .dashboard-view :deep(.command-highlight),
+  .dashboard-view :deep(.command-panel),
+  .dashboard-view :deep(.command-metric),
+  .dashboard-view :deep(.command-status-card),
+  .dashboard-view :deep(.command-rec-item),
+  .dashboard-view :deep(.signal-hero),
+  .dashboard-view :deep(.signal-panel),
+  .dashboard-view :deep(.signal-stat),
+  .dashboard-view :deep(.signal-rec-item),
+  .dashboard-view :deep(.signal-log),
+  .dashboard-view :deep(.signal-summary) {
+    border-radius: 12px !important;
+  }
+}
+</style>

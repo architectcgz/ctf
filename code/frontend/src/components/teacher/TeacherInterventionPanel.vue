@@ -3,9 +3,7 @@ import { computed, ref, watch } from 'vue'
 
 import { getStudentRecommendations } from '@/api/teacher'
 import type { RecommendationItem, TeacherStudentItem } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 
 const props = defineProps<{
   students: TeacherStudentItem[]
@@ -98,6 +96,12 @@ function isRecommendationLoading(studentId: string): boolean {
   return recommendationLoadingMap.value[studentId] ?? false
 }
 
+function getCandidateClass(accent: InterventionCandidate['accent']): string {
+  if (accent === 'danger') return 'intervention-item intervention-item--danger'
+  if (accent === 'warning') return 'intervention-item intervention-item--warning'
+  return 'intervention-item intervention-item--primary'
+}
+
 watch(
   recommendationTargets,
   async (nextTargets, _, onCleanup) => {
@@ -152,14 +156,20 @@ watch(
 </script>
 
 <template>
-  <SectionCard
-    title="优先介入学生"
-    :subtitle="
-      className
-        ? `${className} 当前最值得优先跟进的学生名单。`
-        : '当前班级最值得优先跟进的学生名单。'
-    "
-  >
+  <section class="teacher-panel">
+    <header class="teacher-panel__header">
+      <h2 class="teacher-panel__title">
+        优先介入学生
+      </h2>
+      <p class="teacher-panel__subtitle">
+        {{
+          className
+            ? `${className} 当前最值得优先跟进的学生名单。`
+            : '当前班级最值得优先跟进的学生名单。'
+        }}
+      </p>
+    </header>
+
     <AppEmpty
       v-if="candidates.length === 0"
       icon="GraduationCap"
@@ -167,56 +177,194 @@ watch(
       description="当前班级学生的训练活跃度和解题表现暂时没有明显风险。"
     />
 
-    <div v-else class="space-y-3">
-      <AppCard
+    <div
+      v-else
+      class="intervention-list"
+    >
+      <article
         v-for="item in candidates"
         :key="item.student.id"
-        variant="action"
-        :accent="item.accent"
+        :class="getCandidateClass(item.accent)"
       >
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <div class="font-semibold text-text-primary">
+        <div class="intervention-item__layout">
+          <div class="intervention-item__main">
+            <div class="intervention-item__name">
               {{ item.student.name || item.student.username }}
             </div>
-            <div class="mt-1 text-sm text-text-secondary">@{{ item.student.username }}</div>
-            <div class="mt-3 text-sm leading-6 text-text-secondary">{{ item.reason }}</div>
+            <div class="intervention-item__username">
+              @{{ item.student.username }}
+            </div>
+            <div class="intervention-item__reason">
+              {{ item.reason }}
+            </div>
 
             <div
               v-if="isRecommendationLoading(item.student.id)"
-              class="mt-3 rounded-2xl border border-border bg-base/60 px-4 py-3 text-sm text-text-secondary"
+              class="intervention-item__recommendation"
             >
               正在匹配建议训练题...
             </div>
 
             <div
               v-else-if="getRecommendation(item.student.id)"
-              class="mt-3 rounded-2xl border border-border bg-base/60 px-4 py-3"
+              class="intervention-item__recommendation"
             >
-              <div class="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+              <div class="intervention-item__recommendation-label">
                 建议训练题
               </div>
-              <div class="mt-2 text-sm font-semibold text-text-primary">
+              <div class="intervention-item__recommendation-title">
                 {{ getRecommendation(item.student.id)?.title }}
               </div>
-              <div class="mt-1 text-xs text-text-secondary">
+              <div class="intervention-item__recommendation-meta">
                 {{ getRecommendation(item.student.id)?.category }} /
                 {{ getRecommendation(item.student.id)?.difficulty }}
               </div>
-              <div class="mt-2 text-sm leading-6 text-text-secondary">
+              <div class="intervention-item__recommendation-reason">
                 {{ getRecommendation(item.student.id)?.reason }}
               </div>
             </div>
           </div>
 
-          <div class="text-right text-xs text-text-secondary">
+          <div class="intervention-item__stats">
             <div>{{ item.student.recent_event_count ?? 0 }} 次动作</div>
-            <div class="mt-1">
+            <div>
               {{ item.student.solved_count ?? 0 }} 题 / {{ item.student.total_score ?? 0 }} 分
             </div>
           </div>
         </div>
-      </AppCard>
+      </article>
     </div>
-  </SectionCard>
+  </section>
 </template>
+
+<style scoped>
+.teacher-panel {
+  border-top: 1px solid var(--color-border-default);
+  padding-top: 0.95rem;
+}
+
+.teacher-panel__header {
+  margin-bottom: 0.72rem;
+}
+
+.teacher-panel__title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.teacher-panel__subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.intervention-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.intervention-item {
+  --intervention-accent: var(--color-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  border-left: 2px solid var(--intervention-accent);
+  padding: 0.72rem 0.2rem 0.82rem 0.8rem;
+}
+
+.intervention-item--primary {
+  --intervention-accent: var(--color-primary);
+}
+
+.intervention-item--warning {
+  --intervention-accent: var(--color-warning);
+}
+
+.intervention-item--danger {
+  --intervention-accent: var(--color-danger);
+}
+
+.intervention-item__layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.intervention-item__main {
+  min-width: 0;
+}
+
+.intervention-item__name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.intervention-item__username {
+  margin-top: 0.15rem;
+  font-size: 0.79rem;
+  color: var(--color-text-secondary);
+}
+
+.intervention-item__reason {
+  margin-top: 0.34rem;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.intervention-item__recommendation {
+  margin-top: 0.48rem;
+  border-left: 2px solid color-mix(in srgb, var(--intervention-accent) 66%, var(--color-border-default));
+  padding-left: 0.62rem;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+}
+
+.intervention-item__recommendation-label {
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--intervention-accent) 76%, var(--color-text-secondary));
+}
+
+.intervention-item__recommendation-title {
+  margin-top: 0.22rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.intervention-item__recommendation-meta {
+  margin-top: 0.1rem;
+  font-size: 0.76rem;
+  color: var(--color-text-secondary);
+}
+
+.intervention-item__recommendation-reason {
+  margin-top: 0.24rem;
+  font-size: 0.82rem;
+  line-height: 1.68;
+  color: var(--color-text-secondary);
+}
+
+.intervention-item__stats {
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .intervention-item__layout {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .intervention-item__stats {
+    text-align: left;
+  }
+}
+</style>

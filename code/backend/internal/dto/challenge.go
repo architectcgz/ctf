@@ -61,7 +61,7 @@ type ChallengeQuery struct {
 	Keyword    string `form:"keyword"`
 	SortBy     string `form:"sort_by" binding:"omitempty,oneof=created_at difficulty"`
 	Page       int    `form:"page" binding:"omitempty,min=1"`
-	Size       int    `form:"size" binding:"omitempty,min=1,max=100"`
+	Size       int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
 // ChallengeListItem 学员视图靶场列表项
