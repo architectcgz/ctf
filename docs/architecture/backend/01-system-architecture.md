@@ -153,10 +153,16 @@ flowchart LR
 
 - 当前实现以 `internal/app/buildRouterRuntime` 作为统一 composition root，负责集中装配 repository、service、handler 与共享基础设施依赖。
 - HTTP 路由与后台任务共享同一套关键运行时组件，当前已确认：
-  - `runtimeService` 由路由层创建一次，同时复用于：
-    - HTTP Handler 链路
+  - `runtimeBaseService` 由 composition root 创建一次，同时复用于：
     - 运行时清理任务 `runtimeinfra.Cleaner`
     - AWD Flag 注入器 `contest.DockerAWDFlagInjector`
+  - `runtimeInstanceService` 由 composition root 创建一次，专门负责：
+    - HTTP Handler 链路中的实例查询、续期、销毁和教师端用例
+    - 复用 `runtimeBaseService` 提供的运行时资源清理能力
+  - `runtime.Module` 作为 facade，统一组合：
+    - `runtimeBaseService` 的运行时编排能力
+    - `runtimeInstanceService` 的 HTTP 用例能力
+    - 代理票据能力
   - `assessmentService` 由路由层创建一次，同时复用于：
     - HTTP Handler 链路
     - 能力画像后台任务 `assessment.Cleaner`
@@ -263,7 +269,7 @@ flowchart TD
 
 | 项目 | 说明 |
 |------|------|
-| 核心职责 | 实例查询、访问代理、运行时拓扑编排、容器/网络/ACL 生命周期治理 |
+| 核心职责 | `application` 负责实例查询/续期/销毁等用例，`service` 负责运行时拓扑编排、容器/网络/ACL 生命周期治理，`api/http` 负责访问代理 |
 | 容器生命周期 | 创建 → 启动 → 运行中 → 停止 → 删除；异常状态自动检测与清理 |
 | 网络隔离 | 每个靶机实例分配独立 Docker Network，禁止容器间互访（AWD 模式除外） |
 | 资源限制 | CPU（默认 0.5 核）、内存（默认 256MB）、磁盘（默认 1GB）、网络带宽，均可按题目配置 |
@@ -439,12 +445,12 @@ ctf-platform/
 │   │   │   └── repository.go
 │   │   ├── runtime/
 │   │   │   ├── api/http/handler.go  # 实例访问与运行时 HTTP API
-│   │   │   ├── application/         # Query / UseCase 入口（分层迁移中）
+│   │   │   ├── application/         # 实例 Query / UseCase 入口
 │   │   │   ├── contracts.go         # 模块对外 contract
 │   │   │   ├── infrastructure/
 │   │   │   │   └── repository.go    # GORM 持久化实现
-│   │   │   ├── module.go            # 模块 facade
-│   │   │   └── service.go           # 实例运行时编排 Service
+│   │   │   ├── module.go            # 组合 facade（编排 + HTTP 用例 + 代理票据）
+│   │   │   └── service.go           # 运行时拓扑编排 Service
 │   │   ├── runtimeinfra/
 │   │   │   ├── engine.go            # Docker SDK 封装层
 │   │   │   ├── cleaner.go           # 运行时清理任务

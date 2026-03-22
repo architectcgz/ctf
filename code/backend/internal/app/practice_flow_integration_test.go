@@ -38,6 +38,7 @@ import (
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimeModule "ctf-platform/internal/module/runtime"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	systemModule "ctf-platform/internal/module/system"
 	"ctf-platform/internal/validation"
@@ -739,8 +740,10 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	runtimeBaseService := runtimeModule.NewService(instanceRepo, nil, &cfg.Container, logger)
+	runtimeInstanceService := runtimeapp.NewInstanceService(instanceRepo, runtimeBaseService, &cfg.Container, logger)
 	runtimeService := runtimeModule.NewModule(
 		runtimeBaseService,
+		runtimeInstanceService,
 		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
 		cfg.Container.ProxyBodyPreviewSize,
 	)

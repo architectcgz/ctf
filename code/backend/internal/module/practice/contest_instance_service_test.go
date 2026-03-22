@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeModule "ctf-platform/internal/module/challenge"
 	runtimeModule "ctf-platform/internal/module/runtime"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -65,7 +66,11 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		MaxExtends:     2,
 		ExtendDuration: 30 * time.Minute,
 	}, nil)
-	visible, err := runtimeService.GetUserInstancesWithContext(context.Background(), 5002)
+	instanceService := runtimeapp.NewInstanceService(runtimeinfrarepo.NewRepository(db), runtimeService, &config.ContainerConfig{
+		MaxExtends:     2,
+		ExtendDuration: 30 * time.Minute,
+	}, nil)
+	visible, err := instanceService.GetUserInstancesWithContext(context.Background(), 5002)
 	if err != nil {
 		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
 	}
@@ -73,7 +78,7 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected teammate to see shared instance, got %+v", visible)
 	}
 
-	accessURL, err := runtimeService.GetAccessURLWithContext(context.Background(), first.ID, 5002)
+	accessURL, err := instanceService.GetAccessURLWithContext(context.Background(), first.ID, 5002)
 	if err != nil {
 		t.Fatalf("GetAccessURLWithContext() error = %v", err)
 	}
