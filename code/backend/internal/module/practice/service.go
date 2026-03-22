@@ -18,7 +18,7 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
 	"ctf-platform/internal/module/runtime"
-	rediskeys "ctf-platform/internal/pkg/redis"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
@@ -57,9 +57,18 @@ type Service struct {
 	redis             *redis.Client
 	config            *config.Config
 	logger            *zap.Logger
+	eventBus          platformevents.Bus
 	baseCtx           context.Context
 	cancel            context.CancelFunc
 	tasks             sync.WaitGroup
+}
+
+func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
+	if s == nil {
+		return nil
+	}
+	s.eventBus = bus
+	return s
 }
 
 func NewService(
@@ -303,10 +312,19 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 
 	if isCorrect {
 		cacheKey := constants.UserProgressKey(userID)
-		if err := s.redis.Del(ctx, cacheKey, rediskeys.RecommendationKey(userID)).Err(); err != nil {
+		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
-		s.triggerAssessmentUpdate(userID, challengeItem.Category)
+		s.publishWeakEvent(ctx, platformevents.Event{
+			Name: EventFlagAccepted,
+			Payload: FlagAcceptedEvent{
+				UserID:      userID,
+				ChallengeID: challengeID,
+				Dimension:   challengeItem.Category,
+				Points:      challengeItem.Points,
+				OccurredAt:  submission.SubmittedAt,
+			},
+		})
 	}
 
 	resp := &dto.SubmissionResp{
@@ -354,6 +372,17 @@ func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockH
 	}); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
+
+	s.publishWeakEvent(context.Background(), platformevents.Event{
+		Name: EventHintUnlocked,
+		Payload: HintUnlockedEvent{
+			UserID:      userID,
+			ChallengeID: challengeID,
+			Dimension:   challengeItem.Category,
+			HintLevel:   hint.Level,
+			OccurredAt:  time.Now(),
+		},
+	})
 
 	return &dto.UnlockHintResp{
 		Hint: &dto.ChallengeHintResp{
@@ -843,6 +872,18 @@ func (s *Service) runAsyncTask(fn func(context.Context)) {
 
 		fn(s.baseCtx)
 	}()
+}
+
+func (s *Service) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
+	if s.eventBus == nil {
+		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := s.eventBus.Publish(ctx, evt); err != nil {
+		s.logger.Warn("publish_practice_event_failed", zap.String("event", evt.Name), zap.Error(err))
+	}
 }
 
 func toInstanceResp(inst *model.Instance) *dto.InstanceResp {

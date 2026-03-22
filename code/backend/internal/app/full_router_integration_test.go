@@ -228,12 +228,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "teacher")
 		return originalBuildTeacherModule(root, assessment)
 	}
-	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.ContestModule {
-		if root == nil || challenge == nil {
-			t.Fatal("expected root and challenge for contest module builder")
+	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, container *composition.ContainerModule) *composition.ContestModule {
+		if root == nil || challenge == nil || container == nil {
+			t.Fatal("expected root, challenge and container for contest module builder")
 		}
 		calls = append(calls, "contest")
-		return originalBuildContestModule(root, challenge)
+		return originalBuildContestModule(root, challenge, container)
 	}
 	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, container *composition.ContainerModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
 		if root == nil || challenge == nil || container == nil || assessment == nil {

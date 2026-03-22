@@ -60,6 +60,7 @@ func (m *SystemModule) BuildNotificationHandler(root *Root, auth *AuthModule) {
 		m.WebSocketManager,
 		log.Named("notification_service"),
 	)
+	notificationService.RegisterPracticeEventConsumers(root.Events)
 	m.NotificationHandler = system.NewNotificationHandler(
 		notificationService,
 		auth.TokenService,

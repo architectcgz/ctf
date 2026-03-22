@@ -5,6 +5,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/module/practice"
+	platformevents "ctf-platform/internal/platform/events"
 	"errors"
 	"fmt"
 	"strings"
@@ -33,6 +35,32 @@ func NewService(repo *Repository, redis *redis.Client, cfg config.AssessmentConf
 		config: normalizeConfig(cfg),
 		logger: logger,
 	}
+}
+
+func (s *Service) RegisterPracticeEventConsumers(bus platformevents.Bus) {
+	if s == nil || bus == nil {
+		return
+	}
+	bus.Subscribe(practice.EventFlagAccepted, s.handleFlagAcceptedEvent)
+}
+
+func (s *Service) handleFlagAcceptedEvent(ctx context.Context, evt platformevents.Event) error {
+	payload, ok := evt.Payload.(practice.FlagAcceptedEvent)
+	if !ok {
+		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
+	}
+	if !model.IsValidDimension(payload.Dimension) {
+		return nil
+	}
+
+	updateCtx := ctx
+	cancel := func() {}
+	if timeout := s.config.IncrementalUpdateTimeout; timeout > 0 {
+		updateCtx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer cancel()
+
+	return s.UpdateSkillProfileForDimension(updateCtx, payload.UserID, payload.Dimension)
 }
 
 // CalculateSkillProfile 计算用户能力画像

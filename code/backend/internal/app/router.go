@@ -131,7 +131,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
 	teacherModule := buildTeacherModule(root, assessmentModule)
-	contestModule := buildContestModule(root, challengeModule)
+	contestModule := buildContestModule(root, challengeModule, containerModule)
 	practiceModule := buildPracticeModule(root, challengeModule, containerModule, assessmentModule)
 	containerModule.BuildHandler(root, systemModule)
 

@@ -1,6 +1,8 @@
 package composition
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/module/container"
@@ -34,6 +36,14 @@ func BuildContainerModule(root *Root) (*ContainerModule, error) {
 	}
 
 	service := container.NewService(repo, runtimeEngine, &cfg.Container, log.Named("container_service"))
+	cleaner := container.NewCleaner(service, cache, cfg.Container.CleanupLockTTL, log.Named("container_cleaner"))
+	root.RegisterBackgroundJob(NewBackgroundJob(
+		"container_cleaner",
+		func(context.Context) error {
+			return cleaner.Start(cfg.Container.CleanupInterval)
+		},
+		cleaner.Stop,
+	))
 
 	return &ContainerModule{
 		ProxyTicketService: container.NewProxyTicketService(cache, &cfg.Container),

@@ -13,7 +13,9 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/module/practice"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type ChallengeRepository interface {
@@ -40,6 +42,34 @@ func NewRecommendationService(repo *Repository, challengeRepo ChallengeRepositor
 		logger:        logger,
 		config:        normalizeRecommendationConfig(cfg),
 	}
+}
+
+func (s *RecommendationService) RegisterPracticeEventConsumers(bus platformevents.Bus) {
+	if s == nil || bus == nil {
+		return
+	}
+	bus.Subscribe(practice.EventFlagAccepted, s.handlePracticeCacheRefreshEvent)
+	bus.Subscribe(practice.EventHintUnlocked, s.handlePracticeCacheRefreshEvent)
+}
+
+func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
+	if s.redis == nil {
+		return nil
+	}
+
+	var userID int64
+	switch payload := evt.Payload.(type) {
+	case practice.FlagAcceptedEvent:
+		userID = payload.UserID
+	case practice.HintUnlockedEvent:
+		userID = payload.UserID
+	default:
+		return fmt.Errorf("unexpected practice cache refresh payload: %T", evt.Payload)
+	}
+	if userID <= 0 {
+		return nil
+	}
+	return s.redis.Del(ctx, rediskeys.RecommendationKey(userID)).Err()
 }
 
 func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error) {
