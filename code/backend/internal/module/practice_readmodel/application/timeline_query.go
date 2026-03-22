@@ -17,5 +17,20 @@ func (s *QueryService) GetTimeline(ctx context.Context, userID int64, limit, off
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dto.TimelineResp{Events: events}, nil
+	resp := &dto.TimelineResp{
+		Events: make([]dto.TimelineEvent, len(events)),
+	}
+	for i, event := range events {
+		resp.Events[i] = dto.TimelineEvent{
+			Type:        event.Type,
+			ChallengeID: event.ChallengeID,
+			Title:       event.Title,
+			Timestamp:   event.Timestamp,
+			IsCorrect:   event.IsCorrect,
+			Points:      event.Points,
+			Detail:      event.Detail,
+		}
+	}
+
+	return resp, nil
 }

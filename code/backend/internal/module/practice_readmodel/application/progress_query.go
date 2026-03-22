@@ -52,8 +52,22 @@ func (s *QueryService) GetProgress(ctx context.Context, userID int64) (*dto.Prog
 		TotalScore:      totalScore,
 		TotalSolved:     totalSolved,
 		Rank:            rank,
-		CategoryStats:   categoryStats,
-		DifficultyStats: difficultyStats,
+		CategoryStats:   make([]dto.CategoryStat, len(categoryStats)),
+		DifficultyStats: make([]dto.DifficultyStat, len(difficultyStats)),
+	}
+	for i, stat := range categoryStats {
+		resp.CategoryStats[i] = dto.CategoryStat{
+			Category: stat.Category,
+			Solved:   stat.Solved,
+			Total:    stat.Total,
+		}
+	}
+	for i, stat := range difficultyStats {
+		resp.DifficultyStats[i] = dto.DifficultyStat{
+			Difficulty: stat.Difficulty,
+			Solved:     stat.Solved,
+			Total:      stat.Total,
+		}
 	}
 
 	if s.cache != nil {
