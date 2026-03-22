@@ -12,9 +12,9 @@ import (
 
 type RuntimeModule struct {
 	Handler *runtimehttp.Handler
-	Query   runtimeModule.RuntimeQuery
 
 	service *runtimeModule.Module
+	query   *runtimeapp.QueryService
 }
 
 func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
@@ -44,8 +44,8 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	)
 
 	return &RuntimeModule{
-		Query:   runtimeapp.NewQueryService(repo),
 		service: service,
+		query:   runtimeapp.NewQueryService(repo),
 	}
 }
 

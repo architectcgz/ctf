@@ -10,21 +10,29 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/module/runtime"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
+type runtimeQuery interface {
+	CountRunning() (int64, error)
+}
+
+type runtimeStatsProvider interface {
+	ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error)
+}
+
 type DashboardService struct {
-	runtimeQuery runtime.RuntimeQuery
-	runtime      runtime.RuntimeStatsProvider
+	runtimeQuery runtimeQuery
+	runtime      runtimeStatsProvider
 	redis        *redislib.Client
 	config       *config.Config
 	logger       *zap.Logger
 }
 
 func NewDashboardService(
-	runtimeQuery runtime.RuntimeQuery,
-	runtimeStats runtime.RuntimeStatsProvider,
+	runtimeQuery runtimeQuery,
+	runtimeStats runtimeStatsProvider,
 	redis *redislib.Client,
 	cfg *config.Config,
 	logger *zap.Logger,
