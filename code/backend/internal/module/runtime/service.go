@@ -11,10 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
-	"ctf-platform/pkg/errcode"
 )
 
 type Service struct {
@@ -25,9 +23,6 @@ type Service struct {
 }
 
 type runtimeRepository interface {
-	CreateWithContext(ctx context.Context, instance *model.Instance) error
-	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.Instance, error)
-	UpdateStatusWithContext(ctx context.Context, id int64, status string) error
 	UpdateStatusAndReleasePort(id int64, status string) error
 	FindExpired() ([]*model.Instance, error)
 	ListActiveContainerIDs() ([]string, error)
@@ -495,54 +490,6 @@ func (s *Service) WriteFileToContainer(ctx context.Context, containerID, filePat
 	return s.engine.WriteFileToContainer(ctx, containerID, filePath, content)
 }
 
-func (s *Service) CreateInstance(userID, challengeID int64) (*dto.InstanceResp, error) {
-	return s.CreateInstanceWithContext(context.Background(), userID, challengeID)
-}
-
-func (s *Service) CreateInstanceWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	// 检查用户并发实例数
-	instances, err := s.repo.FindByUserIDWithContext(ctx, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if len(instances) >= s.config.MaxConcurrentPerUser {
-		return nil, errcode.ErrInstanceLimitExceeded
-	}
-
-	// 创建实例记录
-	instance := &model.Instance{
-		UserID:      userID,
-		ChallengeID: challengeID,
-		ContainerID: fmt.Sprintf("container-%d-%d", userID, time.Now().Unix()),
-		Status:      model.InstanceStatusCreating,
-		ExpiresAt:   time.Now().Add(s.config.DefaultTTL),
-		MaxExtends:  s.config.MaxExtends,
-	}
-
-	if err := s.repo.CreateWithContext(ctx, instance); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	instance.Status = model.InstanceStatusRunning
-	instance.AccessURL = fmt.Sprintf("http://localhost:3%04d", 1000+instance.ID)
-	if err := s.repo.UpdateStatusWithContext(ctx, instance.ID, model.InstanceStatusRunning); err != nil {
-		s.logger.Error("更新实例状态失败", zap.Error(err))
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	s.logger.Info("创建实例",
-		zap.Int64("user_id", userID),
-		zap.Int64("challenge_id", challengeID),
-		zap.Int64("instance_id", instance.ID),
-		zap.Time("expires_at", instance.ExpiresAt))
-
-	return toInstanceResp(instance), nil
-}
-
 func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	instances, err := s.repo.FindExpired()
 	if err != nil {
@@ -687,20 +634,6 @@ func (s *Service) cleanupTopologyResources(containerIDs []string, networkIDs []s
 	}
 	for idx := len(networkIDs) - 1; idx >= 0; idx-- {
 		_ = s.RemoveNetwork(networkIDs[idx])
-	}
-}
-
-func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
-	return &dto.InstanceResp{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		AccessURL:        inst.AccessURL,
-		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
 	}
 }
 

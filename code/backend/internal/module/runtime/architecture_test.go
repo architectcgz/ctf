@@ -64,6 +64,12 @@ func TestInfrastructureDoesNotDependOnDTOOrGin(t *testing.T) {
 	}
 }
 
+func TestServiceDoesNotDependOnDTO(t *testing.T) {
+	t.Parallel()
+
+	assertFileDoesNotImport(t, "service.go", "ctf-platform/internal/dto")
+}
+
 func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
 	t.Helper()
 
