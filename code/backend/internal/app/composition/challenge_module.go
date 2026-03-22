@@ -22,7 +22,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.Service, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.service, cfg, log.Named("image_service"))
 	challengeService := challengeModule.NewService(
 		challengeRepo,
 		imageRepo,
