@@ -60,20 +60,24 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected team scoped instance, got %+v", instance)
 	}
 
-	visible, err := service.ListUserInstancesWithContext(context.Background(), 5002)
+	runtimeService := containerModule.NewService(containerModule.NewRepository(db), nil, &config.ContainerConfig{
+		MaxExtends:     2,
+		ExtendDuration: 30 * time.Minute,
+	}, nil)
+	visible, err := runtimeService.GetUserInstancesWithContext(context.Background(), 5002)
 	if err != nil {
-		t.Fatalf("ListUserInstancesWithContext() error = %v", err)
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
 	}
 	if len(visible) != 1 || visible[0].ID != first.ID {
 		t.Fatalf("expected teammate to see shared instance, got %+v", visible)
 	}
 
-	info, err := service.GetInstanceWithContext(context.Background(), first.ID, 5002)
+	accessURL, err := runtimeService.GetAccessURLWithContext(context.Background(), first.ID, 5002)
 	if err != nil {
-		t.Fatalf("GetInstanceWithContext() error = %v", err)
+		t.Fatalf("GetAccessURLWithContext() error = %v", err)
 	}
-	if info.ID != first.ID {
-		t.Fatalf("expected teammate to access shared instance, got %+v", info)
+	if accessURL != first.AccessURL {
+		t.Fatalf("expected teammate to access shared instance, got %q", accessURL)
 	}
 }
 

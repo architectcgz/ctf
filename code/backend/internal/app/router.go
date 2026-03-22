@@ -23,6 +23,7 @@ type routerRuntime struct {
 	assessment *composition.AssessmentModule
 	container  *composition.ContainerModule
 	contest    *composition.ContestModule
+	runtime    *composition.RuntimeModule
 }
 
 var (
@@ -33,6 +34,7 @@ var (
 	buildContestModule           = composition.BuildContestModule
 	buildPracticeModule          = composition.BuildPracticeModule
 	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
+	buildRuntimeModule           = composition.BuildRuntimeModule
 	buildSystemModule            = composition.BuildSystemModule
 	buildTeacherModule           = composition.BuildTeacherModule
 )
@@ -84,7 +86,8 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	if err != nil {
 		return nil, err
 	}
-	systemModule := buildSystemModule(root, containerModule)
+	runtimeModule := buildRuntimeModule(root, containerModule)
+	systemModule := buildSystemModule(root, runtimeModule)
 
 	authModule, err := buildAuthModule(root, systemModule)
 	if err != nil {
@@ -126,16 +129,16 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
-	challengeModule, err := buildChallengeModule(root, containerModule)
+	challengeModule, err := buildChallengeModule(root, runtimeModule)
 	if err != nil {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
 	teacherModule := buildTeacherModule(root, assessmentModule)
-	contestModule := buildContestModule(root, challengeModule, containerModule)
-	practiceModule := buildPracticeModule(root, challengeModule, containerModule, assessmentModule)
+	contestModule := buildContestModule(root, challengeModule, runtimeModule)
+	practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
-	containerModule.BuildHandler(root, systemModule)
+	runtimeModule.BuildHandler(root, systemModule)
 
 	adminUserRepo := adminUserModule.NewRepository(db)
 	adminUserService := adminUserModule.NewService(adminUserRepo, cfg.Pagination, log.Named("admin_user_service"))
@@ -154,10 +157,10 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		auditRecorder:     systemModule.AuditService,
 		assessment:        assessmentModule,
 		challenge:         challengeModule,
-		container:         containerModule,
 		contest:           contestModule,
 		practice:          practiceModule,
 		practiceReadmodel: practiceReadmodelModule,
+		runtime:           runtimeModule,
 		teacher:           teacherModule,
 	})
 
@@ -166,6 +169,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		assessment: assessmentModule,
 		container:  containerModule,
 		contest:    contestModule,
+		runtime:    runtimeModule,
 		closers: []lifecycleComponent{
 			{name: "report_service", closer: assessmentModule.ReportService},
 			{name: "image_service", closer: challengeModule.ImageService},

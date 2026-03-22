@@ -17,7 +17,10 @@ type InstanceResp struct {
 type InstanceInfo struct {
 	ID               int64     `json:"id"`
 	ChallengeID      int64     `json:"challenge_id"`
-	ChallengeName    string    `json:"challenge_name,omitempty"`
+	ChallengeTitle   string    `json:"challenge_title,omitempty"`
+	Category         string    `json:"category,omitempty"`
+	Difficulty       string    `json:"difficulty,omitempty"`
+	FlagType         string    `json:"flag_type,omitempty"`
 	Status           string    `json:"status"`
 	AccessURL        string    `json:"access_url"`
 	ExpiresAt        time.Time `json:"expires_at"`

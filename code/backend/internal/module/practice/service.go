@@ -40,8 +40,6 @@ type imageStore interface {
 type instanceStore interface {
 	UpdateRuntime(instance *model.Instance) error
 	UpdateStatusAndReleasePort(id int64, status string) error
-	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
-	FindVisibleByUser(ctx context.Context, userID int64) ([]*model.Instance, error)
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
 }
 
@@ -460,50 +458,6 @@ func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, conte
 	return scope, nil
 }
 
-func (s *Service) GetInstance(instanceID, userID int64) (*dto.InstanceInfo, error) {
-	return s.GetInstanceWithContext(context.Background(), instanceID, userID)
-}
-
-func (s *Service) GetInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceInfo, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instance, err := s.instanceRepo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if instance == nil {
-		return nil, errcode.ErrInstanceNotFound
-	}
-
-	return toInstanceInfo(instance), nil
-}
-
-func (s *Service) ListUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	return s.ListUserInstancesWithContext(context.Background(), userID)
-}
-
-func (s *Service) ListUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instances, err := s.instanceRepo.FindVisibleByUser(ctx, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	result := make([]*dto.InstanceInfo, len(instances))
-	for i, inst := range instances {
-		result[i] = toInstanceInfo(inst)
-		if chal, err := s.challengeRepo.FindByID(inst.ChallengeID); err == nil {
-			result[i].ChallengeName = chal.Title
-		}
-	}
-	return result, nil
-}
-
 func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Challenge) (string, string, error) {
 	switch chal.FlagType {
 	case model.FlagTypeDynamic:
@@ -800,25 +754,6 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		Status:           inst.Status,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst),
-		CreatedAt:        inst.CreatedAt,
-	}
-}
-
-func toInstanceInfo(inst *model.Instance) *dto.InstanceInfo {
-	remaining := int64(time.Until(inst.ExpiresAt).Seconds())
-	if remaining < 0 {
-		remaining = 0
-	}
-	return &dto.InstanceInfo{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		AccessURL:        inst.AccessURL,
-		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    remaining,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
 		RemainingExtends: remainingExtends(inst),

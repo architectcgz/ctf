@@ -27,6 +27,21 @@ type TeacherInstanceFilter struct {
 	StudentNo string
 }
 
+type UserVisibleInstanceRow struct {
+	ID             int64     `gorm:"column:id"`
+	ChallengeID    int64     `gorm:"column:challenge_id"`
+	ChallengeTitle string    `gorm:"column:challenge_title"`
+	Category       string    `gorm:"column:category"`
+	Difficulty     string    `gorm:"column:difficulty"`
+	FlagType       string    `gorm:"column:flag_type"`
+	Status         string    `gorm:"column:status"`
+	AccessURL      string    `gorm:"column:access_url"`
+	ExpiresAt      time.Time `gorm:"column:expires_at"`
+	ExtendCount    int       `gorm:"column:extend_count"`
+	MaxExtends     int       `gorm:"column:max_extends"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
@@ -232,6 +247,33 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 		Order("inst.created_at DESC").
 		Scan(&instances).Error
 	return instances, err
+}
+
+func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error) {
+	items := make([]UserVisibleInstanceRow, 0)
+	err := r.db.WithContext(ctx).
+		Table("instances AS inst").
+		Select(strings.Join([]string{
+			"inst.id",
+			"inst.challenge_id",
+			"c.title AS challenge_title",
+			"c.category",
+			"c.difficulty",
+			"c.flag_type",
+			"inst.status",
+			"inst.access_url",
+			"inst.expires_at",
+			"inst.extend_count",
+			"inst.max_extends",
+			"inst.created_at",
+		}, ", ")).
+		Joins("JOIN challenges c ON c.id = inst.challenge_id").
+		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
+		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
+		Order("inst.created_at DESC").
+		Scan(&items).Error
+	return items, err
 }
 
 func (r *Repository) FindExpired() ([]*model.Instance, error) {

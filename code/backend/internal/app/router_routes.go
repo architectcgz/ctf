@@ -25,10 +25,10 @@ type userRouteDeps struct {
 	auditLogger       *zap.Logger
 	assessment        *composition.AssessmentModule
 	challenge         *composition.ChallengeModule
-	container         *composition.ContainerModule
 	contest           *composition.ContestModule
 	practice          *composition.PracticeModule
 	practiceReadmodel *composition.PracticeReadmodelModule
+	runtime           *composition.RuntimeModule
 	teacher           *composition.TeacherModule
 }
 
@@ -502,15 +502,14 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.practice.Handler.UnlockHint,
 	)
-	protected.GET("/instances", deps.practice.Handler.ListUserInstances)
-	protected.GET("/instances/:id", deps.practice.Handler.GetInstance)
+	protected.GET("/instances", deps.runtime.Handler.ListInstances)
 	protected.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.container.Handler.DestroyInstance,
+		deps.runtime.Handler.DestroyInstance,
 	)
 	protected.POST("/instances/:id/extend",
 		audit(middleware.AuditOptions{
@@ -518,11 +517,11 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.container.Handler.ExtendInstance,
+		deps.runtime.Handler.ExtendInstance,
 	)
-	protected.POST("/instances/:id/access", deps.container.Handler.AccessInstance)
-	apiV1.GET("/instances/:id/proxy", deps.container.Handler.ProxyInstance)
-	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.container.Handler.ProxyInstance)
+	protected.POST("/instances/:id/access", deps.runtime.Handler.AccessInstance)
+	apiV1.GET("/instances/:id/proxy", deps.runtime.Handler.ProxyInstance)
+	apiV1.Any("/instances/:id/proxy/*proxyPath", deps.runtime.Handler.ProxyInstance)
 
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", deps.practiceReadmodel.Handler.GetProgress)
@@ -536,14 +535,14 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/classes/:name/summary", deps.teacher.Handler.GetClassSummary)
 	teacherOrAbove.GET("/classes/:name/trend", deps.teacher.Handler.GetClassTrend)
 	teacherOrAbove.GET("/classes/:name/review", deps.teacher.Handler.GetClassReview)
-	teacherOrAbove.GET("/instances", deps.container.Handler.ListTeacherInstances)
+	teacherOrAbove.GET("/instances", deps.runtime.Handler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "instance",
 			ResourceIDParam: "id",
 		}),
-		deps.container.Handler.DestroyTeacherInstance,
+		deps.runtime.Handler.DestroyTeacherInstance,
 	)
 	teacherOrAbove.GET("/students/:id/progress", deps.teacher.Handler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", deps.assessment.Handler.GetStudentSkillProfile)

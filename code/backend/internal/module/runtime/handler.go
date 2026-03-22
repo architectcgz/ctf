@@ -1,4 +1,4 @@
-package container
+package runtime
 
 import (
 	"bytes"
@@ -28,36 +28,17 @@ type ProxyCookieConfig struct {
 }
 
 type Handler struct {
-	service       *Service
-	proxyTickets  *ProxyTicketService
+	service       *Module
 	auditRecorder auditlog.Recorder
 	cookieConfig  ProxyCookieConfig
 }
 
-func NewHandler(service *Service, proxyTickets *ProxyTicketService, auditRecorder auditlog.Recorder, cookieConfig ProxyCookieConfig) *Handler {
+func NewHandler(service *Module, auditRecorder auditlog.Recorder, cookieConfig ProxyCookieConfig) *Handler {
 	return &Handler{
 		service:       service,
-		proxyTickets:  proxyTickets,
 		auditRecorder: auditRecorder,
 		cookieConfig:  cookieConfig,
 	}
-}
-
-func (h *Handler) CreateInstance(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.ValidationError(c, err)
-		return
-	}
-
-	resp, err := h.service.CreateInstanceWithContext(c.Request.Context(), userID, challengeID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
 }
 
 func (h *Handler) DestroyInstance(c *gin.Context) {
@@ -107,7 +88,7 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 		return
 	}
 
-	ticket, _, err := h.proxyTickets.IssueTicket(c.Request.Context(), currentUser, instanceID)
+	ticket, _, err := h.service.proxyTickets.IssueTicket(c.Request.Context(), currentUser, instanceID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -173,7 +154,7 @@ func (h *Handler) ProxyInstance(c *gin.Context) {
 	rawQuery := c.Request.URL.Query()
 	rawQuery.Del("ticket")
 
-	bodyPreview, bodyCaptured, bodyTruncated := captureProxyBodyPreview(c.Request, h.service.config.ProxyBodyPreviewSize)
+	bodyPreview, bodyCaptured, bodyTruncated := captureProxyBodyPreview(c.Request, h.service.proxyBodyPreviewSize)
 	shouldAudit := shouldAuditProxyRequest(c.Request.Method, joinedPath)
 	requestID := c.GetString("request_id")
 	username := claims.Username
@@ -262,12 +243,12 @@ func buildProxyAccessURL(instanceID int64, ticket string) string {
 }
 
 func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTicketClaims, string, error) {
-	if h.proxyTickets == nil {
+	if h.service == nil || h.service.proxyTickets == nil {
 		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
 	}
 
 	if ticket := strings.TrimSpace(c.Query("ticket")); ticket != "" {
-		claims, err := h.proxyTickets.ResolveTicket(c.Request.Context(), ticket)
+		claims, err := h.service.proxyTickets.ResolveTicket(c.Request.Context(), ticket)
 		if err != nil {
 			return nil, "", err
 		}
@@ -275,7 +256,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTi
 			return nil, "", errcode.ErrForbidden
 		}
 
-		setProxyAccessCookie(c, ticket, instanceID, int(h.service.config.ProxyTicketTTL.Seconds()), h.cookieConfig)
+		setProxyAccessCookie(c, ticket, instanceID, h.service.proxyTicketMaxAge(), h.cookieConfig)
 		return claims, sanitizedProxyRedirectURL(c), nil
 	}
 
@@ -283,7 +264,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*ProxyTi
 	if err != nil {
 		return nil, "", errcode.ErrProxyTicketInvalid
 	}
-	claims, err := h.proxyTickets.ResolveTicket(c.Request.Context(), ticketCookie)
+	claims, err := h.service.proxyTickets.ResolveTicket(c.Request.Context(), ticketCookie)
 	if err != nil {
 		return nil, "", err
 	}

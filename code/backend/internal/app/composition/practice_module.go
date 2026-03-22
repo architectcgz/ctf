@@ -7,7 +7,7 @@ type PracticeModule struct {
 	Service *practiceModule.Service
 }
 
-func BuildPracticeModule(root *Root, challenge *ChallengeModule, container *ContainerModule, assessment *AssessmentModule) *PracticeModule {
+func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) *PracticeModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -19,8 +19,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, container *Cont
 		repo,
 		challenge.Repository,
 		challenge.ImageRepository,
-		container.Repository,
-		container.Service,
+		runtime.Repository,
+		runtime.Service,
 		scoreService,
 		assessment.Service,
 		cache,
