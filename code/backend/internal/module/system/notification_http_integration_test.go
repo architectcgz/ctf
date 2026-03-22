@@ -30,6 +30,7 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
 	ctfws "ctf-platform/pkg/websocket"
@@ -39,7 +40,7 @@ type notificationIntegrationEnv struct {
 	router              *gin.Engine
 	db                  *gorm.DB
 	cache               *redislib.Client
-	tokenService        authModule.TokenService
+	tokenService        authcontracts.TokenService
 	notificationService *NotificationService
 }
 

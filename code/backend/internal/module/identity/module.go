@@ -1,15 +1,15 @@
 package identity
 
 import (
-	authModule "ctf-platform/internal/module/auth"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type Module struct {
-	authModule.TokenService
+	authcontracts.TokenService
 }
 
-func NewModule(tokenService authModule.TokenService) *Module {
+func NewModule(tokenService authcontracts.TokenService) *Module {
 	return &Module{TokenService: tokenService}
 }
 

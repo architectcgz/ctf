@@ -12,6 +12,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -66,11 +67,11 @@ func TestCASProviderAuthenticateAutoProvisionSuccess(t *testing.T) {
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 			if userID != 101 || username != "cas_user_1" || role != model.RoleStudent {
 				t.Fatalf("unexpected token issue params: %d %s %s", userID, username, role)
 			}
-			return &TokenPair{
+			return &authcontracts.TokenPair{
 				AccessToken:     "cas-access-token",
 				RefreshToken:    "cas-refresh-token",
 				AccessTokenTTL:  15 * time.Minute,
@@ -152,8 +153,8 @@ func TestCASProviderAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *tes
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
-			return &TokenPair{
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
+			return &authcontracts.TokenPair{
 				AccessToken:     "existing-access-token",
 				RefreshToken:    "existing-refresh-token",
 				AccessTokenTTL:  15 * time.Minute,

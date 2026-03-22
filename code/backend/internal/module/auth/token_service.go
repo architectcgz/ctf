@@ -13,45 +13,17 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
 )
-
-type TokenPair struct {
-	AccessToken     string
-	RefreshToken    string
-	AccessTokenTTL  time.Duration
-	RefreshTokenTTL time.Duration
-}
-
-type WSTicket struct {
-	Ticket    string
-	ExpiresAt time.Time
-}
 
 type wsTicketPayload struct {
 	UserID   int64     `json:"user_id"`
 	Username string    `json:"username"`
 	Role     string    `json:"role"`
 	IssuedAt time.Time `json:"issued_at"`
-}
-
-type TokenService interface {
-	IssueTokens(userID int64, username, role string) (*TokenPair, error)
-	IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*TokenPair, error)
-	RefreshAccessToken(ctx context.Context, refreshToken string) (*dtoRefreshPayload, error)
-	RevokeToken(ctx context.Context, jti string, ttl time.Duration) error
-	ClearRefreshSession(ctx context.Context, userID int64, refreshJTI string) error
-	IsRevoked(ctx context.Context, jti string) (bool, error)
-	ParseToken(tokenString string) (*jwtpkg.Claims, error)
-	IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error)
-	ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error)
-}
-
-type dtoRefreshPayload struct {
-	AccessToken string
-	ExpiresIn   int64
 }
 
 type tokenService struct {
@@ -61,7 +33,7 @@ type tokenService struct {
 	manager  *jwtpkg.Manager
 }
 
-func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cache *redislib.Client, manager *jwtpkg.Manager) TokenService {
+func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cache *redislib.Client, manager *jwtpkg.Manager) authcontracts.TokenService {
 	return &tokenService{
 		config:   cfg,
 		wsConfig: wsConfig,
@@ -70,11 +42,11 @@ func NewTokenService(cfg config.AuthConfig, wsConfig config.WebSocketConfig, cac
 	}
 }
 
-func (s *tokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+func (s *tokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	return s.IssueTokensWithContext(context.Background(), userID, username, role)
 }
 
-func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*TokenPair, error) {
+func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -92,7 +64,7 @@ func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64,
 		return nil, fmt.Errorf("store refresh session: %w", err)
 	}
 
-	return &TokenPair{
+	return &authcontracts.TokenPair{
 		AccessToken:     accessToken,
 		RefreshToken:    refreshToken,
 		AccessTokenTTL:  s.manager.AccessTokenTTL(),
@@ -100,7 +72,7 @@ func (s *tokenService) IssueTokensWithContext(ctx context.Context, userID int64,
 	}, nil
 }
 
-func (s *tokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*dtoRefreshPayload, error) {
+func (s *tokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
 	claims, err := s.manager.ParseToken(refreshToken)
 	if err != nil {
 		return nil, mapJWTError(err, true)
@@ -129,7 +101,7 @@ func (s *tokenService) RefreshAccessToken(ctx context.Context, refreshToken stri
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dtoRefreshPayload{
+	return &authcontracts.RefreshAccessPayload{
 		AccessToken: accessToken,
 		ExpiresIn:   accessClaims.ExpiresAt.Time.Unix() - time.Now().Unix(),
 	}, nil
@@ -182,7 +154,7 @@ func (s *tokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error) {
 	return s.manager.ParseToken(tokenString)
 }
 
-func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error) {
+func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	ticket, err := generateOpaqueToken(32)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -203,7 +175,7 @@ func (s *tokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUs
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &WSTicket{
+	return &authcontracts.WSTicket{
 		Ticket:    ticket,
 		ExpiresAt: expiresAt,
 	}, nil

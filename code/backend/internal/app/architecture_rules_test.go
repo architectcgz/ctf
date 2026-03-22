@@ -103,7 +103,7 @@ func concreteCrossModuleImport(sourceModule, importPath string) (moduleName stri
 	}
 	if len(parts) == 1 {
 		switch parts[0] {
-		case "runtimeinfra", "challenge", "practice", "system":
+		case "runtimeinfra", "challenge", "practice", "system", "auth":
 			return parts[0], "root", true
 		default:
 			return "", "", false
