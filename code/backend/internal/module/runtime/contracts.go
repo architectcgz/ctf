@@ -17,6 +17,12 @@ type RuntimeStatsProvider interface {
 	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)
 }
 
+type InstanceRepository interface {
+	UpdateRuntime(instance *model.Instance) error
+	UpdateStatusAndReleasePort(id int64, status string) error
+	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
+}
+
 type RuntimeFacade interface {
 	RuntimeStatsProvider
 	InspectImageSize(ctx context.Context, imageRef string) (int64, error)

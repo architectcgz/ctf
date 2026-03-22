@@ -62,39 +62,6 @@ func (h *Handler) StartContestChallenge(c *gin.Context) {
 	response.Success(c, instance)
 }
 
-// GetInstance 获取实例详情
-// GET /api/v1/instances/:id
-func (h *Handler) GetInstance(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-	instanceID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
-		return
-	}
-
-	instance, err := h.service.GetInstanceWithContext(c.Request.Context(), instanceID, userID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, instance)
-}
-
-// ListUserInstances 获取我的实例列表
-// GET /api/v1/instances
-func (h *Handler) ListUserInstances(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-
-	instances, err := h.service.ListUserInstancesWithContext(c.Request.Context(), userID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, instances)
-}
-
 // SubmitFlag 提交 Flag
 // POST /api/v1/challenges/:id/submit
 func (h *Handler) SubmitFlag(c *gin.Context) {

@@ -162,12 +162,62 @@ func TestFullRouter_AuthorizedSmokeMatrix(t *testing.T) {
 	}
 }
 
+func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	headers := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/instances", nil, headers)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var items []struct {
+		ID               int64     `json:"id"`
+		ChallengeID      int64     `json:"challenge_id"`
+		ChallengeTitle   string    `json:"challenge_title"`
+		Category         string    `json:"category"`
+		Difficulty       string    `json:"difficulty"`
+		FlagType         string    `json:"flag_type"`
+		Status           string    `json:"status"`
+		AccessURL        string    `json:"access_url"`
+		ExpiresAt        time.Time `json:"expires_at"`
+		RemainingTime    int64     `json:"remaining_time"`
+		RemainingExtends int       `json:"remaining_extends"`
+	}
+	decodeFullRouterData(t, resp, &items)
+
+	if len(items) != 1 {
+		t.Fatalf("expected 1 instance, got %+v", items)
+	}
+	item := items[0]
+	if item.ID != env.instance.ID {
+		t.Fatalf("expected instance id %d, got %d", env.instance.ID, item.ID)
+	}
+	if item.ChallengeID != env.challenge.ID {
+		t.Fatalf("expected challenge id %d, got %d", env.challenge.ID, item.ChallengeID)
+	}
+	if item.ChallengeTitle != env.challenge.Title {
+		t.Fatalf("expected challenge title %q, got %q", env.challenge.Title, item.ChallengeTitle)
+	}
+	if item.Category != env.challenge.Category {
+		t.Fatalf("expected category %q, got %q", env.challenge.Category, item.Category)
+	}
+	if item.Difficulty != env.challenge.Difficulty {
+		t.Fatalf("expected difficulty %q, got %q", env.challenge.Difficulty, item.Difficulty)
+	}
+	if item.FlagType != env.challenge.FlagType {
+		t.Fatalf("expected flag type %q, got %q", env.challenge.FlagType, item.FlagType)
+	}
+	if item.RemainingExtends != env.instance.MaxExtends-env.instance.ExtendCount {
+		t.Fatalf("expected remaining_extends %d, got %d", env.instance.MaxExtends-env.instance.ExtendCount, item.RemainingExtends)
+	}
+}
+
 func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
 	var calls []string
 
 	originalBuildContainerModule := buildContainerModule
+	originalBuildRuntimeModule := buildRuntimeModule
 	originalBuildSystemModule := buildSystemModule
 	originalBuildAuthModule := buildAuthModule
 	originalBuildChallengeModule := buildChallengeModule
@@ -178,6 +228,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
 		buildContainerModule = originalBuildContainerModule
+		buildRuntimeModule = originalBuildRuntimeModule
 		buildSystemModule = originalBuildSystemModule
 		buildAuthModule = originalBuildAuthModule
 		buildChallengeModule = originalBuildChallengeModule
@@ -195,12 +246,19 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "container")
 		return originalBuildContainerModule(root)
 	}
-	buildSystemModule = func(root *composition.Root, container *composition.ContainerModule) *composition.SystemModule {
+	buildRuntimeModule = func(root *composition.Root, container *composition.ContainerModule) *composition.RuntimeModule {
 		if root == nil || container == nil {
-			t.Fatal("expected root and container for system module builder")
+			t.Fatal("expected root and container for runtime module builder")
+		}
+		calls = append(calls, "runtime")
+		return originalBuildRuntimeModule(root, container)
+	}
+	buildSystemModule = func(root *composition.Root, runtime *composition.RuntimeModule) *composition.SystemModule {
+		if root == nil || runtime == nil {
+			t.Fatal("expected root and runtime for system module builder")
 		}
 		calls = append(calls, "system")
-		return originalBuildSystemModule(root, container)
+		return originalBuildSystemModule(root, runtime)
 	}
 	buildAuthModule = func(root *composition.Root, system *composition.SystemModule) (*composition.AuthModule, error) {
 		if root == nil || system == nil {
@@ -209,12 +267,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "auth")
 		return originalBuildAuthModule(root, system)
 	}
-	buildChallengeModule = func(root *composition.Root, container *composition.ContainerModule) (*composition.ChallengeModule, error) {
-		if root == nil || container == nil {
-			t.Fatal("expected root and container for challenge module builder")
+	buildChallengeModule = func(root *composition.Root, runtime *composition.RuntimeModule) (*composition.ChallengeModule, error) {
+		if root == nil || runtime == nil {
+			t.Fatal("expected root and runtime for challenge module builder")
 		}
 		calls = append(calls, "challenge")
-		return originalBuildChallengeModule(root, container)
+		return originalBuildChallengeModule(root, runtime)
 	}
 	buildAssessmentModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.AssessmentModule {
 		if root == nil || challenge == nil {
@@ -230,19 +288,19 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "teacher")
 		return originalBuildTeacherModule(root, assessment)
 	}
-	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, container *composition.ContainerModule) *composition.ContestModule {
-		if root == nil || challenge == nil || container == nil {
-			t.Fatal("expected root, challenge and container for contest module builder")
+	buildContestModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.RuntimeModule) *composition.ContestModule {
+		if root == nil || challenge == nil || runtime == nil {
+			t.Fatal("expected root, challenge and runtime for contest module builder")
 		}
 		calls = append(calls, "contest")
-		return originalBuildContestModule(root, challenge, container)
+		return originalBuildContestModule(root, challenge, runtime)
 	}
-	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, container *composition.ContainerModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
-		if root == nil || challenge == nil || container == nil || assessment == nil {
-			t.Fatal("expected root, challenge, container, and assessment for practice module builder")
+	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, runtime *composition.RuntimeModule, assessment *composition.AssessmentModule) *composition.PracticeModule {
+		if root == nil || challenge == nil || runtime == nil || assessment == nil {
+			t.Fatal("expected root, challenge, runtime, and assessment for practice module builder")
 		}
 		calls = append(calls, "practice")
-		return originalBuildPracticeModule(root, challenge, container, assessment)
+		return originalBuildPracticeModule(root, challenge, runtime, assessment)
 	}
 	buildPracticeReadmodelModule = func(root *composition.Root) *composition.PracticeReadmodelModule {
 		if root == nil {
@@ -260,7 +318,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"container", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice", "practice_readmodel"}
+	expectedCalls := []string{"container", "runtime", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice", "practice_readmodel"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

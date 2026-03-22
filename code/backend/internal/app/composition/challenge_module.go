@@ -14,7 +14,7 @@ type ChallengeModule struct {
 	WriteupHandler  *challengeModule.WriteupHandler
 }
 
-func BuildChallengeModule(root *Root, container *ContainerModule) (*ChallengeModule, error) {
+func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -22,7 +22,7 @@ func BuildChallengeModule(root *Root, container *ContainerModule) (*ChallengeMod
 
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, container.Service, cfg, log.Named("image_service"))
+	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.Service, cfg, log.Named("image_service"))
 	challengeService := challengeModule.NewService(
 		challengeRepo,
 		imageRepo,

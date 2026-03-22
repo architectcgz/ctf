@@ -17,7 +17,7 @@ type SystemModule struct {
 	WebSocketManager    *websocketpkg.Manager
 }
 
-func BuildSystemModule(root *Root, container *ContainerModule) *SystemModule {
+func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -26,8 +26,8 @@ func BuildSystemModule(root *Root, container *ContainerModule) *SystemModule {
 	auditRepo := system.NewAuditRepository(db)
 	auditService := system.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
 	dashboardService := system.NewDashboardService(
-		container.Query,
-		container.Service,
+		runtime.Query,
+		runtime.Service,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),

@@ -37,6 +37,7 @@ import (
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
+	runtimeModule "ctf-platform/internal/module/runtime"
 	systemModule "ctf-platform/internal/module/system"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -737,7 +738,11 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := containerModule.NewRepository(db)
 	containerService := containerModule.NewService(instanceRepo, nil, &cfg.Container, logger)
-	proxyTicketService := containerModule.NewProxyTicketService(cache, &cfg.Container)
+	runtimeService := runtimeModule.NewModule(
+		containerService,
+		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
+		cfg.Container.ProxyBodyPreviewSize,
+	)
 	practiceService := practiceModule.NewService(
 		practiceRepo,
 		challengeRepo,
@@ -755,7 +760,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelModule := practiceReadmodel.NewModule(practiceReadmodelService)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelModule)
-	containerHandler := containerModule.NewHandler(containerService, proxyTicketService, auditService, containerModule.ProxyCookieConfig{})
+	runtimeHandler := runtimeModule.NewHandler(runtimeService, auditService, runtimeModule.ProxyCookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)
@@ -797,9 +802,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	protected.POST("/challenges/:id/hints/:level/unlock", practiceHandler.UnlockHint)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
-	protected.POST("/instances/:id/access", containerHandler.AccessInstance)
-	apiV1.GET("/instances/:id/proxy", containerHandler.ProxyInstance)
-	apiV1.Any("/instances/:id/proxy/*proxyPath", containerHandler.ProxyInstance)
+	protected.POST("/instances/:id/access", runtimeHandler.AccessInstance)
+	apiV1.GET("/instances/:id/proxy", runtimeHandler.ProxyInstance)
+	apiV1.Any("/instances/:id/proxy/*proxyPath", runtimeHandler.ProxyInstance)
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceReadmodelHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceReadmodelHandler.GetTimeline)

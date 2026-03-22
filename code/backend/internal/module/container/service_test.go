@@ -397,6 +397,132 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	}
 }
 
+func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestService(repo)
+	now := time.Now()
+
+	if err := repo.db.Create(&model.Challenge{
+		ID:         101,
+		Title:      "Matrix Web Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     100,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1001,
+		UserID:      1,
+		ChallengeID: 101,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30001",
+		ExpiresAt:   now.Add(time.Hour),
+		ExtendCount: 1,
+		MaxExtends:  3,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 1)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected 1 instance, got %+v", items)
+	}
+	item := items[0]
+	if item.ChallengeTitle != "Matrix Web Challenge" {
+		t.Fatalf("expected challenge title, got %+v", item)
+	}
+	if item.Category != model.DimensionWeb {
+		t.Fatalf("expected category %q, got %+v", model.DimensionWeb, item)
+	}
+	if item.Difficulty != model.ChallengeDifficultyEasy {
+		t.Fatalf("expected difficulty %q, got %+v", model.ChallengeDifficultyEasy, item)
+	}
+	if item.FlagType != model.FlagTypeStatic {
+		t.Fatalf("expected flag type %q, got %+v", model.FlagTypeStatic, item)
+	}
+	if item.RemainingExtends != 2 {
+		t.Fatalf("expected remaining extends 2, got %+v", item)
+	}
+}
+
+func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestService(repo)
+	now := time.Now()
+	contestID := int64(501)
+	teamID := int64(601)
+
+	if err := repo.db.Create(&model.Challenge{
+		ID:         102,
+		Title:      "Shared AWD Challenge",
+		Category:   model.DimensionPwn,
+		Difficulty: model.ChallengeDifficultyMedium,
+		FlagType:   model.FlagTypeDynamic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     150,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := repo.db.Create(&model.Team{
+		ID:         teamID,
+		ContestID:  contestID,
+		Name:       "Runtime Team",
+		CaptainID:  1,
+		InviteCode: "runtime",
+		MaxMembers: 4,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create team: %v", err)
+	}
+	if err := repo.db.Create(&model.TeamMember{
+		ContestID: contestID,
+		TeamID:    teamID,
+		UserID:    2,
+		JoinedAt:  now,
+		CreatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create team member: %v", err)
+	}
+
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1002,
+		UserID:      1,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: 102,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30002",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1002 {
+		t.Fatalf("expected teammate visible shared instance, got %+v", items)
+	}
+}
+
 func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testing.T) {
 	t.Parallel()
 

@@ -12,7 +12,7 @@ type ContestModule struct {
 	TeamHandler          *contestModule.TeamHandler
 }
 
-func BuildContestModule(root *Root, challenge *ChallengeModule, container *ContainerModule) *ContestModule {
+func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -50,7 +50,7 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, container *Conta
 		cache,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
-		contestModule.NewDockerAWDFlagInjector(db, container.Service, log.Named("awd_flag_injector")),
+		contestModule.NewDockerAWDFlagInjector(db, runtime.Service, log.Named("awd_flag_injector")),
 		log.Named("awd_round_updater"),
 	)
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("contest_status_updater", statusUpdater.Start))

@@ -588,14 +588,14 @@ func (s *Service) GetUserInstancesWithContext(ctx context.Context, userID int64)
 		ctx = context.Background()
 	}
 
-	instances, err := s.repo.FindVisibleByUser(ctx, userID)
+	instances, err := s.repo.ListVisibleByUser(ctx, userID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	result := make([]*dto.InstanceInfo, len(instances))
 	for i, inst := range instances {
-		result[i] = toInstanceInfo(inst)
+		result[i] = toInstanceInfo(inst, time.Now())
 	}
 	return result, nil
 }
@@ -855,17 +855,21 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 	}
 }
 
-func toInstanceInfo(inst *model.Instance) *dto.InstanceInfo {
+func toInstanceInfo(inst UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
 	return &dto.InstanceInfo{
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
+		ChallengeTitle:   inst.ChallengeTitle,
+		Category:         inst.Category,
+		Difficulty:       inst.Difficulty,
+		FlagType:         inst.FlagType,
 		Status:           inst.Status,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    calculateRemainingTime(inst.ExpiresAt, time.Now()),
+		RemainingTime:    calculateRemainingTime(inst.ExpiresAt, now),
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst),
+		RemainingExtends: remainingExtends(&model.Instance{MaxExtends: inst.MaxExtends, ExtendCount: inst.ExtendCount}),
 		CreatedAt:        inst.CreatedAt,
 	}
 }
