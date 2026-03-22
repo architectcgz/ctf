@@ -44,10 +44,10 @@ type createdTopologyNetwork struct {
 }
 
 const (
-	managedByLabelKey           = "managed-by"
-	managedByLabelValue         = "ctf-platform"
-	challengeInstanceLabelKey   = "ctf-component"
-	challengeInstanceLabelValue = "challenge-instance"
+	managedByLabelKey           = runtimedomain.ManagedByLabelKey
+	managedByLabelValue         = runtimedomain.ManagedByLabelValue
+	challengeInstanceLabelKey   = runtimedomain.ChallengeInstanceLabelKey
+	challengeInstanceLabelValue = runtimedomain.ChallengeInstanceLabelValue
 	managedContainerNamePrefix  = "ctf-instance-"
 	managedNetworkNamePrefix    = "ctf-net-"
 )
@@ -56,9 +56,6 @@ type runtimeEngine interface {
 	CreateNetwork(ctx context.Context, name string, labels map[string]string, internal bool) (string, error)
 	CreateContainer(ctx context.Context, cfg *model.ContainerConfig) (string, error)
 	ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error)
-	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
-	RemoveImage(ctx context.Context, imageRef string) error
-	ListManagedContainerStats(ctx context.Context, managedBy string) ([]runtimeinfra.ManagedContainerStat, error)
 	ConnectContainerToNetwork(ctx context.Context, containerID, networkName string) error
 	InspectContainerNetworkIPs(ctx context.Context, containerID string) (map[string]string, error)
 	StartContainer(ctx context.Context, containerID string) error
@@ -67,7 +64,6 @@ type runtimeEngine interface {
 	RemoveNetwork(ctx context.Context, networkID string) error
 	ApplyACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
 	RemoveACLRules(ctx context.Context, rules []model.InstanceRuntimeACLRule) error
-	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
 	ListManagedContainers(ctx context.Context, managedBy string) ([]runtimeinfra.ManagedContainer, error)
 }
 
@@ -151,27 +147,6 @@ func (s *Service) resolveServicePort(ctx context.Context, imageRef string) (int,
 		return preferredPort, nil
 	}
 	return resolvedPort, nil
-}
-
-func (s *Service) InspectImageSize(ctx context.Context, imageRef string) (int64, error) {
-	if strings.TrimSpace(imageRef) == "" || s.engine == nil {
-		return 0, nil
-	}
-	return s.engine.InspectImageSize(ctx, imageRef)
-}
-
-func (s *Service) RemoveImage(ctx context.Context, imageRef string) error {
-	if strings.TrimSpace(imageRef) == "" || s.engine == nil {
-		return nil
-	}
-	return s.engine.RemoveImage(ctx, imageRef)
-}
-
-func (s *Service) ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
-	if s.engine == nil {
-		return []runtimeinfra.ManagedContainerStat{}, nil
-	}
-	return s.engine.ListManagedContainerStats(ctx, managedByFilter())
 }
 
 func (s *Service) CleanupRuntime(instance *model.Instance) error {
@@ -460,14 +435,6 @@ func (s *Service) RemoveNetworkWithContext(ctx context.Context, networkID string
 	return nil
 }
 
-func (s *Service) WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error {
-	if s.engine == nil {
-		s.logger.Info("写入容器文件（降级跳过）", zap.String("container_id", containerID), zap.String("path", filePath))
-		return nil
-	}
-	return s.engine.WriteFileToContainer(ctx, containerID, filePath, content)
-}
-
 func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	instances, err := s.repo.FindExpired()
 	if err != nil {
@@ -494,7 +461,7 @@ func (s *Service) CleanupOrphans(ctx context.Context) error {
 		return nil
 	}
 
-	managedContainers, err := s.engine.ListManagedContainers(ctx, managedByFilter())
+	managedContainers, err := s.engine.ListManagedContainers(ctx, runtimedomain.ManagedByFilter())
 	if err != nil {
 		return err
 	}
@@ -581,10 +548,6 @@ func buildManagedNetworkName(key string) string {
 		trimmed = model.TopologyDefaultNetworkKey
 	}
 	return fmt.Sprintf("%s%s-%d", managedNetworkNamePrefix, trimmed, time.Now().UnixNano())
-}
-
-func managedByFilter() string {
-	return fmt.Sprintf("%s=%s", managedByLabelKey, managedByLabelValue)
 }
 
 func selectOrphanContainers(

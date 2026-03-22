@@ -28,6 +28,16 @@ type RuntimeCleaner interface {
 	CleanupRuntimeWithContext(ctx context.Context, instance *model.Instance) error
 }
 
+// ManagedContainerStat 表示 runtime application 层暴露的受管容器运行指标快照。
+type ManagedContainerStat struct {
+	ContainerID   string
+	ContainerName string
+	CPUPercent    float64
+	MemoryPercent float64
+	MemoryUsage   int64
+	MemoryLimit   int64
+}
+
 // TeacherInstanceFilter 定义教师端实例列表筛选条件。
 type TeacherInstanceFilter struct {
 	ClassName string
