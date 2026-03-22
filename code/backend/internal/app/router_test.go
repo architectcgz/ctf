@@ -84,11 +84,9 @@ func TestIdentityModuleContractsCompile(t *testing.T) {
 
 func TestRuntimeModuleContractsCompile(t *testing.T) {
 	var _ runtime.RuntimeStatsProvider = (*runtime.Module)(nil)
-	var _ runtime.RuntimeFacade = (*runtime.Module)(nil)
 	var _ runtime.RuntimeHTTPService = (*runtime.Module)(nil)
 	var _ runtime.InstanceRepository = (*runtime.Module)(nil)
 	var _ runtime.InstanceRepository = (*runtimeinfrarepo.Repository)(nil)
-	var _ runtime.RuntimeFacade = (*runtime.Service)(nil)
 }
 
 func TestOpsModuleContractsCompile(t *testing.T) {
@@ -110,10 +108,10 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodel.PracticeQuery)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Query", reflect.TypeOf((*runtime.RuntimeQuery)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Service", reflect.TypeOf((*runtime.RuntimeFacade)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.TeacherModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Repository")
+	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Service")
 }
 
 func TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies(t *testing.T) {

@@ -37,12 +37,18 @@ type imageStore interface {
 	FindByID(id int64) (*model.Image, error)
 }
 
+type runtimeInstanceService interface {
+	CleanupRuntime(instance *model.Instance) error
+	CreateTopology(ctx context.Context, req *runtime.TopologyCreateRequest) (*runtime.TopologyCreateResult, error)
+	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+}
+
 type Service struct {
 	repo              *Repository
 	challengeRepo     challenge.PracticeChallengeContract
 	imageRepo         imageStore
 	instanceRepo      runtime.InstanceRepository
-	runtimeService    runtime.RuntimeFacade
+	runtimeService    runtimeInstanceService
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
 	redis             *redis.Client
@@ -67,7 +73,7 @@ func NewService(
 	challengeRepo challenge.PracticeChallengeContract,
 	imageRepo imageStore,
 	instanceRepo runtime.InstanceRepository,
-	runtimeService runtime.RuntimeFacade,
+	runtimeService runtimeInstanceService,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
