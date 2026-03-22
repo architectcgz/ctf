@@ -1,7 +1,6 @@
-package runtime
+package domain
 
 import (
-	"context"
 	"fmt"
 	"hash/fnv"
 	"sort"
@@ -27,8 +26,18 @@ type aclRuleSpec struct {
 	ports    []int
 }
 
-func (s *Service) resolveTopologyACLRules(ctx context.Context, req *TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
-	if s.engine == nil || req == nil || len(req.Policies) == 0 {
+type aclBinding struct {
+	sourceIP string
+	targetIP string
+}
+
+// ResolveTopologyACLRules 根据实例运行时拓扑和容器 IP 信息解析细粒度 ACL 规则。
+func ResolveTopologyACLRules(
+	policies []model.TopologyTrafficPolicy,
+	details model.InstanceRuntimeDetails,
+	ipsByContainerID map[string]map[string]string,
+) ([]model.InstanceRuntimeACLRule, error) {
+	if len(policies) == 0 {
 		return nil, nil
 	}
 
@@ -45,17 +54,8 @@ func (s *Service) resolveTopologyACLRules(ctx context.Context, req *TopologyCrea
 		networkNameByKey[network.Key] = network.Name
 	}
 
-	ipsByContainerID := make(map[string]map[string]string, len(details.Containers))
-	for _, container := range details.Containers {
-		ipsByNetworkName, err := s.engine.InspectContainerNetworkIPs(ctx, container.ContainerID)
-		if err != nil {
-			return nil, err
-		}
-		ipsByContainerID[container.ContainerID] = ipsByNetworkName
-	}
-
 	groups := make(map[string]*aclRuleGroup)
-	for _, policy := range req.Policies {
+	for _, policy := range policies {
 		if model.IsBroadTopologyPolicy(policy) {
 			continue
 		}
@@ -131,11 +131,6 @@ func (s *Service) resolveTopologyACLRules(ctx context.Context, req *TopologyCrea
 	}
 
 	return rules, nil
-}
-
-type aclBinding struct {
-	sourceIP string
-	targetIP string
 }
 
 func (b aclBinding) groupKey() string {

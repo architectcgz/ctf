@@ -22,6 +22,21 @@ func TestApplicationDoesNotDependOnHTTPOrRuntimeInfra(t *testing.T) {
 	}
 }
 
+func TestDomainDoesNotDependOnGinGORMOrRuntimeInfra(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("domain", "*.go"))
+	if err != nil {
+		t.Fatalf("glob domain files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtimeinfra")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+	}
+}
+
 func TestAPIHTTPDoesNotDependOnGORMOrRuntimeInfra(t *testing.T) {
 	t.Parallel()
 

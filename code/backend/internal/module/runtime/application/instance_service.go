@@ -10,6 +10,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -176,7 +177,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 			Status:          item.Status,
 			AccessURL:       item.AccessURL,
 			ExpiresAt:       item.ExpiresAt,
-			RemainingTime:   calculateRemainingTime(item.ExpiresAt, now),
+			RemainingTime:   runtimedomain.RemainingTime(item.ExpiresAt, now),
 			ExtendCount:     item.ExtendCount,
 			MaxExtends:      item.MaxExtends,
 			CreatedAt:       item.CreatedAt,
@@ -242,7 +243,7 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
+		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
 }
@@ -258,28 +259,12 @@ func toInstanceInfo(inst UserVisibleInstanceRow, now time.Time) *dto.InstanceInf
 		Status:           inst.Status,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    calculateRemainingTime(inst.ExpiresAt, now),
+		RemainingTime:    runtimedomain.RemainingTime(inst.ExpiresAt, now),
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
+		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
-}
-
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
-}
-
-func calculateRemainingTime(expiresAt, now time.Time) int64 {
-	remaining := int64(expiresAt.Sub(now).Seconds())
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
 }
 
 func normalizeContext(ctx context.Context) context.Context {
