@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"ctf-platform/internal/dto"
-	teacherModule "ctf-platform/internal/module/teacher"
+	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
 type Module struct {
-	repo *teacherModule.Repository
+	repo *readmodelinfra.Repository
 }
 
-func NewModule(repo *teacherModule.Repository) *Module {
+func NewModule(repo *readmodelinfra.Repository) *Module {
 	return &Module{repo: repo}
 }
 

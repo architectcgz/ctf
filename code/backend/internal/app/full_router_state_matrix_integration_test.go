@@ -9,15 +9,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	flagcrypto "ctf-platform/pkg/crypto"
 	redislib "github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	xws "golang.org/x/net/websocket"
 )
 
@@ -25,6 +29,39 @@ type fullRouterEnvelope struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data"`
+}
+
+func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
+	cfg, db, cache := newAppTestDependencies(t)
+
+	originalBuildTeacherModule := buildTeacherModule
+	t.Cleanup(func() {
+		buildTeacherModule = originalBuildTeacherModule
+	})
+
+	called := false
+	buildTeacherModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeacherModule {
+		module := originalBuildTeacherModule(root, assessment)
+		called = true
+		if module == nil || module.Handler == nil {
+			t.Fatal("expected teacher module handler")
+		}
+		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&teachinghttp.Handler{}); got != want {
+			t.Fatalf("teacher handler type = %v, want %v", got, want)
+		}
+		return module
+	}
+
+	router, err := NewRouter(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("NewRouter() error = %v", err)
+	}
+	if router == nil {
+		t.Fatal("expected router")
+	}
+	if !called {
+		t.Fatal("expected teacher module builder to be called")
+	}
 }
 
 func TestFullRouter_ContestParticipationStateMatrix(t *testing.T) {

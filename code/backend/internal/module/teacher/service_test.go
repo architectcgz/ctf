@@ -10,6 +10,8 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	readmodelapp "ctf-platform/internal/module/teaching_readmodel/application"
+	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -218,6 +220,35 @@ func TestServiceGetClassSummaryForTeacher(t *testing.T) {
 	}
 	if summary.ActiveRate != 100 {
 		t.Fatalf("expected active_rate=100, got %+v", summary)
+	}
+}
+
+func TestTeacherQueriesDoNotExposeWriteOperations(t *testing.T) {
+	db := setupTeacherTestDB(t)
+
+	type teacherReadOnlyQuery interface {
+		ListClasses(ctx context.Context, requesterID int64, requesterRole string) ([]dto.TeacherClassItem, error)
+		ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error)
+		GetClassSummary(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassSummaryResp, error)
+		GetClassTrend(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassTrendResp, error)
+		GetClassReview(ctx context.Context, requesterID int64, requesterRole, className string) (*dto.TeacherClassReviewResp, error)
+		GetStudentProgress(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.TeacherProgressResp, error)
+		GetStudentRecommendations(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit int) ([]dto.TeacherRecommendationItem, error)
+		GetStudentTimeline(ctx context.Context, requesterID int64, requesterRole string, studentID int64, limit, offset int) (*dto.TimelineResp, error)
+	}
+
+	var service teacherReadOnlyQuery = readmodelapp.NewQueryService(
+		readmodelinfra.NewRepository(db),
+		&stubRecommendationProvider{},
+		nil,
+	)
+
+	classes, err := service.ListClasses(context.Background(), 1, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("ListClasses() error = %v", err)
+	}
+	if len(classes) != 1 || classes[0].Name != "Class A" {
+		t.Fatalf("unexpected classes: %+v", classes)
 	}
 }
 
