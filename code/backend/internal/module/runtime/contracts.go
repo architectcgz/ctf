@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
@@ -21,44 +20,6 @@ type ProxyCookieConfig struct {
 
 type RuntimeQuery interface {
 	CountRunning() (int64, error)
-}
-
-type TeacherInstanceFilter struct {
-	ClassName string
-	Keyword   string
-	StudentNo string
-}
-
-type UserVisibleInstanceRow struct {
-	ID             int64
-	ChallengeID    int64
-	ChallengeTitle string
-	Category       string
-	Difficulty     string
-	FlagType       string
-	Status         string
-	AccessURL      string
-	ExpiresAt      time.Time
-	ExtendCount    int
-	MaxExtends     int
-	CreatedAt      time.Time
-}
-
-type TeacherInstanceRow struct {
-	ID              int64
-	StudentID       int64
-	StudentName     string
-	StudentUsername string
-	StudentNo       *string
-	ClassName       string
-	ChallengeID     int64
-	ChallengeTitle  string
-	Status          string
-	AccessURL       string
-	ExpiresAt       time.Time
-	ExtendCount     int
-	MaxExtends      int
-	CreatedAt       time.Time
 }
 
 type RuntimeStatsProvider interface {

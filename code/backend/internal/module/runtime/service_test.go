@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	. "ctf-platform/internal/module/runtime"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -246,7 +247,7 @@ func TestServiceDestroyInstanceAllowsContestTeamMember(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 	contestID := int64(301)
 	teamID := int64(401)
@@ -285,7 +286,7 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 	contestID := int64(302)
 	teamID := int64(402)
@@ -335,7 +336,7 @@ func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
 	if err := repo.db.Create(&model.Challenge{
@@ -394,7 +395,7 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 	contestID := int64(501)
 	teamID := int64(601)
@@ -505,11 +506,7 @@ func TestServiceDestroyManagedInstanceRemovesAllRuntimeContainers(t *testing.T) 
 
 	repo := newTestRepository(t)
 	engine := &fakeRuntimeEngine{}
-	service := NewService(repo, engine, &config.ContainerConfig{
-		MaxExtends:        2,
-		ExtendDuration:    30 * time.Minute,
-		OrphanGracePeriod: 5 * time.Minute,
-	}, nil)
+	service := newTestRuntimeModule(repo, engine)
 
 	instance := &model.Instance{
 		ID:             1,
@@ -767,7 +764,7 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
 	seedUser(t, repo.db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
@@ -805,7 +802,7 @@ func TestServiceListTeacherInstancesRejectsTeacherCrossClassFilter(t *testing.T)
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
 	seedUser(t, repo.db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
@@ -820,7 +817,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	t.Parallel()
 
 	repo := newTestRepository(t)
-	service := newTestService(repo)
+	service := newTestRuntimeModule(repo, nil)
 	now := time.Now()
 
 	seedUser(t, repo.db, &model.User{ID: 1, Username: "teacher-a", Role: model.RoleTeacher, ClassName: "Class A", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now})
@@ -880,6 +877,17 @@ func newTestService(repo *runtimeTestRepository) *Service {
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}, nil)
+}
+
+func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *Module {
+	cfg := &config.ContainerConfig{
+		MaxExtends:        2,
+		ExtendDuration:    30 * time.Minute,
+		OrphanGracePeriod: 5 * time.Minute,
+	}
+	service := NewService(repo, engine, cfg, nil)
+	instanceService := runtimeapp.NewInstanceService(repo, service, cfg, nil)
+	return NewModule(service, instanceService, nil, 0)
 }
 
 type fakeRuntimeEngine struct {

@@ -25,19 +25,12 @@ type Service struct {
 
 type runtimeRepository interface {
 	CreateWithContext(ctx context.Context, instance *model.Instance) error
-	FindByID(id int64) (*model.Instance, error)
-	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.Instance, error)
 	UpdateStatusWithContext(ctx context.Context, id int64, status string) error
 	UpdateStatusAndReleasePort(id int64, status string) error
-	FindAccessibleByIDForUser(ctx context.Context, instanceID, userID int64) (*model.Instance, error)
-	ListVisibleByUser(ctx context.Context, userID int64) ([]UserVisibleInstanceRow, error)
-	ListTeacherInstances(ctx context.Context, filter TeacherInstanceFilter) ([]TeacherInstanceRow, error)
-	AtomicExtendByIDWithContext(ctx context.Context, id int64, maxExtends int, duration time.Duration) error
 	FindExpired() ([]*model.Instance, error)
 	ListActiveContainerIDs() ([]string, error)
 	ListAllocatedPorts() ([]int, error)
-	CountRunning() (int64, error)
 }
 
 type TopologyCreateNode struct {
@@ -531,203 +524,6 @@ func (s *Service) CreateInstanceWithContext(ctx context.Context, userID, challen
 	return toInstanceResp(instance), nil
 }
 
-func (s *Service) DestroyInstance(instanceID, userID int64) error {
-	return s.DestroyInstanceWithContext(context.Background(), instanceID, userID)
-}
-
-func (s *Service) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if instance == nil {
-		return errcode.ErrForbidden
-	}
-
-	s.logger.Info("销毁实例",
-		zap.Int64("instance_id", instanceID),
-		zap.Int64("user_id", userID))
-
-	return s.destroyManagedInstanceWithContext(ctx, instance)
-}
-
-func (s *Service) ExtendInstance(instanceID, userID int64) (*dto.InstanceResp, error) {
-	return s.ExtendInstanceWithContext(context.Background(), instanceID, userID)
-}
-
-func (s *Service) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if instance == nil {
-		return nil, errcode.ErrForbidden
-	}
-	if instance.Status != model.InstanceStatusRunning {
-		return nil, errcode.ErrInstanceExpired
-	}
-
-	// 使用原子更新避免并发竞争
-	if err := s.repo.AtomicExtendByIDWithContext(ctx, instanceID, s.config.MaxExtends, s.config.ExtendDuration); err != nil {
-		return nil, err
-	}
-
-	updatedInstance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if updatedInstance == nil {
-		return nil, errcode.ErrForbidden
-	}
-
-	s.logger.Info("延时实例",
-		zap.Int64("instance_id", instanceID),
-		zap.Int("extend_count", instance.ExtendCount+1),
-		zap.Time("new_expires_at", instance.ExpiresAt.Add(s.config.ExtendDuration)))
-
-	return toInstanceResp(updatedInstance), nil
-}
-
-func (s *Service) GetUserInstances(userID int64) ([]*dto.InstanceInfo, error) {
-	return s.GetUserInstancesWithContext(context.Background(), userID)
-}
-
-func (s *Service) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instances, err := s.repo.ListVisibleByUser(ctx, userID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	result := make([]*dto.InstanceInfo, len(instances))
-	for i, inst := range instances {
-		result[i] = toInstanceInfo(inst, time.Now())
-	}
-	return result, nil
-}
-
-func (s *Service) GetAccessURL(instanceID, userID int64) (string, error) {
-	return s.GetAccessURLWithContext(context.Background(), instanceID, userID)
-}
-
-func (s *Service) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	instance, err := s.repo.FindAccessibleByIDForUser(ctx, instanceID, userID)
-	if err != nil {
-		return "", errcode.ErrInternal.WithCause(err)
-	}
-	if instance == nil {
-		return "", errcode.ErrForbidden
-	}
-	if instance.Status != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
-		return "", errcode.ErrInstanceExpired
-	}
-	return instance.AccessURL, nil
-}
-
-func (s *Service) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
-	filter := TeacherInstanceFilter{}
-	if query != nil {
-		filter.ClassName = strings.TrimSpace(query.ClassName)
-		filter.Keyword = strings.TrimSpace(query.Keyword)
-		filter.StudentNo = strings.TrimSpace(query.StudentNo)
-	}
-
-	if requesterRole != model.RoleAdmin {
-		requester, err := s.repo.FindUserByID(ctx, requesterID)
-		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
-		}
-		if requester == nil {
-			return nil, errcode.ErrUnauthorized
-		}
-
-		className := strings.TrimSpace(requester.ClassName)
-		if className == "" {
-			return []dto.TeacherInstanceItem{}, nil
-		}
-		if filter.ClassName != "" && filter.ClassName != className {
-			return nil, errcode.ErrForbidden
-		}
-		filter.ClassName = className
-	}
-
-	items, err := s.repo.ListTeacherInstances(ctx, filter)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	now := time.Now()
-	result := make([]dto.TeacherInstanceItem, len(items))
-	for idx, item := range items {
-		result[idx] = dto.TeacherInstanceItem{
-			ID:              item.ID,
-			StudentID:       item.StudentID,
-			StudentName:     item.StudentName,
-			StudentUsername: item.StudentUsername,
-			StudentNo:       item.StudentNo,
-			ClassName:       item.ClassName,
-			ChallengeID:     item.ChallengeID,
-			ChallengeTitle:  item.ChallengeTitle,
-			Status:          item.Status,
-			AccessURL:       item.AccessURL,
-			ExpiresAt:       item.ExpiresAt,
-			RemainingTime:   calculateRemainingTime(item.ExpiresAt, now),
-			ExtendCount:     item.ExtendCount,
-			MaxExtends:      item.MaxExtends,
-			CreatedAt:       item.CreatedAt,
-		}
-	}
-
-	return result, nil
-}
-
-func (s *Service) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
-	instance, err := s.repo.FindByID(instanceID)
-	if err != nil {
-		return errcode.ErrInstanceNotFound
-	}
-
-	if requesterRole != model.RoleAdmin {
-		requester, err := s.repo.FindUserByID(ctx, requesterID)
-		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-		if requester == nil {
-			return errcode.ErrUnauthorized
-		}
-
-		owner, err := s.repo.FindUserByID(ctx, instance.UserID)
-		if err != nil {
-			return errcode.ErrInternal.WithCause(err)
-		}
-		if owner == nil || strings.TrimSpace(owner.ClassName) == "" || owner.ClassName != requester.ClassName {
-			return errcode.ErrForbidden
-		}
-	}
-
-	s.logger.Info("教师销毁实例",
-		zap.Int64("instance_id", instanceID),
-		zap.Int64("requester_id", requesterID),
-		zap.String("requester_role", requesterRole))
-
-	return s.destroyManagedInstanceWithContext(ctx, instance)
-}
-
 func (s *Service) CleanExpiredInstances(ctx context.Context) error {
 	instances, err := s.repo.FindExpired()
 	if err != nil {
@@ -884,50 +680,17 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst),
+		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
 }
 
-func toInstanceInfo(inst UserVisibleInstanceRow, now time.Time) *dto.InstanceInfo {
-	return &dto.InstanceInfo{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		ChallengeTitle:   inst.ChallengeTitle,
-		Category:         inst.Category,
-		Difficulty:       inst.Difficulty,
-		FlagType:         inst.FlagType,
-		Status:           inst.Status,
-		AccessURL:        inst.AccessURL,
-		ExpiresAt:        inst.ExpiresAt,
-		RemainingTime:    calculateRemainingTime(inst.ExpiresAt, now),
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(&model.Instance{MaxExtends: inst.MaxExtends, ExtendCount: inst.ExtendCount}),
-		CreatedAt:        inst.CreatedAt,
-	}
-}
-
-func remainingExtends(inst *model.Instance) int {
-	remaining := inst.MaxExtends - inst.ExtendCount
+func remainingExtends(maxExtends int, extendCount int) int {
+	remaining := maxExtends - extendCount
 	if remaining < 0 {
 		return 0
 	}
 	return remaining
-}
-
-func (s *Service) destroyManagedInstance(instance *model.Instance) error {
-	return s.destroyManagedInstanceWithContext(context.Background(), instance)
-}
-
-func (s *Service) destroyManagedInstanceWithContext(ctx context.Context, instance *model.Instance) error {
-	if err := s.CleanupRuntimeWithContext(ctx, instance); err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if err := s.repo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusStopped); err != nil {
-		return errcode.ErrInternal.WithCause(err)
-	}
-	return nil
 }
 
 func managedContainerIDs(instance *model.Instance) []string {
@@ -1023,12 +786,4 @@ func collectCreatedNetworkIDs(networks []createdTopologyNetwork) []string {
 		}
 	}
 	return result
-}
-
-func calculateRemainingTime(expiresAt, now time.Time) int64 {
-	remaining := int64(expiresAt.Sub(now).Seconds())
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
 }

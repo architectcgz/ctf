@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	runtime "ctf-platform/internal/module/runtime"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -260,7 +260,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 	return instances, err
 }
 
-func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtime.UserVisibleInstanceRow, error) {
+func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeapp.UserVisibleInstanceRow, error) {
 	rows := make([]userVisibleInstanceRow, 0)
 	err := r.db.WithContext(ctx).
 		Table("instances AS inst").
@@ -288,9 +288,9 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		return nil, err
 	}
 
-	items := make([]runtime.UserVisibleInstanceRow, len(rows))
+	items := make([]runtimeapp.UserVisibleInstanceRow, len(rows))
 	for idx, row := range rows {
-		items[idx] = runtime.UserVisibleInstanceRow{
+		items[idx] = runtimeapp.UserVisibleInstanceRow{
 			ID:             row.ID,
 			ChallengeID:    row.ChallengeID,
 			ChallengeTitle: row.ChallengeTitle,
@@ -316,7 +316,7 @@ func (r *Repository) FindExpired() ([]*model.Instance, error) {
 	return instances, err
 }
 
-func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtime.TeacherInstanceFilter) ([]runtime.TeacherInstanceRow, error) {
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeapp.TeacherInstanceFilter) ([]runtimeapp.TeacherInstanceRow, error) {
 	rows := make([]teacherInstanceRow, 0)
 
 	query := r.db.WithContext(ctx).
@@ -357,9 +357,9 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtime.Te
 		return nil, fmt.Errorf("list teacher instances: %w", err)
 	}
 
-	items := make([]runtime.TeacherInstanceRow, len(rows))
+	items := make([]runtimeapp.TeacherInstanceRow, len(rows))
 	for idx, row := range rows {
-		items[idx] = runtime.TeacherInstanceRow{
+		items[idx] = runtimeapp.TeacherInstanceRow{
 			ID:              row.ID,
 			StudentID:       row.StudentID,
 			StudentName:     row.StudentName,
