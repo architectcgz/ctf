@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
-	"time"
 
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -14,9 +12,6 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
-	"ctf-platform/internal/module/assessment"
-	"ctf-platform/internal/module/container"
-	"ctf-platform/internal/module/contest"
 )
 
 type reportServiceCloser interface {
@@ -29,15 +24,10 @@ type lifecycleComponent struct {
 }
 
 type HTTPServer struct {
-	server        *http.Server
-	cleaner       *container.Cleaner
-	assessment    *assessment.Cleaner
-	closers       []lifecycleComponent
-	statusUpdater *contest.StatusUpdater
-	awdUpdater    *contest.AWDRoundUpdater
-	updaterCancel context.CancelFunc
-	updaterWG     *sync.WaitGroup
-	logger        *zap.Logger
+	server         *http.Server
+	backgroundJobs []composition.BackgroundJob
+	closers        []lifecycleComponent
+	logger         *zap.Logger
 }
 
 func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*HTTPServer, error) {
@@ -50,56 +40,7 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 	if err != nil {
 		return nil, err
 	}
-	if routerRuntime.container == nil || routerRuntime.container.Service == nil {
-		return nil, fmt.Errorf("container service not initialized")
-	}
-	if routerRuntime.assessment == nil || routerRuntime.assessment.Service == nil {
-		return nil, fmt.Errorf("assessment service not initialized")
-	}
-
-	cleaner := container.NewCleaner(routerRuntime.container.Service, cache, cfg.Container.CleanupLockTTL, log.Named("container_cleaner"))
-
-	if err := cleaner.Start(cfg.Container.CleanupInterval); err != nil {
-		return nil, fmt.Errorf("启动清理任务失败: %w", err)
-	}
-
-	assessmentCleaner := assessment.NewCleaner(routerRuntime.assessment.Service, log.Named("assessment_cleaner"))
-	if err := assessmentCleaner.Start(cfg.Assessment.FullRebuildCron, cfg.Assessment.FullRebuildTimeout); err != nil {
-		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = cleaner.Stop(cleanupCtx)
-		return nil, fmt.Errorf("启动能力画像任务失败: %w", err)
-	}
-
-	statusUpdater := contest.NewStatusUpdater(
-		routerRuntime.contest.Repository,
-		cache,
-		cfg.Contest.StatusUpdateInterval,
-		cfg.Contest.StatusUpdateBatchSize,
-		cfg.Contest.StatusUpdateLockTTL,
-		log.Named("contest_status_updater"),
-	)
-	awdUpdater := contest.NewAWDRoundUpdater(
-		db,
-		cache,
-		cfg.Contest.AWD,
-		cfg.Container.FlagGlobalSecret,
-		contest.NewDockerAWDFlagInjector(db, routerRuntime.container.Service, log.Named("awd_flag_injector")),
-		log.Named("awd_round_updater"),
-	)
-	updaterCtx, updaterCancel := context.WithCancel(context.Background())
-	updaterWG := &sync.WaitGroup{}
-	updaterWG.Add(2)
-	go func() {
-		defer updaterWG.Done()
-		statusUpdater.Start(updaterCtx)
-	}()
-	go func() {
-		defer updaterWG.Done()
-		awdUpdater.Start(updaterCtx)
-	}()
-
-	return &HTTPServer{
+	server := &HTTPServer{
 		server: &http.Server{
 			Addr:         fmt.Sprintf("%s:%d", cfg.HTTP.Host, cfg.HTTP.Port),
 			Handler:      routerRuntime.engine,
@@ -107,15 +48,14 @@ func NewHTTPServer(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redi
 			WriteTimeout: cfg.HTTP.WriteTimeout,
 			IdleTimeout:  cfg.HTTP.IdleTimeout,
 		},
-		cleaner:       cleaner,
-		assessment:    assessmentCleaner,
-		closers:       routerRuntime.closers,
-		statusUpdater: statusUpdater,
-		awdUpdater:    awdUpdater,
-		updaterCancel: updaterCancel,
-		updaterWG:     updaterWG,
-		logger:        log,
-	}, nil
+		backgroundJobs: root.BackgroundJobs(),
+		closers:        routerRuntime.closers,
+		logger:         log,
+	}
+	if err := server.startBackgroundJobs(); err != nil {
+		return nil, err
+	}
+	return server, nil
 }
 
 func (s *HTTPServer) Start() error {
@@ -125,27 +65,8 @@ func (s *HTTPServer) Start() error {
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	var shutdownErrs []error
 
-	s.logger.Info("停止竞赛状态更新任务")
-	s.logger.Info("停止 AWD 轮次推进任务")
-	if s.updaterCancel != nil {
-		s.updaterCancel()
-	}
-	if err := s.waitForUpdaters(ctx); err != nil {
+	if err := s.stopBackgroundJobs(ctx); err != nil {
 		shutdownErrs = append(shutdownErrs, err)
-	}
-
-	s.logger.Info("停止清理任务")
-	if s.cleaner != nil {
-		if err := s.cleaner.Stop(ctx); err != nil {
-			shutdownErrs = append(shutdownErrs, err)
-		}
-	}
-
-	s.logger.Info("停止能力画像任务")
-	if s.assessment != nil {
-		if err := s.assessment.Stop(ctx); err != nil {
-			shutdownErrs = append(shutdownErrs, err)
-		}
 	}
 
 	for _, component := range s.closers {
@@ -164,19 +85,23 @@ func (s *HTTPServer) Shutdown(ctx context.Context) error {
 	return errors.Join(shutdownErrs...)
 }
 
-func (s *HTTPServer) waitForUpdaters(ctx context.Context) error {
-	done := make(chan struct{})
-	go func() {
-		if s.updaterWG != nil {
-			s.updaterWG.Wait()
+func (s *HTTPServer) startBackgroundJobs() error {
+	for _, job := range s.backgroundJobs {
+		s.logger.Info("启动后台任务", zap.String("job", job.Name()))
+		if err := job.Start(context.Background()); err != nil {
+			return fmt.Errorf("%s: %w", job.Name(), err)
 		}
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
 	}
+	return nil
+}
+
+func (s *HTTPServer) stopBackgroundJobs(ctx context.Context) error {
+	var errs []error
+	for _, job := range s.backgroundJobs {
+		s.logger.Info("停止后台任务", zap.String("job", job.Name()))
+		if err := job.Stop(ctx); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", job.Name(), err))
+		}
+	}
+	return errors.Join(errs...)
 }

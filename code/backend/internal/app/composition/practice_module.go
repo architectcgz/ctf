@@ -27,6 +27,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, container *Cont
 		cfg,
 		log.Named("practice_service"),
 	)
+	service.SetEventBus(root.Events)
 
 	return &PracticeModule{
 		Handler: practiceModule.NewHandler(service),

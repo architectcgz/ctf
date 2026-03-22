@@ -12,7 +12,7 @@ type ContestModule struct {
 	TeamHandler          *contestModule.TeamHandler
 }
 
-func BuildContestModule(root *Root, challenge *ChallengeModule) *ContestModule {
+func BuildContestModule(root *Root, challenge *ChallengeModule, container *ContainerModule) *ContestModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -37,6 +37,24 @@ func BuildContestModule(root *Root, challenge *ChallengeModule) *ContestModule {
 	participationService := contestModule.NewParticipationService(repo, participationRepo, teamRepo)
 	submissionRepo := contestModule.NewSubmissionRepository(db)
 	submissionService := contestModule.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagService, teamRepo, scoreboardService, cfg)
+	statusUpdater := contestModule.NewStatusUpdater(
+		repo,
+		cache,
+		cfg.Contest.StatusUpdateInterval,
+		cfg.Contest.StatusUpdateBatchSize,
+		cfg.Contest.StatusUpdateLockTTL,
+		log.Named("contest_status_updater"),
+	)
+	awdUpdater := contestModule.NewAWDRoundUpdater(
+		db,
+		cache,
+		cfg.Contest.AWD,
+		cfg.Container.FlagGlobalSecret,
+		contestModule.NewDockerAWDFlagInjector(db, container.Service, log.Named("awd_flag_injector")),
+		log.Named("awd_round_updater"),
+	)
+	root.RegisterBackgroundJob(NewLoopBackgroundJob("contest_status_updater", statusUpdater.Start))
+	root.RegisterBackgroundJob(NewLoopBackgroundJob("awd_round_updater", awdUpdater.Start))
 
 	return &ContestModule{
 		AWDHandler:           contestModule.NewAWDHandler(awdService),

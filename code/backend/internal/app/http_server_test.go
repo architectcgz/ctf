@@ -3,10 +3,10 @@ package app
 import (
 	"context"
 	"net/http"
-	"sync"
 	"testing"
 	"time"
 
+	"ctf-platform/internal/app/composition"
 	"go.uber.org/zap"
 )
 
@@ -28,8 +28,7 @@ func TestHTTPServerShutdownClosesReportService(t *testing.T) {
 		closers: []lifecycleComponent{
 			{name: "report_service", closer: reportCloser},
 		},
-		updaterWG: &sync.WaitGroup{},
-		logger:    zap.NewNop(),
+		logger: zap.NewNop(),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -42,6 +41,52 @@ func TestHTTPServerShutdownClosesReportService(t *testing.T) {
 	case <-reportCloser.closed:
 	default:
 		t.Fatal("expected report service to be closed")
+	}
+}
+
+func TestHTTPServerStartsAndStopsRegisteredBackgroundJobs(t *testing.T) {
+	t.Parallel()
+
+	started := make(chan struct{}, 1)
+	stopped := make(chan struct{}, 1)
+	server := &HTTPServer{
+		server: &http.Server{},
+		backgroundJobs: []composition.BackgroundJob{
+			composition.NewBackgroundJob(
+				"test_background_job",
+				func(context.Context) error {
+					started <- struct{}{}
+					return nil
+				},
+				func(context.Context) error {
+					stopped <- struct{}{}
+					return nil
+				},
+			),
+		},
+		logger: zap.NewNop(),
+	}
+
+	if err := server.startBackgroundJobs(); err != nil {
+		t.Fatalf("startBackgroundJobs() error = %v", err)
+	}
+
+	select {
+	case <-started:
+	default:
+		t.Fatal("expected background job to be started")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+
+	select {
+	case <-stopped:
+	default:
+		t.Fatal("expected background job to be stopped")
 	}
 }
 
@@ -63,7 +108,7 @@ func TestNewHTTPServerBuildsAndShutsDown(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewHTTPServer() error = %v", err)
 	}
-	if server.cleaner == nil || server.assessment == nil || server.statusUpdater == nil || server.awdUpdater == nil {
+	if len(server.backgroundJobs) == 0 {
 		t.Fatal("expected http server background components to be initialized")
 	}
 

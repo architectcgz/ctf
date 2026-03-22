@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
@@ -16,6 +17,8 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
 	"ctf-platform/internal/module/runtime"
+	"ctf-platform/internal/platform/events"
+	flagcrypto "ctf-platform/pkg/crypto"
 )
 
 type stubAssessmentService struct {
@@ -246,6 +249,91 @@ func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {
 	case <-called:
 		t.Fatal("expected closed service to skip async task")
 	case <-time.After(50 * time.Millisecond):
+	}
+}
+
+func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
+	t.Parallel()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.Submission{}); err != nil {
+		t.Fatalf("migrate submissions: %v", err)
+	}
+
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+	flagSalt := "static-salt"
+
+	bus := events.NewBus()
+	repo := NewRepository(db)
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   100,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeStatic,
+					FlagSalt: flagSalt,
+					FlagHash: flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+			Cache: config.CacheConfig{
+				ProgressTTL: time.Minute,
+			},
+		},
+		nil,
+	)
+	service.SetEventBus(bus)
+
+	received := make(chan FlagAcceptedEvent, 1)
+	bus.Subscribe(EventFlagAccepted, func(_ context.Context, evt events.Event) error {
+		payload, ok := evt.Payload.(FlagAcceptedEvent)
+		if !ok {
+			t.Fatalf("unexpected payload type: %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
+
+	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct submission response, got %+v", resp)
+	}
+
+	select {
+	case evt := <-received:
+		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != model.DimensionWeb {
+			t.Fatalf("unexpected event payload: %+v", evt)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected practice.flag_accepted event to be published")
 	}
 }
 
