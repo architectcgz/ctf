@@ -7,11 +7,13 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
 type Module struct {
 	*Service
+	instanceRepository   InstanceRepository
 	instanceService      instanceHTTPService
 	proxyTickets         proxyTicketService
 	proxyBodyPreviewSize int
@@ -35,6 +37,17 @@ type proxyTicketService interface {
 func NewModule(service *Service, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
 	return &Module{
 		Service:              service,
+		instanceRepository:   nil,
+		instanceService:      instanceService,
+		proxyTickets:         proxyTickets,
+		proxyBodyPreviewSize: proxyBodyPreviewSize,
+	}
+}
+
+func NewModuleWithRepository(service *Service, instanceRepository InstanceRepository, instanceService instanceHTTPService, proxyTickets proxyTicketService, proxyBodyPreviewSize int) *Module {
+	return &Module{
+		Service:              service,
+		instanceRepository:   instanceRepository,
 		instanceService:      instanceService,
 		proxyTickets:         proxyTickets,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
@@ -83,6 +96,27 @@ func (m *Module) DestroyTeacherInstance(ctx context.Context, instanceID, request
 	return m.instanceService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
 }
 
+func (m *Module) UpdateRuntime(instance *model.Instance) error {
+	if m == nil || m.instanceRepository == nil {
+		return errInstanceRepositoryUnavailable()
+	}
+	return m.instanceRepository.UpdateRuntime(instance)
+}
+
+func (m *Module) UpdateStatusAndReleasePort(id int64, status string) error {
+	if m == nil || m.instanceRepository == nil {
+		return errInstanceRepositoryUnavailable()
+	}
+	return m.instanceRepository.UpdateStatusAndReleasePort(id, status)
+}
+
+func (m *Module) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
+	if m == nil || m.instanceRepository == nil {
+		return nil, errInstanceRepositoryUnavailable()
+	}
+	return m.instanceRepository.FindByUserAndChallenge(userID, challengeID)
+}
+
 func (m *Module) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error) {
 	if m == nil || m.proxyTickets == nil {
 		return "", errProxyTicketServiceUnavailable()
@@ -119,4 +153,8 @@ func errProxyTicketServiceUnavailable() error {
 
 func errInstanceServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("instance application service is not configured"))
+}
+
+func errInstanceRepositoryUnavailable() error {
+	return errcode.ErrInternal.WithCause(fmt.Errorf("instance repository contract is not configured"))
 }

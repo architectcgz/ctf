@@ -37,17 +37,11 @@ type imageStore interface {
 	FindByID(id int64) (*model.Image, error)
 }
 
-type instanceStore interface {
-	UpdateRuntime(instance *model.Instance) error
-	UpdateStatusAndReleasePort(id int64, status string) error
-	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
-}
-
 type Service struct {
 	repo              *Repository
 	challengeRepo     challenge.PracticeChallengeContract
 	imageRepo         imageStore
-	instanceRepo      instanceStore
+	instanceRepo      runtime.InstanceRepository
 	runtimeService    runtime.RuntimeFacade
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
@@ -72,7 +66,7 @@ func NewService(
 	repo *Repository,
 	challengeRepo challenge.PracticeChallengeContract,
 	imageRepo imageStore,
-	instanceRepo instanceStore,
+	instanceRepo runtime.InstanceRepository,
 	runtimeService runtime.RuntimeFacade,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
