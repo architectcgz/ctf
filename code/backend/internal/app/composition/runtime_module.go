@@ -13,8 +13,11 @@ import (
 type RuntimeModule struct {
 	Handler *runtimehttp.Handler
 
-	service *runtimeModule.Module
-	query   *runtimeapp.QueryService
+	service              *runtimeModule.Module
+	query                *runtimeapp.QueryService
+	imageRuntimeService  *runtimeapp.ImageRuntimeService
+	containerStats       *runtimeapp.ContainerStatsService
+	containerFileService *runtimeapp.ContainerFileService
 }
 
 func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
@@ -44,8 +47,11 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	)
 
 	return &RuntimeModule{
-		service: service,
-		query:   runtimeapp.NewQueryService(repo),
+		service:              service,
+		query:                runtimeapp.NewQueryService(repo),
+		imageRuntimeService:  runtimeapp.NewImageRuntimeService(infra.Engine),
+		containerStats:       runtimeapp.NewContainerStatsService(newRuntimeManagedContainerStatsReader(infra.Engine)),
+		containerFileService: runtimeapp.NewContainerFileService(infra.Engine, log.Named("runtime_container_file_service")),
 	}
 }
 

@@ -50,7 +50,7 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		cache,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
-		contestModule.NewDockerAWDFlagInjector(db, runtime.service, log.Named("awd_flag_injector")),
+		contestModule.NewDockerAWDFlagInjector(db, runtime.containerFileService, log.Named("awd_flag_injector")),
 		log.Named("awd_round_updater"),
 	)
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("contest_status_updater", statusUpdater.Start))
