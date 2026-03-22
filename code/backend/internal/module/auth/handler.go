@@ -12,13 +12,14 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
 	service       Service
-	tokenService  TokenService
+	tokenService  authcontracts.TokenService
 	casProvider   CASProvider
 	cookieConfig  CookieConfig
 	log           *zap.Logger
@@ -34,7 +35,7 @@ type CookieConfig struct {
 	MaxAge   time.Duration
 }
 
-func NewHandler(service Service, tokenService TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
+func NewHandler(service Service, tokenService authcontracts.TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
 	}

@@ -10,12 +10,13 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
 type Service interface {
-	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *TokenPair, error)
-	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *TokenPair, error)
+	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
 	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
 	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
 	ValidatePassword(user *model.User, password string) bool
@@ -23,12 +24,12 @@ type Service interface {
 
 type service struct {
 	repo         Repository
-	tokenService TokenService
+	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	loginPolicy  config.RateLimitPolicyConfig
 }
 
-func NewService(repo Repository, tokenService TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
+func NewService(repo Repository, tokenService authcontracts.TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -41,7 +42,7 @@ func NewService(repo Repository, tokenService TokenService, loginPolicy config.R
 	}
 }
 
-func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *TokenPair, error) {
+func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	s.log.Info("auth_register_attempt", zap.String("username", req.Username))
 
 	user := &model.User{
@@ -77,7 +78,7 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *TokenPair, error) {
+func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	s.log.Info("auth_login_attempt", zap.String("username", req.Username))
 
 	user, err := s.repo.FindByUsername(ctx, req.Username)
@@ -183,7 +184,7 @@ func (s *service) ValidatePassword(user *model.User, password string) bool {
 	return user.CheckPassword(password)
 }
 
-func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *TokenPair, error) {
+func (s *service) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	tokens, err := s.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		s.log.Error("auth_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))

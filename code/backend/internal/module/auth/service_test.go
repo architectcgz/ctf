@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
@@ -168,21 +169,21 @@ func TestServiceChangePasswordRejectsSamePassword(t *testing.T) {
 }
 
 type mockTokenService struct {
-	issueFn func(userID int64, username, role string) (*TokenPair, error)
+	issueFn func(userID int64, username, role string) (*authcontracts.TokenPair, error)
 }
 
-func (m *mockTokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+func (m *mockTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	return m.IssueTokensWithContext(context.Background(), userID, username, role)
 }
 
-func (m *mockTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*TokenPair, error) {
+func (m *mockTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	if m.issueFn == nil {
 		return nil, errors.New("unexpected call")
 	}
 	return m.issueFn(userID, username, role)
 }
 
-func (m *mockTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*dtoRefreshPayload, error) {
+func (m *mockTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
 	return nil, nil
 }
 
@@ -202,7 +203,7 @@ func (m *mockTokenService) ParseToken(tokenString string) (*jwtpkg.Claims, error
 	return nil, nil
 }
 
-func (m *mockTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error) {
+func (m *mockTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	return nil, nil
 }
 
@@ -226,11 +227,11 @@ func TestServiceRegisterSuccess(t *testing.T) {
 		},
 	}
 	tokenService := &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 			if userID != 101 {
 				t.Fatalf("unexpected user id: %d", userID)
 			}
-			return &TokenPair{
+			return &authcontracts.TokenPair{
 				AccessToken:     "access-token",
 				RefreshToken:    "refresh-token",
 				AccessTokenTTL:  15 * time.Minute,
@@ -265,7 +266,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 			return ErrRoleNotFound
 		},
 	}, &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 			return nil, errors.New("should not be called")
 		},
 	}, config.RateLimitPolicyConfig{}, zap.NewNop())
@@ -308,7 +309,7 @@ func TestServiceLoginInvalidPassword(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 			return nil, errors.New("should not be called")
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
@@ -350,7 +351,7 @@ func TestServiceLoginLocksAccountAfterExceededAttempts(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 			t.Fatal("IssueTokens() should not be called")
 			return nil, nil
 		},
@@ -396,8 +397,8 @@ func TestServiceLoginUnlocksExpiredAccountAndSucceeds(t *testing.T) {
 			return nil
 		},
 	}, &mockTokenService{
-		issueFn: func(userID int64, username, role string) (*TokenPair, error) {
-			return &TokenPair{AccessToken: "access", RefreshToken: "refresh", AccessTokenTTL: time.Minute}, nil
+		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {
+			return &authcontracts.TokenPair{AccessToken: "access", RefreshToken: "refresh", AccessTokenTTL: time.Minute}, nil
 		},
 	}, config.RateLimitPolicyConfig{Limit: 3, Window: time.Minute, LockDuration: 15 * time.Minute}, zap.NewNop())
 

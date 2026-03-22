@@ -29,6 +29,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	systemModule "ctf-platform/internal/module/system"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -728,7 +729,7 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 	}
 }
 
-func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, manager *jwtpkg.Manager) TokenService {
+func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, manager *jwtpkg.Manager) authcontracts.TokenService {
 	return &memoryTokenService{
 		config:   cfg,
 		wsConfig: wsCfg,
@@ -738,11 +739,11 @@ func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig, 
 	}
 }
 
-func (s *memoryTokenService) IssueTokens(userID int64, username, role string) (*TokenPair, error) {
+func (s *memoryTokenService) IssueTokens(userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	return s.IssueTokensWithContext(context.Background(), userID, username, role)
 }
 
-func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*TokenPair, error) {
+func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID int64, username, role string) (*authcontracts.TokenPair, error) {
 	accessToken, _, err := s.manager.GenerateAccessToken(userID, username, role)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)
@@ -753,7 +754,7 @@ func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID in
 		return nil, fmt.Errorf("generate refresh token: %w", err)
 	}
 
-	return &TokenPair{
+	return &authcontracts.TokenPair{
 		AccessToken:     accessToken,
 		RefreshToken:    refreshToken,
 		AccessTokenTTL:  s.manager.AccessTokenTTL(),
@@ -761,7 +762,7 @@ func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID in
 	}, nil
 }
 
-func (s *memoryTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*dtoRefreshPayload, error) {
+func (s *memoryTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
 	claims, err := s.manager.ParseToken(refreshToken)
 	if err != nil {
 		return nil, mapJWTError(err, true)
@@ -783,7 +784,7 @@ func (s *memoryTokenService) RefreshAccessToken(ctx context.Context, refreshToke
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	return &dtoRefreshPayload{
+	return &authcontracts.RefreshAccessPayload{
 		AccessToken: accessToken,
 		ExpiresIn:   accessClaims.ExpiresAt.Time.Unix() - time.Now().Unix(),
 	}, nil
@@ -828,7 +829,7 @@ func (s *memoryTokenService) ParseToken(tokenString string) (*jwtpkg.Claims, err
 	return s.manager.ParseToken(tokenString)
 }
 
-func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error) {
+func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {
 	ticket := fmt.Sprintf("ticket_%s", randomHex(12))
 	expiresAt := time.Now().Add(s.wsConfig.TicketTTL)
 
@@ -840,7 +841,7 @@ func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.Cur
 		Role:     user.Role,
 	}
 
-	return &WSTicket{
+	return &authcontracts.WSTicket{
 		Ticket:    ticket,
 		ExpiresAt: expiresAt,
 	}, nil
@@ -983,7 +984,7 @@ func testRequestID() gin.HandlerFunc {
 	}
 }
 
-func testAuthMiddleware(tokenService TokenService) gin.HandlerFunc {
+func testAuthMiddleware(tokenService authcontracts.TokenService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := extractBearerToken(c.GetHeader("Authorization"))
 		if tokenString == "" {

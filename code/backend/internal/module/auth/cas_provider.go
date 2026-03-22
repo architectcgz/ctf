@@ -18,6 +18,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
 )
@@ -34,13 +35,13 @@ const (
 type CASProvider interface {
 	Status() *dto.CASStatusResp
 	BuildLogin(ctx context.Context) (*dto.CASLoginResp, error)
-	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *TokenPair, error)
+	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error)
 }
 
 type casProvider struct {
 	config       config.CASConfig
 	repo         Repository
-	tokenService TokenService
+	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	httpClient   *http.Client
 }
@@ -79,7 +80,7 @@ type casPrincipal struct {
 	TeacherNo string
 }
 
-func NewCASProvider(cfg config.CASConfig, repo Repository, tokenService TokenService, log *zap.Logger, httpClient *http.Client) CASProvider {
+func NewCASProvider(cfg config.CASConfig, repo Repository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASProvider {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -126,7 +127,7 @@ func (p *casProvider) BuildLogin(context.Context) (*dto.CASLoginResp, error) {
 	}, nil
 }
 
-func (p *casProvider) Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *TokenPair, error) {
+func (p *casProvider) Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	if !p.config.Enabled {
 		return nil, nil, errcode.ErrCASDisabled
 	}
@@ -289,7 +290,7 @@ func (p *casProvider) mergePrincipal(user *model.User, principal *casPrincipal) 
 	return changed
 }
 
-func (p *casProvider) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *TokenPair, error) {
+func (p *casProvider) issueLoginResp(ctx context.Context, user *model.User) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	tokens, err := p.tokenService.IssueTokensWithContext(ctx, user.ID, user.Username, user.Role)
 	if err != nil {
 		p.log.Error("auth_cas_issue_token_failed", zap.String("username", user.Username), zap.Int64("user_id", user.ID), zap.Error(err))

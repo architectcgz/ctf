@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	authModule "ctf-platform/internal/module/auth"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
 	"ctf-platform/pkg/response"
 )
 
-func Auth(tokenService authModule.TokenService) gin.HandlerFunc {
+func Auth(tokenService authcontracts.TokenService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := extractBearerToken(c.GetHeader("Authorization"))
 		if tokenString == "" {
