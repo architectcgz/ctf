@@ -17,6 +17,7 @@ func TestApplicationDoesNotDependOnHTTPOrRuntimeInfra(t *testing.T) {
 	}
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+		assertFileDoesNotImport(t, file, "github.com/redis/go-redis/v9")
 		assertFileDoesNotImport(t, file, "ctf-platform/pkg/response")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/runtimeinfra")
 	}
