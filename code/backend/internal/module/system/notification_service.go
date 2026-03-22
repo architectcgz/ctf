@@ -12,7 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/practice"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 	ctfws "ctf-platform/pkg/websocket"
@@ -47,12 +47,12 @@ func (s *NotificationService) RegisterPracticeEventConsumers(bus platformevents.
 	if s == nil || bus == nil {
 		return
 	}
-	bus.Subscribe(practice.EventFlagAccepted, s.handlePracticeFlagAccepted)
-	bus.Subscribe(practice.EventHintUnlocked, s.handlePracticeHintUnlocked)
+	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeFlagAccepted)
+	bus.Subscribe(practicecontracts.EventHintUnlocked, s.handlePracticeHintUnlocked)
 }
 
 func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(practice.FlagAcceptedEvent)
+	payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
 	}
@@ -66,7 +66,7 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 }
 
 func (s *NotificationService) handlePracticeHintUnlocked(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(practice.HintUnlockedEvent)
+	payload, ok := evt.Payload.(practicecontracts.HintUnlockedEvent)
 	if !ok {
 		return fmt.Errorf("unexpected practice hint event payload: %T", evt.Payload)
 	}

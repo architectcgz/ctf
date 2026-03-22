@@ -6,7 +6,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	challengeModule "ctf-platform/internal/module/challenge"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 
 	"gorm.io/gorm"
@@ -14,11 +14,11 @@ import (
 
 type ChallengeService struct {
 	repo          *ChallengeRepository
-	challengeRepo challengeModule.ContestChallengeContract
+	challengeRepo challengecontracts.ContestChallengeContract
 	contestRepo   Repository
 }
 
-func NewChallengeService(repo *ChallengeRepository, challengeRepo challengeModule.ContestChallengeContract, contestRepo Repository) *ChallengeService {
+func NewChallengeService(repo *ChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo Repository) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,

@@ -1,9 +1,12 @@
 package composition
 
 import (
+	"context"
+
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/module/ops"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	"ctf-platform/internal/module/system"
 	websocketpkg "ctf-platform/pkg/websocket"
 )
@@ -17,6 +20,14 @@ type SystemModule struct {
 	WebSocketManager    *websocketpkg.Manager
 }
 
+type runtimeSystemQuery interface {
+	CountRunning() (int64, error)
+}
+
+type runtimeSystemStatsProvider interface {
+	ListManagedContainerStats(ctx context.Context) ([]system.ManagedContainerStat, error)
+}
+
 func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	cfg := root.Config()
 	log := root.Logger()
@@ -26,8 +37,8 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	auditRepo := system.NewAuditRepository(db)
 	auditService := system.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
 	dashboardService := system.NewDashboardService(
-		runtime.query,
-		newSystemRuntimeStatsProvider(runtime.containerStats),
+		runtime.system.query,
+		runtime.system.statsProvider,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),
@@ -71,4 +82,36 @@ func (m *SystemModule) BuildNotificationHandler(root *Root, auth *AuthModule) {
 
 func NamedAuditLogger(log *zap.Logger) *zap.Logger {
 	return log.Named("audit_middleware")
+}
+
+type systemRuntimeStatsProvider struct {
+	service *runtimeapp.ContainerStatsService
+}
+
+func newSystemRuntimeStatsProvider(service *runtimeapp.ContainerStatsService) *systemRuntimeStatsProvider {
+	return &systemRuntimeStatsProvider{service: service}
+}
+
+func (p *systemRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]system.ManagedContainerStat, error) {
+	if p == nil || p.service == nil {
+		return []system.ManagedContainerStat{}, nil
+	}
+
+	stats, err := p.service.ListManagedContainerStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]system.ManagedContainerStat, 0, len(stats))
+	for _, item := range stats {
+		result = append(result, system.ManagedContainerStat{
+			ContainerID:   item.ContainerID,
+			ContainerName: item.ContainerName,
+			CPUPercent:    item.CPUPercent,
+			MemoryPercent: item.MemoryPercent,
+			MemoryUsage:   item.MemoryUsage,
+			MemoryLimit:   item.MemoryLimit,
+		})
+	}
+	return result, nil
 }

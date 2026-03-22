@@ -15,7 +15,8 @@ import (
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/challenge"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -50,7 +51,7 @@ type instanceRepository interface {
 
 type Service struct {
 	repo              *Repository
-	challengeRepo     challenge.PracticeChallengeContract
+	challengeRepo     challengecontracts.PracticeChallengeContract
 	imageRepo         imageStore
 	instanceRepo      instanceRepository
 	runtimeService    runtimeInstanceService
@@ -75,7 +76,7 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 
 func NewService(
 	repo *Repository,
-	challengeRepo challenge.PracticeChallengeContract,
+	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo imageStore,
 	instanceRepo instanceRepository,
 	runtimeService runtimeInstanceService,
@@ -318,8 +319,8 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
 		}
 		s.publishWeakEvent(ctx, platformevents.Event{
-			Name: EventFlagAccepted,
-			Payload: FlagAcceptedEvent{
+			Name: practicecontracts.EventFlagAccepted,
+			Payload: practicecontracts.FlagAcceptedEvent{
 				UserID:      userID,
 				ChallengeID: challengeID,
 				Dimension:   challengeItem.Category,
@@ -376,8 +377,8 @@ func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockH
 	}
 
 	s.publishWeakEvent(context.Background(), platformevents.Event{
-		Name: EventHintUnlocked,
-		Payload: HintUnlockedEvent{
+		Name: practicecontracts.EventHintUnlocked,
+		Payload: practicecontracts.HintUnlockedEvent{
 			UserID:      userID,
 			ChallengeID: challengeID,
 			Dimension:   challengeItem.Category,

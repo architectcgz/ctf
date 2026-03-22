@@ -92,13 +92,24 @@ func concreteCrossModuleImport(sourceModule, importPath string) (moduleName stri
 	}
 
 	parts := strings.Split(strings.TrimPrefix(importPath, prefix), "/")
-	if len(parts) < 2 {
+	if len(parts) == 0 {
 		return "", "", false
 	}
 	if parts[0] == sourceModule {
 		return "", "", false
 	}
 	if sourceModule == "teacher" && parts[0] == "teaching_readmodel" {
+		return "", "", false
+	}
+	if len(parts) == 1 {
+		switch parts[0] {
+		case "runtimeinfra", "challenge", "practice", "system":
+			return parts[0], "root", true
+		default:
+			return "", "", false
+		}
+	}
+	if len(parts) < 2 {
 		return "", "", false
 	}
 

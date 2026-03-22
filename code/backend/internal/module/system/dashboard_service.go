@@ -10,7 +10,6 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
-	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -18,8 +17,17 @@ type runtimeQuery interface {
 	CountRunning() (int64, error)
 }
 
+type ManagedContainerStat struct {
+	ContainerID   string
+	ContainerName string
+	CPUPercent    float64
+	MemoryPercent float64
+	MemoryUsage   int64
+	MemoryLimit   int64
+}
+
 type runtimeStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error)
+	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)
 }
 
 type DashboardService struct {

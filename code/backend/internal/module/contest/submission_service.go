@@ -15,7 +15,7 @@ import (
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/challenge"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -23,13 +23,13 @@ type SubmissionService struct {
 	contestRepo       Repository
 	repo              *SubmissionRepository
 	redis             *redislib.Client
-	flagValidator     challenge.FlagValidator
+	flagValidator     challengecontracts.FlagValidator
 	teamRepo          *TeamRepository
 	scoreboardService *ScoreboardService
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challenge.FlagValidator, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,

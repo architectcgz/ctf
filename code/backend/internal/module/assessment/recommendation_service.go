@@ -13,7 +13,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/practice"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 )
@@ -48,8 +48,8 @@ func (s *RecommendationService) RegisterPracticeEventConsumers(bus platformevent
 	if s == nil || bus == nil {
 		return
 	}
-	bus.Subscribe(practice.EventFlagAccepted, s.handlePracticeCacheRefreshEvent)
-	bus.Subscribe(practice.EventHintUnlocked, s.handlePracticeCacheRefreshEvent)
+	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeCacheRefreshEvent)
+	bus.Subscribe(practicecontracts.EventHintUnlocked, s.handlePracticeCacheRefreshEvent)
 }
 
 func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
@@ -59,9 +59,9 @@ func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Cont
 
 	var userID int64
 	switch payload := evt.Payload.(type) {
-	case practice.FlagAcceptedEvent:
+	case practicecontracts.FlagAcceptedEvent:
 		userID = payload.UserID
-	case practice.HintUnlockedEvent:
+	case practicecontracts.HintUnlockedEvent:
 		userID = payload.UserID
 	default:
 		return fmt.Errorf("unexpected practice cache refresh payload: %T", evt.Payload)

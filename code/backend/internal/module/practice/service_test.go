@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -295,9 +296,9 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	)
 	service.SetEventBus(bus)
 
-	received := make(chan FlagAcceptedEvent, 1)
-	bus.Subscribe(EventFlagAccepted, func(_ context.Context, evt events.Event) error {
-		payload, ok := evt.Payload.(FlagAcceptedEvent)
+	received := make(chan practicecontracts.FlagAcceptedEvent, 1)
+	bus.Subscribe(practicecontracts.EventFlagAccepted, func(_ context.Context, evt events.Event) error {
+		payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
 		if !ok {
 			t.Fatalf("unexpected payload type: %T", evt.Payload)
 		}

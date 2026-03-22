@@ -17,7 +17,6 @@ import (
 	"ctf-platform/internal/model"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -33,10 +32,10 @@ func (s *stubDashboardRuntimeQuery) CountRunning() (int64, error) {
 }
 
 type stubDashboardRuntimeStatsProvider struct {
-	listManagedContainerStatsFn func(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error)
+	listManagedContainerStatsFn func(ctx context.Context) ([]ManagedContainerStat, error)
 }
 
-func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
+func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error) {
 	if s.listManagedContainerStatsFn == nil {
 		return nil, nil
 	}
@@ -194,8 +193,8 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 			},
 		},
 		&stubDashboardRuntimeStatsProvider{
-			listManagedContainerStatsFn: func(ctx context.Context) ([]runtimeinfra.ManagedContainerStat, error) {
-				return []runtimeinfra.ManagedContainerStat{
+			listManagedContainerStatsFn: func(ctx context.Context) ([]ManagedContainerStat, error) {
+				return []ManagedContainerStat{
 					{
 						ContainerID:   "runtime-1",
 						ContainerName: "runtime-web",
