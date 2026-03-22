@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	readmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 )
 
 type timelineEventRow struct {
@@ -22,7 +22,7 @@ type timelineEventRow struct {
 	Detail      string
 }
 
-func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, offset int) ([]dto.TimelineEvent, error) {
+func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, offset int) ([]readmodelapp.TimelineEventRecord, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -107,7 +107,7 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 	})
 
 	if offset >= len(events) {
-		return []dto.TimelineEvent{}, nil
+		return []readmodelapp.TimelineEventRecord{}, nil
 	}
 
 	end := offset + limit
@@ -115,9 +115,9 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 		end = len(events)
 	}
 
-	items := make([]dto.TimelineEvent, 0, end-offset)
+	items := make([]readmodelapp.TimelineEventRecord, 0, end-offset)
 	for _, event := range events[offset:end] {
-		items = append(items, dto.TimelineEvent{
+		items = append(items, readmodelapp.TimelineEventRecord{
 			Type:        event.Type,
 			ChallengeID: event.ChallengeID,
 			Title:       event.Title,
