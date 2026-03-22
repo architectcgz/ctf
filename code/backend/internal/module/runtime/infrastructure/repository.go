@@ -61,17 +61,6 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Create(instance *model.Instance) error {
-	return r.CreateWithContext(context.Background(), instance)
-}
-
-func (r *Repository) CreateWithContext(ctx context.Context, instance *model.Instance) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return r.db.WithContext(ctx).Create(instance).Error
-}
-
 func (r *Repository) FindByID(id int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("id = ?", id).First(&instance).Error
@@ -90,23 +79,6 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 		return nil, fmt.Errorf("find user by id: %w", err)
 	}
 	return &user, nil
-}
-
-func (r *Repository) FindByUserID(userID int64) ([]*model.Instance, error) {
-	return r.FindByUserIDWithContext(context.Background(), userID)
-}
-
-func (r *Repository) FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.Instance, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	var instances []*model.Instance
-	err := r.db.WithContext(ctx).Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND status IN ?", userID,
-		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
-		Order("created_at DESC").
-		Find(&instances).Error
-	return instances, err
 }
 
 func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
@@ -167,19 +139,6 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 		return nil, err
 	}
 	return &instance, nil
-}
-
-func (r *Repository) UpdateStatus(id int64, status string) error {
-	return r.UpdateStatusWithContext(context.Background(), id, status)
-}
-
-func (r *Repository) UpdateStatusWithContext(ctx context.Context, id int64, status string) error {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return r.db.WithContext(ctx).Model(&model.Instance{}).
-		Where("id = ?", id).
-		Update("status", status).Error
 }
 
 func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
