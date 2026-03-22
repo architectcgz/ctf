@@ -1,6 +1,11 @@
 package composition
 
-import runtimeModule "ctf-platform/internal/module/runtime"
+import (
+	"context"
+
+	runtimeModule "ctf-platform/internal/module/runtime"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
+)
 
 type RuntimeModule struct {
 	Handler    *runtimeModule.Handler
@@ -11,19 +16,31 @@ type RuntimeModule struct {
 	service *runtimeModule.Module
 }
 
-func BuildRuntimeModule(root *Root, container *ContainerModule) *RuntimeModule {
+func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	cfg := root.Config()
+	log := root.Logger()
+	db := root.DB()
 	cache := root.Cache()
+	repo := runtimeModule.NewRepository(db)
+	baseService := runtimeModule.NewService(repo, infra.Engine, &cfg.Container, log.Named("runtime_service"))
+	cleaner := runtimeinfra.NewCleaner(baseService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
+	root.RegisterBackgroundJob(NewBackgroundJob(
+		"runtime_cleaner",
+		func(context.Context) error {
+			return cleaner.Start(cfg.Container.CleanupInterval)
+		},
+		cleaner.Stop,
+	))
 
 	service := runtimeModule.NewModule(
-		container.Service,
+		baseService,
 		runtimeModule.NewProxyTicketService(cache, &cfg.Container),
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 
 	return &RuntimeModule{
-		Query:      runtimeModule.NewQuery(container.Repository),
-		Repository: container.Repository,
+		Query:      runtimeModule.NewQuery(repo),
+		Repository: repo,
 		Service:    service,
 		service:    service,
 	}

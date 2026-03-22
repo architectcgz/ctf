@@ -168,15 +168,15 @@ func (s *Service) GetUser(id int64) (*dto.UserResp, error) {
 }
 ```
 
-### 7. 容器操作（强制）
+### 7. 运行时容器操作（强制）
 
-**所有容器操作必须通过 container 模块，禁止直接调用 Docker SDK**
+**所有运行时容器操作必须通过 runtime 模块，禁止业务模块直接调用 Docker SDK 或 `runtimeinfra`**
 
 ```go
-// ✅ 正确：通过 container.Service
-instance, err := s.containerService.CreateInstance(config)
+// ✅ 正确：通过 runtime.RuntimeFacade
+containerID, networkID, hostPort, servicePort, err := s.runtimeService.CreateContainer(ctx, imageRef, env, reservedHostPort)
 
-// ❌ 错误：直接使用 Docker SDK
+// ❌ 错误：业务模块直接使用 Docker SDK
 container, err := dockerClient.ContainerCreate(...)
 ```
 
@@ -201,7 +201,7 @@ container, err := dockerClient.ContainerCreate(...)
 - [ ] 是否使用统一错误码？
 - [ ] 输入是否校验？
 - [ ] 是否有 SQL 注入风险？
-- [ ] 容器操作是否通过 container 模块？
+- [ ] 运行时容器操作是否通过 runtime 模块？
 
 ## 前端代码规范
 

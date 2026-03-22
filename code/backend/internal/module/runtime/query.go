@@ -1,16 +1,14 @@
 package runtime
 
-import "ctf-platform/internal/module/container"
-
 type RuntimeQuery interface {
 	CountRunning() (int64, error)
 }
 
 type Query struct {
-	repo *container.Repository
+	repo *Repository
 }
 
-func NewQuery(repo *container.Repository) *Query {
+func NewQuery(repo *Repository) *Query {
 	return &Query{repo: repo}
 }
 

@@ -216,7 +216,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 
 	var calls []string
 
-	originalBuildContainerModule := buildContainerModule
+	originalBuildRuntimeInfraModule := buildRuntimeInfraModule
 	originalBuildRuntimeModule := buildRuntimeModule
 	originalBuildSystemModule := buildSystemModule
 	originalBuildAuthModule := buildAuthModule
@@ -227,7 +227,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildPracticeModule := buildPracticeModule
 	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
-		buildContainerModule = originalBuildContainerModule
+		buildRuntimeInfraModule = originalBuildRuntimeInfraModule
 		buildRuntimeModule = originalBuildRuntimeModule
 		buildSystemModule = originalBuildSystemModule
 		buildAuthModule = originalBuildAuthModule
@@ -239,19 +239,19 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		buildPracticeReadmodelModule = originalBuildPracticeReadmodelModule
 	}()
 
-	buildContainerModule = func(root *composition.Root) (*composition.ContainerModule, error) {
+	buildRuntimeInfraModule = func(root *composition.Root) (*composition.RuntimeInfraModule, error) {
 		if root == nil {
-			t.Fatal("expected root for container module builder")
+			t.Fatal("expected root for runtime infra module builder")
 		}
-		calls = append(calls, "container")
-		return originalBuildContainerModule(root)
+		calls = append(calls, "runtime_infra")
+		return originalBuildRuntimeInfraModule(root)
 	}
-	buildRuntimeModule = func(root *composition.Root, container *composition.ContainerModule) *composition.RuntimeModule {
-		if root == nil || container == nil {
-			t.Fatal("expected root and container for runtime module builder")
+	buildRuntimeModule = func(root *composition.Root, infra *composition.RuntimeInfraModule) *composition.RuntimeModule {
+		if root == nil || infra == nil {
+			t.Fatal("expected root and runtime infra for runtime module builder")
 		}
 		calls = append(calls, "runtime")
-		return originalBuildRuntimeModule(root, container)
+		return originalBuildRuntimeModule(root, infra)
 	}
 	buildSystemModule = func(root *composition.Root, runtime *composition.RuntimeModule) *composition.SystemModule {
 		if root == nil || runtime == nil {
@@ -318,7 +318,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"container", "runtime", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice", "practice_readmodel"}
+	expectedCalls := []string{"runtime_infra", "runtime", "system", "auth", "challenge", "assessment", "teacher", "contest", "practice", "practice_readmodel"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

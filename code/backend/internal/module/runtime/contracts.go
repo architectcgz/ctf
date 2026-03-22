@@ -4,14 +4,11 @@ import (
 	"context"
 
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/container"
+	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
 
-type ManagedContainerStat = container.ManagedContainerStat
-type TopologyCreateRequest = container.TopologyCreateRequest
-type TopologyCreateResult = container.TopologyCreateResult
-type TopologyCreateNetwork = container.TopologyCreateNetwork
-type TopologyCreateNode = container.TopologyCreateNode
+type ManagedContainer = runtimeinfra.ManagedContainer
+type ManagedContainerStat = runtimeinfra.ManagedContainerStat
 
 type RuntimeStatsProvider interface {
 	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)

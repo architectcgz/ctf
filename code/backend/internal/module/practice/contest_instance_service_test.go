@@ -15,7 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeModule "ctf-platform/internal/module/challenge"
-	containerModule "ctf-platform/internal/module/container"
+	runtimeModule "ctf-platform/internal/module/runtime"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -60,7 +60,7 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected team scoped instance, got %+v", instance)
 	}
 
-	runtimeService := containerModule.NewService(containerModule.NewRepository(db), nil, &config.ContainerConfig{
+	runtimeService := runtimeModule.NewService(runtimeModule.NewRepository(db), nil, &config.ContainerConfig{
 		MaxExtends:     2,
 		ExtendDuration: 30 * time.Minute,
 	}, nil)
@@ -178,8 +178,8 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 func newContestInstanceTestService(db *gorm.DB) *Service {
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)
-	instanceRepo := containerModule.NewRepository(db)
-	containerService := containerModule.NewService(instanceRepo, nil, &config.ContainerConfig{
+	instanceRepo := runtimeModule.NewRepository(db)
+	runtimeService := runtimeModule.NewService(instanceRepo, nil, &config.ContainerConfig{
 		PortRangeStart:       30000,
 		PortRangeEnd:         30010,
 		DefaultExposedPort:   8080,
@@ -194,7 +194,7 @@ func newContestInstanceTestService(db *gorm.DB) *Service {
 		challengeRepo,
 		imageRepo,
 		instanceRepo,
-		containerService,
+		runtimeService,
 		nil,
 		nil,
 		nil,

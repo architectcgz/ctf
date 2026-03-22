@@ -1,4 +1,4 @@
-package container
+package runtimeinfra
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 )
 
-// ManagedContainerStat 是 container 模块对外暴露的受管容器运行指标快照。
+// ManagedContainerStat 是 runtime 模块消费的受管容器运行指标快照。
 type ManagedContainerStat struct {
 	ContainerID   string
 	ContainerName string
