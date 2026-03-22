@@ -4,11 +4,13 @@ import (
 	"context"
 
 	runtimeModule "ctf-platform/internal/module/runtime"
+	runtimehttp "ctf-platform/internal/module/runtime/api/http"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
 )
 
 type RuntimeModule struct {
-	Handler    *runtimeModule.Handler
+	Handler    *runtimehttp.Handler
 	Query      runtimeModule.RuntimeQuery
 	Repository runtimeModule.InstanceRepository
 	Service    runtimeModule.RuntimeFacade
@@ -39,7 +41,7 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 	)
 
 	return &RuntimeModule{
-		Query:      runtimeModule.NewQuery(repo),
+		Query:      runtimeapp.NewQueryService(repo),
 		Repository: repo,
 		Service:    service,
 		service:    service,
@@ -52,7 +54,7 @@ func (m *RuntimeModule) BuildHandler(root *Root, system *SystemModule) {
 	}
 
 	cfg := root.Config()
-	m.Handler = runtimeModule.NewHandler(
+	m.Handler = runtimehttp.NewHandler(
 		m.service,
 		system.AuditService,
 		runtimeModule.ProxyCookieConfig{
