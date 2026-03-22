@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -212,15 +213,16 @@ func (s *Service) CleanupRuntimeWithContext(ctx context.Context, instance *model
 	if instance == nil {
 		return nil
 	}
-	if err := s.removeACLRulesWithContext(ctx, managedACLRules(instance)); err != nil {
+	resources := runtimedomain.ExtractManagedResources(instance)
+	if err := s.removeACLRulesWithContext(ctx, resources.ACLRules); err != nil {
 		s.logger.Warn("删除实例 ACL 规则失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 	}
-	for _, containerID := range managedContainerIDs(instance) {
+	for _, containerID := range resources.ContainerIDs {
 		if err := s.RemoveContainerWithContext(ctx, containerID); err != nil {
 			return err
 		}
 	}
-	for _, networkID := range managedNetworkIDs(instance) {
+	for _, networkID := range resources.NetworkIDs {
 		if err := s.RemoveNetworkWithContext(ctx, networkID); err != nil {
 			return err
 		}
@@ -420,6 +422,23 @@ func (s *Service) RemoveContainerWithContext(ctx context.Context, containerID st
 
 	s.logger.Info("删除容器", zap.String("container_id", containerID))
 	return nil
+}
+
+func (s *Service) resolveTopologyACLRules(ctx context.Context, req *TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
+	if s.engine == nil || req == nil || len(req.Policies) == 0 {
+		return nil, nil
+	}
+
+	ipsByContainerID := make(map[string]map[string]string, len(details.Containers))
+	for _, container := range details.Containers {
+		ipsByNetworkName, err := s.engine.InspectContainerNetworkIPs(ctx, container.ContainerID)
+		if err != nil {
+			return nil, err
+		}
+		ipsByContainerID[container.ContainerID] = ipsByNetworkName
+	}
+
+	return runtimedomain.ResolveTopologyACLRules(req.Policies, details, ipsByContainerID)
 }
 
 func (s *Service) removeACLRules(rules []model.InstanceRuntimeACLRule) error {
@@ -680,88 +699,9 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,
 		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: remainingExtends(inst.MaxExtends, inst.ExtendCount),
+		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
-}
-
-func remainingExtends(maxExtends int, extendCount int) int {
-	remaining := maxExtends - extendCount
-	if remaining < 0 {
-		return 0
-	}
-	return remaining
-}
-
-func managedContainerIDs(instance *model.Instance) []string {
-	if instance == nil {
-		return nil
-	}
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
-	if err != nil || len(details.Containers) == 0 {
-		if instance.ContainerID == "" {
-			return nil
-		}
-		return []string{instance.ContainerID}
-	}
-	result := make([]string, 0, len(details.Containers))
-	seen := make(map[string]struct{}, len(details.Containers))
-	for _, item := range details.Containers {
-		if item.ContainerID == "" {
-			continue
-		}
-		if _, exists := seen[item.ContainerID]; exists {
-			continue
-		}
-		seen[item.ContainerID] = struct{}{}
-		result = append(result, item.ContainerID)
-	}
-	if len(result) == 0 && instance.ContainerID != "" {
-		return []string{instance.ContainerID}
-	}
-	return result
-}
-
-func managedNetworkIDs(instance *model.Instance) []string {
-	if instance == nil {
-		return nil
-	}
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
-	if err == nil && len(details.Networks) > 0 {
-		result := make([]string, 0, len(details.Networks))
-		seen := make(map[string]struct{}, len(details.Networks))
-		for _, item := range details.Networks {
-			if item.NetworkID == "" {
-				continue
-			}
-			if _, exists := seen[item.NetworkID]; exists {
-				continue
-			}
-			seen[item.NetworkID] = struct{}{}
-			result = append(result, item.NetworkID)
-		}
-		if len(result) > 0 {
-			return result
-		}
-	}
-	if instance.NetworkID == "" {
-		return nil
-	}
-	return []string{instance.NetworkID}
-}
-
-func managedACLRules(instance *model.Instance) []model.InstanceRuntimeACLRule {
-	if instance == nil {
-		return nil
-	}
-	details, err := model.DecodeInstanceRuntimeDetails(instance.RuntimeDetails)
-	if err != nil {
-		return nil
-	}
-	if len(details.ACLRules) == 0 {
-		return nil
-	}
-	return append([]model.InstanceRuntimeACLRule(nil), details.ACLRules...)
 }
 
 func normalizedCreateNetworks(networks []TopologyCreateNetwork) []TopologyCreateNetwork {

@@ -447,6 +447,7 @@ ctf-platform/
 │   │   │   ├── api/http/handler.go  # 实例访问与运行时 HTTP API
 │   │   │   ├── application/         # 实例 Query / UseCase 入口
 │   │   │   ├── contracts.go         # 模块对外 contract
+│   │   │   ├── domain/              # 运行时 ACL 与实例资源规则
 │   │   │   ├── infrastructure/
 │   │   │   │   └── repository.go    # GORM 持久化实现
 │   │   │   ├── module.go            # 组合 facade（编排 + HTTP 用例 + 代理票据）
