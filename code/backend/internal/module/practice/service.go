@@ -38,7 +38,7 @@ type imageStore interface {
 
 type runtimeInstanceService interface {
 	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, req *topologyCreateRequest) (*topologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
@@ -584,7 +584,7 @@ func (s *Service) buildTopologyCreateRequest(
 	entryNodeKey string,
 	spec model.TopologySpec,
 	flag string,
-) (*topologyCreateRequest, error) {
+) (*TopologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
 		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
 	}
@@ -594,10 +594,10 @@ func (s *Service) buildTopologyCreateRequest(
 		return nil, err
 	}
 
-	request := &topologyCreateRequest{
+	request := &TopologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
-		Networks:         make([]topologyCreateNetwork, 0),
-		Nodes:            make([]topologyCreateNode, 0, len(spec.Nodes)),
+		Networks:         make([]TopologyCreateNetwork, 0),
+		Nodes:            make([]TopologyCreateNode, 0, len(spec.Nodes)),
 		Policies:         append([]model.TopologyTrafficPolicy(nil), spec.Policies...),
 	}
 	runtimePlan := buildRuntimeTopologyPlan(spec)
@@ -628,7 +628,7 @@ func (s *Service) buildTopologyCreateRequest(
 			}
 		}
 
-		request.Nodes = append(request.Nodes, topologyCreateNode{
+		request.Nodes = append(request.Nodes, TopologyCreateNode{
 			Key:          node.Key,
 			Image:        imageRef,
 			Env:          env,

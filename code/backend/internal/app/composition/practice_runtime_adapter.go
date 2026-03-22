@@ -1,60 +1,32 @@
-package practice
+package composition
 
 import (
 	"context"
 	"reflect"
 
 	"ctf-platform/internal/model"
-	runtime "ctf-platform/internal/module/runtime"
+	practiceModule "ctf-platform/internal/module/practice"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
 )
 
-type topologyCreateNode struct {
-	Key          string
-	Image        string
-	Env          map[string]string
-	ServicePort  int
-	IsEntryPoint bool
-	NetworkKeys  []string
-	Resources    *model.ResourceLimits
-}
-
-type topologyCreateNetwork struct {
-	Key      string
-	Internal bool
-}
-
-type topologyCreateRequest struct {
-	Networks         []topologyCreateNetwork
-	Nodes            []topologyCreateNode
-	Policies         []model.TopologyTrafficPolicy
-	ReservedHostPort int
-}
-
-type topologyCreateResult struct {
-	PrimaryContainerID string
-	NetworkID          string
-	AccessURL          string
-	RuntimeDetails     model.InstanceRuntimeDetails
-}
-
-type runtimeTopologyBridge interface {
+type practiceRuntimeTopologyBridge interface {
 	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, req *runtime.TopologyCreateRequest) (*runtime.TopologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *runtimeapp.TopologyCreateRequest) (*runtimeapp.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
-type runtimeInstanceServiceAdapter struct {
-	service runtimeTopologyBridge
+type practiceRuntimeInstanceServiceAdapter struct {
+	service practiceRuntimeTopologyBridge
 }
 
-func NewRuntimeInstanceServiceAdapter(service runtimeTopologyBridge) runtimeInstanceService {
-	if isNilRuntimeTopologyBridge(service) {
+func newPracticeRuntimeInstanceServiceAdapter(service practiceRuntimeTopologyBridge) *practiceRuntimeInstanceServiceAdapter {
+	if isNilPracticeRuntimeTopologyBridge(service) {
 		return nil
 	}
-	return &runtimeInstanceServiceAdapter{service: service}
+	return &practiceRuntimeInstanceServiceAdapter{service: service}
 }
 
-func isNilRuntimeTopologyBridge(service runtimeTopologyBridge) bool {
+func isNilPracticeRuntimeTopologyBridge(service practiceRuntimeTopologyBridge) bool {
 	if service == nil {
 		return true
 	}
@@ -67,14 +39,14 @@ func isNilRuntimeTopologyBridge(service runtimeTopologyBridge) bool {
 	}
 }
 
-func (a *runtimeInstanceServiceAdapter) CleanupRuntime(instance *model.Instance) error {
+func (a *practiceRuntimeInstanceServiceAdapter) CleanupRuntime(instance *model.Instance) error {
 	if a == nil || a.service == nil {
 		return nil
 	}
 	return a.service.CleanupRuntime(instance)
 }
 
-func (a *runtimeInstanceServiceAdapter) CreateTopology(ctx context.Context, req *topologyCreateRequest) (*topologyCreateResult, error) {
+func (a *practiceRuntimeInstanceServiceAdapter) CreateTopology(ctx context.Context, req *practiceModule.TopologyCreateRequest) (*practiceModule.TopologyCreateResult, error) {
 	if a == nil || a.service == nil || req == nil {
 		return nil, nil
 	}
@@ -86,29 +58,29 @@ func (a *runtimeInstanceServiceAdapter) CreateTopology(ctx context.Context, req 
 	return fromRuntimeTopologyCreateResult(result), nil
 }
 
-func (a *runtimeInstanceServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
+func (a *practiceRuntimeInstanceServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
 	if a == nil || a.service == nil {
 		return "", "", 0, 0, nil
 	}
 	return a.service.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
-func toRuntimeTopologyCreateRequest(req *topologyCreateRequest) *runtime.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequest(req *practiceModule.TopologyCreateRequest) *runtimeapp.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
 
-	networks := make([]runtime.TopologyCreateNetwork, 0, len(req.Networks))
+	networks := make([]runtimeapp.TopologyCreateNetwork, 0, len(req.Networks))
 	for _, network := range req.Networks {
-		networks = append(networks, runtime.TopologyCreateNetwork{
+		networks = append(networks, runtimeapp.TopologyCreateNetwork{
 			Key:      network.Key,
 			Internal: network.Internal,
 		})
 	}
 
-	nodes := make([]runtime.TopologyCreateNode, 0, len(req.Nodes))
+	nodes := make([]runtimeapp.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
-		nodes = append(nodes, runtime.TopologyCreateNode{
+		nodes = append(nodes, runtimeapp.TopologyCreateNode{
 			Key:          node.Key,
 			Image:        node.Image,
 			Env:          cloneStringMap(node.Env),
@@ -119,7 +91,7 @@ func toRuntimeTopologyCreateRequest(req *topologyCreateRequest) *runtime.Topolog
 		})
 	}
 
-	return &runtime.TopologyCreateRequest{
+	return &runtimeapp.TopologyCreateRequest{
 		Networks:         networks,
 		Nodes:            nodes,
 		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
@@ -127,11 +99,11 @@ func toRuntimeTopologyCreateRequest(req *topologyCreateRequest) *runtime.Topolog
 	}
 }
 
-func fromRuntimeTopologyCreateResult(result *runtime.TopologyCreateResult) *topologyCreateResult {
+func fromRuntimeTopologyCreateResult(result *runtimeapp.TopologyCreateResult) *practiceModule.TopologyCreateResult {
 	if result == nil {
 		return nil
 	}
-	return &topologyCreateResult{
+	return &practiceModule.TopologyCreateResult{
 		PrimaryContainerID: result.PrimaryContainerID,
 		NetworkID:          result.NetworkID,
 		AccessURL:          result.AccessURL,
