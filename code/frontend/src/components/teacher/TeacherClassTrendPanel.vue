@@ -4,13 +4,15 @@ import { computed } from 'vue'
 import type { TeacherClassTrendData } from '@/api/contracts'
 import LineChart from '@/components/charts/LineChart.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 
 const props = defineProps<{
   trend: TeacherClassTrendData | null
   title?: string
   subtitle?: string
 }>()
+
+const panelTitle = computed(() => props.title || '近 7 天训练趋势')
+const panelSubtitle = computed(() => props.subtitle || '按天查看训练事件、成功解题和活跃学生变化。')
 
 const categories = computed(() => (props.trend?.points ?? []).map((point) => point.date.slice(5)))
 
@@ -31,10 +33,16 @@ const series = computed(() => [
 </script>
 
 <template>
-  <SectionCard
-    :title="title || '近 7 天训练趋势'"
-    :subtitle="subtitle || '按天查看训练事件、成功解题和活跃学生变化。'"
-  >
+  <section class="teacher-panel">
+    <header class="teacher-panel__header">
+      <h2 class="teacher-panel__title">
+        {{ panelTitle }}
+      </h2>
+      <p class="teacher-panel__subtitle">
+        {{ panelSubtitle }}
+      </p>
+    </header>
+
     <AppEmpty
       v-if="!trend || trend.points.length === 0"
       icon="FileChartColumnIncreasing"
@@ -42,6 +50,43 @@ const series = computed(() => [
       description="当前班级近 7 天还没有可用训练趋势。"
     />
 
-    <LineChart v-else :categories="categories" :series="series" />
-  </SectionCard>
+    <div
+      v-else
+      class="teacher-panel__chart"
+    >
+      <LineChart
+        :categories="categories"
+        :series="series"
+      />
+    </div>
+  </section>
 </template>
+
+<style scoped>
+.teacher-panel {
+  border-top: 1px solid var(--color-border-default);
+  padding-top: 0.95rem;
+}
+
+.teacher-panel__header {
+  margin-bottom: 0.72rem;
+}
+
+.teacher-panel__title {
+  font-size: 1.04rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.teacher-panel__subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--color-text-secondary);
+}
+
+.teacher-panel__chart {
+  overflow-x: auto;
+  padding-top: 0.3rem;
+}
+</style>

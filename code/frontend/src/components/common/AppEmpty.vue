@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center justify-center rounded-lg border border-border bg-surface px-6 py-10 text-center">
+  <div class="flex flex-col items-center justify-center border-y border-border-subtle px-6 py-10 text-center">
     <component :is="iconComp" class="h-12 w-12 text-text-muted" />
     <div class="mt-3 text-sm font-semibold">{{ title }}</div>
     <div v-if="description" class="mt-1 text-sm text-text-secondary">{{ description }}</div>

@@ -202,7 +202,10 @@ onMounted(() => {
       title="报告导出"
       description="先查看当前班级报告预览，再决定是否创建导出任务下载 PDF 或 Excel 文件。"
     >
-      <AppCard variant="action" accent="neutral">
+      <AppCard
+        variant="action"
+        accent="neutral"
+      >
         当前账号：<span class="font-medium text-[var(--color-text-primary)]">{{
           authStore.user?.username || '-'
         }}</span>
@@ -210,7 +213,10 @@ onMounted(() => {
     </PageHeader>
 
     <section class="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
-      <SectionCard title="创建导出任务" subtitle="预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。">
+      <SectionCard
+        title="创建导出任务"
+        subtitle="预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。"
+      >
         <AppCard
           variant="hero"
           accent="primary"
@@ -219,15 +225,13 @@ onMounted(() => {
           subtitle="先确定班级和导出格式，再把任务交给后端。下载变为可选动作，不影响当前页面预览。"
         >
           <label class="block">
-            <span class="mb-2 block text-sm font-medium text-[var(--color-text-primary)]"
-              >班级名称</span
-            >
+            <span class="mb-2 block text-sm font-medium text-[var(--color-text-primary)]">班级名称</span>
             <input
               v-model="form.className"
               type="text"
               :placeholder="classNamePlaceholder"
-              class="w-full rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/15"
-            />
+              class="w-full border border-l-2 border-[var(--color-border-default)] bg-transparent px-3 py-2.5 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-0"
+            >
           </label>
 
           <fieldset>
@@ -236,42 +240,51 @@ onMounted(() => {
             </legend>
             <div class="grid gap-3 sm:grid-cols-2">
               <label
-                class="flex items-start gap-3 rounded-xl border px-4 py-4 transition"
+                class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
                 :class="
                   form.format === 'pdf'
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/8'
-                    : 'border-[var(--color-border-default)] bg-[var(--color-bg-base)] hover:border-[var(--color-primary)]/50'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
+                    : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
                 "
               >
-                <input v-model="form.format" type="radio" value="pdf" class="mt-1" />
+                <input
+                  v-model="form.format"
+                  type="radio"
+                  value="pdf"
+                  class="mt-1"
+                >
                 <span>
                   <span class="block font-medium text-[var(--color-text-primary)]">PDF</span>
-                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]"
-                    >适合打印、归档和正式汇报。</span
-                  >
+                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]">适合打印、归档和正式汇报。</span>
                 </span>
               </label>
 
               <label
-                class="flex items-start gap-3 rounded-xl border px-4 py-4 transition"
+                class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
                 :class="
                   form.format === 'excel'
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/8'
-                    : 'border-[var(--color-border-default)] bg-[var(--color-bg-base)] hover:border-[var(--color-primary)]/50'
+                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
+                    : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
                 "
               >
-                <input v-model="form.format" type="radio" value="excel" class="mt-1" />
+                <input
+                  v-model="form.format"
+                  type="radio"
+                  value="excel"
+                  class="mt-1"
+                >
                 <span>
                   <span class="block font-medium text-[var(--color-text-primary)]">Excel</span>
-                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]"
-                    >适合继续分析、筛选和二次加工。</span
-                  >
+                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]">适合继续分析、筛选和二次加工。</span>
                 </span>
               </label>
             </div>
           </fieldset>
 
-          <AppCard variant="action" accent="neutral">
+          <AppCard
+            variant="action"
+            accent="neutral"
+          >
             如果当前账号已绑定班级，可直接留空使用默认班级；管理员也可手动输入其他班级名称。
           </AppCard>
 
@@ -279,7 +292,7 @@ onMounted(() => {
             <button
               type="button"
               :disabled="previewLoading"
-              class="inline-flex items-center rounded-xl border border-[var(--color-border-default)] px-5 py-3 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center border border-[var(--color-border-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
               @click="loadPreview"
             >
               {{ previewLoading ? '加载预览中...' : '查看当前预览' }}
@@ -288,7 +301,7 @@ onMounted(() => {
             <button
               type="button"
               :disabled="submitting"
-              class="inline-flex items-center rounded-xl bg-[var(--color-primary)] px-5 py-3 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center border border-[var(--color-primary)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               @click="handleExport"
             >
               {{ submitting ? '提交中...' : '创建导出任务' }}
@@ -298,7 +311,10 @@ onMounted(() => {
       </SectionCard>
 
       <div class="space-y-6">
-        <SectionCard title="最近一次任务" subtitle="导出状态、下载信息和任务元数据都在这里收口。">
+        <SectionCard
+          title="最近一次任务"
+          subtitle="导出状态、下载信息和任务元数据都在这里收口。"
+        >
           <AppEmpty
             v-if="!latestExport"
             title="还没有创建导出任务"
@@ -306,7 +322,14 @@ onMounted(() => {
             icon="FileChartColumnIncreasing"
           />
 
-          <AppCard v-else variant="hero" :accent="latestExport.result.status === 'ready' ? 'success' : latestExport.result.status === 'failed' ? 'danger' : 'warning'" eyebrow="Latest Task" :title="String(latestExport.result.report_id)" :subtitle="derivedDownloadHint">
+          <AppCard
+            v-else
+            variant="hero"
+            :accent="latestExport.result.status === 'ready' ? 'success' : latestExport.result.status === 'failed' ? 'danger' : 'warning'"
+            eyebrow="Latest Task"
+            :title="String(latestExport.result.report_id)"
+            :subtitle="derivedDownloadHint"
+          >
             <template #header>
               <span
                 class="rounded-full px-3 py-1 text-xs font-semibold"
@@ -329,9 +352,24 @@ onMounted(() => {
             </template>
 
             <div class="grid grid-cols-2 gap-3 text-sm">
-              <AppCard variant="metric" accent="primary" eyebrow="班级" :title="latestExport.className" />
-              <AppCard variant="metric" accent="primary" eyebrow="格式" :title="latestExport.format.toUpperCase()" />
-              <AppCard variant="metric" accent="neutral" eyebrow="创建时间" :title="formatDate(latestExport.createdAt)" />
+              <AppCard
+                variant="metric"
+                accent="primary"
+                eyebrow="班级"
+                :title="latestExport.className"
+              />
+              <AppCard
+                variant="metric"
+                accent="primary"
+                eyebrow="格式"
+                :title="latestExport.format.toUpperCase()"
+              />
+              <AppCard
+                variant="metric"
+                accent="neutral"
+                eyebrow="创建时间"
+                :title="formatDate(latestExport.createdAt)"
+              />
               <AppCard
                 variant="metric"
                 accent="neutral"
@@ -343,7 +381,7 @@ onMounted(() => {
             <button
               type="button"
               :disabled="downloading || latestExport.result.status !== 'ready'"
-              class="inline-flex items-center rounded-xl border border-[var(--color-border-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              class="inline-flex items-center border border-[var(--color-border-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
               @click="handleDownload"
             >
               {{
@@ -359,7 +397,10 @@ onMounted(() => {
           </AppCard>
         </SectionCard>
 
-        <SectionCard title="使用说明" subtitle="导出链路和当前后端能力边界。">
+        <SectionCard
+          title="使用说明"
+          subtitle="导出链路和当前后端能力边界。"
+        >
           <ol class="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
             <li>1. 先点击“查看当前预览”，直接在页面内查看当前班级报告内容。</li>
             <li>2. 确认需要留档时，再创建后台导出任务。</li>
@@ -375,7 +416,10 @@ onMounted(() => {
         title="当前报告预览"
         description="不下载也能直接查看当前班级的关键报告内容。"
       >
-        <AppCard variant="action" accent="neutral">
+        <AppCard
+          variant="action"
+          accent="neutral"
+        >
           预览班级：<span class="font-medium text-[var(--color-text-primary)]">{{
             previewClassName || '未选择'
           }}</span>
@@ -384,16 +428,19 @@ onMounted(() => {
 
       <div
         v-if="previewError"
-        class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-700"
+        class="border-b border-l-2 border-amber-300 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"
       >
         {{ previewError }}
       </div>
 
-      <div v-if="previewLoading" class="grid gap-4 md:grid-cols-3">
+      <div
+        v-if="previewLoading"
+        class="grid gap-4 md:grid-cols-3"
+      >
         <div
           v-for="index in 3"
           :key="index"
-          class="h-28 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"
+          class="h-24 animate-pulse border-b border-[var(--color-border-default)] bg-[var(--color-bg-surface)]"
         />
       </div>
 
@@ -425,9 +472,15 @@ onMounted(() => {
           subtitle="直接查看当前班级训练事件、成功解题和活跃学生走势。"
         />
 
-        <TeacherClassReviewPanel :review="previewReview" :class-name="previewClassName" />
+        <TeacherClassReviewPanel
+          :review="previewReview"
+          :class-name="previewClassName"
+        />
 
-        <TeacherClassInsightsPanel :students="previewStudents" :class-name="previewClassName" />
+        <TeacherClassInsightsPanel
+          :students="previewStudents"
+          :class-name="previewClassName"
+        />
       </template>
 
       <AppEmpty

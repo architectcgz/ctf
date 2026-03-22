@@ -3,7 +3,7 @@
     <div
       v-for="item in toasts"
       :key="item.id"
-      class="group relative overflow-hidden rounded-[22px] border border-border bg-surface/94 px-4 py-3.5 shadow-[0_18px_40px_var(--color-shadow-soft)] backdrop-blur"
+      class="group relative overflow-hidden rounded-[22px] border border-border bg-surface px-4 py-3.5 shadow-[0_18px_40px_var(--color-shadow-soft)]"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"

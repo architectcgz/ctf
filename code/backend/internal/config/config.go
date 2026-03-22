@@ -258,8 +258,12 @@ func Load(env string) (*Config, error) {
 		cfg.App.Env = env
 	}
 
-	if strings.TrimSpace(cfg.Container.FlagGlobalSecret) == "" {
+	cfg.Container.FlagGlobalSecret = strings.TrimSpace(cfg.Container.FlagGlobalSecret)
+	if cfg.Container.FlagGlobalSecret == "" {
 		return nil, fmt.Errorf("container.flag_global_secret must be set via CTF_CONTAINER_FLAG_GLOBAL_SECRET environment variable")
+	}
+	if len(cfg.Container.FlagGlobalSecret) < 32 {
+		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}
 
 	if err := cfg.Validate(); err != nil {

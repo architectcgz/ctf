@@ -35,7 +35,7 @@ export function useScoreboardView() {
     loading.value = true
 
     try {
-      const payload = await getContests({ page: 1, size: 100 })
+      const payload = await getContests({ page: 1, page_size: 100 })
       const contests = sortContestsByLatest(
         payload.list.filter((item) => DISPLAYABLE_CONTEST_STATUSES.has(item.status))
       )

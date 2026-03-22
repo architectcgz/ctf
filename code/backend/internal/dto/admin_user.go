@@ -10,7 +10,7 @@ type AdminUserQuery struct {
 	Status    string `form:"status" binding:"omitempty,oneof=active inactive locked banned"`
 	ClassName string `form:"class_name" binding:"omitempty,max=128"`
 	Page      int    `form:"page" binding:"omitempty,min=1"`
-	Size      int    `form:"size" binding:"omitempty,min=1,max=100"`
+	Size      int    `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
 type AdminUserResp struct {

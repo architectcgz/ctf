@@ -1,4 +1,4 @@
-import { ApiError, request } from './request'
+import { ApiError, getAxiosInstance, request } from './request'
 import { normalizeInstanceData } from './instance'
 
 import type {
@@ -12,6 +12,10 @@ import type {
 } from './contracts'
 
 export type GetChallengesData = PageResult<ChallengeListItem>
+export interface DownloadedAttachment {
+  blob: Blob
+  filename: string
+}
 
 interface RawChallengeListItem extends Omit<ChallengeListItem, 'id' | 'tags'> {
   id: string | number
@@ -103,4 +107,44 @@ export async function createInstance(id: string): Promise<InstanceData> {
     suppressErrorToast: true,
   })
   return normalizeInstanceData(payload)
+}
+
+function resolveFilename(contentDisposition: string | undefined, fallback: string): string {
+  if (!contentDisposition) return fallback
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1])
+  }
+
+  const basicMatch = contentDisposition.match(/filename=\"?([^\";]+)\"?/i)
+  if (basicMatch?.[1]) {
+    return basicMatch[1]
+  }
+
+  return fallback
+}
+
+export async function downloadAttachment(attachmentURL: string): Promise<DownloadedAttachment> {
+  const normalizedURL = normalizeAttachmentRequestURL(attachmentURL)
+  const response = await getAxiosInstance().get<Blob>(normalizedURL, {
+    responseType: 'blob',
+  })
+  const fallback = decodeURIComponent(attachmentURL.split('/').pop() || 'attachment')
+  return {
+    blob: response.data,
+    filename: resolveFilename(response.headers['content-disposition'], fallback),
+  }
+}
+
+function normalizeAttachmentRequestURL(rawURL: string): string {
+  const value = rawURL.trim()
+  if (!value) return value
+  if (/^https?:\/\//i.test(value)) return value
+
+  // axios instance already has baseURL=/api/v1, avoid /api/v1/api/v1/...
+  if (value.startsWith('/api/v1/')) {
+    return value.slice('/api/v1'.length)
+  }
+  return value
 }

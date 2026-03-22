@@ -7,7 +7,7 @@ MIGRATE ?= $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v
 MIGRATIONS_DIR ?= ./migrations
 MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:5432/ctf?sslmode=disable
 
-.PHONY: run build test fmt tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges
+.PHONY: run build test fmt tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges import-challenge-packs
 
 run:
 	APP_ENV=$(APP_ENV) $(GO) run ./cmd/server
@@ -44,6 +44,9 @@ migrate-create:
 
 seed-demo-challenges:
 	APP_ENV=$(APP_ENV) $(GO) run ./cmd/seed-demo-challenges
+
+import-challenge-packs:
+	APP_ENV=$(APP_ENV) $(GO) run ./cmd/import-challenge-packs
 
 infra-up-shared:
 	$(MAKE) -C ../.. infra-up

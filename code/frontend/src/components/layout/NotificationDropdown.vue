@@ -3,7 +3,7 @@
     <button
       ref="trigger"
       type="button"
-      class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition hover:border-primary/45 hover:bg-elevated hover:text-text-primary"
+      class="notification-trigger relative inline-flex h-10 w-10 items-center justify-center"
       aria-label="打开通知中心"
       @click="toggleOpen"
     >
@@ -31,11 +31,11 @@
           <AppCard
             variant="panel"
             accent="primary"
-            class="overflow-hidden rounded-[28px] shadow-[0_32px_80px_var(--color-shadow-strong)] backdrop-blur-xl"
+            class="notification-panel overflow-hidden border-l-2 border-primary/30"
           >
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0">
-                <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-text-muted">
+                <div class="notification-kicker text-text-muted">
                   Notification Hub
                 </div>
                 <div class="mt-1 text-base font-semibold text-text-primary">
@@ -59,7 +59,7 @@
                 </span>
                 <button
                   type="button"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-base/60 text-text-muted transition hover:border-primary/40 hover:text-text-primary"
+                  class="notification-mini-button inline-flex h-8 w-8 items-center justify-center"
                   aria-label="关闭通知中心"
                   @click="close"
                 >
@@ -71,7 +71,7 @@
             <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border-subtle pt-4">
               <button
                 type="button"
-                class="rounded-xl border border-border bg-base/70 px-3 py-2 text-xs font-medium text-text-secondary transition hover:border-primary/45 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                class="notification-action-button px-3 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
                 :disabled="unreadCount === 0"
                 @click="markAllRead"
               >
@@ -79,7 +79,7 @@
               </button>
               <button
                 type="button"
-                class="rounded-xl border border-border bg-base/70 px-3 py-2 text-xs font-medium text-text-secondary transition hover:border-primary/45 hover:text-text-primary"
+                class="notification-action-button px-3 py-2 text-xs font-medium"
                 @click="goToNotifications"
               >
                 查看全部通知
@@ -207,3 +207,43 @@ const {
   markAllRead,
 } = useNotificationDropdown(() => props.realtimeStatus)
 </script>
+
+<style scoped>
+.notification-trigger,
+.notification-mini-button,
+.notification-action-button {
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+.notification-trigger:hover,
+.notification-mini-button:hover,
+.notification-action-button:hover {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border-default));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.notification-panel {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-base) 96%, var(--color-bg-surface)));
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
+}
+
+.notification-kicker {
+  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+:global([data-theme="light"]) .notification-panel {
+  background:
+    linear-gradient(180deg, #ffffff, #f8fafc);
+}
+</style>

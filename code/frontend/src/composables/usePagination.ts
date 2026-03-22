@@ -29,6 +29,9 @@ export function usePagination<T>(
     error.value = null
     try {
       const data = await fetchFn({ page: page.value, page_size: pageSize.value })
+      if (!Number.isInteger(data.page_size) || data.page_size < 1) {
+        throw new Error('分页响应缺少合法的 page_size 字段')
+      }
       list.value = data.list
       total.value = data.total
       page.value = data.page

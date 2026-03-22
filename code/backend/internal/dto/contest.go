@@ -35,7 +35,7 @@ type ContestResp struct {
 type ListContestsReq struct {
 	Status *string `form:"status" binding:"omitempty,oneof=draft registration running frozen ended"`
 	Page   int     `form:"page" binding:"omitempty,min=1"`
-	Size   int     `form:"size" binding:"omitempty,min=1,max=100"`
+	Size   int     `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
 type ScoreboardContestInfo struct {
@@ -86,7 +86,7 @@ type CreateContestAnnouncementReq struct {
 type ContestRegistrationQuery struct {
 	Status *string `form:"status" binding:"omitempty,oneof=pending approved rejected"`
 	Page   int     `form:"page" binding:"omitempty,min=1"`
-	Size   int     `form:"size" binding:"omitempty,min=1,max=100"`
+	Size   int     `form:"page_size" binding:"omitempty,min=1,max=100"`
 }
 
 type ReviewContestRegistrationReq struct {
