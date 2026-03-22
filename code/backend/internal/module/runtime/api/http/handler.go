@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"io"
 	stdhttp "net/http"
 	"net/http/httputil"
@@ -23,13 +24,31 @@ import (
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
 
-type Handler struct {
-	service       runtime.RuntimeHTTPService
-	auditRecorder auditlog.Recorder
-	cookieConfig  runtime.ProxyCookieConfig
+type CookieConfig struct {
+	Secure   bool
+	SameSite stdhttp.SameSite
 }
 
-func NewHandler(service runtime.RuntimeHTTPService, auditRecorder auditlog.Recorder, cookieConfig runtime.ProxyCookieConfig) *Handler {
+type runtimeService interface {
+	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
+	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
+	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
+	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
+	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
+	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
+	ResolveProxyTicket(ctx context.Context, ticket string) (*runtime.ProxyTicketClaims, error)
+	ProxyTicketMaxAge() int
+	ProxyBodyPreviewSize() int
+}
+
+type Handler struct {
+	service       runtimeService
+	auditRecorder auditlog.Recorder
+	cookieConfig  CookieConfig
+}
+
+func NewHandler(service runtimeService, auditRecorder auditlog.Recorder, cookieConfig CookieConfig) *Handler {
 	return &Handler{
 		service:       service,
 		auditRecorder: auditRecorder,
@@ -270,7 +289,7 @@ func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtime
 	return claims, "", nil
 }
 
-func setProxyAccessCookie(c *gin.Context, ticket string, instanceID int64, maxAge int, cfg runtime.ProxyCookieConfig) {
+func setProxyAccessCookie(c *gin.Context, ticket string, instanceID int64, maxAge int, cfg CookieConfig) {
 	stdhttp.SetCookie(c.Writer, &stdhttp.Cookie{
 		Name:     proxyAccessCookieName,
 		Value:    ticket,

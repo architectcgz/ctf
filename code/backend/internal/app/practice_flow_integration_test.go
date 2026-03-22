@@ -765,7 +765,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelModule := practiceReadmodel.NewModule(practiceReadmodelService)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelModule)
-	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditService, runtimeModule.ProxyCookieConfig{})
+	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditService, runtimehttp.CookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)

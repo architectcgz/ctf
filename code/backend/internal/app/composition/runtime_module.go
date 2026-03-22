@@ -58,7 +58,7 @@ func (m *RuntimeModule) BuildHandler(root *Root, system *SystemModule) {
 	m.Handler = runtimehttp.NewHandler(
 		m.service,
 		system.AuditService,
-		runtimeModule.ProxyCookieConfig{
+		runtimehttp.CookieConfig{
 			Secure:   cfg.Auth.RefreshCookieSecure,
 			SameSite: cfg.Auth.CookieSameSite(),
 		},

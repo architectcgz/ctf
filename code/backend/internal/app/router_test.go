@@ -83,7 +83,6 @@ func TestIdentityModuleContractsCompile(t *testing.T) {
 }
 
 func TestRuntimeModuleContractsCompile(t *testing.T) {
-	var _ runtime.RuntimeHTTPService = (*runtime.Module)(nil)
 	var _ runtime.InstanceRepository = (*runtime.Module)(nil)
 	var _ runtime.InstanceRepository = (*runtimeinfrarepo.Repository)(nil)
 }
