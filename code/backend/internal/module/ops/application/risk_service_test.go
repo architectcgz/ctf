@@ -1,4 +1,4 @@
-package ops
+package application
 
 import (
 	"testing"
@@ -7,12 +7,12 @@ import (
 
 func TestAggregateSubmitBurstsAppliesThresholdSortAndLimit(t *testing.T) {
 	base := time.Date(2026, 3, 23, 12, 0, 0, 0, time.UTC)
-	events := make([]riskAuditEvent, 0)
+	events := make([]RiskAuditEvent, 0)
 
 	appendEvents := func(userID int64, username string, count int, lastSeen time.Time) {
 		for idx := 0; idx < count; idx++ {
 			eventTime := lastSeen.Add(-time.Duration(count-idx-1) * time.Second)
-			events = append(events, riskAuditEvent{
+			events = append(events, RiskAuditEvent{
 				UserID:    &userID,
 				Username:  username,
 				IPAddress: "10.0.0.1",
@@ -63,7 +63,7 @@ func TestAggregateSharedIPsGroupsUsersAndSorts(t *testing.T) {
 	user7 := int64(7)
 	user8 := int64(8)
 
-	rows, affectedUsers := aggregateSharedIPs([]riskAuditEvent{
+	rows, affectedUsers := aggregateSharedIPs([]RiskAuditEvent{
 		{UserID: &user2, Username: "bravo", IPAddress: "10.0.0.1", CreatedAt: now},
 		{UserID: &user1, Username: "alpha", IPAddress: "10.0.0.1", CreatedAt: now},
 		{UserID: &user1, Username: "alpha", IPAddress: "10.0.0.1", CreatedAt: now},

@@ -44,6 +44,9 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/audit-logs", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/dashboard", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/cheat-detection", "internal/module/ops")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/notifications", "internal/module/ops")
+	assertRouteHandlerContains(t, router, "PUT", "/api/v1/notifications/:id/read", "internal/module/ops")
+	assertRouteHandlerContains(t, router, "GET", "/ws/notifications", "internal/module/ops")
 }
 
 func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
@@ -109,6 +112,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditHandler", reflect.TypeOf((*ops.AuditLogHandler)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "DashboardHandler", reflect.TypeOf((*ops.DashboardHandler)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "NotificationHandler", reflect.TypeOf((*ops.NotificationHandler)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "RiskHandler", reflect.TypeOf((*ops.RiskHandler)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
 	assertNoField(t, reflect.TypeOf(composition.AuthModule{}), "TokenService")

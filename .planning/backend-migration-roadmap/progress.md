@@ -14,3 +14,10 @@
   - `audit / dashboard / risk` 已从 `system` 收敛到 `ops`
   - `composition.SystemModule` 已通过 `ops` contract 装配对应 admin handler
   - 对外 admin 路径保持不变，`notification` 与 websocket 仍留在 `system`
+- 完成 `ops-layering-phase1`：
+  - `ops` 已物理拆分为 `api/http`、`application`、`infrastructure`
+  - 根包仅保留对外 contract 与模块级 wrapper
+- 完成 `ops-convergence-phase2`：
+  - `notification` 已从 `system` 迁入 `ops`
+  - `/api/v1/notifications` 与 `/ws/notifications` 路径保持不变
+  - 后端 `internal/module/system` 实现已删除

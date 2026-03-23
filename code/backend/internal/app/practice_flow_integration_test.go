@@ -33,7 +33,9 @@ import (
 	challengeModule "ctf-platform/internal/module/challenge"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
-	opsModule "ctf-platform/internal/module/ops"
+	opshttp "ctf-platform/internal/module/ops/api/http"
+	opsapp "ctf-platform/internal/module/ops/application"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practiceModule "ctf-platform/internal/module/practice"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
@@ -714,8 +716,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	authRepo := identityinfra.NewRepository(db)
 	authService := authModule.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
 	profileService := identityapp.NewProfileService(authRepo, logger.Named("identity_profile_service"))
-	auditRepo := opsModule.NewAuditRepository(db)
-	auditService := opsModule.NewAuditService(auditRepo, cfg.Pagination, logger)
+	auditRepo := opsinfra.NewAuditRepository(db)
+	auditService := opsapp.NewAuditService(auditRepo, cfg.Pagination, logger)
 	authHandler := authModule.NewHandler(authService, profileService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
@@ -724,7 +726,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		SameSite: cfg.Auth.CookieSameSite(),
 		MaxAge:   cfg.Auth.RefreshTokenTTL,
 	}, logger, auditService)
-	auditHandler := opsModule.NewAuditHandler(auditService)
+	auditHandler := opshttp.NewAuditHandler(auditService)
 
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)

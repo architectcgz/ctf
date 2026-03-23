@@ -1,4 +1,4 @@
-package ops
+package application
 
 import (
 	"context"
@@ -16,12 +16,12 @@ import (
 )
 
 type AuditService struct {
-	repo       *AuditRepository
+	repo       AuditRepository
 	pagination config.PaginationConfig
 	logger     *zap.Logger
 }
 
-func NewAuditService(repo *AuditRepository, pagination config.PaginationConfig, logger *zap.Logger) *AuditService {
+func NewAuditService(repo AuditRepository, pagination config.PaginationConfig, logger *zap.Logger) *AuditService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

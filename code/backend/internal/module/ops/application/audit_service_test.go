@@ -1,4 +1,4 @@
-package ops
+package application_test
 
 import (
 	"context"
@@ -13,6 +13,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	opsapp "ctf-platform/internal/module/ops/application"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -29,8 +31,8 @@ func setupAuditTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newAuditTestService(db *gorm.DB) *AuditService {
-	return NewAuditService(NewAuditRepository(db), config.PaginationConfig{
+func newAuditTestService(db *gorm.DB) *opsapp.AuditService {
+	return opsapp.NewAuditService(opsinfra.NewAuditRepository(db), config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     50,
 	}, zap.NewNop())

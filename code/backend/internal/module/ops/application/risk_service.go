@@ -1,4 +1,4 @@
-package ops
+package application
 
 import (
 	"context"
@@ -23,11 +23,11 @@ const (
 )
 
 type RiskService struct {
-	repo *RiskRepository
+	repo RiskRepository
 	log  *zap.Logger
 }
 
-func NewRiskService(repo *RiskRepository, log *zap.Logger) *RiskService {
+func NewRiskService(repo RiskRepository, log *zap.Logger) *RiskService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -67,7 +67,7 @@ func (s *RiskService) GetCheatDetection(ctx context.Context) (*dto.CheatDetectio
 	}, nil
 }
 
-func aggregateSubmitBursts(events []riskAuditEvent) ([]dto.CheatDetectionUser, map[int64]struct{}) {
+func aggregateSubmitBursts(events []RiskAuditEvent) ([]dto.CheatDetectionUser, map[int64]struct{}) {
 	type item struct {
 		username string
 		count    int
@@ -118,7 +118,7 @@ func aggregateSubmitBursts(events []riskAuditEvent) ([]dto.CheatDetectionUser, m
 	return rows, userIDs
 }
 
-func aggregateSharedIPs(events []riskAuditEvent) ([]dto.CheatDetectionIPGroup, map[int64]struct{}) {
+func aggregateSharedIPs(events []RiskAuditEvent) ([]dto.CheatDetectionIPGroup, map[int64]struct{}) {
 	type item struct {
 		usernames map[string]struct{}
 		userIDs   map[int64]struct{}

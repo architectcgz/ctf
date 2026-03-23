@@ -1,4 +1,4 @@
-package system
+package http
 
 import (
 	"bytes"
@@ -33,6 +33,8 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	opsapp "ctf-platform/internal/module/ops/application"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
 	ctfws "ctf-platform/pkg/websocket"
@@ -43,7 +45,7 @@ type notificationIntegrationEnv struct {
 	db                  *gorm.DB
 	cache               *redislib.Client
 	tokenService        authcontracts.TokenService
-	notificationService *NotificationService
+	notificationService *opsapp.NotificationService
 }
 
 type notificationTestEnvelope struct {
@@ -241,8 +243,8 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	}, zap.NewNop(), nil)
 
 	wsManager := ctfws.NewManager(wsCfg, zap.NewNop())
-	notificationRepo := NewNotificationRepository(db)
-	notificationService := NewNotificationService(notificationRepo, config.PaginationConfig{
+	notificationRepo := opsinfra.NewNotificationRepository(db)
+	notificationService := opsapp.NewNotificationService(notificationRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, wsManager, zap.NewNop())

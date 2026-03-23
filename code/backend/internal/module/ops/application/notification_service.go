@@ -1,4 +1,4 @@
-package system
+package application
 
 import (
 	"context"
@@ -18,19 +18,14 @@ import (
 	ctfws "ctf-platform/pkg/websocket"
 )
 
-type NotificationBroadcaster interface {
-	SendToUser(userID int64, message ctfws.Envelope) int
-	Broadcast(message ctfws.Envelope) int
-}
-
 type NotificationService struct {
-	repo       *NotificationRepository
+	repo       NotificationRepository
 	pagination config.PaginationConfig
 	manager    NotificationBroadcaster
 	logger     *zap.Logger
 }
 
-func NewNotificationService(repo *NotificationRepository, pagination config.PaginationConfig, manager NotificationBroadcaster, logger *zap.Logger) *NotificationService {
+func NewNotificationService(repo NotificationRepository, pagination config.PaginationConfig, manager NotificationBroadcaster, logger *zap.Logger) *NotificationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

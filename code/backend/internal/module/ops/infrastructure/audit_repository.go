@@ -1,37 +1,13 @@
-package ops
+package infrastructure
 
 import (
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	opsapp "ctf-platform/internal/module/ops/application"
 )
-
-type AuditLogListFilter struct {
-	UserID       *int64
-	Action       string
-	ResourceType string
-	ResourceID   *int64
-	StartTime    *time.Time
-	EndTime      *time.Time
-	Offset       int
-	Limit        int
-}
-
-type AuditLogRecord struct {
-	ID            int64     `gorm:"column:id"`
-	UserID        *int64    `gorm:"column:user_id"`
-	Action        string    `gorm:"column:action"`
-	ResourceType  string    `gorm:"column:resource_type"`
-	ResourceID    *int64    `gorm:"column:resource_id"`
-	Detail        string    `gorm:"column:detail"`
-	IPAddress     string    `gorm:"column:ip_address"`
-	UserAgent     *string   `gorm:"column:user_agent"`
-	CreatedAt     time.Time `gorm:"column:created_at"`
-	ActorUsername string    `gorm:"column:actor_username"`
-}
 
 type AuditRepository struct {
 	db *gorm.DB
@@ -45,7 +21,7 @@ func (r *AuditRepository) Create(ctx context.Context, log *model.AuditLog) error
 	return r.db.WithContext(ctx).Create(log).Error
 }
 
-func (r *AuditRepository) List(ctx context.Context, filter AuditLogListFilter) ([]AuditLogRecord, int64, error) {
+func (r *AuditRepository) List(ctx context.Context, filter opsapp.AuditLogListFilter) ([]opsapp.AuditLogRecord, int64, error) {
 	query := r.db.WithContext(ctx).
 		Table("audit_logs").
 		Joins("LEFT JOIN users ON users.id = audit_logs.user_id")
@@ -74,7 +50,7 @@ func (r *AuditRepository) List(ctx context.Context, filter AuditLogListFilter) (
 		return nil, 0, err
 	}
 
-	records := make([]AuditLogRecord, 0)
+	records := make([]opsapp.AuditLogRecord, 0)
 	err := query.
 		Select(`
 			audit_logs.id,
