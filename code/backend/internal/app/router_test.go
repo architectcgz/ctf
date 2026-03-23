@@ -17,10 +17,13 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/identity"
+	identityhttp "ctf-platform/internal/module/identity/api/http"
 	"ctf-platform/internal/module/ops"
 	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
+	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
+	teachingreadmodelapp "ctf-platform/internal/module/teaching_readmodel/application"
 )
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
@@ -85,21 +88,24 @@ func TestOpsModuleContractsCompile(t *testing.T) {
 }
 
 func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
-	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodel.Module)(nil)
+	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodelapp.QueryService)(nil)
 }
 
 func TestPracticeReadmodelModuleContractsCompile(t *testing.T) {
-	var _ practicereadmodel.PracticeQuery = (*practicereadmodel.Module)(nil)
+	var _ practicereadmodel.PracticeQuery = (*practicereadmodelapp.QueryService)(nil)
 }
 
 func TestCompositionModulesExposeContracts(t *testing.T) {
 	t.Parallel()
 
-	assertFieldType(t, reflect.TypeOf(composition.AuthModule{}), "TokenService", reflect.TypeOf((*identity.Authenticator)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "AdminHandler", reflect.TypeOf(&identityhttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileService", reflect.TypeOf((*identity.ProfileService)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identity.Authenticator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodel.PracticeQuery)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.SystemModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
+	assertNoField(t, reflect.TypeOf(composition.AuthModule{}), "TokenService")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Query")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Repository")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Service")

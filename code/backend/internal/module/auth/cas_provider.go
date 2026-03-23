@@ -19,6 +19,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
 )
@@ -40,7 +41,7 @@ type CASProvider interface {
 
 type casProvider struct {
 	config       config.CASConfig
-	repo         Repository
+	users        identitymodule.UserRepository
 	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	httpClient   *http.Client
@@ -80,7 +81,7 @@ type casPrincipal struct {
 	TeacherNo string
 }
 
-func NewCASProvider(cfg config.CASConfig, repo Repository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASProvider {
+func NewCASProvider(cfg config.CASConfig, users identitymodule.UserRepository, tokenService authcontracts.TokenService, log *zap.Logger, httpClient *http.Client) CASProvider {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -90,7 +91,7 @@ func NewCASProvider(cfg config.CASConfig, repo Repository, tokenService authcont
 
 	return &casProvider{
 		config:       cfg,
-		repo:         repo,
+		users:        users,
 		tokenService: tokenService,
 		log:          log,
 		httpClient:   httpClient,
@@ -134,7 +135,7 @@ func (p *casProvider) Authenticate(ctx context.Context, ticket string) (*dto.Log
 	if !p.isConfigured() {
 		return nil, nil, errcode.ErrCASNotConfigured
 	}
-	if p.repo == nil || p.tokenService == nil {
+	if p.users == nil || p.tokenService == nil {
 		return nil, nil, errcode.ErrCASNotImplemented
 	}
 
@@ -212,9 +213,9 @@ func (p *casProvider) validateTicket(ctx context.Context, ticket string) (*casPr
 }
 
 func (p *casProvider) syncUser(ctx context.Context, principal *casPrincipal) (*model.User, error) {
-	user, err := p.repo.FindByUsername(ctx, principal.Username)
+	user, err := p.users.FindByUsername(ctx, principal.Username)
 	if err != nil {
-		if !errors.Is(err, ErrUserNotFound) {
+		if !errors.Is(err, identitymodule.ErrUserNotFound) {
 			p.log.Error("auth_cas_find_user_failed", zap.String("username", principal.Username), zap.Error(err))
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
@@ -235,7 +236,7 @@ func (p *casProvider) syncUser(ctx context.Context, principal *casPrincipal) (*m
 		if err := user.SetPassword(randomPassword()); err != nil {
 			return nil, errcode.ErrInternal.WithCause(err)
 		}
-		if err := p.repo.Create(ctx, user); err != nil {
+		if err := p.users.Create(ctx, user); err != nil {
 			return nil, p.mapUserSyncError(err)
 		}
 		return user, nil
@@ -259,7 +260,7 @@ func (p *casProvider) syncUser(ctx context.Context, principal *casPrincipal) (*m
 	if !changed {
 		return user, nil
 	}
-	if err := p.repo.UpdateCASProfile(ctx, user); err != nil {
+	if err := p.users.UpdateProfile(ctx, user); err != nil {
 		return nil, p.mapUserSyncError(err)
 	}
 	return user, nil
@@ -307,15 +308,15 @@ func (p *casProvider) issueLoginResp(ctx context.Context, user *model.User) (*dt
 
 func (p *casProvider) mapUserSyncError(err error) error {
 	switch {
-	case errors.Is(err, ErrUsernameExists):
+	case errors.Is(err, identitymodule.ErrUsernameExists):
 		return errcode.ErrUsernameExists
-	case errors.Is(err, ErrEmailExists):
+	case errors.Is(err, identitymodule.ErrEmailExists):
 		return errcode.ErrEmailExists
-	case errors.Is(err, ErrStudentNoExists):
+	case errors.Is(err, identitymodule.ErrStudentNoExists):
 		return errcode.ErrStudentNoExists
-	case errors.Is(err, ErrTeacherNoExists):
+	case errors.Is(err, identitymodule.ErrTeacherNoExists):
 		return errcode.ErrTeacherNoExists
-	case errors.Is(err, ErrRoleNotFound):
+	case errors.Is(err, identitymodule.ErrRoleNotFound):
 		return errcode.ErrInternal.WithCause(err)
 	default:
 		return errcode.ErrInternal.WithCause(err)

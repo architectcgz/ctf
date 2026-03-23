@@ -154,12 +154,12 @@ flowchart LR
 - 当前实现以 `internal/app/buildRouterRuntime` 作为统一 composition root，负责集中装配 repository、service、handler 与共享基础设施依赖。
 - HTTP 路由与后台任务共享同一套关键运行时组件，当前已确认：
   - `runtimeBaseService` 由 composition root 创建一次，同时复用于：
-    - 运行时清理任务 `runtimeinfra.Cleaner`
+    - 运行时清理任务 `runtime/infrastructure.Cleaner`
     - AWD Flag 注入器 `contest.DockerAWDFlagInjector`
   - `runtimeInstanceService` 由 composition root 创建一次，专门负责：
     - HTTP Handler 链路中的实例查询、续期、销毁和教师端用例
     - 复用 `runtimeBaseService` 提供的运行时资源清理能力
-  - `runtime.Module` 作为 facade，统一组合：
+  - `runtime` 组合模块统一装配：
     - `runtimeBaseService` 的运行时编排能力
     - `runtimeInstanceService` 的 HTTP 用例能力
     - 代理票据应用服务
@@ -193,7 +193,7 @@ flowchart TD
         system["system\n系统管理\n仪表盘\n审计日志"]
     end
 
-    subgraph Infra["runtimeinfra（基础设施适配层）"]
+    subgraph Infra["runtime/infrastructure（基础设施适配层）"]
         runtimeinfra["Docker Engine · ACL 下发 · 清理任务 · 运行指标采集"]
     end
 
@@ -276,7 +276,7 @@ flowchart TD
 | 端口映射 | 动态分配宿主机端口（范围可配置，默认 30000-39999），映射到容器服务端口 |
 | 镜像管理 | 题目镜像元数据由 challenge 模块持有，runtime 负责运行时镜像探测与删除 |
 | 健康检查 | 定时探活（TCP/HTTP），连续失败 N 次标记为异常并通知用户 |
-| 运行时基础设施 | `runtimeinfra` 提供 Docker Engine、ACL 下发、清理任务和运行指标采集 |
+| 运行时基础设施 | `runtime/infrastructure` 提供 Docker Engine、ACL 下发、清理任务和运行指标采集 |
 | 数据表 | `instances`、`port_allocations` |
 | 依赖模块 | 无业务上游依赖，被 challenge / practice / contest / system 模块调用 |
 
@@ -446,18 +446,15 @@ ctf-platform/
 │   │   ├── runtime/
 │   │   │   ├── api/http/handler.go  # 实例访问与运行时 HTTP API
 │   │   │   ├── application/         # 实例 Query / UseCase 入口
-│   │   │   ├── contracts.go         # 模块对外 contract
 │   │   │   ├── domain/              # 运行时 ACL 与实例资源规则
 │   │   │   ├── infrastructure/
 │   │   │   │   ├── repository.go    # GORM 持久化实现
-│   │   │   │   └── proxy_ticket_store.go # 代理票据 Redis 存储
-│   │   │   ├── module.go            # 组合 facade（编排 + HTTP 用例 + 代理票据）
-│   │   │   └── service.go           # 运行时拓扑编排 Service
-│   │   ├── runtimeinfra/
-│   │   │   ├── engine.go            # Docker SDK 封装层
-│   │   │   ├── cleaner.go           # 运行时清理任务
-│   │   │   ├── acl.go               # ACL 下发
-│   │   │   └── runtime_metrics.go   # 运行指标采集
+│   │   │   │   ├── proxy_ticket_store.go # 代理票据 Redis 存储
+│   │   │   │   ├── engine.go        # Docker SDK 封装层
+│   │   │   │   ├── cleaner.go       # 运行时清理任务
+│   │   │   │   ├── acl.go           # ACL 下发
+│   │   │   │   └── runtime_metrics.go # 运行指标采集
+│   │   │   └── doc.go               # 根包仅保留命名空间说明
 │   │   └── system/
 │   │       ├── handler.go
 │   │       ├── service.go

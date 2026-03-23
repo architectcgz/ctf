@@ -1,4 +1,4 @@
-package runtimeinfra
+package infrastructure
 
 import (
 	"archive/tar"
@@ -20,17 +20,13 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimedomain "ctf-platform/internal/module/runtime/domain"
 )
 
 type Engine struct {
 	cli          *client.Client
 	containerCfg *config.ContainerConfig
-}
-
-type ManagedContainer struct {
-	ID        string
-	Name      string
-	CreatedAt time.Time
 }
 
 func NewEngine(cfg *config.ContainerConfig) (*Engine, error) {
@@ -219,24 +215,24 @@ func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath
 	return e.cli.CopyToContainer(ctx, containerID, dir, io.NopCloser(bytes.NewReader(archive.Bytes())), container.CopyToContainerOptions{})
 }
 
-func (e *Engine) ListManagedContainers(ctx context.Context, managedBy string) ([]ManagedContainer, error) {
+func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeapp.ManagedContainer, error) {
 	containers, err := e.cli.ContainerList(ctx, container.ListOptions{
 		All: true,
 		Filters: filters.NewArgs(
-			filters.Arg("label", managedBy),
+			filters.Arg("label", runtimedomain.ManagedByFilter()),
 		),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	items := make([]ManagedContainer, 0, len(containers))
+	items := make([]runtimeapp.ManagedContainer, 0, len(containers))
 	for _, item := range containers {
 		name := item.ID[:12]
 		if len(item.Names) > 0 {
 			name = item.Names[0]
 		}
-		items = append(items, ManagedContainer{
+		items = append(items, runtimeapp.ManagedContainer{
 			ID:        item.ID,
 			Name:      name,
 			CreatedAt: time.Unix(item.Created, 0),

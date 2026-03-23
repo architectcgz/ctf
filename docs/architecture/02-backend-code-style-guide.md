@@ -1,297 +1,149 @@
-# CTF Backend 代码风格指南
+# CTF Backend 代码风格补充约束
 
-## 1. 目标
+## 1. 文档定位
 
-这份文档参考 `zhi-file-service-go/docs/code-style-guide.md`，目标不是统一空格，而是统一：
+CTF 后端默认先遵守 workspace 共享 Go 规范：
 
-- 包边界
-- 文件职责
-- 命名方式
-- 错误处理
-- 事务边界
-- 日志与测试习惯
+- `/home/azhi/workspace/docs/go-code-style-guide.md`
 
-目标是让 CTF 后端在持续重构期间，新增代码仍然像同一套系统。
+这份文档只补充 CTF 自己的项目化约束，重点回答三个问题：
 
-## 2. 总体原则
+- 共享规范里的 owner 在 CTF 中如何映射
+- CTF 模块继续迁移时应收敛到什么结构
+- 哪些历史写法在 CTF 中必须继续清理
 
-### 2.1 清晰优先于炫技
+## 2. CTF 的 owner 映射规则
 
-优先选择：
+共享规范里的：
 
-- 简单
-- 可读
-- 可调试
-- 可测试
+- `service boundary`
+- `owner`
 
-不要为了“更抽象”牺牲理解成本。
+在 CTF 中统一映射成：
 
-### 2.2 显式优先于隐式
+- `module boundary`
 
-优先选择：
+也就是说，CTF 的最终目标不是多服务单仓，而是：
 
-- 明确依赖注入
-- 明确参数与返回值
-- 明确事务边界
-- 明确 cache key 与配置来源
+- 单体部署
+- 模块化单体
+- 模块内部严格分层
+- 模块之间通过窄 contracts / query facade / event 交互
 
-避免隐藏上下文和魔法行为。
+## 3. CTF 后端默认模块结构
 
-### 2.3 约束优先于便利
+新增模块或较大重构时，优先采用：
 
-如果实现破坏了：
+```text
+internal/module/<module>/
+├── contracts.go
+├── api/http/
+├── application/commands/
+├── application/queries/
+├── domain/
+├── ports/
+├── infrastructure/<adapter>/
+└── runtime/
+```
 
-- 模块边界
-- 依赖方向
-- 状态一致性
+说明：
 
-那它就不是合格实现。
+- `contracts.go`：模块对外暴露的最小能力面
+- `api/http`：Gin handler，仅做协议映射
+- `application/commands`：写用例、事务边界、状态推进
+- `application/queries`：读用例、只读聚合、投影视图拼装
+- `domain`：实体、规则、状态机、领域错误
+- `ports`：由消费方定义的最小依赖接口
+- `infrastructure/<adapter>`：GORM、Redis、Docker、导出、外部集成等适配器
+- `runtime/`：模块内唯一 wiring 层；如果模块当前没有装配需求，可以暂时不建
 
-## 3. 工具基线
+## 4. CTF 的额外硬约束
 
-后端最小工具基线：
+### 4.1 不再新增兼容层
 
-- `gofmt`
-- `goimports`
-- `go test ./...`
+CTF 当前迁移采用硬迁移，不保留长期兼容层。
 
-本仓库默认不接受以下习惯：
+因此：
 
-- 格式没过先不管
-- import 顺序手调但不统一
-- 测试先跳过，后面再补
+- 不再新增根包 `module.go` 门面层
+- 不再新增旧接口到新实现的转发壳
+- 不再为了“先跑起来”引入新的桥接 module
 
-## 4. 命名规范
+如果某次迁移不得不出现临时转发文件，它也必须被视为待删除遗留，并写进对应 `.planning/` 任务，而不是进入目标结构。
 
-### 4.1 包名
+### 4.2 composition 是唯一全局装配入口
 
-规则：
+全局装配统一收敛到：
 
-- 全小写
-- 简短
-- 不带下划线
-- 不带无意义后缀
+- `code/backend/internal/app/composition`
 
-正确示例：
+模块内部如需局部装配，统一放在本模块的 `runtime/`。
+禁止在 handler、repository、测试辅助包里偷偷拼跨模块依赖。
 
-- `contest`
-- `practice`
-- `teaching_readmodel`
+### 4.3 跨模块调用必须收窄
+
+跨模块调用优先采用：
+
+- `contracts.go`
+- query facade
+- 领域事件
+
+不允许直接依赖对方的：
+
+- concrete repository
+- concrete service
 - `infrastructure`
+- `api/http`
 
-避免：
+### 4.4 readmodel 是正式 owner，不是临时查询包
 
-- `contestservice`
-- `commonutil`
-- `practice_api`
+满足以下任一条件时，应优先拆出 readmodel：
 
-### 4.2 类型名
+- 查询会聚合多个 owner 的数据
+- 读路径和写路径关注点明显不同
+- 查询逻辑已经开始超过命令模块的可维护范围
+- 需要单独治理分页、投影、时间线、统计或推荐视图
 
-规则：
+已经成立的方向包括：
 
-- 用清晰业务名词
-- 不重复 package 语义
+- `practice_readmodel`
+- `teaching_readmodel`
 
-例如在 `practice_readmodel` 中：
+后续迁移时，应继续防止读逻辑回流到命令模块。
 
-- 用 `Module`
-- 用 `QueryService`
-- 用 `Repository`
+### 4.5 错误处理统一收敛到项目既有体系
 
-不要写成：
+CTF 的 canonical 错误表达继续使用项目现有错误码体系收敛。
 
-- `PracticeReadmodelQueryServiceImpl`
-
-### 4.3 方法名
-
-规则：
-
-- 用动词开头
-- 体现业务行为
-
-正确示例：
-
-- `CreateContest`
-- `SubmitFlag`
-- `GetTimeline`
-- `ListClassStudents`
-
-避免：
-
-- `DoContest`
-- `HandleInfo`
-- `ProcessData`
-
-### 4.4 变量名
-
-规则：
-
-- 短作用域用短名
-- 长作用域用全名
-
-正确示例：
-
-- `ctx`
-- `tx`
-- `userID`
-- `challengeID`
-- `practiceReadmodelService`
-
-避免：
-
-- `tmp1`
-- `obj`
-- `svc1`
-
-## 5. 文件组织
-
-### 5.1 一个文件一个主要关注点
-
-不要把以下内容持续堆在同一个文件里：
-
-- HTTP handler
-- 查询拼装
-- SQL 细节
-- 事务控制
-- 配置默认值
-
-### 5.2 文件命名
-
-优先按对象或用例命名：
-
-- `handler.go`
-- `query_service.go`
-- `repository.go`
-- `score_service.go`
-
-避免继续新增：
-
-- `misc.go`
-- `util.go`
-- `helper.go`
-
-除非它真的是极小且边界明确的辅助文件。
-
-## 6. 分层职责
-
-### 6.1 `api/http`
-
-负责：
-
-- request 解析
-- 参数校验
-- 当前用户上下文提取
-- response / error 映射
-
-不负责：
-
-- SQL 查询
-- 事务编排
-- 跨模块复杂业务规则
-
-### 6.2 `application`
-
-负责：
-
-- use case 编排
-- 事务边界
-- 查询结果拼装
-- cache 读写策略
-- 跨 repository 调用顺序
-
-不负责：
-
-- HTTP 协议细节
-- GORM SQL 细节
-- 连接池、Redis client 初始化
-
-### 6.3 `infrastructure`
-
-负责：
-
-- GORM 查询
-- Redis / 外部系统适配
-- SQL 投影与持久化细节
-
-不负责：
-
-- Gin request 解析
-- 页面级或接口级错误文案
-- 跨模块业务编排
-
-## 7. 接口与契约
-
-接口应服务于消费方，而不是为了“看起来解耦”。
-
-优先在以下场景抽接口：
-
-- 跨模块 contracts
-- provider 替换点
-- 测试隔离外部依赖
-
-不满足这些条件时，不要为了抽象而抽象。
-
-## 8. 错误处理与日志
-
-### 8.1 错误处理
+约束：
 
 - `infrastructure` 返回原始错误或带上下文包装的错误
-- `application` 负责收敛到 `errcode`
-- 不要吞错
-- 不要在多层重复包装成看不懂的错误链
+- `application` 负责收敛到项目错误码
+- `api/http` 负责映射到响应结构
+- 不要跨层依赖裸字符串错误做业务判断
 
-### 8.2 日志
+### 4.6 缓存、配置与副作用必须显式
 
-日志应打在边界和关键副作用处：
-
-- 外部依赖失败
-- 异步任务失败
-- 关键状态推进
-- 风险排查需要的业务节点
-
-不要在每一层都对同一个错误重复打日志。
-
-## 9. Context、事务与缓存
-
-### 9.1 Context
-
-所有可能阻塞的操作优先接收 `context.Context`：
-
-- DB
-- Redis
-- 外部调用
-- 异步任务入口
-
-### 9.2 事务边界
-
-事务边界应由 `application` 或模块 service 控制，不应散落在 handler 中。
-
-### 9.3 缓存
-
-- cache key 统一收敛到 `internal/constants` 或明确的 adapter 中
+- cache key 统一收敛到明确常量或 adapter
 - TTL 必须从配置读取，不写死在业务逻辑里
-- cache 失效策略要和写路径放在同一个业务决策面上
+- Docker、导出、审计、异步任务等副作用只能出现在应用层编排点或 adapter 中
 
-## 10. 测试规则
+## 5. 迁移时的 review 检查项
 
-优先保证以下测试仍然齐全：
+每次后端迁移默认检查：
 
-- 模块 service / application 的行为测试
-- app/router 的装配测试
-- architecture rule 测试
-- 关键 HTTP / integration 测试
+1. handler 是否仍在编排业务或直接调 repository
+2. `application` 是否直接依赖 concrete adapter
+3. 是否跨模块 import 了对方内部实现
+4. 是否把读侧聚合又塞回了命令模块
+5. 是否继续制造根包兼容壳或新的桥接层
+6. cache、配置、事务边界是否显式
 
-新增重构时，优先补：
+## 6. 增量迁移要求
 
-- 契约边界测试
-- 路由归属测试
-- 读写职责分离后的回归测试
+这份补充约束不是要求一次性重写全仓，而是要求：
 
-## 11. 增量迁移要求
-
-这份规范不是要求一次性重写全仓，而是要求：
-
-1. 新代码按规范写
-2. 正在重构的模块优先按规范落地
-3. 旧模块在被持续修改时逐步收敛
-4. 不再继续制造新的大而平文件
+1. 新代码按共享规范和本地补充一起落地
+2. 当前正在迁移的模块优先向目标结构物理收敛
+3. 旧模块在被持续修改时逐步补齐 `domain / ports / runtime`
+4. 不再继续制造新的大平铺文件和历史兼容层

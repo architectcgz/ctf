@@ -1,4 +1,4 @@
-package runtimeinfra
+package infrastructure
 
 import (
 	"context"

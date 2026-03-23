@@ -11,10 +11,9 @@ import (
 	contestmodule "ctf-platform/internal/module/contest"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
-	runtimedomain "ctf-platform/internal/module/runtime/domain"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
+	"go.uber.org/zap"
 )
 
 type RuntimeModule struct {
@@ -49,17 +48,17 @@ type runtimeContestDeps struct {
 	containerFiles contestmodule.AWDContainerFileWriter
 }
 
-func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
+func BuildRuntimeModule(root *Root) *RuntimeModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
 	cache := root.Cache()
-	repo := runtimeinfrarepo.NewRepository(db)
-	engineAdapter := newRuntimeEngineAdapter(infra.Engine)
-	cleanupService := runtimeapp.NewRuntimeCleanupService(infra.Engine, log.Named("runtime_cleanup_service"))
-	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engineAdapter, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
+	repo := runtimeinfra.NewRepository(db)
+	engine := buildRuntimeEngine(root)
+	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
+	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
 	instanceService := runtimeapp.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service"))
-	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
+	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfra.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	cleaner := runtimeinfra.NewCleaner(maintenanceService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"runtime_cleaner",
@@ -81,19 +80,46 @@ func BuildRuntimeModule(root *Root, infra *RuntimeInfraModule) *RuntimeModule {
 		},
 		practice: runtimePracticeDeps{
 			instanceRepository: repo,
-			runtimeService:     newPracticeRuntimeInstanceServiceAdapter(cleanupService, runtimeapp.NewProvisioningService(repo, infra.Engine, &cfg.Container, log.Named("runtime_provisioning_service"))),
+			runtimeService:     newPracticeRuntimeInstanceServiceAdapter(cleanupService, runtimeapp.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))),
 		},
 		challenge: runtimeChallengeDeps{
-			imageRuntime: runtimeapp.NewImageRuntimeService(infra.Engine),
+			imageRuntime: runtimeapp.NewImageRuntimeService(engine),
 		},
 		system: runtimeSystemDeps{
 			query:         runtimeapp.NewQueryService(repo),
-			statsProvider: newSystemRuntimeStatsProvider(runtimeapp.NewContainerStatsService(engineAdapter)),
+			statsProvider: newSystemRuntimeStatsProvider(runtimeapp.NewContainerStatsService(engine)),
 		},
 		contest: runtimeContestDeps{
-			containerFiles: runtimeapp.NewContainerFileService(infra.Engine, log.Named("runtime_container_file_service")),
+			containerFiles: runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
 		},
 	}
+}
+
+func buildRuntimeEngine(root *Root) *runtimeinfra.Engine {
+	if root == nil {
+		return nil
+	}
+
+	cfg := root.Config()
+	log := root.Logger()
+	if cfg == nil {
+		return nil
+	}
+	if cfg.App.Env == "test" {
+		if log != nil {
+			log.Info("runtime_engine_disabled_in_test_env_for_router")
+		}
+		return nil
+	}
+
+	engine, err := runtimeinfra.NewEngine(&cfg.Container)
+	if err != nil {
+		if log != nil {
+			log.Warn("runtime_engine_init_failed_for_router", zap.Error(err))
+		}
+		return nil
+	}
+	return engine
 }
 
 func (m *RuntimeModule) BuildHandler(root *Root, system *SystemModule) {
@@ -232,57 +258,4 @@ func errRuntimeHTTPInstanceServiceUnavailable() error {
 
 func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
-}
-
-type runtimeEngineAdapter struct {
-	engine *runtimeinfra.Engine
-}
-
-func newRuntimeEngineAdapter(engine *runtimeinfra.Engine) *runtimeEngineAdapter {
-	return &runtimeEngineAdapter{engine: engine}
-}
-
-func (r *runtimeEngineAdapter) ListManagedContainers(ctx context.Context) ([]runtimeapp.ManagedContainer, error) {
-	if r == nil || r.engine == nil {
-		return []runtimeapp.ManagedContainer{}, nil
-	}
-
-	containers, err := r.engine.ListManagedContainers(ctx, runtimedomain.ManagedByFilter())
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]runtimeapp.ManagedContainer, 0, len(containers))
-	for _, item := range containers {
-		result = append(result, runtimeapp.ManagedContainer{
-			ID:        item.ID,
-			Name:      item.Name,
-			CreatedAt: item.CreatedAt,
-		})
-	}
-	return result, nil
-}
-
-func (r *runtimeEngineAdapter) ListManagedContainerStats(ctx context.Context) ([]runtimeapp.ManagedContainerStat, error) {
-	if r == nil || r.engine == nil {
-		return []runtimeapp.ManagedContainerStat{}, nil
-	}
-
-	stats, err := r.engine.ListManagedContainerStats(ctx, runtimedomain.ManagedByFilter())
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]runtimeapp.ManagedContainerStat, 0, len(stats))
-	for _, item := range stats {
-		result = append(result, runtimeapp.ManagedContainerStat{
-			ContainerID:   item.ContainerID,
-			ContainerName: item.ContainerName,
-			CPUPercent:    item.CPUPercent,
-			MemoryPercent: item.MemoryPercent,
-			MemoryUsage:   item.MemoryUsage,
-			MemoryLimit:   item.MemoryLimit,
-		})
-	}
-	return result, nil
 }

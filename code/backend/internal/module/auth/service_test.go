@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitymodule "ctf-platform/internal/module/identity"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
@@ -19,11 +20,14 @@ import (
 
 type mockRepository struct {
 	createFn           func(ctx context.Context, user *model.User) error
-	findByUsernameFn   func(ctx context.Context, username string) (*model.User, error)
 	findByIDFn         func(ctx context.Context, userID int64) (*model.User, error)
+	findByUsernameFn   func(ctx context.Context, username string) (*model.User, error)
+	listFn             func(ctx context.Context, filter identitymodule.UserListFilter) ([]*model.User, int64, error)
+	updateFn           func(ctx context.Context, user *model.User) error
+	deleteFn           func(ctx context.Context, userID int64) error
 	updatePasswordFn   func(ctx context.Context, userID int64, newHash string) error
 	updateLoginStateFn func(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error
-	updateCASProfileFn func(ctx context.Context, user *model.User) error
+	updateProfileFn    func(ctx context.Context, user *model.User) error
 }
 
 func (m *mockRepository) Create(ctx context.Context, user *model.User) error {
@@ -35,16 +39,37 @@ func (m *mockRepository) Create(ctx context.Context, user *model.User) error {
 
 func (m *mockRepository) FindByUsername(ctx context.Context, username string) (*model.User, error) {
 	if m.findByUsernameFn == nil {
-		return nil, ErrUserNotFound
+		return nil, identitymodule.ErrUserNotFound
 	}
 	return m.findByUsernameFn(ctx, username)
 }
 
 func (m *mockRepository) FindByID(ctx context.Context, userID int64) (*model.User, error) {
 	if m.findByIDFn == nil {
-		return nil, ErrUserNotFound
+		return nil, identitymodule.ErrUserNotFound
 	}
 	return m.findByIDFn(ctx, userID)
+}
+
+func (m *mockRepository) List(ctx context.Context, filter identitymodule.UserListFilter) ([]*model.User, int64, error) {
+	if m.listFn == nil {
+		return nil, 0, nil
+	}
+	return m.listFn(ctx, filter)
+}
+
+func (m *mockRepository) Update(ctx context.Context, user *model.User) error {
+	if m.updateFn == nil {
+		return nil
+	}
+	return m.updateFn(ctx, user)
+}
+
+func (m *mockRepository) Delete(ctx context.Context, userID int64) error {
+	if m.deleteFn == nil {
+		return nil
+	}
+	return m.deleteFn(ctx, userID)
 }
 
 func (m *mockRepository) UpdatePassword(ctx context.Context, userID int64, newHash string) error {
@@ -61,111 +86,11 @@ func (m *mockRepository) UpdateLoginState(ctx context.Context, userID int64, fai
 	return m.updateLoginStateFn(ctx, userID, failedAttempts, lastFailedAt, lockedUntil, status)
 }
 
-func (m *mockRepository) UpdateCASProfile(ctx context.Context, user *model.User) error {
-	if m.updateCASProfileFn == nil {
+func (m *mockRepository) UpdateProfile(ctx context.Context, user *model.User) error {
+	if m.updateProfileFn == nil {
 		return nil
 	}
-	return m.updateCASProfileFn(ctx, user)
-}
-
-func TestServiceChangePasswordSuccess(t *testing.T) {
-	t.Parallel()
-
-	user := &model.User{
-		ID:       1,
-		Username: "alice_1",
-		Role:     model.RoleStudent,
-		Status:   model.UserStatusActive,
-	}
-	if err := user.SetPassword("Password123"); err != nil {
-		t.Fatalf("SetPassword() error = %v", err)
-	}
-	oldHash := user.PasswordHash
-
-	var updatedHash string
-	service := NewService(&mockRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
-			if userID != user.ID {
-				t.Fatalf("unexpected user id: %d", userID)
-			}
-			return user, nil
-		},
-		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
-			if userID != user.ID {
-				t.Fatalf("unexpected user id: %d", userID)
-			}
-			updatedHash = newHash
-			return nil
-		},
-	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
-
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
-		OldPassword: "Password123",
-		NewPassword: "Password456",
-	})
-	if err != nil {
-		t.Fatalf("ChangePassword() error = %v", err)
-	}
-	if updatedHash == "" || updatedHash == oldHash {
-		t.Fatalf("expected password hash to be updated")
-	}
-	if !user.CheckPassword("Password456") {
-		t.Fatalf("expected user password to be replaced with new password")
-	}
-}
-
-func TestServiceChangePasswordOldPasswordInvalid(t *testing.T) {
-	t.Parallel()
-
-	user := &model.User{ID: 1, Username: "alice_1"}
-	if err := user.SetPassword("Password123"); err != nil {
-		t.Fatalf("SetPassword() error = %v", err)
-	}
-
-	service := NewService(&mockRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
-			return user, nil
-		},
-		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
-			t.Fatalf("UpdatePassword() should not be called")
-			return nil
-		},
-	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
-
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
-		OldPassword: "wrong-password",
-		NewPassword: "Password456",
-	})
-	if !errors.Is(err, errcode.ErrOldPasswordInvalid) {
-		t.Fatalf("expected old password invalid, got %v", err)
-	}
-}
-
-func TestServiceChangePasswordRejectsSamePassword(t *testing.T) {
-	t.Parallel()
-
-	user := &model.User{ID: 1, Username: "alice_1"}
-	if err := user.SetPassword("Password123"); err != nil {
-		t.Fatalf("SetPassword() error = %v", err)
-	}
-
-	service := NewService(&mockRepository{
-		findByIDFn: func(ctx context.Context, userID int64) (*model.User, error) {
-			return user, nil
-		},
-		updatePasswordFn: func(ctx context.Context, userID int64, newHash string) error {
-			t.Fatalf("UpdatePassword() should not be called")
-			return nil
-		},
-	}, &mockTokenService{}, config.RateLimitPolicyConfig{}, zap.NewNop())
-
-	err := service.ChangePassword(context.Background(), user.ID, &dto.ChangePasswordReq{
-		OldPassword: "Password123",
-		NewPassword: "Password123",
-	})
-	if !errors.Is(err, errcode.ErrPasswordUnchanged) {
-		t.Fatalf("expected password unchanged error, got %v", err)
-	}
+	return m.updateProfileFn(ctx, user)
 }
 
 type mockTokenService struct {
@@ -263,7 +188,7 @@ func TestServiceRegisterRoleNotFound(t *testing.T) {
 
 	service := NewService(&mockRepository{
 		createFn: func(ctx context.Context, user *model.User) error {
-			return ErrRoleNotFound
+			return identitymodule.ErrRoleNotFound
 		},
 	}, &mockTokenService{
 		issueFn: func(userID int64, username, role string) (*authcontracts.TokenPair, error) {

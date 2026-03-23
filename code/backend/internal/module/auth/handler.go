@@ -13,12 +13,14 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
 	service       Service
+	profile       identitymodule.ProfileService
 	tokenService  authcontracts.TokenService
 	casProvider   CASProvider
 	cookieConfig  CookieConfig
@@ -35,7 +37,7 @@ type CookieConfig struct {
 	MaxAge   time.Duration
 }
 
-func NewHandler(service Service, tokenService authcontracts.TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
+func NewHandler(service Service, profile identitymodule.ProfileService, tokenService authcontracts.TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -45,6 +47,7 @@ func NewHandler(service Service, tokenService authcontracts.TokenService, casPro
 
 	return &Handler{
 		service:       service,
+		profile:       profile,
 		tokenService:  tokenService,
 		casProvider:   casProvider,
 		cookieConfig:  cookieConfig,
@@ -175,8 +178,13 @@ func (h *Handler) Logout(c *gin.Context) {
 }
 
 func (h *Handler) Profile(c *gin.Context) {
+	if h.profile == nil {
+		response.Error(c, errcode.ErrServiceUnavailable)
+		return
+	}
+
 	authUser := authctx.MustCurrentUser(c)
-	profile, err := h.service.GetProfile(c.Request.Context(), authUser.UserID)
+	profile, err := h.profile.GetProfile(c.Request.Context(), authUser.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -185,6 +193,11 @@ func (h *Handler) Profile(c *gin.Context) {
 }
 
 func (h *Handler) ChangePassword(c *gin.Context) {
+	if h.profile == nil {
+		response.Error(c, errcode.ErrServiceUnavailable)
+		return
+	}
+
 	authUser := authctx.MustCurrentUser(c)
 	req := &dto.ChangePasswordReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
@@ -192,7 +205,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
+	if err := h.profile.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
 			Action:       model.AuditActionUpdate,

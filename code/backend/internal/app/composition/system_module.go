@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/module/identity"
 	"ctf-platform/internal/module/ops"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	"ctf-platform/internal/module/system"
@@ -55,7 +56,7 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	}
 }
 
-func (m *SystemModule) BuildNotificationHandler(root *Root, auth *AuthModule) {
+func (m *SystemModule) BuildNotificationHandler(root *Root, tokenService identity.Authenticator) {
 	if m == nil {
 		return
 	}
@@ -74,7 +75,7 @@ func (m *SystemModule) BuildNotificationHandler(root *Root, auth *AuthModule) {
 	notificationService.RegisterPracticeEventConsumers(root.Events)
 	m.NotificationHandler = system.NewNotificationHandler(
 		notificationService,
-		auth.TokenService,
+		tokenService,
 		m.WebSocketManager,
 		log.Named("notification_handler"),
 	)

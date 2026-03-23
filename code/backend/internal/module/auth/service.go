@@ -11,31 +11,30 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 )
 
 type Service interface {
 	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
 	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
-	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
-	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
 	ValidatePassword(user *model.User, password string) bool
 }
 
 type service struct {
-	repo         Repository
+	users        identitymodule.UserRepository
 	tokenService authcontracts.TokenService
 	log          *zap.Logger
 	loginPolicy  config.RateLimitPolicyConfig
 }
 
-func NewService(repo Repository, tokenService authcontracts.TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
+func NewService(users identitymodule.UserRepository, tokenService authcontracts.TokenService, loginPolicy config.RateLimitPolicyConfig, log *zap.Logger) Service {
 	if log == nil {
 		log = zap.NewNop()
 	}
 
 	return &service{
-		repo:         repo,
+		users:        users,
 		tokenService: tokenService,
 		log:          log,
 		loginPolicy:  loginPolicy,
@@ -57,15 +56,15 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 		return nil, nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	if err := s.repo.Create(ctx, user); err != nil {
+	if err := s.users.Create(ctx, user); err != nil {
 		switch {
-		case errors.Is(err, ErrUsernameExists):
+		case errors.Is(err, identitymodule.ErrUsernameExists):
 			s.log.Warn("auth_register_failed_username_exists", zap.String("username", req.Username))
 			return nil, nil, errcode.ErrUsernameExists
-		case errors.Is(err, ErrEmailExists):
+		case errors.Is(err, identitymodule.ErrEmailExists):
 			s.log.Warn("auth_register_failed_email_exists", zap.String("username", req.Username), zap.String("email", req.Email))
 			return nil, nil, errcode.ErrEmailExists
-		case errors.Is(err, ErrRoleNotFound):
+		case errors.Is(err, identitymodule.ErrRoleNotFound):
 			s.log.Error("auth_register_failed_role_missing", zap.String("username", req.Username), zap.String("role", user.Role))
 			return nil, nil, errcode.ErrInternal.WithCause(err)
 		default:
@@ -81,9 +80,9 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error) {
 	s.log.Info("auth_login_attempt", zap.String("username", req.Username))
 
-	user, err := s.repo.FindByUsername(ctx, req.Username)
+	user, err := s.users.FindByUsername(ctx, req.Username)
 	if err != nil {
-		if errors.Is(err, ErrUserNotFound) {
+		if errors.Is(err, identitymodule.ErrUserNotFound) {
 			s.log.Warn("auth_login_failed_user_not_found", zap.String("username", req.Username))
 			return nil, nil, errcode.ErrInvalidCredentials
 		}
@@ -134,52 +133,6 @@ func (s *service) Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp,
 	return s.issueLoginResp(ctx, user)
 }
 
-func (s *service) GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error) {
-	user, err := s.repo.FindByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, ErrUserNotFound) {
-			return nil, errcode.ErrUnauthorized
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	profile := buildAuthUser(user)
-	return &profile, nil
-}
-
-func (s *service) ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error {
-	user, err := s.repo.FindByID(ctx, userID)
-	if err != nil {
-		if errors.Is(err, ErrUserNotFound) {
-			return errcode.ErrUnauthorized
-		}
-		return errcode.ErrInternal.WithCause(err)
-	}
-
-	if !s.ValidatePassword(user, req.OldPassword) {
-		s.log.Warn("auth_change_password_failed_old_password_invalid", zap.Int64("user_id", userID))
-		return errcode.ErrOldPasswordInvalid
-	}
-	if req.OldPassword == req.NewPassword {
-		s.log.Warn("auth_change_password_failed_password_unchanged", zap.Int64("user_id", userID))
-		return errcode.ErrPasswordUnchanged
-	}
-
-	if err := user.SetPassword(req.NewPassword); err != nil {
-		s.log.Error("auth_change_password_hash_failed", zap.Int64("user_id", userID), zap.Error(err))
-		return errcode.ErrInternal.WithCause(err)
-	}
-	if err := s.repo.UpdatePassword(ctx, userID, user.PasswordHash); err != nil {
-		if errors.Is(err, ErrUserNotFound) {
-			return errcode.ErrUnauthorized
-		}
-		s.log.Error("auth_change_password_update_failed", zap.Int64("user_id", userID), zap.Error(err))
-		return errcode.ErrInternal.WithCause(err)
-	}
-
-	s.log.Info("auth_change_password_succeeded", zap.Int64("user_id", userID))
-	return nil
-}
-
 func (s *service) ValidatePassword(user *model.User, password string) bool {
 	return user.CheckPassword(password)
 }
@@ -217,7 +170,7 @@ func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now t
 	}
 
 	lastFailedAt := &now
-	if err := s.repo.UpdateLoginState(ctx, user.ID, failedAttempts, lastFailedAt, lockedUntil, status); err != nil {
+	if err := s.users.UpdateLoginState(ctx, user.ID, failedAttempts, lastFailedAt, lockedUntil, status); err != nil {
 		return false, err
 	}
 
@@ -229,7 +182,7 @@ func (s *service) recordFailedLogin(ctx context.Context, user *model.User, now t
 }
 
 func (s *service) resetLoginTracking(ctx context.Context, user *model.User, status string) error {
-	if err := s.repo.UpdateLoginState(ctx, user.ID, 0, nil, nil, status); err != nil {
+	if err := s.users.UpdateLoginState(ctx, user.ID, 0, nil, nil, status); err != nil {
 		return err
 	}
 	user.FailedLoginAttempts = 0

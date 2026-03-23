@@ -1,4 +1,4 @@
-package adminuser
+package infrastructure
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	identitymodule "ctf-platform/internal/module/identity"
 )
 
 const (
@@ -19,34 +20,18 @@ const (
 	uniqueTeacherNoIndex     = "uk_users_teacher_no"
 )
 
-var ErrUserNotFound = errors.New("admin user not found")
-var ErrUsernameExists = errors.New("admin username already exists")
-var ErrEmailExists = errors.New("admin email already exists")
-var ErrStudentNoExists = errors.New("admin student no already exists")
-var ErrTeacherNoExists = errors.New("admin teacher no already exists")
-var ErrRoleNotFound = errors.New("admin role not found")
-
-type UserListFilter struct {
-	Keyword   string
-	StudentNo string
-	TeacherNo string
-	Role      string
-	Status    string
-	ClassName string
-	Offset    int
-	Limit     int
-}
-
 type Repository struct {
 	db *gorm.DB
 }
+
+var _ identitymodule.UserRepository = (*Repository)(nil)
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) List(ctx context.Context, filter UserListFilter) ([]*model.User, int64, error) {
-	query := r.db.WithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
+func (r *Repository) List(ctx context.Context, filter identitymodule.UserListFilter) ([]*model.User, int64, error) {
+	query := r.dbWithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
 	if filter.Keyword != "" {
 		keyword := "%" + strings.TrimSpace(filter.Keyword) + "%"
 		query = query.Where(
@@ -89,28 +74,28 @@ func (r *Repository) List(ctx context.Context, filter UserListFilter) ([]*model.
 
 func (r *Repository) FindByID(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
-	if err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
+	if err := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrUserNotFound
+			return nil, identitymodule.ErrUserNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("find user by id: %w", err)
 	}
 	return &user, nil
 }
 
 func (r *Repository) FindByUsername(ctx context.Context, username string) (*model.User, error) {
 	var user model.User
-	if err := r.db.WithContext(ctx).Where("username = ? AND deleted_at IS NULL", username).First(&user).Error; err != nil {
+	if err := r.dbWithContext(ctx).Where("username = ? AND deleted_at IS NULL", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrUserNotFound
+			return nil, identitymodule.ErrUserNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("find user by username: %w", err)
 	}
 	return &user, nil
 }
 
 func (r *Repository) Create(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(user).Error; err != nil {
 			return mapUserWriteError(err)
 		}
@@ -122,8 +107,8 @@ func (r *Repository) Create(ctx context.Context, user *model.User) error {
 }
 
 func (r *Repository) Update(ctx context.Context, user *model.User) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&model.User{}).
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&model.User{}).
 			Where("id = ? AND deleted_at IS NULL", user.ID).
 			Updates(map[string]any{
 				"password_hash": user.PasswordHash,
@@ -135,8 +120,12 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 				"class_name":    user.ClassName,
 				"status":        user.Status,
 				"updated_at":    time.Now(),
-			}).Error; err != nil {
-			return mapUserWriteError(err)
+			})
+		if result.Error != nil {
+			return mapUserWriteError(result.Error)
+		}
+		if result.RowsAffected == 0 {
+			return identitymodule.ErrUserNotFound
 		}
 		if err := syncUserRole(tx, user.ID, user.Role); err != nil {
 			return err
@@ -146,21 +135,79 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 }
 
 func (r *Repository) Delete(ctx context.Context, userID int64) error {
-	result := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).Delete(&model.User{})
+	result := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).Delete(&model.User{})
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ErrUserNotFound
+		return identitymodule.ErrUserNotFound
 	}
 	return nil
+}
+
+func (r *Repository) UpdatePassword(ctx context.Context, userID int64, newHash string) error {
+	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", userID).Update("password_hash", newHash)
+	if result.Error != nil {
+		return fmt.Errorf("update password: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return identitymodule.ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *Repository) UpdateLoginState(ctx context.Context, userID int64, failedAttempts int, lastFailedAt, lockedUntil *time.Time, status string) error {
+	updates := map[string]any{
+		"failed_login_attempts": failedAttempts,
+		"last_failed_login_at":  lastFailedAt,
+		"locked_until":          lockedUntil,
+		"status":                status,
+	}
+	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", userID).Updates(updates)
+	if result.Error != nil {
+		return fmt.Errorf("update login state: %w", result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return identitymodule.ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *Repository) UpdateProfile(ctx context.Context, user *model.User) error {
+	updates := map[string]any{
+		"name":                  user.Name,
+		"email":                 user.Email,
+		"student_no":            user.StudentNo,
+		"teacher_no":            user.TeacherNo,
+		"class_name":            user.ClassName,
+		"status":                user.Status,
+		"failed_login_attempts": user.FailedLoginAttempts,
+		"last_failed_login_at":  user.LastFailedLoginAt,
+		"locked_until":          user.LockedUntil,
+		"updated_at":            time.Now(),
+	}
+	result := r.dbWithContext(ctx).Model(&model.User{}).Where("id = ? AND deleted_at IS NULL", user.ID).Updates(updates)
+	if result.Error != nil {
+		return mapUserWriteError(fmt.Errorf("update profile: %w", result.Error))
+	}
+	if result.RowsAffected == 0 {
+		return identitymodule.ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return r.db.WithContext(ctx)
 }
 
 func syncUserRole(tx *gorm.DB, userID int64, roleCode string) error {
 	var role model.Role
 	if err := tx.Where("code = ?", roleCode).First(&role).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ErrRoleNotFound
+			return identitymodule.ErrRoleNotFound
 		}
 		return fmt.Errorf("find role: %w", err)
 	}
@@ -180,13 +227,13 @@ func mapUserWriteError(err error) error {
 	message := err.Error()
 	switch {
 	case strings.Contains(message, uniqueUsernameConstraint):
-		return ErrUsernameExists
+		return identitymodule.ErrUsernameExists
 	case strings.Contains(message, uniqueEmailConstraint):
-		return ErrEmailExists
+		return identitymodule.ErrEmailExists
 	case strings.Contains(message, uniqueStudentNoIndex):
-		return ErrStudentNoExists
+		return identitymodule.ErrStudentNoExists
 	case strings.Contains(message, uniqueTeacherNoIndex):
-		return ErrTeacherNoExists
+		return identitymodule.ErrTeacherNoExists
 	default:
 		return err
 	}

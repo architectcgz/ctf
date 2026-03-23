@@ -1,20 +1,21 @@
-package adminuser
+package http
 
 import (
-	"net/http"
+	nethttp "net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
-	service *Service
+	service identitymodule.AdminService
 }
 
-func NewHandler(service *Service) *Handler {
+func NewHandler(service identitymodule.AdminService) *Handler {
 	return &Handler{service: service}
 }
 
@@ -92,5 +93,5 @@ func (h *Handler) ImportUsers(c *gin.Context) {
 		response.FromError(c, err)
 		return
 	}
-	response.SuccessWithStatus(c, http.StatusCreated, result)
+	response.SuccessWithStatus(c, nethttp.StatusCreated, result)
 }
