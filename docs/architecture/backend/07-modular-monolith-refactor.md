@@ -868,6 +868,14 @@ internal/app/composition/
 - 审计、通知、风险、仪表盘从“杂项系统模块”变成明确运营域
 - 仪表盘改依赖 query/service contract，而非外部 repository
 
+当前进度（2026-03-23，Phase 1）：
+
+- `audit / dashboard / risk` 已从 `system` 收敛到 `ops`
+- `composition.SystemModule` 已通过 `ops` contract 装配 admin 审计、仪表盘、风控 handler
+- `/api/v1/admin/audit-logs`、`/api/v1/admin/dashboard`、`/api/v1/admin/cheat-detection` 路径保持不变
+- `notification` 及其 websocket / 事件消费链路仍保留在 `system`，后续再单独迁移
+- `ops` 获取 runtime 容器指标时通过 query / stats provider bridge，不直接持有 runtime persistence concrete
+
 完成标准：
 
 - `ops` 不再直接持有 `runtime` 的 persistence 实现

@@ -14,10 +14,10 @@ import (
 
 type SystemModule struct {
 	AuditService        ops.AuditRecorder
-	AuditHandler        *system.AuditHandler
-	DashboardHandler    *system.DashboardHandler
+	AuditHandler        ops.AuditLogHandler
+	DashboardHandler    ops.DashboardHandler
 	NotificationHandler *system.NotificationHandler
-	RiskHandler         *system.RiskHandler
+	RiskHandler         ops.RiskHandler
 	WebSocketManager    *websocketpkg.Manager
 }
 
@@ -26,7 +26,7 @@ type runtimeSystemQuery interface {
 }
 
 type runtimeSystemStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]system.ManagedContainerStat, error)
+	ListManagedContainerStats(ctx context.Context) ([]ops.ManagedContainerStat, error)
 }
 
 func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
@@ -35,23 +35,23 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	db := root.DB()
 	cache := root.Cache()
 
-	auditRepo := system.NewAuditRepository(db)
-	auditService := system.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
-	dashboardService := system.NewDashboardService(
+	auditRepo := ops.NewAuditRepository(db)
+	auditService := ops.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
+	dashboardService := ops.NewDashboardService(
 		runtime.system.query,
 		runtime.system.statsProvider,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),
 	)
-	riskRepo := system.NewRiskRepository(db)
-	riskService := system.NewRiskService(riskRepo, log.Named("risk_service"))
+	riskRepo := ops.NewRiskRepository(db)
+	riskService := ops.NewRiskService(riskRepo, log.Named("risk_service"))
 
 	return &SystemModule{
 		AuditService:     ops.NewModule(auditService),
-		AuditHandler:     system.NewAuditHandler(auditService),
-		DashboardHandler: system.NewDashboardHandler(dashboardService),
-		RiskHandler:      system.NewRiskHandler(riskService),
+		AuditHandler:     ops.NewAuditHandler(auditService),
+		DashboardHandler: ops.NewDashboardHandler(dashboardService),
+		RiskHandler:      ops.NewRiskHandler(riskService),
 		WebSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
 	}
 }
@@ -93,9 +93,9 @@ func newSystemRuntimeStatsProvider(service *runtimeapp.ContainerStatsService) *s
 	return &systemRuntimeStatsProvider{service: service}
 }
 
-func (p *systemRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]system.ManagedContainerStat, error) {
+func (p *systemRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]ops.ManagedContainerStat, error) {
 	if p == nil || p.service == nil {
-		return []system.ManagedContainerStat{}, nil
+		return []ops.ManagedContainerStat{}, nil
 	}
 
 	stats, err := p.service.ListManagedContainerStats(ctx)
@@ -103,9 +103,9 @@ func (p *systemRuntimeStatsProvider) ListManagedContainerStats(ctx context.Conte
 		return nil, err
 	}
 
-	result := make([]system.ManagedContainerStat, 0, len(stats))
+	result := make([]ops.ManagedContainerStat, 0, len(stats))
 	for _, item := range stats {
-		result = append(result, system.ManagedContainerStat{
+		result = append(result, ops.ManagedContainerStat{
 			ContainerID:   item.ContainerID,
 			ContainerName: item.ContainerName,
 			CPUPercent:    item.CPUPercent,

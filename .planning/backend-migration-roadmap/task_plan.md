@@ -11,7 +11,7 @@
 | 1. `runtimeinfra` 并回 `runtime` | completed | 过渡模块已删除，职责已并回 `runtime/infrastructure` |
 | 2. 两个 readmodel 根壳清理 | completed | `practice_readmodel` / `teaching_readmodel` 已删除根壳并统一 contract 边界 |
 | 3. `auth + adminuser -> identity` | in_progress | Phase 1 已完成：用户主数据已收拢到 `identity`，后续还需继续消化残余 auth 流程实现 |
-| 4. `system -> ops` | pending | 让运营能力从杂项模块变成明确 owner |
+| 4. `system -> ops` | in_progress | Phase 1 已完成 `audit / dashboard / risk` 收敛，`notification` 仍待后续迁移 |
 | 5. 大业务模块内部物理分层 Phase 1 | pending | 先处理 `challenge / contest / assessment / practice` 的 concrete 暴露 |
 
 ## Recommended Order

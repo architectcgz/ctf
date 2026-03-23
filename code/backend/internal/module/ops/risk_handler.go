@@ -1,4 +1,4 @@
-package system
+package ops
 
 import (
 	"github.com/gin-gonic/gin"
@@ -6,15 +6,15 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-type RiskHandler struct {
+type RiskHTTPHandler struct {
 	service *RiskService
 }
 
-func NewRiskHandler(service *RiskService) *RiskHandler {
-	return &RiskHandler{service: service}
+func NewRiskHandler(service *RiskService) *RiskHTTPHandler {
+	return &RiskHTTPHandler{service: service}
 }
 
-func (h *RiskHandler) GetCheatDetection(c *gin.Context) {
+func (h *RiskHTTPHandler) GetCheatDetection(c *gin.Context) {
 	result, err := h.service.GetCheatDetection(c.Request.Context())
 	if err != nil {
 		response.FromError(c, err)

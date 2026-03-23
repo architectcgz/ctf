@@ -58,6 +58,10 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
 	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
 	instanceService := runtimeapp.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service"))
+	var containerStatsService *runtimeapp.ContainerStatsService
+	if engine != nil {
+		containerStatsService = runtimeapp.NewContainerStatsService(engine)
+	}
 	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfra.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	cleaner := runtimeinfra.NewCleaner(maintenanceService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
@@ -87,7 +91,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 		},
 		system: runtimeSystemDeps{
 			query:         runtimeapp.NewQueryService(repo),
-			statsProvider: newSystemRuntimeStatsProvider(runtimeapp.NewContainerStatsService(engine)),
+			statsProvider: newSystemRuntimeStatsProvider(containerStatsService),
 		},
 		contest: runtimeContestDeps{
 			containerFiles: runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
