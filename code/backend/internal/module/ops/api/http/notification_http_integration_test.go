@@ -29,8 +29,10 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
-	authModule "ctf-platform/internal/module/auth"
+	authhttp "ctf-platform/internal/module/auth/api/http"
+	authapp "ctf-platform/internal/module/auth/application"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opsapp "ctf-platform/internal/module/ops/application"
@@ -225,16 +227,16 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	if err != nil {
 		t.Fatalf("create jwt manager: %v", err)
 	}
-	tokenService := authModule.NewTokenService(authCfg, wsCfg, cache, jwtManager)
+	tokenService := authinfra.NewTokenService(authCfg, wsCfg, cache, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := authModule.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+	authService := authapp.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
 		Limit:        10,
 		Window:       time.Minute,
 		LockDuration: 15 * time.Minute,
 	}, zap.NewNop())
 	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
-	authHandler := authModule.NewHandler(authService, profileService, tokenService, authModule.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil), authModule.CookieConfig{
+	authHandler := authhttp.NewHandler(authService, profileService, tokenService, authapp.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil), authhttp.CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,

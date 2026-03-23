@@ -1,7 +1,7 @@
 package composition
 
 import (
-	authmodule "ctf-platform/internal/module/auth"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	"ctf-platform/internal/module/identity"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identityapp "ctf-platform/internal/module/identity/application"
@@ -29,7 +29,7 @@ func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 	}
 
 	users := identityinfra.NewRepository(db)
-	tokenService := identity.NewModule(authmodule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
+	tokenService := identity.NewModule(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
 	adminService := identityapp.NewAdminService(users, cfg.Pagination, log.Named("identity_admin_service"))
 	profileService := identityapp.NewProfileService(users, log.Named("identity_profile_service"))
 

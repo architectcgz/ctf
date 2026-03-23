@@ -1,4 +1,4 @@
-package auth
+package http_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -29,6 +30,8 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	authhttp "ctf-platform/internal/module/auth/api/http"
+	authapp "ctf-platform/internal/module/auth/application"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
@@ -660,20 +663,20 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		TicketKeyPrefix: "test:ws:ticket",
 	}, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+	authService := authapp.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
 		Limit:        3,
 		Window:       time.Minute,
 		LockDuration: 15 * time.Minute,
 	}, zap.NewNop())
 	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
-	casProvider := NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
+	casProvider := authapp.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditService := opsapp.NewAuditService(auditRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
-	authHandler := NewHandler(authService, profileService, tokenService, casProvider, CookieConfig{
+	authHandler := authhttp.NewHandler(authService, profileService, tokenService, casProvider, authhttp.CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
@@ -770,7 +773,7 @@ func (s *memoryTokenService) IssueTokensWithContext(_ context.Context, userID in
 func (s *memoryTokenService) RefreshAccessToken(ctx context.Context, refreshToken string) (*authcontracts.RefreshAccessPayload, error) {
 	claims, err := s.manager.ParseToken(refreshToken)
 	if err != nil {
-		return nil, mapJWTError(err, true)
+		return nil, mapTestJWTError(err, true)
 	}
 	if claims.TokenType != jwtpkg.TokenTypeRefresh {
 		return nil, errcode.ErrTokenInvalid
@@ -1083,6 +1086,19 @@ func mapTestAuthError(err error) error {
 		return errcode.ErrTokenInvalid
 	default:
 		return errcode.ErrUnauthorized
+	}
+}
+
+func mapTestJWTError(err error, isRefresh bool) error {
+	switch {
+	case errors.Is(err, jwtpkg.ErrExpiredToken) && isRefresh:
+		return errcode.ErrRefreshTokenExpired
+	case errors.Is(err, jwtpkg.ErrExpiredToken):
+		return errcode.ErrAccessTokenExpired
+	case errors.Is(err, jwtpkg.ErrInvalidToken):
+		return errcode.ErrTokenInvalid
+	default:
+		return err
 	}
 }
 
