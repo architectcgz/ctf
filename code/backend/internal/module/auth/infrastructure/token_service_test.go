@@ -1,8 +1,14 @@
-package auth
+package infrastructure_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,6 +16,7 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/config"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -26,7 +33,7 @@ func TestTokenServiceTracksAndClearsRefreshSession(t *testing.T) {
 		t.Fatalf("new jwt manager: %v", err)
 	}
 
-	service := NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
 	tokens, err := service.IssueTokens(42, "alice", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens() error = %v", err)
@@ -64,7 +71,7 @@ func TestTokenServiceClearRefreshSessionDoesNotRemoveNewerSession(t *testing.T) 
 		t.Fatalf("new jwt manager: %v", err)
 	}
 
-	service := NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
 	firstTokens, err := service.IssueTokens(52, "bob", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(first) error = %v", err)
@@ -107,7 +114,7 @@ func TestTokenServiceRefreshAccessTokenRejectsStaleRefreshSession(t *testing.T) 
 		t.Fatalf("new jwt manager: %v", err)
 	}
 
-	service := NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
 	firstTokens, err := service.IssueTokens(77, "carol", "student")
 	if err != nil {
 		t.Fatalf("IssueTokens(first) error = %v", err)
@@ -141,7 +148,7 @@ func TestTokenServiceIssueTokensWithContextHonorsCancellation(t *testing.T) {
 		t.Fatalf("new jwt manager: %v", err)
 	}
 
-	service := NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient, manager)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -157,4 +164,56 @@ func testWebSocketConfig() config.WebSocketConfig {
 		TicketTTL:       time.Minute,
 		TicketKeyPrefix: "test:ws:ticket",
 	}
+}
+
+func newTestAuthConfig(t *testing.T) config.AuthConfig {
+	t.Helper()
+
+	privateKeyPath, publicKeyPath := writeTestKeyPair(t)
+	return config.AuthConfig{
+		Issuer:                "ctf-platform-test",
+		AccessTokenTTL:        15 * time.Minute,
+		RefreshTokenTTL:       24 * time.Hour,
+		RefreshCookieName:     "refresh_token",
+		RefreshCookiePath:     "/",
+		RefreshCookieHTTPOnly: true,
+		RefreshCookieSameSite: "lax",
+		PrivateKeyPath:        privateKeyPath,
+		PublicKeyPath:         publicKeyPath,
+		TokenBlacklistPrefix:  "test:blacklist",
+	}
+}
+
+func writeTestKeyPair(t *testing.T) (string, string) {
+	t.Helper()
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate rsa key: %v", err)
+	}
+
+	privatePEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+	publicDER, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		t.Fatalf("marshal public key: %v", err)
+	}
+	publicPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicDER,
+	})
+
+	keyDir := t.TempDir()
+	privatePath := filepath.Join(keyDir, "test_private.pem")
+	publicPath := filepath.Join(keyDir, "test_public.pem")
+	if err := os.WriteFile(privatePath, privatePEM, 0o600); err != nil {
+		t.Fatalf("write private key: %v", err)
+	}
+	if err := os.WriteFile(publicPath, publicPEM, 0o644); err != nil {
+		t.Fatalf("write public key: %v", err)
+	}
+
+	return privatePath, publicPath
 }

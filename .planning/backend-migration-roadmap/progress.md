@@ -10,6 +10,7 @@
   - `identity` 新增 `UserRepository / AdminService / ProfileService / Authenticator`
   - `composition/router` 已改为通过 `IdentityModule` 装配
   - `auth` 已收缩，不再 owner 用户资料与管理能力
+  - `auth` 现已进一步完成 `api/http + application + infrastructure` 物理分层，根目录已清空 concrete 实现
 - 推进 `ops-convergence-phase1`：
   - `audit / dashboard / risk` 已从 `system` 收敛到 `ops`
   - `composition.SystemModule` 已通过 `ops` contract 装配对应 admin handler

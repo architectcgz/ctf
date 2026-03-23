@@ -29,7 +29,9 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
-	authModule "ctf-platform/internal/module/auth"
+	authhttp "ctf-platform/internal/module/auth/api/http"
+	authapp "ctf-platform/internal/module/auth/application"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	challengemodule "ctf-platform/internal/module/challenge"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengeapp "ctf-platform/internal/module/challenge/application"
@@ -717,13 +719,13 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	if err != nil {
 		t.Fatalf("create jwt manager: %v", err)
 	}
-	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
+	tokenService := authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := authModule.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
+	authService := authapp.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
 	profileService := identityapp.NewProfileService(authRepo, logger.Named("identity_profile_service"))
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditService := opsapp.NewAuditService(auditRepo, cfg.Pagination, logger)
-	authHandler := authModule.NewHandler(authService, profileService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
+	authHandler := authhttp.NewHandler(authService, profileService, tokenService, authapp.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authhttp.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
 		Secure:   cfg.Auth.RefreshCookieSecure,

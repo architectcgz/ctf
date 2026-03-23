@@ -1,7 +1,7 @@
-package auth
+package http
 
 import (
-	"net/http"
+	stdhttp "net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	authapp "ctf-platform/internal/module/auth/application"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
@@ -19,10 +20,10 @@ import (
 )
 
 type Handler struct {
-	service       Service
+	service       authapp.Service
 	profile       identitymodule.ProfileService
 	tokenService  authcontracts.TokenService
-	casProvider   CASProvider
+	casProvider   authapp.CASProvider
 	cookieConfig  CookieConfig
 	log           *zap.Logger
 	auditRecorder auditlog.Recorder
@@ -33,16 +34,18 @@ type CookieConfig struct {
 	Path     string
 	Secure   bool
 	HTTPOnly bool
-	SameSite http.SameSite
+	SameSite stdhttp.SameSite
 	MaxAge   time.Duration
 }
 
-func NewHandler(service Service, profile identitymodule.ProfileService, tokenService authcontracts.TokenService, casProvider CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
+const casProviderName = "cas"
+
+func NewHandler(service authapp.Service, profile identitymodule.ProfileService, tokenService authcontracts.TokenService, casProvider authapp.CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	if casProvider == nil {
-		casProvider = NewCASProvider(config.CASConfig{}, nil, nil, log.Named("cas_provider"), nil)
+		casProvider = authapp.NewCASProvider(config.CASConfig{}, nil, nil, log.Named("cas_provider"), nil)
 	}
 
 	return &Handler{

@@ -1,26 +1,27 @@
 package composition
 
 import (
-	authModule "ctf-platform/internal/module/auth"
+	authhttp "ctf-platform/internal/module/auth/api/http"
+	authapp "ctf-platform/internal/module/auth/application"
 )
 
 type AuthModule struct {
-	Handler *authModule.Handler
+	Handler *authhttp.Handler
 }
 
 func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*AuthModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
-	authService := authModule.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	casProvider := authModule.NewCASProvider(cfg.Auth.CAS, identity.users, identity.TokenService, log.Named("cas_provider"), nil)
+	authService := authapp.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
+	casProvider := authapp.NewCASProvider(cfg.Auth.CAS, identity.users, identity.TokenService, log.Named("cas_provider"), nil)
 
 	return &AuthModule{
-		Handler: authModule.NewHandler(
+		Handler: authhttp.NewHandler(
 			authService,
 			identity.ProfileService,
 			identity.TokenService,
 			casProvider,
-			authModule.CookieConfig{
+			authhttp.CookieConfig{
 				Name:     cfg.Auth.RefreshCookieName,
 				Path:     cfg.Auth.RefreshCookiePath,
 				Secure:   cfg.Auth.RefreshCookieSecure,
