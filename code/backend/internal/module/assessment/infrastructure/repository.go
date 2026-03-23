@@ -1,11 +1,12 @@
-package assessment
+package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	"errors"
 	"fmt"
 
+	"ctf-platform/internal/model"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -99,20 +100,13 @@ func (r *Repository) ListStudentIDsWithContext(ctx context.Context) ([]int64, er
 	return ids, err
 }
 
-// DimensionScore 维度得分统计
-type DimensionScore struct {
-	Dimension  string
-	TotalScore int
-	UserScore  int
-}
-
 // GetDimensionScores 查询用户各维度得分统计
-func (r *Repository) GetDimensionScores(userID int64) ([]DimensionScore, error) {
+func (r *Repository) GetDimensionScores(userID int64) ([]assessmentapp.DimensionScore, error) {
 	return r.GetDimensionScoresWithContext(context.Background(), userID)
 }
 
-func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID int64) ([]DimensionScore, error) {
-	var scores []DimensionScore
+func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID int64) ([]assessmentapp.DimensionScore, error) {
+	var scores []assessmentapp.DimensionScore
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.category AS dimension,
@@ -136,12 +130,12 @@ func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID i
 }
 
 // GetDimensionScore 查询用户单个维度得分统计（增量更新用）
-func (r *Repository) GetDimensionScore(userID int64, dimension string) (*DimensionScore, error) {
+func (r *Repository) GetDimensionScore(userID int64, dimension string) (*assessmentapp.DimensionScore, error) {
 	return r.GetDimensionScoreWithContext(context.Background(), userID, dimension)
 }
 
-func (r *Repository) GetDimensionScoreWithContext(ctx context.Context, userID int64, dimension string) (*DimensionScore, error) {
-	var score DimensionScore
+func (r *Repository) GetDimensionScoreWithContext(ctx context.Context, userID int64, dimension string) (*assessmentapp.DimensionScore, error) {
+	var score assessmentapp.DimensionScore
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.category AS dimension,

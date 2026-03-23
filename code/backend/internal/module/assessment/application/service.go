@@ -1,12 +1,7 @@
-package assessment
+package application
 
 import (
 	"context"
-	"ctf-platform/internal/config"
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	platformevents "ctf-platform/internal/platform/events"
 	"errors"
 	"fmt"
 	"strings"
@@ -15,17 +10,42 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
 
+type DimensionScore struct {
+	Dimension  string
+	TotalScore int
+	UserScore  int
+}
+
+type Repository interface {
+	FindUserByIDWithContext(ctx context.Context, userID int64) (*model.User, error)
+	UpsertWithContext(ctx context.Context, profile *model.SkillProfile) error
+	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error)
+	BatchUpsertWithContext(ctx context.Context, profiles []*model.SkillProfile) error
+	ListStudentIDsWithContext(ctx context.Context) ([]int64, error)
+	GetDimensionScoresWithContext(ctx context.Context, userID int64) ([]DimensionScore, error)
+	GetDimensionScoreWithContext(ctx context.Context, userID int64, dimension string) (*DimensionScore, error)
+}
+
 type Service struct {
-	repo   *Repository
+	repo   Repository
 	redis  *redis.Client
 	config config.AssessmentConfig
 	logger *zap.Logger
 }
 
-func NewService(repo *Repository, redis *redis.Client, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
+var _ assessmentcontracts.ProfileService = (*Service)(nil)
+
+func NewService(repo Repository, redis *redis.Client, cfg config.AssessmentConfig, logger *zap.Logger) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

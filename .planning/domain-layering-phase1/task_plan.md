@@ -11,10 +11,10 @@
 | 1. 盘点 composition 当前暴露的 concrete 能力 | completed | 已确认 `challenge / contest / assessment / practice` 的泄漏点与依赖面 |
 | 2. `challenge` Phase 1 | in_progress | app 侧已收窄为 `Catalog / FlagValidator / ImageStore`，内部 `catalog / flag / image / topology / writeup` 物理切片未做 |
 | 3. `contest` Phase 1 | in_progress | `ContestModule` 已移除对外 `Repository` 暴露，内部 `core / participation / team / submission / awd` 仍待拆分 |
-| 4. `assessment` Phase 1 | in_progress | 已新增 `assessment/contracts` 并收窄 `ProfileService / Recommendations`，`profile / recommendation / report` 仍待物理切片 |
+| 4. `assessment` Phase 1 | completed | 已完成 `api/http`、`application`、`infrastructure` 物理分层并切到新 handler 装配 |
 | 5. `practice` Phase 1 | in_progress | `PracticeModule` 已移除对外 concrete `Service`，runtime bridge 仍在 composition，后续继续下沉 |
 | 6. 收紧 composition 暴露与架构测试 | completed | composition 已改为只暴露 handler + contracts/生命周期接口 |
-| 7. 定向验证 | completed | `challenge / contest / assessment / practice / teaching_readmodel / app` focused tests 已通过 |
+| 7. 定向验证 | completed | contract 收口与 `assessment` 物理分层的 focused tests 已通过 |
 
 ## Key Files
 

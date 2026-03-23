@@ -1,4 +1,4 @@
-package assessment
+package application_test
 
 import (
 	"context"
@@ -15,6 +15,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -51,9 +53,9 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newRecommendationTestService(db *gorm.DB, challengeRepo ChallengeRepository, redisClient *redis.Client) *RecommendationService {
-	return NewRecommendationService(
-		NewRepository(db),
+func newRecommendationTestService(db *gorm.DB, challengeRepo assessmentapp.ChallengeRepository, redisClient *redis.Client) *assessmentapp.RecommendationService {
+	return assessmentapp.NewRecommendationService(
+		assessmentinfra.NewRepository(db),
 		challengeRepo,
 		redisClient,
 		config.RecommendationConfig{

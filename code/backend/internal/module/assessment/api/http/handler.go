@@ -1,20 +1,32 @@
-package assessment
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/dto"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
 	"ctf-platform/pkg/response"
 )
 
-type Handler struct {
-	service               *Service
-	recommendationService *RecommendationService
+type skillProfileService interface {
+	GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+	GetStudentSkillProfile(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*dto.SkillProfileResp, error)
 }
 
-func NewHandler(service *Service, recommendationService *RecommendationService) *Handler {
+type recommendationProvider interface {
+	RecommendWithContext(ctx context.Context, userID int64, limit int) (*dto.RecommendationResp, error)
+}
+
+type Handler struct {
+	service               skillProfileService
+	recommendationService recommendationProvider
+}
+
+func NewHandler(service skillProfileService, recommendationService recommendationProvider) *Handler {
 	return &Handler{
 		service:               service,
 		recommendationService: recommendationService,
@@ -55,9 +67,7 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 func (h *Handler) GetRecommendations(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	var req struct {
-		Limit int `form:"limit"`
-	}
+	var req assessmentapp.RecommendationQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return

@@ -1,4 +1,4 @@
-package assessment
+package application
 
 import (
 	"context"
@@ -16,6 +16,72 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
+
+type testReportRepository struct {
+	db *gorm.DB
+}
+
+func (r *testReportRepository) Create(ctx context.Context, report *model.Report) error {
+	if r == nil || r.db == nil {
+		return nil
+	}
+	return r.db.WithContext(ctx).Create(report).Error
+}
+
+func (r *testReportRepository) FindByID(context.Context, int64) (*model.Report, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+
+func (r *testReportRepository) MarkReady(context.Context, int64, string, time.Time) error {
+	return nil
+}
+
+func (r *testReportRepository) MarkFailed(context.Context, int64, string) error {
+	return nil
+}
+
+func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (*ReportUser, error) {
+	if r == nil || r.db == nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var user ReportUser
+	if err := r.db.WithContext(ctx).
+		Model(&model.User{}).
+		Select("id, username, class_name, role").
+		Where("id = ? AND deleted_at IS NULL", userID).
+		Scan(&user).Error; err != nil {
+		return nil, err
+	}
+	if user.ID == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &user, nil
+}
+
+func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*PersonalReportStats, error) {
+	return &PersonalReportStats{}, nil
+}
+
+func (r *testReportRepository) ListPersonalDimensionStats(context.Context, int64) ([]ReportDimensionStat, error) {
+	return []ReportDimensionStat{}, nil
+}
+
+func (r *testReportRepository) CountClassStudents(context.Context, string) (int, error) {
+	return 0, nil
+}
+
+func (r *testReportRepository) GetClassAverageScore(context.Context, string) (float64, error) {
+	return 0, nil
+}
+
+func (r *testReportRepository) ListClassDimensionAverages(context.Context, string) ([]ClassDimensionAverage, error) {
+	return []ClassDimensionAverage{}, nil
+}
+
+func (r *testReportRepository) ListClassTopStudents(context.Context, string, int) ([]ClassTopStudent, error) {
+	return []ClassTopStudent{}, nil
+}
 
 func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
 	t.Parallel()
@@ -184,7 +250,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	}
 
 	service := NewReportService(
-		NewReportRepository(db),
+		&testReportRepository{db: db},
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
