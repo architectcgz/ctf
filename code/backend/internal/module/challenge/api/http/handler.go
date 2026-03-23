@@ -1,6 +1,7 @@
-package challenge
+package http
 
 import (
+	"context"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/errcode"
@@ -14,10 +15,21 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	service challengeService
 }
 
-func NewHandler(service *Service) *Handler {
+type challengeService interface {
+	CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
+	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
+	DeleteChallenge(id int64) error
+	GetChallenge(id int64) (*dto.ChallengeResp, error)
+	ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error)
+	PublishChallenge(id int64) error
+	ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
+	GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
+}
+
+func NewHandler(service challengeService) *Handler {
 	return &Handler{service: service}
 }
 

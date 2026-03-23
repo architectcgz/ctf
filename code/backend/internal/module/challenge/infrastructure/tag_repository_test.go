@@ -1,12 +1,13 @@
-package challenge
+package infrastructure
 
 import (
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/module/challenge/testsupport"
 	"testing"
 )
 
 func TestTagRepositoryCreate(t *testing.T) {
-	db := setupTagTestDB(t)
+	db := testsupport.SetupTagTestDB(t)
 	repo := NewTagRepository(db)
 
 	tag := &model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability}
@@ -20,7 +21,7 @@ func TestTagRepositoryCreate(t *testing.T) {
 }
 
 func TestTagRepositoryList(t *testing.T) {
-	db := setupTagTestDB(t)
+	db := testsupport.SetupTagTestDB(t)
 	repo := NewTagRepository(db)
 
 	db.Create(&model.Tag{Name: "SQL注入", Type: model.TagTypeVulnerability})
@@ -36,7 +37,7 @@ func TestTagRepositoryList(t *testing.T) {
 }
 
 func TestTagRepositoryAttachToChallenge(t *testing.T) {
-	db := setupTagTestDB(t)
+	db := testsupport.SetupTagTestDB(t)
 	repo := NewTagRepository(db)
 
 	db.Create(&model.Challenge{ID: 1, Title: "test", Status: model.ChallengeStatusDraft})

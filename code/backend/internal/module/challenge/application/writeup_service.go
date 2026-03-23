@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"errors"
@@ -13,10 +13,10 @@ import (
 )
 
 type WriteupService struct {
-	repo *Repository
+	repo ChallengeRepository
 }
 
-func NewWriteupService(repo *Repository) *WriteupService {
+func NewWriteupService(repo ChallengeRepository) *WriteupService {
 	return &WriteupService{repo: repo}
 }
 

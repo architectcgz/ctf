@@ -1,4 +1,4 @@
-package challenge
+package infrastructure
 
 import (
 	"ctf-platform/internal/model"

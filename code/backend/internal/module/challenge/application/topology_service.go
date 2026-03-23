@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"errors"
@@ -13,12 +13,12 @@ import (
 )
 
 type TopologyService struct {
-	repo         *Repository
-	templateRepo *TemplateRepository
-	imageRepo    *ImageRepository
+	repo         ChallengeRepository
+	templateRepo EnvironmentTemplateRepository
+	imageRepo    ImageRepository
 }
 
-func NewTopologyService(repo *Repository, templateRepo *TemplateRepository, imageRepo *ImageRepository) *TopologyService {
+func NewTopologyService(repo ChallengeRepository, templateRepo EnvironmentTemplateRepository, imageRepo ImageRepository) *TopologyService {
 	return &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,

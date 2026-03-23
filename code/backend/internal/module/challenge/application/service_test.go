@@ -1,9 +1,12 @@
-package challenge
+package application
 
 import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengemodule "ctf-platform/internal/module/challenge"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
 	"testing"
 	"time"
@@ -12,18 +15,18 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func newTestService(repo *Repository, imageRepo *ImageRepository) *Service {
-	return NewService(repo, imageRepo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+func newTestService(repo ChallengeRepository, imageRepo ImageRepository) *Service {
+	return NewService(repo, imageRepo, nil, &challengemodule.Config{SolvedCountCacheTTL: time.Minute}, nil)
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	// 创建测试镜像
 	db.Create(&model.Image{ID: 1, Name: "test-image"})
 
-	repo := NewRepository(db)
-	imageRepo := NewImageRepository(db)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
 	resp, err := service.CreateChallenge(&dto.CreateChallengeReq{
@@ -44,10 +47,10 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 }
 
 func TestServiceCreateChallengeImageNotFound(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
-	repo := NewRepository(db)
-	imageRepo := NewImageRepository(db)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
 	_, err := service.CreateChallenge(&dto.CreateChallengeReq{
@@ -59,10 +62,10 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 }
 
 func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
-	repo := NewRepository(db)
-	imageRepo := NewImageRepository(db)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
 	resp, err := service.CreateChallenge(&dto.CreateChallengeReq{
@@ -83,14 +86,14 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 }
 
 func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	// 创建靶场和运行中的实例
 	challenge := &model.Challenge{Title: "Test", Status: "draft"}
 	db.Create(challenge)
 	db.Create(&model.Instance{ChallengeID: challenge.ID, Status: "running"})
 
-	repo := NewRepository(db)
+	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
 	err := service.DeleteChallenge(challenge.ID)
@@ -100,12 +103,12 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 }
 
 func TestServicePublishChallengeNoImage(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "Test", ImageID: 0}
 	db.Create(challenge)
 
-	repo := NewRepository(db)
+	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
 	err := service.PublishChallenge(challenge.ID)
@@ -123,12 +126,12 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 }
 
 func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft}
 	db.Create(challenge)
 
-	repo := NewRepository(db)
+	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
 	_, err := service.GetPublishedChallenge(1, challenge.ID)
@@ -138,7 +141,7 @@ func TestServiceGetPublishedChallengeNotPublished(t *testing.T) {
 }
 
 func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{
 		Title:         "Hint Challenge",
@@ -162,7 +165,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 		t.Fatalf("create hint: %v", err)
 	}
 
-	repo := NewRepository(db)
+	repo := challengeinfra.NewRepository(db)
 	service := newTestService(repo, nil)
 
 	resp, err := service.GetChallenge(challenge.ID)
@@ -178,7 +181,7 @@ func TestServiceGetChallengeIncludesHintsAndAttachment(t *testing.T) {
 }
 
 func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 
 	challenge := &model.Challenge{
 		Title:  "Published",
@@ -201,7 +204,7 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewService(NewRepository(db), nil, redisClient, &Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewService(challengeinfra.NewRepository(db), nil, redisClient, &challengemodule.Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

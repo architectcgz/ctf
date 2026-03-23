@@ -3,8 +3,11 @@ package composition
 import (
 	"context"
 
-	challengeModule "ctf-platform/internal/module/challenge"
+	challengemodule "ctf-platform/internal/module/challenge"
+	challengehttp "ctf-platform/internal/module/challenge/api/http"
+	challengeapp "ctf-platform/internal/module/challenge/application"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 )
 
 type asyncTaskCloser interface {
@@ -14,13 +17,13 @@ type asyncTaskCloser interface {
 type ChallengeModule struct {
 	BackgroundCloser asyncTaskCloser
 	Catalog          challengecontracts.ChallengeContract
-	FlagHandler      *challengeModule.FlagHandler
+	FlagHandler      *challengehttp.FlagHandler
 	FlagValidator    challengecontracts.FlagValidator
-	Handler          *challengeModule.Handler
-	ImageHandler     *challengeModule.ImageHandler
+	Handler          *challengehttp.Handler
+	ImageHandler     *challengehttp.ImageHandler
 	ImageStore       challengecontracts.ImageStore
-	TopologyHandler  *challengeModule.TopologyHandler
-	WriteupHandler   *challengeModule.WriteupHandler
+	TopologyHandler  *challengehttp.TopologyHandler
+	WriteupHandler   *challengehttp.WriteupHandler
 }
 
 func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
@@ -29,20 +32,20 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 	db := root.DB()
 	cache := root.Cache()
 
-	challengeRepo := challengeModule.NewRepository(db)
-	imageRepo := challengeModule.NewImageRepository(db)
-	imageService := challengeModule.NewImageService(imageRepo, challengeRepo, runtime.challenge.imageRuntime, cfg, log.Named("image_service"))
-	challengeService := challengeModule.NewService(
+	challengeRepo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	imageService := challengeapp.NewImageService(imageRepo, challengeRepo, runtime.challenge.imageRuntime, cfg, log.Named("image_service"))
+	challengeService := challengeapp.NewService(
 		challengeRepo,
 		imageRepo,
 		cache,
-		&challengeModule.Config{SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL},
+		&challengemodule.Config{SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL},
 		log.Named("challenge_service"),
 	)
-	writeupService := challengeModule.NewWriteupService(challengeRepo)
-	templateRepo := challengeModule.NewTemplateRepository(db)
-	topologyService := challengeModule.NewTopologyService(challengeRepo, templateRepo, imageRepo)
-	flagService, err := challengeModule.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	writeupService := challengeapp.NewWriteupService(challengeRepo)
+	templateRepo := challengeinfra.NewTemplateRepository(db)
+	topologyService := challengeapp.NewTopologyService(challengeRepo, templateRepo, imageRepo)
+	flagService, err := challengeapp.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +53,12 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 	return &ChallengeModule{
 		BackgroundCloser: imageService,
 		Catalog:          challengeRepo,
-		FlagHandler:      challengeModule.NewFlagHandler(flagService),
+		FlagHandler:      challengehttp.NewFlagHandler(flagService),
 		FlagValidator:    flagService,
-		Handler:          challengeModule.NewHandler(challengeService),
-		ImageHandler:     challengeModule.NewImageHandler(imageService),
+		Handler:          challengehttp.NewHandler(challengeService),
+		ImageHandler:     challengehttp.NewImageHandler(imageService),
 		ImageStore:       imageRepo,
-		TopologyHandler:  challengeModule.NewTopologyHandler(topologyService),
-		WriteupHandler:   challengeModule.NewWriteupHandler(writeupService),
+		TopologyHandler:  challengehttp.NewTopologyHandler(topologyService),
+		WriteupHandler:   challengehttp.NewWriteupHandler(writeupService),
 	}, nil
 }
