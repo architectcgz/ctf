@@ -35,20 +35,20 @@ type fullRouterEnvelope struct {
 func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
 	cfg, db, cache := newAppTestDependencies(t)
 
-	originalBuildTeacherModule := buildTeacherModule
+	originalBuildTeachingReadmodelModule := buildTeachingReadmodelModule
 	t.Cleanup(func() {
-		buildTeacherModule = originalBuildTeacherModule
+		buildTeachingReadmodelModule = originalBuildTeachingReadmodelModule
 	})
 
 	called := false
-	buildTeacherModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeacherModule {
-		module := originalBuildTeacherModule(root, assessment)
+	buildTeachingReadmodelModule = func(root *composition.Root, assessment *composition.AssessmentModule) *composition.TeachingReadmodelModule {
+		module := originalBuildTeachingReadmodelModule(root, assessment)
 		called = true
 		if module == nil || module.Handler == nil {
-			t.Fatal("expected teacher module handler")
+			t.Fatal("expected teaching readmodel module handler")
 		}
 		if got, want := reflect.TypeOf(module.Handler), reflect.TypeOf(&teachinghttp.Handler{}); got != want {
-			t.Fatalf("teacher handler type = %v, want %v", got, want)
+			t.Fatalf("teaching readmodel handler type = %v, want %v", got, want)
 		}
 		return module
 	}
@@ -61,7 +61,7 @@ func TestTeacherRoutesAreServedByTeachingReadModel(t *testing.T) {
 		t.Fatal("expected router")
 	}
 	if !called {
-		t.Fatal("expected teacher module builder to be called")
+		t.Fatal("expected teaching readmodel module builder to be called")
 	}
 }
 

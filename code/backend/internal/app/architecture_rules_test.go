@@ -98,9 +98,6 @@ func concreteCrossModuleImport(sourceModule, importPath string) (moduleName stri
 	if parts[0] == sourceModule {
 		return "", "", false
 	}
-	if sourceModule == "teacher" && parts[0] == "teaching_readmodel" {
-		return "", "", false
-	}
 	if len(parts) == 1 {
 		switch parts[0] {
 		case "runtimeinfra", "challenge", "practice", "system", "auth":

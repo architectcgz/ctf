@@ -29,7 +29,7 @@ type userRouteDeps struct {
 	practice          *composition.PracticeModule
 	practiceReadmodel *composition.PracticeReadmodelModule
 	runtime           *composition.RuntimeModule
-	teacher           *composition.TeacherModule
+	teachingReadmodel *composition.TeachingReadmodelModule
 }
 
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
@@ -530,11 +530,11 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	usersGroup.GET("/me/recommendations", deps.assessment.Handler.GetRecommendations)
 	usersGroup.GET("/:id/skill-profile", middleware.RequireRole(model.RoleTeacher), deps.assessment.Handler.GetStudentSkillProfile)
 
-	teacherOrAbove.GET("/classes", deps.teacher.Handler.ListClasses)
-	teacherOrAbove.GET("/classes/:name/students", deps.teacher.Handler.ListClassStudents)
-	teacherOrAbove.GET("/classes/:name/summary", deps.teacher.Handler.GetClassSummary)
-	teacherOrAbove.GET("/classes/:name/trend", deps.teacher.Handler.GetClassTrend)
-	teacherOrAbove.GET("/classes/:name/review", deps.teacher.Handler.GetClassReview)
+	teacherOrAbove.GET("/classes", deps.teachingReadmodel.Handler.ListClasses)
+	teacherOrAbove.GET("/classes/:name/students", deps.teachingReadmodel.Handler.ListClassStudents)
+	teacherOrAbove.GET("/classes/:name/summary", deps.teachingReadmodel.Handler.GetClassSummary)
+	teacherOrAbove.GET("/classes/:name/trend", deps.teachingReadmodel.Handler.GetClassTrend)
+	teacherOrAbove.GET("/classes/:name/review", deps.teachingReadmodel.Handler.GetClassReview)
 	teacherOrAbove.GET("/instances", deps.runtime.Handler.ListTeacherInstances)
 	teacherOrAbove.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
@@ -544,10 +544,10 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.runtime.Handler.DestroyTeacherInstance,
 	)
-	teacherOrAbove.GET("/students/:id/progress", deps.teacher.Handler.GetStudentProgress)
+	teacherOrAbove.GET("/students/:id/progress", deps.teachingReadmodel.Handler.GetStudentProgress)
 	teacherOrAbove.GET("/students/:id/skill-profile", deps.assessment.Handler.GetStudentSkillProfile)
-	teacherOrAbove.GET("/students/:id/recommendations", deps.teacher.Handler.GetStudentRecommendations)
-	teacherOrAbove.GET("/students/:id/timeline", deps.teacher.Handler.GetStudentTimeline)
+	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
+	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
 
 	protected.POST("/reports/personal", deps.assessment.ReportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", deps.assessment.ReportHandler.GetReportStatus)
