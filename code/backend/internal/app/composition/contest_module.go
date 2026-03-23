@@ -35,12 +35,12 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	)
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	contestChallengeService := contestapp.NewChallengeService(contestChallengeRepo, challenge.Catalog, repo)
-	teamRepo := contestModule.NewTeamRepository(db)
-	teamService := contestModule.NewTeamService(teamRepo, repo)
+	teamRepo := contestinfra.NewTeamRepository(db)
+	teamService := contestapp.NewTeamService(teamRepo, repo)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	participationService := contestapp.NewParticipationService(repo, participationRepo, teamRepo)
-	submissionRepo := contestModule.NewSubmissionRepository(db)
-	submissionService := contestModule.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagValidator, teamRepo, scoreboardService, cfg)
+	submissionRepo := contestinfra.NewSubmissionRepository(db)
+	submissionService := contestapp.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagValidator, teamRepo, scoreboardService, cfg)
 	statusUpdater := contestapp.NewStatusUpdater(
 		repo,
 		cache,

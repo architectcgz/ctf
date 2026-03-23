@@ -63,6 +63,14 @@
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
 - 继续推进 `contest` 根包瘦身：
+  - contest team / submission / registration_support 已迁到 `internal/module/contest/application`
+  - team / submission repository 已迁到 `internal/module/contest/infrastructure`
+  - `ContestModule` 装配已切到新目录，根包旧 `team / submission / registration_support` 实现已物理删除
+  - contest 相关测试已切到新目录构造器与接口依赖
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 继续推进 `contest` 根包瘦身：
   - contest challenge service/repository 已迁到 `internal/module/contest/application` 与 `internal/module/contest/infrastructure`
   - contest participation service/repository 已迁到 `internal/module/contest/application` 与 `internal/module/contest/infrastructure`
   - contest status updater 已迁到 `internal/module/contest/application`，对应测试已随实现迁移

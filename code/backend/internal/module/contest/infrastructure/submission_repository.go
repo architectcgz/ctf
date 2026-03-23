@@ -1,4 +1,4 @@
-package contest
+package infrastructure
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
 )
 
 type SubmissionRepository struct {
@@ -29,7 +30,7 @@ func (r *SubmissionRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *SubmissionRepository) WithinTransaction(ctx context.Context, fn func(repo *SubmissionRepository) error) error {
+func (r *SubmissionRepository) WithinTransaction(ctx context.Context, fn func(repo contestapp.ContestSubmissionRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
