@@ -1,20 +1,26 @@
 package composition
 
 import (
+	"context"
+
 	challengeModule "ctf-platform/internal/module/challenge"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 )
 
+type asyncTaskCloser interface {
+	Close(ctx context.Context) error
+}
+
 type ChallengeModule struct {
-	FlagHandler     *challengeModule.FlagHandler
-	FlagService     challengecontracts.FlagValidator
-	Handler         *challengeModule.Handler
-	ImageHandler    *challengeModule.ImageHandler
-	ImageRepository *challengeModule.ImageRepository
-	ImageService    *challengeModule.ImageService
-	Repository      challengecontracts.ChallengeContract
-	TopologyHandler *challengeModule.TopologyHandler
-	WriteupHandler  *challengeModule.WriteupHandler
+	BackgroundCloser asyncTaskCloser
+	Catalog          challengecontracts.ChallengeContract
+	FlagHandler      *challengeModule.FlagHandler
+	FlagValidator    challengecontracts.FlagValidator
+	Handler          *challengeModule.Handler
+	ImageHandler     *challengeModule.ImageHandler
+	ImageStore       challengecontracts.ImageStore
+	TopologyHandler  *challengeModule.TopologyHandler
+	WriteupHandler   *challengeModule.WriteupHandler
 }
 
 func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
@@ -42,14 +48,14 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 	}
 
 	return &ChallengeModule{
-		FlagHandler:     challengeModule.NewFlagHandler(flagService),
-		FlagService:     flagService,
-		Handler:         challengeModule.NewHandler(challengeService),
-		ImageHandler:    challengeModule.NewImageHandler(imageService),
-		ImageRepository: imageRepo,
-		ImageService:    imageService,
-		Repository:      challengeRepo,
-		TopologyHandler: challengeModule.NewTopologyHandler(topologyService),
-		WriteupHandler:  challengeModule.NewWriteupHandler(writeupService),
+		BackgroundCloser: imageService,
+		Catalog:          challengeRepo,
+		FlagHandler:      challengeModule.NewFlagHandler(flagService),
+		FlagValidator:    flagService,
+		Handler:          challengeModule.NewHandler(challengeService),
+		ImageHandler:     challengeModule.NewImageHandler(imageService),
+		ImageStore:       imageRepo,
+		TopologyHandler:  challengeModule.NewTopologyHandler(topologyService),
+		WriteupHandler:   challengeModule.NewWriteupHandler(writeupService),
 	}, nil
 }

@@ -10,6 +10,10 @@ type FlagValidator interface {
 	ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error)
 }
 
+type ImageStore interface {
+	FindByID(id int64) (*model.Image, error)
+}
+
 type ContestChallengeContract interface {
 	FindByID(id int64) (*model.Challenge, error)
 	BatchGetSolvedStatus(userID int64, challengeIDs []int64) (map[int64]bool, error)

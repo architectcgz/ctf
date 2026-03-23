@@ -7,7 +7,6 @@ type ContestModule struct {
 	ChallengeHandler     *contestModule.ChallengeHandler
 	Handler              *contestModule.Handler
 	ParticipationHandler *contestModule.ParticipationHandler
-	Repository           contestModule.Repository
 	SubmissionHandler    *contestModule.SubmissionHandler
 	TeamHandler          *contestModule.TeamHandler
 }
@@ -30,13 +29,13 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		log.Named("contest_awd_service"),
 	)
 	contestChallengeRepo := contestModule.NewChallengeRepository(db)
-	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challenge.Repository, repo)
+	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challenge.Catalog, repo)
 	teamRepo := contestModule.NewTeamRepository(db)
 	teamService := contestModule.NewTeamService(teamRepo, repo)
 	participationRepo := contestModule.NewParticipationRepository(db)
 	participationService := contestModule.NewParticipationService(repo, participationRepo, teamRepo)
 	submissionRepo := contestModule.NewSubmissionRepository(db)
-	submissionService := contestModule.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagService, teamRepo, scoreboardService, cfg)
+	submissionService := contestModule.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagValidator, teamRepo, scoreboardService, cfg)
 	statusUpdater := contestModule.NewStatusUpdater(
 		repo,
 		cache,
@@ -61,7 +60,6 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		ChallengeHandler:     contestModule.NewChallengeHandler(contestChallengeService),
 		Handler:              contestModule.NewHandler(contestService, scoreboardService),
 		ParticipationHandler: contestModule.NewParticipationHandler(participationService),
-		Repository:           repo,
 		SubmissionHandler:    contestModule.NewSubmissionHandler(submissionService),
 		TeamHandler:          contestModule.NewTeamHandler(teamService),
 	}

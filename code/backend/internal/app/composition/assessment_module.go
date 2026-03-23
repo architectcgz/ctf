@@ -3,13 +3,14 @@ package composition
 import "context"
 
 import assessmentModule "ctf-platform/internal/module/assessment"
+import assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 
 type AssessmentModule struct {
-	Handler               *assessmentModule.Handler
-	RecommendationService *assessmentModule.RecommendationService
-	ReportHandler         *assessmentModule.ReportHandler
-	ReportService         *assessmentModule.ReportService
-	Service               *assessmentModule.Service
+	BackgroundCloser asyncTaskCloser
+	Handler          *assessmentModule.Handler
+	ProfileService   assessmentcontracts.ProfileService
+	Recommendations  assessmentcontracts.RecommendationProvider
+	ReportHandler    *assessmentModule.ReportHandler
 }
 
 func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentModule {
@@ -23,7 +24,7 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	service.RegisterPracticeEventConsumers(root.Events)
 	recommendationService := assessmentModule.NewRecommendationService(
 		repo,
-		challenge.Repository,
+		challenge.Catalog,
 		cache,
 		cfg.Recommendation,
 		log.Named("recommendation_service"),
@@ -41,10 +42,10 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	))
 
 	return &AssessmentModule{
-		Handler:               assessmentModule.NewHandler(service, recommendationService),
-		RecommendationService: recommendationService,
-		ReportHandler:         assessmentModule.NewReportHandler(reportService),
-		ReportService:         reportService,
-		Service:               service,
+		BackgroundCloser: reportService,
+		Handler:          assessmentModule.NewHandler(service, recommendationService),
+		ProfileService:   service,
+		Recommendations:  recommendationService,
+		ReportHandler:    assessmentModule.NewReportHandler(reportService),
 	}
 }
