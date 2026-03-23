@@ -564,7 +564,7 @@ func (s *awdService) ensureContestChallenge(ctx context.Context, contestID, chal
 func (s *awdService) resolveUserTeamID(ctx context.Context, userID, contestID int64) (int64, error) {
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err == nil {
-		if err := registrationStatusError(registration.Status); err != nil {
+		if err := contestapp.RegistrationStatusError(registration.Status); err != nil {
 			return 0, err
 		}
 		if registration.TeamID == nil || *registration.TeamID <= 0 {

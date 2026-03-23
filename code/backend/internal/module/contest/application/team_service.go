@@ -1,25 +1,25 @@
-package contest
+package application
 
 import (
 	"context"
 	"crypto/rand"
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
-	"ctf-platform/pkg/errcode"
 	"encoding/base32"
 	"errors"
 	"strings"
 
 	"gorm.io/gorm"
+
+	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
+	"ctf-platform/pkg/errcode"
 )
 
 type TeamService struct {
-	teamRepo    *TeamRepository
-	contestRepo contestapp.Repository
+	teamRepo    ContestTeamRepository
+	contestRepo Repository
 }
 
-func NewTeamService(teamRepo *TeamRepository, contestRepo contestapp.Repository) *TeamService {
+func NewTeamService(teamRepo ContestTeamRepository, contestRepo Repository) *TeamService {
 	return &TeamService{
 		teamRepo:    teamRepo,
 		contestRepo: contestRepo,
@@ -29,7 +29,7 @@ func NewTeamService(teamRepo *TeamRepository, contestRepo contestapp.Repository)
 func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64, req *dto.CreateTeamReq) (*dto.TeamResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, contestapp.ErrContestNotFound) {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -41,7 +41,6 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 		return nil, err
 	}
 
-	// 检查用户是否已在该竞赛的队伍中
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(captainID, contestID)
 	if err == nil && existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
@@ -52,7 +51,6 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 		maxMembers = 4
 	}
 
-	// 重试生成邀请码并创建队伍
 	const maxRetries = 3
 	var team *model.Team
 	for i := 0; i < maxRetries; i++ {
@@ -74,13 +72,13 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 			break
 		}
 
-		if IsUniqueViolation(err, "uk_teams_invite_code") {
+		if s.teamRepo.IsUniqueViolation(err, "uk_teams_invite_code") {
 			continue
 		}
-		if IsUniqueViolation(err, "uk_teams_contest_name") {
+		if s.teamRepo.IsUniqueViolation(err, "uk_teams_contest_name") {
 			return nil, errcode.ErrTeamNameExists
 		}
-		if IsUniqueViolation(err, "uk_team_members_contest_user") {
+		if s.teamRepo.IsUniqueViolation(err, "uk_team_members_contest_user") {
 			return nil, errcode.ErrAlreadyInTeam
 		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -101,7 +99,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*dto.TeamResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, contestapp.ErrContestNotFound) {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -124,13 +122,11 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		return nil, errcode.ErrTeamNotFound
 	}
 
-	// 检查用户是否已在该竞赛的队伍中
 	existingTeam, err := s.teamRepo.FindUserTeamInContest(userID, team.ContestID)
 	if err == nil && existingTeam.ID > 0 {
 		return nil, errcode.ErrAlreadyInTeam
 	}
 
-	// 使用带锁的添加成员方法，防止并发竞态
 	err = s.teamRepo.AddMemberWithLock(contestID, team.ID, userID)
 	if err != nil {
 		if errors.Is(err, ErrTeamFull) {
@@ -139,7 +135,7 @@ func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID in
 		if errors.Is(err, ErrAlreadyJoinedContest) {
 			return nil, errcode.ErrAlreadyInTeam
 		}
-		if IsUniqueViolation(err, "uk_team_members_contest_user") {
+		if s.teamRepo.IsUniqueViolation(err, "uk_team_members_contest_user") {
 			return nil, errcode.ErrAlreadyInTeam
 		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -160,7 +156,7 @@ func (s *TeamService) ensureApprovedRegistration(contestID, userID int64) error 
 		}
 		return errcode.ErrInternal.WithCause(err)
 	}
-	if err := registrationStatusError(registration.Status); err != nil {
+	if err := RegistrationStatusError(registration.Status); err != nil {
 		return err
 	}
 	return nil
@@ -265,7 +261,7 @@ func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMembe
 
 func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
-		if errors.Is(err, contestapp.ErrContestNotFound) {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

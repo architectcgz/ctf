@@ -9,7 +9,9 @@ import (
 )
 
 var (
-	ErrContestNotFound = errors.New("contest not found")
+	ErrContestNotFound      = errors.New("contest not found")
+	ErrTeamFull             = errors.New("team is full")
+	ErrAlreadyJoinedContest = errors.New("user already joined another team in contest")
 )
 
 type Repository interface {
@@ -72,4 +74,34 @@ type ContestParticipationSolvedProgressRow struct {
 
 type ContestTeamFinder interface {
 	FindUserTeamInContest(userID, contestID int64) (*model.Team, error)
+}
+
+type ContestTeamRepository interface {
+	ContestTeamFinder
+	CreateWithMember(team *model.Team, captainID int64) error
+	FindByID(id int64) (*model.Team, error)
+	DeleteWithMembers(id int64) error
+	AddMemberWithLock(contestID, teamID, userID int64) error
+	RemoveMember(teamID, userID int64) error
+	FindContestRegistration(contestID, userID int64) (*model.ContestRegistration, error)
+	GetMembers(teamID int64) ([]*model.TeamMember, error)
+	GetMemberCount(teamID int64) (int64, error)
+	ListByContest(contestID int64) ([]*model.Team, error)
+	GetMemberCountBatch(teamIDs []int64) (map[int64]int, error)
+	FindUsersByIDs(ids []int64) ([]*model.User, error)
+	IsUniqueViolation(err error, constraint string) bool
+}
+
+type ContestSubmissionRepository interface {
+	WithinTransaction(ctx context.Context, fn func(repo ContestSubmissionRepository) error) error
+	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
+	FindContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	FindChallengeByID(ctx context.Context, challengeID int64) (*model.Challenge, error)
+	CreateSubmission(ctx context.Context, submission *model.Submission) error
+	LockContestChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
+	CountCorrectSubmissions(ctx context.Context, contestID, challengeID int64, teamID *int64, userID int64) (int64, error)
+	UpdateFirstBlood(ctx context.Context, contestID, challengeID, teamID int64) error
+	ListCorrectSubmissions(ctx context.Context, contestID, challengeID int64) ([]model.Submission, error)
+	UpdateSubmissionScore(ctx context.Context, submissionID int64, score int) error
+	AddTeamScore(ctx context.Context, teamID int64, delta int, lastSolveAt *time.Time) error
 }

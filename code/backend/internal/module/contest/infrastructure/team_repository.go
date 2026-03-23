@@ -1,7 +1,6 @@
-package contest
+package infrastructure
 
 import (
-	"ctf-platform/internal/model"
 	"errors"
 	"strings"
 	"time"
@@ -9,10 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-)
 
-var ErrTeamFull = errors.New("team is full")
-var ErrAlreadyJoinedContest = errors.New("user already joined another team in contest")
+	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
+)
 
 type TeamRepository struct {
 	db *gorm.DB
@@ -20,10 +19,6 @@ type TeamRepository struct {
 
 func NewTeamRepository(db *gorm.DB) *TeamRepository {
 	return &TeamRepository{db: db}
-}
-
-func (r *TeamRepository) Create(team *model.Team) error {
-	return r.db.Create(team).Error
 }
 
 func (r *TeamRepository) CreateWithMember(team *model.Team, captainID int64) error {
@@ -48,16 +43,6 @@ func (r *TeamRepository) FindByID(id int64) (*model.Team, error) {
 	var team model.Team
 	err := r.db.Where("id = ?", id).First(&team).Error
 	return &team, err
-}
-
-func (r *TeamRepository) FindByInviteCode(code string) (*model.Team, error) {
-	var team model.Team
-	err := r.db.Where("invite_code = ?", code).First(&team).Error
-	return &team, err
-}
-
-func (r *TeamRepository) Delete(id int64) error {
-	return r.db.Delete(&model.Team{}, id).Error
 }
 
 func (r *TeamRepository) DeleteWithMembers(id int64) error {
@@ -88,10 +73,6 @@ func (r *TeamRepository) DeleteWithMembers(id int64) error {
 	})
 }
 
-func (r *TeamRepository) AddMember(member *model.TeamMember) error {
-	return r.db.Create(member).Error
-}
-
 func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var team model.Team
@@ -108,7 +89,7 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 			return err
 		}
 		if existingCount > 0 {
-			return ErrAlreadyJoinedContest
+			return contestapp.ErrAlreadyJoinedContest
 		}
 
 		var memberCount int64
@@ -116,7 +97,7 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 			return err
 		}
 		if memberCount >= int64(team.MaxMembers) {
-			return ErrTeamFull
+			return contestapp.ErrTeamFull
 		}
 
 		member := &model.TeamMember{
@@ -190,8 +171,8 @@ func (r *TeamRepository) GetMemberCountBatch(teamIDs []int64) (map[int64]int, er
 		Scan(&results).Error
 
 	countMap := make(map[int64]int)
-	for _, r := range results {
-		countMap[r.TeamID] = r.Count
+	for _, result := range results {
+		countMap[result.TeamID] = result.Count
 	}
 	return countMap, err
 }
@@ -206,7 +187,7 @@ func (r *TeamRepository) FindUsersByIDs(ids []int64) ([]*model.User, error) {
 	return users, err
 }
 
-func IsUniqueViolation(err error, constraint string) bool {
+func (r *TeamRepository) IsUniqueViolation(err error, constraint string) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		return pgErr.Code == "23505" && strings.Contains(pgErr.ConstraintName, constraint)

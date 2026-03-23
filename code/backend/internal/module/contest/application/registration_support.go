@@ -1,11 +1,11 @@
-package contest
+package application
 
 import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
-func registrationStatusError(status string) error {
+func RegistrationStatusError(status string) error {
 	switch status {
 	case "", model.ContestRegistrationStatusApproved:
 		return nil

@@ -442,7 +442,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 }
 
 func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
-	var newSubmissionService func(contestapp.Repository, *SubmissionRepository, *redis.Client, challengecontracts.FlagValidator, *TeamRepository, *contestapp.ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
+	var newSubmissionService func(contestapp.Repository, contestapp.ContestSubmissionRepository, *redis.Client, challengecontracts.FlagValidator, contestapp.ContestTeamFinder, *contestapp.ScoreboardService, *config.Config) *contestapp.SubmissionService = contestapp.NewSubmissionService
 
 	db := newContestTestDB(t)
 
@@ -469,7 +469,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	called := false
 	service := newSubmissionService(
 		contestinfra.NewRepository(db),
-		NewSubmissionRepository(db),
+		contestinfra.NewSubmissionRepository(db),
 		redisClient,
 		&stubContestFlagValidator{
 			validateFlagFn: func(gotUserID, gotChallengeID int64, input string, nonce string) (bool, error) {
@@ -486,7 +486,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 				return true, nil
 			},
 		},
-		NewTeamRepository(db),
+		contestinfra.NewTeamRepository(db),
 		nil,
 		&config.Config{
 			Contest: config.ContestConfig{
@@ -510,7 +510,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	}
 }
 
-func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.Client, *gorm.DB) {
+func newContestSubmissionTestService(t *testing.T) (*contestapp.SubmissionService, *redis.Client, *gorm.DB) {
 	t.Helper()
 
 	db := newContestTestDB(t)
@@ -541,7 +541,7 @@ func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.C
 	}
 	contestRepo := contestinfra.NewRepository(db)
 	scoreboardService := contestapp.NewScoreboardService(contestRepo, redisClient, &cfg.Contest, zap.NewNop())
-	service := NewSubmissionService(contestRepo, NewSubmissionRepository(db), redisClient, flagService, NewTeamRepository(db), scoreboardService, cfg)
+	service := contestapp.NewSubmissionService(contestRepo, contestinfra.NewSubmissionRepository(db), redisClient, flagService, contestinfra.NewTeamRepository(db), scoreboardService, cfg)
 	return service, redisClient, db
 }
 

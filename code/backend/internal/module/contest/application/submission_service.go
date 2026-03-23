@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -16,21 +16,20 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
-	contestapp "ctf-platform/internal/module/contest/application"
 	"ctf-platform/pkg/errcode"
 )
 
 type SubmissionService struct {
-	contestRepo       contestapp.Repository
-	repo              *SubmissionRepository
+	contestRepo       Repository
+	repo              ContestSubmissionRepository
 	redis             *redislib.Client
 	flagValidator     challengecontracts.FlagValidator
-	teamRepo          *TeamRepository
-	scoreboardService *contestapp.ScoreboardService
+	teamRepo          ContestTeamFinder
+	scoreboardService *ScoreboardService
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo contestapp.Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo *TeamRepository, scoreboardService *contestapp.ScoreboardService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo Repository, repo ContestSubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo ContestTeamFinder, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,
@@ -45,7 +44,7 @@ func NewSubmissionService(contestRepo contestapp.Repository, repo *SubmissionRep
 func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, contestapp.ErrContestNotFound) {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -126,7 +125,7 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 func (s *SubmissionService) resolveTeamID(ctx context.Context, userID, contestID int64) (*int64, error) {
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err == nil {
-		if err := registrationStatusError(registration.Status); err != nil {
+		if err := RegistrationStatusError(registration.Status); err != nil {
 			return nil, err
 		}
 		return registration.TeamID, nil
@@ -154,7 +153,7 @@ func (s *SubmissionService) handleCorrectSubmission(ctx context.Context, submiss
 	finalScore := 0
 	teamScoreDeltas := make(map[int64]int)
 
-	err = s.repo.WithinTransaction(ctx, func(txRepo *SubmissionRepository) error {
+	err = s.repo.WithinTransaction(ctx, func(txRepo ContestSubmissionRepository) error {
 		lockedChallenge, err := txRepo.LockContestChallenge(ctx, *submission.ContestID, submission.ChallengeID)
 		if err != nil {
 			return err
@@ -245,7 +244,7 @@ func (s *SubmissionService) calculateContestScore(contestChallenge model.Contest
 	if s.scoreboardService != nil {
 		return s.scoreboardService.CalculateDynamicScoreWithBase(baseScore, solveCount)
 	}
-	return contestapp.CalculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
+	return CalculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
 }
 
 func (s *SubmissionService) resolveContestBaseScore(contestChallenge model.ContestChallenge, challengeRecord model.Challenge) float64 {
