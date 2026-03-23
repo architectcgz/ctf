@@ -1,14 +1,19 @@
 package composition
 
-import contestModule "ctf-platform/internal/module/contest"
+import (
+	contestModule "ctf-platform/internal/module/contest"
+	contesthttp "ctf-platform/internal/module/contest/api/http"
+	contestapp "ctf-platform/internal/module/contest/application"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+)
 
 type ContestModule struct {
-	AWDHandler           *contestModule.AWDHandler
-	ChallengeHandler     *contestModule.ChallengeHandler
-	Handler              *contestModule.Handler
-	ParticipationHandler *contestModule.ParticipationHandler
-	SubmissionHandler    *contestModule.SubmissionHandler
-	TeamHandler          *contestModule.TeamHandler
+	AWDHandler           *contesthttp.AWDHandler
+	ChallengeHandler     *contesthttp.ChallengeHandler
+	Handler              *contesthttp.Handler
+	ParticipationHandler *contesthttp.ParticipationHandler
+	SubmissionHandler    *contesthttp.SubmissionHandler
+	TeamHandler          *contesthttp.TeamHandler
 }
 
 func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
@@ -17,9 +22,9 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	db := root.DB()
 	cache := root.Cache()
 
-	repo := contestModule.NewRepository(db)
-	scoreboardService := contestModule.NewScoreboardService(repo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
-	contestService := contestModule.NewService(repo, log.Named("contest_service"))
+	repo := contestinfra.NewRepository(db)
+	scoreboardService := contestapp.NewScoreboardService(repo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
+	contestService := contestapp.NewService(repo, log.Named("contest_service"))
 	awdService := contestModule.NewAWDService(
 		contestModule.NewAWDRepository(db),
 		repo,
@@ -28,15 +33,15 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
 	)
-	contestChallengeRepo := contestModule.NewChallengeRepository(db)
-	contestChallengeService := contestModule.NewChallengeService(contestChallengeRepo, challenge.Catalog, repo)
+	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
+	contestChallengeService := contestapp.NewChallengeService(contestChallengeRepo, challenge.Catalog, repo)
 	teamRepo := contestModule.NewTeamRepository(db)
 	teamService := contestModule.NewTeamService(teamRepo, repo)
-	participationRepo := contestModule.NewParticipationRepository(db)
-	participationService := contestModule.NewParticipationService(repo, participationRepo, teamRepo)
+	participationRepo := contestinfra.NewParticipationRepository(db)
+	participationService := contestapp.NewParticipationService(repo, participationRepo, teamRepo)
 	submissionRepo := contestModule.NewSubmissionRepository(db)
 	submissionService := contestModule.NewSubmissionService(repo, submissionRepo, cache, challenge.FlagValidator, teamRepo, scoreboardService, cfg)
-	statusUpdater := contestModule.NewStatusUpdater(
+	statusUpdater := contestapp.NewStatusUpdater(
 		repo,
 		cache,
 		cfg.Contest.StatusUpdateInterval,
@@ -56,11 +61,11 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("awd_round_updater", awdUpdater.Start))
 
 	return &ContestModule{
-		AWDHandler:           contestModule.NewAWDHandler(awdService),
-		ChallengeHandler:     contestModule.NewChallengeHandler(contestChallengeService),
-		Handler:              contestModule.NewHandler(contestService, scoreboardService),
-		ParticipationHandler: contestModule.NewParticipationHandler(participationService),
-		SubmissionHandler:    contestModule.NewSubmissionHandler(submissionService),
-		TeamHandler:          contestModule.NewTeamHandler(teamService),
+		AWDHandler:           contesthttp.NewAWDHandler(awdService),
+		ChallengeHandler:     contesthttp.NewChallengeHandler(contestChallengeService),
+		Handler:              contesthttp.NewHandler(contestService, scoreboardService),
+		ParticipationHandler: contesthttp.NewParticipationHandler(participationService),
+		SubmissionHandler:    contesthttp.NewSubmissionHandler(submissionService),
+		TeamHandler:          contesthttp.NewTeamHandler(teamService),
 	}
 }

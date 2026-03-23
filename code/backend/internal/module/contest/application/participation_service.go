@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -14,11 +14,11 @@ import (
 
 type ParticipationService struct {
 	contestRepo Repository
-	repo        *ParticipationRepository
-	teamRepo    *TeamRepository
+	repo        ContestParticipationRepository
+	teamRepo    ContestTeamFinder
 }
 
-func NewParticipationService(contestRepo Repository, repo *ParticipationRepository, teamRepo *TeamRepository) *ParticipationService {
+func NewParticipationService(contestRepo Repository, repo ContestParticipationRepository, teamRepo ContestTeamFinder) *ParticipationService {
 	return &ParticipationService{
 		contestRepo: contestRepo,
 		repo:        repo,

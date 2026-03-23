@@ -16,6 +16,8 @@ import (
 	challengeapp "ctf-platform/internal/module/challenge/application"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	contestapp "ctf-platform/internal/module/contest/application"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
@@ -80,14 +82,14 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 	assertContestTeamScore(t, db, secondTeamID, 405)
 
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
-	firstScore, err := redisClient.ZScore(context.Background(), scoreboardKey, teamIDToMember(firstTeamID)).Result()
+	firstScore, err := redisClient.ZScore(context.Background(), scoreboardKey, contestapp.TeamIDToMember(firstTeamID)).Result()
 	if err != nil {
 		t.Fatalf("load first team score from redis: %v", err)
 	}
 	if firstScore != 446 {
 		t.Fatalf("unexpected first redis score: %v", firstScore)
 	}
-	secondScore, err := redisClient.ZScore(context.Background(), scoreboardKey, teamIDToMember(secondTeamID)).Result()
+	secondScore, err := redisClient.ZScore(context.Background(), scoreboardKey, contestapp.TeamIDToMember(secondTeamID)).Result()
 	if err != nil {
 		t.Fatalf("load second team score from redis: %v", err)
 	}
@@ -169,7 +171,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 	assertContestTeamScore(t, db, teamID, 495)
 
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
-	score, err := redisClient.ZScore(context.Background(), scoreboardKey, teamIDToMember(teamID)).Result()
+	score, err := redisClient.ZScore(context.Background(), scoreboardKey, contestapp.TeamIDToMember(teamID)).Result()
 	if err != nil {
 		t.Fatalf("load team score from redis: %v", err)
 	}
@@ -221,9 +223,9 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 			Decay:     0.9,
 		},
 	}
-	service := NewScoreboardService(NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
+	service := contestapp.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
-	if err := redisClient.ZAdd(context.Background(), scoreboardKey, redis.Z{Score: 999, Member: teamIDToMember(99)}).Err(); err != nil {
+	if err := redisClient.ZAdd(context.Background(), scoreboardKey, redis.Z{Score: 999, Member: contestapp.TeamIDToMember(99)}).Err(); err != nil {
 		t.Fatalf("seed redis scoreboard: %v", err)
 	}
 
@@ -238,10 +240,10 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 	if len(members) != 2 {
 		t.Fatalf("unexpected redis members: %+v", members)
 	}
-	if memberToTeamID(members[0].Member) != 31 || members[0].Score != 600 {
+	if contestapp.MemberToTeamID(members[0].Member) != 31 || members[0].Score != 600 {
 		t.Fatalf("unexpected first redis member: %+v", members[0])
 	}
-	if memberToTeamID(members[1].Member) != 33 || members[1].Score != 450 {
+	if contestapp.MemberToTeamID(members[1].Member) != 33 || members[1].Score != 450 {
 		t.Fatalf("unexpected second redis member: %+v", members[1])
 	}
 }
@@ -325,8 +327,8 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 	})
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
 	if err := redisClient.ZAdd(context.Background(), scoreboardKey,
-		redis.Z{Score: 260, Member: teamIDToMember(131)},
-		redis.Z{Score: 120, Member: teamIDToMember(132)},
+		redis.Z{Score: 260, Member: contestapp.TeamIDToMember(131)},
+		redis.Z{Score: 120, Member: contestapp.TeamIDToMember(132)},
 	).Err(); err != nil {
 		t.Fatalf("seed redis scoreboard: %v", err)
 	}
@@ -338,7 +340,7 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 			Decay:     0.9,
 		},
 	}
-	service := NewScoreboardService(NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
+	service := contestapp.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
 
 	resp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -398,14 +400,14 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 	liveKey := rediskeys.RankContestTeamKey(contestID)
 	frozenKey := rediskeys.RankContestFrozenKey(contestID)
 	if err := redisClient.ZAdd(context.Background(), liveKey,
-		redis.Z{Score: 300, Member: teamIDToMember(141)},
-		redis.Z{Score: 180, Member: teamIDToMember(142)},
+		redis.Z{Score: 300, Member: contestapp.TeamIDToMember(141)},
+		redis.Z{Score: 180, Member: contestapp.TeamIDToMember(142)},
 	).Err(); err != nil {
 		t.Fatalf("seed live scoreboard: %v", err)
 	}
 	if err := redisClient.ZAdd(context.Background(), frozenKey,
-		redis.Z{Score: 120, Member: teamIDToMember(142)},
-		redis.Z{Score: 100, Member: teamIDToMember(141)},
+		redis.Z{Score: 120, Member: contestapp.TeamIDToMember(142)},
+		redis.Z{Score: 100, Member: contestapp.TeamIDToMember(141)},
 	).Err(); err != nil {
 		t.Fatalf("seed frozen scoreboard: %v", err)
 	}
@@ -417,7 +419,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 			Decay:     0.9,
 		},
 	}
-	service := NewScoreboardService(NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
+	service := contestapp.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &cfg.Contest, zap.NewNop())
 
 	publicResp, err := service.GetScoreboard(context.Background(), contestID, 1, 10)
 	if err != nil {
@@ -440,7 +442,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 }
 
 func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
-	var newSubmissionService func(Repository, *SubmissionRepository, *redis.Client, challengecontracts.FlagValidator, *TeamRepository, *ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
+	var newSubmissionService func(contestapp.Repository, *SubmissionRepository, *redis.Client, challengecontracts.FlagValidator, *TeamRepository, *contestapp.ScoreboardService, *config.Config) *SubmissionService = NewSubmissionService
 
 	db := newContestTestDB(t)
 
@@ -466,7 +468,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 
 	called := false
 	service := newSubmissionService(
-		NewRepository(db),
+		contestinfra.NewRepository(db),
 		NewSubmissionRepository(db),
 		redisClient,
 		&stubContestFlagValidator{
@@ -537,8 +539,8 @@ func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.C
 			FirstBloodBonus: 0.1,
 		},
 	}
-	contestRepo := NewRepository(db)
-	scoreboardService := NewScoreboardService(contestRepo, redisClient, &cfg.Contest, zap.NewNop())
+	contestRepo := contestinfra.NewRepository(db)
+	scoreboardService := contestapp.NewScoreboardService(contestRepo, redisClient, &cfg.Contest, zap.NewNop())
 	service := NewSubmissionService(contestRepo, NewSubmissionRepository(db), redisClient, flagService, NewTeamRepository(db), scoreboardService, cfg)
 	return service, redisClient, db
 }

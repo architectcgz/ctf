@@ -1,6 +1,7 @@
-package contest
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -9,15 +10,29 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-type Handler struct {
-	service           Service
-	scoreboardService *ScoreboardService
+type contestService interface {
+	CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
+	UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error)
+	GetContest(ctx context.Context, id int64) (*dto.ContestResp, error)
+	ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
 }
 
-func NewHandler(service Service, scoreboardService ...*ScoreboardService) *Handler {
-	var sb *ScoreboardService
-	if len(scoreboardService) > 0 {
-		sb = scoreboardService[0]
+type scoreboardService interface {
+	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
+	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
+	FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error
+	UnfreezeScoreboard(ctx context.Context, contestID int64) error
+}
+
+type Handler struct {
+	service           contestService
+	scoreboardService scoreboardService
+}
+
+func NewHandler(service contestService, scoreboardServices ...scoreboardService) *Handler {
+	var sb scoreboardService
+	if len(scoreboardServices) > 0 {
+		sb = scoreboardServices[0]
 	}
 	return &Handler{
 		service:           service,

@@ -11,6 +11,8 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -18,10 +20,10 @@ func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testin
 	t.Parallel()
 
 	db := newContestTestDB(t)
-	contestRepo := NewRepository(db)
-	participationRepo := NewParticipationRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
+	service := contestapp.NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	if err := db.Create(&model.Contest{
@@ -60,10 +62,10 @@ func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *test
 	t.Parallel()
 
 	db := newContestTestDB(t)
-	contestRepo := NewRepository(db)
-	participationRepo := NewParticipationRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
+	service := contestapp.NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	reviewedBy := int64(9001)
@@ -153,7 +155,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 	t.Parallel()
 
 	db := newContestTestDB(t)
-	contestRepo := NewRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
 	teamRepo := NewTeamRepository(db)
 	service := NewTeamService(teamRepo, contestRepo)
 
@@ -198,10 +200,10 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 	t.Parallel()
 
 	db := newContestTestDB(t)
-	contestRepo := NewRepository(db)
-	participationRepo := NewParticipationRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
+	service := contestapp.NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	contest := &model.Contest{
@@ -283,10 +285,10 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	t.Parallel()
 
 	db := newContestTestDB(t)
-	contestRepo := NewRepository(db)
-	participationRepo := NewParticipationRepository(db)
+	contestRepo := contestinfra.NewRepository(db)
+	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := NewTeamRepository(db)
-	service := NewParticipationService(contestRepo, participationRepo, teamRepo)
+	service := contestapp.NewParticipationService(contestRepo, participationRepo, teamRepo)
 
 	now := time.Now()
 	if err := db.Create(&model.Contest{

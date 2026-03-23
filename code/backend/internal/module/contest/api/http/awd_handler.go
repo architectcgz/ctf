@@ -1,6 +1,8 @@
-package contest
+package http
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
@@ -8,11 +10,24 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-type AWDHandler struct {
-	service AWDService
+type awdService interface {
+	CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error)
+	ListRounds(ctx context.Context, contestID int64) ([]*dto.AWDRoundResp, error)
+	RunCurrentRoundChecks(ctx context.Context, contestID int64) (*dto.AWDCheckerRunResp, error)
+	RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error)
+	UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error)
+	ListServices(ctx context.Context, contestID, roundID int64) ([]*dto.AWDTeamServiceResp, error)
+	CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error)
+	SubmitAttack(ctx context.Context, userID, contestID, challengeID int64, req *dto.SubmitAWDAttackReq) (*dto.AWDAttackLogResp, error)
+	ListAttackLogs(ctx context.Context, contestID, roundID int64) ([]*dto.AWDAttackLogResp, error)
+	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error)
 }
 
-func NewAWDHandler(service AWDService) *AWDHandler {
+type AWDHandler struct {
+	service awdService
+}
+
+func NewAWDHandler(service awdService) *AWDHandler {
 	return &AWDHandler{service: service}
 }
 

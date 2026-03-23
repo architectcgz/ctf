@@ -1,19 +1,32 @@
-package contest
+package http
 
 import (
+	"context"
+	"strconv"
+
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type TeamHandler struct {
-	teamService *TeamService
+type teamService interface {
+	CreateTeam(ctx context.Context, contestID, captainID int64, req *dto.CreateTeamReq) (*dto.TeamResp, error)
+	JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*dto.TeamResp, error)
+	LeaveTeam(ctx context.Context, contestID, userID, teamID int64) error
+	DismissTeam(ctx context.Context, contestID, captainID, teamID int64) error
+	GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error)
+	GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error)
+	ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error)
+	KickMember(ctx context.Context, contestID, captainID, teamID, memberUserID int64) error
 }
 
-func NewTeamHandler(teamService *TeamService) *TeamHandler {
+type TeamHandler struct {
+	teamService teamService
+}
+
+func NewTeamHandler(teamService teamService) *TeamHandler {
 	return &TeamHandler{teamService: teamService}
 }
 

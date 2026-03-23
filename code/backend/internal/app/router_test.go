@@ -20,6 +20,7 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contesthttp "ctf-platform/internal/module/contest/api/http"
 	"ctf-platform/internal/module/identity"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	"ctf-platform/internal/module/ops"
@@ -63,6 +64,10 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/challenges", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/admin/challenges/:id/flag", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/images", "internal/module/challenge/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/contests", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/scoreboard", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/submissions", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/teams", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/instances", "internal/module/practice/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/instances", "internal/module/practice/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/submit", "internal/module/practice/api/http")
@@ -150,6 +155,12 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ProfileService", reflect.TypeOf((*assessmentcontracts.ProfileService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "Recommendations", reflect.TypeOf((*assessmentcontracts.RecommendationProvider)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ReportHandler", reflect.TypeOf(&assessmenthttp.ReportHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "AWDHandler", reflect.TypeOf(&contesthttp.AWDHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "ChallengeHandler", reflect.TypeOf(&contesthttp.ChallengeHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "Handler", reflect.TypeOf(&contesthttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "ParticipationHandler", reflect.TypeOf(&contesthttp.ParticipationHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "SubmissionHandler", reflect.TypeOf(&contesthttp.SubmissionHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "TeamHandler", reflect.TypeOf(&contesthttp.TeamHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.PracticeModule{}), "Handler", reflect.TypeOf(&practicehttp.Handler{}))
 	assertNoField(t, reflect.TypeOf(composition.AuthModule{}), "TokenService")
 	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagService")

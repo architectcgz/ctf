@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func (s *statusUpdaterRepoStub) FindTeamsByContest(context.Context, int64) ([]*m
 	panic("unexpected call")
 }
 
-func (s *statusUpdaterRepoStub) FindScoreboardTeamStats(context.Context, int64, string, []int64) (map[int64]scoreboardTeamStats, error) {
+func (s *statusUpdaterRepoStub) FindScoreboardTeamStats(context.Context, int64, string, []int64) (map[int64]ScoreboardTeamStats, error) {
 	panic("unexpected call")
 }
 

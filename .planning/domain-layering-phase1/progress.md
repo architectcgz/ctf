@@ -43,3 +43,30 @@
 - 本轮限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/practice/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 推进 `contest` Phase 1 首刀：
+  - 6 个 contest handler 已迁到 `internal/module/contest/api/http`
+  - `ContestModule` 暴露的 handler 类型与 composition 装配已切到 `internal/module/contest/api/http`
+  - contest 路由契约测试已新增对 `contest/api/http` 路由来源和 `ContestModule` handler 类型的约束
+  - `contest/api/http` 现已依赖本地 handler interface，而不是继续绑定 root 包 concrete handler 类型
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes' -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 完成 `contest` Phase 1 第二刀并收口旧根包：
+  - contest 核心竞赛能力已迁到 `internal/module/contest/application`
+  - contest repository 已迁到 `internal/module/contest/infrastructure`
+  - `core / participation / team / submission / awd / status_updater` 已切到新 `application.Repository / ScoreboardService` 依赖
+  - `ContestModule` 已直接装配 `contest/api/http`、`contest/application`、`contest/infrastructure`
+  - `contest` 根包旧 `repository / service / scoreboard / scoring` 实现已物理删除，不保留兼容层
+  - contest 相关测试已切到新目录依赖与 helper
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 继续推进 `contest` 根包瘦身：
+  - contest challenge service/repository 已迁到 `internal/module/contest/application` 与 `internal/module/contest/infrastructure`
+  - contest participation service/repository 已迁到 `internal/module/contest/application` 与 `internal/module/contest/infrastructure`
+  - contest status updater 已迁到 `internal/module/contest/application`，对应测试已随实现迁移
+  - `ContestModule` 装配已切到新目录，根包旧 `challenge / participation / status_updater` 实现已物理删除
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`

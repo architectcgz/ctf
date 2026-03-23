@@ -17,13 +17,15 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
 func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	db := newAWDTestDB(t)
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), nil, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), nil, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 1, now)
@@ -62,7 +64,7 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 2, now)
@@ -164,7 +166,7 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{
 		CheckerTimeout:    time.Second,
 		CheckerHealthPath: "/health",
 	}, zap.NewNop())
@@ -226,7 +228,7 @@ func TestAWDServiceRunCurrentRoundChecksRejectsEndedContest(t *testing.T) {
 		t.Fatalf("seed stale current round: %v", err)
 	}
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 
 	_, err = service.RunCurrentRoundChecks(context.Background(), 222)
 	if err != errcode.ErrContestEnded {
@@ -268,7 +270,7 @@ func TestAWDServiceRunRoundChecksRefreshesSelectedRound(t *testing.T) {
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), nil, "", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), nil, "", config.ContestAWDConfig{
 		CheckerTimeout:    time.Second,
 		CheckerHealthPath: "/health",
 	}, zap.NewNop())
@@ -307,7 +309,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 3, now)
@@ -435,7 +437,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	assertContestRedisScore(t, redisClient, 3, 313, 25)
 	assertContestRedisScoreMissing(t, redisClient, 3, 312)
 
-	scoreboardService := NewScoreboardService(NewRepository(db), redisClient, &config.ContestConfig{}, zap.NewNop())
+	scoreboardService := contestapp.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &config.ContestConfig{}, zap.NewNop())
 	scoreboard, err := scoreboardService.GetLiveScoreboard(context.Background(), 3, 1, 10)
 	if err != nil {
 		t.Fatalf("GetLiveScoreboard() error = %v", err)
@@ -461,7 +463,7 @@ func TestAWDServiceCreateAttackLogCreatesVictimServiceImpactWhenMissing(t *testi
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 6, now)
@@ -513,7 +515,7 @@ func TestAWDServiceHistoricalManualUpdatesDoNotOverrideLiveServiceStatusCache(t 
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 16, now)
@@ -553,7 +555,7 @@ func TestAWDServiceEndedContestManualUpdatesDoNotRestoreLiveServiceStatusCache(t
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 17, now)
@@ -598,7 +600,7 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 4, now)
@@ -667,7 +669,7 @@ func TestAWDServiceSubmitAttackAcceptsPreviousRoundFlagWithinGrace(t *testing.T)
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
 		PreviousRoundGrace: time.Minute,
 	}, zap.NewNop())
 	now := time.Now()
@@ -721,7 +723,7 @@ func TestAWDServiceSubmitAttackAllowsFrozenContest(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{}, zap.NewNop())
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{}, zap.NewNop())
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 6, now)
@@ -775,7 +777,7 @@ func TestAWDServiceSubmitAttackIgnoresStaleCurrentRoundPointer(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
 		PreviousRoundGrace: 0,
 	}, zap.NewNop())
 	now := time.Now()
@@ -829,7 +831,7 @@ func TestAWDServiceSubmitAttackUsesTimeDerivedCurrentRoundWhenRoundStatusLags(t 
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
 		RoundInterval:      time.Minute,
 		PreviousRoundGrace: 0,
 	}, zap.NewNop())
@@ -901,7 +903,7 @@ func TestAWDServiceSubmitAttackRejectsPreviousFlagAfterMaterializingMissingCurre
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
 		RoundInterval:      time.Minute,
 		PreviousRoundGrace: 0,
 	}, zap.NewNop())
@@ -969,7 +971,7 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewAWDService(NewAWDRepository(db), NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
+	service := NewAWDService(NewAWDRepository(db), contestinfra.NewRepository(db), redisClient, "awd-secret", config.ContestAWDConfig{
 		RoundInterval:      time.Minute,
 		PreviousRoundGrace: 0,
 	}, zap.NewNop())
@@ -1078,7 +1080,7 @@ func assertTeamTotalScore(t *testing.T, db *gorm.DB, teamID int64, expected int)
 func assertContestRedisScore(t *testing.T, redisClient *redis.Client, contestID, teamID int64, expected float64) {
 	t.Helper()
 
-	score, err := redisClient.ZScore(context.Background(), rediskeys.RankContestTeamKey(contestID), teamIDToMember(teamID)).Result()
+	score, err := redisClient.ZScore(context.Background(), rediskeys.RankContestTeamKey(contestID), contestapp.TeamIDToMember(teamID)).Result()
 	if err != nil {
 		t.Fatalf("load redis score for team %d: %v", teamID, err)
 	}
@@ -1090,7 +1092,7 @@ func assertContestRedisScore(t *testing.T, redisClient *redis.Client, contestID,
 func assertContestRedisScoreMissing(t *testing.T, redisClient *redis.Client, contestID, teamID int64) {
 	t.Helper()
 
-	_, err := redisClient.ZScore(context.Background(), rediskeys.RankContestTeamKey(contestID), teamIDToMember(teamID)).Result()
+	_, err := redisClient.ZScore(context.Background(), rediskeys.RankContestTeamKey(contestID), contestapp.TeamIDToMember(teamID)).Result()
 	if err == nil {
 		t.Fatalf("expected missing redis score for team %d", teamID)
 	}

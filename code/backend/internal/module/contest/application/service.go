@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -83,28 +83,24 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	// H3: 状态流转校验（先校验，不修改）
 	if req.Status != nil && *req.Status != contest.Status {
 		if !isValidTransition(contest.Status, *req.Status) {
 			return nil, errcode.ErrInvalidStatusTransition
 		}
 	}
 
-	// H5: 禁止在 registration/running/ended 状态修改开始时间
 	if contest.Status == model.ContestStatusRegistration || contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
 		if req.StartTime != nil {
 			return nil, errcode.ErrContestAlreadyStarted
 		}
 	}
 
-	// 禁止在 running/ended 状态修改结束时间
 	if contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
 		if req.EndTime != nil {
 			return nil, errcode.ErrContestAlreadyStarted
 		}
 	}
 
-	// M5: 禁止在非 draft 状态修改模式
 	if req.Mode != nil && *req.Mode != contest.Mode {
 		if contest.Status != model.ContestStatusDraft {
 			return nil, errcode.ErrCannotModifyAfterDraft
@@ -129,7 +125,6 @@ func (s *service) UpdateContest(ctx context.Context, id int64, req *dto.UpdateCo
 		return nil, errcode.ErrInvalidTimeRange
 	}
 
-	// 所有校验通过后再设置状态
 	if req.Status != nil {
 		contest.Status = *req.Status
 	}

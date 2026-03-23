@@ -1,24 +1,24 @@
-package contest
+package application
 
 import (
 	"context"
 	"errors"
 
+	"gorm.io/gorm"
+
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/pkg/errcode"
-
-	"gorm.io/gorm"
 )
 
 type ChallengeService struct {
-	repo          *ChallengeRepository
+	repo          ContestChallengeRepository
 	challengeRepo challengecontracts.ContestChallengeContract
 	contestRepo   Repository
 }
 
-func NewChallengeService(repo *ChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo Repository) *ChallengeService {
+func NewChallengeService(repo ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo Repository) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
