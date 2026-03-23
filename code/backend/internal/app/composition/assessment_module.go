@@ -1,16 +1,20 @@
 package composition
 
-import "context"
+import (
+	"context"
 
-import assessmentModule "ctf-platform/internal/module/assessment"
-import assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+)
 
 type AssessmentModule struct {
 	BackgroundCloser asyncTaskCloser
-	Handler          *assessmentModule.Handler
+	Handler          *assessmenthttp.Handler
 	ProfileService   assessmentcontracts.ProfileService
 	Recommendations  assessmentcontracts.RecommendationProvider
-	ReportHandler    *assessmentModule.ReportHandler
+	ReportHandler    *assessmenthttp.ReportHandler
 }
 
 func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentModule {
@@ -19,10 +23,10 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	db := root.DB()
 	cache := root.Cache()
 
-	repo := assessmentModule.NewRepository(db)
-	service := assessmentModule.NewService(repo, cache, cfg.Assessment, log.Named("assessment_service"))
+	repo := assessmentinfra.NewRepository(db)
+	service := assessmentapp.NewService(repo, cache, cfg.Assessment, log.Named("assessment_service"))
 	service.RegisterPracticeEventConsumers(root.Events)
-	recommendationService := assessmentModule.NewRecommendationService(
+	recommendationService := assessmentapp.NewRecommendationService(
 		repo,
 		challenge.Catalog,
 		cache,
@@ -30,9 +34,9 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 		log.Named("recommendation_service"),
 	)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
-	reportRepo := assessmentModule.NewReportRepository(db)
-	reportService := assessmentModule.NewReportService(reportRepo, service, cfg.Report, log.Named("report_service"))
-	cleaner := assessmentModule.NewCleaner(service, log.Named("assessment_cleaner"))
+	reportRepo := assessmentinfra.NewReportRepository(db)
+	reportService := assessmentapp.NewReportService(reportRepo, service, cfg.Report, log.Named("report_service"))
+	cleaner := assessmentapp.NewCleaner(service, log.Named("assessment_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"assessment_cleaner",
 		func(context.Context) error {
@@ -43,9 +47,9 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 
 	return &AssessmentModule{
 		BackgroundCloser: reportService,
-		Handler:          assessmentModule.NewHandler(service, recommendationService),
+		Handler:          assessmenthttp.NewHandler(service, recommendationService),
 		ProfileService:   service,
 		Recommendations:  recommendationService,
-		ReportHandler:    assessmentModule.NewReportHandler(reportService),
+		ReportHandler:    assessmenthttp.NewReportHandler(reportService),
 	}
 }

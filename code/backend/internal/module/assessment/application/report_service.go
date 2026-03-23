@@ -1,4 +1,4 @@
-package assessment
+package application
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 )
 
 type ReportService struct {
-	repo              *ReportRepository
-	assessmentService *Service
+	repo              ReportRepository
+	assessmentService AssessmentProfileReader
 	config            config.ReportConfig
 	logger            *zap.Logger
 	workerPool        chan struct{}
@@ -33,10 +33,42 @@ type ReportService struct {
 	tasks             sync.WaitGroup
 }
 
-type reportDownload struct {
+type ReportDownload struct {
 	Path        string
 	FileName    string
 	ContentType string
+}
+
+type ReportUser struct {
+	ID        int64
+	Username  string
+	ClassName string
+	Role      string
+}
+
+type PersonalReportStats struct {
+	TotalScore    int
+	TotalSolved   int
+	TotalAttempts int
+	Rank          int
+}
+
+type ReportDimensionStat struct {
+	Dimension string
+	Solved    int
+	Total     int
+}
+
+type ClassDimensionAverage struct {
+	Dimension string
+	AvgScore  float64
+}
+
+type ClassTopStudent struct {
+	UserID     int64
+	Username   string
+	TotalScore int
+	Rank       int
 }
 
 type personalReportData struct {
@@ -54,7 +86,25 @@ type classReportData struct {
 	TopStudents       []ClassTopStudent
 }
 
-func NewReportService(repo *ReportRepository, assessmentService *Service, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
+type ReportRepository interface {
+	Create(ctx context.Context, report *model.Report) error
+	FindByID(ctx context.Context, reportID int64) (*model.Report, error)
+	MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error
+	MarkFailed(ctx context.Context, reportID int64, message string) error
+	FindUserByID(ctx context.Context, userID int64) (*ReportUser, error)
+	GetPersonalStats(ctx context.Context, userID int64) (*PersonalReportStats, error)
+	ListPersonalDimensionStats(ctx context.Context, userID int64) ([]ReportDimensionStat, error)
+	CountClassStudents(ctx context.Context, className string) (int, error)
+	GetClassAverageScore(ctx context.Context, className string) (float64, error)
+	ListClassDimensionAverages(ctx context.Context, className string) ([]ClassDimensionAverage, error)
+	ListClassTopStudents(ctx context.Context, className string, limit int) ([]ClassTopStudent, error)
+}
+
+type AssessmentProfileReader interface {
+	GetSkillProfileWithContext(ctx context.Context, userID int64) (*dto.SkillProfileResp, error)
+}
+
+func NewReportService(repo ReportRepository, assessmentService AssessmentProfileReader, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -166,7 +216,7 @@ func validateClassReportAccess(requester *ReportUser, className string) error {
 	return nil
 }
 
-func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*reportDownload, error) {
+func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*ReportDownload, error) {
 	report, err := s.repo.FindByID(ctx, reportID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -212,7 +262,7 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 		}
 	}
 
-	return &reportDownload{
+	return &ReportDownload{
 		Path:        filePath,
 		FileName:    fileName,
 		ContentType: contentType,

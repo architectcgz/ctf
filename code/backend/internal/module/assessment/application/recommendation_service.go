@@ -1,4 +1,4 @@
-package assessment
+package application
 
 import (
 	"context"
@@ -13,10 +13,16 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
 )
+
+type RecommendationRepository interface {
+	FindByUserIDWithContext(ctx context.Context, userID int64) ([]*model.SkillProfile, error)
+	ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error)
+}
 
 type ChallengeRepository interface {
 	FindPublishedForRecommendation(limit int, dimensions []string, excludeSolved []int64) ([]*model.Challenge, error)
@@ -24,14 +30,16 @@ type ChallengeRepository interface {
 }
 
 type RecommendationService struct {
-	repo          *Repository
+	repo          RecommendationRepository
 	challengeRepo ChallengeRepository
 	redis         *redis.Client
 	logger        *zap.Logger
 	config        config.RecommendationConfig
 }
 
-func NewRecommendationService(repo *Repository, challengeRepo ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
+var _ assessmentcontracts.RecommendationProvider = (*RecommendationService)(nil)
+
+func NewRecommendationService(repo RecommendationRepository, challengeRepo ChallengeRepository, redis *redis.Client, cfg config.RecommendationConfig, logger *zap.Logger) *RecommendationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -213,4 +221,8 @@ func normalizeRecommendationConfig(cfg config.RecommendationConfig) config.Recom
 		cfg.MaxLimit = 20
 	}
 	return cfg
+}
+
+type RecommendationQuery struct {
+	Limit int `form:"limit"`
 }

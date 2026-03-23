@@ -13,4 +13,13 @@
 - 限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/challenge ./internal/module/contest ./internal/module/assessment ./internal/module/practice ./internal/module/teaching_readmodel/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge' -count=1`
-- 尚未开始模块内部物理搬迁；`challenge / contest / assessment / practice` 仍保持根目录大平铺，下一轮继续按 owner-first 分层切片
+- 完成 `assessment` 物理分层：
+  - HTTP handler 已迁到 `internal/module/assessment/api/http`
+  - 能力画像 / 推荐 / 报告 / cleaner 已迁到 `internal/module/assessment/application`
+  - repository 已迁到 `internal/module/assessment/infrastructure`
+  - `AssessmentModule` 已直接装配新三层目录，不再依赖 `internal/module/assessment` 根包
+  - assessment 路由 handler 来源已切到 `internal/module/assessment/api/http`
+- 新一轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/assessment/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 当前仍未开始 `challenge / contest / practice` 的模块内部物理搬迁；下一轮继续按 owner-first 分层切片

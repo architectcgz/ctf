@@ -1,20 +1,29 @@
-package assessment
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
 	"ctf-platform/pkg/response"
 )
 
-type ReportHandler struct {
-	service *ReportService
+type reportService interface {
+	CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error)
+	CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error)
+	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentapp.ReportDownload, error)
+	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error)
 }
 
-func NewReportHandler(service *ReportService) *ReportHandler {
+type ReportHandler struct {
+	service reportService
+}
+
+func NewReportHandler(service reportService) *ReportHandler {
 	return &ReportHandler{service: service}
 }
 

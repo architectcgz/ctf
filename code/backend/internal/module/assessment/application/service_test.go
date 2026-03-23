@@ -1,4 +1,4 @@
-package assessment
+package application_test
 
 import (
 	"context"
@@ -14,6 +14,8 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,9 +37,9 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newAssessmentTestService(db *gorm.DB, redisClient *redis.Client) *Service {
-	return NewService(
-		NewRepository(db),
+func newAssessmentTestService(db *gorm.DB, redisClient *redis.Client) *assessmentapp.Service {
+	return assessmentapp.NewService(
+		assessmentinfra.NewRepository(db),
 		redisClient,
 		config.AssessmentConfig{
 			RedisKeyPrefix: "assessment:test",

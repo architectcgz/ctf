@@ -16,6 +16,7 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
+	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/identity"
@@ -46,6 +47,15 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/audit-logs", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/dashboard", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/cheat-detection", "internal/module/ops")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/users/me/skill-profile", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/users/me/recommendations", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/users/:id/skill-profile", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/reports/personal", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/reports/:id", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/reports/:id/download", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/reports/class", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/skill-profile", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/reports/class", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/notifications", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/notifications/:id/read", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/ws/notifications", "internal/module/ops")
@@ -120,8 +130,10 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "Catalog", reflect.TypeOf((*challengecontracts.ChallengeContract)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagValidator", reflect.TypeOf((*challengecontracts.FlagValidator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "ImageStore", reflect.TypeOf((*challengecontracts.ImageStore)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "Handler", reflect.TypeOf(&assessmenthttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ProfileService", reflect.TypeOf((*assessmentcontracts.ProfileService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "Recommendations", reflect.TypeOf((*assessmentcontracts.RecommendationProvider)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ReportHandler", reflect.TypeOf(&assessmenthttp.ReportHandler{}))
 	assertNoField(t, reflect.TypeOf(composition.AuthModule{}), "TokenService")
 	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagService")
 	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "ImageRepository")
