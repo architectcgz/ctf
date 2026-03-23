@@ -33,6 +33,7 @@ import (
 	challengeModule "ctf-platform/internal/module/challenge"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
+	opsModule "ctf-platform/internal/module/ops"
 	practiceModule "ctf-platform/internal/module/practice"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
@@ -40,7 +41,6 @@ import (
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	systemModule "ctf-platform/internal/module/system"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -714,8 +714,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	authRepo := identityinfra.NewRepository(db)
 	authService := authModule.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
 	profileService := identityapp.NewProfileService(authRepo, logger.Named("identity_profile_service"))
-	auditRepo := systemModule.NewAuditRepository(db)
-	auditService := systemModule.NewAuditService(auditRepo, cfg.Pagination, logger)
+	auditRepo := opsModule.NewAuditRepository(db)
+	auditService := opsModule.NewAuditService(auditRepo, cfg.Pagination, logger)
 	authHandler := authModule.NewHandler(authService, profileService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
@@ -724,7 +724,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		SameSite: cfg.Auth.CookieSameSite(),
 		MaxAge:   cfg.Auth.RefreshTokenTTL,
 	}, logger, auditService)
-	auditHandler := systemModule.NewAuditHandler(auditService)
+	auditHandler := opsModule.NewAuditHandler(auditService)
 
 	challengeRepo := challengeModule.NewRepository(db)
 	imageRepo := challengeModule.NewImageRepository(db)

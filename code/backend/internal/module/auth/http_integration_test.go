@@ -32,7 +32,7 @@ import (
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
-	systemModule "ctf-platform/internal/module/system"
+	opsModule "ctf-platform/internal/module/ops"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -666,8 +666,8 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	}, zap.NewNop())
 	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
 	casProvider := NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
-	auditRepo := systemModule.NewAuditRepository(db)
-	auditService := systemModule.NewAuditService(auditRepo, config.PaginationConfig{
+	auditRepo := opsModule.NewAuditRepository(db)
+	auditService := opsModule.NewAuditService(auditRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
@@ -678,7 +678,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   authCfg.RefreshTokenTTL,
 	}, zap.NewNop(), auditService)
-	auditHandler := systemModule.NewAuditHandler(auditService)
+	auditHandler := opsModule.NewAuditHandler(auditService)
 
 	router := gin.New()
 	router.Use(testRequestID())
