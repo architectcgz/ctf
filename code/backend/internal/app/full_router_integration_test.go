@@ -217,7 +217,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	var calls []string
 
 	originalBuildRuntimeModule := buildRuntimeModule
-	originalBuildSystemModule := buildSystemModule
+	originalBuildOpsModule := buildOpsModule
 	originalBuildIdentityModule := buildIdentityModule
 	originalBuildAuthModule := buildAuthModule
 	originalBuildChallengeModule := buildChallengeModule
@@ -228,7 +228,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 	originalBuildPracticeReadmodelModule := buildPracticeReadmodelModule
 	defer func() {
 		buildRuntimeModule = originalBuildRuntimeModule
-		buildSystemModule = originalBuildSystemModule
+		buildOpsModule = originalBuildOpsModule
 		buildIdentityModule = originalBuildIdentityModule
 		buildAuthModule = originalBuildAuthModule
 		buildChallengeModule = originalBuildChallengeModule
@@ -246,12 +246,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "runtime")
 		return originalBuildRuntimeModule(root)
 	}
-	buildSystemModule = func(root *composition.Root, runtime *composition.RuntimeModule) *composition.SystemModule {
+	buildOpsModule = func(root *composition.Root, runtime *composition.RuntimeModule) *composition.OpsModule {
 		if root == nil || runtime == nil {
-			t.Fatal("expected root and runtime for system module builder")
+			t.Fatal("expected root and runtime for ops module builder")
 		}
-		calls = append(calls, "system")
-		return originalBuildSystemModule(root, runtime)
+		calls = append(calls, "ops")
+		return originalBuildOpsModule(root, runtime)
 	}
 	buildIdentityModule = func(root *composition.Root) (*composition.IdentityModule, error) {
 		if root == nil {
@@ -260,12 +260,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "identity")
 		return originalBuildIdentityModule(root)
 	}
-	buildAuthModule = func(root *composition.Root, system *composition.SystemModule, identity *composition.IdentityModule) (*composition.AuthModule, error) {
-		if root == nil || system == nil || identity == nil {
-			t.Fatal("expected root, system and identity for auth module builder")
+	buildAuthModule = func(root *composition.Root, ops *composition.OpsModule, identity *composition.IdentityModule) (*composition.AuthModule, error) {
+		if root == nil || ops == nil || identity == nil {
+			t.Fatal("expected root, ops and identity for auth module builder")
 		}
 		calls = append(calls, "auth")
-		return originalBuildAuthModule(root, system, identity)
+		return originalBuildAuthModule(root, ops, identity)
 	}
 	buildChallengeModule = func(root *composition.Root, runtime *composition.RuntimeModule) (*composition.ChallengeModule, error) {
 		if root == nil || runtime == nil {
@@ -318,7 +318,7 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		t.Fatal("expected router")
 	}
 
-	expectedCalls := []string{"runtime", "system", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice", "practice_readmodel"}
+	expectedCalls := []string{"runtime", "ops", "identity", "auth", "challenge", "assessment", "teaching_readmodel", "contest", "practice", "practice_readmodel"}
 	if len(calls) != len(expectedCalls) {
 		t.Fatalf("expected %d module builder calls, got %d (%v)", len(expectedCalls), len(calls), calls)
 	}

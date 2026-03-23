@@ -30,10 +30,10 @@ var (
 	buildChallengeModule         = composition.BuildChallengeModule
 	buildContestModule           = composition.BuildContestModule
 	buildIdentityModule          = composition.BuildIdentityModule
+	buildOpsModule               = composition.BuildOpsModule
 	buildPracticeModule          = composition.BuildPracticeModule
 	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
 	buildRuntimeModule           = composition.BuildRuntimeModule
-	buildSystemModule            = composition.BuildSystemModule
 	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
 )
 
@@ -81,14 +81,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/redis", health.GetRedis)
 
 	runtimeModule := buildRuntimeModule(root)
-	systemModule := buildSystemModule(root, runtimeModule)
+	opsModule := buildOpsModule(root, runtimeModule)
 
 	identityModule, err := buildIdentityModule(root)
 	if err != nil {
 		return nil, err
 	}
 
-	authModule, err := buildAuthModule(root, systemModule, identityModule)
+	authModule, err := buildAuthModule(root, opsModule, identityModule)
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +116,10 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authModule.Handler.IssueWSTicket)
 
-	systemModule.BuildNotificationHandler(root, identityModule.TokenService)
-	protected.GET("/notifications", systemModule.NotificationHandler.ListNotifications)
-	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), systemModule.NotificationHandler.MarkAsRead)
-	engine.GET("/ws/notifications", systemModule.NotificationHandler.ServeWS)
+	opsModule.BuildNotificationHandler(root, identityModule.TokenService)
+	protected.GET("/notifications", opsModule.NotificationHandler.ListNotifications)
+	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), opsModule.NotificationHandler.MarkAsRead)
+	engine.GET("/ws/notifications", opsModule.NotificationHandler.ServeWS)
 
 	teacherOrAbove := protected.Group("/teacher")
 	teacherOrAbove.Use(middleware.RequireRole(model.RoleTeacher))
@@ -137,19 +137,19 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	contestModule := buildContestModule(root, challengeModule, runtimeModule)
 	practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
-	runtimeModule.BuildHandler(root, systemModule)
+	runtimeModule.BuildHandler(root, opsModule)
 
 	registerAdminRoutes(adminOnly, adminRouteDeps{
 		identityHandler: identityModule.AdminHandler,
 		auditLogger:     composition.NamedAuditLogger(log),
-		auditRecorder:   systemModule.AuditService,
+		auditRecorder:   opsModule.AuditService,
 		challenge:       challengeModule,
 		contest:         contestModule,
-		system:          systemModule,
+		ops:             opsModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
 		auditLogger:       composition.NamedAuditLogger(log),
-		auditRecorder:     systemModule.AuditService,
+		auditRecorder:     opsModule.AuditService,
 		assessment:        assessmentModule,
 		challenge:         challengeModule,
 		contest:           contestModule,

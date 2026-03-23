@@ -8,7 +8,7 @@ type AuthModule struct {
 	Handler *authModule.Handler
 }
 
-func BuildAuthModule(root *Root, system *SystemModule, identity *IdentityModule) (*AuthModule, error) {
+func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*AuthModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
 	authService := authModule.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
@@ -29,7 +29,7 @@ func BuildAuthModule(root *Root, system *SystemModule, identity *IdentityModule)
 				MaxAge:   cfg.Auth.RefreshTokenTTL,
 			},
 			log.Named("auth_handler"),
-			system.AuditService,
+			ops.AuditService,
 		),
 	}, nil
 }
