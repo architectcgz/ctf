@@ -19,7 +19,7 @@
 ## Dependency Rules
 
 - `internal/module/*` 不应直接跨模块导入其他模块的 concrete subpackage。
-- 允许的过渡性例外只有 `teacher -> teaching_readmodel` 兼容包装层，后续收敛完成后应删除。
+- 当前不再保留 `teacher -> teaching_readmodel` 兼容包装层；教师侧读查询统一直接收敛到 `teaching_readmodel`。
 - 新增跨模块能力时，优先新增 contract、query facade 或事件，而不是直接拿对方 infrastructure/application 实现。
 
 ## Review Questions

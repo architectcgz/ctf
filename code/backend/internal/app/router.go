@@ -35,7 +35,7 @@ var (
 	buildRuntimeInfraModule      = composition.BuildRuntimeInfraModule
 	buildRuntimeModule           = composition.BuildRuntimeModule
 	buildSystemModule            = composition.BuildSystemModule
-	buildTeacherModule           = composition.BuildTeacherModule
+	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
 )
 
 func NewRouter(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*gin.Engine, error) {
@@ -133,7 +133,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		return nil, err
 	}
 	assessmentModule := buildAssessmentModule(root, challengeModule)
-	teacherModule := buildTeacherModule(root, assessmentModule)
+	teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
 	contestModule := buildContestModule(root, challengeModule, runtimeModule)
 	practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
@@ -160,7 +160,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		practice:          practiceModule,
 		practiceReadmodel: practiceReadmodelModule,
 		runtime:           runtimeModule,
-		teacher:           teacherModule,
+		teachingReadmodel: teachingReadmodelModule,
 	})
 
 	return &routerRuntime{
