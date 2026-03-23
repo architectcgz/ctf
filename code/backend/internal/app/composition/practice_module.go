@@ -10,8 +10,8 @@ import (
 )
 
 type PracticeModule struct {
-	Handler *practiceModule.Handler
-	Service *practiceModule.Service
+	BackgroundCloser asyncTaskCloser
+	Handler          *practiceModule.Handler
 }
 
 func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) *PracticeModule {
@@ -24,12 +24,12 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	scoreService := practiceModule.NewScoreService(repo, cache, log.Named("score_service"), &cfg.Score)
 	service := practiceModule.NewService(
 		repo,
-		challenge.Repository,
-		challenge.ImageRepository,
+		challenge.Catalog,
+		challenge.ImageStore,
 		runtime.practice.instanceRepository,
 		runtime.practice.runtimeService,
 		scoreService,
-		assessment.Service,
+		assessment.ProfileService,
 		cache,
 		cfg,
 		log.Named("practice_service"),
@@ -37,8 +37,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	service.SetEventBus(root.Events)
 
 	return &PracticeModule{
-		Handler: practiceModule.NewHandler(service),
-		Service: service,
+		BackgroundCloser: service,
+		Handler:          practiceModule.NewHandler(service),
 	}
 }
 

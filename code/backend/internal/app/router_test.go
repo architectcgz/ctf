@@ -16,6 +16,8 @@ import (
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/config"
+	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	"ctf-platform/internal/module/identity"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	"ctf-platform/internal/module/ops"
@@ -115,7 +117,21 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "NotificationHandler", reflect.TypeOf((*ops.NotificationHandler)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "RiskHandler", reflect.TypeOf((*ops.RiskHandler)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "Catalog", reflect.TypeOf((*challengecontracts.ChallengeContract)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagValidator", reflect.TypeOf((*challengecontracts.FlagValidator)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "ImageStore", reflect.TypeOf((*challengecontracts.ImageStore)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ProfileService", reflect.TypeOf((*assessmentcontracts.ProfileService)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "Recommendations", reflect.TypeOf((*assessmentcontracts.RecommendationProvider)(nil)).Elem())
 	assertNoField(t, reflect.TypeOf(composition.AuthModule{}), "TokenService")
+	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagService")
+	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "ImageRepository")
+	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "ImageService")
+	assertNoField(t, reflect.TypeOf(composition.ChallengeModule{}), "Repository")
+	assertNoField(t, reflect.TypeOf(composition.ContestModule{}), "Repository")
+	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "RecommendationService")
+	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "ReportService")
+	assertNoField(t, reflect.TypeOf(composition.AssessmentModule{}), "Service")
+	assertNoField(t, reflect.TypeOf(composition.PracticeModule{}), "Service")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Query")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Repository")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Service")

@@ -17,7 +17,7 @@ func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *Tea
 	db := root.DB()
 
 	repo := readmodelinfra.NewRepository(db)
-	service := readmodelapp.NewQueryService(repo, assessment.RecommendationService, log.Named("teaching_readmodel_query_service"))
+	service := readmodelapp.NewQueryService(repo, assessment.Recommendations, log.Named("teaching_readmodel_query_service"))
 
 	return &TeachingReadmodelModule{
 		Handler: teachinghttp.NewHandler(service),
