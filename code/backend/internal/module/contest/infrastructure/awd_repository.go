@@ -1,15 +1,15 @@
-package contest
+package infrastructure
 
 import (
 	"context"
 	"time"
 
 	redislib "github.com/redis/go-redis/v9"
-	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
-	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
 )
 
 type AWDRepository struct {
@@ -31,7 +31,7 @@ func (r *AWDRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo *AWDRepository) error) error {
+func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo contestapp.AWDRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
@@ -39,6 +39,21 @@ func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo *A
 
 func (r *AWDRepository) CreateRound(ctx context.Context, round *model.AWDRound) error {
 	return r.dbWithContext(ctx).Create(round).Error
+}
+
+func (r *AWDRepository) UpsertRound(ctx context.Context, round *model.AWDRound) error {
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "contest_id"},
+			{Name: "round_number"},
+		},
+		DoUpdates: clause.Assignments(map[string]any{
+			"status":     round.Status,
+			"started_at": round.StartedAt,
+			"ended_at":   round.EndedAt,
+			"updated_at": time.Now(),
+		}),
+	}).Create(round).Error
 }
 
 func (r *AWDRepository) ListRoundsByContest(ctx context.Context, contestID int64) ([]model.AWDRound, error) {
@@ -81,12 +96,48 @@ func (r *AWDRepository) FindRunningRound(ctx context.Context, contestID int64) (
 	return &round, nil
 }
 
+func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
+	var contests []model.Contest
+	query := r.dbWithContext(ctx).
+		Where("mode = ?", model.ContestModeAWD).
+		Where("status IN ?", []string{
+			model.ContestStatusRegistration,
+			model.ContestStatusRunning,
+			model.ContestStatusFrozen,
+			model.ContestStatusEnded,
+		}).
+		Where("start_time <= ?", now).
+		Where("end_time > ?", recentCutoff).
+		Order("start_time ASC, id ASC")
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if err := query.Find(&contests).Error; err != nil {
+		return nil, err
+	}
+	return contests, nil
+}
+
 func (r *AWDRepository) FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
 	var teams []*model.Team
 	err := r.dbWithContext(ctx).
 		Where("contest_id = ?", contestID).
 		Find(&teams).Error
 	return teams, err
+}
+
+func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error) {
+	var challenges []model.Challenge
+	if err := r.dbWithContext(ctx).
+		Table("challenges AS c").
+		Select("c.*").
+		Joins("JOIN contest_challenges AS cc ON cc.challenge_id = c.id").
+		Where("cc.contest_id = ?", contestID).
+		Order("c.id ASC").
+		Scan(&challenges).Error; err != nil {
+		return nil, err
+	}
+	return challenges, nil
 }
 
 func (r *AWDRepository) ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error) {
@@ -131,6 +182,26 @@ func (r *AWDRepository) FindChallengeByID(ctx context.Context, challengeID int64
 	return &challenge, nil
 }
 
+func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, contestID int64, challengeIDs []int64) ([]contestapp.AWDServiceInstance, error) {
+	if len(challengeIDs) == 0 {
+		return nil, nil
+	}
+
+	var instances []contestapp.AWDServiceInstance
+	if err := r.dbWithContext(ctx).
+		Table("instances AS inst").
+		Select("COALESCE(inst.team_id, tm.team_id) AS team_id, inst.challenge_id AS challenge_id, inst.access_url AS access_url").
+		Joins("LEFT JOIN team_members AS tm ON tm.user_id = inst.user_id AND tm.contest_id = ?", contestID).
+		Where("inst.challenge_id IN ?", challengeIDs).
+		Where("inst.status = ?", model.InstanceStatusRunning).
+		Where("(inst.contest_id = ? AND inst.team_id IS NOT NULL) OR (inst.team_id IS NULL AND tm.team_id IS NOT NULL)", contestID).
+		Order("tm.team_id ASC, inst.challenge_id ASC, inst.id ASC").
+		Scan(&instances).Error; err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
 func (r *AWDRepository) UpsertServiceCheck(
 	ctx context.Context,
 	roundID, teamID, challengeID int64,
@@ -158,6 +229,25 @@ func (r *AWDRepository) UpsertServiceCheck(
 		return nil, err
 	}
 	return record, nil
+}
+
+func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.AWDTeamService) error {
+	if len(records) == 0 {
+		return nil
+	}
+	return r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "round_id"},
+			{Name: "team_id"},
+			{Name: "challenge_id"},
+		},
+		DoUpdates: clause.AssignmentColumns([]string{
+			"service_status",
+			"check_result",
+			"defense_score",
+			"updated_at",
+		}),
+	}).Create(&records).Error
 }
 
 func (r *AWDRepository) ListServicesByRound(ctx context.Context, roundID int64) ([]model.AWDTeamService, error) {
@@ -225,43 +315,9 @@ func (r *AWDRepository) ListAttackLogsByRound(ctx context.Context, roundID int64
 }
 
 func (r *AWDRepository) RecalculateContestTeamScores(ctx context.Context, contestID int64) error {
-	return recalculateAWDContestTeamScores(ctx, r.db, contestID)
+	return RecalculateAWDContestTeamScores(ctx, r.db, contestID)
 }
 
 func (r *AWDRepository) RebuildContestScoreboardCache(ctx context.Context, redis *redislib.Client, contestID int64) error {
-	return rebuildContestScoreboardCache(ctx, r.db, redis, contestID)
-}
-
-func (r *AWDRepository) RunRoundServiceChecks(
-	ctx context.Context,
-	redis *redislib.Client,
-	cfg config.ContestAWDConfig,
-	flagSecret string,
-	contest *model.Contest,
-	round *model.AWDRound,
-	source string,
-	log *zap.Logger,
-) error {
-	checker := NewAWDRoundUpdater(r.db, redis, cfg, flagSecret, nil, log)
-	return checker.RunRoundServiceChecks(ctx, contest, round, source)
-}
-
-func (r *AWDRepository) EnsureActiveRoundMaterialized(
-	ctx context.Context,
-	redis *redislib.Client,
-	cfg config.ContestAWDConfig,
-	flagSecret string,
-	contest *model.Contest,
-	now time.Time,
-	log *zap.Logger,
-) error {
-	updater := NewAWDRoundUpdater(r.db, redis, cfg, flagSecret, nil, log)
-	activeRound, totalRounds, ok := updater.calculateRoundPlan(contest, now)
-	if !ok || activeRound <= 0 {
-		return gorm.ErrRecordNotFound
-	}
-	if err := updater.reconcileRounds(ctx, contest, activeRound, totalRounds); err != nil {
-		return err
-	}
-	return updater.syncRoundFlags(ctx, contest, activeRound, now)
+	return RebuildContestScoreboardCache(ctx, r.db, redis, contestID)
 }

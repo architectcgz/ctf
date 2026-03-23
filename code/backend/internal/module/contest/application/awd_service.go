@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -16,7 +16,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -35,27 +34,44 @@ type AWDService interface {
 	GetRoundSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDRoundSummaryResp, error)
 }
 
+const (
+	awdCheckSourceScheduler      = "scheduler"
+	awdCheckSourceManualCurrent  = "manual_current_round"
+	awdCheckSourceManualSelected = "manual_selected_round"
+	awdCheckSourceManualService  = "manual_service_check"
+)
+
 type awdService struct {
-	repo        *AWDRepository
-	redis       *redislib.Client
-	contestRepo contestapp.Repository
-	flagSecret  string
-	awdConfig   config.ContestAWDConfig
-	log         *zap.Logger
+	repo         AWDRepository
+	roundManager AWDRoundManager
+	redis        *redislib.Client
+	contestRepo  Repository
+	flagSecret   string
+	awdConfig    config.ContestAWDConfig
+	log          *zap.Logger
 }
 
 func NewAWDService(
-	repo *AWDRepository,
-	contestRepo contestapp.Repository,
+	repo AWDRepository,
+	contestRepo Repository,
 	redis *redislib.Client,
 	flagSecret string,
 	awdConfig config.ContestAWDConfig,
 	log *zap.Logger,
+	roundManager AWDRoundManager,
 ) AWDService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &awdService{repo: repo, redis: redis, contestRepo: contestRepo, flagSecret: flagSecret, awdConfig: awdConfig, log: log}
+	return &awdService{
+		repo:         repo,
+		roundManager: roundManager,
+		redis:        redis,
+		contestRepo:  contestRepo,
+		flagSecret:   flagSecret,
+		awdConfig:    awdConfig,
+		log:          log,
+	}
 }
 
 func (s *awdService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
@@ -123,7 +139,10 @@ func (s *awdService) RunCurrentRoundChecks(ctx context.Context, contestID int64)
 		return nil, err
 	}
 
-	if err := s.repo.RunRoundServiceChecks(ctx, s.redis, s.awdConfig, s.flagSecret, contest, round, awdCheckSourceManualCurrent, s.log.Named("awd_manual_checker")); err != nil {
+	if s.roundManager == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+	}
+	if err := s.roundManager.RunRoundServiceChecks(ctx, contest, round, awdCheckSourceManualCurrent); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
@@ -139,7 +158,10 @@ func (s *awdService) RunRoundChecks(ctx context.Context, contestID, roundID int6
 		return nil, err
 	}
 
-	if err := s.repo.RunRoundServiceChecks(ctx, s.redis, s.awdConfig, s.flagSecret, contest, round, awdCheckSourceManualSelected, s.log.Named("awd_manual_checker")); err != nil {
+	if s.roundManager == nil {
+		return nil, errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+	}
+	if err := s.roundManager.RunRoundServiceChecks(ctx, contest, round, awdCheckSourceManualSelected); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	return s.buildCheckerRunResp(ctx, contestID, round)
@@ -185,7 +207,7 @@ func (s *awdService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 
 	now := time.Now()
 	var record *model.AWDTeamService
-	if err := s.repo.WithinTransaction(ctx, func(txRepo *AWDRepository) error {
+	if err := s.repo.WithinTransaction(ctx, func(txRepo AWDRepository) error {
 		var txErr error
 		record, txErr = txRepo.UpsertServiceCheck(ctx, roundID, req.TeamID, req.ChallengeID, req.ServiceStatus, checkResult, defenseScore, now)
 		if txErr != nil {
@@ -287,7 +309,7 @@ func (s *awdService) createAttackLog(
 		ScoreGained:    scoreGained,
 	}
 	now := time.Now()
-	if err := s.repo.WithinTransaction(ctx, func(txRepo *AWDRepository) error {
+	if err := s.repo.WithinTransaction(ctx, func(txRepo AWDRepository) error {
 		if err := txRepo.CreateAttackLog(ctx, logRecord); err != nil {
 			return err
 		}
@@ -512,7 +534,7 @@ func (s *awdService) GetRoundSummary(ctx context.Context, contestID, roundID int
 func (s *awdService) ensureAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, contestapp.ErrContestNotFound) {
+		if errors.Is(err, ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -564,7 +586,7 @@ func (s *awdService) ensureContestChallenge(ctx context.Context, contestID, chal
 func (s *awdService) resolveUserTeamID(ctx context.Context, userID, contestID int64) (int64, error) {
 	registration, err := s.repo.FindRegistration(ctx, contestID, userID)
 	if err == nil {
-		if err := contestapp.RegistrationStatusError(registration.Status); err != nil {
+		if err := RegistrationStatusError(registration.Status); err != nil {
 			return 0, err
 		}
 		if registration.TeamID == nil || *registration.TeamID <= 0 {
@@ -650,7 +672,10 @@ func (s *awdService) ensureActiveRoundMaterialized(ctx context.Context, contest 
 	if contest == nil {
 		return errcode.ErrContestNotFound
 	}
-	if err := s.repo.EnsureActiveRoundMaterialized(ctx, s.redis, s.awdConfig, s.flagSecret, contest, now, s.log.Named("awd_round_materializer")); err != nil {
+	if s.roundManager == nil {
+		return errcode.ErrInternal.WithCause(errors.New("awd round manager is nil"))
+	}
+	if err := s.roundManager.EnsureActiveRoundMaterialized(ctx, contest, now); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errcode.ErrAWDRoundNotActive
 		}
@@ -912,4 +937,15 @@ func isUniqueConstraintError(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "unique")
+}
+
+func buildAWDRoundFlag(contestID int64, roundNumber int, teamID, challengeID int64, secret, prefix string) string {
+	nonce := strings.Join([]string{
+		"awd",
+		strconv.FormatInt(contestID, 10),
+		strconv.Itoa(roundNumber),
+		strconv.FormatInt(teamID, 10),
+		strconv.FormatInt(challengeID, 10),
+	}, ":")
+	return crypto.GenerateDynamicFlag(teamID, challengeID, secret, nonce, prefix)
 }

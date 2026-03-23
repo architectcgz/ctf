@@ -1,4 +1,4 @@
-package contest
+package application_test
 
 import (
 	"context"
@@ -18,6 +18,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestapp "ctf-platform/internal/module/contest/application"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
@@ -43,8 +44,8 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 	secondTeamID := int64(12)
 
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
-	createContestTeamRegistration(t, db, contestID, firstTeamID, 1001, "Alpha", now)
-	createContestTeamRegistration(t, db, contestID, secondTeamID, 1002, "Beta", now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, firstTeamID, 1001, "Alpha", now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, secondTeamID, 1002, "Beta", now)
 
 	firstResp, err := service.SubmitFlagInContest(context.Background(), 1001, contestID, challengeID, "flag{contest-dynamic}")
 	if err != nil {
@@ -78,8 +79,8 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 		t.Fatalf("unexpected first blood team: %+v", contestChallenge.FirstBloodBy)
 	}
 
-	assertContestTeamScore(t, db, firstTeamID, 446)
-	assertContestTeamScore(t, db, secondTeamID, 405)
+	testsupport.AssertContestTeamScore(t, db, firstTeamID, 446)
+	testsupport.AssertContestTeamScore(t, db, secondTeamID, 405)
 
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
 	firstScore, err := redisClient.ZScore(context.Background(), scoreboardKey, contestapp.TeamIDToMember(firstTeamID)).Result()
@@ -113,7 +114,7 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 		Update("contest_score", overrideScore).Error; err != nil {
 		t.Fatalf("set contest score override: %v", err)
 	}
-	createContestTeamRegistration(t, db, contestID, teamID, 2001, "Gamma", now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, 2001, "Gamma", now)
 
 	resp, err := service.SubmitFlagInContest(context.Background(), 2001, contestID, challengeID, "flag{contest-dynamic}")
 	if err != nil {
@@ -141,8 +142,8 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 	teamID := int64(41)
 
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
-	createContestTeamRegistration(t, db, contestID, teamID, 4001, "Delta", now)
-	createContestRegistrationForExistingTeam(t, db, contestID, teamID, 4002, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, 4001, "Delta", now)
+	testsupport.CreateContestRegistrationForExistingTeam(t, db, contestID, teamID, 4002, now)
 
 	firstResp, err := service.SubmitFlagInContest(context.Background(), 4001, contestID, challengeID, "flag{contest-dynamic}")
 	if err != nil {
@@ -168,7 +169,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 		t.Fatalf("unexpected submissions: %+v", submissions)
 	}
 
-	assertContestTeamScore(t, db, teamID, 495)
+	testsupport.AssertContestTeamScore(t, db, teamID, 495)
 
 	scoreboardKey := rediskeys.RankContestTeamKey(contestID)
 	score, err := redisClient.ZScore(context.Background(), scoreboardKey, contestapp.TeamIDToMember(teamID)).Result()
@@ -181,7 +182,7 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 }
 
 func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 
 	now := time.Now()
 	contestID := int64(3)
@@ -249,7 +250,7 @@ func TestScoreboardServiceRebuildScoreboardUsesTeamTotals(t *testing.T) {
 }
 
 func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	if err := db.AutoMigrate(&model.AWDRound{}, &model.AWDAttackLog{}); err != nil {
 		t.Fatalf("auto migrate awd models: %v", err)
 	}
@@ -358,7 +359,7 @@ func TestScoreboardServiceGetScoreboardUsesAWDAttackStats(t *testing.T) {
 }
 
 func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) {
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	if err := db.AutoMigrate(&model.AWDRound{}, &model.AWDAttackLog{}); err != nil {
 		t.Fatalf("auto migrate awd models: %v", err)
 	}
@@ -444,7 +445,7 @@ func TestScoreboardServiceGetLiveScoreboardBypassesFrozenSnapshot(t *testing.T) 
 func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	var newSubmissionService func(contestapp.Repository, contestapp.ContestSubmissionRepository, *redis.Client, challengecontracts.FlagValidator, contestapp.ContestTeamFinder, *contestapp.ScoreboardService, *config.Config) *contestapp.SubmissionService = contestapp.NewSubmissionService
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 
 	mini, err := miniredis.Run()
 	if err != nil {
@@ -464,7 +465,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 	userID := int64(90001)
 
 	createContestSubmissionFixture(t, db, contestID, challengeID, now)
-	createContestTeamRegistration(t, db, contestID, teamID, userID, "Validator", now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Validator", now)
 
 	called := false
 	service := newSubmissionService(
@@ -513,7 +514,7 @@ func TestSubmissionServiceUsesChallengeFlagValidator(t *testing.T) {
 func newContestSubmissionTestService(t *testing.T) (*contestapp.SubmissionService, *redis.Client, *gorm.DB) {
 	t.Helper()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 
 	mini, err := miniredis.Run()
 	if err != nil {
@@ -590,62 +591,5 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 	}
 	if err := flagService.ConfigureStaticFlag(challengeID, "flag{contest-dynamic}", "flag"); err != nil {
 		t.Fatalf("configure static flag: %v", err)
-	}
-}
-
-func createContestTeamRegistration(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, teamName string, now time.Time) {
-	t.Helper()
-
-	if err := db.Create(&model.Team{
-		ID:         teamID,
-		ContestID:  contestID,
-		Name:       teamName,
-		CaptainID:  userID,
-		InviteCode: teamName,
-		MaxMembers: 4,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}).Error; err != nil {
-		t.Fatalf("create team: %v", err)
-	}
-	if err := db.Create(&model.ContestRegistration{
-		ContestID: contestID,
-		UserID:    userID,
-		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}).Error; err != nil {
-		t.Fatalf("create registration: %v", err)
-	}
-}
-
-func createContestRegistrationForExistingTeam(t *testing.T, db *gorm.DB, contestID, teamID, userID int64, now time.Time) {
-	t.Helper()
-
-	if err := db.Create(&model.ContestRegistration{
-		ContestID: contestID,
-		UserID:    userID,
-		TeamID:    &teamID,
-		Status:    model.ContestRegistrationStatusApproved,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}).Error; err != nil {
-		t.Fatalf("create registration: %v", err)
-	}
-}
-
-func assertContestTeamScore(t *testing.T, db *gorm.DB, teamID int64, expected int) {
-	t.Helper()
-
-	var team model.Team
-	if err := db.First(&team, teamID).Error; err != nil {
-		t.Fatalf("load team %d: %v", teamID, err)
-	}
-	if team.TotalScore != expected {
-		t.Fatalf("unexpected team score for %d: %+v", teamID, team)
-	}
-	if team.LastSolveAt == nil {
-		t.Fatalf("expected last solve time for team %d", teamID)
 	}
 }

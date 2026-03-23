@@ -1,25 +1,22 @@
-package contest
+package application_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestapp "ctf-platform/internal/module/contest/application"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	"ctf-platform/internal/module/contest/testsupport"
 	"ctf-platform/pkg/errcode"
 )
 
 func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testing.T) {
 	t.Parallel()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
@@ -61,7 +58,7 @@ func TestParticipationServiceRegisterContestCreatesPendingRegistration(t *testin
 func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *testing.T) {
 	t.Parallel()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
@@ -110,51 +107,10 @@ func TestParticipationServiceRegisterContestRequeuesRejectedRegistration(t *test
 	}
 }
 
-func TestTeamRepositoryCreateWithMemberSyncsContestRegistration(t *testing.T) {
-	t.Parallel()
-
-	db := newContestTestDB(t)
-	repo := contestinfra.NewTeamRepository(db)
-	now := time.Now()
-	if err := db.Create(&model.ContestRegistration{
-		ContestID: 2,
-		UserID:    2001,
-		Status:    model.ContestRegistrationStatusApproved,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}).Error; err != nil {
-		t.Fatalf("create registration: %v", err)
-	}
-	team := &model.Team{
-		ContestID:  2,
-		Name:       "Blue Team",
-		CaptainID:  2001,
-		InviteCode: "ABC123",
-		MaxMembers: 4,
-		CreatedAt:  now,
-		UpdatedAt:  now,
-	}
-
-	if err := repo.CreateWithMember(team, 2001); err != nil {
-		t.Fatalf("CreateWithMember() error = %v", err)
-	}
-
-	var registration model.ContestRegistration
-	if err := db.Where("contest_id = ? AND user_id = ?", 2, 2001).First(&registration).Error; err != nil {
-		t.Fatalf("load registration: %v", err)
-	}
-	if registration.TeamID == nil || *registration.TeamID != team.ID {
-		t.Fatalf("unexpected team binding: %+v", registration)
-	}
-	if registration.Status != model.ContestRegistrationStatusApproved {
-		t.Fatalf("unexpected registration status: %s", registration.Status)
-	}
-}
-
 func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 	t.Parallel()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
 	service := contestapp.NewTeamService(teamRepo, contestRepo)
@@ -199,7 +155,7 @@ func TestTeamServiceCreateTeamRequiresApprovedRegistration(t *testing.T) {
 func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 	t.Parallel()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
@@ -284,7 +240,7 @@ func TestParticipationServiceAnnouncementsAndMyProgress(t *testing.T) {
 func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	t.Parallel()
 
-	db := newContestTestDB(t)
+	db := testsupport.SetupContestTestDB(t)
 	contestRepo := contestinfra.NewRepository(db)
 	participationRepo := contestinfra.NewParticipationRepository(db)
 	teamRepo := contestinfra.NewTeamRepository(db)
@@ -348,43 +304,4 @@ func TestParticipationServiceListAndReviewRegistrations(t *testing.T) {
 	if reviewed.Status != model.ContestRegistrationStatusApproved || reviewed.ReviewedBy == nil || *reviewed.ReviewedBy != 9001 || reviewed.ReviewedAt == nil {
 		t.Fatalf("unexpected reviewed registration: %+v", reviewed)
 	}
-}
-
-func newContestTestDB(t *testing.T) *gorm.DB {
-	t.Helper()
-
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(
-		&model.Contest{},
-		&model.Challenge{},
-		&model.User{},
-		&model.Team{},
-		&model.TeamMember{},
-		&model.ContestRegistration{},
-		&model.ContestAnnouncement{},
-		&model.ContestChallenge{},
-		&model.Submission{},
-	); err != nil {
-		t.Fatalf("auto migrate: %v", err)
-	}
-	if err := db.Exec(`
-		CREATE UNIQUE INDEX IF NOT EXISTS uk_submissions_contest_user_challenge_correct
-		ON submissions(contest_id, user_id, challenge_id)
-		WHERE is_correct = 1 AND contest_id IS NOT NULL AND team_id IS NULL
-	`).Error; err != nil {
-		t.Fatalf("create contest submission user unique index: %v", err)
-	}
-	if err := db.Exec(`
-		CREATE UNIQUE INDEX IF NOT EXISTS uk_submissions_contest_team_challenge_correct
-		ON submissions(contest_id, team_id, challenge_id)
-		WHERE is_correct = 1 AND contest_id IS NOT NULL AND team_id IS NOT NULL
-	`).Error; err != nil {
-		t.Fatalf("create contest submission team unique index: %v", err)
-	}
-	return db
 }

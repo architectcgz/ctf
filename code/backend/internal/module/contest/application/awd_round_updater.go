@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -15,39 +15,26 @@ import (
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/internal/pkg/redislock"
-	"ctf-platform/pkg/crypto"
 )
 
 const (
 	defaultAWDRoundAttackScore  = 50
 	defaultAWDRoundDefenseScore = 50
-
-	awdCheckSourceScheduler      = "scheduler"
-	awdCheckSourceManualCurrent  = "manual_current_round"
-	awdCheckSourceManualSelected = "manual_selected_round"
-	awdCheckSourceManualService  = "manual_service_check"
 )
 
 type AWDRoundUpdater struct {
-	db         *gorm.DB
+	repo       AWDRepository
 	redis      *redislib.Client
 	cfg        config.ContestAWDConfig
 	flagSecret string
 	injector   AWDFlagInjector
 	httpClient *http.Client
 	log        *zap.Logger
-}
-
-type awdServiceInstance struct {
-	TeamID      int64
-	ChallengeID int64
-	AccessURL   string
 }
 
 type awdServiceTargetKey struct {
@@ -107,12 +94,28 @@ type awdCheckError struct {
 	message string
 }
 
+type noopAWDFlagInjector struct {
+	log *zap.Logger
+}
+
 func (e awdCheckError) Error() string {
 	return e.message
 }
 
+func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model.Contest, round *model.AWDRound, assignments []AWDFlagAssignment) error {
+	if i == nil || i.log == nil || contest == nil || round == nil {
+		return nil
+	}
+	i.log.Debug("skip_awd_flag_injection",
+		zap.Int64("contest_id", contest.ID),
+		zap.Int64("round_id", round.ID),
+		zap.Int("assignment_count", len(assignments)),
+	)
+	return nil
+}
+
 func NewAWDRoundUpdater(
-	db *gorm.DB,
+	repo AWDRepository,
 	redis *redislib.Client,
 	cfg config.ContestAWDConfig,
 	flagSecret string,
@@ -123,10 +126,10 @@ func NewAWDRoundUpdater(
 		log = zap.NewNop()
 	}
 	if injector == nil {
-		injector = NewNoopAWDFlagInjector(log.Named("awd_flag_injector"))
+		injector = &noopAWDFlagInjector{log: log.Named("awd_flag_injector")}
 	}
 	return &AWDRoundUpdater{
-		db:         db,
+		repo:       repo,
 		redis:      redis,
 		cfg:        cfg,
 		flagSecret: flagSecret,
@@ -137,7 +140,7 @@ func NewAWDRoundUpdater(
 }
 
 func (u *AWDRoundUpdater) Start(ctx context.Context) {
-	u.updateRoundsAt(ctx, time.Now())
+	u.UpdateRoundsAt(ctx, time.Now())
 
 	ticker := time.NewTicker(u.cfg.SchedulerInterval)
 	defer ticker.Stop()
@@ -147,13 +150,13 @@ func (u *AWDRoundUpdater) Start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			u.updateRoundsAt(ctx, time.Now())
+			u.UpdateRoundsAt(ctx, time.Now())
 		}
 	}
 }
 
-func (u *AWDRoundUpdater) updateRoundsAt(ctx context.Context, now time.Time) {
-	if u.db == nil {
+func (u *AWDRoundUpdater) UpdateRoundsAt(ctx context.Context, now time.Time) {
+	if u.repo == nil {
 		return
 	}
 	lock, acquired, err := redislock.Acquire(ctx, u.redis, rediskeys.AWDSchedulerLockKey(), u.cfg.SchedulerLockTTL)
@@ -179,20 +182,8 @@ func (u *AWDRoundUpdater) updateRoundsAt(ctx context.Context, now time.Time) {
 	}
 
 	recentCutoff := now.Add(-u.cfg.RoundInterval)
-	var contests []model.Contest
-	if err := u.db.WithContext(ctx).
-		Where("mode = ?", model.ContestModeAWD).
-		Where("status IN ?", []string{
-			model.ContestStatusRegistration,
-			model.ContestStatusRunning,
-			model.ContestStatusFrozen,
-			model.ContestStatusEnded,
-		}).
-		Where("start_time <= ?", now).
-		Where("end_time > ?", recentCutoff).
-		Order("start_time ASC, id ASC").
-		Limit(u.cfg.SchedulerBatchSize).
-		Find(&contests).Error; err != nil {
+	contests, err := u.repo.ListSchedulableAWDContests(ctx, now, recentCutoff, u.cfg.SchedulerBatchSize)
+	if err != nil {
 		u.log.Error("list_awd_contests_failed", zap.Error(err))
 		return
 	}
@@ -239,6 +230,28 @@ func (u *AWDRoundUpdater) syncContestRounds(ctx context.Context, contest *model.
 	}
 }
 
+func (u *AWDRoundUpdater) EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error {
+	activeRound, totalRounds, ok := u.calculateRoundPlan(contest, now)
+	if !ok || activeRound <= 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if err := u.reconcileRounds(ctx, contest, activeRound, totalRounds); err != nil {
+		return err
+	}
+	return u.syncRoundFlags(ctx, contest, activeRound, now)
+}
+
+func (u *AWDRoundUpdater) SetHTTPClient(client *http.Client) {
+	if u == nil || client == nil {
+		return
+	}
+	u.httpClient = client
+}
+
+func (u *AWDRoundUpdater) SyncRoundServiceChecks(ctx context.Context, contest *model.Contest, activeRound int) error {
+	return u.syncRoundServiceChecks(ctx, contest, activeRound)
+}
+
 func (u *AWDRoundUpdater) calculateRoundPlan(contest *model.Contest, now time.Time) (int, int, bool) {
 	if contest == nil {
 		return 0, 0, false
@@ -272,12 +285,9 @@ func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *model.Co
 		scheduledRounds = activeRound
 	}
 
-	return u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		var existingRounds []model.AWDRound
-		if err := tx.
-			Where("contest_id = ?", contest.ID).
-			Order("round_number ASC, id ASC").
-			Find(&existingRounds).Error; err != nil {
+	return u.repo.WithinTransaction(ctx, func(txRepo AWDRepository) error {
+		existingRounds, err := txRepo.ListRoundsByContest(ctx, contest.ID)
+		if err != nil {
 			return err
 		}
 
@@ -325,18 +335,7 @@ func (u *AWDRoundUpdater) reconcileRounds(ctx context.Context, contest *model.Co
 				AttackScore:  attackScore,
 				DefenseScore: defenseScore,
 			}
-			if err := tx.Clauses(clause.OnConflict{
-				Columns: []clause.Column{
-					{Name: "contest_id"},
-					{Name: "round_number"},
-				},
-				DoUpdates: clause.Assignments(map[string]any{
-					"status":     status,
-					"started_at": &roundStart,
-					"ended_at":   endedAt,
-					"updated_at": time.Now(),
-				}),
-			}).Create(record).Error; err != nil {
+			if err := txRepo.UpsertRound(ctx, record); err != nil {
 				return err
 			}
 		}
@@ -396,13 +395,7 @@ func (u *AWDRoundUpdater) syncRoundFlags(ctx context.Context, contest *model.Con
 }
 
 func (u *AWDRoundUpdater) findRoundByNumber(ctx context.Context, contestID int64, roundNumber int) (*model.AWDRound, error) {
-	var round model.AWDRound
-	if err := u.db.WithContext(ctx).
-		Where("contest_id = ? AND round_number = ?", contestID, roundNumber).
-		First(&round).Error; err != nil {
-		return nil, err
-	}
-	return &round, nil
+	return u.repo.FindRoundByNumber(ctx, contestID, roundNumber)
 }
 
 func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contestID int64, round *model.AWDRound) ([]AWDFlagAssignment, error) {
@@ -429,28 +422,21 @@ func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contest
 }
 
 func (u *AWDRoundUpdater) loadContestTeams(ctx context.Context, contestID int64) ([]model.Team, error) {
-	var teams []model.Team
-	if err := u.db.WithContext(ctx).
-		Where("contest_id = ?", contestID).
-		Order("id ASC").
-		Find(&teams).Error; err != nil {
+	teamPtrs, err := u.repo.FindTeamsByContest(ctx, contestID)
+	if err != nil {
 		return nil, err
+	}
+	teams := make([]model.Team, 0, len(teamPtrs))
+	for _, team := range teamPtrs {
+		if team != nil {
+			teams = append(teams, *team)
+		}
 	}
 	return teams, nil
 }
 
 func (u *AWDRoundUpdater) loadContestChallenges(ctx context.Context, contestID int64) ([]model.Challenge, error) {
-	var challenges []model.Challenge
-	if err := u.db.WithContext(ctx).
-		Table("challenges AS c").
-		Select("c.*").
-		Joins("JOIN contest_challenges AS cc ON cc.challenge_id = c.id").
-		Where("cc.contest_id = ?", contestID).
-		Order("c.id ASC").
-		Scan(&challenges).Error; err != nil {
-		return nil, err
-	}
-	return challenges, nil
+	return u.repo.ListChallengesByContest(ctx, contestID)
 }
 
 func (u *AWDRoundUpdater) currentRoundTTL(contest *model.Contest, round *model.AWDRound, now time.Time) time.Duration {
@@ -514,7 +500,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 		return err
 	}
 
-	grouped := make(map[awdServiceTargetKey][]awdServiceInstance, len(instances))
+	grouped := make(map[awdServiceTargetKey][]AWDServiceInstance, len(instances))
 	for _, instance := range instances {
 		key := awdServiceTargetKey{teamID: instance.TeamID, challengeID: instance.ChallengeID}
 		grouped[key] = append(grouped[key], instance)
@@ -549,23 +535,11 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	}
 
 	if len(records) > 0 {
-		if err := u.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			if err := tx.Clauses(clause.OnConflict{
-				Columns: []clause.Column{
-					{Name: "round_id"},
-					{Name: "team_id"},
-					{Name: "challenge_id"},
-				},
-				DoUpdates: clause.AssignmentColumns([]string{
-					"service_status",
-					"check_result",
-					"defense_score",
-					"updated_at",
-				}),
-			}).Create(&records).Error; err != nil {
+		if err := u.repo.WithinTransaction(ctx, func(txRepo AWDRepository) error {
+			if err := txRepo.UpsertTeamServices(ctx, records); err != nil {
 				return err
 			}
-			return recalculateAWDContestTeamScores(ctx, tx, contest.ID)
+			return txRepo.RecalculateContestTeamScores(ctx, contest.ID)
 		}); err != nil {
 			return err
 		}
@@ -588,7 +562,7 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 		}
 	}
 	if u.redis != nil {
-		if err := rebuildContestScoreboardCache(ctx, u.db, u.redis, contest.ID); err != nil {
+		if err := u.repo.RebuildContestScoreboardCache(ctx, u.redis, contest.ID); err != nil {
 			return err
 		}
 	}
@@ -597,15 +571,12 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 }
 
 func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, contestID int64, round *model.AWDRound) (bool, error) {
-	if u.redis == nil || u.db == nil || contestID <= 0 || round == nil {
+	if u.redis == nil || u.repo == nil || contestID <= 0 || round == nil {
 		return false, nil
 	}
 
-	var currentRound model.AWDRound
-	if err := u.db.WithContext(ctx).
-		Where("contest_id = ? AND status = ?", contestID, model.AWDRoundStatusRunning).
-		Order("round_number DESC, id DESC").
-		First(&currentRound).Error; err != nil {
+	currentRound, err := u.repo.FindRunningRound(ctx, contestID)
+	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, err
 		}
@@ -621,7 +592,7 @@ func (u *AWDRoundUpdater) shouldSyncLiveServiceStatusCache(ctx context.Context, 
 	return currentRound.ID == round.ID, nil
 }
 
-func (u *AWDRoundUpdater) loadContestServiceInstances(ctx context.Context, contestID int64, challenges []model.Challenge) ([]awdServiceInstance, error) {
+func (u *AWDRoundUpdater) loadContestServiceInstances(ctx context.Context, contestID int64, challenges []model.Challenge) ([]AWDServiceInstance, error) {
 	if len(challenges) == 0 {
 		return nil, nil
 	}
@@ -630,22 +601,10 @@ func (u *AWDRoundUpdater) loadContestServiceInstances(ctx context.Context, conte
 		challengeIDs = append(challengeIDs, challenge.ID)
 	}
 
-	var instances []awdServiceInstance
-	if err := u.db.WithContext(ctx).
-		Table("instances AS inst").
-		Select("COALESCE(inst.team_id, tm.team_id) AS team_id, inst.challenge_id AS challenge_id, inst.access_url AS access_url").
-		Joins("LEFT JOIN team_members AS tm ON tm.user_id = inst.user_id AND tm.contest_id = ?", contestID).
-		Where("inst.challenge_id IN ?", challengeIDs).
-		Where("inst.status = ?", model.InstanceStatusRunning).
-		Where("(inst.contest_id = ? AND inst.team_id IS NOT NULL) OR (inst.team_id IS NULL AND tm.team_id IS NOT NULL)", contestID).
-		Order("tm.team_id ASC, inst.challenge_id ASC, inst.id ASC").
-		Scan(&instances).Error; err != nil {
-		return nil, err
-	}
-	return instances, nil
+	return u.repo.ListServiceInstancesByContest(ctx, contestID, challengeIDs)
 }
 
-func (u *AWDRoundUpdater) checkTeamChallengeServices(ctx context.Context, instances []awdServiceInstance, source string) (*awdServiceCheckOutcome, error) {
+func (u *AWDRoundUpdater) checkTeamChallengeServices(ctx context.Context, instances []AWDServiceInstance, source string) (*awdServiceCheckOutcome, error) {
 	healthPath := normalizedAWDCheckerHealthPath(u.cfg.CheckerHealthPath)
 	result := awdServiceCheckResult{
 		CheckedAt:            time.Now().UTC().Format(time.RFC3339),
@@ -890,9 +849,4 @@ func normalizedAWDCheckSource(value string) string {
 	default:
 		return awdCheckSourceScheduler
 	}
-}
-
-func buildAWDRoundFlag(contestID int64, roundNumber int, teamID, challengeID int64, secret, prefix string) string {
-	nonce := fmt.Sprintf("awd:%d:%d:%d:%d", contestID, roundNumber, teamID, challengeID)
-	return crypto.GenerateDynamicFlag(teamID, challengeID, secret, nonce, prefix)
 }

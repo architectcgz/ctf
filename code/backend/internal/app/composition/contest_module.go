@@ -1,7 +1,6 @@
 package composition
 
 import (
-	contestModule "ctf-platform/internal/module/contest"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contestapp "ctf-platform/internal/module/contest/application"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -23,15 +22,25 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	cache := root.Cache()
 
 	repo := contestinfra.NewRepository(db)
+	awdRepo := contestinfra.NewAWDRepository(db)
 	scoreboardService := contestapp.NewScoreboardService(repo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestService := contestapp.NewService(repo, log.Named("contest_service"))
-	awdService := contestModule.NewAWDService(
-		contestModule.NewAWDRepository(db),
+	awdUpdater := contestapp.NewAWDRoundUpdater(
+		awdRepo,
+		cache,
+		cfg.Contest.AWD,
+		cfg.Container.FlagGlobalSecret,
+		contestinfra.NewDockerAWDFlagInjector(db, runtime.contest.containerFiles, log.Named("awd_flag_injector")),
+		log.Named("awd_round_updater"),
+	)
+	awdService := contestapp.NewAWDService(
+		awdRepo,
 		repo,
 		cache,
 		cfg.Container.FlagGlobalSecret,
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
+		awdUpdater,
 	)
 	contestChallengeRepo := contestinfra.NewChallengeRepository(db)
 	contestChallengeService := contestapp.NewChallengeService(contestChallengeRepo, challenge.Catalog, repo)
@@ -48,14 +57,6 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		cfg.Contest.StatusUpdateBatchSize,
 		cfg.Contest.StatusUpdateLockTTL,
 		log.Named("contest_status_updater"),
-	)
-	awdUpdater := contestModule.NewAWDRoundUpdater(
-		db,
-		cache,
-		cfg.Contest.AWD,
-		cfg.Container.FlagGlobalSecret,
-		contestModule.NewDockerAWDFlagInjector(db, runtime.contest.containerFiles, log.Named("awd_flag_injector")),
-		log.Named("awd_round_updater"),
 	)
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("contest_status_updater", statusUpdater.Start))
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("awd_round_updater", awdUpdater.Start))
