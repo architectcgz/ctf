@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -82,15 +83,13 @@ func TestImageServiceCreateImageWithContextHonorsCancellation(t *testing.T) {
 	service := NewImageService(
 		challengeinfra.NewImageRepository(db),
 		challengeinfra.NewRepository(db),
-		&stubImageRuntime{
-			inspectImageSizeFn: func(ctx context.Context, imageRef string) (int64, error) {
-				if imageRef != "web:latest" {
-					t.Fatalf("unexpected image ref: %s", imageRef)
-				}
-				<-ctx.Done()
-				return 0, ctx.Err()
-			},
-		},
+		runtimeadapters.NewImageRuntime(func(ctx context.Context, imageRef string) (int64, error) {
+			if imageRef != "web:latest" {
+				t.Fatalf("unexpected image ref: %s", imageRef)
+			}
+			<-ctx.Done()
+			return 0, ctx.Err()
+		}, nil),
 		&config.Config{},
 		nil,
 	)
@@ -121,17 +120,15 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 	service := NewImageService(
 		challengeinfra.NewImageRepository(db),
 		challengeinfra.NewRepository(db),
-		&stubImageRuntime{
-			removeImageFn: func(ctx context.Context, imageRef string) error {
-				if imageRef != "web:latest" {
-					t.Fatalf("unexpected image ref: %s", imageRef)
-				}
-				removeCalls.Add(1)
-				close(startedCh)
-				<-ctx.Done()
-				return ctx.Err()
-			},
-		},
+		runtimeadapters.NewImageRuntime(nil, func(ctx context.Context, imageRef string) error {
+			if imageRef != "web:latest" {
+				t.Fatalf("unexpected image ref: %s", imageRef)
+			}
+			removeCalls.Add(1)
+			close(startedCh)
+			<-ctx.Done()
+			return ctx.Err()
+		}),
 		&config.Config{},
 		nil,
 	)
