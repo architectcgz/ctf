@@ -13,8 +13,9 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	challengeModule "ctf-platform/internal/module/challenge"
+	challengeapp "ctf-platform/internal/module/challenge/application"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
@@ -523,7 +524,7 @@ func newContestSubmissionTestService(t *testing.T) (*SubmissionService, *redis.C
 		_ = redisClient.Close()
 	})
 
-	flagService, err := challengeModule.NewFlagService(challengeModule.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	flagService, err := challengeapp.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}
@@ -581,7 +582,7 @@ func createContestSubmissionFixture(t *testing.T, db *gorm.DB, contestID, challe
 		t.Fatalf("create contest challenge: %v", err)
 	}
 
-	flagService, err := challengeModule.NewFlagService(challengeModule.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	flagService, err := challengeapp.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
 	if err != nil {
 		t.Fatalf("new flag service: %v", err)
 	}

@@ -1,7 +1,6 @@
-package challenge
+package application
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -18,11 +17,11 @@ import (
 var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[^\{\}\n\r]+\}$`)
 
 type FlagService struct {
-	repo         *Repository
+	repo         ChallengeRepository
 	globalSecret string
 }
 
-func NewFlagService(repo *Repository, globalSecret string) (*FlagService, error) {
+func NewFlagService(repo ChallengeRepository, globalSecret string) (*FlagService, error) {
 	secret := strings.TrimSpace(globalSecret)
 	if secret == "" {
 		return nil, fmt.Errorf("container.flag_global_secret 未配置")
@@ -45,27 +44,24 @@ func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix st
 		return errcode.New(10001, fmt.Sprintf("Flag 长度不能超过 256 字符，当前长度: %d", len(flag)), 400)
 	}
 
-	ctx := context.Background()
-	return s.repo.WithinTransaction(ctx, func(txRepo *Repository) error {
-		challenge, err := s.loadChallengeFromRepo(txRepo, challengeID)
-		if err != nil {
-			return err
-		}
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return err
+	}
 
-		salt, err := crypto.GenerateSalt()
-		if err != nil {
-			return err
-		}
+	salt, err := crypto.GenerateSalt()
+	if err != nil {
+		return err
+	}
 
-		challenge.FlagType = model.FlagTypeStatic
-		challenge.FlagHash = crypto.HashStaticFlag(flag, salt)
-		challenge.FlagSalt = salt
-		if flagPrefix != "" {
-			challenge.FlagPrefix = flagPrefix
-		}
+	challenge.FlagType = model.FlagTypeStatic
+	challenge.FlagHash = crypto.HashStaticFlag(flag, salt)
+	challenge.FlagSalt = salt
+	if flagPrefix != "" {
+		challenge.FlagPrefix = flagPrefix
+	}
 
-		return txRepo.Update(challenge)
-	})
+	return s.repo.Update(challenge)
 }
 
 // ConfigureDynamicFlag 配置动态 Flag
@@ -138,11 +134,7 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 }
 
 func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
-	return s.loadChallengeFromRepo(s.repo, challengeID)
-}
-
-func (s *FlagService) loadChallengeFromRepo(repo *Repository, challengeID int64) (*model.Challenge, error) {
-	challenge, err := repo.FindByID(challengeID)
+	challenge, err := s.repo.FindByID(challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrNotFound

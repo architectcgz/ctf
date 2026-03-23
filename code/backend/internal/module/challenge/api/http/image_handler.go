@@ -1,6 +1,7 @@
-package challenge
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,10 +11,18 @@ import (
 )
 
 type ImageHandler struct {
-	service *ImageService
+	service imageService
 }
 
-func NewImageHandler(service *ImageService) *ImageHandler {
+type imageService interface {
+	CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
+	GetImage(id int64) (*dto.ImageResp, error)
+	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
+	UpdateImage(id int64, req *dto.UpdateImageReq) error
+	DeleteImage(id int64) error
+}
+
+func NewImageHandler(service imageService) *ImageHandler {
 	return &ImageHandler{service: service}
 }
 

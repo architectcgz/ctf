@@ -14,7 +14,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	"ctf-platform/internal/module/challenge"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
@@ -93,7 +93,7 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 	}
 
 	service := &Service{
-		imageRepo: challenge.NewImageRepository(db),
+		imageRepo: challengeinfra.NewImageRepository(db),
 		config:    &config.Config{},
 	}
 

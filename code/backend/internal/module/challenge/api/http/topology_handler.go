@@ -1,4 +1,4 @@
-package challenge
+package http
 
 import (
 	"strconv"
@@ -10,10 +10,21 @@ import (
 )
 
 type TopologyHandler struct {
-	service *TopologyService
+	service topologyService
 }
 
-func NewTopologyHandler(service *TopologyService) *TopologyHandler {
+type topologyService interface {
+	SaveChallengeTopology(challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
+	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
+	DeleteChallengeTopology(challengeID int64) error
+	CreateTemplate(req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
+	UpdateTemplate(id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
+	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
+	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
+	DeleteTemplate(id int64) error
+}
+
+func NewTopologyHandler(service topologyService) *TopologyHandler {
 	return &TopologyHandler{service: service}
 }
 

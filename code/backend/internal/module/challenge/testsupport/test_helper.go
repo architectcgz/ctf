@@ -1,4 +1,4 @@
-package challenge
+package testsupport
 
 import (
 	"ctf-platform/internal/model"
@@ -8,12 +8,14 @@ import (
 	"gorm.io/gorm"
 )
 
-func setupTestDB(t *testing.T) *gorm.DB {
+func SetupTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)
 	}
-	db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&model.Challenge{},
 		&model.Image{},
 		&model.Instance{},
@@ -23,11 +25,15 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},
 		&model.EnvironmentTemplate{},
-	)
+	); err != nil {
+		t.Fatalf("failed to migrate tables: %v", err)
+	}
 	return db
 }
 
-func setupTagTestDB(t *testing.T) *gorm.DB {
+func SetupTagTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("failed to open db: %v", err)

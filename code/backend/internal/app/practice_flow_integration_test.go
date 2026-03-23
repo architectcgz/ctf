@@ -30,7 +30,10 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
-	challengeModule "ctf-platform/internal/module/challenge"
+	challengemodule "ctf-platform/internal/module/challenge"
+	challengehttp "ctf-platform/internal/module/challenge/api/http"
+	challengeapp "ctf-platform/internal/module/challenge/application"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
@@ -728,18 +731,18 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}, logger, auditService)
 	auditHandler := opshttp.NewAuditHandler(auditService)
 
-	challengeRepo := challengeModule.NewRepository(db)
-	imageRepo := challengeModule.NewImageRepository(db)
-	challengeService := challengeModule.NewService(challengeRepo, imageRepo, cache, &challengeModule.Config{
+	challengeRepo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	challengeService := challengeapp.NewService(challengeRepo, imageRepo, cache, &challengemodule.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
-	challengeHandler := challengeModule.NewHandler(challengeService)
+	challengeHandler := challengehttp.NewHandler(challengeService)
 
-	flagService, err := challengeModule.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	flagService, err := challengeapp.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
 		t.Fatalf("create flag service: %v", err)
 	}
-	flagHandler := challengeModule.NewFlagHandler(flagService)
+	flagHandler := challengehttp.NewFlagHandler(flagService)
 
 	practiceRepo := practiceModule.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)

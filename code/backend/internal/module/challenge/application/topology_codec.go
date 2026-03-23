@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"context"
@@ -16,14 +16,9 @@ import (
 	"ctf-platform/pkg/errcode"
 )
 
-type ImageRuntime interface {
-	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
-	RemoveImage(ctx context.Context, imageRef string) error
-}
-
 type ImageService struct {
-	repo          *ImageRepository
-	challengeRepo *Repository
+	repo          ImageRepository
+	challengeRepo ChallengeRepository
 	runtime       ImageRuntime
 	config        *config.Config
 	logger        *zap.Logger
@@ -33,8 +28,8 @@ type ImageService struct {
 }
 
 func NewImageService(
-	repo *ImageRepository,
-	challengeRepo *Repository,
+	repo ImageRepository,
+	challengeRepo ChallengeRepository,
 	runtime ImageRuntime,
 	cfg *config.Config,
 	logger *zap.Logger,

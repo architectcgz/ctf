@@ -1,4 +1,4 @@
-package challenge
+package http
 
 import (
 	"strconv"
@@ -11,10 +11,17 @@ import (
 )
 
 type WriteupHandler struct {
-	service *WriteupService
+	service writeupService
 }
 
-func NewWriteupHandler(service *WriteupService) *WriteupHandler {
+type writeupService interface {
+	Upsert(challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
+	GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error)
+	Delete(challengeID int64) error
+	GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
+}
+
+func NewWriteupHandler(service writeupService) *WriteupHandler {
 	return &WriteupHandler{service: service}
 }
 

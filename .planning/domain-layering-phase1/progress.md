@@ -22,4 +22,14 @@
 - 新一轮限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/assessment/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
-- 当前仍未开始 `challenge / contest / practice` 的模块内部物理搬迁；下一轮继续按 owner-first 分层切片
+- 完成 `challenge` 物理分层：
+  - HTTP handler 已迁到 `internal/module/challenge/api/http`
+  - challenge / flag / image / topology / writeup / tag service 已迁到 `internal/module/challenge/application`
+  - challenge / image / writeup / tag repository 已迁到 `internal/module/challenge/infrastructure`
+  - 新增 `internal/module/challenge/testsupport` 收敛测试建表与 runtime stub
+  - `ChallengeModule` 与 `RuntimeModule` 已切到新目录装配，`practice/contest/app` 受影响测试已改为新依赖
+  - `challenge` 根包旧 `handler/service/repository` 与对应测试已物理删除，不保留兼容层
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/challenge/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest ./internal/module/practice -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`

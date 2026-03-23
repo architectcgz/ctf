@@ -14,7 +14,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	challengeModule "ctf-platform/internal/module/challenge"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practiceModule "ctf-platform/internal/module/practice"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
@@ -180,8 +180,8 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 }
 
 func newContestInstanceTestService(db *gorm.DB) *practiceModule.Service {
-	challengeRepo := challengeModule.NewRepository(db)
-	imageRepo := challengeModule.NewImageRepository(db)
+	challengeRepo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
 	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{

@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"context"
@@ -10,32 +10,15 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
 )
-
-type stubImageRuntime struct {
-	inspectImageSizeFn func(ctx context.Context, imageRef string) (int64, error)
-	removeImageFn      func(ctx context.Context, imageRef string) error
-}
-
-func (s *stubImageRuntime) InspectImageSize(ctx context.Context, imageRef string) (int64, error) {
-	if s.inspectImageSizeFn == nil {
-		return 0, nil
-	}
-	return s.inspectImageSizeFn(ctx, imageRef)
-}
-
-func (s *stubImageRuntime) RemoveImage(ctx context.Context, imageRef string) error {
-	if s.removeImageFn == nil {
-		return nil
-	}
-	return s.removeImageFn(ctx, imageRef)
-}
 
 func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *testing.T) {
 	t.Parallel()
 
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -49,8 +32,8 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 	}
 
 	service := NewImageService(
-		NewImageRepository(db),
-		NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
 		nil,
 		&config.Config{},
 		nil,
@@ -65,15 +48,15 @@ func TestImageServiceDeleteImageReturnsInUseWhenChallengeReferencesImage(t *test
 func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 	t.Parallel()
 
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 
 	service := NewImageService(
-		NewImageRepository(db),
-		NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
 		nil,
 		&config.Config{},
 		nil,
@@ -95,10 +78,10 @@ func TestImageServiceDeleteImageRemovesUnreferencedImage(t *testing.T) {
 func TestImageServiceCreateImageWithContextHonorsCancellation(t *testing.T) {
 	t.Parallel()
 
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	service := NewImageService(
-		NewImageRepository(db),
-		NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
 		&stubImageRuntime{
 			inspectImageSizeFn: func(ctx context.Context, imageRef string) (int64, error) {
 				if imageRef != "web:latest" {
@@ -127,7 +110,7 @@ func TestImageServiceCreateImageWithContextHonorsCancellation(t *testing.T) {
 func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 	t.Parallel()
 
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	image := &model.Image{Name: "web", Tag: "latest", Status: model.ImageStatusAvailable}
 	if err := db.Create(image).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -136,8 +119,8 @@ func TestImageServiceCloseCancelsAsyncDelete(t *testing.T) {
 	startedCh := make(chan struct{})
 	var removeCalls atomic.Int32
 	service := NewImageService(
-		NewImageRepository(db),
-		NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		challengeinfra.NewRepository(db),
 		&stubImageRuntime{
 			removeImageFn: func(ctx context.Context, imageRef string) error {
 				if imageRef != "web:latest" {

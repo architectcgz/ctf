@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"testing"
@@ -6,10 +6,12 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	"ctf-platform/internal/module/challenge/testsupport"
 )
 
 func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -29,7 +31,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	repo := NewRepository(db)
+	repo := challengeinfra.NewRepository(db)
 	service := NewWriteupService(repo)
 
 	saved, err := service.Upsert(challengeItem.ID, 99, &dto.UpsertChallengeWriteupReq{
@@ -54,7 +56,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 }
 
 func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image 1: %v", err)
@@ -77,9 +79,9 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	repo := NewRepository(db)
-	templateRepo := NewTemplateRepository(db)
-	imageRepo := NewImageRepository(db)
+	repo := challengeinfra.NewRepository(db)
+	templateRepo := challengeinfra.NewTemplateRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
 	service := NewTopologyService(repo, templateRepo, imageRepo)
 
 	templateResp, err := service.CreateTemplate(&dto.UpsertEnvironmentTemplateReq{
@@ -138,7 +140,7 @@ func TestTopologyServiceSaveChallengeTopologyWithTemplate(t *testing.T) {
 }
 
 func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -158,7 +160,7 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := NewTopologyService(NewRepository(db), NewTemplateRepository(db), NewImageRepository(db))
+	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
 	_, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		EntryNodeKey: "web",
 		Networks: []dto.TopologyNetworkReq{
@@ -174,13 +176,13 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 }
 
 func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
 	}
 
-	service := NewTopologyService(NewRepository(db), NewTemplateRepository(db), NewImageRepository(db))
+	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
 	saved, err := service.CreateTemplate(&dto.UpsertEnvironmentTemplateReq{
 		Name:         "细粒度策略模板",
 		EntryNodeKey: "web",
@@ -200,7 +202,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyOnTemplateCreate(t *testing.T) {
 }
 
 func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -242,7 +244,7 @@ func TestTopologyServiceAllowsFineGrainedPolicyWhenBindingTemplate(t *testing.T)
 		t.Fatalf("create template: %v", err)
 	}
 
-	service := NewTopologyService(NewRepository(db), NewTemplateRepository(db), NewImageRepository(db))
+	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
 	saved, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
 		TemplateID: &template.ID,
 	})

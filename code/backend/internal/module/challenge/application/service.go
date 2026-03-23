@@ -1,9 +1,10 @@
-package challenge
+package application
 
 import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengemodule "ctf-platform/internal/module/challenge"
 	"ctf-platform/pkg/cache"
 	"ctf-platform/pkg/errcode"
 	"encoding/json"
@@ -17,14 +18,14 @@ import (
 )
 
 type Service struct {
-	repo      *Repository
-	imageRepo *ImageRepository
+	repo      ChallengeRepository
+	imageRepo ImageRepository
 	redis     *redis.Client
-	config    *Config
+	config    *challengemodule.Config
 	log       *zap.Logger
 }
 
-func NewService(repo *Repository, imageRepo *ImageRepository, redis *redis.Client, config *Config, log *zap.Logger) *Service {
+func NewService(repo ChallengeRepository, imageRepo ImageRepository, redis *redis.Client, config *challengemodule.Config, log *zap.Logger) *Service {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -43,7 +44,7 @@ func (s *Service) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeRe
 		_, err := s.imageRepo.FindByID(req.ImageID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+				return nil, errcode.ErrNotFound.WithCause(errors.New(challengemodule.ErrMsgImageNotFound))
 			}
 			return nil, err
 		}
@@ -101,7 +102,7 @@ func (s *Service) UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error {
 			_, err := s.imageRepo.FindByID(*req.ImageID)
 			if err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					return errcode.ErrNotFound.WithCause(errors.New(ErrMsgImageNotFound))
+					return errcode.ErrNotFound.WithCause(errors.New(challengemodule.ErrMsgImageNotFound))
 				}
 				return err
 			}
@@ -134,7 +135,7 @@ func (s *Service) DeleteChallenge(id int64) error {
 		return err
 	}
 	if hasInstances {
-		return errcode.ErrConflict.WithCause(errors.New(ErrMsgHasRunningInstances))
+		return errcode.ErrConflict.WithCause(errors.New(challengemodule.ErrMsgHasRunningInstances))
 	}
 
 	return s.repo.Delete(id)

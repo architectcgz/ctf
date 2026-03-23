@@ -1,4 +1,4 @@
-package challenge
+package application
 
 import (
 	"strings"
@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	"ctf-platform/internal/module/challenge/testsupport"
 )
 
 func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Challenge{
 		ID:        1,
@@ -21,7 +23,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(NewRepository(db), strings.Repeat("s", 32))
+	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("s", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
@@ -48,7 +50,7 @@ func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
 }
 
 func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
-	db := setupTestDB(t)
+	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Challenge{
 		ID:        2,
@@ -60,7 +62,7 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatalf("seed challenge: %v", err)
 	}
 
-	service, err := NewFlagService(NewRepository(db), strings.Repeat("d", 32))
+	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("d", 32))
 	if err != nil {
 		t.Fatalf("NewFlagService() error = %v", err)
 	}
