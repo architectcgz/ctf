@@ -1,4 +1,4 @@
-package practice
+package application
 
 import (
 	"context"
@@ -29,13 +29,13 @@ var difficultyWeights = map[string]float64{
 
 // ScoreService 计分服务
 type ScoreService struct {
-	repo   *Repository
+	repo   PracticeRepository
 	redis  *redis.Client
 	logger *zap.Logger
 	config *config.ScoreConfig
 }
 
-func NewScoreService(repo *Repository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
+func NewScoreService(repo PracticeRepository, redis *redis.Client, logger *zap.Logger, cfg *config.ScoreConfig) *ScoreService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

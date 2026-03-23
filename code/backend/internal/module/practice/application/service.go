@@ -1,4 +1,4 @@
-package practice
+package application
 
 import (
 	"context"
@@ -33,28 +33,12 @@ type ScoreUpdater interface {
 	lockTimeout() time.Duration
 }
 
-type imageStore interface {
-	FindByID(id int64) (*model.Image, error)
-}
-
-type runtimeInstanceService interface {
-	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error)
-	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
-}
-
-type instanceRepository interface {
-	UpdateRuntime(instance *model.Instance) error
-	UpdateStatusAndReleasePort(id int64, status string) error
-	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
-}
-
 type Service struct {
-	repo              *Repository
+	repo              PracticeRepository
 	challengeRepo     challengecontracts.PracticeChallengeContract
-	imageRepo         imageStore
-	instanceRepo      instanceRepository
-	runtimeService    runtimeInstanceService
+	imageRepo         challengecontracts.ImageStore
+	instanceRepo      InstanceRepository
+	runtimeService    RuntimeInstanceService
 	scoreService      ScoreUpdater
 	assessmentService AssessmentService
 	redis             *redis.Client
@@ -75,11 +59,11 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 }
 
 func NewService(
-	repo *Repository,
+	repo PracticeRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
-	imageRepo imageStore,
-	instanceRepo instanceRepository,
-	runtimeService runtimeInstanceService,
+	imageRepo challengecontracts.ImageStore,
+	instanceRepo InstanceRepository,
+	runtimeService RuntimeInstanceService,
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
@@ -126,18 +110,12 @@ func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, 
 }
 
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
-	return s.startChallengeWithScope(ctx, userID, challengeID, instanceScope{
-		flagSubjectID: userID,
+	return s.startChallengeWithScope(ctx, userID, challengeID, InstanceScope{
+		FlagSubjectID: userID,
 	})
 }
 
-type instanceScope struct {
-	contestID     *int64
-	teamID        *int64
-	flagSubjectID int64
-}
-
-func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope instanceScope) (*dto.InstanceResp, error) {
+func (s *Service) startChallengeWithScope(ctx context.Context, userID, challengeID int64, scope InstanceScope) (*dto.InstanceResp, error) {
 	chal, err := s.challengeRepo.FindByID(challengeID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -152,7 +130,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
 	}
 
-	flag, nonce, err := s.buildInstanceFlag(scope.flagSubjectID, challengeID, chal)
+	flag, nonce, err := s.buildInstanceFlag(scope.FlagSubjectID, challengeID, chal)
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +139,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		instance *model.Instance
 		reused   bool
 	)
-	if err := s.repo.WithinTransaction(ctx, func(txRepo *Repository) error {
+	if err := s.repo.WithinTransaction(ctx, func(txRepo PracticeRepository) error {
 		if err := txRepo.LockInstanceScope(userID, scope); err != nil {
 			return err
 		}
@@ -196,8 +174,8 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 
 		instance = &model.Instance{
 			UserID:      userID,
-			ContestID:   scope.contestID,
-			TeamID:      scope.teamID,
+			ContestID:   scope.ContestID,
+			TeamID:      scope.TeamID,
 			ChallengeID: challengeID,
 			HostPort:    hostPort,
 			Status:      model.InstanceStatusCreating,
@@ -399,65 +377,65 @@ func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockH
 	}, nil
 }
 
-func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (instanceScope, error) {
+func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (InstanceScope, error) {
 	if s.repo == nil {
-		return instanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
+		return InstanceScope{}, errcode.ErrInternal.WithCause(fmt.Errorf("practice repository is nil"))
 	}
 
 	contest, err := s.repo.FindContestByIDWithContext(ctx, contestID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, errcode.ErrContestNotFound
+			return InstanceScope{}, errcode.ErrContestNotFound
 		}
-		return instanceScope{}, errcode.ErrInternal.WithCause(err)
+		return InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch contest.Status {
 	case model.ContestStatusRunning, model.ContestStatusFrozen:
 	default:
 		if contest.Status == model.ContestStatusEnded {
-			return instanceScope{}, errcode.ErrContestEnded
+			return InstanceScope{}, errcode.ErrContestEnded
 		}
-		return instanceScope{}, errcode.ErrContestNotRunning
+		return InstanceScope{}, errcode.ErrContestNotRunning
 	}
 
 	contestChallenge, err := s.repo.FindContestChallengeWithContext(ctx, contestID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, errcode.ErrChallengeNotInContest
+			return InstanceScope{}, errcode.ErrChallengeNotInContest
 		}
-		return instanceScope{}, errcode.ErrInternal.WithCause(err)
+		return InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	if !contestChallenge.IsVisible {
-		return instanceScope{}, errcode.ErrContestChallengeVisible
+		return InstanceScope{}, errcode.ErrContestChallengeVisible
 	}
 
 	registration, err := s.repo.FindContestRegistrationWithContext(ctx, contestID, userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return instanceScope{}, errcode.ErrNotRegistered
+			return InstanceScope{}, errcode.ErrNotRegistered
 		}
-		return instanceScope{}, errcode.ErrInternal.WithCause(err)
+		return InstanceScope{}, errcode.ErrInternal.WithCause(err)
 	}
 	switch registration.Status {
 	case model.ContestRegistrationStatusApproved:
 	case model.ContestRegistrationStatusPending:
-		return instanceScope{}, errcode.ErrContestRegistrationPending
+		return InstanceScope{}, errcode.ErrContestRegistrationPending
 	default:
-		return instanceScope{}, errcode.ErrRegistrationNotApproved
+		return InstanceScope{}, errcode.ErrRegistrationNotApproved
 	}
 
 	contestIDCopy := contestID
-	scope := instanceScope{
-		contestID:     &contestIDCopy,
-		flagSubjectID: userID,
+	scope := InstanceScope{
+		ContestID:     &contestIDCopy,
+		FlagSubjectID: userID,
 	}
 	if contest.Mode == model.ContestModeAWD {
 		if registration.TeamID == nil || *registration.TeamID <= 0 {
-			return instanceScope{}, errcode.ErrAWDTeamRequired
+			return InstanceScope{}, errcode.ErrAWDTeamRequired
 		}
 		teamID := *registration.TeamID
-		scope.teamID = &teamID
-		scope.flagSubjectID = teamID
+		scope.TeamID = &teamID
+		scope.FlagSubjectID = teamID
 		return scope, nil
 	}
 

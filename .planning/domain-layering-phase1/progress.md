@@ -33,3 +33,13 @@
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/challenge/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest ./internal/module/practice -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 完成 `practice` 物理分层：
+  - HTTP handler 已迁到 `internal/module/practice/api/http`
+  - 写流程 / 计分 / topology runtime 逻辑已迁到 `internal/module/practice/application`
+  - repository 已迁到 `internal/module/practice/infrastructure`
+  - 新增 `internal/module/practice/testsupport` 收敛测试建表辅助
+  - `PracticeModule`、`practice flow` 集成测试、runtime test adapter、竞赛实例测试已切到新目录依赖
+  - `practice` 根包旧 `handler/service/repository/score/topology` 实现与重复测试已物理删除，不保留兼容层
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/practice/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`

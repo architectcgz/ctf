@@ -1,4 +1,4 @@
-package practice
+package application
 
 import "ctf-platform/internal/model"
 

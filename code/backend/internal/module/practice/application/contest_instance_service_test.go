@@ -1,4 +1,4 @@
-package practice_test
+package application_test
 
 import (
 	"context"
@@ -15,7 +15,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
-	practiceModule "ctf-platform/internal/module/practice"
+	practiceapp "ctf-platform/internal/module/practice/application"
+	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
@@ -179,7 +180,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newContestInstanceTestService(db *gorm.DB) *practiceModule.Service {
+func newContestInstanceTestService(db *gorm.DB) *practiceapp.Service {
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
@@ -194,8 +195,8 @@ func newContestInstanceTestService(db *gorm.DB) *practiceModule.Service {
 		MaxExtends:           2,
 		CreateTimeout:        time.Second,
 	}, nil)
-	return practiceModule.NewService(
-		practiceModule.NewRepository(db),
+	return practiceapp.NewService(
+		practiceinfra.NewRepository(db),
 		challengeRepo,
 		imageRepo,
 		instanceRepo,

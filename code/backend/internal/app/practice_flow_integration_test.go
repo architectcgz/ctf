@@ -39,7 +39,9 @@ import (
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opsapp "ctf-platform/internal/module/ops/application"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
-	practiceModule "ctf-platform/internal/module/practice"
+	practicehttp "ctf-platform/internal/module/practice/api/http"
+	practiceapp "ctf-platform/internal/module/practice/application"
+	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
@@ -744,7 +746,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}
 	flagHandler := challengehttp.NewFlagHandler(flagService)
 
-	practiceRepo := practiceModule.NewRepository(db)
+	practiceRepo := practiceinfra.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, logger)
 	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
@@ -755,7 +757,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
-	practiceService := practiceModule.NewService(
+	practiceService := practiceapp.NewService(
 		practiceRepo,
 		challengeRepo,
 		imageRepo,
@@ -767,7 +769,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		cfg,
 		logger,
 	)
-	practiceHandler := practiceModule.NewHandler(practiceService)
+	practiceHandler := practicehttp.NewHandler(practiceService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
 	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
