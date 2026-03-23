@@ -1,4 +1,4 @@
-package ops
+package application
 
 import (
 	"context"
@@ -13,34 +13,17 @@ import (
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
-type runtimeQuery interface {
-	CountRunning() (int64, error)
-}
-
-type ManagedContainerStat struct {
-	ContainerID   string
-	ContainerName string
-	CPUPercent    float64
-	MemoryPercent float64
-	MemoryUsage   int64
-	MemoryLimit   int64
-}
-
-type runtimeStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error)
-}
-
 type DashboardService struct {
-	runtimeQuery runtimeQuery
-	runtime      runtimeStatsProvider
+	runtimeQuery RuntimeQuery
+	runtime      RuntimeStatsProvider
 	redis        *redislib.Client
 	config       *config.Config
 	logger       *zap.Logger
 }
 
 func NewDashboardService(
-	runtimeQuery runtimeQuery,
-	runtimeStats runtimeStatsProvider,
+	runtimeQuery RuntimeQuery,
+	runtimeStats RuntimeStatsProvider,
 	redis *redislib.Client,
 	cfg *config.Config,
 	logger *zap.Logger,

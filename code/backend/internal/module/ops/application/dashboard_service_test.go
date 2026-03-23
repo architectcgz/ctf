@@ -1,4 +1,4 @@
-package ops
+package application
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	opsmodule "ctf-platform/internal/module/ops"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
@@ -32,10 +33,10 @@ func (s *stubDashboardRuntimeQuery) CountRunning() (int64, error) {
 }
 
 type stubDashboardRuntimeStatsProvider struct {
-	listManagedContainerStatsFn func(ctx context.Context) ([]ManagedContainerStat, error)
+	listManagedContainerStatsFn func(ctx context.Context) ([]opsmodule.ManagedContainerStat, error)
 }
 
-func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]ManagedContainerStat, error) {
+func (s *stubDashboardRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]opsmodule.ManagedContainerStat, error) {
 	if s.listManagedContainerStatsFn == nil {
 		return nil, nil
 	}
@@ -184,7 +185,7 @@ func TestDashboardServiceCheckAlertsReturnsCPUAndMemoryAlerts(t *testing.T) {
 }
 
 func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
-	var newDashboardService func(runtimeQuery, runtimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
+	var newDashboardService func(RuntimeQuery, RuntimeStatsProvider, *redislib.Client, *config.Config, *zap.Logger) *DashboardService = NewDashboardService
 
 	service := newDashboardService(
 		&stubDashboardRuntimeQuery{
@@ -193,8 +194,8 @@ func TestDashboardServiceUsesRuntimeStatsProvider(t *testing.T) {
 			},
 		},
 		&stubDashboardRuntimeStatsProvider{
-			listManagedContainerStatsFn: func(ctx context.Context) ([]ManagedContainerStat, error) {
-				return []ManagedContainerStat{
+			listManagedContainerStatsFn: func(ctx context.Context) ([]opsmodule.ManagedContainerStat, error) {
+				return []opsmodule.ManagedContainerStat{
 					{
 						ContainerID:   "runtime-1",
 						ContainerName: "runtime-web",

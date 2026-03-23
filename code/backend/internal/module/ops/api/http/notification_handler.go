@@ -1,4 +1,4 @@
-package system
+package http
 
 import (
 	"context"
@@ -11,24 +11,21 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	opsmodule "ctf-platform/internal/module/ops"
 	"ctf-platform/pkg/response"
 	ctfws "ctf-platform/pkg/websocket"
 )
 
 type notificationAuthContextKey struct{}
 
-type wsTicketConsumer interface {
-	ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error)
-}
-
 type NotificationHandler struct {
-	service      *NotificationService
-	tokenService wsTicketConsumer
+	service      opsmodule.NotificationService
+	tokenService opsmodule.WSTicketConsumer
 	manager      *ctfws.Manager
 	logger       *zap.Logger
 }
 
-func NewNotificationHandler(service *NotificationService, tokenService wsTicketConsumer, manager *ctfws.Manager, logger *zap.Logger) *NotificationHandler {
+func NewNotificationHandler(service opsmodule.NotificationService, tokenService opsmodule.WSTicketConsumer, manager *ctfws.Manager, logger *zap.Logger) *NotificationHandler {
 	if logger == nil {
 		logger = zap.NewNop()
 	}

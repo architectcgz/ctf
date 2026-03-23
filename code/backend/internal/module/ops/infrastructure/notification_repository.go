@@ -1,4 +1,4 @@
-package system
+package infrastructure
 
 import (
 	"context"
@@ -6,14 +6,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	opsapp "ctf-platform/internal/module/ops/application"
 )
-
-type NotificationListFilter struct {
-	UserID int64
-	Type   string
-	Offset int
-	Limit  int
-}
 
 type NotificationRepository struct {
 	db *gorm.DB
@@ -27,7 +21,7 @@ func (r *NotificationRepository) Create(ctx context.Context, notification *model
 	return r.db.WithContext(ctx).Create(notification).Error
 }
 
-func (r *NotificationRepository) List(ctx context.Context, filter NotificationListFilter) ([]model.Notification, int64, error) {
+func (r *NotificationRepository) List(ctx context.Context, filter opsapp.NotificationListFilter) ([]model.Notification, int64, error) {
 	query := r.db.WithContext(ctx).Model(&model.Notification{}).Where("user_id = ?", filter.UserID)
 	if filter.Type != "" {
 		query = query.Where("type = ?", filter.Type)

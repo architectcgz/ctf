@@ -1,17 +1,18 @@
-package ops
+package http
 
 import (
 	"github.com/gin-gonic/gin"
 
+	opsmodule "ctf-platform/internal/module/ops"
 	"ctf-platform/pkg/response"
 )
 
-type DashboardHTTPHandler struct {
-	service *DashboardService
+type DashboardHandler struct {
+	service opsmodule.DashboardService
 }
 
-func NewDashboardHandler(service *DashboardService) *DashboardHTTPHandler {
-	return &DashboardHTTPHandler{
+func NewDashboardHandler(service opsmodule.DashboardService) *DashboardHandler {
+	return &DashboardHandler{
 		service: service,
 	}
 }
@@ -22,7 +23,7 @@ func NewDashboardHandler(service *DashboardService) *DashboardHTTPHandler {
 // @Security BearerAuth
 // @Success 200 {object} dto.DashboardStats
 // @Router /api/v1/admin/dashboard [get]
-func (h *DashboardHTTPHandler) GetDashboard(c *gin.Context) {
+func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	stats, err := h.service.GetDashboardStats(c.Request.Context())
 	if err != nil {
 		response.FromError(c, err)

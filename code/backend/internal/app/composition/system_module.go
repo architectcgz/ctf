@@ -7,8 +7,10 @@ import (
 
 	"ctf-platform/internal/module/identity"
 	"ctf-platform/internal/module/ops"
+	opshttp "ctf-platform/internal/module/ops/api/http"
+	opsapp "ctf-platform/internal/module/ops/application"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
-	"ctf-platform/internal/module/system"
 	websocketpkg "ctf-platform/pkg/websocket"
 )
 
@@ -16,7 +18,7 @@ type SystemModule struct {
 	AuditService        ops.AuditRecorder
 	AuditHandler        ops.AuditLogHandler
 	DashboardHandler    ops.DashboardHandler
-	NotificationHandler *system.NotificationHandler
+	NotificationHandler ops.NotificationHandler
 	RiskHandler         ops.RiskHandler
 	WebSocketManager    *websocketpkg.Manager
 }
@@ -35,23 +37,23 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	db := root.DB()
 	cache := root.Cache()
 
-	auditRepo := ops.NewAuditRepository(db)
-	auditService := ops.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
-	dashboardService := ops.NewDashboardService(
+	auditRepo := opsinfra.NewAuditRepository(db)
+	auditService := opsapp.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
+	dashboardService := opsapp.NewDashboardService(
 		runtime.system.query,
 		runtime.system.statsProvider,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),
 	)
-	riskRepo := ops.NewRiskRepository(db)
-	riskService := ops.NewRiskService(riskRepo, log.Named("risk_service"))
+	riskRepo := opsinfra.NewRiskRepository(db)
+	riskService := opsapp.NewRiskService(riskRepo, log.Named("risk_service"))
 
 	return &SystemModule{
 		AuditService:     ops.NewModule(auditService),
-		AuditHandler:     ops.NewAuditHandler(auditService),
-		DashboardHandler: ops.NewDashboardHandler(dashboardService),
-		RiskHandler:      ops.NewRiskHandler(riskService),
+		AuditHandler:     opshttp.NewAuditHandler(auditService),
+		DashboardHandler: opshttp.NewDashboardHandler(dashboardService),
+		RiskHandler:      opshttp.NewRiskHandler(riskService),
 		WebSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
 	}
 }
@@ -65,15 +67,15 @@ func (m *SystemModule) BuildNotificationHandler(root *Root, tokenService identit
 	log := root.Logger()
 	db := root.DB()
 
-	notificationRepo := system.NewNotificationRepository(db)
-	notificationService := system.NewNotificationService(
+	notificationRepo := opsinfra.NewNotificationRepository(db)
+	notificationService := opsapp.NewNotificationService(
 		notificationRepo,
 		cfg.Pagination,
 		m.WebSocketManager,
 		log.Named("notification_service"),
 	)
 	notificationService.RegisterPracticeEventConsumers(root.Events)
-	m.NotificationHandler = system.NewNotificationHandler(
+	m.NotificationHandler = opshttp.NewNotificationHandler(
 		notificationService,
 		tokenService,
 		m.WebSocketManager,
