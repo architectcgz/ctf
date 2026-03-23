@@ -1,19 +1,29 @@
-package contest
+package http
 
 import (
+	"context"
+	"strconv"
+
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type ChallengeHandler struct {
-	service *ChallengeService
+type challengeService interface {
+	AddChallengeToContest(ctx context.Context, contestID int64, req *dto.AddContestChallengeReq) (*dto.ContestChallengeResp, error)
+	RemoveChallengeFromContest(ctx context.Context, contestID, challengeID int64) error
+	UpdateChallenge(ctx context.Context, contestID, challengeID int64, req *dto.UpdateContestChallengeReq) error
+	GetContestChallenges(ctx context.Context, userID, contestID int64) ([]*dto.ContestChallengeInfo, error)
+	ListAdminChallenges(ctx context.Context, contestID int64) ([]*dto.ContestChallengeResp, error)
 }
 
-func NewChallengeHandler(service *ChallengeService) *ChallengeHandler {
+type ChallengeHandler struct {
+	service challengeService
+}
+
+func NewChallengeHandler(service challengeService) *ChallengeHandler {
 	return &ChallengeHandler{service: service}
 }
 

@@ -1,19 +1,25 @@
-package contest
+package http
 
 import (
+	"context"
+	"strconv"
+
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type SubmissionHandler struct {
-	service *SubmissionService
+type submissionService interface {
+	SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 }
 
-func NewSubmissionHandler(service *SubmissionService) *SubmissionHandler {
+type SubmissionHandler struct {
+	service submissionService
+}
+
+func NewSubmissionHandler(service submissionService) *SubmissionHandler {
 	return &SubmissionHandler{service: service}
 }
 

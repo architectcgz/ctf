@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func NewScoreboardService(repo Repository, redis *redislib.Client, cfg *config.C
 
 func (s *ScoreboardService) UpdateScore(ctx context.Context, contestID, teamID int64, points float64) error {
 	key := rediskeys.RankContestTeamKey(contestID)
-	return s.redis.ZIncrBy(ctx, key, points, teamIDToMember(teamID)).Err()
+	return s.redis.ZIncrBy(ctx, key, points, TeamIDToMember(teamID)).Err()
 }
 
 func (s *ScoreboardService) RebuildScoreboard(ctx context.Context, contestID int64) error {
@@ -61,7 +61,7 @@ func (s *ScoreboardService) RebuildScoreboard(ctx context.Context, contestID int
 		}
 		entries = append(entries, redislib.Z{
 			Score:  float64(team.TotalScore),
-			Member: teamIDToMember(team.ID),
+			Member: TeamIDToMember(team.ID),
 		})
 	}
 	if len(entries) > 0 {
@@ -129,7 +129,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 
 	teamIDs := make([]int64, 0, len(results))
 	for _, item := range results {
-		teamIDs = append(teamIDs, memberToTeamID(item.Member))
+		teamIDs = append(teamIDs, MemberToTeamID(item.Member))
 	}
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
@@ -180,7 +180,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 
 func (s *ScoreboardService) GetTeamRank(ctx context.Context, contestID, teamID int64) (*dto.TeamRankResp, error) {
 	key := rediskeys.RankContestTeamKey(contestID)
-	score, err := s.redis.ZScore(ctx, key, teamIDToMember(teamID)).Result()
+	score, err := s.redis.ZScore(ctx, key, TeamIDToMember(teamID)).Result()
 	if err != nil {
 		if err == redislib.Nil {
 			return &dto.TeamRankResp{TeamID: teamID, Rank: 0, Score: 0}, nil
@@ -188,7 +188,7 @@ func (s *ScoreboardService) GetTeamRank(ctx context.Context, contestID, teamID i
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	rank, err := s.redis.ZRevRank(ctx, key, teamIDToMember(teamID)).Result()
+	rank, err := s.redis.ZRevRank(ctx, key, TeamIDToMember(teamID)).Result()
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
@@ -290,11 +290,11 @@ func teamName(team *model.Team) string {
 	return team.Name
 }
 
-func teamIDToMember(teamID int64) string {
+func TeamIDToMember(teamID int64) string {
 	return strconv.FormatInt(teamID, 10)
 }
 
-func memberToTeamID(member any) int64 {
+func MemberToTeamID(member any) int64 {
 	switch value := member.(type) {
 	case string:
 		id, _ := strconv.ParseInt(value, 10, 64)

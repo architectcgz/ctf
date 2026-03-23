@@ -1,6 +1,7 @@
-package contest
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -10,11 +11,21 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-type ParticipationHandler struct {
-	service *ParticipationService
+type participationService interface {
+	RegisterContest(ctx context.Context, contestID, userID int64) error
+	ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult, error)
+	ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req *dto.ReviewContestRegistrationReq) (*dto.ContestRegistrationResp, error)
+	ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error)
+	CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req *dto.CreateContestAnnouncementReq) (*dto.ContestAnnouncementResp, error)
+	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error
+	GetMyProgress(ctx context.Context, contestID, userID int64) (*dto.ContestMyProgressResp, error)
 }
 
-func NewParticipationHandler(service *ParticipationService) *ParticipationHandler {
+type ParticipationHandler struct {
+	service participationService
+}
+
+func NewParticipationHandler(service participationService) *ParticipationHandler {
 	return &ParticipationHandler{service: service}
 }
 

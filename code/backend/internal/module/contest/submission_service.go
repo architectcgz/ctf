@@ -16,20 +16,21 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	contestapp "ctf-platform/internal/module/contest/application"
 	"ctf-platform/pkg/errcode"
 )
 
 type SubmissionService struct {
-	contestRepo       Repository
+	contestRepo       contestapp.Repository
 	repo              *SubmissionRepository
 	redis             *redislib.Client
 	flagValidator     challengecontracts.FlagValidator
 	teamRepo          *TeamRepository
-	scoreboardService *ScoreboardService
+	scoreboardService *contestapp.ScoreboardService
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo *TeamRepository, scoreboardService *ScoreboardService, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo contestapp.Repository, repo *SubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo *TeamRepository, scoreboardService *contestapp.ScoreboardService, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,
@@ -44,7 +45,7 @@ func NewSubmissionService(contestRepo Repository, repo *SubmissionRepository, re
 func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, contestID, challengeID int64, flag string) (*dto.SubmissionResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, ErrContestNotFound) {
+		if errors.Is(err, contestapp.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -244,7 +245,7 @@ func (s *SubmissionService) calculateContestScore(contestChallenge model.Contest
 	if s.scoreboardService != nil {
 		return s.scoreboardService.CalculateDynamicScoreWithBase(baseScore, solveCount)
 	}
-	return calculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
+	return contestapp.CalculateDynamicScore(baseScore, s.cfg.Contest.MinScore, s.cfg.Contest.Decay, solveCount)
 }
 
 func (s *SubmissionService) resolveContestBaseScore(contestChallenge model.ContestChallenge, challengeRecord model.Challenge) float64 {

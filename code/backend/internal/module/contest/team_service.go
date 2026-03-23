@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
 	"ctf-platform/pkg/errcode"
 	"encoding/base32"
 	"errors"
@@ -15,10 +16,10 @@ import (
 
 type TeamService struct {
 	teamRepo    *TeamRepository
-	contestRepo Repository
+	contestRepo contestapp.Repository
 }
 
-func NewTeamService(teamRepo *TeamRepository, contestRepo Repository) *TeamService {
+func NewTeamService(teamRepo *TeamRepository, contestRepo contestapp.Repository) *TeamService {
 	return &TeamService{
 		teamRepo:    teamRepo,
 		contestRepo: contestRepo,
@@ -28,7 +29,7 @@ func NewTeamService(teamRepo *TeamRepository, contestRepo Repository) *TeamServi
 func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64, req *dto.CreateTeamReq) (*dto.TeamResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, ErrContestNotFound) {
+		if errors.Is(err, contestapp.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -100,7 +101,7 @@ func (s *TeamService) CreateTeam(ctx context.Context, contestID, captainID int64
 func (s *TeamService) JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*dto.TeamResp, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, ErrContestNotFound) {
+		if errors.Is(err, contestapp.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
@@ -264,7 +265,7 @@ func (s *TeamService) GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMembe
 
 func (s *TeamService) ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error) {
 	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
-		if errors.Is(err, ErrContestNotFound) {
+		if errors.Is(err, contestapp.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)

@@ -1,4 +1,4 @@
-package contest
+package infrastructure
 
 import (
 	"context"
@@ -9,58 +9,38 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
 )
 
-var (
-	ErrContestNotFound = errors.New("contest not found")
-)
-
-type Repository interface {
-	Create(ctx context.Context, contest *model.Contest) error
-	FindByID(ctx context.Context, id int64) (*model.Contest, error)
-	Update(ctx context.Context, contest *model.Contest) error
-	List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error)
-	ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error)
-	UpdateStatus(ctx context.Context, id int64, status string) error
-	FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error)
-	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
-	FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]scoreboardTeamStats, error)
-}
-
-type scoreboardTeamStats struct {
-	SolvedCount      int
-	LastSubmissionAt *time.Time
-}
-
-type repository struct {
+type Repository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) Repository {
-	return &repository{db: db}
+func NewRepository(db *gorm.DB) *Repository {
+	return &Repository{db: db}
 }
 
-func (r *repository) Create(ctx context.Context, contest *model.Contest) error {
+func (r *Repository) Create(ctx context.Context, contest *model.Contest) error {
 	return r.db.WithContext(ctx).Create(contest).Error
 }
 
-func (r *repository) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, error) {
 	var contest model.Contest
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&contest).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, ErrContestNotFound
+			return nil, contestapp.ErrContestNotFound
 		}
 		return nil, err
 	}
 	return &contest, nil
 }
 
-func (r *repository) Update(ctx context.Context, contest *model.Contest) error {
+func (r *Repository) Update(ctx context.Context, contest *model.Contest) error {
 	return r.db.WithContext(ctx).Save(contest).Error
 }
 
-func (r *repository) List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error) {
+func (r *Repository) List(ctx context.Context, status *string, offset, limit int) ([]*model.Contest, int64, error) {
 	var contests []*model.Contest
 	var total int64
 
@@ -77,7 +57,7 @@ func (r *repository) List(ctx context.Context, status *string, offset, limit int
 	return contests, total, err
 }
 
-func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error) {
+func (r *Repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []string, now time.Time, offset, limit int) ([]*model.Contest, int64, error) {
 	var contests []*model.Contest
 	var total int64
 
@@ -111,7 +91,7 @@ func (r *repository) ListByStatusesAndTimeRange(ctx context.Context, statuses []
 	return contests, total, err
 }
 
-func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) error {
+func (r *Repository) UpdateStatus(ctx context.Context, id int64, status string) error {
 	result := r.db.WithContext(ctx).Model(&model.Contest{}).
 		Where("id = ? AND status != ?", id, status).
 		Update("status", status)
@@ -120,7 +100,6 @@ func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) 
 		return result.Error
 	}
 
-	// RowsAffected == 0 可能是不存在或状态已相同，需要区分
 	if result.RowsAffected == 0 {
 		var exists bool
 		err := r.db.WithContext(ctx).Model(&model.Contest{}).
@@ -129,14 +108,14 @@ func (r *repository) UpdateStatus(ctx context.Context, id int64, status string) 
 			return err
 		}
 		if !exists {
-			return ErrContestNotFound
+			return contestapp.ErrContestNotFound
 		}
 	}
 
 	return nil
 }
 
-func (r *repository) FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error) {
+func (r *Repository) FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.Team, error) {
 	if len(ids) == 0 {
 		return []*model.Team{}, nil
 	}
@@ -146,7 +125,7 @@ func (r *repository) FindTeamsByIDs(ctx context.Context, ids []int64) ([]*model.
 	return teams, err
 }
 
-func (r *repository) FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
+func (r *Repository) FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error) {
 	var teams []*model.Team
 	err := r.db.WithContext(ctx).
 		Where("contest_id = ?", contestID).
@@ -161,8 +140,8 @@ type scoreboardTeamStatsRow struct {
 	LastSubmissionAtRaw string `gorm:"column:last_submission_at"`
 }
 
-func (r *repository) FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]scoreboardTeamStats, error) {
-	result := make(map[int64]scoreboardTeamStats, len(teamIDs))
+func (r *Repository) FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]contestapp.ScoreboardTeamStats, error) {
+	result := make(map[int64]contestapp.ScoreboardTeamStats, len(teamIDs))
 	if len(teamIDs) == 0 {
 		return result, nil
 	}
@@ -193,7 +172,7 @@ func (r *repository) FindScoreboardTeamStats(ctx context.Context, contestID int6
 	}
 
 	for _, row := range rows {
-		result[row.TeamID] = scoreboardTeamStats{
+		result[row.TeamID] = contestapp.ScoreboardTeamStats{
 			SolvedCount:      row.SolvedCount,
 			LastSubmissionAt: parseContestAggregateTime(row.LastSubmissionAtRaw),
 		}

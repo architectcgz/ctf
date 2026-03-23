@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
@@ -37,7 +38,7 @@ type AWDService interface {
 type awdService struct {
 	repo        *AWDRepository
 	redis       *redislib.Client
-	contestRepo Repository
+	contestRepo contestapp.Repository
 	flagSecret  string
 	awdConfig   config.ContestAWDConfig
 	log         *zap.Logger
@@ -45,7 +46,7 @@ type awdService struct {
 
 func NewAWDService(
 	repo *AWDRepository,
-	contestRepo Repository,
+	contestRepo contestapp.Repository,
 	redis *redislib.Client,
 	flagSecret string,
 	awdConfig config.ContestAWDConfig,
@@ -511,7 +512,7 @@ func (s *awdService) GetRoundSummary(ctx context.Context, contestID, roundID int
 func (s *awdService) ensureAWDContest(ctx context.Context, contestID int64) (*model.Contest, error) {
 	contest, err := s.contestRepo.FindByID(ctx, contestID)
 	if err != nil {
-		if errors.Is(err, ErrContestNotFound) {
+		if errors.Is(err, contestapp.ErrContestNotFound) {
 			return nil, errcode.ErrContestNotFound
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
