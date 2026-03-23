@@ -1,7 +1,8 @@
-package contest
+package infrastructure
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ type awdServiceScoreRow struct {
 	CheckResult  string `gorm:"column:check_result"`
 }
 
-func recalculateAWDContestTeamScores(ctx context.Context, db *gorm.DB, contestID int64) error {
+func RecalculateAWDContestTeamScores(ctx context.Context, db *gorm.DB, contestID int64) error {
 	if db == nil || contestID <= 0 {
 		return nil
 	}
@@ -111,8 +112,8 @@ func recalculateAWDContestTeamScores(ctx context.Context, db *gorm.DB, contestID
 }
 
 func shouldCountAWDDefenseScoreForOfficialTotals(checkResult string) bool {
-	switch normalizeAWDCheckSource(parseAWDCheckResult(checkResult)["check_source"]) {
-	case awdCheckSourceScheduler, awdCheckSourceManualCurrent, awdCheckSourceManualSelected, awdCheckSourceManualService:
+	switch normalizeAWDCheckSourceValue(parseAWDCheckResultValue(checkResult)["check_source"]) {
+	case "scheduler", "manual_current_round", "manual_selected_round", "manual_service_check":
 		return true
 	default:
 		return false
@@ -120,10 +121,10 @@ func shouldCountAWDDefenseScoreForOfficialTotals(checkResult string) bool {
 }
 
 func shouldCountAWDAttackForOfficialTotals(source string) bool {
-	return normalizeAWDAttackSource(source) == model.AWDAttackSourceSubmission
+	return normalizeAWDAttackSourceValue(source) == model.AWDAttackSourceSubmission
 }
 
-func rebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis *redislib.Client, contestID int64) error {
+func RebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis *redislib.Client, contestID int64) error {
 	if db == nil || redis == nil || contestID <= 0 {
 		return nil
 	}
@@ -157,11 +158,52 @@ func rebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis *redi
 	return err
 }
 
-func syncAWDContestScores(ctx context.Context, db *gorm.DB, redis *redislib.Client, contestID int64) error {
-	if err := recalculateAWDContestTeamScores(ctx, db, contestID); err != nil {
+func SyncAWDContestScores(ctx context.Context, db *gorm.DB, redis *redislib.Client, contestID int64) error {
+	if err := RecalculateAWDContestTeamScores(ctx, db, contestID); err != nil {
 		return err
 	}
-	return rebuildContestScoreboardCache(ctx, db, redis, contestID)
+	return RebuildContestScoreboardCache(ctx, db, redis, contestID)
+}
+
+func normalizeAWDCheckSourceValue(value any) string {
+	raw, ok := value.(string)
+	if !ok {
+		return ""
+	}
+	switch strings.TrimSpace(raw) {
+	case "scheduler":
+		return "scheduler"
+	case "manual_current_round":
+		return "manual_current_round"
+	case "manual_selected_round":
+		return "manual_selected_round"
+	case "manual_service_check":
+		return "manual_service_check"
+	default:
+		return ""
+	}
+}
+
+func parseAWDCheckResultValue(value string) map[string]any {
+	if strings.TrimSpace(value) == "" {
+		return map[string]any{}
+	}
+	result := make(map[string]any)
+	if err := json.Unmarshal([]byte(value), &result); err != nil {
+		return map[string]any{}
+	}
+	return result
+}
+
+func normalizeAWDAttackSourceValue(value string) string {
+	switch strings.TrimSpace(value) {
+	case model.AWDAttackSourceManual:
+		return model.AWDAttackSourceManual
+	case model.AWDAttackSourceSubmission:
+		return model.AWDAttackSourceSubmission
+	default:
+		return model.AWDAttackSourceLegacy
+	}
 }
 
 func parseAWDScoreSyncTime(raw string) *time.Time {

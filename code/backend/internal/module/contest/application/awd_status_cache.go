@@ -1,4 +1,4 @@
-package contest
+package application
 
 import (
 	"context"

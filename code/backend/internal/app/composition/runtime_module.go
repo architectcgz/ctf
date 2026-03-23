@@ -8,7 +8,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	challengeapp "ctf-platform/internal/module/challenge/application"
-	contestmodule "ctf-platform/internal/module/contest"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -45,7 +45,7 @@ type runtimeOpsDeps struct {
 }
 
 type runtimeContestDeps struct {
-	containerFiles contestmodule.AWDContainerFileWriter
+	containerFiles contestinfra.AWDContainerFileWriter
 }
 
 func BuildRuntimeModule(root *Root) *RuntimeModule {

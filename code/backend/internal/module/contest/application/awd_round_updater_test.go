@@ -1,4 +1,4 @@
-package contest
+package application_test
 
 import (
 	"context"
@@ -48,14 +48,14 @@ func TestAWDRoundUpdaterCreatesAndAdvancesRounds(t *testing.T) {
 		t.Fatalf("update challenge flag prefix: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      roundInterval,
 		RoundLockTTL:       time.Minute,
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	updater.updateRoundsAt(context.Background(), now)
+	updater.UpdateRoundsAt(context.Background(), now)
 
 	var rounds []model.AWDRound
 	if err := db.Order("round_number ASC").Find(&rounds, "contest_id = ?", 101).Error; err != nil {
@@ -122,14 +122,14 @@ func TestAWDRoundUpdaterSkipsWhenRoundLockHeld(t *testing.T) {
 	}
 	mini.SetTTL(lockKey, time.Minute)
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      roundInterval,
 		RoundLockTTL:       time.Minute,
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	updater.updateRoundsAt(context.Background(), now)
+	updater.UpdateRoundsAt(context.Background(), now)
 
 	var count int64
 	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", 102).Count(&count).Error; err != nil {
@@ -167,7 +167,7 @@ func TestAWDRoundUpdaterSkipsWhenSchedulerLockHeld(t *testing.T) {
 		t.Fatalf("seed scheduler lock: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerLockTTL:   time.Minute,
 		SchedulerBatchSize: 10,
@@ -175,7 +175,7 @@ func TestAWDRoundUpdaterSkipsWhenSchedulerLockHeld(t *testing.T) {
 		RoundLockTTL:       time.Minute,
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	updater.updateRoundsAt(context.Background(), now)
+	updater.UpdateRoundsAt(context.Background(), now)
 
 	var count int64
 	if err := db.Model(&model.AWDRound{}).Where("contest_id = ?", 152).Count(&count).Error; err != nil {
@@ -210,14 +210,14 @@ func TestAWDRoundUpdaterReconcileRoundsInheritsPreviousRoundScores(t *testing.T)
 		t.Fatalf("update contest time window: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
 		RoundLockTTL:       time.Minute,
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	updater.updateRoundsAt(context.Background(), now)
+	updater.UpdateRoundsAt(context.Background(), now)
 
 	var round model.AWDRound
 	if err := db.Where("contest_id = ? AND round_number = ?", 111, 2).First(&round).Error; err != nil {
@@ -262,7 +262,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, nil, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -270,9 +270,9 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
-	if err := updater.syncRoundServiceChecks(context.Background(), &model.Contest{ID: 103}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 103}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
@@ -353,7 +353,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 		t.Fatalf("create scoped awd instance: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, nil, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -361,9 +361,9 @@ func TestAWDRoundUpdaterSyncsServiceChecksForContestScopedTeamInstance(t *testin
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
-	if err := updater.syncRoundServiceChecks(context.Background(), &model.Contest{ID: 105}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 105}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
@@ -430,7 +430,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -438,7 +438,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksDoNotOverwriteLiveStatusCache(t *te
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 108}, &model.AWDRound{ID: 10801, ContestID: 108, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -515,7 +515,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -523,7 +523,7 @@ func TestAWDRoundUpdaterCurrentRoundChecksRefreshLiveStatusCache(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 109}, &model.AWDRound{ID: 10902, ContestID: 109, RoundNumber: 2}, awdCheckSourceManualCurrent); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -586,7 +586,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		t.Fatalf("seed live status cache: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, redisClient, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, redisClient, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -594,7 +594,7 @@ func TestAWDRoundUpdaterHistoricalRoundChecksIgnoreStaleCurrentRoundPointer(t *t
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
 	if err := updater.RunRoundServiceChecks(context.Background(), &model.Contest{ID: 110}, &model.AWDRound{ID: 11001, ContestID: 110, RoundNumber: 1}, awdCheckSourceManualSelected); err != nil {
 		t.Fatalf("RunRoundServiceChecks() error = %v", err)
@@ -660,7 +660,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		t.Fatalf("create failed awd instance: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, nil, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -668,9 +668,9 @@ func TestAWDRoundUpdaterSyncsServiceChecksWithPartialAvailability(t *testing.T) 
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = healthyServer.Client()
+	updater.SetHTTPClient(healthyServer.Client())
 
-	if err := updater.syncRoundServiceChecks(context.Background(), &model.Contest{ID: 107}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 107}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
@@ -711,7 +711,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsDownWithoutHealthyInstance(t *testin
 	createAWDContestChallengeFixture(t, db, 104, 104001, now)
 	createAWDTeamFixture(t, db, 104011, 104, "Alpha", now)
 
-	updater := NewAWDRoundUpdater(db, nil, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -720,7 +720,7 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsDownWithoutHealthyInstance(t *testin
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
 
-	if err := updater.syncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 
@@ -782,7 +782,7 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 		t.Fatalf("create awd instance: %v", err)
 	}
 
-	updater := NewAWDRoundUpdater(db, nil, config.ContestAWDConfig{
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
 		SchedulerInterval:  time.Second,
 		SchedulerBatchSize: 10,
 		RoundInterval:      5 * time.Minute,
@@ -790,9 +790,9 @@ func TestAWDRoundUpdaterMarksServiceDownAfterHTTPFailure(t *testing.T) {
 		CheckerTimeout:     time.Second,
 		CheckerHealthPath:  "/health",
 	}, "test-flag-secret", nil, zap.NewNop())
-	updater.httpClient = server.Client()
+	updater.SetHTTPClient(server.Client())
 
-	if err := updater.syncRoundServiceChecks(context.Background(), &model.Contest{ID: 106}, 1); err != nil {
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 106}, 1); err != nil {
 		t.Fatalf("syncRoundServiceChecks() error = %v", err)
 	}
 

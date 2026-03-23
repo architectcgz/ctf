@@ -1,4 +1,4 @@
-package contest
+package infrastructure_test
 
 import (
 	"context"
@@ -8,6 +8,9 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
+	contestapp "ctf-platform/internal/module/contest/application"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	"ctf-platform/internal/module/contest/testsupport"
 )
 
 type stubAWDContainerFileWriter struct {
@@ -26,15 +29,15 @@ func (s *stubAWDContainerFileWriter) WriteFileToContainer(_ context.Context, con
 }
 
 func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
-	db := newAWDTestDB(t)
+	db := testsupport.SetupAWDTestDB(t)
 	now := time.Now()
 
-	createAWDContestFixture(t, db, 10, now)
-	createAWDChallengeFixture(t, db, 1001, now)
-	createAWDTeamFixture(t, db, 1011, 10, "Alpha", now)
-	createAWDTeamMemberFixture(t, db, 10, 1011, 5001, now)
-	createAWDTeamMemberFixture(t, db, 10, 1011, 5002, now)
-	createAWDRoundFixture(t, db, 10001, 10, 1, 50, 50, now)
+	testsupport.CreateAWDContestFixture(t, db, 10, now)
+	testsupport.CreateAWDChallengeFixture(t, db, 1001, now)
+	testsupport.CreateAWDTeamFixture(t, db, 1011, 10, "Alpha", now)
+	testsupport.CreateAWDTeamMemberFixture(t, db, 10, 1011, 5001, now)
+	testsupport.CreateAWDTeamMemberFixture(t, db, 10, 1011, 5002, now)
+	testsupport.CreateAWDRoundFixture(t, db, 10001, 10, 1, 50, 50, now)
 
 	runtimeDetails, err := model.EncodeInstanceRuntimeDetails(model.InstanceRuntimeDetails{
 		Containers: []model.InstanceRuntimeContainer{
@@ -72,9 +75,9 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	}
 
 	writer := &stubAWDContainerFileWriter{}
-	injector := NewDockerAWDFlagInjector(db, writer, zap.NewNop())
+	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []AWDFlagAssignment{
+	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []contestapp.AWDFlagAssignment{
 		{TeamID: 1011, ChallengeID: 1001, Flag: "awd{round-flag}"},
 	})
 	if err != nil {
@@ -93,12 +96,12 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 }
 
 func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberFallback(t *testing.T) {
-	db := newAWDTestDB(t)
+	db := testsupport.SetupAWDTestDB(t)
 	now := time.Now()
 
-	createAWDContestFixture(t, db, 20, now)
-	createAWDChallengeFixture(t, db, 2001, now)
-	createAWDRoundFixture(t, db, 20001, 20, 1, 50, 50, now)
+	testsupport.CreateAWDContestFixture(t, db, 20, now)
+	testsupport.CreateAWDChallengeFixture(t, db, 2001, now)
+	testsupport.CreateAWDRoundFixture(t, db, 20001, 20, 1, 50, 50, now)
 
 	contestID := int64(20)
 	teamID := int64(2011)
@@ -118,9 +121,9 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 	}
 
 	writer := &stubAWDContainerFileWriter{}
-	injector := NewDockerAWDFlagInjector(db, writer, zap.NewNop())
+	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []AWDFlagAssignment{
+	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []contestapp.AWDFlagAssignment{
 		{TeamID: 2011, ChallengeID: 2001, Flag: "awd{contest-scoped}"},
 	})
 	if err != nil {

@@ -62,6 +62,26 @@
 - 本轮限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 完成 `contest` 根包测试物理迁移与 testsupport 收敛：
+  - AWD / participation / submission 相关测试已迁到 `internal/module/contest/application`
+  - awd flag injector 与 team repository 测试已迁到 `internal/module/contest/infrastructure`
+  - 新增 `internal/module/contest/testsupport`，收敛 contest/AWD 建表、fixture、通用断言与 flag helper
+  - `contest` 根目录已清空，不再承载任何实现或测试文件
+  - 为满足架构约束，submission 场景对 `challenge` 模块的 flag fixture 保持在 `application_test` 本地 helper，不放入 `contest/testsupport`
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 继续推进 `contest` AWD 物理分层：
+  - awd service 已迁到 `internal/module/contest/application`
+  - awd round updater 已迁到 `internal/module/contest/application`
+  - awd repository 与 score sync 已迁到 `internal/module/contest/infrastructure`
+  - awd flag injector 已迁到 `internal/module/contest/infrastructure`
+  - awd status cache 已迁到 `internal/module/contest/application`
+  - `ContestModule` / `RuntimeModule` 装配与 AWD 测试已切到新目录依赖
+  - `contest` 根包当前只保留 AWD 相关测试文件，不再承载后端实现
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
 - 继续推进 `contest` 根包瘦身：
   - contest team / submission / registration_support 已迁到 `internal/module/contest/application`
   - team / submission repository 已迁到 `internal/module/contest/infrastructure`
