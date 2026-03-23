@@ -14,7 +14,7 @@ import (
 	websocketpkg "ctf-platform/pkg/websocket"
 )
 
-type SystemModule struct {
+type OpsModule struct {
 	AuditService        ops.AuditRecorder
 	AuditHandler        ops.AuditLogHandler
 	DashboardHandler    ops.DashboardHandler
@@ -23,15 +23,15 @@ type SystemModule struct {
 	WebSocketManager    *websocketpkg.Manager
 }
 
-type runtimeSystemQuery interface {
+type runtimeOpsQuery interface {
 	CountRunning() (int64, error)
 }
 
-type runtimeSystemStatsProvider interface {
+type runtimeOpsStatsProvider interface {
 	ListManagedContainerStats(ctx context.Context) ([]ops.ManagedContainerStat, error)
 }
 
-func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
+func BuildOpsModule(root *Root, runtime *RuntimeModule) *OpsModule {
 	cfg := root.Config()
 	log := root.Logger()
 	db := root.DB()
@@ -40,8 +40,8 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditService := opsapp.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_service"))
 	dashboardService := opsapp.NewDashboardService(
-		runtime.system.query,
-		runtime.system.statsProvider,
+		runtime.ops.query,
+		runtime.ops.statsProvider,
 		cache,
 		cfg,
 		log.Named("dashboard_service"),
@@ -49,7 +49,7 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	riskRepo := opsinfra.NewRiskRepository(db)
 	riskService := opsapp.NewRiskService(riskRepo, log.Named("risk_service"))
 
-	return &SystemModule{
+	return &OpsModule{
 		AuditService:     ops.NewModule(auditService),
 		AuditHandler:     opshttp.NewAuditHandler(auditService),
 		DashboardHandler: opshttp.NewDashboardHandler(dashboardService),
@@ -58,7 +58,7 @@ func BuildSystemModule(root *Root, runtime *RuntimeModule) *SystemModule {
 	}
 }
 
-func (m *SystemModule) BuildNotificationHandler(root *Root, tokenService identity.Authenticator) {
+func (m *OpsModule) BuildNotificationHandler(root *Root, tokenService identity.Authenticator) {
 	if m == nil {
 		return
 	}
@@ -87,15 +87,15 @@ func NamedAuditLogger(log *zap.Logger) *zap.Logger {
 	return log.Named("audit_middleware")
 }
 
-type systemRuntimeStatsProvider struct {
+type opsRuntimeStatsProvider struct {
 	service *runtimeapp.ContainerStatsService
 }
 
-func newSystemRuntimeStatsProvider(service *runtimeapp.ContainerStatsService) *systemRuntimeStatsProvider {
-	return &systemRuntimeStatsProvider{service: service}
+func newOpsRuntimeStatsProvider(service *runtimeapp.ContainerStatsService) *opsRuntimeStatsProvider {
+	return &opsRuntimeStatsProvider{service: service}
 }
 
-func (p *systemRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]ops.ManagedContainerStat, error) {
+func (p *opsRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]ops.ManagedContainerStat, error) {
 	if p == nil || p.service == nil {
 		return []ops.ManagedContainerStat{}, nil
 	}

@@ -875,7 +875,7 @@ internal/app/composition/
   - `api/http`
   - `application`
   - `infrastructure`
-- `composition.SystemModule` 当前作为 app 侧聚合壳，已全部通过 `ops` contract 装配对应能力
+- `composition.OpsModule` 当前作为 app 侧聚合壳，已全部通过 `ops` contract 装配对应能力
 - `/api/v1/admin/audit-logs`、`/api/v1/admin/dashboard`、`/api/v1/admin/cheat-detection`、`/api/v1/notifications`、`/ws/notifications` 路径保持不变
 - 后端 `internal/module/system` 实现已删除
 - `ops` 获取 runtime 容器指标时通过 query / stats provider bridge，不直接持有 runtime persistence concrete

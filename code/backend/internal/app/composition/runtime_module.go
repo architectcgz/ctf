@@ -22,7 +22,7 @@ type RuntimeModule struct {
 	http      runtimeHTTPDeps
 	practice  runtimePracticeDeps
 	challenge runtimeChallengeDeps
-	system    runtimeSystemDeps
+	ops       runtimeOpsDeps
 	contest   runtimeContestDeps
 }
 
@@ -39,9 +39,9 @@ type runtimeChallengeDeps struct {
 	imageRuntime challengemodule.ImageRuntime
 }
 
-type runtimeSystemDeps struct {
-	query         runtimeSystemQuery
-	statsProvider runtimeSystemStatsProvider
+type runtimeOpsDeps struct {
+	query         runtimeOpsQuery
+	statsProvider runtimeOpsStatsProvider
 }
 
 type runtimeContestDeps struct {
@@ -89,9 +89,9 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 		challenge: runtimeChallengeDeps{
 			imageRuntime: runtimeapp.NewImageRuntimeService(engine),
 		},
-		system: runtimeSystemDeps{
+		ops: runtimeOpsDeps{
 			query:         runtimeapp.NewQueryService(repo),
-			statsProvider: newSystemRuntimeStatsProvider(containerStatsService),
+			statsProvider: newOpsRuntimeStatsProvider(containerStatsService),
 		},
 		contest: runtimeContestDeps{
 			containerFiles: runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
@@ -126,7 +126,7 @@ func buildRuntimeEngine(root *Root) *runtimeinfra.Engine {
 	return engine
 }
 
-func (m *RuntimeModule) BuildHandler(root *Root, system *SystemModule) {
+func (m *RuntimeModule) BuildHandler(root *Root, ops *OpsModule) {
 	if m == nil {
 		return
 	}
@@ -134,7 +134,7 @@ func (m *RuntimeModule) BuildHandler(root *Root, system *SystemModule) {
 	cfg := root.Config()
 	m.Handler = runtimehttp.NewHandler(
 		m.http.service,
-		system.AuditService,
+		ops.AuditService,
 		runtimehttp.CookieConfig{
 			Secure:   cfg.Auth.RefreshCookieSecure,
 			SameSite: cfg.Auth.CookieSameSite(),

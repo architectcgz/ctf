@@ -1014,7 +1014,7 @@ func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 }
 
-func TestFullRouter_AdminSystemAndNotificationStateMatrix(t *testing.T) {
+func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))

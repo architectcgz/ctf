@@ -17,7 +17,7 @@ type adminRouteDeps struct {
 	auditLogger     *zap.Logger
 	challenge       *composition.ChallengeModule
 	contest         *composition.ContestModule
-	system          *composition.SystemModule
+	ops             *composition.OpsModule
 }
 
 type userRouteDeps struct {
@@ -169,9 +169,9 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		deps.challenge.FlagHandler.ConfigureFlag,
 	)
 	adminOnly.GET("/challenges/:id/flag", deps.challenge.FlagHandler.GetFlagConfig)
-	adminOnly.GET("/audit-logs", deps.system.AuditHandler.ListAuditLogs)
-	adminOnly.GET("/dashboard", deps.system.DashboardHandler.GetDashboard)
-	adminOnly.GET("/cheat-detection", deps.system.RiskHandler.GetCheatDetection)
+	adminOnly.GET("/audit-logs", deps.ops.AuditHandler.ListAuditLogs)
+	adminOnly.GET("/dashboard", deps.ops.DashboardHandler.GetDashboard)
+	adminOnly.GET("/cheat-detection", deps.ops.RiskHandler.GetCheatDetection)
 
 	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",
