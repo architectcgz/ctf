@@ -8,16 +8,16 @@ import (
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
-	adminUserModule "ctf-platform/internal/module/adminuser"
+	identityhttp "ctf-platform/internal/module/identity/api/http"
 )
 
 type adminRouteDeps struct {
-	adminUserHandler *adminUserModule.Handler
-	auditRecorder    auditlog.Recorder
-	auditLogger      *zap.Logger
-	challenge        *composition.ChallengeModule
-	contest          *composition.ContestModule
-	system           *composition.SystemModule
+	identityHandler *identityhttp.Handler
+	auditRecorder   auditlog.Recorder
+	auditLogger     *zap.Logger
+	challenge       *composition.ChallengeModule
+	contest         *composition.ContestModule
+	system          *composition.SystemModule
 }
 
 type userRouteDeps struct {
@@ -173,13 +173,13 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/dashboard", deps.system.DashboardHandler.GetDashboard)
 	adminOnly.GET("/cheat-detection", deps.system.RiskHandler.GetCheatDetection)
 
-	adminOnly.GET("/users", deps.adminUserHandler.ListUsers)
+	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
 			ResourceType: "user",
 		}),
-		deps.adminUserHandler.CreateUser,
+		deps.identityHandler.CreateUser,
 	)
 	adminOnly.PUT("/users/:id",
 		middleware.ParseInt64Param("id"),
@@ -188,7 +188,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			ResourceType:    "user",
 			ResourceIDParam: "id",
 		}),
-		deps.adminUserHandler.UpdateUser,
+		deps.identityHandler.UpdateUser,
 	)
 	adminOnly.DELETE("/users/:id",
 		middleware.ParseInt64Param("id"),
@@ -197,14 +197,14 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			ResourceType:    "user",
 			ResourceIDParam: "id",
 		}),
-		deps.adminUserHandler.DeleteUser,
+		deps.identityHandler.DeleteUser,
 	)
 	adminOnly.POST("/users/import",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
 			ResourceType: "user_import",
 		}),
-		deps.adminUserHandler.ImportUsers,
+		deps.identityHandler.ImportUsers,
 	)
 
 	adminOnly.POST("/contests",

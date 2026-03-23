@@ -21,6 +21,6 @@ func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *Tea
 
 	return &TeachingReadmodelModule{
 		Handler: teachinghttp.NewHandler(service),
-		Query:   teachingreadmodel.NewModule(repo),
+		Query:   service,
 	}
 }

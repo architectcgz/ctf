@@ -13,6 +13,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -44,7 +45,7 @@ func TestCASProviderAuthenticateAutoProvisionSuccess(t *testing.T) {
 
 	repo := &mockRepository{
 		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
-			return nil, ErrUserNotFound
+			return nil, identitymodule.ErrUserNotFound
 		},
 		createFn: func(ctx context.Context, user *model.User) error {
 			if user.Username != "cas_user_1" {
@@ -136,7 +137,7 @@ func TestCASProviderAuthenticateExistingUserSyncsProfileAndUnlocksExpired(t *tes
 		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
 			return user, nil
 		},
-		updateCASProfileFn: func(ctx context.Context, updated *model.User) error {
+		updateProfileFn: func(ctx context.Context, updated *model.User) error {
 			if updated.Name != "Updated Name" || updated.Email != "cas_user_2@example.edu" {
 				t.Fatalf("unexpected updated profile: %+v", updated)
 			}
@@ -199,7 +200,7 @@ func TestCASProviderAuthenticateRejectsUserWhenAutoProvisionDisabled(t *testing.
 		AutoProvision: false,
 	}, &mockRepository{
 		findByUsernameFn: func(ctx context.Context, username string) (*model.User, error) {
-			return nil, ErrUserNotFound
+			return nil, identitymodule.ErrUserNotFound
 		},
 	}, &mockTokenService{}, zap.NewNop(), casServer.Client())
 

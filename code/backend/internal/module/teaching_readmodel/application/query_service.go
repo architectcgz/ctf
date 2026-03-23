@@ -11,6 +11,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -25,6 +26,8 @@ type QueryService struct {
 	recommendationService RecommendationProvider
 	logger                *zap.Logger
 }
+
+var _ teachingreadmodel.TeachingQuery = (*QueryService)(nil)
 
 func NewQueryService(repo *readmodelinfra.Repository, recommendationService RecommendationProvider, logger *zap.Logger) *QueryService {
 	if logger == nil {

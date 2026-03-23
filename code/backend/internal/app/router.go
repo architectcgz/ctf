@@ -11,7 +11,6 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
-	adminUserModule "ctf-platform/internal/module/adminuser"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	ratelimitpkg "ctf-platform/pkg/ratelimit"
@@ -30,9 +29,9 @@ var (
 	buildAssessmentModule        = composition.BuildAssessmentModule
 	buildChallengeModule         = composition.BuildChallengeModule
 	buildContestModule           = composition.BuildContestModule
+	buildIdentityModule          = composition.BuildIdentityModule
 	buildPracticeModule          = composition.BuildPracticeModule
 	buildPracticeReadmodelModule = composition.BuildPracticeReadmodelModule
-	buildRuntimeInfraModule      = composition.BuildRuntimeInfraModule
 	buildRuntimeModule           = composition.BuildRuntimeModule
 	buildSystemModule            = composition.BuildSystemModule
 	buildTeachingReadmodelModule = composition.BuildTeachingReadmodelModule
@@ -81,14 +80,15 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.GET("/health/db", health.GetDB)
 	engine.GET("/health/redis", health.GetRedis)
 
-	runtimeInfraModule, err := buildRuntimeInfraModule(root)
+	runtimeModule := buildRuntimeModule(root)
+	systemModule := buildSystemModule(root, runtimeModule)
+
+	identityModule, err := buildIdentityModule(root)
 	if err != nil {
 		return nil, err
 	}
-	runtimeModule := buildRuntimeModule(root, runtimeInfraModule)
-	systemModule := buildSystemModule(root, runtimeModule)
 
-	authModule, err := buildAuthModule(root, systemModule)
+	authModule, err := buildAuthModule(root, systemModule, identityModule)
 	if err != nil {
 		return nil, err
 	}
@@ -110,13 +110,13 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	authGroup.GET("/cas/callback", authModule.Handler.CASCallback)
 
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(authModule.TokenService))
+	protected.Use(middleware.Auth(identityModule.TokenService))
 	protected.POST("/auth/logout", authModule.Handler.Logout)
 	protected.GET("/auth/profile", authModule.Handler.Profile)
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authModule.Handler.IssueWSTicket)
 
-	systemModule.BuildNotificationHandler(root, authModule)
+	systemModule.BuildNotificationHandler(root, identityModule.TokenService)
 	protected.GET("/notifications", systemModule.NotificationHandler.ListNotifications)
 	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), systemModule.NotificationHandler.MarkAsRead)
 	engine.GET("/ws/notifications", systemModule.NotificationHandler.ServeWS)
@@ -139,17 +139,13 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
 	runtimeModule.BuildHandler(root, systemModule)
 
-	adminUserRepo := adminUserModule.NewRepository(db)
-	adminUserService := adminUserModule.NewService(adminUserRepo, cfg.Pagination, log.Named("admin_user_service"))
-	adminUserHandler := adminUserModule.NewHandler(adminUserService)
-
 	registerAdminRoutes(adminOnly, adminRouteDeps{
-		adminUserHandler: adminUserHandler,
-		auditLogger:      composition.NamedAuditLogger(log),
-		auditRecorder:    systemModule.AuditService,
-		challenge:        challengeModule,
-		contest:          contestModule,
-		system:           systemModule,
+		identityHandler: identityModule.AdminHandler,
+		auditLogger:     composition.NamedAuditLogger(log),
+		auditRecorder:   systemModule.AuditService,
+		challenge:       challengeModule,
+		contest:         contestModule,
+		system:          systemModule,
 	})
 	registerUserRoutes(apiV1, protected, teacherOrAbove, userRouteDeps{
 		auditLogger:       composition.NamedAuditLogger(log),

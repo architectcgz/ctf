@@ -16,8 +16,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
-	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
-	runtimeinfra "ctf-platform/internal/module/runtimeinfra"
+	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -844,7 +843,7 @@ func TestServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 }
 
 type runtimeTestRepository struct {
-	*runtimeinfrarepo.Repository
+	*runtimeinfra.Repository
 	db *gorm.DB
 }
 
@@ -865,7 +864,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	return &runtimeTestRepository{
-		Repository: runtimeinfrarepo.NewRepository(db),
+		Repository: runtimeinfra.NewRepository(db),
 		db:         db,
 	}
 }
@@ -907,7 +906,7 @@ type fakeRuntimeEngine struct {
 	imageSize                      int64
 	imageInspectErr                error
 	removedImageRef                string
-	managedContainerStats          []runtimeinfra.ManagedContainerStat
+	managedContainerStats          []runtimeapp.ManagedContainerStat
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -960,8 +959,8 @@ func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) erro
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context, _ string) ([]runtimeinfra.ManagedContainerStat, error) {
-	return append([]runtimeinfra.ManagedContainerStat(nil), f.managedContainerStats...), nil
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeapp.ManagedContainerStat, error) {
+	return append([]runtimeapp.ManagedContainerStat(nil), f.managedContainerStats...), nil
 }
 
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
@@ -1035,7 +1034,7 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context, _ string) ([]runtimeinfra.ManagedContainer, error) {
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeapp.ManagedContainer, error) {
 	return nil, nil
 }
 

@@ -5,6 +5,8 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+
+	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
 )
 
 type QueryService struct {
@@ -13,6 +15,8 @@ type QueryService struct {
 	cacheTTL time.Duration
 	logger   *zap.Logger
 }
+
+var _ practicereadmodel.PracticeQuery = (*QueryService)(nil)
 
 func NewQueryService(repo QueryRepository, cache *redis.Client, cacheTTL time.Duration, logger *zap.Logger) *QueryService {
 	if logger == nil {

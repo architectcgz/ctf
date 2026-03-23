@@ -1,4 +1,4 @@
-package adminuser
+package application
 
 import (
 	"context"
@@ -13,27 +13,30 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 )
 
-type Service struct {
-	repo       *Repository
+type AdminService struct {
+	repo       identitymodule.UserRepository
 	pagination config.PaginationConfig
 	log        *zap.Logger
 }
 
-func NewService(repo *Repository, pagination config.PaginationConfig, log *zap.Logger) *Service {
+var _ identitymodule.AdminService = (*AdminService)(nil)
+
+func NewAdminService(repo identitymodule.UserRepository, pagination config.PaginationConfig, log *zap.Logger) *AdminService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &Service{
+	return &AdminService{
 		repo:       repo,
 		pagination: pagination,
 		log:        log,
 	}
 }
 
-func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]dto.AdminUserResp, int64, int, int, error) {
+func (s *AdminService) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]dto.AdminUserResp, int64, int, int, error) {
 	page := query.Page
 	if page < 1 {
 		page = 1
@@ -46,7 +49,7 @@ func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]d
 		size = s.pagination.MaxPageSize
 	}
 
-	users, total, err := s.repo.List(ctx, UserListFilter{
+	users, total, err := s.repo.List(ctx, identitymodule.UserListFilter{
 		Keyword:   strings.TrimSpace(query.Keyword),
 		StudentNo: strings.TrimSpace(query.StudentNo),
 		TeacherNo: strings.TrimSpace(query.TeacherNo),
@@ -67,11 +70,11 @@ func (s *Service) ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]d
 	return items, total, page, size, nil
 }
 
-func (s *Service) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error) {
+func (s *AdminService) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error) {
 	username := strings.TrimSpace(req.Username)
 	if existing, err := s.repo.FindByUsername(ctx, username); err == nil && existing != nil {
 		return nil, errcode.ErrUsernameExists
-	} else if err != nil && !errors.Is(err, ErrUserNotFound) {
+	} else if err != nil && !errors.Is(err, identitymodule.ErrUserNotFound) {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
@@ -96,7 +99,7 @@ func (s *Service) CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (
 	return &resp, nil
 }
 
-func (s *Service) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error) {
+func (s *AdminService) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error) {
 	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, mapServiceError(err)
@@ -139,14 +142,14 @@ func (s *Service) UpdateUser(ctx context.Context, userID int64, req *dto.UpdateA
 	return &resp, nil
 }
 
-func (s *Service) DeleteUser(ctx context.Context, userID int64) error {
+func (s *AdminService) DeleteUser(ctx context.Context, userID int64) error {
 	if err := s.repo.Delete(ctx, userID); err != nil {
 		return mapServiceError(err)
 	}
 	return nil
 }
 
-func (s *Service) ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error) {
+func (s *AdminService) ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error) {
 	csvReader := csv.NewReader(reader)
 	csvReader.TrimLeadingSpace = true
 	csvReader.FieldsPerRecord = -1
@@ -192,7 +195,7 @@ func (s *Service) ImportUsers(ctx context.Context, reader io.Reader) (*dto.Impor
 	return result, nil
 }
 
-func (s *Service) importRow(ctx context.Context, record []string) (bool, error) {
+func (s *AdminService) importRow(ctx context.Context, record []string) (bool, error) {
 	username := strings.TrimSpace(getCSVValue(record, 0))
 	password := strings.TrimSpace(getCSVValue(record, 1))
 	email := strings.TrimSpace(getCSVValue(record, 2))
@@ -214,11 +217,11 @@ func (s *Service) importRow(ctx context.Context, record []string) (bool, error) 
 	}
 
 	existing, err := s.repo.FindByUsername(ctx, username)
-	if err != nil && !errors.Is(err, ErrUserNotFound) {
+	if err != nil && !errors.Is(err, identitymodule.ErrUserNotFound) {
 		return false, err
 	}
 
-	if existing == nil || errors.Is(err, ErrUserNotFound) {
+	if existing == nil || errors.Is(err, identitymodule.ErrUserNotFound) {
 		if password == "" {
 			return false, fmt.Errorf("新用户必须提供 password")
 		}
@@ -301,17 +304,17 @@ func defaultUserStatus(status string) string {
 
 func mapServiceError(err error) error {
 	switch {
-	case errors.Is(err, ErrUserNotFound):
+	case errors.Is(err, identitymodule.ErrUserNotFound):
 		return errcode.ErrNotFound
-	case errors.Is(err, ErrUsernameExists):
+	case errors.Is(err, identitymodule.ErrUsernameExists):
 		return errcode.ErrUsernameExists
-	case errors.Is(err, ErrEmailExists):
+	case errors.Is(err, identitymodule.ErrEmailExists):
 		return errcode.ErrEmailExists
-	case errors.Is(err, ErrStudentNoExists):
+	case errors.Is(err, identitymodule.ErrStudentNoExists):
 		return errcode.ErrStudentNoExists
-	case errors.Is(err, ErrTeacherNoExists):
+	case errors.Is(err, identitymodule.ErrTeacherNoExists):
 		return errcode.ErrTeacherNoExists
-	case errors.Is(err, ErrRoleNotFound):
+	case errors.Is(err, identitymodule.ErrRoleNotFound):
 		return errcode.ErrInternal.WithCause(err)
 	default:
 		return errcode.ErrInternal.WithCause(err)

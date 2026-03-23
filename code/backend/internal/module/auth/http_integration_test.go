@@ -30,6 +30,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identityapp "ctf-platform/internal/module/identity/application"
+	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	systemModule "ctf-platform/internal/module/system"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -655,20 +657,21 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		TicketTTL:       30 * time.Second,
 		TicketKeyPrefix: "test:ws:ticket",
 	}, jwtManager)
-	authRepo := NewRepository(db)
+	authRepo := identityinfra.NewRepository(db)
 	authService := NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
 		Limit:        3,
 		Window:       time.Minute,
 		LockDuration: 15 * time.Minute,
 	}, zap.NewNop())
+	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
 	casProvider := NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
-	authHandler := NewHandler(authService, tokenService, casProvider, CookieConfig{
+	authHandler := NewHandler(authService, profileService, tokenService, casProvider, CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,

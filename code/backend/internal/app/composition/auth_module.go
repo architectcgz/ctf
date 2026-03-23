@@ -2,35 +2,23 @@ package composition
 
 import (
 	authModule "ctf-platform/internal/module/auth"
-	"ctf-platform/internal/module/identity"
-	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type AuthModule struct {
-	Handler      *authModule.Handler
-	TokenService identity.Authenticator
+	Handler *authModule.Handler
 }
 
-func BuildAuthModule(root *Root, system *SystemModule) (*AuthModule, error) {
+func BuildAuthModule(root *Root, system *SystemModule, identity *IdentityModule) (*AuthModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
-	db := root.DB()
-	cache := root.Cache()
-
-	jwtManager, err := jwtpkg.NewManager(cfg.Auth, cfg.App.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	authRepository := authModule.NewRepository(db)
-	tokenService := identity.NewModule(authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
-	authService := authModule.NewService(authRepository, tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	casProvider := authModule.NewCASProvider(cfg.Auth.CAS, authRepository, tokenService, log.Named("cas_provider"), nil)
+	authService := authModule.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
+	casProvider := authModule.NewCASProvider(cfg.Auth.CAS, identity.users, identity.TokenService, log.Named("cas_provider"), nil)
 
 	return &AuthModule{
 		Handler: authModule.NewHandler(
 			authService,
-			tokenService,
+			identity.ProfileService,
+			identity.TokenService,
 			casProvider,
 			authModule.CookieConfig{
 				Name:     cfg.Auth.RefreshCookieName,
@@ -43,6 +31,5 @@ func BuildAuthModule(root *Root, system *SystemModule) (*AuthModule, error) {
 			log.Named("auth_handler"),
 			system.AuditService,
 		),
-		TokenService: tokenService,
 	}, nil
 }

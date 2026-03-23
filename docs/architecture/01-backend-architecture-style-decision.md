@@ -13,7 +13,7 @@ CTF 后端采用：
 
 **`模块化单体 + Clean-ish + DDD-lite + CQRS-lite`**
 
-这份约束参考了 `zhi-file-service-go` 的架构与代码规范，但不会把 CTF 生搬硬套成“多服务优先”目录。
+这份约束遵守 workspace 共享 Go 规范 `/home/azhi/workspace/docs/go-code-style-guide.md`，但不会把 CTF 生搬硬套成“多服务优先”目录。
 
 ## 2. 为什么这样选
 
@@ -38,15 +38,15 @@ CTF 后端已经具备三个明确特征：
 
 如果继续把所有逻辑堆进“大 handler + 大 service + 大 repository”，后续可维护性会继续恶化；但如果直接上重型 DDD、重型 CQRS、CommandBus / QueryBus，又会引入不必要的工程噪音。
 
-## 3. 与 zhi-file-service-go 的映射关系
+## 3. 与共享 Go 规范的映射关系
 
-`zhi-file-service-go` 的“服务边界”在 CTF 里应映射成“模块边界”，不是物理微服务边界。
+workspace 共享 Go 规范中的“owner / service boundary”在 CTF 里应映射成“模块边界”，不是物理微服务边界。
 
 对应关系如下：
 
 - `service boundary` -> `module boundary`
 - `internal/services/<service>` -> `internal/module/<module>`
-- `transport/http -> app -> domain/ports -> infra` -> `api/http -> application -> module/contracts -> infrastructure`
+- `transport/http -> app -> domain/ports -> infra` -> `api/http -> application -> domain/ports -> infrastructure`
 - `internal/platform` -> `internal/bootstrap`、`internal/infrastructure`、`internal/platform`、`internal/middleware`
 - 克制共享 `pkg/` -> 克制共享 `internal/pkg` 与 `pkg/`
 
@@ -73,19 +73,26 @@ CTF 不采用以下全局目录重构：
 ```text
 internal/module/<name>/
   contracts.go
-  module.go
   api/http/
-  application/
+  application/commands/
+  application/queries/
+  domain/
+  ports/
   infrastructure/
+  runtime/
 ```
 
 说明：
 
 - `contracts.go`：对外暴露的消费契约
-- `module.go`：面向外部的门面或最薄适配层
 - `api/http`：Gin handler，仅做协议适配
 - `application`：use case 编排、事务边界、规则拼装
+- `domain`：领域对象、状态机、纯业务规则
+- `ports`：由消费方定义的最小依赖接口
 - `infrastructure`：GORM / Redis / 外部依赖适配
+- `runtime`：模块内唯一 wiring 层；可选但推荐
+
+不再把根包兼容壳视为目标结构的一部分。迁移过程中若临时保留转发文件，应视为待删除遗留，而不是长期门面层。
 
 现有平铺模块暂时允许保留，但新增读模型、查询模块、复杂重构不应继续默认落成 `handler.go + service.go + repository.go` 的单包大文件模式。
 
@@ -102,15 +109,19 @@ internal/module/<name>/
 推荐依赖方向如下：
 
 ```text
-api/http -> application -> contracts/module
-              |
-         infrastructure
+api/http -> application -> domain/ports
+                            |
+                       infrastructure
+
+runtime -> api/http + application + domain + ports + infrastructure
 ```
 
 必须遵守：
 
 - `api/http` 不直接写 SQL，不直接编排复杂业务
 - `application` 负责 use case 编排、事务边界、错误收敛
+- `domain` 只承载领域规则，不感知 HTTP、SQL 和 SDK
+- `ports` 只定义依赖抽象，不依赖实现
 - `infrastructure` 负责数据库、缓存、外部系统适配
 - 跨模块调用优先依赖 `contracts.go` 暴露的契约，不依赖对方内部子包实现
 

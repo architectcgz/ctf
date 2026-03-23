@@ -174,12 +174,14 @@
 
 ## 4.3 目标三：强制分层
 
-每个模块统一为四层：
+每个模块统一按 owner-first 分层收敛，核心结构包括：
 
 - `api`：HTTP、WebSocket、请求校验、响应映射
 - `application`：用例编排、事务边界、权限判断、跨模块调用、事件发布
-- `domain`：实体、领域规则、领域服务、端口定义
+- `domain`：实体、领域规则、状态机
+- `ports`：由消费方定义的最小依赖接口
 - `infrastructure`：GORM、Redis、Docker、定时任务、文件导出等适配器
+- `runtime`：唯一允许做模块内 wiring 的装配层
 
 ## 4.4 目标四：定义清晰的数据 ownership
 
@@ -393,36 +395,33 @@
 
 ```text
 internal/module/<module>/
+├── contracts.go
 ├── api/
-│   ├── http/
-│   └── websocket/
+│   └── http/
 ├── application/
-│   ├── service/
-│   ├── command/
-│   ├── query/
-│   └── event/
+│   ├── commands/
+│   └── queries/
 ├── domain/
-│   ├── entity/
-│   ├── valueobject/
-│   ├── policy/
-│   ├── repository/
-│   └── service/
-└── infrastructure/
+├── ports/
+├── infrastructure/
     ├── persistence/
     ├── cache/
-    ├── runtime/
     ├── schedule/
     └── export/
+└── runtime/
 ```
 
 对于当前项目，不要求一次性做到最细分目录，但必须至少先落地到：
 
 ```text
 internal/module/<module>/
-├── api/
+├── contracts.go
+├── api/http/
 ├── application/
 ├── domain/
-└── infrastructure/
+├── ports/
+├── infrastructure/
+└── runtime/
 ```
 
 ## 6.1 api 层
@@ -792,6 +791,12 @@ internal/app/composition/
 - 合并 `auth` 与 `adminuser`
 - 对外统一导出用户查询与鉴权接口
 - 隐藏用户 GORM 细节
+
+当前进度（2026-03-23，Phase 1）：
+
+- `adminuser` 已物理并入 `identity`
+- `identity` 已对外暴露 `Authenticator`、用户 repository contract、admin user handler/service、profile/password service
+- `auth` 仍保留注册、登录、CAS、refresh/logout、ws-ticket 等认证流程，后续再继续向 `identity` 收敛
 
 完成标准：
 

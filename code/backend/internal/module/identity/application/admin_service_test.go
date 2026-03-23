@@ -1,4 +1,4 @@
-package adminuser
+package application
 
 import (
 	"context"
@@ -13,10 +13,12 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	identitymodule "ctf-platform/internal/module/identity"
+	"ctf-platform/internal/module/identity/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
 
-func setupAdminUserTestDB(t *testing.T) *gorm.DB {
+func setupIdentityTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
@@ -41,16 +43,16 @@ func setupAdminUserTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newAdminUserServiceForTest(db *gorm.DB) *Service {
-	return NewService(NewRepository(db), config.PaginationConfig{
+func newAdminServiceForTest(db *gorm.DB) identitymodule.AdminService {
+	return NewAdminService(infrastructure.NewRepository(db), config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
 }
 
-func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
-	db := setupAdminUserTestDB(t)
-	service := newAdminUserServiceForTest(db)
+func TestAdminServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
+	db := setupIdentityTestDB(t)
+	service := newAdminServiceForTest(db)
 
 	resp, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
 		Username:  "student-1",
@@ -83,9 +85,9 @@ func TestServiceCreateUserStoresIdentityNumbersByRole(t *testing.T) {
 	}
 }
 
-func TestServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
-	db := setupAdminUserTestDB(t)
-	service := newAdminUserServiceForTest(db)
+func TestAdminServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
+	db := setupIdentityTestDB(t)
+	service := newAdminServiceForTest(db)
 
 	if _, err := service.CreateUser(context.Background(), &dto.CreateAdminUserReq{
 		Username: "duplicate-user",
@@ -107,8 +109,8 @@ func TestServiceCreateUserRejectsDuplicateUsername(t *testing.T) {
 	}
 }
 
-func TestServiceListUsersFiltersByIdentityNumber(t *testing.T) {
-	db := setupAdminUserTestDB(t)
+func TestAdminServiceListUsersFiltersByIdentityNumber(t *testing.T) {
+	db := setupIdentityTestDB(t)
 	now := time.Now()
 	users := []model.User{
 		{
@@ -140,7 +142,7 @@ func TestServiceListUsersFiltersByIdentityNumber(t *testing.T) {
 		}
 	}
 
-	service := newAdminUserServiceForTest(db)
+	service := newAdminServiceForTest(db)
 	list, total, _, _, err := service.ListUsers(context.Background(), &dto.AdminUserQuery{
 		StudentNo: "20240001",
 	})

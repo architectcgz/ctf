@@ -20,10 +20,9 @@ func BuildPracticeReadmodelModule(root *Root) *PracticeReadmodelModule {
 
 	repo := practicereadmodelinfra.NewRepository(db)
 	service := practicereadmodelapp.NewQueryService(repo, cache, cfg.Cache.ProgressTTL, log.Named("practice_readmodel_query_service"))
-	module := practicereadmodel.NewModule(service)
 
 	return &PracticeReadmodelModule{
-		Handler: practicereadmodelhttp.NewHandler(module),
-		Query:   module,
+		Handler: practicereadmodelhttp.NewHandler(service),
+		Query:   service,
 	}
 }

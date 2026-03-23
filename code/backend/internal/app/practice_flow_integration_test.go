@@ -31,8 +31,9 @@ import (
 	"ctf-platform/internal/model"
 	authModule "ctf-platform/internal/module/auth"
 	challengeModule "ctf-platform/internal/module/challenge"
+	identityapp "ctf-platform/internal/module/identity/application"
+	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	practiceModule "ctf-platform/internal/module/practice"
-	practiceReadmodel "ctf-platform/internal/module/practice_readmodel"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
@@ -710,11 +711,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		t.Fatalf("create jwt manager: %v", err)
 	}
 	tokenService := authModule.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
-	authRepo := authModule.NewRepository(db)
+	authRepo := identityinfra.NewRepository(db)
 	authService := authModule.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
+	profileService := identityapp.NewProfileService(authRepo, logger.Named("identity_profile_service"))
 	auditRepo := systemModule.NewAuditRepository(db)
 	auditService := systemModule.NewAuditService(auditRepo, cfg.Pagination, logger)
-	authHandler := authModule.NewHandler(authService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
+	authHandler := authModule.NewHandler(authService, profileService, tokenService, authModule.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authModule.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
 		Secure:   cfg.Auth.RefreshCookieSecure,
@@ -763,8 +765,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceHandler := practiceModule.NewHandler(practiceService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
 	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
-	practiceReadmodelModule := practiceReadmodel.NewModule(practiceReadmodelService)
-	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelModule)
+	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditService, runtimehttp.CookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
