@@ -1,4 +1,4 @@
-package practice
+package application_test
 
 import (
 	"context"
@@ -9,31 +9,17 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	practiceapp "ctf-platform/internal/module/practice/application"
+	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	"ctf-platform/internal/module/practice/testsupport"
 )
 
-func setupScoreServiceTestDB(t *testing.T) *gorm.DB {
-	t.Helper()
-
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Challenge{}, &model.Submission{}, &model.User{}, &model.UserScore{}); err != nil {
-		t.Fatalf("migrate score tables: %v", err)
-	}
-	return db
-}
-
-func newTestScoreService(db *gorm.DB, redisClient *redis.Client) *ScoreService {
-	return NewScoreService(NewRepository(db), redisClient, zap.NewNop(), &config.ScoreConfig{
+func newTestScoreService(db *gorm.DB, redisClient *redis.Client) *practiceapp.ScoreService {
+	return practiceapp.NewScoreService(practiceinfra.NewRepository(db), redisClient, zap.NewNop(), &config.ScoreConfig{
 		CacheTTL:        time.Minute,
 		LockTimeout:     5 * time.Second,
 		MaxRankingLimit: 100,
@@ -41,7 +27,7 @@ func newTestScoreService(db *gorm.DB, redisClient *redis.Client) *ScoreService {
 }
 
 func TestScoreServiceGetUserScoreWithContextHonorsCancellation(t *testing.T) {
-	db := setupScoreServiceTestDB(t)
+	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
@@ -58,7 +44,7 @@ func TestScoreServiceGetUserScoreWithContextHonorsCancellation(t *testing.T) {
 }
 
 func TestScoreServiceUpdateUserScoreWithContextHonorsCancellation(t *testing.T) {
-	db := setupScoreServiceTestDB(t)
+	db := testsupport.SetupScoreServiceTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })

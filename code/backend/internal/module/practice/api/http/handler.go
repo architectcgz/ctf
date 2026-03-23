@@ -1,6 +1,7 @@
-package practice
+package http
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +13,17 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	service practiceService
 }
 
-func NewHandler(service *Service) *Handler {
+type practiceService interface {
+	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
+	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
+	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
+	UnlockHint(userID, challengeID int64, level int) (*dto.UnlockHintResp, error)
+}
+
+func NewHandler(service practiceService) *Handler {
 	return &Handler{service: service}
 }
 

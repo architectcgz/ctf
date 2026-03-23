@@ -1,8 +1,7 @@
-package practice
+package infrastructure
 
 import (
 	"context"
-	"ctf-platform/internal/model"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,6 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"ctf-platform/internal/model"
+	practiceapp "ctf-platform/internal/module/practice/application"
 )
 
 type Repository struct {
@@ -32,7 +34,7 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repository) error) error {
+func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo practiceapp.PracticeRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
@@ -66,10 +68,10 @@ func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, con
 	return &registration, nil
 }
 
-func (r *Repository) LockInstanceScope(userID int64, scope instanceScope) error {
-	if scope.teamID != nil {
+func (r *Repository) LockInstanceScope(userID int64, scope practiceapp.InstanceScope) error {
+	if scope.TeamID != nil {
 		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ?", *scope.teamID).
+			Where("id = ?", *scope.TeamID).
 			First(&model.Team{}).Error
 	}
 	return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
@@ -77,15 +79,15 @@ func (r *Repository) LockInstanceScope(userID int64, scope instanceScope) error 
 		First(&model.User{}).Error
 }
 
-func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope instanceScope) (*model.Instance, error) {
+func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceapp.InstanceScope) (*model.Instance, error) {
 	query := r.db.Model(&model.Instance{}).
 		Where("challenge_id = ? AND status IN ?", challengeID, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
-	case scope.teamID != nil && scope.contestID != nil:
-		query = query.Where("contest_id = ? AND team_id = ?", *scope.contestID, *scope.teamID)
-	case scope.contestID != nil:
-		query = query.Where("contest_id = ? AND user_id = ? AND team_id IS NULL", *scope.contestID, userID)
+	case scope.TeamID != nil && scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND team_id = ?", *scope.ContestID, *scope.TeamID)
+	case scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND user_id = ? AND team_id IS NULL", *scope.ContestID, userID)
 	default:
 		query = query.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL", userID)
 	}
@@ -100,15 +102,15 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 	return &instance, nil
 }
 
-func (r *Repository) CountScopedRunningInstances(userID int64, scope instanceScope) (int, error) {
+func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceapp.InstanceScope) (int, error) {
 	query := r.db.Model(&model.Instance{}).
 		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
-	case scope.teamID != nil && scope.contestID != nil:
-		query = query.Where("contest_id = ? AND team_id = ?", *scope.contestID, *scope.teamID)
-	case scope.contestID != nil:
-		query = query.Where("contest_id = ? AND user_id = ? AND team_id IS NULL", *scope.contestID, userID)
+	case scope.TeamID != nil && scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND team_id = ?", *scope.ContestID, *scope.TeamID)
+	case scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND user_id = ? AND team_id IS NULL", *scope.ContestID, userID)
 	default:
 		query = query.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL", userID)
 	}

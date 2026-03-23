@@ -1,4 +1,4 @@
-package practice
+package application
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
+	"ctf-platform/internal/module/practice/testsupport"
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
@@ -86,7 +87,7 @@ func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID i
 }
 
 func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
-	db := setupPracticeTestDB(t)
+	db := testsupport.SetupPracticeTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -258,7 +259,14 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	flagSalt := "static-salt"
 
 	bus := events.NewBus()
-	repo := NewRepository(db)
+	repo := &stubPracticeRepository{
+		findCorrectSubmissionFn: func(userID, challengeID int64) (*model.Submission, error) {
+			return nil, gorm.ErrRecordNotFound
+		},
+		createSubmissionFn: func(submission *model.Submission) error {
+			return db.Create(submission).Error
+		},
+	}
 	service := NewService(
 		repo,
 		&stubPracticeChallengeContract{
@@ -322,19 +330,4 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("expected practice.flag_accepted event to be published")
 	}
-}
-
-func setupPracticeTestDB(t *testing.T) *gorm.DB {
-	t.Helper()
-
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(&model.Image{}); err != nil {
-		t.Fatalf("migrate image: %v", err)
-	}
-	return db
 }

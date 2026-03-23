@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"ctf-platform/internal/model"
-	practiceModule "ctf-platform/internal/module/practice"
+	practiceapp "ctf-platform/internal/module/practice/application"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 )
 
@@ -42,7 +42,7 @@ func (a *PracticeRuntimeService) CleanupRuntime(instance *model.Instance) error 
 	return a.cleaner.CleanupRuntime(instance)
 }
 
-func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceModule.TopologyCreateRequest) (*practiceModule.TopologyCreateResult, error) {
+func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceapp.TopologyCreateRequest) (*practiceapp.TopologyCreateResult, error) {
 	if a == nil || a.provisioner == nil || req == nil {
 		return nil, nil
 	}
@@ -59,7 +59,7 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 	if result == nil {
 		return nil, nil
 	}
-	return &practiceModule.TopologyCreateResult{
+	return &practiceapp.TopologyCreateResult{
 		PrimaryContainerID: result.PrimaryContainerID,
 		NetworkID:          result.NetworkID,
 		AccessURL:          result.AccessURL,
@@ -87,7 +87,7 @@ func isNilDependency(dependency any) bool {
 	}
 }
 
-func toRuntimeTopologyNetworks(items []practiceModule.TopologyCreateNetwork) []runtimeapp.TopologyCreateNetwork {
+func toRuntimeTopologyNetworks(items []practiceapp.TopologyCreateNetwork) []runtimeapp.TopologyCreateNetwork {
 	result := make([]runtimeapp.TopologyCreateNetwork, 0, len(items))
 	for _, item := range items {
 		result = append(result, runtimeapp.TopologyCreateNetwork{
@@ -98,7 +98,7 @@ func toRuntimeTopologyNetworks(items []practiceModule.TopologyCreateNetwork) []r
 	return result
 }
 
-func toRuntimeTopologyNodes(items []practiceModule.TopologyCreateNode) []runtimeapp.TopologyCreateNode {
+func toRuntimeTopologyNodes(items []practiceapp.TopologyCreateNode) []runtimeapp.TopologyCreateNode {
 	result := make([]runtimeapp.TopologyCreateNode, 0, len(items))
 	for _, item := range items {
 		result = append(result, runtimeapp.TopologyCreateNode{
