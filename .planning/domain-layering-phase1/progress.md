@@ -98,3 +98,6 @@
 - 本轮限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 继续收敛测试侧重复 runtime adapter：
+  - 新增 `internal/testutil/runtimeadapters.ImageRuntime`，统一 challenge 镜像测试所需的 runtime bridge
+  - `challenge/application` 镜像测试已切到共享 adapter，删除模块内本地 `stubImageRuntime`
