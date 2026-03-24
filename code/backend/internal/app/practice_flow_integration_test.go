@@ -32,7 +32,6 @@ import (
 	authhttp "ctf-platform/internal/module/auth/api/http"
 	authapp "ctf-platform/internal/module/auth/application"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
-	challengemodule "ctf-platform/internal/module/challenge"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengeapp "ctf-platform/internal/module/challenge/application"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
@@ -737,7 +736,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	challengeService := challengeapp.NewService(challengeRepo, imageRepo, cache, &challengemodule.Config{
+	challengeService := challengeapp.NewService(challengeRepo, imageRepo, cache, &challengeapp.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
 	challengeHandler := challengehttp.NewHandler(challengeService)
