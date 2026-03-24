@@ -3,7 +3,6 @@ package composition
 import (
 	"context"
 
-	challengemodule "ctf-platform/internal/module/challenge"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengeapp "ctf-platform/internal/module/challenge/application"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -39,7 +38,7 @@ func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule,
 		challengeRepo,
 		imageRepo,
 		cache,
-		&challengemodule.Config{SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL},
+		&challengeapp.Config{SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL},
 		log.Named("challenge_service"),
 	)
 	writeupService := challengeapp.NewWriteupService(challengeRepo)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	challengemodule "ctf-platform/internal/module/challenge"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
@@ -16,7 +15,7 @@ import (
 )
 
 func newTestService(repo ChallengeRepository, imageRepo ImageRepository) *Service {
-	return NewService(repo, imageRepo, nil, &challengemodule.Config{SolvedCountCacheTTL: time.Minute}, nil)
+	return NewService(repo, imageRepo, nil, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {
@@ -204,7 +203,7 @@ func TestServiceGetSolvedCountCachedHonorsContextCancellation(t *testing.T) {
 		_ = redisClient.Close()
 	})
 
-	service := NewService(challengeinfra.NewRepository(db), nil, redisClient, &challengemodule.Config{SolvedCountCacheTTL: time.Minute}, nil)
+	service := NewService(challengeinfra.NewRepository(db), nil, redisClient, &Config{SolvedCountCacheTTL: time.Minute}, nil)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

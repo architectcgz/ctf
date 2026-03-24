@@ -101,3 +101,7 @@
 - 继续收敛测试侧重复 runtime adapter：
   - 新增 `internal/testutil/runtimeadapters.ImageRuntime`，统一 challenge 镜像测试所需的 runtime bridge
   - `challenge/application` 镜像测试已切到共享 adapter，删除模块内本地 `stubImageRuntime`
+- 继续清空 `challenge` 根包：
+  - `challenge.Config` 已下沉到 `challenge/application.Config`
+  - challenge 服务内使用的错误文案已收口到 `challenge/application`
+  - 根包遗留未使用常量已删除，根目录不再保留 Go 代码
