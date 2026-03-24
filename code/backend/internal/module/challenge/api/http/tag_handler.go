@@ -10,18 +10,22 @@ import (
 )
 
 type TagHandler struct {
-	service tagService
+	commands tagCommandService
+	queries  tagQueryService
 }
 
-type tagService interface {
+type tagCommandService interface {
 	CreateTag(req *dto.CreateTagReq) (*dto.TagResp, error)
-	ListTags(tagType string) ([]*dto.TagResp, error)
 	AttachTags(challengeID int64, tagIDs []int64) error
 	DetachTags(challengeID int64, tagIDs []int64) error
 }
 
-func NewTagHandler(service tagService) *TagHandler {
-	return &TagHandler{service: service}
+type tagQueryService interface {
+	ListTags(tagType string) ([]*dto.TagResp, error)
+}
+
+func NewTagHandler(commands tagCommandService, queries tagQueryService) *TagHandler {
+	return &TagHandler{commands: commands, queries: queries}
 }
 
 func (h *TagHandler) CreateTag(c *gin.Context) {
@@ -31,7 +35,7 @@ func (h *TagHandler) CreateTag(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateTag(&req)
+	resp, err := h.commands.CreateTag(&req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -47,7 +51,7 @@ func (h *TagHandler) ListTags(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListTags(query.Type)
+	result, err := h.queries.ListTags(query.Type)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -69,7 +73,7 @@ func (h *TagHandler) AttachTags(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.AttachTags(id, req.TagIDs); err != nil {
+	if err := h.commands.AttachTags(id, req.TagIDs); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -90,7 +94,7 @@ func (h *TagHandler) DetachTags(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DetachTags(id, req.TagIDs); err != nil {
+	if err := h.commands.DetachTags(id, req.TagIDs); err != nil {
 		response.FromError(c, err)
 		return
 	}

@@ -15,22 +15,26 @@ import (
 )
 
 type Handler struct {
-	service challengeService
+	commands challengeCommandService
+	queries  challengeQueryService
 }
 
-type challengeService interface {
+type challengeCommandService interface {
 	CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
 	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
+	PublishChallenge(id int64) error
+}
+
+type challengeQueryService interface {
 	GetChallenge(id int64) (*dto.ChallengeResp, error)
 	ListChallenges(query *dto.ChallengeQuery) (*dto.PageResult, error)
-	PublishChallenge(id int64) error
 	ListPublishedChallengesWithContext(ctx context.Context, userID int64, query *dto.ChallengeQuery) (*dto.PageResult, error)
 	GetPublishedChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.ChallengeDetailResp, error)
 }
 
-func NewHandler(service challengeService) *Handler {
-	return &Handler{service: service}
+func NewHandler(commands challengeCommandService, queries challengeQueryService) *Handler {
+	return &Handler{commands: commands, queries: queries}
 }
 
 func (h *Handler) CreateChallenge(c *gin.Context) {
@@ -40,7 +44,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateChallenge(&req)
+	resp, err := h.commands.CreateChallenge(&req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -62,7 +66,7 @@ func (h *Handler) UpdateChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateChallenge(id, &req); err != nil {
+	if err := h.commands.UpdateChallenge(id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -77,7 +81,7 @@ func (h *Handler) DeleteChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteChallenge(id); err != nil {
+	if err := h.commands.DeleteChallenge(id); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -92,7 +96,7 @@ func (h *Handler) GetChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetChallenge(id)
+	resp, err := h.queries.GetChallenge(id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -108,7 +112,7 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListChallenges(&query)
+	result, err := h.queries.ListChallenges(&query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -124,7 +128,7 @@ func (h *Handler) PublishChallenge(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.PublishChallenge(id); err != nil {
+	if err := h.commands.PublishChallenge(id); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -140,7 +144,7 @@ func (h *Handler) ListPublishedChallenges(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListPublishedChallengesWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
+	result, err := h.queries.ListPublishedChallengesWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -157,7 +161,7 @@ func (h *Handler) GetPublishedChallenge(c *gin.Context) {
 		return
 	}
 
-	detail, err := h.service.GetPublishedChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	detail, err := h.queries.GetPublishedChallengeWithContext(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
 	if err != nil {
 		response.FromError(c, err)
 		return

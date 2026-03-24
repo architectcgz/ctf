@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 )
 
 type TeamRepository struct {
@@ -89,7 +89,7 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 			return err
 		}
 		if existingCount > 0 {
-			return contestapp.ErrAlreadyJoinedContest
+			return contestdomain.ErrAlreadyJoinedContest
 		}
 
 		var memberCount int64
@@ -97,7 +97,7 @@ func (r *TeamRepository) AddMemberWithLock(contestID, teamID, userID int64) erro
 			return err
 		}
 		if memberCount >= int64(team.MaxMembers) {
-			return contestapp.ErrTeamFull
+			return contestdomain.ErrTeamFull
 		}
 
 		member := &model.TeamMember{

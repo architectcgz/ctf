@@ -8,14 +8,14 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	"ctf-platform/pkg/response"
 )
 
 type reportService interface {
 	CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error)
 	CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error)
-	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentapp.ReportDownload, error)
+	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error)
 	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error)
 }
 

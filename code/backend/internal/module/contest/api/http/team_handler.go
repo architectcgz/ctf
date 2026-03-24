@@ -11,23 +11,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type teamService interface {
+type teamCommandService interface {
 	CreateTeam(ctx context.Context, contestID, captainID int64, req *dto.CreateTeamReq) (*dto.TeamResp, error)
 	JoinTeam(ctx context.Context, contestID, userID, teamID int64) (*dto.TeamResp, error)
 	LeaveTeam(ctx context.Context, contestID, userID, teamID int64) error
 	DismissTeam(ctx context.Context, contestID, captainID, teamID int64) error
-	GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error)
-	GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error)
-	ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error)
 	KickMember(ctx context.Context, contestID, captainID, teamID, memberUserID int64) error
 }
 
-type TeamHandler struct {
-	teamService teamService
+type teamQueryService interface {
+	GetTeamInfo(teamID int64) (*dto.TeamResp, []*dto.TeamMemberResp, error)
+	GetMyTeam(ctx context.Context, contestID, userID int64) (map[string]any, error)
+	ListTeams(ctx context.Context, contestID int64) ([]*dto.TeamResp, error)
 }
 
-func NewTeamHandler(teamService teamService) *TeamHandler {
-	return &TeamHandler{teamService: teamService}
+type TeamHandler struct {
+	commands teamCommandService
+	queries  teamQueryService
+}
+
+func NewTeamHandler(commands teamCommandService, queries teamQueryService) *TeamHandler {
+	return &TeamHandler{commands: commands, queries: queries}
 }
 
 func (h *TeamHandler) CreateTeam(c *gin.Context) {
@@ -44,7 +48,7 @@ func (h *TeamHandler) CreateTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	teamResp, err := h.teamService.CreateTeam(c.Request.Context(), contestID, userID, &req)
+	teamResp, err := h.commands.CreateTeam(c.Request.Context(), contestID, userID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -66,7 +70,7 @@ func (h *TeamHandler) JoinTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	teamResp, err := h.teamService.JoinTeam(c.Request.Context(), contestID, userID, teamID)
+	teamResp, err := h.commands.JoinTeam(c.Request.Context(), contestID, userID, teamID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -88,7 +92,7 @@ func (h *TeamHandler) LeaveTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	if err := h.teamService.LeaveTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
+	if err := h.commands.LeaveTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -109,7 +113,7 @@ func (h *TeamHandler) DismissTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	if err := h.teamService.DismissTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
+	if err := h.commands.DismissTeam(c.Request.Context(), contestID, userID, teamID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -124,7 +128,7 @@ func (h *TeamHandler) GetTeamInfo(c *gin.Context) {
 		return
 	}
 
-	teamResp, members, err := h.teamService.GetTeamInfo(teamID)
+	teamResp, members, err := h.queries.GetTeamInfo(teamID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -143,7 +147,7 @@ func (h *TeamHandler) ListTeams(c *gin.Context) {
 		return
 	}
 
-	teams, err := h.teamService.ListTeams(c.Request.Context(), contestID)
+	teams, err := h.queries.ListTeams(c.Request.Context(), contestID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -160,7 +164,7 @@ func (h *TeamHandler) GetMyTeam(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	team, err := h.teamService.GetMyTeam(c.Request.Context(), contestID, userID)
+	team, err := h.queries.GetMyTeam(c.Request.Context(), contestID, userID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -186,7 +190,7 @@ func (h *TeamHandler) KickMember(c *gin.Context) {
 	}
 
 	userID := authctx.MustCurrentUser(c).UserID
-	if err := h.teamService.KickMember(c.Request.Context(), contestID, userID, teamID, memberUserID); err != nil {
+	if err := h.commands.KickMember(c.Request.Context(), contestID, userID, teamID, memberUserID); err != nil {
 		response.FromError(c, err)
 		return
 	}

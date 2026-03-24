@@ -11,19 +11,23 @@ import (
 )
 
 type ImageHandler struct {
-	service imageService
+	commands imageCommandService
+	queries  imageQueryService
 }
 
-type imageService interface {
+type imageCommandService interface {
 	CreateImageWithContext(ctx context.Context, req *dto.CreateImageReq) (*dto.ImageResp, error)
-	GetImage(id int64) (*dto.ImageResp, error)
-	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
 	UpdateImage(id int64, req *dto.UpdateImageReq) error
 	DeleteImage(id int64) error
 }
 
-func NewImageHandler(service imageService) *ImageHandler {
-	return &ImageHandler{service: service}
+type imageQueryService interface {
+	GetImage(id int64) (*dto.ImageResp, error)
+	ListImages(query *dto.ImageQuery) (*dto.PageResult, error)
+}
+
+func NewImageHandler(commands imageCommandService, queries imageQueryService) *ImageHandler {
+	return &ImageHandler{commands: commands, queries: queries}
 }
 
 func (h *ImageHandler) CreateImage(c *gin.Context) {
@@ -33,7 +37,7 @@ func (h *ImageHandler) CreateImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateImageWithContext(c.Request.Context(), &req)
+	resp, err := h.commands.CreateImageWithContext(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -49,7 +53,7 @@ func (h *ImageHandler) GetImage(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.GetImage(id)
+	resp, err := h.queries.GetImage(id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -65,7 +69,7 @@ func (h *ImageHandler) ListImages(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.ListImages(&query)
+	result, err := h.queries.ListImages(&query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -87,7 +91,7 @@ func (h *ImageHandler) UpdateImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateImage(id, &req); err != nil {
+	if err := h.commands.UpdateImage(id, &req); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -102,7 +106,7 @@ func (h *ImageHandler) DeleteImage(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteImage(id); err != nil {
+	if err := h.commands.DeleteImage(id); err != nil {
 		response.FromError(c, err)
 		return
 	}

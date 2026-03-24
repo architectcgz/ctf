@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
-	practiceapp "ctf-platform/internal/module/practice/application"
+	practiceports "ctf-platform/internal/module/practice/ports"
 )
 
 type Repository struct {
@@ -34,7 +34,7 @@ func (r *Repository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo practiceapp.PracticeRepository) error) error {
+func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo practiceports.PracticeRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
@@ -68,7 +68,7 @@ func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, con
 	return &registration, nil
 }
 
-func (r *Repository) LockInstanceScope(userID int64, scope practiceapp.InstanceScope) error {
+func (r *Repository) LockInstanceScope(userID int64, scope practiceports.InstanceScope) error {
 	if scope.TeamID != nil {
 		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.TeamID).
@@ -79,7 +79,7 @@ func (r *Repository) LockInstanceScope(userID int64, scope practiceapp.InstanceS
 		First(&model.User{}).Error
 }
 
-func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceapp.InstanceScope) (*model.Instance, error) {
+func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	query := r.db.Model(&model.Instance{}).
 		Where("challenge_id = ? AND status IN ?", challengeID, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
 
@@ -102,7 +102,7 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 	return &instance, nil
 }
 
-func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceapp.InstanceScope) (int, error) {
+func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
 	query := r.db.Model(&model.Instance{}).
 		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
 

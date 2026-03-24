@@ -11,18 +11,22 @@ import (
 )
 
 type WriteupHandler struct {
-	service writeupService
+	commands writeupCommandService
+	queries  writeupQueryService
 }
 
-type writeupService interface {
+type writeupCommandService interface {
 	Upsert(challengeID, actorUserID int64, req *dto.UpsertChallengeWriteupReq) (*dto.AdminChallengeWriteupResp, error)
-	GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	Delete(challengeID int64) error
+}
+
+type writeupQueryService interface {
+	GetAdmin(challengeID int64) (*dto.AdminChallengeWriteupResp, error)
 	GetPublished(userID, challengeID int64) (*dto.ChallengeWriteupResp, error)
 }
 
-func NewWriteupHandler(service writeupService) *WriteupHandler {
-	return &WriteupHandler{service: service}
+func NewWriteupHandler(commands writeupCommandService, queries writeupQueryService) *WriteupHandler {
+	return &WriteupHandler{commands: commands, queries: queries}
 }
 
 func (h *WriteupHandler) Upsert(c *gin.Context) {
@@ -36,7 +40,7 @@ func (h *WriteupHandler) Upsert(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.Upsert(challengeID, authctx.MustCurrentUser(c).UserID, &req)
+	resp, err := h.commands.Upsert(challengeID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -50,7 +54,7 @@ func (h *WriteupHandler) GetAdmin(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.service.GetAdmin(challengeID)
+	resp, err := h.queries.GetAdmin(challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -64,7 +68,7 @@ func (h *WriteupHandler) Delete(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	if err := h.service.Delete(challengeID); err != nil {
+	if err := h.commands.Delete(challengeID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -77,7 +81,7 @@ func (h *WriteupHandler) GetPublished(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.service.GetPublished(authctx.MustCurrentUser(c).UserID, challengeID)
+	resp, err := h.queries.GetPublished(authctx.MustCurrentUser(c).UserID, challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

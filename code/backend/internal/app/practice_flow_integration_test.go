@@ -33,7 +33,8 @@ import (
 	authapp "ctf-platform/internal/module/auth/application"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
-	challengeapp "ctf-platform/internal/module/challenge/application"
+	challengecmd "ctf-platform/internal/module/challenge/application/commands"
+	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	identityapp "ctf-platform/internal/module/identity/application"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
@@ -41,7 +42,7 @@ import (
 	opsapp "ctf-platform/internal/module/ops/application"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
-	practiceapp "ctf-platform/internal/module/practice/application"
+	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
@@ -736,16 +737,21 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	challengeService := challengeapp.NewService(challengeRepo, imageRepo, cache, &challengeapp.Config{
+	challengeCommandService := challengecmd.NewChallengeService(challengeRepo, imageRepo)
+	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, cache, &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)
-	challengeHandler := challengehttp.NewHandler(challengeService)
+	challengeHandler := challengehttp.NewHandler(challengeCommandService, challengeQueryService)
 
-	flagService, err := challengeapp.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	flagQueryService, err := challengeqry.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
 	if err != nil {
-		t.Fatalf("create flag service: %v", err)
+		t.Fatalf("create flag query service: %v", err)
 	}
-	flagHandler := challengehttp.NewFlagHandler(flagService)
+	flagCommandService, err := challengecmd.NewFlagService(challengeRepo, cfg.Container.FlagGlobalSecret)
+	if err != nil {
+		t.Fatalf("create flag command service: %v", err)
+	}
+	flagHandler := challengehttp.NewFlagHandler(flagCommandService, flagQueryService)
 
 	practiceRepo := practiceinfra.NewRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
@@ -758,7 +764,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)
-	practiceService := practiceapp.NewService(
+	practiceService := practicecmd.NewService(
 		practiceRepo,
 		challengeRepo,
 		imageRepo,

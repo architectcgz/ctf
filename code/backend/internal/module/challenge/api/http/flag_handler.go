@@ -11,17 +11,21 @@ import (
 )
 
 type FlagHandler struct {
-	flagService flagService
+	commands flagCommandService
+	queries  flagQueryService
 }
 
-type flagService interface {
+type flagCommandService interface {
 	ConfigureStaticFlag(challengeID int64, flag, flagPrefix string) error
 	ConfigureDynamicFlag(challengeID int64, flagPrefix string) error
+}
+
+type flagQueryService interface {
 	GetFlagConfig(challengeID int64) (*dto.FlagResp, error)
 }
 
-func NewFlagHandler(flagService flagService) *FlagHandler {
-	return &FlagHandler{flagService: flagService}
+func NewFlagHandler(commands flagCommandService, queries flagQueryService) *FlagHandler {
+	return &FlagHandler{commands: commands, queries: queries}
 }
 
 // ConfigureFlag 配置 Flag
@@ -40,9 +44,9 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 	}
 
 	if req.FlagType == model.FlagTypeStatic {
-		err = h.flagService.ConfigureStaticFlag(challengeID, req.Flag, req.FlagPrefix)
+		err = h.commands.ConfigureStaticFlag(challengeID, req.Flag, req.FlagPrefix)
 	} else {
-		err = h.flagService.ConfigureDynamicFlag(challengeID, req.FlagPrefix)
+		err = h.commands.ConfigureDynamicFlag(challengeID, req.FlagPrefix)
 	}
 
 	if err != nil {
@@ -62,7 +66,7 @@ func (h *FlagHandler) GetFlagConfig(c *gin.Context) {
 		return
 	}
 
-	flagResp, err := h.flagService.GetFlagConfig(challengeID)
+	flagResp, err := h.queries.GetFlagConfig(challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return

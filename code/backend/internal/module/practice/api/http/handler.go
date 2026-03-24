@@ -20,7 +20,7 @@ type practiceService interface {
 	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
-	UnlockHint(userID, challengeID int64, level int) (*dto.UnlockHintResp, error)
+	UnlockHintWithContext(ctx context.Context, userID, challengeID int64, level int) (*dto.UnlockHintResp, error)
 }
 
 func NewHandler(service practiceService) *Handler {
@@ -110,7 +110,7 @@ func (h *Handler) UnlockHint(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.UnlockHint(userID, challengeID, level)
+	resp, err := h.service.UnlockHintWithContext(c.Request.Context(), userID, challengeID, level)
 	if err != nil {
 		response.FromError(c, err)
 		return

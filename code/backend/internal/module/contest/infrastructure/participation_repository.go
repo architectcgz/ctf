@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type ParticipationRepository struct {
@@ -52,7 +52,7 @@ func (r *ParticipationRepository) SaveRegistration(ctx context.Context, registra
 	return r.dbWithContext(ctx).Save(registration).Error
 }
 
-func (r *ParticipationRepository) ListRegistrations(ctx context.Context, contestID int64, status *string, offset, limit int) ([]*contestapp.ContestParticipationRegistrationRow, int64, error) {
+func (r *ParticipationRepository) ListRegistrations(ctx context.Context, contestID int64, status *string, offset, limit int) ([]*contestports.ContestParticipationRegistrationRow, int64, error) {
 	baseQuery := r.dbWithContext(ctx).
 		Table("contest_registrations AS cr").
 		Joins("JOIN users u ON u.id = cr.user_id").
@@ -66,7 +66,7 @@ func (r *ParticipationRepository) ListRegistrations(ctx context.Context, contest
 		return nil, 0, err
 	}
 
-	var rows []*contestapp.ContestParticipationRegistrationRow
+	var rows []*contestports.ContestParticipationRegistrationRow
 	if err := baseQuery.
 		Select("cr.id, cr.contest_id, cr.user_id, u.username, cr.team_id, cr.status, cr.reviewed_by, cr.reviewed_at, cr.created_at, cr.updated_at").
 		Order("cr.created_at ASC, cr.id ASC").
@@ -111,8 +111,8 @@ func (r *ParticipationRepository) DeleteAnnouncement(ctx context.Context, contes
 	return result.RowsAffected > 0, nil
 }
 
-func (r *ParticipationRepository) ListSolvedProgress(ctx context.Context, contestID, userID int64) ([]*contestapp.ContestParticipationSolvedProgressRow, error) {
-	var rows []*contestapp.ContestParticipationSolvedProgressRow
+func (r *ParticipationRepository) ListSolvedProgress(ctx context.Context, contestID, userID int64) ([]*contestports.ContestParticipationSolvedProgressRow, error) {
+	var rows []*contestports.ContestParticipationSolvedProgressRow
 	if err := r.dbWithContext(ctx).
 		Table("submissions AS s").
 		Select("cc.id AS contest_challenge_id, s.submitted_at AS solved_at, s.score AS points_earned").

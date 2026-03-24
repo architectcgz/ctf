@@ -13,30 +13,36 @@ import (
 type contestService interface {
 	CreateContest(ctx context.Context, req *dto.CreateContestReq) (*dto.ContestResp, error)
 	UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error)
+}
+
+type contestQueryService interface {
 	GetContest(ctx context.Context, id int64) (*dto.ContestResp, error)
 	ListContests(ctx context.Context, req *dto.ListContestsReq) ([]*dto.ContestResp, int64, error)
 }
 
-type scoreboardService interface {
+type scoreboardQueryService interface {
 	GetScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
 	GetLiveScoreboard(ctx context.Context, contestID int64, page, pageSize int) (*dto.ScoreboardResp, error)
+}
+
+type scoreboardCommandService interface {
 	FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error
 	UnfreezeScoreboard(ctx context.Context, contestID int64) error
 }
 
 type Handler struct {
-	service           contestService
-	scoreboardService scoreboardService
+	commands          contestService
+	queries           contestQueryService
+	scoreboardQueries scoreboardQueryService
+	scoreboardCommand scoreboardCommandService
 }
 
-func NewHandler(service contestService, scoreboardServices ...scoreboardService) *Handler {
-	var sb scoreboardService
-	if len(scoreboardServices) > 0 {
-		sb = scoreboardServices[0]
-	}
+func NewHandler(commands contestService, queries contestQueryService, scoreboardQueries scoreboardQueryService, scoreboardCommand scoreboardCommandService) *Handler {
 	return &Handler{
-		service:           service,
-		scoreboardService: sb,
+		commands:          commands,
+		queries:           queries,
+		scoreboardQueries: scoreboardQueries,
+		scoreboardCommand: scoreboardCommand,
 	}
 }
 
@@ -47,7 +53,7 @@ func (h *Handler) CreateContest(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.CreateContest(c.Request.Context(), &req)
+	resp, err := h.commands.CreateContest(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -64,7 +70,7 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.service.UpdateContest(c.Request.Context(), id, &req)
+	resp, err := h.commands.UpdateContest(c.Request.Context(), id, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -75,7 +81,7 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 
 func (h *Handler) GetContest(c *gin.Context) {
 	id := c.GetInt64("id")
-	resp, err := h.service.GetContest(c.Request.Context(), id)
+	resp, err := h.queries.GetContest(c.Request.Context(), id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -90,7 +96,7 @@ func (h *Handler) ListContests(c *gin.Context) {
 		return
 	}
 
-	contests, total, err := h.service.ListContests(c.Request.Context(), &req)
+	contests, total, err := h.queries.ListContests(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -138,9 +144,9 @@ func (h *Handler) getScoreboard(c *gin.Context, live bool) {
 
 	var scoreboard *dto.ScoreboardResp
 	if live {
-		scoreboard, err = h.scoreboardService.GetLiveScoreboard(c.Request.Context(), contestID, page, pageSize)
+		scoreboard, err = h.scoreboardQueries.GetLiveScoreboard(c.Request.Context(), contestID, page, pageSize)
 	} else {
-		scoreboard, err = h.scoreboardService.GetScoreboard(c.Request.Context(), contestID, page, pageSize)
+		scoreboard, err = h.scoreboardQueries.GetScoreboard(c.Request.Context(), contestID, page, pageSize)
 	}
 	if err != nil {
 		response.FromError(c, err)
@@ -163,7 +169,7 @@ func (h *Handler) FreezeScoreboard(c *gin.Context) {
 		return
 	}
 
-	if err := h.scoreboardService.FreezeScoreboard(c.Request.Context(), contestID, req.MinutesBeforeEnd); err != nil {
+	if err := h.scoreboardCommand.FreezeScoreboard(c.Request.Context(), contestID, req.MinutesBeforeEnd); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -178,7 +184,7 @@ func (h *Handler) UnfreezeScoreboard(c *gin.Context) {
 		return
 	}
 
-	if err := h.scoreboardService.UnfreezeScoreboard(c.Request.Context(), contestID); err != nil {
+	if err := h.scoreboardCommand.UnfreezeScoreboard(c.Request.Context(), contestID); err != nil {
 		response.FromError(c, err)
 		return
 	}

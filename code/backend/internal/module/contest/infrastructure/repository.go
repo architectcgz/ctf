@@ -9,7 +9,8 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type Repository struct {
@@ -29,7 +30,7 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*model.Contest, er
 	err := r.db.WithContext(ctx).Where("id = ?", id).First(&contest).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, contestapp.ErrContestNotFound
+			return nil, contestdomain.ErrContestNotFound
 		}
 		return nil, err
 	}
@@ -108,7 +109,7 @@ func (r *Repository) UpdateStatus(ctx context.Context, id int64, status string) 
 			return err
 		}
 		if !exists {
-			return contestapp.ErrContestNotFound
+			return contestdomain.ErrContestNotFound
 		}
 	}
 
@@ -140,8 +141,8 @@ type scoreboardTeamStatsRow struct {
 	LastSubmissionAtRaw string `gorm:"column:last_submission_at"`
 }
 
-func (r *Repository) FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]contestapp.ScoreboardTeamStats, error) {
-	result := make(map[int64]contestapp.ScoreboardTeamStats, len(teamIDs))
+func (r *Repository) FindScoreboardTeamStats(ctx context.Context, contestID int64, contestMode string, teamIDs []int64) (map[int64]contestports.ScoreboardTeamStats, error) {
+	result := make(map[int64]contestports.ScoreboardTeamStats, len(teamIDs))
 	if len(teamIDs) == 0 {
 		return result, nil
 	}
@@ -172,7 +173,7 @@ func (r *Repository) FindScoreboardTeamStats(ctx context.Context, contestID int6
 	}
 
 	for _, row := range rows {
-		result[row.TeamID] = contestapp.ScoreboardTeamStats{
+		result[row.TeamID] = contestports.ScoreboardTeamStats{
 			SolvedCount:      row.SolvedCount,
 			LastSubmissionAt: parseContestAggregateTime(row.LastSubmissionAtRaw),
 		}
