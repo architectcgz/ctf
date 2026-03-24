@@ -6,8 +6,9 @@ import (
 
 	"ctf-platform/internal/model"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
-	practiceapp "ctf-platform/internal/module/practice/application"
+	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 )
 
@@ -23,8 +24,8 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	cache := root.Cache()
 
 	repo := practiceinfra.NewRepository(db)
-	scoreService := practiceapp.NewScoreService(repo, cache, log.Named("score_service"), &cfg.Score)
-	service := practiceapp.NewService(
+	scoreService := practicecmd.NewScoreService(repo, cache, log.Named("score_service"), &cfg.Score)
+	service := practicecmd.NewService(
 		repo,
 		challenge.Catalog,
 		challenge.ImageStore,
@@ -56,7 +57,7 @@ type practiceRuntimeRepositoryBridge interface {
 
 type practiceRuntimeInstanceService interface {
 	CleanupRuntime(instance *model.Instance) error
-	CreateTopology(ctx context.Context, req *practiceapp.TopologyCreateRequest) (*practiceapp.TopologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
@@ -100,7 +101,7 @@ func (a *practiceRuntimeInstanceServiceAdapter) CleanupRuntime(instance *model.I
 	return a.cleaner.CleanupRuntime(instance)
 }
 
-func (a *practiceRuntimeInstanceServiceAdapter) CreateTopology(ctx context.Context, req *practiceapp.TopologyCreateRequest) (*practiceapp.TopologyCreateResult, error) {
+func (a *practiceRuntimeInstanceServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
 	if a == nil || a.provisioner == nil || req == nil {
 		return nil, nil
 	}
@@ -119,7 +120,7 @@ func (a *practiceRuntimeInstanceServiceAdapter) CreateContainer(ctx context.Cont
 	return a.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
-func toRuntimeTopologyCreateRequest(req *practiceapp.TopologyCreateRequest) *runtimeapp.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeapp.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
@@ -153,11 +154,11 @@ func toRuntimeTopologyCreateRequest(req *practiceapp.TopologyCreateRequest) *run
 	}
 }
 
-func fromRuntimeTopologyCreateResult(result *runtimeapp.TopologyCreateResult) *practiceapp.TopologyCreateResult {
+func fromRuntimeTopologyCreateResult(result *runtimeapp.TopologyCreateResult) *practiceports.TopologyCreateResult {
 	if result == nil {
 		return nil
 	}
-	return &practiceapp.TopologyCreateResult{
+	return &practiceports.TopologyCreateResult{
 		PrimaryContainerID: result.PrimaryContainerID,
 		NetworkID:          result.NetworkID,
 		AccessURL:          result.AccessURL,

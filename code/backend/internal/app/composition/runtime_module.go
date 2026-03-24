@@ -7,7 +7,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	challengeapp "ctf-platform/internal/module/challenge/application"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
@@ -36,7 +36,7 @@ type runtimePracticeDeps struct {
 }
 
 type runtimeChallengeDeps struct {
-	imageRuntime challengeapp.ImageRuntime
+	imageRuntime challengeports.ImageRuntime
 }
 
 type runtimeOpsDeps struct {

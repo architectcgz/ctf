@@ -1,0 +1,95 @@
+package queries
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+
+	"gorm.io/gorm"
+
+	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
+	"ctf-platform/internal/module/challenge/ports"
+	"ctf-platform/pkg/crypto"
+	"ctf-platform/pkg/errcode"
+)
+
+type FlagService struct {
+	repo         ports.ChallengeRepository
+	globalSecret string
+}
+
+func NewFlagService(repo ports.ChallengeRepository, globalSecret string) (*FlagService, error) {
+	secret := strings.TrimSpace(globalSecret)
+	if secret == "" {
+		return nil, fmt.Errorf("container.flag_global_secret 未配置")
+	}
+	if len(secret) < 32 {
+		return nil, fmt.Errorf("container.flag_global_secret 长度不足 32 字节，当前长度: %d", len(secret))
+	}
+	return &FlagService{
+		repo:         repo,
+		globalSecret: secret,
+	}, nil
+}
+
+func (s *FlagService) GenerateDynamicFlag(userID, challengeID int64, nonce string) (string, error) {
+	if nonce == "" {
+		return "", errcode.ErrInvalidParams
+	}
+
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return "", err
+	}
+	return crypto.GenerateDynamicFlag(userID, challengeID, s.globalSecret, nonce, challenge.FlagPrefix), nil
+}
+
+func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonce string) (bool, error) {
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return false, err
+	}
+
+	if challenge.FlagType == model.FlagTypeStatic {
+		hash := crypto.HashStaticFlag(input, challenge.FlagSalt)
+		return crypto.ValidateFlag(hash, challenge.FlagHash), nil
+	}
+
+	expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
+	if err != nil {
+		return false, err
+	}
+	return crypto.ValidateFlag(input, expectedFlag), nil
+}
+
+func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return nil, err
+	}
+
+	configured := false
+	if challenge.FlagType == model.FlagTypeStatic && challenge.FlagHash != "" {
+		configured = true
+	} else if challenge.FlagType == model.FlagTypeDynamic {
+		configured = true
+	}
+
+	return &dto.FlagResp{
+		FlagType:   challenge.FlagType,
+		FlagPrefix: challenge.FlagPrefix,
+		Configured: configured,
+	}, nil
+}
+
+func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {
+	challenge, err := s.repo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	return challenge, nil
+}

@@ -8,7 +8,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	"ctf-platform/pkg/response"
 )
 
@@ -67,7 +67,7 @@ func (h *Handler) GetStudentSkillProfile(c *gin.Context) {
 func (h *Handler) GetRecommendations(c *gin.Context) {
 	userID := authctx.MustCurrentUser(c).UserID
 
-	var req assessmentapp.RecommendationQuery
+	var req assessmentqry.RecommendationQuery
 	if err := c.ShouldBindQuery(&req); err != nil {
 		response.ValidationError(c, err)
 		return

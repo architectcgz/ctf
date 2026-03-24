@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 )
 
 type ReportRepository struct {
@@ -57,8 +57,8 @@ func (r *ReportRepository) MarkFailed(ctx context.Context, reportID int64, messa
 		}).Error
 }
 
-func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*assessmentapp.ReportUser, error) {
-	var user assessmentapp.ReportUser
+func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error) {
+	var user assessmentdomain.ReportUser
 	err := r.db.WithContext(ctx).Model(&model.User{}).
 		Select("id, username, class_name, role").
 		Where("id = ? AND deleted_at IS NULL", userID).
@@ -72,8 +72,8 @@ func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*ass
 	return &user, nil
 }
 
-func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (*assessmentapp.PersonalReportStats, error) {
-	var stats assessmentapp.PersonalReportStats
+func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (*assessmentdomain.PersonalReportStats, error) {
+	var stats assessmentdomain.PersonalReportStats
 	err := r.db.WithContext(ctx).Raw(`
 		WITH solved AS (
 			SELECT DISTINCT challenge_id
@@ -118,8 +118,8 @@ func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (
 	return &stats, nil
 }
 
-func (r *ReportRepository) ListPersonalDimensionStats(ctx context.Context, userID int64) ([]assessmentapp.ReportDimensionStat, error) {
-	stats := make([]assessmentapp.ReportDimensionStat, 0)
+func (r *ReportRepository) ListPersonalDimensionStats(ctx context.Context, userID int64) ([]assessmentdomain.ReportDimensionStat, error) {
+	stats := make([]assessmentdomain.ReportDimensionStat, 0)
 	err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.category AS dimension,
@@ -168,8 +168,8 @@ func (r *ReportRepository) GetClassAverageScore(ctx context.Context, className s
 	return avgScore, err
 }
 
-func (r *ReportRepository) ListClassDimensionAverages(ctx context.Context, className string) ([]assessmentapp.ClassDimensionAverage, error) {
-	rows := make([]assessmentapp.ClassDimensionAverage, 0)
+func (r *ReportRepository) ListClassDimensionAverages(ctx context.Context, className string) ([]assessmentdomain.ClassDimensionAverage, error) {
+	rows := make([]assessmentdomain.ClassDimensionAverage, 0)
 	err := r.db.WithContext(ctx).Raw(`
 		SELECT sp.dimension, COALESCE(AVG(sp.score), 0) AS avg_score
 		FROM users u
@@ -181,8 +181,8 @@ func (r *ReportRepository) ListClassDimensionAverages(ctx context.Context, class
 	return rows, err
 }
 
-func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentapp.ClassTopStudent, error) {
-	rows := make([]assessmentapp.ClassTopStudent, 0)
+func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentdomain.ClassTopStudent, error) {
+	rows := make([]assessmentdomain.ClassTopStudent, 0)
 	err := r.db.WithContext(ctx).Raw(`
 		WITH user_scores AS (
 			SELECT

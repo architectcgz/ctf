@@ -4,7 +4,8 @@ import (
 	"context"
 
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
-	assessmentapp "ctf-platform/internal/module/assessment/application"
+	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 )
@@ -24,9 +25,10 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	cache := root.Cache()
 
 	repo := assessmentinfra.NewRepository(db)
-	service := assessmentapp.NewService(repo, cache, cfg.Assessment, log.Named("assessment_service"))
-	service.RegisterPracticeEventConsumers(root.Events)
-	recommendationService := assessmentapp.NewRecommendationService(
+	profileCommandService := assessmentcmd.NewProfileService(repo, cache, cfg.Assessment, log.Named("assessment_service"))
+	profileCommandService.RegisterPracticeEventConsumers(root.Events)
+	profileQueryService := assessmentqry.NewProfileService(repo)
+	recommendationService := assessmentqry.NewRecommendationService(
 		repo,
 		challenge.Catalog,
 		cache,
@@ -35,8 +37,8 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
 	reportRepo := assessmentinfra.NewReportRepository(db)
-	reportService := assessmentapp.NewReportService(reportRepo, service, cfg.Report, log.Named("report_service"))
-	cleaner := assessmentapp.NewCleaner(service, log.Named("assessment_cleaner"))
+	reportService := assessmentcmd.NewReportService(reportRepo, profileQueryService, cfg.Report, log.Named("report_service"))
+	cleaner := assessmentcmd.NewCleaner(profileCommandService, log.Named("assessment_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"assessment_cleaner",
 		func(context.Context) error {
@@ -47,8 +49,8 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 
 	return &AssessmentModule{
 		BackgroundCloser: reportService,
-		Handler:          assessmenthttp.NewHandler(service, recommendationService),
-		ProfileService:   service,
+		Handler:          assessmenthttp.NewHandler(profileQueryService, recommendationService),
+		ProfileService:   profileCommandService,
 		Recommendations:  recommendationService,
 		ReportHandler:    assessmenthttp.NewReportHandler(reportService),
 	}

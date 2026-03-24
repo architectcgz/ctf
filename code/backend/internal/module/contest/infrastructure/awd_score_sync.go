@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -148,7 +148,7 @@ func RebuildContestScoreboardCache(ctx context.Context, db *gorm.DB, redis *redi
 		}
 		entries = append(entries, redislib.Z{
 			Score:  float64(team.TotalScore),
-			Member: contestapp.TeamIDToMember(team.ID),
+			Member: contestdomain.TeamIDToMember(team.ID),
 		})
 	}
 	if len(entries) > 0 {

@@ -10,22 +10,26 @@ import (
 )
 
 type TopologyHandler struct {
-	service topologyService
+	commands topologyCommandService
+	queries  topologyQueryService
 }
 
-type topologyService interface {
+type topologyCommandService interface {
 	SaveChallengeTopology(challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error)
-	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
 	DeleteChallengeTopology(challengeID int64) error
 	CreateTemplate(req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
 	UpdateTemplate(id int64, req *dto.UpsertEnvironmentTemplateReq) (*dto.EnvironmentTemplateResp, error)
-	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
-	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
 	DeleteTemplate(id int64) error
 }
 
-func NewTopologyHandler(service topologyService) *TopologyHandler {
-	return &TopologyHandler{service: service}
+type topologyQueryService interface {
+	GetChallengeTopology(challengeID int64) (*dto.ChallengeTopologyResp, error)
+	GetTemplate(id int64) (*dto.EnvironmentTemplateResp, error)
+	ListTemplates(keyword string) ([]*dto.EnvironmentTemplateResp, error)
+}
+
+func NewTopologyHandler(commands topologyCommandService, queries topologyQueryService) *TopologyHandler {
+	return &TopologyHandler{commands: commands, queries: queries}
 }
 
 func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
@@ -39,7 +43,7 @@ func (h *TopologyHandler) SaveChallengeTopology(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.SaveChallengeTopology(challengeID, &req)
+	resp, err := h.commands.SaveChallengeTopology(challengeID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -53,7 +57,7 @@ func (h *TopologyHandler) GetChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	resp, err := h.service.GetChallengeTopology(challengeID)
+	resp, err := h.queries.GetChallengeTopology(challengeID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -67,7 +71,7 @@ func (h *TopologyHandler) DeleteChallengeTopology(c *gin.Context) {
 		response.InvalidParams(c, "无效的 challenge id")
 		return
 	}
-	if err := h.service.DeleteChallengeTopology(challengeID); err != nil {
+	if err := h.commands.DeleteChallengeTopology(challengeID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -80,7 +84,7 @@ func (h *TopologyHandler) CreateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.CreateTemplate(&req)
+	resp, err := h.commands.CreateTemplate(&req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -99,7 +103,7 @@ func (h *TopologyHandler) UpdateTemplate(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	resp, err := h.service.UpdateTemplate(id, &req)
+	resp, err := h.commands.UpdateTemplate(id, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -113,7 +117,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	resp, err := h.service.GetTemplate(id)
+	resp, err := h.queries.GetTemplate(id)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -122,7 +126,7 @@ func (h *TopologyHandler) GetTemplate(c *gin.Context) {
 }
 
 func (h *TopologyHandler) ListTemplates(c *gin.Context) {
-	resp, err := h.service.ListTemplates(c.Query("keyword"))
+	resp, err := h.queries.ListTemplates(c.Query("keyword"))
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -136,7 +140,7 @@ func (h *TopologyHandler) DeleteTemplate(c *gin.Context) {
 		response.InvalidParams(c, "无效的 template id")
 		return
 	}
-	if err := h.service.DeleteTemplate(id); err != nil {
+	if err := h.commands.DeleteTemplate(id); err != nil {
 		response.FromError(c, err)
 		return
 	}

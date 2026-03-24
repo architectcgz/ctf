@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type AWDContainerFileWriter interface {
@@ -18,14 +18,14 @@ type noopAWDFlagInjector struct {
 	log *zap.Logger
 }
 
-func NewNoopAWDFlagInjector(log *zap.Logger) contestapp.AWDFlagInjector {
+func NewNoopAWDFlagInjector(log *zap.Logger) contestports.AWDFlagInjector {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	return &noopAWDFlagInjector{log: log}
 }
 
-func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestapp.AWDFlagAssignment) error {
+func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestports.AWDFlagAssignment) error {
 	i.log.Debug("skip_awd_flag_injection",
 		zap.Int64("contest_id", contest.ID),
 		zap.Int64("round_id", round.ID),
@@ -41,7 +41,7 @@ type dockerAWDFlagInjector struct {
 	log          *zap.Logger
 }
 
-func NewDockerAWDFlagInjector(db *gorm.DB, writer AWDContainerFileWriter, log *zap.Logger) contestapp.AWDFlagInjector {
+func NewDockerAWDFlagInjector(db *gorm.DB, writer AWDContainerFileWriter, log *zap.Logger) contestports.AWDFlagInjector {
 	if writer == nil {
 		return NewNoopAWDFlagInjector(log)
 	}
@@ -56,7 +56,7 @@ func NewDockerAWDFlagInjector(db *gorm.DB, writer AWDContainerFileWriter, log *z
 	}
 }
 
-func (i *dockerAWDFlagInjector) InjectRoundFlags(ctx context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestapp.AWDFlagAssignment) error {
+func (i *dockerAWDFlagInjector) InjectRoundFlags(ctx context.Context, contest *model.Contest, round *model.AWDRound, assignments []contestports.AWDFlagAssignment) error {
 	if i.db == nil || contest == nil || round == nil || len(assignments) == 0 {
 		return nil
 	}

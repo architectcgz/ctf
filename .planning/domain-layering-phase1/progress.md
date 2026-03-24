@@ -105,3 +105,57 @@
   - `challenge.Config` 已下沉到 `challenge/application.Config`
   - challenge 服务内使用的错误文案已收口到 `challenge/application`
   - 根包遗留未使用常量已删除，根目录不再保留 Go 代码
+- 启动 `challenge` Phase 2 分层：
+  - `challenge/application` 已继续拆为 `application/commands` 与 `application/queries`
+  - repository / runtime 依赖口已从 `application/ports.go` 下沉到 `challenge/ports`
+  - 通用映射与拓扑编解码已收敛到 `challenge/domain`
+  - `challenge/api/http` 已改为组合 command/query service，而不是继续绑定单个大 service
+  - `composition`、practice flow 集成测试、contest submission 测试已切到新目录依赖
+  - 新增 `challenge/architecture_test.go`，约束 root 空壳与 commands/queries/ports/domain 边界
+
+## 2026-03-24
+
+- 启动 `practice` Phase 2 分层：
+  - `practice/application` 已继续拆为 `application/commands` 与 `application/queries`
+  - repository / runtime / assessment 依赖口与 topology create contract 已下沉到 `practice/ports`
+  - 实例响应映射、计分权重与拓扑规划算法已收敛到 `practice/domain`
+  - `practice/api/http` 已切到 command service，并补充 `UnlockHintWithContext` 以避免 handler 再走 `context.Background()`
+  - `PracticeModule`、practice flow 集成测试与 practice 模块测试已切到新目录依赖
+  - 新增 `practice/architecture_test.go`，约束 root 空壳与 commands/queries/ports/domain 边界
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/practice/... -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 启动 `assessment` Phase 2 分层：
+  - `assessment/application` 已继续拆为 `application/commands` 与 `application/queries`
+  - repository / challenge query / report reader 依赖口已下沉到 `assessment/ports`
+  - 画像维度统计、空画像构建、推荐配置和报告相关值对象已收敛到 `assessment/domain`
+  - `AssessmentModule` 已改为装配 profile command/query、recommendation query 和 report command service
+  - assessment handler 已切到 query service，请求 DTO 也改为从 `queries` 读取
+  - 新增 `assessment/architecture_test.go`，约束 root 空壳与 commands/queries/ports/domain 边界
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/assessment/... -count=1`
+- 推进 `contest` Phase 2 命令查询分层首个可提交切片：
+  - `contest/application` 已新增 `commands` 与 `queries`，并将 `challenge / participation / team / submission` 物理迁入新目录
+  - `contest/ports` 已收敛 repository / transaction / AWD 依赖口，infrastructure 已切到新 `ports` 契约
+  - `contest/domain` 已补齐 `contest/team/challenge` 响应映射，复用既有状态规则、报名规则与计分工具
+  - `ContestModule` 已改为直接装配 command/query service，`submission` 写流程已依赖新的 `ScoreboardAdminService`
+  - contest 相关应用测试已切到新构造器与 `contest/domain` helper；旧根包 `challenge / participation / team / submission` 实现已物理删除
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... ./internal/app/composition -count=1`
+- 推进 `contest` Phase 2 AWD 命令查询与后台任务分层：
+  - `contest/application/commands` 已接管 AWD 写操作，`contest/application/queries` 已接管轮次与汇总读操作
+  - `contest/application/jobs` 已承接 `awd_round_updater / status_updater`，`ContestModule` 与 `AWDHandler` 已切到 commands/queries/jobs 装配
+  - `contest/domain/awd.go` 现承载 AWD flag、check source、响应映射与汇总排序等共享规则，commands/jobs 复用同一套 helper
+  - AWD 相关测试已物理迁到 `application/commands` 与 `application/jobs`；旧根包 `awd_service / awd_round_updater / status_updater / awd_status_cache` 及对应测试已物理删除
+  - `contest/application` 根目录残留的 `participation / submission` 测试也已迁到 `application/commands`，应用层测试目录与分层结构保持一致
+  - `contest/ports` 已从单文件拆为 `contest / challenge / participation / team / submission / awd / scoreboard` 分文件，接口边界按子域收口；`contest/architecture_test.go` 也新增了对 `application/jobs` 的依赖约束
+  - `contest/application/commands/awd_service.go` 已继续拆为同包多文件，按 `service / round_commands / attack_commands / support` 分担职责，避免 AWD 写侧继续集中在单一超大文件
+  - `contest/application/jobs/awd_round_updater.go` 已继续拆为 `awd_round_updater / awd_rounds / awd_checks / awd_probe` 多文件，后台调度、轮次编排、巡检执行与 HTTP probe 辅助职责已分离
+  - `contest/application/commands/submission_service.go` 已继续拆为 `submission_service / submission_submit / submission_support`；`team_service.go` 已继续拆为 `team_service / team_membership_commands / team_support`，提交流程、计分辅助、队伍成员管理和公共校验已分离
+  - `contest/application/queries/scoreboard_service.go` 已继续拆为 `scoreboard_service / scoreboard_query / scoreboard_support`；`participation_service.go` 已继续拆为 `participation_service / participation_query`，排行榜读流程、冻结快照辅助、报名列表与个人进度查询职责已分离
+  - `contest/architecture_test.go` 已进一步约束 `commands / queries / jobs` 三层之间不得直接互相依赖，确保应用层职责只通过 `domain / ports` 收敛，而不是再次横向耦合
+  - `contest/application/commands/participation_service.go` 已继续拆为 `participation_service / participation_registration_commands / participation_announcement_commands`；`queries/challenge_service.go` 已继续拆为 `challenge_service / challenge_query`
+  - `contest/architecture_test.go` 已继续加强 `domain / ports` 的反向依赖约束，禁止其回头依赖 `api/http`、`infrastructure` 与 `application/*`
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... ./internal/app/composition -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`

@@ -11,22 +11,26 @@ import (
 	"ctf-platform/pkg/response"
 )
 
-type participationService interface {
+type participationCommandService interface {
 	RegisterContest(ctx context.Context, contestID, userID int64) error
-	ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult, error)
 	ReviewRegistration(ctx context.Context, contestID, registrationID, reviewerID int64, req *dto.ReviewContestRegistrationReq) (*dto.ContestRegistrationResp, error)
-	ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error)
 	CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req *dto.CreateContestAnnouncementReq) (*dto.ContestAnnouncementResp, error)
 	DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error
+}
+
+type participationQueryService interface {
+	ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult, error)
+	ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error)
 	GetMyProgress(ctx context.Context, contestID, userID int64) (*dto.ContestMyProgressResp, error)
 }
 
 type ParticipationHandler struct {
-	service participationService
+	commands participationCommandService
+	queries  participationQueryService
 }
 
-func NewParticipationHandler(service participationService) *ParticipationHandler {
-	return &ParticipationHandler{service: service}
+func NewParticipationHandler(commands participationCommandService, queries participationQueryService) *ParticipationHandler {
+	return &ParticipationHandler{commands: commands, queries: queries}
 }
 
 func (h *ParticipationHandler) RegisterContest(c *gin.Context) {
@@ -35,7 +39,7 @@ func (h *ParticipationHandler) RegisterContest(c *gin.Context) {
 		response.InvalidParams(c, "无效的竞赛ID")
 		return
 	}
-	if err := h.service.RegisterContest(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID); err != nil {
+	if err := h.commands.RegisterContest(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -53,7 +57,7 @@ func (h *ParticipationHandler) ListRegistrations(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	items, err := h.service.ListRegistrations(c.Request.Context(), contestID, &query)
+	items, err := h.queries.ListRegistrations(c.Request.Context(), contestID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -77,7 +81,7 @@ func (h *ParticipationHandler) ReviewRegistration(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	item, err := h.service.ReviewRegistration(c.Request.Context(), contestID, registrationID, authctx.MustCurrentUser(c).UserID, &req)
+	item, err := h.commands.ReviewRegistration(c.Request.Context(), contestID, registrationID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -91,7 +95,7 @@ func (h *ParticipationHandler) ListAnnouncements(c *gin.Context) {
 		response.InvalidParams(c, "无效的竞赛ID")
 		return
 	}
-	items, err := h.service.ListAnnouncements(c.Request.Context(), contestID)
+	items, err := h.queries.ListAnnouncements(c.Request.Context(), contestID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -110,7 +114,7 @@ func (h *ParticipationHandler) CreateAnnouncement(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	item, err := h.service.CreateAnnouncement(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID, &req)
+	item, err := h.commands.CreateAnnouncement(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -129,7 +133,7 @@ func (h *ParticipationHandler) DeleteAnnouncement(c *gin.Context) {
 		response.InvalidParams(c, "无效的公告ID")
 		return
 	}
-	if err := h.service.DeleteAnnouncement(c.Request.Context(), contestID, announcementID); err != nil {
+	if err := h.commands.DeleteAnnouncement(c.Request.Context(), contestID, announcementID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -142,7 +146,7 @@ func (h *ParticipationHandler) GetMyProgress(c *gin.Context) {
 		response.InvalidParams(c, "无效的竞赛ID")
 		return
 	}
-	item, err := h.service.GetMyProgress(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID)
+	item, err := h.queries.GetMyProgress(c.Request.Context(), contestID, authctx.MustCurrentUser(c).UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return

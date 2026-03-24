@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 )
 
@@ -77,7 +77,7 @@ func TestDockerAWDFlagInjectorInjectsAllRunningTeamContainers(t *testing.T) {
 	writer := &stubAWDContainerFileWriter{}
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []contestapp.AWDFlagAssignment{
+	err = injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 10}, &model.AWDRound{ID: 10001}, []contestports.AWDFlagAssignment{
 		{TeamID: 1011, ChallengeID: 1001, Flag: "awd{round-flag}"},
 	})
 	if err != nil {
@@ -123,7 +123,7 @@ func TestDockerAWDFlagInjectorInjectsContestScopedTeamInstanceWithoutTeamMemberF
 	writer := &stubAWDContainerFileWriter{}
 	injector := contestinfra.NewDockerAWDFlagInjector(db, writer, zap.NewNop())
 
-	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []contestapp.AWDFlagAssignment{
+	err := injector.InjectRoundFlags(context.Background(), &model.Contest{ID: 20}, &model.AWDRound{ID: 20001}, []contestports.AWDFlagAssignment{
 		{TeamID: 2011, ChallengeID: 2001, Flag: "awd{contest-scoped}"},
 	})
 	if err != nil {

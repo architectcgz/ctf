@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"ctf-platform/internal/model"
-	contestapp "ctf-platform/internal/module/contest/application"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type AWDRepository struct {
@@ -31,7 +31,7 @@ func (r *AWDRepository) dbWithContext(ctx context.Context) *gorm.DB {
 	return r.db.WithContext(ctx)
 }
 
-func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo contestapp.AWDRepository) error) error {
+func (r *AWDRepository) WithinTransaction(ctx context.Context, fn func(txRepo contestports.AWDRepository) error) error {
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
@@ -182,12 +182,12 @@ func (r *AWDRepository) FindChallengeByID(ctx context.Context, challengeID int64
 	return &challenge, nil
 }
 
-func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, contestID int64, challengeIDs []int64) ([]contestapp.AWDServiceInstance, error) {
+func (r *AWDRepository) ListServiceInstancesByContest(ctx context.Context, contestID int64, challengeIDs []int64) ([]contestports.AWDServiceInstance, error) {
 	if len(challengeIDs) == 0 {
 		return nil, nil
 	}
 
-	var instances []contestapp.AWDServiceInstance
+	var instances []contestports.AWDServiceInstance
 	if err := r.dbWithContext(ctx).
 		Table("instances AS inst").
 		Select("COALESCE(inst.team_id, tm.team_id) AS team_id, inst.challenge_id AS challenge_id, inst.access_url AS access_url").
