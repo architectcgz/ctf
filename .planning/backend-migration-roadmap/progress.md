@@ -160,3 +160,7 @@
   - `contest` participation repository 已从单文件拆为 registration、announcement 与 progress 三段
   - `ParticipationRepository` 对外接口保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-submission-repository-split-phase2`：
+  - `contest` submission repository 已从单文件拆为 lookup、写入与计分更新三段
+  - `SubmissionRepository` 对外接口保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 定向测试覆盖本轮无行为变化拆分
