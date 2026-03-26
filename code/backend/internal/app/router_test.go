@@ -138,6 +138,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileCommands", reflect.TypeOf((*identitycontracts.ProfileCommandService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileQueries", reflect.TypeOf((*identitycontracts.ProfileQueryService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identitycontracts.Authenticator)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditService", reflect.TypeOf((*auditlog.Recorder)(nil)).Elem())
@@ -178,6 +179,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Query")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Repository")
 	assertNoField(t, reflect.TypeOf(composition.RuntimeModule{}), "Service")
+	assertNoField(t, reflect.TypeOf(composition.IdentityModule{}), "users")
 }
 
 func TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies(t *testing.T) {
@@ -301,6 +303,7 @@ func TestAuthModuleUsesTypedDeps(t *testing.T) {
 	blocked := []string{
 		"authcmd.NewService(identity.users, identity.TokenService",
 		"authcmd.NewCASService(cfg.Auth.CAS, identity.users, identity.TokenService",
+		"users:           identity.users,",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

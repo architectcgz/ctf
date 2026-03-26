@@ -15,8 +15,7 @@ type IdentityModule struct {
 	ProfileCommands identitycontracts.ProfileCommandService
 	ProfileQueries  identitycontracts.ProfileQueryService
 	TokenService    identitycontracts.Authenticator
-
-	users identitycontracts.UserRepository
+	Users           identitycontracts.UserRepository
 }
 
 type identityModuleDeps struct {
@@ -44,7 +43,7 @@ func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 		ProfileCommands: profileCommandService,
 		ProfileQueries:  profileQueryService,
 		TokenService:    deps.tokenService,
-		users:           deps.users,
+		Users:           deps.users,
 	}, nil
 }
 
