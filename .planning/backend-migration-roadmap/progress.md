@@ -22,3 +22,14 @@
   - `notification` 已从 `system` 迁入 `ops`
   - `/api/v1/notifications` 与 `/ws/notifications` 路径保持不变
   - 后端 `internal/module/system` 实现已删除
+
+## 2026-03-26
+
+- 完成 `contest-layering-phase2`：
+  - `contest` 已删除宽 `Repository`
+  - composition deps 已切到 ports 窄接口
+  - `BuildContestModule` 已拆成按子能力划分的局部 builder
+- 完成 `challenge-layering-phase2`：
+  - `challenge` 已删除宽 `ChallengeRepository`
+  - application 构造依赖已切到按用例划分的窄端口
+  - `challenge` composition 已收口到 typed deps，并拆成 image/core/flag/topology/writeup 局部 builder
