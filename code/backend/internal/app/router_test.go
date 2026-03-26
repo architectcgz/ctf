@@ -212,6 +212,30 @@ func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	if err != nil {
+		t.Fatalf("read contest_module.go: %v", err)
+	}
+
+	source := string(content)
+	blocked := []string{
+		"*contestinfra.Repository",
+		"*contestinfra.AWDRepository",
+		"*contestinfra.ChallengeRepository",
+		"*contestinfra.TeamRepository",
+		"*contestinfra.ParticipationRepository",
+		"*contestinfra.SubmissionRepository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("contest composition deps should not keep concrete repo field %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 
