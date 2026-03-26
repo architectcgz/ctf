@@ -42,6 +42,10 @@ type AWDFlagAssignment struct {
 	Flag        string
 }
 
+type AWDContainerFileWriter interface {
+	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
+}
+
 type AWDFlagInjector interface {
 	InjectRoundFlags(ctx context.Context, contest *model.Contest, round *model.AWDRound, assignments []AWDFlagAssignment) error
 }
