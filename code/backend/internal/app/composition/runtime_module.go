@@ -15,6 +15,8 @@ import (
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 	"go.uber.org/zap"
@@ -62,13 +64,13 @@ type runtimeContestDeps struct {
 type runtimeModuleDeps struct {
 	repo                  runtimeports.InstanceRepository
 	practiceInstanceRepo  practiceports.InstanceRepository
-	countRunningRepo      runtimeports.CountRunningRepository
-	proxyTicketStore      runtimeports.ProxyTicketStore
+	instanceCommands      runtimeHTTPCommandService
+	instanceQueries       runtimeHTTPQueryService
+	countRunningQuery     opsports.RuntimeQuery
+	proxyTicketService    runtimeHTTPProxyTicketService
 	cleanupService        *runtimeapp.RuntimeCleanupService
 	maintenanceService    *runtimeapp.RuntimeMaintenanceService
-	instanceService       runtimeHTTPInstanceService
 	provisioningService   *runtimeapp.ProvisioningService
-	proxyTicketService    runtimeHTTPProxyTicketService
 	containerStatsService *runtimeapp.ContainerStatsService
 	imageRuntime          challengeports.ImageRuntime
 	containerFiles        contestports.AWDContainerFileWriter
@@ -105,7 +107,6 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 	repo := runtimeinfra.NewRepository(root.DB())
 	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
 	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
-	instanceService := runtimeapp.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service"))
 	provisioningService := runtimeapp.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
 	if engine != nil {
@@ -116,13 +117,13 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 	return runtimeModuleDeps{
 		repo:                  repo,
 		practiceInstanceRepo:  repo,
-		countRunningRepo:      repo,
-		proxyTicketStore:      proxyTicketStore,
+		instanceCommands:      runtimecmd.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service")),
+		instanceQueries:       runtimeqry.NewInstanceService(repo),
+		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
+		proxyTicketService:    runtimeqry.NewProxyTicketService(proxyTicketStore, cfg.Container.ProxyTicketTTL),
 		cleanupService:        cleanupService,
 		maintenanceService:    maintenanceService,
-		instanceService:       instanceService,
 		provisioningService:   provisioningService,
-		proxyTicketService:    runtimeapp.NewProxyTicketService(proxyTicketStore, cfg.Container.ProxyTicketTTL),
 		containerStatsService: containerStatsService,
 		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
 		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
@@ -145,7 +146,8 @@ func registerRuntimeBackgroundJobs(root *Root, deps runtimeModuleDeps) {
 func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 	return runtimeHTTPDeps{
 		service: newRuntimeHTTPServiceAdapter(
-			deps.instanceService,
+			deps.instanceCommands,
+			deps.instanceQueries,
 			deps.proxyTicketService,
 			root.Config().Container.ProxyBodyPreviewSize,
 		),
@@ -167,7 +169,7 @@ func buildRuntimeChallengeDeps(deps runtimeModuleDeps) runtimeChallengeDeps {
 
 func buildRuntimeOpsDeps(deps runtimeModuleDeps) runtimeOpsDeps {
 	return runtimeOpsDeps{
-		query:         runtimeapp.NewQueryService(deps.countRunningRepo),
+		query:         deps.countRunningQuery,
 		statsProvider: newRuntimeOpsStatsProvider(deps.containerStatsService),
 	}
 }
@@ -261,80 +263,85 @@ type runtimeHTTPService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
-	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error)
+	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
 }
 
-type runtimeHTTPInstanceService interface {
+type runtimeHTTPCommandService interface {
 	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
 	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
+}
+
+type runtimeHTTPQueryService interface {
 	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
-	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 type runtimeHTTPProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error)
+	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	MaxAge() int
 }
 
 type runtimeHTTPServiceAdapter struct {
-	instanceService      runtimeHTTPInstanceService
+	commandService       runtimeHTTPCommandService
+	queryService         runtimeHTTPQueryService
 	proxyTickets         runtimeHTTPProxyTicketService
 	proxyBodyPreviewSize int
 }
 
-func newRuntimeHTTPServiceAdapter(instanceService runtimeHTTPInstanceService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
-		instanceService:      instanceService,
+		commandService:       commandService,
+		queryService:         queryService,
 		proxyTickets:         proxyTickets,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 	}
 }
 
 func (a *runtimeHTTPServiceAdapter) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.commandService == nil {
 		return errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.DestroyInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.commandService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.ExtendInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.queryService == nil {
 		return "", errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.GetAccessURLWithContext(ctx, instanceID, userID)
+	return a.queryService.GetAccessURLWithContext(ctx, instanceID, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.queryService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.GetUserInstancesWithContext(ctx, userID)
+	return a.queryService.GetUserInstancesWithContext(ctx, userID)
 }
 
 func (a *runtimeHTTPServiceAdapter) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.queryService == nil {
 		return nil, errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
+	return a.queryService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 
 func (a *runtimeHTTPServiceAdapter) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
-	if a == nil || a.instanceService == nil {
+	if a == nil || a.commandService == nil {
 		return errRuntimeHTTPInstanceServiceUnavailable()
 	}
-	return a.instanceService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
+	return a.commandService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
 }
 
 func (a *runtimeHTTPServiceAdapter) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error) {
@@ -346,7 +353,7 @@ func (a *runtimeHTTPServiceAdapter) IssueProxyTicket(ctx context.Context, user a
 	return ticket, err
 }
 
-func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error) {
+func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	if a == nil || a.proxyTickets == nil {
 		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
 	}

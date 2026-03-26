@@ -6,62 +6,67 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
-type httpInstanceService interface {
+type httpInstanceCommandService interface {
 	DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error
 	ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error)
+	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
+}
+
+type httpInstanceQueryService interface {
 	GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error)
 	GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error)
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
-	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 }
 
 type httpProxyTicketService interface {
 	IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error)
-	ResolveTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error)
+	ResolveTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	MaxAge() int
 }
 
 // HTTPService 为测试提供 runtime HTTP handler 所需的 facade。
 type HTTPService struct {
-	instanceService      httpInstanceService
+	commandService       httpInstanceCommandService
+	queryService         httpInstanceQueryService
 	proxyTickets         httpProxyTicketService
 	proxyBodyPreviewSize int
 }
 
 // NewHTTPService 创建 runtime HTTP 测试 facade。
-func NewHTTPService(instanceService httpInstanceService, proxyTickets httpProxyTicketService, proxyBodyPreviewSize int) *HTTPService {
+func NewHTTPService(commandService httpInstanceCommandService, queryService httpInstanceQueryService, proxyTickets httpProxyTicketService, proxyBodyPreviewSize int) *HTTPService {
 	return &HTTPService{
-		instanceService:      instanceService,
+		commandService:       commandService,
+		queryService:         queryService,
 		proxyTickets:         proxyTickets,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 	}
 }
 
 func (a *HTTPService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
-	return a.instanceService.DestroyInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.DestroyInstanceWithContext(ctx, instanceID, userID)
 }
 
 func (a *HTTPService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
-	return a.instanceService.ExtendInstanceWithContext(ctx, instanceID, userID)
+	return a.commandService.ExtendInstanceWithContext(ctx, instanceID, userID)
 }
 
 func (a *HTTPService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
-	return a.instanceService.GetAccessURLWithContext(ctx, instanceID, userID)
+	return a.queryService.GetAccessURLWithContext(ctx, instanceID, userID)
 }
 
 func (a *HTTPService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
-	return a.instanceService.GetUserInstancesWithContext(ctx, userID)
+	return a.queryService.GetUserInstancesWithContext(ctx, userID)
 }
 
 func (a *HTTPService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
-	return a.instanceService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
+	return a.queryService.ListTeacherInstances(ctx, requesterID, requesterRole, query)
 }
 
 func (a *HTTPService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
-	return a.instanceService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
+	return a.commandService.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
 }
 
 func (a *HTTPService) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error) {
@@ -69,7 +74,7 @@ func (a *HTTPService) IssueProxyTicket(ctx context.Context, user authctx.Current
 	return ticket, err
 }
 
-func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error) {
+func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }
 

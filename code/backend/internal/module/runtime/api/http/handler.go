@@ -17,7 +17,7 @@ import (
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
@@ -37,7 +37,7 @@ type runtimeService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
-	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error)
+	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
 }
@@ -257,7 +257,7 @@ func buildProxyAccessURL(instanceID int64, ticket string) string {
 	return "/api/v1/instances/" + strconv.FormatInt(instanceID, 10) + "/proxy/?ticket=" + url.QueryEscape(ticket)
 }
 
-func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtimeapp.ProxyTicketClaims, string, error) {
+func (h *Handler) resolveProxyClaims(c *gin.Context, instanceID int64) (*runtimeports.ProxyTicketClaims, string, error) {
 	if h.service == nil {
 		return nil, "", errcode.ErrInternal.WithCause(errcode.ErrServiceUnavailable)
 	}
@@ -369,7 +369,7 @@ func shouldAuditProxyRequest(method, requestPath string) bool {
 
 func (h *Handler) recordProxyAudit(
 	c *gin.Context,
-	claims *runtimeapp.ProxyTicketClaims,
+	claims *runtimeports.ProxyTicketClaims,
 	instanceID int64,
 	username string,
 	requestID string,

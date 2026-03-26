@@ -88,3 +88,7 @@
 - 完成 composition 收尾守卫：
   - 新增源码级防回退检查，约束 composition 不得重新读取 `identity.users` 与 `runtime.<private-submodule>.` 私有字段
   - 收尾扫描确认当前 composition 不再存在上述私有跨模块字段穿透
+- 完成 `runtime-layering-phase2`：
+  - `runtime` 的实例读写与 proxy ticket 主调用面已切到 `application/commands` 与 `application/queries`
+  - `runtime/api/http`、testutil 与受影响 focused tests 不再依赖 root `runtime/application` 的实例 facade
+  - root `runtime/application` 已删除 legacy `instance/query/proxy ticket` facade，并补齐分层防回退守卫

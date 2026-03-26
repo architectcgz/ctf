@@ -16,6 +16,8 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -869,14 +871,46 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	}
 }
 
-func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *runtimeapp.InstanceService {
+type testRuntimeService struct {
+	commands *runtimecmd.InstanceService
+	queries  *runtimeqry.InstanceService
+}
+
+func (s *testRuntimeService) DestroyInstanceWithContext(ctx context.Context, instanceID, userID int64) error {
+	return s.commands.DestroyInstanceWithContext(ctx, instanceID, userID)
+}
+
+func (s *testRuntimeService) ExtendInstanceWithContext(ctx context.Context, instanceID, userID int64) (*dto.InstanceResp, error) {
+	return s.commands.ExtendInstanceWithContext(ctx, instanceID, userID)
+}
+
+func (s *testRuntimeService) GetUserInstancesWithContext(ctx context.Context, userID int64) ([]*dto.InstanceInfo, error) {
+	return s.queries.GetUserInstancesWithContext(ctx, userID)
+}
+
+func (s *testRuntimeService) GetAccessURLWithContext(ctx context.Context, instanceID, userID int64) (string, error) {
+	return s.queries.GetAccessURLWithContext(ctx, instanceID, userID)
+}
+
+func (s *testRuntimeService) ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error) {
+	return s.queries.ListTeacherInstances(ctx, requesterID, requesterRole, query)
+}
+
+func (s *testRuntimeService) DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error {
+	return s.commands.DestroyTeacherInstance(ctx, instanceID, requesterID, requesterRole)
+}
+
+func newTestRuntimeModule(repo *runtimeTestRepository, engine *fakeRuntimeEngine) *testRuntimeService {
 	cfg := &config.ContainerConfig{
 		MaxExtends:        2,
 		ExtendDuration:    30 * time.Minute,
 		OrphanGracePeriod: 5 * time.Minute,
 	}
 	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, nil)
-	return runtimeapp.NewInstanceService(repo, cleanupService, cfg, nil)
+	return &testRuntimeService{
+		commands: runtimecmd.NewInstanceService(repo, cleanupService, cfg, nil),
+		queries:  runtimeqry.NewInstanceService(repo),
+	}
 }
 
 type fakeRuntimeEngine struct {
