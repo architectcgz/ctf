@@ -2,7 +2,7 @@
 
 ## Goal
 
-把 CTF 后端剩余架构迁移拆成可独立推进的 5 个后续切片，按依赖顺序逐个完成。
+把 CTF 后端剩余架构迁移拆成可独立推进的 5 个后续切片，按依赖顺序逐个完成。当前这 5 条主线已全部收口，后续若继续推进，需要基于最新代码树重新切新的迁移切片。
 
 ## Tracks
 
@@ -12,7 +12,7 @@
 | 2. 两个 readmodel 根壳清理 | completed | `practice_readmodel` / `teaching_readmodel` 已删除根壳并统一 contract 边界 |
 | 3. `auth + adminuser -> identity` | completed | `adminuser` 已删除，`auth` 也已完成 `api/http + application + infrastructure` 物理分层并清空根包 concrete 实现 |
 | 4. `system -> ops` | completed | `audit / dashboard / risk / notification` 已收敛到 `ops`，后端 `system` 实现已删除 |
-| 5. 大业务模块内部物理分层 Phase 1 | pending | 先处理 `challenge / contest / assessment / practice` 的 concrete 暴露 |
+| 5. 大业务模块内部物理分层 Phase 1 | completed | `challenge / contest / assessment / practice` 已完成分层收口；相关模块根包已清空 concrete 实现并补架构守卫 |
 
 ## Recommended Order
 

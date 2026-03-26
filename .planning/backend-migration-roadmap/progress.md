@@ -81,3 +81,10 @@
   - `auth` composition 已引入 `authModuleDeps`
   - 登录、CAS、profile、audit 依赖已通过 typed contracts 装配
   - `auth` 不再直接读取 `identity` 组合模块的私有仓储字段以外扩装配逻辑
+- 完成 `domain-layering-phase1` 收口核对：
+  - `challenge / contest / assessment / practice` 已完成内部物理分层，模块根包当前仅保留 `architecture_test.go`
+  - `ops / identity / auth / practice_readmodel / teaching_readmodel` 也已切到 root 空壳 + 分层目录
+  - roadmap 原始 5 条主线已全部完成，后续迁移需基于当前代码树重新拆新切片
+- 完成 composition 收尾守卫：
+  - 新增源码级防回退检查，约束 composition 不得重新读取 `identity.users` 与 `runtime.<private-submodule>.` 私有字段
+  - 收尾扫描确认当前 composition 不再存在上述私有跨模块字段穿透
