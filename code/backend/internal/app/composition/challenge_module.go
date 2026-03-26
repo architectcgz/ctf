@@ -85,7 +85,7 @@ func buildChallengeModuleDeps(root *Root, runtime *RuntimeModule) challengeModul
 		topologyRepo:         challengeRepo,
 		writeupRepo:          challengeRepo,
 		templateRepo:         challengeinfra.NewTemplateRepository(db),
-		imageRuntime:         runtime.challenge.imageRuntime,
+		imageRuntime:         runtime.ChallengeImageRuntime,
 	}
 }
 

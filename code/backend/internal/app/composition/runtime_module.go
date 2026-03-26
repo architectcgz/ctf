@@ -23,6 +23,13 @@ import (
 type RuntimeModule struct {
 	Handler *runtimehttp.Handler
 
+	PracticeInstanceRepository practiceports.InstanceRepository
+	PracticeRuntimeService     practiceports.RuntimeInstanceService
+	ChallengeImageRuntime      challengeports.ImageRuntime
+	OpsRuntimeQuery            opsports.RuntimeQuery
+	OpsRuntimeStatsProvider    opsports.RuntimeStatsProvider
+	ContestContainerFiles      contestports.AWDContainerFileWriter
+
 	http      runtimeHTTPDeps
 	practice  runtimePracticeDeps
 	challenge runtimeChallengeDeps
@@ -71,13 +78,24 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	engine := buildRuntimeEngine(root)
 	deps := buildRuntimeModuleDeps(root, engine)
 	registerRuntimeBackgroundJobs(root, deps)
+	httpDeps := buildRuntimeHTTPDeps(root, deps)
+	practiceDeps := buildRuntimePracticeDeps(deps)
+	challengeDeps := buildRuntimeChallengeDeps(deps)
+	opsDeps := buildRuntimeOpsDeps(deps)
+	contestDeps := buildRuntimeContestDeps(deps)
 
 	return &RuntimeModule{
-		http:      buildRuntimeHTTPDeps(root, deps),
-		practice:  buildRuntimePracticeDeps(deps),
-		challenge: buildRuntimeChallengeDeps(deps),
-		ops:       buildRuntimeOpsDeps(deps),
-		contest:   buildRuntimeContestDeps(deps),
+		PracticeInstanceRepository: practiceDeps.instanceRepository,
+		PracticeRuntimeService:     practiceDeps.runtimeService,
+		ChallengeImageRuntime:      challengeDeps.imageRuntime,
+		OpsRuntimeQuery:            opsDeps.query,
+		OpsRuntimeStatsProvider:    opsDeps.statsProvider,
+		ContestContainerFiles:      contestDeps.containerFiles,
+		http:                       httpDeps,
+		practice:                   practiceDeps,
+		challenge:                  challengeDeps,
+		ops:                        opsDeps,
+		contest:                    contestDeps,
 	}
 }
 

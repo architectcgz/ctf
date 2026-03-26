@@ -65,6 +65,10 @@
   - `runtime` composition 已切到 `typed deps + 局部 builder`
   - repo、application service、cross-module adapter、后台任务注册已从 `BuildRuntimeModule` 主函数拆出
   - `runtime` 装配结构已与其他 phase2 模块保持一致
+- 完成 `runtime-contract-export-phase2`：
+  - `RuntimeModule` 已公开暴露 practice/challenge/ops/contest 跨模块 contract
+  - `challenge / ops / practice / contest` 已切换为读取 runtime 公开字段
+  - 跨模块装配不再依赖 `runtime` 私有嵌套字段
 - 完成 `identity-readmodel-composition-phase2`：
   - `identity` composition 已切到 `UserRepository / Authenticator` typed deps
   - `practice_readmodel` 与 `teaching_readmodel` composition 已切到 query ports typed deps
