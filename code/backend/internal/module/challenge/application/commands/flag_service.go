@@ -17,11 +17,11 @@ import (
 var flagPattern = regexp.MustCompile(`^[a-zA-Z0-9_]+\{[^\{\}\n\r]+\}$`)
 
 type FlagService struct {
-	repo         ports.ChallengeRepository
+	repo         ports.ChallengeFlagRepository
 	globalSecret string
 }
 
-func NewFlagService(repo ports.ChallengeRepository, globalSecret string) (*FlagService, error) {
+func NewFlagService(repo ports.ChallengeFlagRepository, globalSecret string) (*FlagService, error) {
 	secret := strings.TrimSpace(globalSecret)
 	if secret == "" {
 		return nil, fmt.Errorf("container.flag_global_secret 未配置")

@@ -14,11 +14,11 @@ import (
 )
 
 type ChallengeService struct {
-	repo      challengeports.ChallengeRepository
+	repo      challengeports.ChallengeCommandRepository
 	imageRepo challengeports.ImageRepository
 }
 
-func NewChallengeService(repo challengeports.ChallengeRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
+func NewChallengeService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
 	return &ChallengeService{
 		repo:      repo,
 		imageRepo: imageRepo,

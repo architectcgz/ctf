@@ -18,7 +18,7 @@ import (
 
 type ImageService struct {
 	repo          challengeports.ImageRepository
-	challengeRepo challengeports.ChallengeRepository
+	challengeRepo challengeports.ChallengeImageUsageRepository
 	runtime       challengeports.ImageRuntime
 	logger        *zap.Logger
 	baseCtx       context.Context
@@ -28,7 +28,7 @@ type ImageService struct {
 
 func NewImageService(
 	repo challengeports.ImageRepository,
-	challengeRepo challengeports.ChallengeRepository,
+	challengeRepo challengeports.ChallengeImageUsageRepository,
 	runtime challengeports.ImageRuntime,
 	logger *zap.Logger,
 ) *ImageService {
