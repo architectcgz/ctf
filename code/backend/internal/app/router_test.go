@@ -185,7 +185,76 @@ func TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies(t *testing.T)
 
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 1, reflect.TypeOf(&composition.RuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildContestModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
+	assertFunctionParamType(t, reflect.TypeOf(composition.BuildOpsModule), 1, reflect.TypeOf(&composition.RuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildPracticeModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
+}
+
+func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "ops_module.go"))
+	if err != nil {
+		t.Fatalf("read ops_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildOpsModuleDeps(",
+		"buildOpsAuditHandler(",
+		"buildOpsDashboardHandler(",
+		"buildOpsRiskHandler(",
+		"buildOpsNotificationDeps(",
+		"buildOpsNotificationHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops module should delegate through %s", marker)
+		}
+	}
+}
+
+func TestOpsModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "ops_module.go"))
+	if err != nil {
+		t.Fatalf("read ops_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type opsModuleDeps struct",
+		"auditRepo",
+		"opsports.AuditRepository",
+		"riskRepo",
+		"opsports.RiskRepository",
+		"runtimeQuery",
+		"opsports.RuntimeQuery",
+		"runtimeStats",
+		"opsports.RuntimeStatsProvider",
+		"type opsNotificationDeps struct",
+		"notificationRepo",
+		"opsports.NotificationRepository",
+		"broadcaster",
+		"opsports.NotificationBroadcaster",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("ops composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"auditRepo := opsinfra.NewAuditRepository(db)",
+		"riskRepo := opsinfra.NewRiskRepository(db)",
+		"notificationRepo := opsinfra.NewNotificationRepository(db)",
+		"runtimeapp \"ctf-platform/internal/module/runtime/application\"",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("ops composition should not keep concrete marker %s", marker)
+		}
+	}
 }
 
 func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
