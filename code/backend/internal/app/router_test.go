@@ -454,6 +454,89 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	}
 }
 
+func TestIdentityModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "identity_module.go"))
+	if err != nil {
+		t.Fatalf("read identity_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type identityModuleDeps struct",
+		"users",
+		"identitycontracts.UserRepository",
+		"tokenService",
+		"identitycontracts.Authenticator",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("identity composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"users := identityinfra.NewRepository(db)",
+		"identityinfra.NewRepository(db)",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("identity composition should not keep concrete marker %s", marker)
+		}
+	}
+}
+
+func TestPracticeReadmodelModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_readmodel_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_readmodel_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type practiceReadmodelModuleDeps struct",
+		"repo",
+		"practicereadmodelports.QueryRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice readmodel composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	if strings.Contains(source, "practicereadmodelinfra.NewRepository(db)") {
+		t.Fatalf("practice readmodel composition should not instantiate concrete repo inline")
+	}
+}
+
+func TestTeachingReadmodelModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "teaching_readmodel_module.go"))
+	if err != nil {
+		t.Fatalf("read teaching_readmodel_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type teachingReadmodelModuleDeps struct",
+		"repo",
+		"readmodelports.Repository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("teaching readmodel composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	if strings.Contains(source, "readmodelinfra.NewRepository(db)") {
+		t.Fatalf("teaching readmodel composition should not instantiate concrete repo inline")
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 
