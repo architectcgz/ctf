@@ -41,3 +41,7 @@
   - `assessment` composition 已切到 typed deps
   - `BuildAssessmentModule` 已拆为 profile / recommendation / report 局部 builder
   - composition 不再直接持有 concrete assessment repo 字段
+- 完成 `runtime-bridge-phase2`：
+  - `practice` runtime adapter 已下沉到 `runtime` composition
+  - `runtime` 对外暴露的 practice/contest 依赖已切到外部 ports 接口
+  - `runtime` composition 不再反向依赖 `contest/infrastructure` 类型
