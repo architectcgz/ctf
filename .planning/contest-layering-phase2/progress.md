@@ -20,3 +20,5 @@
 - `contest/architecture_test.go` 已新增护栏，禁止重新声明 legacy 宽仓储接口
 - `BuildContestModule` 已按 `core / awd / challenge / participation / team / submission` 拆成局部 builder
 - 新增 `TestBuildContestModuleDelegatesToSubBuilders`，约束 `contest` composition 不再回退为单个大装配函数
+- `contestModuleDeps` 已从 concrete repo 指针切到 `contest/ports` 窄接口
+- 新增 `TestContestModuleDepsAvoidConcreteContestRepositories`，约束 composition 不再直接持有 concrete contest repo 字段

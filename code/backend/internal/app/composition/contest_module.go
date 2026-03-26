@@ -6,6 +6,7 @@ import (
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 type ContestModule struct {
@@ -21,28 +22,22 @@ type contestModuleDeps struct {
 	root              *Root
 	challenge         *ChallengeModule
 	runtime           *RuntimeModule
-	contestRepo       *contestinfra.Repository
-	awdRepo           *contestinfra.AWDRepository
-	challengeRepo     *contestinfra.ChallengeRepository
-	teamRepo          *contestinfra.TeamRepository
-	participationRepo *contestinfra.ParticipationRepository
-	submissionRepo    *contestinfra.SubmissionRepository
+	contestCommands   contestports.ContestCommandRepository
+	contestLookup     contestports.ContestLookupRepository
+	contestList       contestports.ContestListRepository
+	contestScoreboard contestports.ContestScoreboardRepository
+	contestAdmin      contestports.ContestScoreboardAdminRepository
+	contestStatus     contestports.ContestStatusRepository
+	awdRepo           contestports.AWDRepository
+	challengeRepo     contestports.ContestChallengeRepository
+	teamRepo          contestports.ContestTeamRepository
+	teamFinder        contestports.ContestTeamFinder
+	participationRepo contestports.ContestParticipationRepository
+	submissionRepo    contestports.ContestSubmissionRepository
 }
 
 func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
-	db := root.DB()
-
-	deps := &contestModuleDeps{
-		root:              root,
-		challenge:         challenge,
-		runtime:           runtime,
-		contestRepo:       contestinfra.NewRepository(db),
-		awdRepo:           contestinfra.NewAWDRepository(db),
-		challengeRepo:     contestinfra.NewChallengeRepository(db),
-		teamRepo:          contestinfra.NewTeamRepository(db),
-		participationRepo: contestinfra.NewParticipationRepository(db),
-		submissionRepo:    contestinfra.NewSubmissionRepository(db),
-	}
+	deps := newContestModuleDeps(root, challenge, runtime)
 
 	handler, scoreboardCommands, statusUpdater := buildContestCoreHandler(deps)
 	awdHandler, awdUpdater := buildContestAWDHandler(deps)
@@ -64,17 +59,46 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	}
 }
 
+func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *contestModuleDeps {
+	db := root.DB()
+
+	contestRepo := contestinfra.NewRepository(db)
+	awdRepo := contestinfra.NewAWDRepository(db)
+	challengeRepo := contestinfra.NewChallengeRepository(db)
+	teamRepo := contestinfra.NewTeamRepository(db)
+	participationRepo := contestinfra.NewParticipationRepository(db)
+	submissionRepo := contestinfra.NewSubmissionRepository(db)
+
+	return &contestModuleDeps{
+		root:              root,
+		challenge:         challenge,
+		runtime:           runtime,
+		contestCommands:   contestRepo,
+		contestLookup:     contestRepo,
+		contestList:       contestRepo,
+		contestScoreboard: contestRepo,
+		contestAdmin:      contestRepo,
+		contestStatus:     contestRepo,
+		awdRepo:           awdRepo,
+		challengeRepo:     challengeRepo,
+		teamRepo:          teamRepo,
+		teamFinder:        teamRepo,
+		participationRepo: participationRepo,
+		submissionRepo:    submissionRepo,
+	}
+}
+
 func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *contestcmd.ScoreboardAdminService, *contestjobs.StatusUpdater) {
 	cfg := deps.root.Config()
 	log := deps.root.Logger()
 	cache := deps.root.Cache()
 
-	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestRepo, cache, &cfg.Contest)
-	scoreboardQueries := contestqry.NewScoreboardService(deps.contestRepo, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
-	contestCommands := contestcmd.NewContestService(deps.contestRepo, log.Named("contest_service"))
-	contestQueries := contestqry.NewContestService(deps.contestRepo, log.Named("contest_service"))
+	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, cache, &cfg.Contest)
+	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
+	contestCommands := contestcmd.NewContestService(deps.contestCommands, log.Named("contest_service"))
+	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
 	statusUpdater := contestjobs.NewStatusUpdater(
-		deps.contestRepo,
+		deps.contestStatus,
 		cache,
 		cfg.Contest.StatusUpdateInterval,
 		cfg.Contest.StatusUpdateBatchSize,
@@ -101,33 +125,33 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 	)
 	awdCommands := contestcmd.NewAWDService(
 		deps.awdRepo,
-		deps.contestRepo,
+		deps.contestLookup,
 		cache,
 		cfg.Container.FlagGlobalSecret,
 		cfg.Contest.AWD,
 		log.Named("contest_awd_service"),
 		awdUpdater,
 	)
-	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestRepo)
+	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
 
 	return contesthttp.NewAWDHandler(awdCommands, awdQueries), awdUpdater
 }
 
 func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.ChallengeHandler {
-	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestRepo)
-	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestRepo)
+	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestLookup)
+	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestLookup)
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }
 
 func buildContestParticipationHandler(deps *contestModuleDeps) *contesthttp.ParticipationHandler {
-	participationCommands := contestcmd.NewParticipationService(deps.contestRepo, deps.participationRepo, deps.teamRepo)
-	participationQueries := contestqry.NewParticipationService(deps.contestRepo, deps.participationRepo, deps.teamRepo)
+	participationCommands := contestcmd.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
+	participationQueries := contestqry.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
 	return contesthttp.NewParticipationHandler(participationCommands, participationQueries)
 }
 
 func buildContestTeamHandler(deps *contestModuleDeps) *contesthttp.TeamHandler {
-	teamCommands := contestcmd.NewTeamService(deps.teamRepo, deps.contestRepo)
-	teamQueries := contestqry.NewTeamService(deps.teamRepo, deps.contestRepo)
+	teamCommands := contestcmd.NewTeamService(deps.teamRepo, deps.contestLookup)
+	teamQueries := contestqry.NewTeamService(deps.teamRepo, deps.contestLookup)
 	return contesthttp.NewTeamHandler(teamCommands, teamQueries)
 }
 
@@ -136,11 +160,11 @@ func buildContestSubmissionHandler(deps *contestModuleDeps, scoreboardCommands *
 	cfg := deps.root.Config()
 
 	submissionService := contestcmd.NewSubmissionService(
-		deps.contestRepo,
+		deps.contestLookup,
 		deps.submissionRepo,
 		cache,
 		deps.challenge.FlagValidator,
-		deps.teamRepo,
+		deps.teamFinder,
 		scoreboardCommands,
 		cfg,
 	)
