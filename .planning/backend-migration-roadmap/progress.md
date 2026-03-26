@@ -168,3 +168,7 @@
   - `contest` team query 已从单文件拆为 team info 与 team list / my team 两段
   - `TeamService` 对外接口保持不变，queries 文件边界进一步清晰
   - `contest/...` 与相关 query 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-challenge-command-split-phase2`：
+  - `contest` challenge command 已从单文件拆为 add 与 manage 两段
+  - `ChallengeService` 对外接口保持不变，commands 文件边界进一步清晰
+  - `contest/...` 定向测试覆盖本轮无行为变化拆分
