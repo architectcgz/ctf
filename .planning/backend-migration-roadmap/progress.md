@@ -100,3 +100,7 @@
   - `runtime` 的 provisioning / cleanup / maintenance 写侧服务已下沉到 `application/commands`
   - `composition`、practice flow 与受影响测试不再通过 root `runtime/application` 构造上述写侧服务
   - root `runtime/application` 继续收缩，不再保留上述 legacy write-side service 实现
+- 完成 `contest-awd-query-split-phase2`：
+  - `contest` AWD 读侧查询已从单文件拆为 `service / query / support` 三段
+  - 查询流程、校验与 team 装载 helper 已按职责分离
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
