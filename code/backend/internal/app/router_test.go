@@ -572,6 +572,28 @@ func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 	}
 }
 
+func TestAssessmentModuleUsesTypedCrossModuleDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "assessment_module.go"))
+	if err != nil {
+		t.Fatalf("read assessment_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type assessmentModuleExternalDeps struct",
+		"challengeRepo",
+		"assessmentports.ChallengeRepository",
+		"buildAssessmentModuleExternalDeps(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("assessment composition should declare typed cross-module deps marker %s", marker)
+		}
+	}
+}
+
 func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 	t.Parallel()
 
@@ -582,6 +604,8 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
+		"buildAssessmentModuleDeps(",
+		"buildAssessmentModuleExternalDeps(",
 		"buildAssessmentProfileHandler(",
 		"buildAssessmentRecommendationHandler(",
 		"buildAssessmentReportHandler(",
