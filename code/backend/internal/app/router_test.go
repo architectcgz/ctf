@@ -760,6 +760,37 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 	}
 }
 
+func TestCompositionBuildersAvoidPrivateCrossModuleFields(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("composition", "*_module.go"))
+	if err != nil {
+		t.Fatalf("glob composition modules: %v", err)
+	}
+
+	blocked := []string{
+		"identity.users",
+		"runtime.practice.",
+		"runtime.ops.",
+		"runtime.challenge.",
+		"runtime.contest.",
+	}
+
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+
+		source := string(content)
+		for _, marker := range blocked {
+			if strings.Contains(source, marker) {
+				t.Fatalf("%s should not reference private cross-module field %s", file, marker)
+			}
+		}
+	}
+}
+
 func TestIdentityModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
