@@ -3,6 +3,7 @@ package contest
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -114,6 +115,18 @@ func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/commands")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/queries")
 		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/contest/application/jobs")
+	}
+}
+
+func TestPortsDoNotDeclareWideRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "contest.go"))
+	if err != nil {
+		t.Fatalf("read contest ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type Repository interface") {
+		t.Fatalf("contest ports must not declare the legacy wide Repository interface")
 	}
 }
 
