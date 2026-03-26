@@ -12,7 +12,7 @@ type AWDService struct {
 	repo         contestports.AWDRepository
 	roundManager contestports.AWDRoundManager
 	redis        *redislib.Client
-	contestRepo  contestports.Repository
+	contestRepo  contestports.ContestLookupRepository
 	flagSecret   string
 	awdConfig    config.ContestAWDConfig
 	log          *zap.Logger
@@ -20,7 +20,7 @@ type AWDService struct {
 
 func NewAWDService(
 	repo contestports.AWDRepository,
-	contestRepo contestports.Repository,
+	contestRepo contestports.ContestLookupRepository,
 	redis *redislib.Client,
 	flagSecret string,
 	awdConfig config.ContestAWDConfig,

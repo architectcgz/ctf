@@ -15,10 +15,10 @@ import (
 
 type AWDService struct {
 	repo        contestports.AWDRepository
-	contestRepo contestports.Repository
+	contestRepo contestports.ContestLookupRepository
 }
 
-func NewAWDService(repo contestports.AWDRepository, contestRepo contestports.Repository) *AWDService {
+func NewAWDService(repo contestports.AWDRepository, contestRepo contestports.ContestLookupRepository) *AWDService {
 	return &AWDService{
 		repo:        repo,
 		contestRepo: contestRepo,

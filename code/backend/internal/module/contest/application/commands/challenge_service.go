@@ -17,10 +17,10 @@ import (
 type ChallengeService struct {
 	repo          contestports.ContestChallengeRepository
 	challengeRepo challengecontracts.ContestChallengeContract
-	contestRepo   contestports.Repository
+	contestRepo   contestports.ContestLookupRepository
 }
 
-func NewChallengeService(repo contestports.ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.Repository) *ChallengeService {
+func NewChallengeService(repo contestports.ContestChallengeRepository, challengeRepo challengecontracts.ContestChallengeContract, contestRepo contestports.ContestLookupRepository) *ChallengeService {
 	return &ChallengeService{
 		repo:          repo,
 		challengeRepo: challengeRepo,
