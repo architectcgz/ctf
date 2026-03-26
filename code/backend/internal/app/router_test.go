@@ -273,6 +273,12 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"opsports.RuntimeQuery",
 		"proxyTicketService",
 		"runtimeHTTPProxyTicketService",
+		"cleanupService",
+		"*runtimecmd.RuntimeCleanupService",
+		"maintenanceService",
+		"*runtimecmd.RuntimeMaintenanceService",
+		"provisioningService",
+		"*runtimecmd.ProvisioningService",
 		"imageRuntime",
 		"challengeports.ImageRuntime",
 		"containerFiles",
@@ -296,6 +302,9 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 	source := string(content)
 	expected := []string{
 		"runtimecmd.NewInstanceService(",
+		"runtimecmd.NewRuntimeCleanupService(",
+		"runtimecmd.NewRuntimeMaintenanceService(",
+		"runtimecmd.NewProvisioningService(",
 		"runtimeqry.NewInstanceService(",
 		"runtimeqry.NewCountRunningService(",
 		"runtimeqry.NewProxyTicketService(",
@@ -310,6 +319,9 @@ func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
 		"runtimeapp.NewInstanceService(",
 		"runtimeapp.NewQueryService(",
 		"runtimeapp.NewProxyTicketService(",
+		"runtimeapp.NewRuntimeCleanupService(",
+		"runtimeapp.NewRuntimeMaintenanceService(",
+		"runtimeapp.NewProvisioningService(",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {

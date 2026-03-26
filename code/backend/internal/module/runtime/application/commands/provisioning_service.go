@@ -1,4 +1,4 @@
-package application
+package commands
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 const (
@@ -56,10 +57,10 @@ func NewProvisioningService(repo provisioningRepository, engine provisioningEngi
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if isNilApplicationDependency(repo) {
+	if isNilCommandDependency(repo) {
 		repo = nil
 	}
-	if isNilApplicationDependency(engine) {
+	if isNilCommandDependency(engine) {
 		engine = nil
 	}
 	if cfg == nil {
@@ -80,12 +81,12 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 		return "", "", 0, 0, err
 	}
 
-	result, err := s.CreateTopology(ctx, &TopologyCreateRequest{
+	result, err := s.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
 		ReservedHostPort: reservedHostPort,
-		Networks: []TopologyCreateNetwork{
+		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []TopologyCreateNode{
+		Nodes: []runtimeports.TopologyCreateNode{
 			{
 				Key:          "default",
 				Image:        imageName,
@@ -110,7 +111,7 @@ func (s *ProvisioningService) CreateContainer(ctx context.Context, imageName str
 }
 
 // CreateTopology 按拓扑请求创建网络、容器与 ACL 规则。
-func (s *ProvisioningService) CreateTopology(ctx context.Context, req *TopologyCreateRequest) (*TopologyCreateResult, error) {
+func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeports.TopologyCreateRequest) (*runtimeports.TopologyCreateResult, error) {
 	ctx = normalizeContext(ctx)
 	if req == nil || len(req.Nodes) == 0 {
 		return nil, fmt.Errorf("topology nodes are required")
@@ -170,7 +171,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *TopologyC
 			}
 			details.Containers = append(details.Containers, item)
 		}
-		return &TopologyCreateResult{
+		return &runtimeports.TopologyCreateResult{
 			PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 			NetworkID:          details.Networks[0].NetworkID,
 			AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
@@ -274,7 +275,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *TopologyC
 		details.ACLRules = resolvedACLRules
 	}
 
-	return &TopologyCreateResult{
+	return &runtimeports.TopologyCreateResult{
 		PrimaryContainerID: details.Containers[entryNodeIndex].ContainerID,
 		NetworkID:          details.Networks[0].NetworkID,
 		AccessURL:          fmt.Sprintf("http://%s:%d", s.config.PublicHost, hostPort),
@@ -301,7 +302,7 @@ func (s *ProvisioningService) resolveServicePort(ctx context.Context, imageRef s
 	return resolvedPort, nil
 }
 
-func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
+func (s *ProvisioningService) resolveTopologyACLRules(ctx context.Context, req *runtimeports.TopologyCreateRequest, details model.InstanceRuntimeDetails) ([]model.InstanceRuntimeACLRule, error) {
 	if s.engine == nil || req == nil || len(req.Policies) == 0 {
 		return nil, nil
 	}
@@ -428,14 +429,14 @@ func managedNetworkLabels() map[string]string {
 	}
 }
 
-func normalizedCreateNetworks(networks []TopologyCreateNetwork) []TopologyCreateNetwork {
+func normalizedCreateNetworks(networks []runtimeports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {
 	if len(networks) == 0 {
-		return []TopologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
+		return []runtimeports.TopologyCreateNetwork{{Key: model.TopologyDefaultNetworkKey}}
 	}
 	return networks
 }
 
-func normalizedNodeNetworkKeys(keys []string, networks []TopologyCreateNetwork) []string {
+func normalizedNodeNetworkKeys(keys []string, networks []runtimeports.TopologyCreateNetwork) []string {
 	if len(keys) > 0 {
 		return append([]string(nil), keys...)
 	}

@@ -1,4 +1,4 @@
-package application
+package commands
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type runtimeMaintenanceRepository interface {
@@ -17,11 +18,11 @@ type runtimeMaintenanceRepository interface {
 }
 
 type runtimeMaintenanceEngine interface {
-	ListManagedContainers(ctx context.Context) ([]ManagedContainer, error)
+	ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error)
 }
 
 type runtimeMaintenanceCleaner interface {
-	RuntimeCleaner
+	runtimeports.RuntimeCleaner
 	RemoveContainerWithContext(ctx context.Context, containerID string) error
 }
 
@@ -39,13 +40,13 @@ func NewRuntimeMaintenanceService(repo runtimeMaintenanceRepository, engine runt
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if isNilApplicationDependency(repo) {
+	if isNilCommandDependency(repo) {
 		repo = nil
 	}
-	if isNilApplicationDependency(engine) {
+	if isNilCommandDependency(engine) {
 		engine = nil
 	}
-	if isNilApplicationDependency(cleaner) {
+	if isNilCommandDependency(cleaner) {
 		cleaner = nil
 	}
 	if cfg == nil {
@@ -126,9 +127,9 @@ func (s *RuntimeMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	return nil
 }
 
-func selectOrphanContainers(managedContainers []ManagedContainer, activeContainerIDs map[string]struct{}, gracePeriod time.Duration) []ManagedContainer {
+func selectOrphanContainers(managedContainers []runtimeports.ManagedContainer, activeContainerIDs map[string]struct{}, gracePeriod time.Duration) []runtimeports.ManagedContainer {
 	now := time.Now()
-	orphanContainers := make([]ManagedContainer, 0, len(managedContainers))
+	orphanContainers := make([]runtimeports.ManagedContainer, 0, len(managedContainers))
 	for _, container := range managedContainers {
 		if _, exists := activeContainerIDs[container.ID]; exists {
 			continue

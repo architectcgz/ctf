@@ -17,7 +17,7 @@ import (
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
@@ -65,7 +65,7 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected team scoped instance, got %+v", instance)
 	}
 
-	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
+	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
 	_ = runtimeCleanupService
 	instanceQueries := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 	visible, err := instanceQueries.GetUserInstancesWithContext(context.Background(), 5002)
@@ -183,8 +183,8 @@ func newContestInstanceTestService(db *gorm.DB) *practicecmd.Service {
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
-	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
-	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
+	runtimeCleanupService := runtimecmd.NewRuntimeCleanupService(nil, nil)
+	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &config.ContainerConfig{
 		PortRangeStart:       30000,
 		PortRangeEnd:         30010,
 		DefaultExposedPort:   8080,
