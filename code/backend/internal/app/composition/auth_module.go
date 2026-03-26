@@ -53,7 +53,7 @@ func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*Aut
 
 func buildAuthModuleDeps(ops *OpsModule, identity *IdentityModule) authModuleDeps {
 	return authModuleDeps{
-		users:           identity.users,
+		users:           identity.Users,
 		tokenService:    identity.TokenService,
 		profileCommands: identity.ProfileCommands,
 		profileQueries:  identity.ProfileQueries,

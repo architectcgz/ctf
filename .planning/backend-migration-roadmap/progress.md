@@ -69,6 +69,10 @@
   - `identity` composition 已切到 `UserRepository / Authenticator` typed deps
   - `practice_readmodel` 与 `teaching_readmodel` composition 已切到 query ports typed deps
   - 轻量模块装配不再 inline new concrete repository
+- 完成 `identity-contract-export-phase2`：
+  - `IdentityModule` 已公开暴露 `Users` contract
+  - `auth` 对 identity 的用户仓储依赖已切到公开 contract
+  - 跨模块装配不再读取 `IdentityModule` 私有字段
 - 完成 `auth-composition-phase2`：
   - `auth` composition 已引入 `authModuleDeps`
   - 登录、CAS、profile、audit 依赖已通过 typed contracts 装配
