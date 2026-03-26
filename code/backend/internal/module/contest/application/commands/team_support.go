@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base32"
 	"errors"
@@ -23,6 +24,20 @@ func (s *TeamService) ensureApprovedRegistration(contestID, userID int64) error 
 	}
 	if err := contestdomain.RegistrationStatusError(registration.Status); err != nil {
 		return err
+	}
+	return nil
+}
+
+func (s *TeamService) ensureTeamJoinableContest(ctx context.Context, contestID int64) error {
+	contest, err := s.contestRepo.FindByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, contestdomain.ErrContestNotFound) {
+			return errcode.ErrContestNotFound
+		}
+		return errcode.ErrInternal.WithCause(err)
+	}
+	if contest.Status != model.ContestStatusRegistration && contest.Status != model.ContestStatusRunning {
+		return errcode.ErrContestTeamUnavailable
 	}
 	return nil
 }

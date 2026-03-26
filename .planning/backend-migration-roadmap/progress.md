@@ -172,3 +172,7 @@
   - `contest` challenge command 已从单文件拆为 add 与 manage 两段
   - `ChallengeService` 对外接口保持不变，commands 文件边界进一步清晰
   - `contest/...` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-command-split-phase2`：
+  - `contest` team command 已从单文件拆为 create/join 与成员管理两段
+  - `TeamService` 对外接口保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 command 定向测试覆盖本轮无行为变化拆分
