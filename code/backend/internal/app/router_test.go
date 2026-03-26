@@ -483,6 +483,56 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 	}
 }
 
+func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type practiceModuleExternalDeps struct",
+		"instanceRepo",
+		"practiceports.InstanceRepository",
+		"runtimeService",
+		"practiceports.RuntimeInstanceService",
+		"challengeRepo",
+		"practiceRuntimeChallengeContract",
+		"imageStore",
+		"practiceRuntimeImageStore",
+		"assessment",
+		"practiceRuntimeAssessmentService",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice composition should declare typed cross-module deps marker %s", marker)
+		}
+	}
+}
+
+func TestBuildPracticeModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildPracticeModuleDeps(",
+		"buildPracticeModuleExternalDeps(",
+		"buildPracticeHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice module should delegate through %s", marker)
+		}
+	}
+}
+
 func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
 	t.Parallel()
 
