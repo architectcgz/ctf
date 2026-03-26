@@ -1,17 +1,23 @@
 package http
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 
-	opsmodule "ctf-platform/internal/module/ops"
+	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
-type RiskHandler struct {
-	service opsmodule.RiskService
+type riskQueryService interface {
+	GetCheatDetection(ctx context.Context) (*dto.CheatDetectionResp, error)
 }
 
-func NewRiskHandler(service opsmodule.RiskService) *RiskHandler {
+type RiskHandler struct {
+	service riskQueryService
+}
+
+func NewRiskHandler(service riskQueryService) *RiskHandler {
 	return &RiskHandler{service: service}
 }
 

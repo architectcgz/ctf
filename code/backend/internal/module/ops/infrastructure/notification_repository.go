@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opsports "ctf-platform/internal/module/ops/ports"
 )
 
 type NotificationRepository struct {
@@ -21,7 +21,7 @@ func (r *NotificationRepository) Create(ctx context.Context, notification *model
 	return r.db.WithContext(ctx).Create(notification).Error
 }
 
-func (r *NotificationRepository) List(ctx context.Context, filter opsapp.NotificationListFilter) ([]model.Notification, int64, error) {
+func (r *NotificationRepository) List(ctx context.Context, filter opsports.NotificationListFilter) ([]model.Notification, int64, error) {
 	query := r.db.WithContext(ctx).Model(&model.Notification{}).Where("user_id = ?", filter.UserID)
 	if filter.Type != "" {
 		query = query.Where("type = ?", filter.Type)

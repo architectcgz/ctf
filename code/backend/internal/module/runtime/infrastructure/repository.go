@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -219,7 +219,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 	return instances, err
 }
 
-func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeapp.UserVisibleInstanceRow, error) {
+func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]runtimeports.UserVisibleInstanceRow, error) {
 	rows := make([]userVisibleInstanceRow, 0)
 	err := r.db.WithContext(ctx).
 		Table("instances AS inst").
@@ -247,9 +247,9 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		return nil, err
 	}
 
-	items := make([]runtimeapp.UserVisibleInstanceRow, len(rows))
+	items := make([]runtimeports.UserVisibleInstanceRow, len(rows))
 	for idx, row := range rows {
-		items[idx] = runtimeapp.UserVisibleInstanceRow{
+		items[idx] = runtimeports.UserVisibleInstanceRow{
 			ID:             row.ID,
 			ChallengeID:    row.ChallengeID,
 			ChallengeTitle: row.ChallengeTitle,
@@ -275,7 +275,7 @@ func (r *Repository) FindExpired() ([]*model.Instance, error) {
 	return instances, err
 }
 
-func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeapp.TeacherInstanceFilter) ([]runtimeapp.TeacherInstanceRow, error) {
+func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeports.TeacherInstanceFilter) ([]runtimeports.TeacherInstanceRow, error) {
 	rows := make([]teacherInstanceRow, 0)
 
 	query := r.db.WithContext(ctx).
@@ -316,9 +316,9 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimeapp
 		return nil, fmt.Errorf("list teacher instances: %w", err)
 	}
 
-	items := make([]runtimeapp.TeacherInstanceRow, len(rows))
+	items := make([]runtimeports.TeacherInstanceRow, len(rows))
 	for idx, row := range rows {
-		items[idx] = runtimeapp.TeacherInstanceRow{
+		items[idx] = runtimeports.TeacherInstanceRow{
 			ID:              row.ID,
 			StudentID:       row.StudentID,
 			StudentName:     row.StudentName,

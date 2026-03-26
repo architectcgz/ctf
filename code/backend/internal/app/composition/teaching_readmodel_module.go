@@ -1,15 +1,14 @@
 package composition
 
 import (
-	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
 	teachinghttp "ctf-platform/internal/module/teaching_readmodel/api/http"
-	readmodelapp "ctf-platform/internal/module/teaching_readmodel/application"
+	readmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	readmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
 )
 
 type TeachingReadmodelModule struct {
 	Handler *teachinghttp.Handler
-	Query   teachingreadmodel.TeachingQuery
+	Query   readmodelqueries.Service
 }
 
 func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *TeachingReadmodelModule {
@@ -17,7 +16,7 @@ func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *Tea
 	db := root.DB()
 
 	repo := readmodelinfra.NewRepository(db)
-	service := readmodelapp.NewQueryService(repo, assessment.Recommendations, log.Named("teaching_readmodel_query_service"))
+	service := readmodelqueries.NewQueryService(repo, assessment.Recommendations, log.Named("teaching_readmodel_query_service"))
 
 	return &TeachingReadmodelModule{
 		Handler: teachinghttp.NewHandler(service),

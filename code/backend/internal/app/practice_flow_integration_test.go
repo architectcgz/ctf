@@ -30,22 +30,25 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
-	authapp "ctf-platform/internal/module/auth/application"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
+	authqry "ctf-platform/internal/module/auth/application/queries"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
-	identityapp "ctf-platform/internal/module/identity/application"
+	identitycmd "ctf-platform/internal/module/identity/application/commands"
+	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
-	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
+	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
@@ -721,19 +724,23 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	}
 	tokenService := authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := authapp.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
-	profileService := identityapp.NewProfileService(authRepo, logger.Named("identity_profile_service"))
+	authService := authcmd.NewService(authRepo, tokenService, cfg.RateLimit.Login, logger)
+	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_command_service"), nil)
+	casQueryService := authqry.NewCASService(cfg.Auth.CAS)
+	profileCommandService := identitycmd.NewProfileService(authRepo, logger.Named("identity_profile_command_service"))
+	profileQueryService := identityqry.NewProfileService(authRepo)
 	auditRepo := opsinfra.NewAuditRepository(db)
-	auditService := opsapp.NewAuditService(auditRepo, cfg.Pagination, logger)
-	authHandler := authhttp.NewHandler(authService, profileService, tokenService, authapp.NewCASProvider(cfg.Auth.CAS, authRepo, tokenService, logger.Named("cas_provider"), nil), authhttp.CookieConfig{
+	auditCommandService := opscmd.NewAuditService(auditRepo, logger)
+	auditQueryService := opsqry.NewAuditService(auditRepo, cfg.Pagination, logger)
+	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
 		Name:     cfg.Auth.RefreshCookieName,
 		Path:     cfg.Auth.RefreshCookiePath,
 		Secure:   cfg.Auth.RefreshCookieSecure,
 		HTTPOnly: cfg.Auth.RefreshCookieHTTPOnly,
 		SameSite: cfg.Auth.CookieSameSite(),
 		MaxAge:   cfg.Auth.RefreshTokenTTL,
-	}, logger, auditService)
-	auditHandler := opshttp.NewAuditHandler(auditService)
+	}, logger, auditCommandService)
+	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
@@ -778,9 +785,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	)
 	practiceHandler := practicehttp.NewHandler(practiceService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
-	practiceReadmodelService := practicereadmodelapp.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
+	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
-	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditService, runtimehttp.CookieConfig{})
+	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
 	student := createFlowUser(t, db, "student_user", "Password123", model.RoleStudent)
@@ -805,7 +812,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)
 	protected.GET("/challenges/:id",
-		middleware.Audit(auditService, middleware.AuditOptions{
+		middleware.Audit(auditCommandService, middleware.AuditOptions{
 			Action:          model.AuditActionRead,
 			ResourceType:    "challenge_detail",
 			ResourceIDParam: "id",
@@ -813,7 +820,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		challengeHandler.GetPublishedChallenge,
 	)
 	protected.POST("/challenges/:id/submit",
-		middleware.Audit(auditService, middleware.AuditOptions{
+		middleware.Audit(auditCommandService, middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,
 			ResourceType:    "challenge_submission",
 			ResourceIDParam: "id",

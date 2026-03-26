@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opsports "ctf-platform/internal/module/ops/ports"
 )
 
 type AuditRepository struct {
@@ -21,7 +21,7 @@ func (r *AuditRepository) Create(ctx context.Context, log *model.AuditLog) error
 	return r.db.WithContext(ctx).Create(log).Error
 }
 
-func (r *AuditRepository) List(ctx context.Context, filter opsapp.AuditLogListFilter) ([]opsapp.AuditLogRecord, int64, error) {
+func (r *AuditRepository) List(ctx context.Context, filter opsports.AuditLogListFilter) ([]opsports.AuditLogRecord, int64, error) {
 	query := r.db.WithContext(ctx).
 		Table("audit_logs").
 		Joins("LEFT JOIN users ON users.id = audit_logs.user_id")
@@ -50,7 +50,7 @@ func (r *AuditRepository) List(ctx context.Context, filter opsapp.AuditLogListFi
 		return nil, 0, err
 	}
 
-	records := make([]opsapp.AuditLogRecord, 0)
+	records := make([]opsports.AuditLogRecord, 0)
 	err := query.
 		Select(`
 			audit_logs.id,

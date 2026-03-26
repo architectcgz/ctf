@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opsports "ctf-platform/internal/module/ops/ports"
 )
 
 type RiskRepository struct {
@@ -18,8 +18,8 @@ func NewRiskRepository(db *gorm.DB) *RiskRepository {
 	return &RiskRepository{db: db}
 }
 
-func (r *RiskRepository) ListRecentSubmitEvents(ctx context.Context, since time.Time, limit int) ([]opsapp.RiskAuditEvent, error) {
-	events := make([]opsapp.RiskAuditEvent, 0)
+func (r *RiskRepository) ListRecentSubmitEvents(ctx context.Context, since time.Time, limit int) ([]opsports.RiskAuditEvent, error) {
+	events := make([]opsports.RiskAuditEvent, 0)
 	err := r.db.WithContext(ctx).
 		Table("audit_logs").
 		Select("audit_logs.user_id, users.username, audit_logs.ip_address, audit_logs.created_at").
@@ -31,8 +31,8 @@ func (r *RiskRepository) ListRecentSubmitEvents(ctx context.Context, since time.
 	return events, err
 }
 
-func (r *RiskRepository) ListRecentLoginEvents(ctx context.Context, since time.Time, limit int) ([]opsapp.RiskAuditEvent, error) {
-	events := make([]opsapp.RiskAuditEvent, 0)
+func (r *RiskRepository) ListRecentLoginEvents(ctx context.Context, since time.Time, limit int) ([]opsports.RiskAuditEvent, error) {
+	events := make([]opsports.RiskAuditEvent, 0)
 	err := r.db.WithContext(ctx).
 		Table("audit_logs").
 		Select("audit_logs.user_id, users.username, audit_logs.ip_address, audit_logs.created_at").

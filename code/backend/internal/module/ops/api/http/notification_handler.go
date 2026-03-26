@@ -11,27 +11,37 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	opsmodule "ctf-platform/internal/module/ops"
+	authcontracts "ctf-platform/internal/module/auth/contracts"
 	"ctf-platform/pkg/response"
 	ctfws "ctf-platform/pkg/websocket"
 )
 
 type notificationAuthContextKey struct{}
 
+type notificationCommandService interface {
+	MarkAsRead(ctx context.Context, userID, notificationID int64) error
+}
+
+type notificationQueryService interface {
+	GetNotifications(ctx context.Context, userID int64, query *dto.NotificationQuery) ([]dto.NotificationInfo, int64, int, int, error)
+}
+
 type NotificationHandler struct {
-	service      opsmodule.NotificationService
-	tokenService opsmodule.WSTicketConsumer
+	commands     notificationCommandService
+	queries      notificationQueryService
+	tokenService authcontracts.TokenService
 	manager      *ctfws.Manager
 	logger       *zap.Logger
 }
 
-func NewNotificationHandler(service opsmodule.NotificationService, tokenService opsmodule.WSTicketConsumer, manager *ctfws.Manager, logger *zap.Logger) *NotificationHandler {
+func NewNotificationHandler(commands notificationCommandService, queries notificationQueryService, tokenService authcontracts.TokenService, manager *ctfws.Manager, logger *zap.Logger) *NotificationHandler {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 
 	return &NotificationHandler{
-		service:      service,
+		commands:     commands,
+		queries:      queries,
 		tokenService: tokenService,
 		manager:      manager,
 		logger:       logger,
@@ -46,7 +56,7 @@ func (h *NotificationHandler) ListNotifications(c *gin.Context) {
 		return
 	}
 
-	items, total, page, pageSize, err := h.service.GetNotifications(c.Request.Context(), authUser.UserID, &query)
+	items, total, page, pageSize, err := h.queries.GetNotifications(c.Request.Context(), authUser.UserID, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -57,7 +67,7 @@ func (h *NotificationHandler) ListNotifications(c *gin.Context) {
 func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 	authUser := authctx.MustCurrentUser(c)
 	notificationID := c.GetInt64("id")
-	if err := h.service.MarkAsRead(c.Request.Context(), authUser.UserID, notificationID); err != nil {
+	if err := h.commands.MarkAsRead(c.Request.Context(), authUser.UserID, notificationID); err != nil {
 		response.FromError(c, err)
 		return
 	}

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	stdhttp "net/http"
 	"time"
 
@@ -12,18 +13,42 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	authapp "ctf-platform/internal/module/auth/application"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
+	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
-	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
+type authCommandService interface {
+	Register(ctx context.Context, req *dto.RegisterReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
+	Login(ctx context.Context, req *dto.LoginReq) (*dto.LoginResp, *authcontracts.TokenPair, error)
+}
+
+type profileCommandService interface {
+	ChangePassword(ctx context.Context, userID int64, req *dto.ChangePasswordReq) error
+}
+
+type profileQueryService interface {
+	GetProfile(ctx context.Context, userID int64) (*dto.AuthUser, error)
+}
+
+type casCommandService interface {
+	Authenticate(ctx context.Context, ticket string) (*dto.LoginResp, *authcontracts.TokenPair, error)
+}
+
+type casQueryService interface {
+	Status() *dto.CASStatusResp
+	BuildLogin(ctx context.Context) (*dto.CASLoginResp, error)
+}
+
 type Handler struct {
-	service       authapp.Service
-	profile       identitymodule.ProfileService
+	commands      authCommandService
+	profileCmd    profileCommandService
+	profileQuery  profileQueryService
+	casCommands   casCommandService
+	casQueries    casQueryService
 	tokenService  authcontracts.TokenService
-	casProvider   authapp.CASProvider
 	cookieConfig  CookieConfig
 	log           *zap.Logger
 	auditRecorder auditlog.Recorder
@@ -40,19 +65,24 @@ type CookieConfig struct {
 
 const casProviderName = "cas"
 
-func NewHandler(service authapp.Service, profile identitymodule.ProfileService, tokenService authcontracts.TokenService, casProvider authapp.CASProvider, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
+func NewHandler(commands authCommandService, profileCmd profileCommandService, profileQuery profileQueryService, tokenService authcontracts.TokenService, casCommands casCommandService, casQueries casQueryService, cookieConfig CookieConfig, log *zap.Logger, auditRecorder auditlog.Recorder) *Handler {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	if casProvider == nil {
-		casProvider = authapp.NewCASProvider(config.CASConfig{}, nil, nil, log.Named("cas_provider"), nil)
+	if casCommands == nil {
+		casCommands = authcmd.NewCASService(config.CASConfig{}, nil, nil, log.Named("cas_command_service"), nil)
+	}
+	if casQueries == nil {
+		casQueries = authqry.NewCASService(config.CASConfig{})
 	}
 
 	return &Handler{
-		service:       service,
-		profile:       profile,
+		commands:      commands,
+		profileCmd:    profileCmd,
+		profileQuery:  profileQuery,
+		casCommands:   casCommands,
+		casQueries:    casQueries,
 		tokenService:  tokenService,
-		casProvider:   casProvider,
 		cookieConfig:  cookieConfig,
 		log:           log,
 		auditRecorder: auditRecorder,
@@ -66,7 +96,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.service.Register(c.Request.Context(), req)
+	resp, tokens, err := h.commands.Register(c.Request.Context(), req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -83,7 +113,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.service.Login(c.Request.Context(), req)
+	resp, tokens, err := h.commands.Login(c.Request.Context(), req)
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,
@@ -181,13 +211,13 @@ func (h *Handler) Logout(c *gin.Context) {
 }
 
 func (h *Handler) Profile(c *gin.Context) {
-	if h.profile == nil {
+	if h.profileQuery == nil {
 		response.Error(c, errcode.ErrServiceUnavailable)
 		return
 	}
 
 	authUser := authctx.MustCurrentUser(c)
-	profile, err := h.profile.GetProfile(c.Request.Context(), authUser.UserID)
+	profile, err := h.profileQuery.GetProfile(c.Request.Context(), authUser.UserID)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -196,7 +226,7 @@ func (h *Handler) Profile(c *gin.Context) {
 }
 
 func (h *Handler) ChangePassword(c *gin.Context) {
-	if h.profile == nil {
+	if h.profileCmd == nil {
 		response.Error(c, errcode.ErrServiceUnavailable)
 		return
 	}
@@ -208,7 +238,7 @@ func (h *Handler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := h.profile.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
+	if err := h.profileCmd.ChangePassword(c.Request.Context(), authUser.UserID, req); err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			UserID:       &authUser.UserID,
 			Action:       model.AuditActionUpdate,
@@ -256,11 +286,11 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 }
 
 func (h *Handler) CASStatus(c *gin.Context) {
-	response.Success(c, h.casProvider.Status())
+	response.Success(c, h.casQueries.Status())
 }
 
 func (h *Handler) CASLogin(c *gin.Context) {
-	resp, err := h.casProvider.BuildLogin(c.Request.Context())
+	resp, err := h.casQueries.BuildLogin(c.Request.Context())
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -275,7 +305,7 @@ func (h *Handler) CASCallback(c *gin.Context) {
 		return
 	}
 
-	resp, tokens, err := h.casProvider.Authenticate(c.Request.Context(), ticket)
+	resp, tokens, err := h.casCommands.Authenticate(c.Request.Context(), ticket)
 	if err != nil {
 		h.recordAudit(c, auditlog.Entry{
 			Action:       model.AuditActionLogin,

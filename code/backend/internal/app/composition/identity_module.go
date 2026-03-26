@@ -2,19 +2,21 @@ package composition
 
 import (
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
-	"ctf-platform/internal/module/identity"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
-	identityapp "ctf-platform/internal/module/identity/application"
+	identitycmd "ctf-platform/internal/module/identity/application/commands"
+	identityqry "ctf-platform/internal/module/identity/application/queries"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	jwtpkg "ctf-platform/pkg/jwt"
 )
 
 type IdentityModule struct {
-	AdminHandler   *identityhttp.Handler
-	ProfileService identity.ProfileService
-	TokenService   identity.Authenticator
+	AdminHandler    *identityhttp.Handler
+	ProfileCommands identitycontracts.ProfileCommandService
+	ProfileQueries  identitycontracts.ProfileQueryService
+	TokenService    identitycontracts.Authenticator
 
-	users identity.UserRepository
+	users identitycontracts.UserRepository
 }
 
 func BuildIdentityModule(root *Root) (*IdentityModule, error) {
@@ -29,14 +31,17 @@ func BuildIdentityModule(root *Root) (*IdentityModule, error) {
 	}
 
 	users := identityinfra.NewRepository(db)
-	tokenService := identity.NewModule(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
-	adminService := identityapp.NewAdminService(users, cfg.Pagination, log.Named("identity_admin_service"))
-	profileService := identityapp.NewProfileService(users, log.Named("identity_profile_service"))
+	tokenService := identitycmd.NewAuthenticatorService(authinfra.NewTokenService(cfg.Auth, cfg.WebSocket, cache, jwtManager))
+	adminCommandService := identitycmd.NewAdminService(users, log.Named("identity_admin_command_service"))
+	adminQueryService := identityqry.NewAdminService(users, cfg.Pagination, log.Named("identity_admin_query_service"))
+	profileCommandService := identitycmd.NewProfileService(users, log.Named("identity_profile_command_service"))
+	profileQueryService := identityqry.NewProfileService(users)
 
 	return &IdentityModule{
-		AdminHandler:   identityhttp.NewHandler(adminService),
-		ProfileService: profileService,
-		TokenService:   tokenService,
-		users:          users,
+		AdminHandler:    identityhttp.NewHandler(adminCommandService, adminQueryService),
+		ProfileCommands: profileCommandService,
+		ProfileQueries:  profileQueryService,
+		TokenService:    tokenService,
+		users:           users,
 	}, nil
 }

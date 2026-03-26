@@ -30,12 +30,15 @@ import (
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
-	authapp "ctf-platform/internal/module/auth/application"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
+	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
-	identityapp "ctf-platform/internal/module/identity/application"
+	identitycmd "ctf-platform/internal/module/identity/application/commands"
+	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	jwtpkg "ctf-platform/pkg/jwt"
@@ -47,7 +50,7 @@ type notificationIntegrationEnv struct {
 	db                  *gorm.DB
 	cache               *redislib.Client
 	tokenService        authcontracts.TokenService
-	notificationService *opsapp.NotificationService
+	notificationService *opscmd.NotificationService
 }
 
 type notificationTestEnvelope struct {
@@ -229,14 +232,17 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	}
 	tokenService := authinfra.NewTokenService(authCfg, wsCfg, cache, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := authapp.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+	authService := authcmd.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
 		Limit:        10,
 		Window:       time.Minute,
 		LockDuration: 15 * time.Minute,
 	}, zap.NewNop())
-	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
-	authHandler := authhttp.NewHandler(authService, profileService, tokenService, authapp.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil), authhttp.CookieConfig{
+	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
+	casQueryService := authqry.NewCASService(authCfg.CAS)
+	profileCommandService := identitycmd.NewProfileService(authRepo, zap.NewNop())
+	profileQueryService := identityqry.NewProfileService(authRepo)
+	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
@@ -246,11 +252,15 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 
 	wsManager := ctfws.NewManager(wsCfg, zap.NewNop())
 	notificationRepo := opsinfra.NewNotificationRepository(db)
-	notificationService := opsapp.NewNotificationService(notificationRepo, config.PaginationConfig{
+	notificationCommandService := opscmd.NewNotificationService(notificationRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, wsManager, zap.NewNop())
-	notificationHandler := NewNotificationHandler(notificationService, tokenService, wsManager, zap.NewNop())
+	notificationQueryService := opsqry.NewNotificationService(notificationRepo, config.PaginationConfig{
+		DefaultPageSize: 20,
+		MaxPageSize:     100,
+	}, zap.NewNop())
+	notificationHandler := NewNotificationHandler(notificationCommandService, notificationQueryService, tokenService, wsManager, zap.NewNop())
 
 	router := gin.New()
 	router.Use(middleware.RequestID())
@@ -267,7 +277,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 		db:                  db,
 		cache:               cache,
 		tokenService:        tokenService,
-		notificationService: notificationService,
+		notificationService: notificationCommandService,
 	}
 }
 

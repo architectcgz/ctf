@@ -8,23 +8,15 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 // ProxyTicketClaims 表示实例代理票据载荷。
-type ProxyTicketClaims struct {
-	UserID     int64     `json:"user_id"`
-	Username   string    `json:"username"`
-	Role       string    `json:"role"`
-	InstanceID int64     `json:"instance_id"`
-	IssuedAt   time.Time `json:"issued_at"`
-}
+type ProxyTicketClaims = runtimeports.ProxyTicketClaims
 
 // ProxyTicketStore 定义代理票据持久化端口。
-type ProxyTicketStore interface {
-	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
-	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
-}
+type ProxyTicketStore = runtimeports.ProxyTicketStore
 
 // ProxyTicketService 负责代理票据签发和解析。
 type ProxyTicketService struct {

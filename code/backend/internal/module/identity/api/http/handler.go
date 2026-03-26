@@ -1,22 +1,38 @@
 package http
 
 import (
+	"context"
+	"io"
 	nethttp "net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	identitymodule "ctf-platform/internal/module/identity"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
-type Handler struct {
-	service identitymodule.AdminService
+type adminCommandService interface {
+	CreateUser(ctx context.Context, req *dto.CreateAdminUserReq) (*dto.AdminUserResp, error)
+	UpdateUser(ctx context.Context, userID int64, req *dto.UpdateAdminUserReq) (*dto.AdminUserResp, error)
+	DeleteUser(ctx context.Context, userID int64) error
+	ImportUsers(ctx context.Context, reader io.Reader) (*dto.ImportUsersResp, error)
 }
 
-func NewHandler(service identitymodule.AdminService) *Handler {
-	return &Handler{service: service}
+type adminQueryService interface {
+	ListUsers(ctx context.Context, query *dto.AdminUserQuery) ([]dto.AdminUserResp, int64, int, int, error)
+}
+
+type Handler struct {
+	commands adminCommandService
+	queries  adminQueryService
+}
+
+func NewHandler(commands adminCommandService, queries adminQueryService) *Handler {
+	return &Handler{
+		commands: commands,
+		queries:  queries,
+	}
 }
 
 func (h *Handler) ListUsers(c *gin.Context) {
@@ -26,7 +42,7 @@ func (h *Handler) ListUsers(c *gin.Context) {
 		return
 	}
 
-	list, total, page, size, err := h.service.ListUsers(c.Request.Context(), &query)
+	list, total, page, size, err := h.queries.ListUsers(c.Request.Context(), &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -41,7 +57,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.CreateUser(c.Request.Context(), &req)
+	user, err := h.commands.CreateUser(c.Request.Context(), &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -57,7 +73,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.UpdateUser(c.Request.Context(), userID, &req)
+	user, err := h.commands.UpdateUser(c.Request.Context(), userID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -67,7 +83,7 @@ func (h *Handler) UpdateUser(c *gin.Context) {
 
 func (h *Handler) DeleteUser(c *gin.Context) {
 	userID := c.GetInt64("id")
-	if err := h.service.DeleteUser(c.Request.Context(), userID); err != nil {
+	if err := h.commands.DeleteUser(c.Request.Context(), userID); err != nil {
 		response.FromError(c, err)
 		return
 	}
@@ -88,7 +104,7 @@ func (h *Handler) ImportUsers(c *gin.Context) {
 	}
 	defer file.Close()
 
-	result, err := h.service.ImportUsers(c.Request.Context(), file)
+	result, err := h.commands.ImportUsers(c.Request.Context(), file)
 	if err != nil {
 		response.FromError(c, err)
 		return

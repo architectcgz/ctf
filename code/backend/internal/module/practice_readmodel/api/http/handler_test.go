@@ -12,7 +12,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
+	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 )
 
 type stubPracticeQuery struct {
@@ -31,7 +31,7 @@ func (s *stubPracticeQuery) GetTimeline(ctx context.Context, userID int64, limit
 func TestNewHandlerAcceptsPracticeQueryContract(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	var _ practicereadmodel.PracticeQuery = (*stubPracticeQuery)(nil)
+	var _ practicereadmodelqueries.Service = (*stubPracticeQuery)(nil)
 
 	handler := NewHandler(&stubPracticeQuery{
 		getProgressFn: func(ctx context.Context, userID int64) (*dto.ProgressResp, error) {

@@ -11,15 +11,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	readmodelports "ctf-platform/internal/module/teaching_readmodel/ports"
 )
-
-type ProgressRow struct {
-	Key    string
-	Total  int
-	Solved int
-}
 
 type Repository struct {
 	db *gorm.DB
@@ -50,8 +44,8 @@ func (r *Repository) CountStudentsByClass(ctx context.Context, className string)
 	return count, nil
 }
 
-func (r *Repository) ListClasses(ctx context.Context) ([]dto.TeacherClassItem, error) {
-	items := make([]dto.TeacherClassItem, 0)
+func (r *Repository) ListClasses(ctx context.Context) ([]readmodelports.ClassItem, error) {
+	items := make([]readmodelports.ClassItem, 0)
 	if err := r.db.WithContext(ctx).Model(&model.User{}).
 		Select("class_name AS name, COUNT(*) AS student_count").
 		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
@@ -63,8 +57,8 @@ func (r *Repository) ListClasses(ctx context.Context) ([]dto.TeacherClassItem, e
 	return items, nil
 }
 
-func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]dto.TeacherStudentItem, error) {
-	items := make([]dto.TeacherStudentItem, 0)
+func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]readmodelports.StudentItem, error) {
+	items := make([]readmodelports.StudentItem, 0)
 	query := r.db.WithContext(ctx).Table("users AS u").
 		Select(`
 			u.id,
@@ -148,8 +142,8 @@ func (r *Repository) CountSolvedChallenges(ctx context.Context, userID int64) (i
 	return count, nil
 }
 
-func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]ProgressRow, error) {
-	rows := make([]ProgressRow, 0)
+func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
+	rows := make([]readmodelports.ProgressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.category AS key,
@@ -169,8 +163,8 @@ func (r *Repository) GetCategoryProgress(ctx context.Context, userID int64) ([]P
 	return rows, nil
 }
 
-func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([]ProgressRow, error) {
-	rows := make([]ProgressRow, 0)
+func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([]readmodelports.ProgressRow, error) {
+	rows := make([]readmodelports.ProgressRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
 		SELECT
 			c.difficulty AS key,
@@ -198,7 +192,7 @@ func (r *Repository) GetDifficultyProgress(ctx context.Context, userID int64) ([
 	return rows, nil
 }
 
-func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]dto.TimelineEvent, error) {
+func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]readmodelports.TimelineEventRecord, error) {
 	if limit <= 0 {
 		limit = 100
 	}
@@ -284,7 +278,7 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	})
 
 	if offset >= len(rows) {
-		return []dto.TimelineEvent{}, nil
+		return []readmodelports.TimelineEventRecord{}, nil
 	}
 	end := offset + limit
 	if end > len(rows) {
@@ -292,9 +286,9 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	}
 	rows = rows[offset:end]
 
-	events := make([]dto.TimelineEvent, len(rows))
+	events := make([]readmodelports.TimelineEventRecord, len(rows))
 	for i, row := range rows {
-		events[i] = dto.TimelineEvent{
+		events[i] = readmodelports.TimelineEventRecord{
 			Type:        row.Type,
 			ChallengeID: row.ChallengeID,
 			Title:       row.Title,
@@ -394,13 +388,13 @@ func (r *Repository) listStudentAuditTimelineRows(ctx context.Context, userID in
 	return rows, nil
 }
 
-func (r *Repository) GetClassSummary(ctx context.Context, className string, since time.Time) (*dto.TeacherClassSummaryResp, error) {
+func (r *Repository) GetClassSummary(ctx context.Context, className string, since time.Time) (*readmodelports.ClassSummary, error) {
 	studentCount, err := r.CountStudentsByClass(ctx, className)
 	if err != nil {
 		return nil, err
 	}
 
-	summary := &dto.TeacherClassSummaryResp{
+	summary := &readmodelports.ClassSummary{
 		ClassName:    className,
 		StudentCount: studentCount,
 	}
@@ -428,7 +422,7 @@ func (r *Repository) GetClassSummary(ctx context.Context, className string, sinc
 	return summary, nil
 }
 
-func (r *Repository) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*dto.TeacherClassTrendResp, error) {
+func (r *Repository) GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*readmodelports.ClassTrend, error) {
 	if days <= 0 {
 		days = 7
 	}
@@ -465,11 +459,11 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		return nil, fmt.Errorf("get class trend: %w", err)
 	}
 
-	points := make([]dto.TeacherClassTrendPoint, days)
+	points := make([]readmodelports.ClassTrendPoint, days)
 	indexByDate := make(map[string]int, days)
 	for i := 0; i < days; i++ {
 		date := since.AddDate(0, 0, i).Format("2006-01-02")
-		points[i] = dto.TeacherClassTrendPoint{Date: date}
+		points[i] = readmodelports.ClassTrendPoint{Date: date}
 		indexByDate[date] = i
 	}
 
@@ -496,7 +490,7 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		points[i].ActiveStudentCount = int64(len(activeUsersByDate[points[i].Date]))
 	}
 
-	return &dto.TeacherClassTrendResp{
+	return &readmodelports.ClassTrend{
 		ClassName: className,
 		Points:    points,
 	}, nil

@@ -2,7 +2,8 @@ package composition
 
 import (
 	authhttp "ctf-platform/internal/module/auth/api/http"
-	authapp "ctf-platform/internal/module/auth/application"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
+	authqry "ctf-platform/internal/module/auth/application/queries"
 )
 
 type AuthModule struct {
@@ -12,15 +13,18 @@ type AuthModule struct {
 func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule) (*AuthModule, error) {
 	cfg := root.Config()
 	log := root.Logger()
-	authService := authapp.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	casProvider := authapp.NewCASProvider(cfg.Auth.CAS, identity.users, identity.TokenService, log.Named("cas_provider"), nil)
+	authService := authcmd.NewService(identity.users, identity.TokenService, cfg.RateLimit.Login, log.Named("auth_service"))
+	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, identity.users, identity.TokenService, log.Named("cas_command_service"), nil)
+	casQueryService := authqry.NewCASService(cfg.Auth.CAS)
 
 	return &AuthModule{
 		Handler: authhttp.NewHandler(
 			authService,
-			identity.ProfileService,
+			identity.ProfileCommands,
+			identity.ProfileQueries,
 			identity.TokenService,
-			casProvider,
+			casCommandService,
+			casQueryService,
 			authhttp.CookieConfig{
 				Name:     cfg.Auth.RefreshCookieName,
 				Path:     cfg.Auth.RefreshCookiePath,
