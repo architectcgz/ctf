@@ -53,6 +53,10 @@
   - `assessment` composition 已切到 typed deps
   - `BuildAssessmentModule` 已拆为 profile / recommendation / report 局部 builder
   - composition 不再直接持有 concrete assessment repo 字段
+- 完成 `assessment-crossdeps-phase2`：
+  - `assessment` composition 已拆分本模块 deps 与 challenge external deps
+  - 推荐服务对 challenge contract 的依赖已从主装配 builder 中收口
+  - assessment 的跨模块装配边界已与其他模块保持一致
 - 完成 `runtime-bridge-phase2`：
   - `practice` runtime adapter 已下沉到 `runtime` composition
   - `runtime` 对外暴露的 practice/contest 依赖已切到外部 ports 接口

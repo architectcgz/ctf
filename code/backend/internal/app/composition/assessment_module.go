@@ -23,17 +23,21 @@ type AssessmentModule struct {
 type assessmentModuleDeps struct {
 	profileRepo        assessmentports.ProfileRepository
 	recommendationRepo assessmentports.RecommendationRepository
-	challengeRepo      assessmentports.ChallengeRepository
 	reportRepo         assessmentports.ReportRepository
+}
+
+type assessmentModuleExternalDeps struct {
+	challengeRepo assessmentports.ChallengeRepository
 }
 
 func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentModule {
 	cfg := root.Config()
-	deps := buildAssessmentModuleDeps(root, challenge)
+	deps := buildAssessmentModuleDeps(root)
+	externalDeps := buildAssessmentModuleExternalDeps(challenge)
 
 	profileCommandService, profileQueryService := buildAssessmentProfileHandler(root, deps)
 	profileCommandService.RegisterPracticeEventConsumers(root.Events)
-	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps)
+	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps, externalDeps)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
 	reportService, reportHandler := buildAssessmentReportHandler(root, cfg, deps, profileQueryService)
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))
@@ -54,13 +58,18 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	}
 }
 
-func buildAssessmentModuleDeps(root *Root, challenge *ChallengeModule) assessmentModuleDeps {
+func buildAssessmentModuleDeps(root *Root) assessmentModuleDeps {
 	repo := assessmentinfra.NewRepository(root.DB())
 	return assessmentModuleDeps{
 		profileRepo:        repo,
 		recommendationRepo: repo,
-		challengeRepo:      challenge.Catalog,
 		reportRepo:         assessmentinfra.NewReportRepository(root.DB()),
+	}
+}
+
+func buildAssessmentModuleExternalDeps(challenge *ChallengeModule) assessmentModuleExternalDeps {
+	return assessmentModuleExternalDeps{
+		challengeRepo: challenge.Catalog,
 	}
 }
 
@@ -75,10 +84,10 @@ func buildAssessmentProfileHandler(root *Root, deps assessmentModuleDeps) (*asse
 	return profileCommandService, profileQueryService
 }
 
-func buildAssessmentRecommendationHandler(root *Root, cfg *config.Config, deps assessmentModuleDeps) *assessmentqry.RecommendationService {
+func buildAssessmentRecommendationHandler(root *Root, cfg *config.Config, deps assessmentModuleDeps, externalDeps assessmentModuleExternalDeps) *assessmentqry.RecommendationService {
 	return assessmentqry.NewRecommendationService(
 		deps.recommendationRepo,
-		deps.challengeRepo,
+		externalDeps.challengeRepo,
 		root.Cache(),
 		cfg.Recommendation,
 		root.Logger().Named("recommendation_service"),
