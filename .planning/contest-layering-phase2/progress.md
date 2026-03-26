@@ -16,3 +16,5 @@
   - `queries/contest_service` 已切到 `ContestListRepository`
   - `commands/scoreboard_admin_service` 已切到 `ContestScoreboardAdminRepository`
   - `challenge / participation / team / awd / submission` 相关 service 已统一收口到 `ContestLookupRepository`
+- 删除已被清空的宽 `contestports.Repository`
+- `contest/architecture_test.go` 已新增护栏，禁止重新声明 legacy 宽仓储接口
