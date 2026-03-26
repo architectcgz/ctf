@@ -128,3 +128,7 @@
   - `contest` AWD 主流程已从单文件拆为 round 管理与 service check 命令两段
   - AWD commands 对外接口保持不变，主流程文件边界进一步清晰
   - `contest/...` 定向测试已覆盖本轮无行为变化拆分
+- 完成 `contest-awd-attack-flow-split-phase2`：
+  - `contest` AWD attack 主流程已从单文件拆为手工 attack log 与 flag submit 两段
+  - AWD commands 对外接口保持不变，attack 主流程文件边界进一步清晰
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
