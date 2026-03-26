@@ -265,10 +265,14 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"runtimeports.InstanceRepository",
 		"practiceInstanceRepo",
 		"practiceports.InstanceRepository",
-		"countRunningRepo",
-		"runtimeports.CountRunningRepository",
-		"proxyTicketStore",
-		"runtimeports.ProxyTicketStore",
+		"instanceCommands",
+		"runtimeHTTPCommandService",
+		"instanceQueries",
+		"runtimeHTTPQueryService",
+		"countRunningQuery",
+		"opsports.RuntimeQuery",
+		"proxyTicketService",
+		"runtimeHTTPProxyTicketService",
 		"imageRuntime",
 		"challengeports.ImageRuntime",
 		"containerFiles",
@@ -277,6 +281,39 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("runtime composition should declare typed deps marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeModuleUsesCommandsQueriesServices(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	if err != nil {
+		t.Fatalf("read runtime_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"runtimecmd.NewInstanceService(",
+		"runtimeqry.NewInstanceService(",
+		"runtimeqry.NewCountRunningService(",
+		"runtimeqry.NewProxyTicketService(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should use layered runtime service marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"runtimeapp.NewInstanceService(",
+		"runtimeapp.NewQueryService(",
+		"runtimeapp.NewProxyTicketService(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should not keep legacy root service marker %s", marker)
 		}
 	}
 }

@@ -6,7 +6,7 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type stubRuntimeService struct{}
@@ -39,7 +39,7 @@ func (stubRuntimeService) IssueProxyTicket(context.Context, authctx.CurrentUser,
 	return "", nil
 }
 
-func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeapp.ProxyTicketClaims, error) {
+func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return nil, nil
 }
 

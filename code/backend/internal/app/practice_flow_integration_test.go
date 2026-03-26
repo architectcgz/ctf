@@ -52,6 +52,8 @@ import (
 	practicereadmodelinfra "ctf-platform/internal/module/practice_readmodel/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
@@ -764,10 +766,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
 	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, logger)
 	runtimeProvisioningService := runtimeapp.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
-	runtimeInstanceService := runtimeapp.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
-	runtimeProxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
+	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
+	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
+	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
-		runtimeInstanceService,
+		runtimeInstanceCommands,
+		runtimeInstanceQueries,
 		runtimeProxyTicketService,
 		cfg.Container.ProxyBodyPreviewSize,
 	)

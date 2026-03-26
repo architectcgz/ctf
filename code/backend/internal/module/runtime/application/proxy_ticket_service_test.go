@@ -1,4 +1,4 @@
-package application
+package application_test
 
 import (
 	"context"
@@ -6,26 +6,28 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
 type stubProxyTicketStore struct {
 	savedTicket string
-	savedClaims ProxyTicketClaims
+	savedClaims runtimeports.ProxyTicketClaims
 	savedTTL    time.Duration
-	findClaims  *ProxyTicketClaims
+	findClaims  *runtimeports.ProxyTicketClaims
 	saveErr     error
 	findErr     error
 }
 
-func (s *stubProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error {
+func (s *stubProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims runtimeports.ProxyTicketClaims, ttl time.Duration) error {
 	s.savedTicket = ticket
 	s.savedClaims = claims
 	s.savedTTL = ttl
 	return s.saveErr
 }
 
-func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error) {
+func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	return s.findClaims, s.findErr
 }
 
@@ -33,7 +35,7 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	t.Parallel()
 
 	store := &stubProxyTicketStore{}
-	service := NewProxyTicketService(store, 15*time.Minute)
+	service := runtimeqry.NewProxyTicketService(store, 15*time.Minute)
 
 	ticket, expiresAt, err := service.IssueTicket(context.Background(), authctx.CurrentUser{
 		UserID:   1001,
@@ -67,12 +69,12 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 	t.Parallel()
 
 	store := &stubProxyTicketStore{
-		findClaims: &ProxyTicketClaims{
+		findClaims: &runtimeports.ProxyTicketClaims{
 			UserID:     1001,
 			InstanceID: 2001,
 		},
 	}
-	service := NewProxyTicketService(store, 15*time.Minute)
+	service := runtimeqry.NewProxyTicketService(store, 15*time.Minute)
 
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
 	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {

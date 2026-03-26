@@ -16,7 +16,7 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
@@ -60,7 +60,7 @@ func newDashboardTestService(t *testing.T, db *gorm.DB, redis *redislib.Client) 
 	t.Helper()
 
 	return NewDashboardService(
-		runtimeapp.NewQueryService(runtimeinfrarepo.NewRepository(db)),
+		runtimeqry.NewCountRunningService(runtimeinfrarepo.NewRepository(db)),
 		nil,
 		redis,
 		&config.Config{

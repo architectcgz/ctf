@@ -18,6 +18,7 @@ import (
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/pkg/errcode"
@@ -65,11 +66,9 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 	}
 
 	runtimeCleanupService := runtimeapp.NewRuntimeCleanupService(nil, nil)
-	instanceService := runtimeapp.NewInstanceService(runtimeinfrarepo.NewRepository(db), runtimeCleanupService, &config.ContainerConfig{
-		MaxExtends:     2,
-		ExtendDuration: 30 * time.Minute,
-	}, nil)
-	visible, err := instanceService.GetUserInstancesWithContext(context.Background(), 5002)
+	_ = runtimeCleanupService
+	instanceQueries := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+	visible, err := instanceQueries.GetUserInstancesWithContext(context.Background(), 5002)
 	if err != nil {
 		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
 	}
@@ -77,7 +76,7 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 		t.Fatalf("expected teammate to see shared instance, got %+v", visible)
 	}
 
-	accessURL, err := instanceService.GetAccessURLWithContext(context.Background(), first.ID, 5002)
+	accessURL, err := instanceQueries.GetAccessURLWithContext(context.Background(), first.ID, 5002)
 	if err != nil {
 		t.Fatalf("GetAccessURLWithContext() error = %v", err)
 	}

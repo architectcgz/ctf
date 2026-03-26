@@ -14,7 +14,8 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
+	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/pkg/errcode"
 )
@@ -75,12 +76,7 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 		UpdatedAt:   now,
 	})
 
-	service := runtimeapp.NewInstanceService(
-		runtimeinfrarepo.NewRepository(db),
-		noopRuntimeCleaner{},
-		&config.ContainerConfig{MaxExtends: 2, ExtendDuration: 30 * time.Minute},
-		nil,
-	)
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
 	if err != nil {
@@ -105,12 +101,7 @@ func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *te
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 102, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 103, UserID: 2, ChallengeID: 11, ContainerID: "inst-stopped", Status: model.InstanceStatusStopped, ExpiresAt: now.Add(30 * time.Minute), CreatedAt: now, UpdatedAt: now})
 
-	service := runtimeapp.NewInstanceService(
-		runtimeinfrarepo.NewRepository(db),
-		noopRuntimeCleaner{},
-		&config.ContainerConfig{MaxExtends: 2, ExtendDuration: 30 * time.Minute},
-		nil,
-	)
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
 
 	items, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, nil)
 	if err != nil {
@@ -148,7 +139,7 @@ func TestInstanceServiceDestroyTeacherInstanceHonorsClassScope(t *testing.T) {
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 201, UserID: 2, ChallengeID: 11, ContainerID: "inst-a", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 	seedInstanceServiceInstance(t, db, &model.Instance{ID: 202, UserID: 3, ChallengeID: 11, ContainerID: "inst-b", Status: model.InstanceStatusRunning, ExpiresAt: now.Add(time.Hour), CreatedAt: now, UpdatedAt: now})
 
-	service := runtimeapp.NewInstanceService(
+	service := runtimecmd.NewInstanceService(
 		runtimeinfrarepo.NewRepository(db),
 		noopRuntimeCleaner{},
 		&config.ContainerConfig{MaxExtends: 2, ExtendDuration: 30 * time.Minute},
