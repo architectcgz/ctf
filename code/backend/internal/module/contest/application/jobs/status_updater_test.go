@@ -9,7 +9,6 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/model"
-	contestports "ctf-platform/internal/module/contest/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
 )
 
@@ -19,34 +18,6 @@ type statusUpdaterRepoStub struct {
 	receivedStatus []string
 	listCalls      int
 	listCalled     chan struct{}
-}
-
-func (s *statusUpdaterRepoStub) Create(context.Context, *model.Contest) error {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) FindByID(context.Context, int64) (*model.Contest, error) {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) Update(context.Context, *model.Contest) error {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) FindTeamsByIDs(context.Context, []int64) ([]*model.Team, error) {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) FindTeamsByContest(context.Context, int64) ([]*model.Team, error) {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) FindScoreboardTeamStats(context.Context, int64, string, []int64) (map[int64]contestports.ScoreboardTeamStats, error) {
-	panic("unexpected call")
-}
-
-func (s *statusUpdaterRepoStub) List(context.Context, *string, int, int) ([]*model.Contest, int64, error) {
-	panic("unexpected call")
 }
 
 func (s *statusUpdaterRepoStub) ListByStatusesAndTimeRange(_ context.Context, statuses []string, _ time.Time, _, _ int) ([]*model.Contest, int64, error) {
