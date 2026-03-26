@@ -96,3 +96,7 @@
   - `runtime` 的 topology / managed-container 共享契约已下沉到 `runtime/ports`
   - `composition`、`runtime/infrastructure` 与 `testutil` 不再为类型定义依赖 root `runtime/application`
   - root `runtime/application` 仅保留应用服务与 alias 层，不再直接承载共享 topology contract 定义
+- 完成 `runtime-write-services-phase2`：
+  - `runtime` 的 provisioning / cleanup / maintenance 写侧服务已下沉到 `application/commands`
+  - `composition`、practice flow 与受影响测试不再通过 root `runtime/application` 构造上述写侧服务
+  - root `runtime/application` 继续收缩，不再保留上述 legacy write-side service 实现

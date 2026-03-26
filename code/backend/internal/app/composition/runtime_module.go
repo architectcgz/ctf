@@ -68,9 +68,9 @@ type runtimeModuleDeps struct {
 	instanceQueries       runtimeHTTPQueryService
 	countRunningQuery     opsports.RuntimeQuery
 	proxyTicketService    runtimeHTTPProxyTicketService
-	cleanupService        *runtimeapp.RuntimeCleanupService
-	maintenanceService    *runtimeapp.RuntimeMaintenanceService
-	provisioningService   *runtimeapp.ProvisioningService
+	cleanupService        *runtimecmd.RuntimeCleanupService
+	maintenanceService    *runtimecmd.RuntimeMaintenanceService
+	provisioningService   *runtimecmd.ProvisioningService
 	containerStatsService *runtimeapp.ContainerStatsService
 	imageRuntime          challengeports.ImageRuntime
 	containerFiles        contestports.AWDContainerFileWriter
@@ -105,9 +105,9 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 	cfg := root.Config()
 	log := root.Logger()
 	repo := runtimeinfra.NewRepository(root.DB())
-	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
-	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
-	provisioningService := runtimeapp.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
+	maintenanceService := runtimecmd.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
+	provisioningService := runtimecmd.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
 	if engine != nil {
 		containerStatsService = runtimeapp.NewContainerStatsService(engine)
@@ -383,11 +383,11 @@ func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 }
 
 type runtimePracticeServiceAdapter struct {
-	cleaner     *runtimeapp.RuntimeCleanupService
-	provisioner *runtimeapp.ProvisioningService
+	cleaner     *runtimecmd.RuntimeCleanupService
+	provisioner *runtimecmd.ProvisioningService
 }
 
-func newRuntimePracticeServiceAdapter(cleaner *runtimeapp.RuntimeCleanupService, provisioner *runtimeapp.ProvisioningService) practiceports.RuntimeInstanceService {
+func newRuntimePracticeServiceAdapter(cleaner *runtimecmd.RuntimeCleanupService, provisioner *runtimecmd.ProvisioningService) practiceports.RuntimeInstanceService {
 	if cleaner == nil && provisioner == nil {
 		return nil
 	}

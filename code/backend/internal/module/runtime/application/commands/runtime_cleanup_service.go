@@ -1,4 +1,4 @@
-package application
+package commands
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func NewRuntimeCleanupService(engine runtimeCleanupEngine, logger *zap.Logger) *
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if isNilApplicationDependency(engine) {
+	if isNilCommandDependency(engine) {
 		engine = nil
 	}
 	return &RuntimeCleanupService{

@@ -1,4 +1,4 @@
-package application
+package commands
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type maintenanceTestRepository struct {
@@ -26,11 +27,11 @@ func (r *maintenanceTestRepository) ListActiveContainerIDs() ([]string, error) {
 }
 
 type maintenanceTestEngine struct {
-	managedContainers []ManagedContainer
+	managedContainers []runtimeports.ManagedContainer
 }
 
-func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]ManagedContainer, error) {
-	return append([]ManagedContainer(nil), e.managedContainers...), nil
+func (e *maintenanceTestEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
+	return append([]runtimeports.ManagedContainer(nil), e.managedContainers...), nil
 }
 
 type maintenanceTestCleaner struct {
@@ -48,7 +49,7 @@ func (c *maintenanceTestCleaner) RemoveContainerWithContext(_ context.Context, c
 
 type typedNilMaintenanceEngine struct{}
 
-func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]ManagedContainer, error) {
+func (*typedNilMaintenanceEngine) ListManagedContainers(context.Context) ([]runtimeports.ManagedContainer, error) {
 	return nil, nil
 }
 
@@ -56,7 +57,7 @@ func TestSelectOrphanContainersSkipsActiveAndGracePeriod(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	managedContainers := []ManagedContainer{
+	managedContainers := []runtimeports.ManagedContainer{
 		{ID: "active", Name: "ctf-instance-active", CreatedAt: now.Add(-10 * time.Minute)},
 		{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: now.Add(-2 * time.Minute)},
 		{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: now.Add(-12 * time.Minute)},
@@ -81,7 +82,7 @@ func TestRuntimeMaintenanceServiceCleanupOrphansSkipsActiveAndGracePeriod(t *tes
 		activeContainerIDs: []string{"active"},
 	}
 	engine := &maintenanceTestEngine{
-		managedContainers: []ManagedContainer{
+		managedContainers: []runtimeports.ManagedContainer{
 			{ID: "active", Name: "ctf-instance-active", CreatedAt: time.Now().Add(-10 * time.Minute)},
 			{ID: "fresh", Name: "ctf-instance-fresh", CreatedAt: time.Now().Add(-2 * time.Minute)},
 			{ID: "orphan", Name: "ctf-instance-orphan", CreatedAt: time.Now().Add(-12 * time.Minute)},
