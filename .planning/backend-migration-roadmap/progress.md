@@ -140,3 +140,7 @@
   - `contest` AWD round updater 已从单文件拆为轮次规划/落库与 flag 同步两段
   - `AWDRoundUpdater` 对外接口保持不变，jobs 主流程文件边界进一步清晰
   - `contest/...` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-score-sync-split-phase2`：
+  - `contest` AWD score sync 已从单文件拆为分数重算、排行榜缓存与解析 helper 三段
+  - AWD repository 对外接口保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 定向测试覆盖本轮无行为变化拆分
