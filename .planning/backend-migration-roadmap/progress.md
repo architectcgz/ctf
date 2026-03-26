@@ -164,3 +164,7 @@
   - `contest` submission repository 已从单文件拆为 lookup、写入与计分更新三段
   - `SubmissionRepository` 对外接口保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-query-split-phase2`：
+  - `contest` team query 已从单文件拆为 team info 与 team list / my team 两段
+  - `TeamService` 对外接口保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 query 定向测试覆盖本轮无行为变化拆分
