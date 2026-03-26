@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -185,6 +186,30 @@ func TestCompositionBuildersUseRuntimeModuleForRuntimeDependencies(t *testing.T)
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildChallengeModule), 1, reflect.TypeOf(&composition.RuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildContestModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
 	assertFunctionParamType(t, reflect.TypeOf(composition.BuildPracticeModule), 2, reflect.TypeOf(&composition.RuntimeModule{}))
+}
+
+func TestBuildContestModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	if err != nil {
+		t.Fatalf("read contest_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildContestCoreHandler(",
+		"buildContestAWDHandler(",
+		"buildContestChallengeHandler(",
+		"buildContestParticipationHandler(",
+		"buildContestTeamHandler(",
+		"buildContestSubmissionHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("contest module should delegate through %s", marker)
+		}
+	}
 }
 
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
