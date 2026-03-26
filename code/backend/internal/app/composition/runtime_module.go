@@ -6,6 +6,7 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"fmt"
 	"time"
 
@@ -51,13 +52,39 @@ type runtimeContestDeps struct {
 	containerFiles contestports.AWDContainerFileWriter
 }
 
+type runtimeModuleDeps struct {
+	repo                  runtimeports.InstanceRepository
+	practiceInstanceRepo  practiceports.InstanceRepository
+	countRunningRepo      runtimeports.CountRunningRepository
+	proxyTicketStore      runtimeports.ProxyTicketStore
+	cleanupService        *runtimeapp.RuntimeCleanupService
+	maintenanceService    *runtimeapp.RuntimeMaintenanceService
+	instanceService       runtimeHTTPInstanceService
+	provisioningService   *runtimeapp.ProvisioningService
+	proxyTicketService    runtimeHTTPProxyTicketService
+	containerStatsService *runtimeapp.ContainerStatsService
+	imageRuntime          challengeports.ImageRuntime
+	containerFiles        contestports.AWDContainerFileWriter
+}
+
 func BuildRuntimeModule(root *Root) *RuntimeModule {
+	engine := buildRuntimeEngine(root)
+	deps := buildRuntimeModuleDeps(root, engine)
+	registerRuntimeBackgroundJobs(root, deps)
+
+	return &RuntimeModule{
+		http:      buildRuntimeHTTPDeps(root, deps),
+		practice:  buildRuntimePracticeDeps(deps),
+		challenge: buildRuntimeChallengeDeps(deps),
+		ops:       buildRuntimeOpsDeps(deps),
+		contest:   buildRuntimeContestDeps(deps),
+	}
+}
+
+func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModuleDeps {
 	cfg := root.Config()
 	log := root.Logger()
-	db := root.DB()
-	cache := root.Cache()
-	repo := runtimeinfra.NewRepository(db)
-	engine := buildRuntimeEngine(root)
+	repo := runtimeinfra.NewRepository(root.DB())
 	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
 	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
 	instanceService := runtimeapp.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service"))
@@ -66,9 +93,28 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	if engine != nil {
 		containerStatsService = runtimeapp.NewContainerStatsService(engine)
 	}
-	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfra.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
-	containerFileService := runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service"))
-	cleaner := runtimeinfra.NewCleaner(maintenanceService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
+	proxyTicketStore := runtimeinfra.NewProxyTicketStore(root.Cache())
+
+	return runtimeModuleDeps{
+		repo:                  repo,
+		practiceInstanceRepo:  repo,
+		countRunningRepo:      repo,
+		proxyTicketStore:      proxyTicketStore,
+		cleanupService:        cleanupService,
+		maintenanceService:    maintenanceService,
+		instanceService:       instanceService,
+		provisioningService:   provisioningService,
+		proxyTicketService:    runtimeapp.NewProxyTicketService(proxyTicketStore, cfg.Container.ProxyTicketTTL),
+		containerStatsService: containerStatsService,
+		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
+		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
+	}
+}
+
+func registerRuntimeBackgroundJobs(root *Root, deps runtimeModuleDeps) {
+	cfg := root.Config()
+	log := root.Logger()
+	cleaner := runtimeinfra.NewCleaner(deps.maintenanceService, root.Cache(), cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"runtime_cleaner",
 		func(context.Context) error {
@@ -76,31 +122,41 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 		},
 		cleaner.Stop,
 	))
+}
 
-	httpService := newRuntimeHTTPServiceAdapter(
-		instanceService,
-		proxyTicketService,
-		cfg.Container.ProxyBodyPreviewSize,
-	)
+func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
+	return runtimeHTTPDeps{
+		service: newRuntimeHTTPServiceAdapter(
+			deps.instanceService,
+			deps.proxyTicketService,
+			root.Config().Container.ProxyBodyPreviewSize,
+		),
+	}
+}
 
-	return &RuntimeModule{
-		http: runtimeHTTPDeps{
-			service: httpService,
-		},
-		practice: runtimePracticeDeps{
-			instanceRepository: repo,
-			runtimeService:     newRuntimePracticeServiceAdapter(cleanupService, provisioningService),
-		},
-		challenge: runtimeChallengeDeps{
-			imageRuntime: runtimeapp.NewImageRuntimeService(engine),
-		},
-		ops: runtimeOpsDeps{
-			query:         runtimeapp.NewQueryService(repo),
-			statsProvider: newRuntimeOpsStatsProvider(containerStatsService),
-		},
-		contest: runtimeContestDeps{
-			containerFiles: containerFileService,
-		},
+func buildRuntimePracticeDeps(deps runtimeModuleDeps) runtimePracticeDeps {
+	return runtimePracticeDeps{
+		instanceRepository: deps.practiceInstanceRepo,
+		runtimeService:     newRuntimePracticeServiceAdapter(deps.cleanupService, deps.provisioningService),
+	}
+}
+
+func buildRuntimeChallengeDeps(deps runtimeModuleDeps) runtimeChallengeDeps {
+	return runtimeChallengeDeps{
+		imageRuntime: deps.imageRuntime,
+	}
+}
+
+func buildRuntimeOpsDeps(deps runtimeModuleDeps) runtimeOpsDeps {
+	return runtimeOpsDeps{
+		query:         runtimeapp.NewQueryService(deps.countRunningRepo),
+		statsProvider: newRuntimeOpsStatsProvider(deps.containerStatsService),
+	}
+}
+
+func buildRuntimeContestDeps(deps runtimeModuleDeps) runtimeContestDeps {
+	return runtimeContestDeps{
+		containerFiles: deps.containerFiles,
 	}
 }
 

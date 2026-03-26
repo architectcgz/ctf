@@ -61,6 +61,10 @@
   - `practice` runtime adapter 已下沉到 `runtime` composition
   - `runtime` 对外暴露的 practice/contest 依赖已切到外部 ports 接口
   - `runtime` composition 不再反向依赖 `contest/infrastructure` 类型
+- 完成 `runtime-composition-phase2`：
+  - `runtime` composition 已切到 `typed deps + 局部 builder`
+  - repo、application service、cross-module adapter、后台任务注册已从 `BuildRuntimeModule` 主函数拆出
+  - `runtime` 装配结构已与其他 phase2 模块保持一致
 - 完成 `identity-readmodel-composition-phase2`：
   - `identity` composition 已切到 `UserRepository / Authenticator` typed deps
   - `practice_readmodel` 与 `teaching_readmodel` composition 已切到 query ports typed deps
