@@ -396,6 +396,64 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestPracticeModuleAvoidsRuntimeBridgeGlue(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_module.go: %v", err)
+	}
+
+	source := string(content)
+	blocked := []string{
+		"type practiceRuntimeCleanerBridge interface",
+		"type practiceRuntimeRepositoryBridge interface",
+		"type practiceRuntimeInstanceService interface",
+		"type practiceRuntimeProvisioningBridge interface",
+		"type practiceRuntimeInstanceServiceAdapter struct",
+		"newPracticeRuntimeInstanceServiceAdapter(",
+		"toRuntimeTopologyCreateRequest(",
+		"fromRuntimeTopologyCreateResult(",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice composition should not keep runtime bridge marker %s", marker)
+		}
+	}
+}
+
+func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	if err != nil {
+		t.Fatalf("read runtime_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"practiceports.InstanceRepository",
+		"practiceports.RuntimeInstanceService",
+		"contestports.AWDContainerFileWriter",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should use external ports marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"contestinfra.AWDContainerFileWriter",
+		"practiceRuntimeRepositoryBridge",
+		"practiceRuntimeInstanceService",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should not keep bridge marker %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 

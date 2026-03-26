@@ -2,13 +2,15 @@ package composition
 
 import (
 	"context"
+	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	"fmt"
 	"time"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
 	challengeports "ctf-platform/internal/module/challenge/ports"
-	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
@@ -31,8 +33,8 @@ type runtimeHTTPDeps struct {
 }
 
 type runtimePracticeDeps struct {
-	instanceRepository practiceRuntimeRepositoryBridge
-	runtimeService     practiceRuntimeInstanceService
+	instanceRepository practiceports.InstanceRepository
+	runtimeService     practiceports.RuntimeInstanceService
 }
 
 type runtimeChallengeDeps struct {
@@ -45,7 +47,7 @@ type runtimeOpsDeps struct {
 }
 
 type runtimeContestDeps struct {
-	containerFiles contestinfra.AWDContainerFileWriter
+	containerFiles contestports.AWDContainerFileWriter
 }
 
 func BuildRuntimeModule(root *Root) *RuntimeModule {
@@ -58,11 +60,13 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 	cleanupService := runtimeapp.NewRuntimeCleanupService(engine, log.Named("runtime_cleanup_service"))
 	maintenanceService := runtimeapp.NewRuntimeMaintenanceService(repo, engine, cleanupService, &cfg.Container, log.Named("runtime_maintenance_service"))
 	instanceService := runtimeapp.NewInstanceService(repo, cleanupService, &cfg.Container, log.Named("runtime_instance_service"))
+	provisioningService := runtimeapp.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))
 	var containerStatsService *runtimeapp.ContainerStatsService
 	if engine != nil {
 		containerStatsService = runtimeapp.NewContainerStatsService(engine)
 	}
 	proxyTicketService := runtimeapp.NewProxyTicketService(runtimeinfra.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
+	containerFileService := runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service"))
 	cleaner := runtimeinfra.NewCleaner(maintenanceService, cache, cfg.Container.CleanupLockTTL, log.Named("runtime_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"runtime_cleaner",
@@ -84,7 +88,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 		},
 		practice: runtimePracticeDeps{
 			instanceRepository: repo,
-			runtimeService:     newPracticeRuntimeInstanceServiceAdapter(cleanupService, runtimeapp.NewProvisioningService(repo, engine, &cfg.Container, log.Named("runtime_provisioning_service"))),
+			runtimeService:     newRuntimePracticeServiceAdapter(cleanupService, provisioningService),
 		},
 		challenge: runtimeChallengeDeps{
 			imageRuntime: runtimeapp.NewImageRuntimeService(engine),
@@ -94,7 +98,7 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 			statsProvider: newOpsRuntimeStatsProvider(containerStatsService),
 		},
 		contest: runtimeContestDeps{
-			containerFiles: runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
+			containerFiles: containerFileService,
 		},
 	}
 }
@@ -262,4 +266,113 @@ func errRuntimeHTTPInstanceServiceUnavailable() error {
 
 func errRuntimeHTTPProxyTicketServiceUnavailable() error {
 	return errcode.ErrInternal.WithCause(fmt.Errorf("proxy ticket service is not configured"))
+}
+
+type runtimePracticeServiceAdapter struct {
+	cleaner     *runtimeapp.RuntimeCleanupService
+	provisioner *runtimeapp.ProvisioningService
+}
+
+func newRuntimePracticeServiceAdapter(cleaner *runtimeapp.RuntimeCleanupService, provisioner *runtimeapp.ProvisioningService) practiceports.RuntimeInstanceService {
+	if cleaner == nil && provisioner == nil {
+		return nil
+	}
+	return &runtimePracticeServiceAdapter{
+		cleaner:     cleaner,
+		provisioner: provisioner,
+	}
+}
+
+func (a *runtimePracticeServiceAdapter) CleanupRuntime(instance *model.Instance) error {
+	if a == nil || a.cleaner == nil {
+		return nil
+	}
+	return a.cleaner.CleanupRuntime(instance)
+}
+
+func (a *runtimePracticeServiceAdapter) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if a == nil || a.provisioner == nil || req == nil {
+		return nil, nil
+	}
+
+	result, err := a.provisioner.CreateTopology(ctx, toRuntimeTopologyCreateRequest(req))
+	if err != nil {
+		return nil, err
+	}
+	return fromRuntimeTopologyCreateResult(result), nil
+}
+
+func (a *runtimePracticeServiceAdapter) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error) {
+	if a == nil || a.provisioner == nil {
+		return "", "", 0, 0, nil
+	}
+	return a.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
+}
+
+func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeapp.TopologyCreateRequest {
+	if req == nil {
+		return nil
+	}
+
+	networks := make([]runtimeapp.TopologyCreateNetwork, 0, len(req.Networks))
+	for _, network := range req.Networks {
+		networks = append(networks, runtimeapp.TopologyCreateNetwork{
+			Key:      network.Key,
+			Internal: network.Internal,
+		})
+	}
+
+	nodes := make([]runtimeapp.TopologyCreateNode, 0, len(req.Nodes))
+	for _, node := range req.Nodes {
+		nodes = append(nodes, runtimeapp.TopologyCreateNode{
+			Key:          node.Key,
+			Image:        node.Image,
+			Env:          cloneRuntimeStringMap(node.Env),
+			ServicePort:  node.ServicePort,
+			IsEntryPoint: node.IsEntryPoint,
+			NetworkKeys:  append([]string(nil), node.NetworkKeys...),
+			Resources:    cloneRuntimeResourceLimits(node.Resources),
+		})
+	}
+
+	return &runtimeapp.TopologyCreateRequest{
+		Networks:         networks,
+		Nodes:            nodes,
+		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
+		ReservedHostPort: req.ReservedHostPort,
+	}
+}
+
+func fromRuntimeTopologyCreateResult(result *runtimeapp.TopologyCreateResult) *practiceports.TopologyCreateResult {
+	if result == nil {
+		return nil
+	}
+	return &practiceports.TopologyCreateResult{
+		PrimaryContainerID: result.PrimaryContainerID,
+		NetworkID:          result.NetworkID,
+		AccessURL:          result.AccessURL,
+		RuntimeDetails:     result.RuntimeDetails,
+	}
+}
+
+func cloneRuntimeStringMap(input map[string]string) map[string]string {
+	if len(input) == 0 {
+		return nil
+	}
+	output := make(map[string]string, len(input))
+	for key, value := range input {
+		output[key] = value
+	}
+	return output
+}
+
+func cloneRuntimeResourceLimits(input *model.ResourceLimits) *model.ResourceLimits {
+	if input == nil {
+		return nil
+	}
+	return &model.ResourceLimits{
+		CPUQuota:  input.CPUQuota,
+		Memory:    input.Memory,
+		PidsLimit: input.PidsLimit,
+	}
 }

@@ -10,10 +10,6 @@ import (
 	contestports "ctf-platform/internal/module/contest/ports"
 )
 
-type AWDContainerFileWriter interface {
-	WriteFileToContainer(ctx context.Context, containerID, filePath string, content []byte) error
-}
-
 type noopAWDFlagInjector struct {
 	log *zap.Logger
 }
@@ -36,12 +32,12 @@ func (i *noopAWDFlagInjector) InjectRoundFlags(_ context.Context, contest *model
 
 type dockerAWDFlagInjector struct {
 	db           *gorm.DB
-	writer       AWDContainerFileWriter
+	writer       contestports.AWDContainerFileWriter
 	flagFilePath string
 	log          *zap.Logger
 }
 
-func NewDockerAWDFlagInjector(db *gorm.DB, writer AWDContainerFileWriter, log *zap.Logger) contestports.AWDFlagInjector {
+func NewDockerAWDFlagInjector(db *gorm.DB, writer contestports.AWDContainerFileWriter, log *zap.Logger) contestports.AWDFlagInjector {
 	if writer == nil {
 		return NewNoopAWDFlagInjector(log)
 	}
