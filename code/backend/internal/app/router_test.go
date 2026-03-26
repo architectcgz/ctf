@@ -236,6 +236,44 @@ func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 	}
 }
 
+func TestContestModuleUsesTypedCrossModuleDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "contest_module.go"))
+	if err != nil {
+		t.Fatalf("read contest_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type contestModuleDeps struct",
+		"challengeCatalog",
+		"challengecontracts.ContestChallengeContract",
+		"flagValidator",
+		"challengecontracts.FlagValidator",
+		"containerFiles",
+		"contestports.AWDContainerFileWriter",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("contest composition should declare typed cross-module deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"challenge         *ChallengeModule",
+		"runtime           *RuntimeModule",
+		"deps.runtime.contest.containerFiles",
+		"deps.challenge.Catalog",
+		"deps.challenge.FlagValidator",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("contest composition should not keep direct module dependency marker %s", marker)
+		}
+	}
+}
+
 func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 	t.Parallel()
 

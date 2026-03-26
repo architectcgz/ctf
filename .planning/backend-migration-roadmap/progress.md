@@ -29,6 +29,10 @@
   - `contest` 已删除宽 `Repository`
   - composition deps 已切到 ports 窄接口
   - `BuildContestModule` 已拆成按子能力划分的局部 builder
+- 完成 `contest-crossdeps-phase2`：
+  - `contest` composition 不再直接保存 `ChallengeModule` / `RuntimeModule`
+  - `contest` 对 `challenge/runtime` 的跨模块依赖已收口到 typed contracts
+  - AWD 注入、挑战目录、flag 校验均通过 typed deps 装配
 - 完成 `challenge-layering-phase2`：
   - `challenge` 已删除宽 `ChallengeRepository`
   - application 构造依赖已切到按用例划分的窄端口
