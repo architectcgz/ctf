@@ -11,8 +11,8 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/image"
 
-	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 func (e *Engine) InspectImageSize(ctx context.Context, imageRef string) (int64, error) {
@@ -31,7 +31,7 @@ func (e *Engine) RemoveImage(ctx context.Context, imageRef string) error {
 	return err
 }
 
-func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeapp.ManagedContainerStat, error) {
+func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeports.ManagedContainerStat, error) {
 	containers, err := e.cli.ContainerList(ctx, containertypes.ListOptions{
 		Filters: filters.NewArgs(filters.Arg("label", runtimedomain.ManagedByFilter())),
 	})
@@ -39,16 +39,16 @@ func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeapp.Ma
 		return nil, err
 	}
 
-	return collectManagedContainerStats(ctx, containers, func(ctx context.Context, containerSummary types.Container) (runtimeapp.ManagedContainerStat, error) {
+	return collectManagedContainerStats(ctx, containers, func(ctx context.Context, containerSummary types.Container) (runtimeports.ManagedContainerStat, error) {
 		stat, err := e.cli.ContainerStats(ctx, containerSummary.ID, false)
 		if err != nil {
-			return runtimeapp.ManagedContainerStat{}, err
+			return runtimeports.ManagedContainerStat{}, err
 		}
 		defer stat.Body.Close()
 
 		var payload types.StatsJSON
 		if err := json.NewDecoder(stat.Body).Decode(&payload); err != nil {
-			return runtimeapp.ManagedContainerStat{}, err
+			return runtimeports.ManagedContainerStat{}, err
 		}
 
 		containerName := shortContainerID(containerSummary.ID)
@@ -56,7 +56,7 @@ func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeapp.Ma
 			containerName = strings.TrimPrefix(containerSummary.Names[0], "/")
 		}
 
-		return runtimeapp.ManagedContainerStat{
+		return runtimeports.ManagedContainerStat{
 			ContainerID:   shortContainerID(containerSummary.ID),
 			ContainerName: containerName,
 			CPUPercent:    calculateCPUPercent(&payload),
@@ -70,13 +70,13 @@ func (e *Engine) ListManagedContainerStats(ctx context.Context) ([]runtimeapp.Ma
 func collectManagedContainerStats(
 	ctx context.Context,
 	containers []types.Container,
-	fetch func(context.Context, types.Container) (runtimeapp.ManagedContainerStat, error),
-) []runtimeapp.ManagedContainerStat {
+	fetch func(context.Context, types.Container) (runtimeports.ManagedContainerStat, error),
+) []runtimeports.ManagedContainerStat {
 	if len(containers) == 0 {
-		return []runtimeapp.ManagedContainerStat{}
+		return []runtimeports.ManagedContainerStat{}
 	}
 
-	stats := make([]runtimeapp.ManagedContainerStat, len(containers))
+	stats := make([]runtimeports.ManagedContainerStat, len(containers))
 	ok := make([]bool, len(containers))
 	var (
 		wg  sync.WaitGroup
@@ -100,7 +100,7 @@ func collectManagedContainerStats(
 	}
 	wg.Wait()
 
-	result := make([]runtimeapp.ManagedContainerStat, 0, len(containers))
+	result := make([]runtimeports.ManagedContainerStat, 0, len(containers))
 	for idx, item := range stats {
 		if !ok[idx] {
 			continue

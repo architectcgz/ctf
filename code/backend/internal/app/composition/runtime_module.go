@@ -423,22 +423,22 @@ func (a *runtimePracticeServiceAdapter) CreateContainer(ctx context.Context, ima
 	return a.provisioner.CreateContainer(ctx, imageName, env, reservedHostPort)
 }
 
-func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeapp.TopologyCreateRequest {
+func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *runtimeports.TopologyCreateRequest {
 	if req == nil {
 		return nil
 	}
 
-	networks := make([]runtimeapp.TopologyCreateNetwork, 0, len(req.Networks))
+	networks := make([]runtimeports.TopologyCreateNetwork, 0, len(req.Networks))
 	for _, network := range req.Networks {
-		networks = append(networks, runtimeapp.TopologyCreateNetwork{
+		networks = append(networks, runtimeports.TopologyCreateNetwork{
 			Key:      network.Key,
 			Internal: network.Internal,
 		})
 	}
 
-	nodes := make([]runtimeapp.TopologyCreateNode, 0, len(req.Nodes))
+	nodes := make([]runtimeports.TopologyCreateNode, 0, len(req.Nodes))
 	for _, node := range req.Nodes {
-		nodes = append(nodes, runtimeapp.TopologyCreateNode{
+		nodes = append(nodes, runtimeports.TopologyCreateNode{
 			Key:          node.Key,
 			Image:        node.Image,
 			Env:          cloneRuntimeStringMap(node.Env),
@@ -449,7 +449,7 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 		})
 	}
 
-	return &runtimeapp.TopologyCreateRequest{
+	return &runtimeports.TopologyCreateRequest{
 		Networks:         networks,
 		Nodes:            nodes,
 		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
@@ -457,7 +457,7 @@ func toRuntimeTopologyCreateRequest(req *practiceports.TopologyCreateRequest) *r
 	}
 }
 
-func fromRuntimeTopologyCreateResult(result *runtimeapp.TopologyCreateResult) *practiceports.TopologyCreateResult {
+func fromRuntimeTopologyCreateResult(result *runtimeports.TopologyCreateResult) *practiceports.TopologyCreateResult {
 	if result == nil {
 		return nil
 	}

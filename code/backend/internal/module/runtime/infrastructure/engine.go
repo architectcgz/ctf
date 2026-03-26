@@ -20,8 +20,8 @@ import (
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
 	runtimedomain "ctf-platform/internal/module/runtime/domain"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type Engine struct {
@@ -215,7 +215,7 @@ func (e *Engine) WriteFileToContainer(ctx context.Context, containerID, filePath
 	return e.cli.CopyToContainer(ctx, containerID, dir, io.NopCloser(bytes.NewReader(archive.Bytes())), container.CopyToContainerOptions{})
 }
 
-func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeapp.ManagedContainer, error) {
+func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeports.ManagedContainer, error) {
 	containers, err := e.cli.ContainerList(ctx, container.ListOptions{
 		All: true,
 		Filters: filters.NewArgs(
@@ -226,13 +226,13 @@ func (e *Engine) ListManagedContainers(ctx context.Context) ([]runtimeapp.Manage
 		return nil, err
 	}
 
-	items := make([]runtimeapp.ManagedContainer, 0, len(containers))
+	items := make([]runtimeports.ManagedContainer, 0, len(containers))
 	for _, item := range containers {
 		name := item.ID[:12]
 		if len(item.Names) > 0 {
 			name = item.Names[0]
 		}
-		items = append(items, runtimeapp.ManagedContainer{
+		items = append(items, runtimeports.ManagedContainer{
 			ID:        item.ID,
 			Name:      name,
 			CreatedAt: time.Unix(item.Created, 0),
