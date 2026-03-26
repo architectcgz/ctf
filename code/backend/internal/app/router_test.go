@@ -15,21 +15,22 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
-	"ctf-platform/internal/module/identity"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
-	"ctf-platform/internal/module/ops"
+	identitycmd "ctf-platform/internal/module/identity/application/commands"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	opshttp "ctf-platform/internal/module/ops/api/http"
+	opscmd "ctf-platform/internal/module/ops/application/commands"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
-	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
-	practicereadmodelapp "ctf-platform/internal/module/practice_readmodel/application"
+	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
-	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
-	teachingreadmodelapp "ctf-platform/internal/module/teaching_readmodel/application"
+	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 )
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
@@ -114,35 +115,36 @@ func TestBuildRoot(t *testing.T) {
 }
 
 func TestIdentityModuleContractsCompile(t *testing.T) {
-	var _ identity.Authenticator = (*identity.Module)(nil)
+	var _ identitycontracts.Authenticator = (*identitycmd.AuthenticatorService)(nil)
 }
 
 func TestOpsModuleContractsCompile(t *testing.T) {
-	var _ ops.AuditRecorder = (*ops.Module)(nil)
+	var _ auditlog.Recorder = (*opscmd.AuditService)(nil)
 }
 
 func TestTeachingReadmodelModuleContractsCompile(t *testing.T) {
-	var _ teachingreadmodel.TeachingQuery = (*teachingreadmodelapp.QueryService)(nil)
+	var _ teachingreadmodelqueries.Service = (*teachingreadmodelqueries.QueryService)(nil)
 }
 
 func TestPracticeReadmodelModuleContractsCompile(t *testing.T) {
-	var _ practicereadmodel.PracticeQuery = (*practicereadmodelapp.QueryService)(nil)
+	var _ practicereadmodelqueries.Service = (*practicereadmodelqueries.QueryService)(nil)
 }
 
 func TestCompositionModulesExposeContracts(t *testing.T) {
 	t.Parallel()
 
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "AdminHandler", reflect.TypeOf(&identityhttp.Handler{}))
-	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileService", reflect.TypeOf((*identity.ProfileService)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identity.Authenticator)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodel.PracticeQuery)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileCommands", reflect.TypeOf((*identitycontracts.ProfileCommandService)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "ProfileQueries", reflect.TypeOf((*identitycontracts.ProfileQueryService)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "TokenService", reflect.TypeOf((*identitycontracts.Authenticator)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
-	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditService", reflect.TypeOf((*ops.AuditRecorder)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditHandler", reflect.TypeOf((*ops.AuditLogHandler)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf((*ops.DashboardHandler)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "NotificationHandler", reflect.TypeOf((*ops.NotificationHandler)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "RiskHandler", reflect.TypeOf((*ops.RiskHandler)(nil)).Elem())
-	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditService", reflect.TypeOf((*auditlog.Recorder)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditHandler", reflect.TypeOf(&opshttp.AuditHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf(&opshttp.DashboardHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "NotificationHandler", reflect.TypeOf(&opshttp.NotificationHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "RiskHandler", reflect.TypeOf(&opshttp.RiskHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.TeachingReadmodelModule{}), "Query", reflect.TypeOf((*teachingreadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "Catalog", reflect.TypeOf((*challengecontracts.ChallengeContract)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagValidator", reflect.TypeOf((*challengecontracts.FlagValidator)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.ChallengeModule{}), "FlagHandler", reflect.TypeOf(&challengehttp.FlagHandler{}))

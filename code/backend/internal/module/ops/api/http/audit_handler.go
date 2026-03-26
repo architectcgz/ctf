@@ -1,18 +1,23 @@
 package http
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
-	opsmodule "ctf-platform/internal/module/ops"
 	"ctf-platform/pkg/response"
 )
 
-type AuditHandler struct {
-	service opsmodule.AuditLogService
+type auditQueryService interface {
+	ListAuditLogs(ctx context.Context, query *dto.AuditLogQuery) ([]dto.AuditLogItem, int64, int, int, error)
 }
 
-func NewAuditHandler(service opsmodule.AuditLogService) *AuditHandler {
+type AuditHandler struct {
+	service auditQueryService
+}
+
+func NewAuditHandler(service auditQueryService) *AuditHandler {
 	return &AuditHandler{service: service}
 }
 

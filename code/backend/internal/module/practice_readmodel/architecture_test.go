@@ -5,13 +5,75 @@ import (
 	"go/token"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 )
 
-func TestApplicationContractsDoNotDependOnDTO(t *testing.T) {
+func TestRootPackageKeepsNoConcreteGoFiles(t *testing.T) {
 	t.Parallel()
 
-	assertFileDoesNotImport(t, filepath.Join("application", "contracts.go"), "ctf-platform/internal/dto")
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatalf("glob practice_readmodel root files: %v", err)
+	}
+
+	nonTestFiles := make([]string, 0, len(files))
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		nonTestFiles = append(nonTestFiles, file)
+	}
+
+	if len(nonTestFiles) != 0 {
+		t.Fatalf("practice_readmodel root package should keep no non-test go files, got %v", nonTestFiles)
+	}
+}
+
+func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/infrastructure")
+	}
+}
+
+func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("application", "queries", "*.go"))
+	if err != nil {
+		t.Fatalf("glob queries files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/infrastructure")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+	}
+}
+
+func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
+	if err != nil {
+		t.Fatalf("glob ports files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/practice_readmodel/application/queries")
+	}
 }
 
 func TestInfrastructureDoesNotDependOnDTO(t *testing.T) {

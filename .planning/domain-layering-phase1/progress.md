@@ -159,3 +159,52 @@
 - 本轮限核定向验证通过：
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/contest/... ./internal/app/composition -count=1`
   - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 推进 `practice_readmodel` Phase 2 分层：
+  - `practice_readmodel` 根包旧 `contracts.go` 已物理删除，不再保留 root contract
+  - 查询服务已迁到 `internal/module/practice_readmodel/application/queries`
+  - repository 依赖口与读模型统计记录已下沉到 `internal/module/practice_readmodel/ports`
+  - `PracticeReadmodelModule`、practice readmodel handler、practice flow 集成测试与 router 契约测试已切到新目录依赖
+  - `practice_readmodel/architecture_test.go` 已新增 root 空壳、`api/http -> application/queries -> ports` 依赖边界约束
+- 推进 `teaching_readmodel` Phase 2 分层：
+  - `teaching_readmodel` 根包旧 `contracts.go` 已物理删除，不再保留 root contract
+  - 查询服务已迁到 `internal/module/teaching_readmodel/application/queries`
+  - repository 依赖口、班级/学生/趋势/时间线读模型记录已下沉到 `internal/module/teaching_readmodel/ports`
+  - `teaching_readmodel` infrastructure 不再直接返回 DTO，DTO 映射已回收到 `application/queries`
+  - `TeachingReadmodelModule`、teaching readmodel handler 与 router 契约测试已切到新目录依赖
+  - `teaching_readmodel/architecture_test.go` 已新增 root 空壳、`api/http -> application/queries -> ports` 依赖边界约束
+- 推进 `ops` Phase 2 分层：
+  - `ops` 根包旧 `contracts.go / module.go` 已物理删除，root 现已清空
+  - `ops/application` 已拆为 `application/commands` 与 `application/queries`
+  - audit 写侧、notification 写侧已迁到 `application/commands`；audit/dashboard/risk/notification 读侧已迁到 `application/queries`
+  - repository / runtime stats / websocket broadcaster 依赖口已下沉到 `internal/module/ops/ports`
+  - `ops/api/http` 已切到本地 command/query interface，不再依赖 `ops` 根包契约
+  - `OpsModule` 已直接装配 `commands / queries / ports`，对外改为暴露 `auditlog.Recorder` 与具体 handler
+  - `practice_flow`、auth HTTP 集成测试、notification HTTP 集成测试与 router 契约测试已切到新目录依赖
+  - `ops/architecture_test.go` 已升级为 root 空壳与 `api/http -> application/commands|queries -> ports` 依赖边界约束
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/ops/... ./internal/app/composition -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 推进 `identity` Phase 2 分层，并同步 `auth/composition/ops` 依赖收口：
+  - `identity` 根包旧 `contracts.go / module.go` 已物理删除，root 现已清空
+  - 新增 `identity/contracts`，收敛 `Authenticator / UserRepository / AdminCommandService / AdminQueryService / ProfileCommandService / ProfileQueryService` 及领域错误
+  - `identity/application` 已拆为 `application/commands` 与 `application/queries`
+  - admin 写侧、profile 改密与 token wrapper 已迁到 `application/commands`；admin 列表与 profile 查询已迁到 `application/queries`
+  - `identity/api/http` 已切到本地 command/query interface，不再依赖 root 包
+  - `identity/infrastructure` 已改为实现 `identity/contracts`，`IdentityModule` 已直接装配 `commands / queries / contracts`
+  - `auth/application` 已改为依赖 `identity/contracts.UserRepository` 与 identity 错误；`auth/api/http` 已改为 profile command/query 双注入
+  - `ops` notification 装配已从 `identity.Authenticator` 收口到 `auth/contracts.TokenService`
+  - `practice_flow`、auth HTTP 集成测试、notification HTTP 集成测试与 router 契约测试已切到新目录依赖
+  - 新增 `identity/architecture_test.go`，约束 root 空壳与 `api/http -> application/commands|queries -> contracts` 依赖边界
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/identity/... ./internal/module/auth/... ./internal/app/composition -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`
+- 推进 `auth` Phase 2 分层：
+  - `auth/application` 已拆为 `application/commands` 与 `application/queries`
+  - `Register / Login / CAS Authenticate` 已迁到 `application/commands`
+  - `CAS Status / CAS Login URL` 已迁到 `application/queries`
+  - `auth/api/http` 已切到本地 command/query interface，不再依赖旧 `auth/application` 大包接口
+  - `AuthModule`、practice flow 集成测试、auth HTTP 集成测试与 notification HTTP 集成测试已切到新目录依赖
+  - 新增 `auth/architecture_test.go`，约束 root 空壳与 `api/http -> application/commands|queries -> contracts` 依赖边界
+- 本轮限核定向验证通过：
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/module/auth/... ./internal/app/composition -count=1`
+  - `GOMAXPROCS=2 go -C code/backend test -p 1 -parallel 1 ./internal/app -run 'TestBuildRoot|TestCompositionModulesExposeContracts|TestNewRouterRegistersStudentChallengeRoutes|TestRouterBuildUsesCompositionModules|TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge|TestArchitectureRulesRejectConcreteCrossModuleImports' -count=1`

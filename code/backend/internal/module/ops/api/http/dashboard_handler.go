@@ -1,17 +1,23 @@
 package http
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 
-	opsmodule "ctf-platform/internal/module/ops"
+	"ctf-platform/internal/dto"
 	"ctf-platform/pkg/response"
 )
 
-type DashboardHandler struct {
-	service opsmodule.DashboardService
+type dashboardQueryService interface {
+	GetDashboardStats(ctx context.Context) (*dto.DashboardStats, error)
 }
 
-func NewDashboardHandler(service opsmodule.DashboardService) *DashboardHandler {
+type DashboardHandler struct {
+	service dashboardQueryService
+}
+
+func NewDashboardHandler(service dashboardQueryService) *DashboardHandler {
 	return &DashboardHandler{
 		service: service,
 	}

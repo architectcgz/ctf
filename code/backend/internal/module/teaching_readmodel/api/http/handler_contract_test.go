@@ -4,18 +4,17 @@ import (
 	"reflect"
 	"testing"
 
-	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
-	readmodelapp "ctf-platform/internal/module/teaching_readmodel/application"
+	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 )
 
 func TestQueryServiceImplementsTeachingQuery(t *testing.T) {
-	var _ teachingreadmodel.TeachingQuery = (*readmodelapp.QueryService)(nil)
+	var _ teachingreadmodelqueries.Service = (*teachingreadmodelqueries.QueryService)(nil)
 }
 
 func TestHandlerDependsOnTeachingQuery(t *testing.T) {
 	t.Parallel()
 
-	want := reflect.TypeOf((*teachingreadmodel.TeachingQuery)(nil)).Elem()
+	want := reflect.TypeOf((*teachingreadmodelqueries.Service)(nil)).Elem()
 
 	if got := reflect.TypeOf(NewHandler).In(0); got != want {
 		t.Fatalf("NewHandler() parameter type = %s, want %s", got, want)

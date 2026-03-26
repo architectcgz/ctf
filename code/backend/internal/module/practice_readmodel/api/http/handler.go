@@ -4,15 +4,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
-	practicereadmodel "ctf-platform/internal/module/practice_readmodel"
+	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
-	query practicereadmodel.PracticeQuery
+	query practicereadmodelqueries.Service
 }
 
-func NewHandler(query practicereadmodel.PracticeQuery) *Handler {
+func NewHandler(query practicereadmodelqueries.Service) *Handler {
 	return &Handler{query: query}
 }
 

@@ -31,12 +31,15 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/model"
 	authhttp "ctf-platform/internal/module/auth/api/http"
-	authapp "ctf-platform/internal/module/auth/application"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
+	authqry "ctf-platform/internal/module/auth/application/queries"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
-	identityapp "ctf-platform/internal/module/identity/application"
+	identitycmd "ctf-platform/internal/module/identity/application/commands"
+	identityqry "ctf-platform/internal/module/identity/application/queries"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opshttp "ctf-platform/internal/module/ops/api/http"
-	opsapp "ctf-platform/internal/module/ops/application"
+	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -663,27 +666,30 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		TicketKeyPrefix: "test:ws:ticket",
 	}, jwtManager)
 	authRepo := identityinfra.NewRepository(db)
-	authService := authapp.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
+	authService := authcmd.NewService(authRepo, tokenService, config.RateLimitPolicyConfig{
 		Enabled:      true,
 		Limit:        3,
 		Window:       time.Minute,
 		LockDuration: 15 * time.Minute,
 	}, zap.NewNop())
-	profileService := identityapp.NewProfileService(authRepo, zap.NewNop())
-	casProvider := authapp.NewCASProvider(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
+	profileCommandService := identitycmd.NewProfileService(authRepo, zap.NewNop())
+	profileQueryService := identityqry.NewProfileService(authRepo)
+	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), nil)
+	casQueryService := authqry.NewCASService(authCfg.CAS)
 	auditRepo := opsinfra.NewAuditRepository(db)
-	auditService := opsapp.NewAuditService(auditRepo, config.PaginationConfig{
+	auditCommandService := opscmd.NewAuditService(auditRepo, zap.NewNop())
+	auditQueryService := opsqry.NewAuditService(auditRepo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, zap.NewNop())
-	authHandler := authhttp.NewHandler(authService, profileService, tokenService, casProvider, authhttp.CookieConfig{
+	authHandler := authhttp.NewHandler(authService, profileCommandService, profileQueryService, tokenService, casCommandService, casQueryService, authhttp.CookieConfig{
 		Name:     authCfg.RefreshCookieName,
 		Path:     authCfg.RefreshCookiePath,
 		HTTPOnly: authCfg.RefreshCookieHTTPOnly,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   authCfg.RefreshTokenTTL,
-	}, zap.NewNop(), auditService)
-	auditHandler := opshttp.NewAuditHandler(auditService)
+	}, zap.NewNop(), auditCommandService)
+	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
 	router := gin.New()
 	router.Use(testRequestID())

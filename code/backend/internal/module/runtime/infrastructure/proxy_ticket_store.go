@@ -9,7 +9,7 @@ import (
 
 	redislib "github.com/redis/go-redis/v9"
 
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 const proxyTicketKeyPrefix = "ctf:instance:proxy:ticket"
@@ -25,7 +25,7 @@ func NewProxyTicketStore(cache *redislib.Client) *ProxyTicketStore {
 }
 
 // SaveProxyTicket 保存代理票据。
-func (s *ProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims runtimeapp.ProxyTicketClaims, ttl time.Duration) error {
+func (s *ProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, claims runtimeports.ProxyTicketClaims, ttl time.Duration) error {
 	if s == nil || s.cache == nil {
 		return fmt.Errorf("proxy ticket store is not configured")
 	}
@@ -38,7 +38,7 @@ func (s *ProxyTicketStore) SaveProxyTicket(ctx context.Context, ticket string, c
 }
 
 // FindProxyTicket 读取代理票据。
-func (s *ProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*runtimeapp.ProxyTicketClaims, error) {
+func (s *ProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {
 	if s == nil || s.cache == nil {
 		return nil, fmt.Errorf("proxy ticket store is not configured")
 	}
@@ -51,7 +51,7 @@ func (s *ProxyTicketStore) FindProxyTicket(ctx context.Context, ticket string) (
 		return nil, err
 	}
 
-	var claims runtimeapp.ProxyTicketClaims
+	var claims runtimeports.ProxyTicketClaims
 	if err := json.Unmarshal([]byte(payload), &claims); err != nil {
 		return nil, err
 	}

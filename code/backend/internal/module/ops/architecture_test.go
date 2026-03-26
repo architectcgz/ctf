@@ -3,89 +3,118 @@ package ops
 import (
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
 )
 
-func TestRootPackageOnlyKeepsContractsAndModule(t *testing.T) {
+func TestRootPackageKeepsNoConcreteGoFiles(t *testing.T) {
 	t.Parallel()
 
-	entries, err := os.ReadDir(".")
+	files, err := filepath.Glob("*.go")
 	if err != nil {
-		t.Fatalf("ReadDir(.) error = %v", err)
+		t.Fatalf("glob ops root files: %v", err)
 	}
 
-	allowed := map[string]struct{}{
-		"architecture_test.go": {},
-		"contracts.go":         {},
-		"module.go":            {},
+	nonTestFiles := make([]string, 0, len(files))
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		nonTestFiles = append(nonTestFiles, file)
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-		if _, ok := allowed[entry.Name()]; ok {
-			continue
-		}
-		t.Fatalf("unexpected root file %s, ops should be physically layered", entry.Name())
+	if len(nonTestFiles) != 0 {
+		t.Fatalf("ops root package should keep no non-test go files, got %v", nonTestFiles)
 	}
 }
 
-func TestLayerPackagesDoNotCrossImportConcreteImplementations(t *testing.T) {
+func TestAPIHTTPDoesNotDependOnInfrastructure(t *testing.T) {
 	t.Parallel()
 
-	repoRoot := filepath.Join("..", "..", "..", "..")
+	files, err := filepath.Glob(filepath.Join("api", "http", "*.go"))
+	if err != nil {
+		t.Fatalf("glob api/http files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/infrastructure")
+	}
+}
+
+func TestCommandsDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("application", "commands", "*.go"))
+	if err != nil {
+		t.Fatalf("glob commands files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/queries")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+	}
+}
+
+func TestQueriesDoNotDependOnAPIHTTPOrInfrastructure(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("application", "queries", "*.go"))
+	if err != nil {
+		t.Fatalf("glob queries files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/commands")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+	}
+}
+
+func TestPortsDoNotDependOnDTOGinOrGORM(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("ports", "*.go"))
+	if err != nil {
+		t.Fatalf("glob ports files: %v", err)
+	}
+	for _, file := range files {
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/dto")
+		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
+		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/api/http")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/infrastructure")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/commands")
+		assertFileDoesNotImport(t, file, "ctf-platform/internal/module/ops/application/queries")
+	}
+}
+
+func assertFileDoesNotImport(t *testing.T, filePath string, blockedImport string) {
+	t.Helper()
+
 	fset := token.NewFileSet()
-	packages := []struct {
-		dir              string
-		forbiddenImports []string
-	}{
-		{
-			dir: "api/http",
-			forbiddenImports: []string{
-				"ctf-platform/internal/module/ops/infrastructure",
-			},
-		},
-		{
-			dir: "application",
-			forbiddenImports: []string{
-				"ctf-platform/internal/module/ops/api/http",
-				"ctf-platform/internal/module/ops/infrastructure",
-				"github.com/gin-gonic/gin",
-			},
-		},
+	fileNode, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
+	if err != nil {
+		t.Fatalf("parse file %s: %v", filePath, err)
 	}
 
-	for _, pkg := range packages {
-		files, err := filepath.Glob(filepath.Join(pkg.dir, "*.go"))
+	for _, importSpec := range fileNode.Imports {
+		importPath, err := strconv.Unquote(importSpec.Path.Value)
 		if err != nil {
-			t.Fatalf("Glob(%s) error = %v", pkg.dir, err)
+			t.Fatalf("unquote import %s: %v", importSpec.Path.Value, err)
 		}
-		for _, filePath := range files {
-			if strings.HasSuffix(filePath, "_test.go") {
-				continue
-			}
-
-			node, err := parser.ParseFile(fset, filePath, nil, parser.ImportsOnly)
-			if err != nil {
-				t.Fatalf("ParseFile(%s) error = %v", filePath, err)
-			}
-
-			for _, importSpec := range node.Imports {
-				importPath, err := strconv.Unquote(importSpec.Path.Value)
-				if err != nil {
-					t.Fatalf("Unquote(%s) error = %v", importSpec.Path.Value, err)
-				}
-				for _, forbidden := range pkg.forbiddenImports {
-					if importPath == forbidden {
-						t.Fatalf("%s must not import %s", filepath.Join(repoRoot, "internal", "module", "ops", filePath), forbidden)
-					}
-				}
-			}
+		if importPath == blockedImport {
+			t.Fatalf("%s must not import %s", filePath, blockedImport)
 		}
 	}
 }

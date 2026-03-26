@@ -7,15 +7,15 @@ import (
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	teachingreadmodel "ctf-platform/internal/module/teaching_readmodel"
+	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
 	"ctf-platform/pkg/response"
 )
 
 type Handler struct {
-	service teachingreadmodel.TeachingQuery
+	service teachingreadmodelqueries.Service
 }
 
-func NewHandler(service teachingreadmodel.TeachingQuery) *Handler {
+func NewHandler(service teachingreadmodelqueries.Service) *Handler {
 	return &Handler{service: service}
 }
 

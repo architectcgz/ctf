@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
-	identitymodule "ctf-platform/internal/module/identity"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 )
 
 const (
@@ -24,13 +24,13 @@ type Repository struct {
 	db *gorm.DB
 }
 
-var _ identitymodule.UserRepository = (*Repository)(nil)
+var _ identitycontracts.UserRepository = (*Repository)(nil)
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) List(ctx context.Context, filter identitymodule.UserListFilter) ([]*model.User, int64, error) {
+func (r *Repository) List(ctx context.Context, filter identitycontracts.UserListFilter) ([]*model.User, int64, error) {
 	query := r.dbWithContext(ctx).Model(&model.User{}).Where("deleted_at IS NULL")
 	if filter.Keyword != "" {
 		keyword := "%" + strings.TrimSpace(filter.Keyword) + "%"
@@ -76,7 +76,7 @@ func (r *Repository) FindByID(ctx context.Context, userID int64) (*model.User, e
 	var user model.User
 	if err := r.dbWithContext(ctx).Where("id = ? AND deleted_at IS NULL", userID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, identitymodule.ErrUserNotFound
+			return nil, identitycontracts.ErrUserNotFound
 		}
 		return nil, fmt.Errorf("find user by id: %w", err)
 	}
@@ -87,7 +87,7 @@ func (r *Repository) FindByUsername(ctx context.Context, username string) (*mode
 	var user model.User
 	if err := r.dbWithContext(ctx).Where("username = ? AND deleted_at IS NULL", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, identitymodule.ErrUserNotFound
+			return nil, identitycontracts.ErrUserNotFound
 		}
 		return nil, fmt.Errorf("find user by username: %w", err)
 	}
@@ -125,7 +125,7 @@ func (r *Repository) Update(ctx context.Context, user *model.User) error {
 			return mapUserWriteError(result.Error)
 		}
 		if result.RowsAffected == 0 {
-			return identitymodule.ErrUserNotFound
+			return identitycontracts.ErrUserNotFound
 		}
 		if err := syncUserRole(tx, user.ID, user.Role); err != nil {
 			return err
@@ -140,7 +140,7 @@ func (r *Repository) Delete(ctx context.Context, userID int64) error {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return identitymodule.ErrUserNotFound
+		return identitycontracts.ErrUserNotFound
 	}
 	return nil
 }
@@ -151,7 +151,7 @@ func (r *Repository) UpdatePassword(ctx context.Context, userID int64, newHash s
 		return fmt.Errorf("update password: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return identitymodule.ErrUserNotFound
+		return identitycontracts.ErrUserNotFound
 	}
 	return nil
 }
@@ -168,7 +168,7 @@ func (r *Repository) UpdateLoginState(ctx context.Context, userID int64, failedA
 		return fmt.Errorf("update login state: %w", result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return identitymodule.ErrUserNotFound
+		return identitycontracts.ErrUserNotFound
 	}
 	return nil
 }
@@ -191,7 +191,7 @@ func (r *Repository) UpdateProfile(ctx context.Context, user *model.User) error 
 		return mapUserWriteError(fmt.Errorf("update profile: %w", result.Error))
 	}
 	if result.RowsAffected == 0 {
-		return identitymodule.ErrUserNotFound
+		return identitycontracts.ErrUserNotFound
 	}
 	return nil
 }
@@ -207,7 +207,7 @@ func syncUserRole(tx *gorm.DB, userID int64, roleCode string) error {
 	var role model.Role
 	if err := tx.Where("code = ?", roleCode).First(&role).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return identitymodule.ErrRoleNotFound
+			return identitycontracts.ErrRoleNotFound
 		}
 		return fmt.Errorf("find role: %w", err)
 	}
@@ -227,13 +227,13 @@ func mapUserWriteError(err error) error {
 	message := err.Error()
 	switch {
 	case strings.Contains(message, uniqueUsernameConstraint):
-		return identitymodule.ErrUsernameExists
+		return identitycontracts.ErrUsernameExists
 	case strings.Contains(message, uniqueEmailConstraint):
-		return identitymodule.ErrEmailExists
+		return identitycontracts.ErrEmailExists
 	case strings.Contains(message, uniqueStudentNoIndex):
-		return identitymodule.ErrStudentNoExists
+		return identitycontracts.ErrStudentNoExists
 	case strings.Contains(message, uniqueTeacherNoIndex):
-		return identitymodule.ErrTeacherNoExists
+		return identitycontracts.ErrTeacherNoExists
 	default:
 		return err
 	}
