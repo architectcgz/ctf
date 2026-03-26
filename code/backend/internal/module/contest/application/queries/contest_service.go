@@ -13,11 +13,11 @@ import (
 )
 
 type ContestService struct {
-	repo contestports.Repository
+	repo contestports.ContestListRepository
 	log  *zap.Logger
 }
 
-func NewContestService(repo contestports.Repository, log *zap.Logger) *ContestService {
+func NewContestService(repo contestports.ContestListRepository, log *zap.Logger) *ContestService {
 	if log == nil {
 		log = zap.NewNop()
 	}

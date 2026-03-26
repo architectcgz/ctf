@@ -11,3 +11,8 @@
   - `status_updater` 测试桩只保留 `ListByStatusesAndTimeRange / UpdateStatus`
 - 新增 `ContestCommandRepository / ContestScoreboardRepository / ContestStatusRepository`
 - 三处服务构造器已切到窄端口，`infrastructure.Repository` 继续复用原实现
+- 第二刀继续按调用面收紧：
+  - 新增 `ContestLookupRepository / ContestListRepository / ContestScoreboardAdminRepository`
+  - `queries/contest_service` 已切到 `ContestListRepository`
+  - `commands/scoreboard_admin_service` 已切到 `ContestScoreboardAdminRepository`
+  - `challenge / participation / team / awd / submission` 相关 service 已统一收口到 `ContestLookupRepository`

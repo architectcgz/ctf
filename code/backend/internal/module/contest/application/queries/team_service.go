@@ -15,10 +15,10 @@ import (
 
 type TeamService struct {
 	teamRepo    contestports.ContestTeamRepository
-	contestRepo contestports.Repository
+	contestRepo contestports.ContestLookupRepository
 }
 
-func NewTeamService(teamRepo contestports.ContestTeamRepository, contestRepo contestports.Repository) *TeamService {
+func NewTeamService(teamRepo contestports.ContestTeamRepository, contestRepo contestports.ContestLookupRepository) *TeamService {
 	return &TeamService{
 		teamRepo:    teamRepo,
 		contestRepo: contestRepo,

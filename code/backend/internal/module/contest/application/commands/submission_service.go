@@ -16,7 +16,7 @@ type scoreboardUpdater interface {
 }
 
 type SubmissionService struct {
-	contestRepo       contestports.Repository
+	contestRepo       contestports.ContestLookupRepository
 	repo              contestports.ContestSubmissionRepository
 	redis             *redislib.Client
 	flagValidator     challengecontracts.FlagValidator
@@ -25,7 +25,7 @@ type SubmissionService struct {
 	cfg               *config.Config
 }
 
-func NewSubmissionService(contestRepo contestports.Repository, repo contestports.ContestSubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
+func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo contestports.ContestSubmissionRepository, redis *redislib.Client, flagValidator challengecontracts.FlagValidator, teamRepo contestports.ContestTeamFinder, scoreboardService scoreboardUpdater, cfg *config.Config) *SubmissionService {
 	return &SubmissionService{
 		contestRepo:       contestRepo,
 		repo:              repo,

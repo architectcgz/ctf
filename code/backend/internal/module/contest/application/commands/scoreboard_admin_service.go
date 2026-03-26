@@ -15,12 +15,12 @@ import (
 )
 
 type ScoreboardAdminService struct {
-	repo  contestports.Repository
+	repo  contestports.ContestScoreboardAdminRepository
 	redis *redislib.Client
 	cfg   *config.ContestConfig
 }
 
-func NewScoreboardAdminService(repo contestports.Repository, redis *redislib.Client, cfg *config.ContestConfig) *ScoreboardAdminService {
+func NewScoreboardAdminService(repo contestports.ContestScoreboardAdminRepository, redis *redislib.Client, cfg *config.ContestConfig) *ScoreboardAdminService {
 	return &ScoreboardAdminService{repo: repo, redis: redis, cfg: cfg}
 }
 
