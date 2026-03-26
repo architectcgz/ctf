@@ -33,3 +33,7 @@
   - `challenge` 已删除宽 `ChallengeRepository`
   - application 构造依赖已切到按用例划分的窄端口
   - `challenge` composition 已收口到 typed deps，并拆成 image/core/flag/topology/writeup 局部 builder
+- 完成 `practice-layering-phase2`：
+  - `practice` 已删除宽 `PracticeRepository`
+  - application 构造依赖已切到 command / command-tx / score / ranking 窄端口
+  - `practice` composition 已收口到 typed deps，不再直接把 concrete repo 扩散给多个服务
