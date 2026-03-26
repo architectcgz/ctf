@@ -278,6 +278,29 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 	}
 }
 
+func TestBuildChallengeModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "challenge_module.go"))
+	if err != nil {
+		t.Fatalf("read challenge_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildChallengeImageHandler(",
+		"buildChallengeCoreHandler(",
+		"buildChallengeFlagHandler(",
+		"buildChallengeTopologyHandler(",
+		"buildChallengeWriteupHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("challenge module should delegate through %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 
