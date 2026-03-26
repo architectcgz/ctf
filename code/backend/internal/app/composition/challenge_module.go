@@ -3,6 +3,7 @@ package composition
 import (
 	"context"
 
+	"ctf-platform/internal/config"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
@@ -43,39 +44,27 @@ type challengeModuleDeps struct {
 
 func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
 	cfg := root.Config()
-	log := root.Logger()
-	cache := root.Cache()
 	deps := buildChallengeModuleDeps(root, runtime)
 
-	imageCommandService := challengecmd.NewImageService(deps.imageRepo, deps.imageUsageRepo, deps.imageRuntime, log.Named("image_service"))
-	imageQueryService := challengeqry.NewImageService(deps.imageRepo, cfg)
-	challengeCommandService := challengecmd.NewChallengeService(deps.challengeCommandRepo, deps.imageRepo)
-	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, cache, &challengeqry.Config{
-		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
-	}, log.Named("challenge_service"))
-	writeupCommandService := challengecmd.NewWriteupService(deps.writeupRepo)
-	writeupQueryService := challengeqry.NewWriteupService(deps.writeupRepo)
-	topologyCommandService := challengecmd.NewTopologyService(deps.topologyRepo, deps.templateRepo, deps.imageRepo)
-	topologyQueryService := challengeqry.NewTopologyService(deps.topologyRepo, deps.templateRepo)
-	flagCommandService, err := challengecmd.NewFlagService(deps.flagRepo, cfg.Container.FlagGlobalSecret)
+	imageCommandService, imageHandler := buildChallengeImageHandler(root, deps)
+	coreHandler := buildChallengeCoreHandler(root, deps)
+	flagHandler, flagValidator, err := buildChallengeFlagHandler(cfg, deps)
 	if err != nil {
 		return nil, err
 	}
-	flagQueryService, err := challengeqry.NewFlagService(deps.flagRepo, cfg.Container.FlagGlobalSecret)
-	if err != nil {
-		return nil, err
-	}
+	topologyHandler := buildChallengeTopologyHandler(deps)
+	writeupHandler := buildChallengeWriteupHandler(deps)
 
 	return &ChallengeModule{
 		BackgroundCloser: imageCommandService,
 		Catalog:          deps.catalog,
-		FlagHandler:      challengehttp.NewFlagHandler(flagCommandService, flagQueryService),
-		FlagValidator:    flagQueryService,
-		Handler:          challengehttp.NewHandler(challengeCommandService, challengeQueryService),
-		ImageHandler:     challengehttp.NewImageHandler(imageCommandService, imageQueryService),
+		FlagHandler:      flagHandler,
+		FlagValidator:    flagValidator,
+		Handler:          coreHandler,
+		ImageHandler:     imageHandler,
 		ImageStore:       deps.imageStore,
-		TopologyHandler:  challengehttp.NewTopologyHandler(topologyCommandService, topologyQueryService),
-		WriteupHandler:   challengehttp.NewWriteupHandler(writeupCommandService, writeupQueryService),
+		TopologyHandler:  topologyHandler,
+		WriteupHandler:   writeupHandler,
 	}, nil
 }
 
@@ -98,4 +87,47 @@ func buildChallengeModuleDeps(root *Root, runtime *RuntimeModule) challengeModul
 		templateRepo:         challengeinfra.NewTemplateRepository(db),
 		imageRuntime:         runtime.challenge.imageRuntime,
 	}
+}
+
+func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challengecmd.ImageService, *challengehttp.ImageHandler) {
+	imageCommandService := challengecmd.NewImageService(
+		deps.imageRepo,
+		deps.imageUsageRepo,
+		deps.imageRuntime,
+		root.Logger().Named("image_service"),
+	)
+	imageQueryService := challengeqry.NewImageService(deps.imageRepo, root.Config())
+	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
+}
+
+func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps) *challengehttp.Handler {
+	challengeCommandService := challengecmd.NewChallengeService(deps.challengeCommandRepo, deps.imageRepo)
+	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, root.Cache(), &challengeqry.Config{
+		SolvedCountCacheTTL: root.Config().Challenge.SolvedCountCacheTTL,
+	}, root.Logger().Named("challenge_service"))
+	return challengehttp.NewHandler(challengeCommandService, challengeQueryService)
+}
+
+func buildChallengeFlagHandler(cfg *config.Config, deps challengeModuleDeps) (*challengehttp.FlagHandler, challengecontracts.FlagValidator, error) {
+	flagCommandService, err := challengecmd.NewFlagService(deps.flagRepo, cfg.Container.FlagGlobalSecret)
+	if err != nil {
+		return nil, nil, err
+	}
+	flagQueryService, err := challengeqry.NewFlagService(deps.flagRepo, cfg.Container.FlagGlobalSecret)
+	if err != nil {
+		return nil, nil, err
+	}
+	return challengehttp.NewFlagHandler(flagCommandService, flagQueryService), flagQueryService, nil
+}
+
+func buildChallengeTopologyHandler(deps challengeModuleDeps) *challengehttp.TopologyHandler {
+	topologyCommandService := challengecmd.NewTopologyService(deps.topologyRepo, deps.templateRepo, deps.imageRepo)
+	topologyQueryService := challengeqry.NewTopologyService(deps.topologyRepo, deps.templateRepo)
+	return challengehttp.NewTopologyHandler(topologyCommandService, topologyQueryService)
+}
+
+func buildChallengeWriteupHandler(deps challengeModuleDeps) *challengehttp.WriteupHandler {
+	writeupCommandService := challengecmd.NewWriteupService(deps.writeupRepo)
+	writeupQueryService := challengeqry.NewWriteupService(deps.writeupRepo)
+	return challengehttp.NewWriteupHandler(writeupCommandService, writeupQueryService)
 }
