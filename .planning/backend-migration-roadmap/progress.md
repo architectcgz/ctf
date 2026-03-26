@@ -112,3 +112,7 @@
   - `contest` AWD infrastructure 已从单文件拆为基础仓储、round、关系查询、service/attack 持久化四段
   - `AWDRepository` 对外接口保持不变，内部职责边界进一步清晰
   - `contest/...` 定向测试已覆盖本轮无行为变化拆分
+- 完成 `contest-awd-command-support-split-phase2`：
+  - `contest` AWD 写侧 helper 已从单文件拆为校验、轮次解析、flag helper 三段
+  - AWD commands 对外接口保持不变，内部 support 边界进一步清晰
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
