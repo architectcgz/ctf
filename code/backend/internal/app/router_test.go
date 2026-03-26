@@ -213,6 +213,46 @@ func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestAuthModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "auth_module.go"))
+	if err != nil {
+		t.Fatalf("read auth_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type authModuleDeps struct",
+		"users",
+		"identitycontracts.UserRepository",
+		"tokenService",
+		"authcontracts.TokenService",
+		"profileCommands",
+		"identitycontracts.ProfileCommandService",
+		"profileQueries",
+		"identitycontracts.ProfileQueryService",
+		"auditRecorder",
+		"auditlog.Recorder",
+		"buildAuthModuleDeps(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("auth composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"authcmd.NewService(identity.users, identity.TokenService",
+		"authcmd.NewCASService(cfg.Auth.CAS, identity.users, identity.TokenService",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("auth composition should not keep direct module dependency marker %s", marker)
+		}
+	}
+}
+
 func TestOpsModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
