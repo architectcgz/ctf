@@ -213,6 +213,62 @@ func TestBuildOpsModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestBuildRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	if err != nil {
+		t.Fatalf("read runtime_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildRuntimeModuleDeps(",
+		"registerRuntimeBackgroundJobs(",
+		"buildRuntimeHTTPDeps(",
+		"buildRuntimePracticeDeps(",
+		"buildRuntimeChallengeDeps(",
+		"buildRuntimeOpsDeps(",
+		"buildRuntimeContestDeps(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime module should delegate through %s", marker)
+		}
+	}
+}
+
+func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "runtime_module.go"))
+	if err != nil {
+		t.Fatalf("read runtime_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type runtimeModuleDeps struct",
+		"repo",
+		"runtimeports.InstanceRepository",
+		"practiceInstanceRepo",
+		"practiceports.InstanceRepository",
+		"countRunningRepo",
+		"runtimeports.CountRunningRepository",
+		"proxyTicketStore",
+		"runtimeports.ProxyTicketStore",
+		"imageRuntime",
+		"challengeports.ImageRuntime",
+		"containerFiles",
+		"contestports.AWDContainerFileWriter",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("runtime composition should declare typed deps marker %s", marker)
+		}
+	}
+}
+
 func TestAuthModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 
