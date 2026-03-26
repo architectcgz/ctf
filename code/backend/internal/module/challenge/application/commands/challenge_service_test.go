@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func newTestService(repo challengeports.ChallengeRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
+func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
 	return NewChallengeService(repo, imageRepo)
 }
 

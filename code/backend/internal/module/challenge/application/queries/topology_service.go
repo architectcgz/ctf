@@ -13,11 +13,11 @@ import (
 )
 
 type TopologyService struct {
-	repo         challengeports.ChallengeRepository
+	repo         challengeports.ChallengeTopologyRepository
 	templateRepo challengeports.EnvironmentTemplateRepository
 }
 
-func NewTopologyService(repo challengeports.ChallengeRepository, templateRepo challengeports.EnvironmentTemplateRepository) *TopologyService {
+func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templateRepo challengeports.EnvironmentTemplateRepository) *TopologyService {
 	return &TopologyService{
 		repo:         repo,
 		templateRepo: templateRepo,

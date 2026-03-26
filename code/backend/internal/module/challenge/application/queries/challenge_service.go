@@ -18,13 +18,13 @@ import (
 )
 
 type ChallengeService struct {
-	repo   challengeports.ChallengeRepository
+	repo   challengeports.ChallengeQueryRepository
 	redis  *redis.Client
 	config *Config
 	log    *zap.Logger
 }
 
-func NewChallengeService(repo challengeports.ChallengeRepository, redis *redis.Client, config *Config, log *zap.Logger) *ChallengeService {
+func NewChallengeService(repo challengeports.ChallengeQueryRepository, redis *redis.Client, config *Config, log *zap.Logger) *ChallengeService {
 	if log == nil {
 		log = zap.NewNop()
 	}

@@ -236,6 +236,48 @@ func TestContestModuleDepsAvoidConcreteContestRepositories(t *testing.T) {
 	}
 }
 
+func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "challenge_module.go"))
+	if err != nil {
+		t.Fatalf("read challenge_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type challengeModuleDeps struct",
+		"challengeCommandRepo",
+		"challengeports.ChallengeCommandRepository",
+		"challengeQueryRepo",
+		"challengeports.ChallengeQueryRepository",
+		"flagRepo",
+		"challengeports.ChallengeFlagRepository",
+		"imageUsageRepo",
+		"challengeports.ChallengeImageUsageRepository",
+		"topologyRepo",
+		"challengeports.ChallengeTopologyRepository",
+		"writeupRepo",
+		"challengeports.ChallengeWriteupRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("challenge composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"challengeRepo *challengeinfra.Repository",
+		"imageRepo *challengeinfra.ImageRepository",
+		"templateRepo *challengeinfra.TemplateRepository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("challenge composition deps should not keep concrete repository field %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 

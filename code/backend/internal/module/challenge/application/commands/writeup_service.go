@@ -15,10 +15,10 @@ import (
 )
 
 type WriteupService struct {
-	repo challengeports.ChallengeRepository
+	repo challengeports.ChallengeWriteupRepository
 }
 
-func NewWriteupService(repo challengeports.ChallengeRepository) *WriteupService {
+func NewWriteupService(repo challengeports.ChallengeWriteupRepository) *WriteupService {
 	return &WriteupService{repo: repo}
 }
 
