@@ -1,6 +1,7 @@
 package composition
 
 import (
+	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
@@ -20,8 +21,6 @@ type ContestModule struct {
 
 type contestModuleDeps struct {
 	root              *Root
-	challenge         *ChallengeModule
-	runtime           *RuntimeModule
 	contestCommands   contestports.ContestCommandRepository
 	contestLookup     contestports.ContestLookupRepository
 	contestList       contestports.ContestListRepository
@@ -34,6 +33,9 @@ type contestModuleDeps struct {
 	teamFinder        contestports.ContestTeamFinder
 	participationRepo contestports.ContestParticipationRepository
 	submissionRepo    contestports.ContestSubmissionRepository
+	challengeCatalog  challengecontracts.ContestChallengeContract
+	flagValidator     challengecontracts.FlagValidator
+	containerFiles    contestports.AWDContainerFileWriter
 }
 
 func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *ContestModule {
@@ -71,8 +73,6 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 
 	return &contestModuleDeps{
 		root:              root,
-		challenge:         challenge,
-		runtime:           runtime,
 		contestCommands:   contestRepo,
 		contestLookup:     contestRepo,
 		contestList:       contestRepo,
@@ -85,6 +85,9 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 		teamFinder:        teamRepo,
 		participationRepo: participationRepo,
 		submissionRepo:    submissionRepo,
+		challengeCatalog:  challenge.Catalog,
+		flagValidator:     challenge.FlagValidator,
+		containerFiles:    runtime.contest.containerFiles,
 	}
 }
 
@@ -120,7 +123,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		cache,
 		cfg.Contest.AWD,
 		cfg.Container.FlagGlobalSecret,
-		contestinfra.NewDockerAWDFlagInjector(db, deps.runtime.contest.containerFiles, log.Named("awd_flag_injector")),
+		contestinfra.NewDockerAWDFlagInjector(db, deps.containerFiles, log.Named("awd_flag_injector")),
 		log.Named("awd_round_updater"),
 	)
 	awdCommands := contestcmd.NewAWDService(
@@ -138,8 +141,8 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 }
 
 func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.ChallengeHandler {
-	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestLookup)
-	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challenge.Catalog, deps.contestLookup)
+	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup)
+	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup)
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }
 
@@ -163,7 +166,7 @@ func buildContestSubmissionHandler(deps *contestModuleDeps, scoreboardCommands *
 		deps.contestLookup,
 		deps.submissionRepo,
 		cache,
-		deps.challenge.FlagValidator,
+		deps.flagValidator,
 		deps.teamFinder,
 		scoreboardCommands,
 		cfg,
