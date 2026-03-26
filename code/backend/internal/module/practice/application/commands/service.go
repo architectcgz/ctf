@@ -36,7 +36,7 @@ type ScoreUpdater interface {
 }
 
 type Service struct {
-	repo              practiceports.PracticeRepository
+	repo              practiceports.PracticeCommandRepository
 	challengeRepo     challengecontracts.PracticeChallengeContract
 	imageRepo         challengecontracts.ImageStore
 	instanceRepo      practiceports.InstanceRepository
@@ -61,7 +61,7 @@ func (s *Service) SetEventBus(bus platformevents.Bus) *Service {
 }
 
 func NewService(
-	repo practiceports.PracticeRepository,
+	repo practiceports.PracticeCommandRepository,
 	challengeRepo challengecontracts.PracticeChallengeContract,
 	imageRepo challengecontracts.ImageStore,
 	instanceRepo practiceports.InstanceRepository,
@@ -141,7 +141,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		instance *model.Instance
 		reused   bool
 	)
-	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeRepository) error {
+	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
 		if err := txRepo.LockInstanceScope(userID, scope); err != nil {
 			return err
 		}
