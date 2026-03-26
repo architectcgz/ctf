@@ -104,3 +104,7 @@
   - `contest` AWD 读侧查询已从单文件拆为 `service / query / support` 三段
   - 查询流程、校验与 team 装载 helper 已按职责分离
   - `contest/...` 定向测试已覆盖本轮无行为变化拆分
+- 完成 `contest-awd-check-split-phase2`：
+  - `contest` AWD 后台巡检已从单文件拆为 `checks / check_sync / check_support` 三段
+  - 巡检编排、live cache 判定与实例装载 helper 已按职责分离
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
