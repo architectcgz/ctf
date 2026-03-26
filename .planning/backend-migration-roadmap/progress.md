@@ -152,3 +152,7 @@
   - `contest` 通用 repository 已从单文件拆为 contest CRUD、team lookup 与 scoreboard 聚合三段
   - `Repository` 对外接口保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-repository-split-phase2`：
+  - `contest` team repository 已从单文件拆为成员事务、查询与约束 helper 三段
+  - `TeamRepository` 对外接口保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 repository 定向测试覆盖本轮无行为变化拆分
