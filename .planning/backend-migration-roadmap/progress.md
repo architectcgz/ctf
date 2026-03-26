@@ -116,3 +116,7 @@
   - `contest` AWD 写侧 helper 已从单文件拆为校验、轮次解析、flag helper 三段
   - AWD commands 对外接口保持不变，内部 support 边界进一步清晰
   - `contest/...` 定向测试已覆盖本轮无行为变化拆分
+- 完成 `contest-submission-flow-split-phase2`：
+  - `contest` submission 写侧已从单文件拆为提交入口、team 解析、计分事务三段
+  - submission commands 对外接口保持不变，内部文件边界进一步清晰
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
