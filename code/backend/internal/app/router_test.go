@@ -301,6 +301,41 @@ func TestBuildChallengeModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "practice_module.go"))
+	if err != nil {
+		t.Fatalf("read practice_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type practiceModuleDeps struct",
+		"commandRepo",
+		"practiceports.PracticeCommandRepository",
+		"scoreRepo",
+		"practiceports.PracticeScoreRepository",
+		"rankingRepo",
+		"practiceports.PracticeRankingRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("practice composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"repo := practiceinfra.NewRepository(db)",
+		"*practiceinfra.Repository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice composition deps should not keep concrete practice repository marker %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 

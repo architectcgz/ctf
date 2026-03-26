@@ -3,6 +3,7 @@ package practice
 import (
 	"go/parser"
 	"go/token"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -86,6 +87,18 @@ func TestPortsDoNotDependOnGinOrGORM(t *testing.T) {
 	for _, file := range files {
 		assertFileDoesNotImport(t, file, "github.com/gin-gonic/gin")
 		assertFileDoesNotImport(t, file, "gorm.io/gorm")
+	}
+}
+
+func TestPortsDoNotDeclareWidePracticeRepository(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("ports", "ports.go"))
+	if err != nil {
+		t.Fatalf("read practice ports file: %v", err)
+	}
+	if strings.Contains(string(content), "type PracticeRepository interface") {
+		t.Fatalf("practice ports must not declare the legacy wide PracticeRepository interface")
 	}
 }
 

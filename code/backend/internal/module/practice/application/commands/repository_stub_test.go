@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -11,7 +10,7 @@ import (
 )
 
 type stubPracticeRepository struct {
-	withinTransactionFn                  func(ctx context.Context, fn func(txRepo practiceports.PracticeRepository) error) error
+	withinTransactionFn                  func(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error
 	findContestByIDWithContextFn         func(ctx context.Context, contestID int64) (*model.Contest, error)
 	findContestChallengeWithContextFn    func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestRegistrationWithContextFn func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
@@ -24,17 +23,9 @@ type stubPracticeRepository struct {
 	createSubmissionFn                   func(submission *model.Submission) error
 	findCorrectSubmissionFn              func(userID, challengeID int64) (*model.Submission, error)
 	isUniqueViolationFn                  func(err error) bool
-	findChallengeScoreWithContextFn      func(ctx context.Context, challengeID int64) (*model.Challenge, error)
-	findChallengesScoresWithContextFn    func(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error)
-	listSolvedChallengeIDsWithContextFn  func(ctx context.Context, userID int64) ([]int64, error)
-	upsertUserScoreWithContextFn         func(ctx context.Context, userScore *model.UserScore) error
-	findUserScoreWithContextFn           func(ctx context.Context, userID int64) (*model.UserScore, error)
-	listTopUserScoresWithContextFn       func(ctx context.Context, limit int) ([]model.UserScore, error)
-	findUsersByIDsWithContextFn          func(ctx context.Context, userIDs []int64) ([]model.User, error)
-	countRecentSubmissionsFn             func(userID, challengeID int64, since time.Time) (int64, error)
 }
 
-func (s *stubPracticeRepository) WithinTransaction(ctx context.Context, fn func(txRepo practiceports.PracticeRepository) error) error {
+func (s *stubPracticeRepository) WithinTransaction(ctx context.Context, fn func(txRepo practiceports.PracticeCommandTxRepository) error) error {
 	if s.withinTransactionFn != nil {
 		return s.withinTransactionFn(ctx, fn)
 	}
@@ -123,81 +114,4 @@ func (s *stubPracticeRepository) IsUniqueViolation(err error) bool {
 		return s.isUniqueViolationFn(err)
 	}
 	return false
-}
-
-func (s *stubPracticeRepository) FindChallengeScoreWithContext(ctx context.Context, challengeID int64) (*model.Challenge, error) {
-	if s.findChallengeScoreWithContextFn != nil {
-		return s.findChallengeScoreWithContextFn(ctx, challengeID)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, gorm.ErrRecordNotFound
-}
-
-func (s *stubPracticeRepository) FindChallengesScoresWithContext(ctx context.Context, challengeIDs []int64) ([]model.Challenge, error) {
-	if s.findChallengesScoresWithContextFn != nil {
-		return s.findChallengesScoresWithContextFn(ctx, challengeIDs)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, nil
-}
-
-func (s *stubPracticeRepository) ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error) {
-	if s.listSolvedChallengeIDsWithContextFn != nil {
-		return s.listSolvedChallengeIDsWithContextFn(ctx, userID)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, nil
-}
-
-func (s *stubPracticeRepository) UpsertUserScoreWithContext(ctx context.Context, userScore *model.UserScore) error {
-	if s.upsertUserScoreWithContextFn != nil {
-		return s.upsertUserScoreWithContextFn(ctx, userScore)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return ctx.Err()
-	}
-	return nil
-}
-
-func (s *stubPracticeRepository) FindUserScoreWithContext(ctx context.Context, userID int64) (*model.UserScore, error) {
-	if s.findUserScoreWithContextFn != nil {
-		return s.findUserScoreWithContextFn(ctx, userID)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, gorm.ErrRecordNotFound
-}
-
-func (s *stubPracticeRepository) ListTopUserScoresWithContext(ctx context.Context, limit int) ([]model.UserScore, error) {
-	if s.listTopUserScoresWithContextFn != nil {
-		return s.listTopUserScoresWithContextFn(ctx, limit)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, nil
-}
-
-func (s *stubPracticeRepository) FindUsersByIDsWithContext(ctx context.Context, userIDs []int64) ([]model.User, error) {
-	if s.findUsersByIDsWithContextFn != nil {
-		return s.findUsersByIDsWithContextFn(ctx, userIDs)
-	}
-	if ctx != nil && ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-	return nil, nil
-}
-
-func (s *stubPracticeRepository) CountRecentSubmissions(userID, challengeID int64, since time.Time) (int64, error) {
-	if s.countRecentSubmissionsFn != nil {
-		return s.countRecentSubmissionsFn(userID, challengeID, since)
-	}
-	return 0, nil
 }

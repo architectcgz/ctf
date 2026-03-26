@@ -17,22 +17,46 @@ type PracticeModule struct {
 	Handler          *practicehttp.Handler
 }
 
+type practiceModuleDeps struct {
+	commandRepo    practiceports.PracticeCommandRepository
+	scoreRepo      practiceports.PracticeScoreRepository
+	rankingRepo    practiceports.PracticeRankingRepository
+	instanceRepo   practiceports.InstanceRepository
+	runtimeService practiceports.RuntimeInstanceService
+	challengeRepo  practiceRuntimeChallengeContract
+	imageStore     practiceRuntimeImageStore
+	assessment     practiceRuntimeAssessmentService
+}
+
+type practiceRuntimeChallengeContract interface {
+	FindByID(id int64) (*model.Challenge, error)
+	FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error)
+	CreateHintUnlock(unlock *model.ChallengeHintUnlock) error
+	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
+}
+
+type practiceRuntimeImageStore interface {
+	FindByID(id int64) (*model.Image, error)
+}
+
+type practiceRuntimeAssessmentService interface {
+	UpdateSkillProfileForDimension(ctx context.Context, userID int64, dimension string) error
+}
+
 func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) *PracticeModule {
 	cfg := root.Config()
 	log := root.Logger()
-	db := root.DB()
 	cache := root.Cache()
-
-	repo := practiceinfra.NewRepository(db)
-	scoreService := practicecmd.NewScoreService(repo, cache, log.Named("score_service"), &cfg.Score)
+	deps := buildPracticeModuleDeps(root, challenge, runtime, assessment)
+	scoreService := practicecmd.NewScoreService(deps.scoreRepo, cache, log.Named("score_service"), &cfg.Score)
 	service := practicecmd.NewService(
-		repo,
-		challenge.Catalog,
-		challenge.ImageStore,
-		runtime.practice.instanceRepository,
-		runtime.practice.runtimeService,
+		deps.commandRepo,
+		deps.challengeRepo,
+		deps.imageStore,
+		deps.instanceRepo,
+		deps.runtimeService,
 		scoreService,
-		assessment.ProfileService,
+		deps.assessment,
 		cache,
 		cfg,
 		log.Named("practice_service"),
@@ -42,6 +66,20 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	return &PracticeModule{
 		BackgroundCloser: service,
 		Handler:          practicehttp.NewHandler(service),
+	}
+}
+
+func buildPracticeModuleDeps(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) practiceModuleDeps {
+	repo := practiceinfra.NewRepository(root.DB())
+	return practiceModuleDeps{
+		commandRepo:    repo,
+		scoreRepo:      repo,
+		rankingRepo:    repo,
+		instanceRepo:   runtime.practice.instanceRepository,
+		runtimeService: runtime.practice.runtimeService,
+		challengeRepo:  challenge.Catalog,
+		imageStore:     challenge.ImageStore,
+		assessment:     assessment.ProfileService,
 	}
 }
 
