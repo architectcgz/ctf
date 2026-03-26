@@ -70,8 +70,8 @@ func buildOpsModuleDeps(root *Root, runtime *RuntimeModule) opsModuleDeps {
 	return opsModuleDeps{
 		auditRepo:        opsinfra.NewAuditRepository(root.DB()),
 		riskRepo:         opsinfra.NewRiskRepository(root.DB()),
-		runtimeQuery:     runtime.ops.query,
-		runtimeStats:     runtime.ops.statsProvider,
+		runtimeQuery:     runtime.OpsRuntimeQuery,
+		runtimeStats:     runtime.OpsRuntimeStatsProvider,
 		webSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
 	}
 }

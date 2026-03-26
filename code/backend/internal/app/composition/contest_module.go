@@ -87,7 +87,7 @@ func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *Runti
 		submissionRepo:    submissionRepo,
 		challengeCatalog:  challenge.Catalog,
 		flagValidator:     challenge.FlagValidator,
-		containerFiles:    runtime.contest.containerFiles,
+		containerFiles:    runtime.ContestContainerFiles,
 	}
 }
 

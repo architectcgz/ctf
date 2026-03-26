@@ -22,13 +22,17 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
+	contestports "ctf-platform/internal/module/contest/ports"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opshttp "ctf-platform/internal/module/ops/api/http"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsports "ctf-platform/internal/module/ops/ports"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
+	practiceports "ctf-platform/internal/module/practice/ports"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
@@ -141,6 +145,12 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.IdentityModule{}), "Users", reflect.TypeOf((*identitycontracts.UserRepository)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.PracticeReadmodelModule{}), "Query", reflect.TypeOf((*practicereadmodelqueries.Service)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "Handler", reflect.TypeOf(&runtimehttp.Handler{}))
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeInstanceRepository", reflect.TypeOf((*practiceports.InstanceRepository)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "PracticeRuntimeService", reflect.TypeOf((*practiceports.RuntimeInstanceService)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ChallengeImageRuntime", reflect.TypeOf((*challengeports.ImageRuntime)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "OpsRuntimeQuery", reflect.TypeOf((*opsports.RuntimeQuery)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "OpsRuntimeStatsProvider", reflect.TypeOf((*opsports.RuntimeStatsProvider)(nil)).Elem())
+	assertFieldType(t, reflect.TypeOf(composition.RuntimeModule{}), "ContestContainerFiles", reflect.TypeOf((*contestports.AWDContainerFileWriter)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditService", reflect.TypeOf((*auditlog.Recorder)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "AuditHandler", reflect.TypeOf(&opshttp.AuditHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.OpsModule{}), "DashboardHandler", reflect.TypeOf(&opshttp.DashboardHandler{}))
@@ -348,6 +358,8 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 		"riskRepo := opsinfra.NewRiskRepository(db)",
 		"notificationRepo := opsinfra.NewNotificationRepository(db)",
 		"runtimeapp \"ctf-platform/internal/module/runtime/application\"",
+		"runtime.ops.query",
+		"runtime.ops.statsProvider",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -432,6 +444,7 @@ func TestContestModuleUsesTypedCrossModuleDeps(t *testing.T) {
 		"challenge         *ChallengeModule",
 		"runtime           *RuntimeModule",
 		"deps.runtime.contest.containerFiles",
+		"runtime.contest.containerFiles",
 		"deps.challenge.Catalog",
 		"deps.challenge.FlagValidator",
 	}
@@ -476,6 +489,7 @@ func TestChallengeModuleUsesTypedPortsDeps(t *testing.T) {
 		"challengeRepo *challengeinfra.Repository",
 		"imageRepo *challengeinfra.ImageRepository",
 		"templateRepo *challengeinfra.TemplateRepository",
+		"runtime.challenge.imageRuntime",
 	}
 	for _, marker := range blocked {
 		if strings.Contains(source, marker) {
@@ -557,6 +571,8 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 		"practiceports.InstanceRepository",
 		"runtimeService",
 		"practiceports.RuntimeInstanceService",
+		"runtime.PracticeInstanceRepository",
+		"runtime.PracticeRuntimeService",
 		"challengeRepo",
 		"practiceRuntimeChallengeContract",
 		"imageStore",
@@ -567,6 +583,16 @@ func TestPracticeModuleUsesTypedCrossModuleDeps(t *testing.T) {
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {
 			t.Fatalf("practice composition should declare typed cross-module deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"runtime.practice.instanceRepository",
+		"runtime.practice.runtimeService",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("practice composition should not keep runtime private marker %s", marker)
 		}
 	}
 }

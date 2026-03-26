@@ -67,8 +67,8 @@ func buildPracticeModuleDeps(root *Root) practiceModuleDeps {
 
 func buildPracticeModuleExternalDeps(challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) practiceModuleExternalDeps {
 	return practiceModuleExternalDeps{
-		instanceRepo:   runtime.practice.instanceRepository,
-		runtimeService: runtime.practice.runtimeService,
+		instanceRepo:   runtime.PracticeInstanceRepository,
+		runtimeService: runtime.PracticeRuntimeService,
 		challengeRepo:  challenge.Catalog,
 		imageStore:     challenge.ImageStore,
 		assessment:     assessment.ProfileService,
