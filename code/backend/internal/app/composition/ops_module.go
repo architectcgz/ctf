@@ -1,8 +1,6 @@
 package composition
 
 import (
-	"context"
-
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/auditlog"
@@ -12,7 +10,6 @@ import (
 	opsqry "ctf-platform/internal/module/ops/application/queries"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	opsports "ctf-platform/internal/module/ops/ports"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
 	websocketpkg "ctf-platform/pkg/websocket"
 )
 
@@ -25,39 +22,32 @@ type OpsModule struct {
 	WebSocketManager    *websocketpkg.Manager
 }
 
-type runtimeOpsQuery interface {
-	CountRunning() (int64, error)
+type opsModuleDeps struct {
+	auditRepo        opsports.AuditRepository
+	riskRepo         opsports.RiskRepository
+	runtimeQuery     opsports.RuntimeQuery
+	runtimeStats     opsports.RuntimeStatsProvider
+	webSocketManager *websocketpkg.Manager
 }
 
-type runtimeOpsStatsProvider interface {
-	ListManagedContainerStats(ctx context.Context) ([]opsports.ManagedContainerStat, error)
+type opsNotificationDeps struct {
+	notificationRepo opsports.NotificationRepository
+	broadcaster      opsports.NotificationBroadcaster
+	webSocketManager *websocketpkg.Manager
 }
 
 func BuildOpsModule(root *Root, runtime *RuntimeModule) *OpsModule {
-	cfg := root.Config()
-	log := root.Logger()
-	db := root.DB()
-	cache := root.Cache()
-
-	auditRepo := opsinfra.NewAuditRepository(db)
-	auditCommandService := opscmd.NewAuditService(auditRepo, log.Named("audit_command_service"))
-	auditQueryService := opsqry.NewAuditService(auditRepo, cfg.Pagination, log.Named("audit_query_service"))
-	dashboardService := opsqry.NewDashboardService(
-		runtime.ops.query,
-		runtime.ops.statsProvider,
-		cache,
-		cfg,
-		log.Named("dashboard_service"),
-	)
-	riskRepo := opsinfra.NewRiskRepository(db)
-	riskService := opsqry.NewRiskService(riskRepo, log.Named("risk_service"))
+	deps := buildOpsModuleDeps(root, runtime)
+	auditHandler, auditService := buildOpsAuditHandler(root, deps)
+	dashboardHandler := buildOpsDashboardHandler(root, deps)
+	riskHandler := buildOpsRiskHandler(root, deps)
 
 	return &OpsModule{
-		AuditService:     auditCommandService,
-		AuditHandler:     opshttp.NewAuditHandler(auditQueryService),
-		DashboardHandler: opshttp.NewDashboardHandler(dashboardService),
-		RiskHandler:      opshttp.NewRiskHandler(riskService),
-		WebSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
+		AuditService:     auditService,
+		AuditHandler:     auditHandler,
+		DashboardHandler: dashboardHandler,
+		RiskHandler:      riskHandler,
+		WebSocketManager: deps.webSocketManager,
 	}
 }
 
@@ -66,64 +56,81 @@ func (m *OpsModule) BuildNotificationHandler(root *Root, tokenService authcontra
 		return
 	}
 
-	cfg := root.Config()
-	log := root.Logger()
-	db := root.DB()
-
-	notificationRepo := opsinfra.NewNotificationRepository(db)
-	notificationCommandService := opscmd.NewNotificationService(
-		notificationRepo,
-		cfg.Pagination,
-		m.WebSocketManager,
-		log.Named("notification_command_service"),
-	)
-	notificationQueryService := opsqry.NewNotificationService(
-		notificationRepo,
-		cfg.Pagination,
-		log.Named("notification_query_service"),
-	)
-	notificationCommandService.RegisterPracticeEventConsumers(root.Events)
-	m.NotificationHandler = opshttp.NewNotificationHandler(
-		notificationCommandService,
-		notificationQueryService,
-		tokenService,
-		m.WebSocketManager,
-		log.Named("notification_handler"),
-	)
+	deps := buildOpsNotificationDeps(root, m.WebSocketManager)
+	m.NotificationHandler = buildOpsNotificationHandler(root, deps, tokenService)
 }
 
 func NamedAuditLogger(log *zap.Logger) *zap.Logger {
 	return log.Named("audit_middleware")
 }
 
-type opsRuntimeStatsProvider struct {
-	service *runtimeapp.ContainerStatsService
+func buildOpsModuleDeps(root *Root, runtime *RuntimeModule) opsModuleDeps {
+	cfg := root.Config()
+	log := root.Logger()
+	return opsModuleDeps{
+		auditRepo:        opsinfra.NewAuditRepository(root.DB()),
+		riskRepo:         opsinfra.NewRiskRepository(root.DB()),
+		runtimeQuery:     runtime.ops.query,
+		runtimeStats:     runtime.ops.statsProvider,
+		webSocketManager: websocketpkg.NewManager(cfg.WebSocket, log.Named("websocket_manager")),
+	}
 }
 
-func newOpsRuntimeStatsProvider(service *runtimeapp.ContainerStatsService) *opsRuntimeStatsProvider {
-	return &opsRuntimeStatsProvider{service: service}
+func buildOpsAuditHandler(root *Root, deps opsModuleDeps) (*opshttp.AuditHandler, auditlog.Recorder) {
+	cfg := root.Config()
+	log := root.Logger()
+	auditCommandService := opscmd.NewAuditService(deps.auditRepo, log.Named("audit_command_service"))
+	auditQueryService := opsqry.NewAuditService(deps.auditRepo, cfg.Pagination, log.Named("audit_query_service"))
+	return opshttp.NewAuditHandler(auditQueryService), auditCommandService
 }
 
-func (p *opsRuntimeStatsProvider) ListManagedContainerStats(ctx context.Context) ([]opsports.ManagedContainerStat, error) {
-	if p == nil || p.service == nil {
-		return []opsports.ManagedContainerStat{}, nil
-	}
+func buildOpsDashboardHandler(root *Root, deps opsModuleDeps) *opshttp.DashboardHandler {
+	cfg := root.Config()
+	log := root.Logger()
+	dashboardService := opsqry.NewDashboardService(
+		deps.runtimeQuery,
+		deps.runtimeStats,
+		root.Cache(),
+		cfg,
+		log.Named("dashboard_service"),
+	)
+	return opshttp.NewDashboardHandler(dashboardService)
+}
 
-	stats, err := p.service.ListManagedContainerStats(ctx)
-	if err != nil {
-		return nil, err
-	}
+func buildOpsRiskHandler(root *Root, deps opsModuleDeps) *opshttp.RiskHandler {
+	log := root.Logger()
+	riskService := opsqry.NewRiskService(deps.riskRepo, log.Named("risk_service"))
+	return opshttp.NewRiskHandler(riskService)
+}
 
-	result := make([]opsports.ManagedContainerStat, 0, len(stats))
-	for _, item := range stats {
-		result = append(result, opsports.ManagedContainerStat{
-			ContainerID:   item.ContainerID,
-			ContainerName: item.ContainerName,
-			CPUPercent:    item.CPUPercent,
-			MemoryPercent: item.MemoryPercent,
-			MemoryUsage:   item.MemoryUsage,
-			MemoryLimit:   item.MemoryLimit,
-		})
+func buildOpsNotificationDeps(root *Root, manager *websocketpkg.Manager) opsNotificationDeps {
+	return opsNotificationDeps{
+		notificationRepo: opsinfra.NewNotificationRepository(root.DB()),
+		broadcaster:      manager,
+		webSocketManager: manager,
 	}
-	return result, nil
+}
+
+func buildOpsNotificationHandler(root *Root, deps opsNotificationDeps, tokenService authcontracts.TokenService) *opshttp.NotificationHandler {
+	cfg := root.Config()
+	log := root.Logger()
+	notificationCommandService := opscmd.NewNotificationService(
+		deps.notificationRepo,
+		cfg.Pagination,
+		deps.broadcaster,
+		log.Named("notification_command_service"),
+	)
+	notificationQueryService := opsqry.NewNotificationService(
+		deps.notificationRepo,
+		cfg.Pagination,
+		log.Named("notification_query_service"),
+	)
+	notificationCommandService.RegisterPracticeEventConsumers(root.Events)
+	return opshttp.NewNotificationHandler(
+		notificationCommandService,
+		notificationQueryService,
+		tokenService,
+		deps.webSocketManager,
+		log.Named("notification_handler"),
+	)
 }

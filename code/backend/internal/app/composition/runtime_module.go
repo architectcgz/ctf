@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
+	opsports "ctf-platform/internal/module/ops/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	"fmt"
 	"time"
@@ -42,8 +43,8 @@ type runtimeChallengeDeps struct {
 }
 
 type runtimeOpsDeps struct {
-	query         runtimeOpsQuery
-	statsProvider runtimeOpsStatsProvider
+	query         opsports.RuntimeQuery
+	statsProvider opsports.RuntimeStatsProvider
 }
 
 type runtimeContestDeps struct {
@@ -95,12 +96,44 @@ func BuildRuntimeModule(root *Root) *RuntimeModule {
 		},
 		ops: runtimeOpsDeps{
 			query:         runtimeapp.NewQueryService(repo),
-			statsProvider: newOpsRuntimeStatsProvider(containerStatsService),
+			statsProvider: newRuntimeOpsStatsProvider(containerStatsService),
 		},
 		contest: runtimeContestDeps{
 			containerFiles: containerFileService,
 		},
 	}
+}
+
+type runtimeOpsStatsProviderAdapter struct {
+	service *runtimeapp.ContainerStatsService
+}
+
+func newRuntimeOpsStatsProvider(service *runtimeapp.ContainerStatsService) opsports.RuntimeStatsProvider {
+	return &runtimeOpsStatsProviderAdapter{service: service}
+}
+
+func (p *runtimeOpsStatsProviderAdapter) ListManagedContainerStats(ctx context.Context) ([]opsports.ManagedContainerStat, error) {
+	if p == nil || p.service == nil {
+		return []opsports.ManagedContainerStat{}, nil
+	}
+
+	stats, err := p.service.ListManagedContainerStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]opsports.ManagedContainerStat, 0, len(stats))
+	for _, item := range stats {
+		result = append(result, opsports.ManagedContainerStat{
+			ContainerID:   item.ContainerID,
+			ContainerName: item.ContainerName,
+			CPUPercent:    item.CPUPercent,
+			MemoryPercent: item.MemoryPercent,
+			MemoryUsage:   item.MemoryUsage,
+			MemoryLimit:   item.MemoryLimit,
+		})
+	}
+	return result, nil
 }
 
 func buildRuntimeEngine(root *Root) *runtimeinfra.Engine {

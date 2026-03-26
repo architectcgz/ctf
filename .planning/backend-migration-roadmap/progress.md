@@ -22,6 +22,10 @@
   - `notification` 已从 `system` 迁入 `ops`
   - `/api/v1/notifications` 与 `/ws/notifications` 路径保持不变
   - 后端 `internal/module/system` 实现已删除
+- 完成 `ops-composition-phase2`：
+  - `ops` composition 已切到 `typed deps + 局部 builder`
+  - `audit / dashboard / risk / notification` 装配不再 inline concrete repo/service
+  - `runtime` 提供给 `ops` 的 dashboard 依赖已通过 ports contract 收口
 
 ## 2026-03-26
 
