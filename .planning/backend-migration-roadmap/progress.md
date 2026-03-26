@@ -108,3 +108,7 @@
   - `contest` AWD 后台巡检已从单文件拆为 `checks / check_sync / check_support` 三段
   - 巡检编排、live cache 判定与实例装载 helper 已按职责分离
   - `contest/...` 定向测试已覆盖本轮无行为变化拆分
+- 完成 `contest-awd-repository-split-phase2`：
+  - `contest` AWD infrastructure 已从单文件拆为基础仓储、round、关系查询、service/attack 持久化四段
+  - `AWDRepository` 对外接口保持不变，内部职责边界进一步清晰
+  - `contest/...` 定向测试已覆盖本轮无行为变化拆分
