@@ -188,3 +188,7 @@
   - `contest` challenge handler 已从单文件拆为 command 与 query 两段
   - `ChallengeHandler` 对外类型与构造函数保持不变，HTTP 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-http-handler-split-phase2`：
+  - `contest` 总 handler 已从单文件拆为 contest CRUD/query 与 scoreboard 两段
+  - `Handler` 对外类型与构造函数保持不变，HTTP 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
