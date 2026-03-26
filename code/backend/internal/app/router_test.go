@@ -336,6 +336,66 @@ func TestPracticeModuleUsesTypedPortsDeps(t *testing.T) {
 	}
 }
 
+func TestAssessmentModuleUsesTypedPortsDeps(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "assessment_module.go"))
+	if err != nil {
+		t.Fatalf("read assessment_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"type assessmentModuleDeps struct",
+		"profileRepo",
+		"assessmentports.ProfileRepository",
+		"recommendationRepo",
+		"assessmentports.RecommendationRepository",
+		"challengeRepo",
+		"assessmentports.ChallengeRepository",
+		"reportRepo",
+		"assessmentports.ReportRepository",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("assessment composition should declare typed deps marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		"repo := assessmentinfra.NewRepository(db)",
+		"reportRepo := assessmentinfra.NewReportRepository(db)",
+		"*assessmentinfra.Repository",
+		"*assessmentinfra.ReportRepository",
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("assessment composition deps should not keep concrete assessment repository marker %s", marker)
+		}
+	}
+}
+
+func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile(filepath.Join("composition", "assessment_module.go"))
+	if err != nil {
+		t.Fatalf("read assessment_module.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		"buildAssessmentProfileHandler(",
+		"buildAssessmentRecommendationHandler(",
+		"buildAssessmentReportHandler(",
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("assessment module should delegate through %s", marker)
+		}
+	}
+}
+
 func assertHasRoute(t *testing.T, router *gin.Engine, method, path string) {
 	t.Helper()
 
