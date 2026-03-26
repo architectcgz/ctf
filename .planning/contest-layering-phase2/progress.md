@@ -18,3 +18,5 @@
   - `challenge / participation / team / awd / submission` 相关 service 已统一收口到 `ContestLookupRepository`
 - 删除已被清空的宽 `contestports.Repository`
 - `contest/architecture_test.go` 已新增护栏，禁止重新声明 legacy 宽仓储接口
+- `BuildContestModule` 已按 `core / awd / challenge / participation / team / submission` 拆成局部 builder
+- 新增 `TestBuildContestModuleDelegatesToSubBuilders`，约束 `contest` composition 不再回退为单个大装配函数
