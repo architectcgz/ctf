@@ -14,7 +14,7 @@ import (
 )
 
 type StatusUpdater struct {
-	repo      contestports.Repository
+	repo      contestports.ContestStatusRepository
 	redis     *redislib.Client
 	log       *zap.Logger
 	interval  time.Duration
@@ -22,7 +22,7 @@ type StatusUpdater struct {
 	lockTTL   time.Duration
 }
 
-func NewStatusUpdater(repo contestports.Repository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger) *StatusUpdater {
+func NewStatusUpdater(repo contestports.ContestStatusRepository, redis *redislib.Client, interval time.Duration, batchSize int, lockTTL time.Duration, log *zap.Logger) *StatusUpdater {
 	if log == nil {
 		log = zap.NewNop()
 	}

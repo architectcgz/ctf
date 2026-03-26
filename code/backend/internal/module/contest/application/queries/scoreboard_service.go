@@ -9,13 +9,13 @@ import (
 )
 
 type ScoreboardService struct {
-	repo   contestports.Repository
+	repo   contestports.ContestScoreboardRepository
 	redis  *redislib.Client
 	logger *zap.Logger
 	config *config.ContestConfig
 }
 
-func NewScoreboardService(repo contestports.Repository, redis *redislib.Client, cfg *config.ContestConfig, logger *zap.Logger) *ScoreboardService {
+func NewScoreboardService(repo contestports.ContestScoreboardRepository, redis *redislib.Client, cfg *config.ContestConfig, logger *zap.Logger) *ScoreboardService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
