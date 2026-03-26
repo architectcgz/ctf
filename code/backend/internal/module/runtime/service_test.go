@@ -19,6 +19,7 @@ import (
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfra "ctf-platform/internal/module/runtime/infrastructure"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -471,11 +472,11 @@ func TestServiceCreateTopologyCreatesMultipleContainersOnSharedNetwork(t *testin
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
-		Networks: []runtimeapp.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeapp.TopologyCreateNode{
+		Nodes: []runtimeports.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},
@@ -623,12 +624,12 @@ func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
-		Networks: []runtimeapp.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: "public"},
 			{Key: "backend", Internal: true},
 		},
-		Nodes: []runtimeapp.TopologyCreateNode{
+		Nodes: []runtimeports.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{"public", "backend"}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{"backend"}},
 		},
@@ -680,11 +681,11 @@ func TestServiceCreateTopologyAppliesFineGrainedACLRules(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	result, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
-		Networks: []runtimeapp.TopologyCreateNetwork{
+	result, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeapp.TopologyCreateNode{
+		Nodes: []runtimeports.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},
@@ -737,11 +738,11 @@ func TestServiceCreateTopologyRollsBackWhenACLApplyFails(t *testing.T) {
 		PublicHost:     "127.0.0.1",
 	}, nil)
 
-	_, err := service.CreateTopology(context.Background(), &runtimeapp.TopologyCreateRequest{
-		Networks: []runtimeapp.TopologyCreateNetwork{
+	_, err := service.CreateTopology(context.Background(), &runtimeports.TopologyCreateRequest{
+		Networks: []runtimeports.TopologyCreateNetwork{
 			{Key: model.TopologyDefaultNetworkKey},
 		},
-		Nodes: []runtimeapp.TopologyCreateNode{
+		Nodes: []runtimeports.TopologyCreateNode{
 			{Key: "web", Image: "ctf/web:v1", ServicePort: 8080, IsEntryPoint: true, NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 			{Key: "db", Image: "ctf/db:v1", NetworkKeys: []string{model.TopologyDefaultNetworkKey}},
 		},
@@ -940,7 +941,7 @@ type fakeRuntimeEngine struct {
 	imageSize                      int64
 	imageInspectErr                error
 	removedImageRef                string
-	managedContainerStats          []runtimeapp.ManagedContainerStat
+	managedContainerStats          []runtimeports.ManagedContainerStat
 	inspectContainerNetworkIPsFunc func(containerID string, engine *fakeRuntimeEngine) map[string]string
 	stopContainerFn                func(ctx context.Context, containerID string, timeout time.Duration) error
 	removeContainerFn              func(ctx context.Context, containerID string, force bool) error
@@ -993,8 +994,8 @@ func (f *fakeRuntimeEngine) RemoveImage(_ context.Context, imageRef string) erro
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeapp.ManagedContainerStat, error) {
-	return append([]runtimeapp.ManagedContainerStat(nil), f.managedContainerStats...), nil
+func (f *fakeRuntimeEngine) ListManagedContainerStats(_ context.Context) ([]runtimeports.ManagedContainerStat, error) {
+	return append([]runtimeports.ManagedContainerStat(nil), f.managedContainerStats...), nil
 }
 
 func (f *fakeRuntimeEngine) ConnectContainerToNetwork(_ context.Context, containerID, networkName string) error {
@@ -1068,7 +1069,7 @@ func (f *fakeRuntimeEngine) WriteFileToContainer(_ context.Context, containerID,
 	return nil
 }
 
-func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeapp.ManagedContainer, error) {
+func (f *fakeRuntimeEngine) ListManagedContainers(_ context.Context) ([]runtimeports.ManagedContainer, error) {
 	return nil, nil
 }
 

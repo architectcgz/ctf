@@ -6,7 +6,7 @@ import (
 
 	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	runtimeapp "ctf-platform/internal/module/runtime/application"
+	runtimeports "ctf-platform/internal/module/runtime/ports"
 )
 
 type practiceRuntimeCleaner interface {
@@ -14,7 +14,7 @@ type practiceRuntimeCleaner interface {
 }
 
 type practiceRuntimeProvisioner interface {
-	CreateTopology(ctx context.Context, req *runtimeapp.TopologyCreateRequest) (*runtimeapp.TopologyCreateResult, error)
+	CreateTopology(ctx context.Context, req *runtimeports.TopologyCreateRequest) (*runtimeports.TopologyCreateResult, error)
 	CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
 }
 
@@ -47,7 +47,7 @@ func (a *PracticeRuntimeService) CreateTopology(ctx context.Context, req *practi
 		return nil, nil
 	}
 
-	result, err := a.provisioner.CreateTopology(ctx, &runtimeapp.TopologyCreateRequest{
+	result, err := a.provisioner.CreateTopology(ctx, &runtimeports.TopologyCreateRequest{
 		Networks:         toRuntimeTopologyNetworks(req.Networks),
 		Nodes:            toRuntimeTopologyNodes(req.Nodes),
 		Policies:         append([]model.TopologyTrafficPolicy(nil), req.Policies...),
@@ -87,10 +87,10 @@ func isNilDependency(dependency any) bool {
 	}
 }
 
-func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []runtimeapp.TopologyCreateNetwork {
-	result := make([]runtimeapp.TopologyCreateNetwork, 0, len(items))
+func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []runtimeports.TopologyCreateNetwork {
+	result := make([]runtimeports.TopologyCreateNetwork, 0, len(items))
 	for _, item := range items {
-		result = append(result, runtimeapp.TopologyCreateNetwork{
+		result = append(result, runtimeports.TopologyCreateNetwork{
 			Key:      item.Key,
 			Internal: item.Internal,
 		})
@@ -98,10 +98,10 @@ func toRuntimeTopologyNetworks(items []practiceports.TopologyCreateNetwork) []ru
 	return result
 }
 
-func toRuntimeTopologyNodes(items []practiceports.TopologyCreateNode) []runtimeapp.TopologyCreateNode {
-	result := make([]runtimeapp.TopologyCreateNode, 0, len(items))
+func toRuntimeTopologyNodes(items []practiceports.TopologyCreateNode) []runtimeports.TopologyCreateNode {
+	result := make([]runtimeports.TopologyCreateNode, 0, len(items))
 	for _, item := range items {
-		result = append(result, runtimeapp.TopologyCreateNode{
+		result = append(result, runtimeports.TopologyCreateNode{
 			Key:          item.Key,
 			Image:        item.Image,
 			Env:          cloneStringMap(item.Env),

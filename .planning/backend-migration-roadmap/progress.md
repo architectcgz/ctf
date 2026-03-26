@@ -92,3 +92,7 @@
   - `runtime` 的实例读写与 proxy ticket 主调用面已切到 `application/commands` 与 `application/queries`
   - `runtime/api/http`、testutil 与受影响 focused tests 不再依赖 root `runtime/application` 的实例 facade
   - root `runtime/application` 已删除 legacy `instance/query/proxy ticket` facade，并补齐分层防回退守卫
+- 完成 `runtime-shared-contracts-phase2`：
+  - `runtime` 的 topology / managed-container 共享契约已下沉到 `runtime/ports`
+  - `composition`、`runtime/infrastructure` 与 `testutil` 不再为类型定义依赖 root `runtime/application`
+  - root `runtime/application` 仅保留应用服务与 alias 层，不再直接承载共享 topology contract 定义

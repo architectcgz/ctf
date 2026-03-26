@@ -1,4 +1,4 @@
-package application
+package ports
 
 import "ctf-platform/internal/model"
 
