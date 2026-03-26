@@ -45,6 +45,10 @@
   - `practice` 已删除宽 `PracticeRepository`
   - application 构造依赖已切到 command / command-tx / score / ranking 窄端口
   - `practice` composition 已收口到 typed deps，不再直接把 concrete repo 扩散给多个服务
+- 完成 `practice-crossdeps-phase2`：
+  - `practice` composition 已拆分 persistence deps、external deps、handler builder
+  - `challenge/runtime/assessment` 跨模块依赖已从主装配函数中收口
+  - `practice` runtime bridge 迁移后的装配边界进一步标准化
 - 完成 `assessment-layering-phase2`：
   - `assessment` composition 已切到 typed deps
   - `BuildAssessmentModule` 已拆为 profile / recommendation / report 局部 builder

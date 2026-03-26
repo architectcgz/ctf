@@ -16,9 +16,12 @@ type PracticeModule struct {
 }
 
 type practiceModuleDeps struct {
-	commandRepo    practiceports.PracticeCommandRepository
-	scoreRepo      practiceports.PracticeScoreRepository
-	rankingRepo    practiceports.PracticeRankingRepository
+	commandRepo practiceports.PracticeCommandRepository
+	scoreRepo   practiceports.PracticeScoreRepository
+	rankingRepo practiceports.PracticeRankingRepository
+}
+
+type practiceModuleExternalDeps struct {
 	instanceRepo   practiceports.InstanceRepository
 	runtimeService practiceports.RuntimeInstanceService
 	challengeRepo  practiceRuntimeChallengeContract
@@ -42,23 +45,9 @@ type practiceRuntimeAssessmentService interface {
 }
 
 func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) *PracticeModule {
-	cfg := root.Config()
-	log := root.Logger()
-	cache := root.Cache()
-	deps := buildPracticeModuleDeps(root, challenge, runtime, assessment)
-	scoreService := practicecmd.NewScoreService(deps.scoreRepo, cache, log.Named("score_service"), &cfg.Score)
-	service := practicecmd.NewService(
-		deps.commandRepo,
-		deps.challengeRepo,
-		deps.imageStore,
-		deps.instanceRepo,
-		deps.runtimeService,
-		scoreService,
-		deps.assessment,
-		cache,
-		cfg,
-		log.Named("practice_service"),
-	)
+	deps := buildPracticeModuleDeps(root)
+	externalDeps := buildPracticeModuleExternalDeps(challenge, runtime, assessment)
+	service := buildPracticeHandler(root, deps, externalDeps)
 	service.SetEventBus(root.Events)
 
 	return &PracticeModule{
@@ -67,16 +56,40 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	}
 }
 
-func buildPracticeModuleDeps(root *Root, challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) practiceModuleDeps {
+func buildPracticeModuleDeps(root *Root) practiceModuleDeps {
 	repo := practiceinfra.NewRepository(root.DB())
 	return practiceModuleDeps{
-		commandRepo:    repo,
-		scoreRepo:      repo,
-		rankingRepo:    repo,
+		commandRepo: repo,
+		scoreRepo:   repo,
+		rankingRepo: repo,
+	}
+}
+
+func buildPracticeModuleExternalDeps(challenge *ChallengeModule, runtime *RuntimeModule, assessment *AssessmentModule) practiceModuleExternalDeps {
+	return practiceModuleExternalDeps{
 		instanceRepo:   runtime.practice.instanceRepository,
 		runtimeService: runtime.practice.runtimeService,
 		challengeRepo:  challenge.Catalog,
 		imageStore:     challenge.ImageStore,
 		assessment:     assessment.ProfileService,
 	}
+}
+
+func buildPracticeHandler(root *Root, deps practiceModuleDeps, externalDeps practiceModuleExternalDeps) *practicecmd.Service {
+	cfg := root.Config()
+	log := root.Logger()
+	cache := root.Cache()
+	scoreService := practicecmd.NewScoreService(deps.scoreRepo, cache, log.Named("score_service"), &cfg.Score)
+	return practicecmd.NewService(
+		deps.commandRepo,
+		externalDeps.challengeRepo,
+		externalDeps.imageStore,
+		externalDeps.instanceRepo,
+		externalDeps.runtimeService,
+		scoreService,
+		externalDeps.assessment,
+		cache,
+		cfg,
+		log.Named("practice_service"),
+	)
 }
