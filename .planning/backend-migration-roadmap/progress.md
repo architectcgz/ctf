@@ -244,3 +244,7 @@
   - `contest` AWD flag sync 已从单文件拆为主流程与 round/assignment support 两段
   - `AWDRoundUpdater` 对外 flag sync 行为保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-check-support-split-phase3`：
+  - `contest` AWD check support 已从单文件拆为 live cache 判定与 service instance 装载两段
+  - `AWDRoundUpdater` 对外巡检 support 行为保持不变，jobs 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
