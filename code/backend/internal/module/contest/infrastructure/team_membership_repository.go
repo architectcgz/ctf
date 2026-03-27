@@ -108,19 +108,3 @@ func (r *TeamRepository) RemoveMember(teamID, userID int64) error {
 		return bindContestRegistrationTeam(tx, team.ContestID, userID, nil)
 	})
 }
-
-func bindContestRegistrationTeam(tx *gorm.DB, contestID, userID int64, teamID *int64) error {
-	result := tx.Model(&model.ContestRegistration{}).
-		Where("contest_id = ? AND user_id = ?", contestID, userID).
-		Updates(map[string]any{
-			"team_id":    teamID,
-			"updated_at": time.Now(),
-		})
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected == 0 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
-}
