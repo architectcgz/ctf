@@ -391,3 +391,7 @@
   - `contest` AWD service upsert command 已从单文件拆为入口编排、事务写入重算与后置同步响应三段
   - `AWDService.UpsertServiceCheck` 的对外接口、返回结构与业务行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-status-repository-split-phase4`：
+  - `contest` status repository 已从单文件拆为状态筛选查询与状态更新写入两段
+  - `Repository` 对外接口、状态筛选与状态推进行为保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
