@@ -363,3 +363,7 @@
   - `contest` participation admin query 已从单文件拆为 registration admin query、announcement query 与 contest existence support 三段
   - `ParticipationService` admin 查询接口、分页行为与返回结构保持不变，queries 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-service-run-command-split-phase4`：
+  - `contest` AWD service run command 已从单文件拆为执行入口与 checker run response / round services support 两段
+  - `AWDService` 手动执行 checker 的对外接口、轮次解析与响应结构保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
