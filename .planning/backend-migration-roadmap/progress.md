@@ -303,3 +303,7 @@
   - `contest` team create/join command 已从单文件拆为 create 与 join 两段
   - `TeamService` 对外命令接口与建队/入队行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-manage-command-split-phase3`：
+  - `contest` team manage command 已从单文件拆为成员离队与队长侧 dismiss/kick 两段
+  - `TeamService` 对外命令接口与离队/解散/踢人行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
