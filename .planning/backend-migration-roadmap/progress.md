@@ -208,3 +208,7 @@
   - `contest` participation query 已从单文件拆为 admin query 与 my progress 两段
   - `ParticipationService` 对外类型与构造函数保持不变，query 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-query-split-phase2`：
+  - `contest` query 主流程已从单文件拆为 get 与 list 两段
+  - `ContestService` 对外类型与构造函数保持不变，query 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
