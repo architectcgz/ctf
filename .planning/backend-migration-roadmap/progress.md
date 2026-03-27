@@ -331,3 +331,7 @@
   - `contest` AWD round handler 已从单文件拆为 round create/list、round checks、round summary 三段
   - `AWDHandler` 对外路由、参数读取与响应行为保持不变，HTTP 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-relation-repository-split-phase4`：
+  - `contest` AWD relation repository 已从单文件拆为 contest/challenge relation 与 team/member relation 两段
+  - `AWDRepository` 对外接口与 relation 查询行为保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
