@@ -259,3 +259,7 @@
   - `contest` AWD round support 已从单文件拆为当前轮次解析/物化与 live window/current round id 两段
   - `AWDService` 对外 round support 行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-service-repository-split-phase3`：
+  - `contest` AWD service repository 已从单文件拆为 service instance、team service、attack log/impact 三段
+  - `AWDRepository` 对外接口保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
