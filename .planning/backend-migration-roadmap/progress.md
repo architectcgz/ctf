@@ -271,3 +271,7 @@
   - `contest` AWD score recalc 已从单文件拆为重算/同步主流程与积分归并 support 两段
   - AWD 官方积分口径保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-summary-query-split-phase3`：
+  - `contest` AWD round summary query 已从单文件拆为查询主流程与 metrics/items 聚合 support 两段
+  - `AWDService.GetRoundSummary` 对外返回结构、排序与统计口径保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
