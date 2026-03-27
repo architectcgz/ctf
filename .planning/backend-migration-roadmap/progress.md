@@ -295,3 +295,7 @@
   - `contest` participation registration command 已从单文件拆为报名与审核两段
   - `ParticipationService` 对外命令接口与报名/审核行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-list-query-split-phase4`：
+  - `contest` AWD list query 已从单文件拆为 round、service、attack log 三段
+  - `AWDService` 对外查询接口与返回结构保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
