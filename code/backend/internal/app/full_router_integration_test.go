@@ -294,6 +294,7 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 				},
 			},
 		}},
+		{name: "self check", method: http.MethodPost, path: fmt.Sprintf("/api/v1/admin/challenges/%d/self-check", adminChallenge.ID)},
 	} {
 		resp := performFullRouterRequest(t, env.router, tc.method, tc.path, tc.payload, teacherHeaders)
 		if resp.Code != http.StatusForbidden {
@@ -336,6 +337,39 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	}
 	if !createdBy.Valid || createdBy.Int64 != env.teacher.ID {
 		t.Fatalf("unexpected created_by=%+v, want %d", createdBy, env.teacher.ID)
+	}
+}
+
+func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	resp := performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/admin/challenges/%d/self-check", env.challenge.ID),
+		nil,
+		teacherHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var result dto.ChallengeSelfCheckResp
+	decodeFullRouterData(t, resp, &result)
+	if result.ChallengeID != env.challenge.ID {
+		t.Fatalf("expected challenge_id=%d, got %d", env.challenge.ID, result.ChallengeID)
+	}
+	if !result.Precheck.Passed {
+		t.Fatalf("expected precheck passed, got %+v", result.Precheck)
+	}
+	if !result.Runtime.Passed {
+		t.Fatalf("expected runtime passed, got %+v", result.Runtime)
+	}
+	if result.Runtime.AccessURL == "" {
+		t.Fatalf("expected runtime access url, got empty")
+	}
+	if len(result.Runtime.Steps) == 0 {
+		t.Fatalf("expected runtime steps, got empty")
 	}
 }
 

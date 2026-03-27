@@ -120,3 +120,32 @@ type FlagResp struct {
 	FlagPrefix string `json:"flag_prefix,omitempty"`
 	Configured bool   `json:"configured"`
 }
+
+type ChallengeSelfCheckStepResp struct {
+	Name    string `json:"name"`
+	Passed  bool   `json:"passed"`
+	Message string `json:"message"`
+}
+
+type ChallengeSelfCheckPhaseResp struct {
+	Passed    bool                         `json:"passed"`
+	StartedAt time.Time                    `json:"started_at"`
+	EndedAt   time.Time                    `json:"ended_at"`
+	Steps     []ChallengeSelfCheckStepResp `json:"steps"`
+}
+
+type ChallengeSelfCheckRuntimeResp struct {
+	Passed         bool                         `json:"passed"`
+	StartedAt      time.Time                    `json:"started_at"`
+	EndedAt        time.Time                    `json:"ended_at"`
+	AccessURL      string                       `json:"access_url,omitempty"`
+	ContainerCount int                          `json:"container_count"`
+	NetworkCount   int                          `json:"network_count"`
+	Steps          []ChallengeSelfCheckStepResp `json:"steps"`
+}
+
+type ChallengeSelfCheckResp struct {
+	ChallengeID int64                         `json:"challenge_id"`
+	Precheck    ChallengeSelfCheckPhaseResp   `json:"precheck"`
+	Runtime     ChallengeSelfCheckRuntimeResp `json:"runtime"`
+}

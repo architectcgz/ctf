@@ -25,6 +25,7 @@ type challengeCommandService interface {
 	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
 	PublishChallenge(id int64) error
+	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
 }
 
 type challengeQueryService interface {
@@ -139,6 +140,22 @@ func (h *Handler) PublishChallenge(c *gin.Context) {
 	}
 
 	response.Success(c, nil)
+}
+
+func (h *Handler) SelfCheckChallenge(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的ID")
+		return
+	}
+
+	resp, err := h.commands.SelfCheckChallenge(c.Request.Context(), id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, resp)
 }
 
 // ListPublishedChallenges 靶场列表（学员视图）

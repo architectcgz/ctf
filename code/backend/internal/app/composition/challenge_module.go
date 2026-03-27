@@ -40,6 +40,7 @@ type challengeModuleDeps struct {
 	writeupRepo          challengeports.ChallengeWriteupRepository
 	templateRepo         challengeports.EnvironmentTemplateRepository
 	imageRuntime         challengeports.ImageRuntime
+	runtimeProbe         challengeports.ChallengeRuntimeProbe
 }
 
 func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
@@ -86,6 +87,7 @@ func buildChallengeModuleDeps(root *Root, runtime *RuntimeModule) challengeModul
 		writeupRepo:          challengeRepo,
 		templateRepo:         challengeinfra.NewTemplateRepository(db),
 		imageRuntime:         runtime.ChallengeImageRuntime,
+		runtimeProbe:         runtime.ChallengeRuntimeProbe,
 	}
 }
 
@@ -101,7 +103,17 @@ func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challeng
 }
 
 func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps) *challengehttp.Handler {
-	challengeCommandService := challengecmd.NewChallengeService(deps.challengeCommandRepo, deps.imageRepo)
+	challengeCommandService := challengecmd.NewChallengeService(
+		deps.challengeCommandRepo,
+		deps.imageRepo,
+		deps.topologyRepo,
+		deps.runtimeProbe,
+		challengecmd.SelfCheckConfig{
+			RuntimeCreateTimeout: root.Config().Container.CreateTimeout,
+			FlagGlobalSecret:     root.Config().Container.FlagGlobalSecret,
+		},
+		root.Logger().Named("challenge_command_service"),
+	)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, root.Cache(), &challengeqry.Config{
 		SolvedCountCacheTTL: root.Config().Challenge.SolvedCountCacheTTL,
 	}, root.Logger().Named("challenge_service"))

@@ -8,10 +8,12 @@ import (
 	"ctf-platform/internal/module/challenge/testsupport"
 	"ctf-platform/pkg/errcode"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
-	return NewChallengeService(repo, imageRepo)
+	return NewChallengeService(repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {

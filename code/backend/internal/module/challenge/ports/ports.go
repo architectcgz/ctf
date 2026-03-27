@@ -91,3 +91,35 @@ type ImageRuntime interface {
 	InspectImageSize(ctx context.Context, imageRef string) (int64, error)
 	RemoveImage(ctx context.Context, imageRef string) error
 }
+
+type RuntimeTopologyCreateNode struct {
+	Key          string
+	Image        string
+	Env          map[string]string
+	ServicePort  int
+	IsEntryPoint bool
+	NetworkKeys  []string
+	Resources    *model.ResourceLimits
+}
+
+type RuntimeTopologyCreateNetwork struct {
+	Key      string
+	Internal bool
+}
+
+type RuntimeTopologyCreateRequest struct {
+	Networks []RuntimeTopologyCreateNetwork
+	Nodes    []RuntimeTopologyCreateNode
+	Policies []model.TopologyTrafficPolicy
+}
+
+type RuntimeTopologyCreateResult struct {
+	AccessURL      string
+	RuntimeDetails model.InstanceRuntimeDetails
+}
+
+type ChallengeRuntimeProbe interface {
+	CreateTopology(ctx context.Context, req *RuntimeTopologyCreateRequest) (*RuntimeTopologyCreateResult, error)
+	CreateContainer(ctx context.Context, imageName string, env map[string]string) (accessURL string, runtimeDetails model.InstanceRuntimeDetails, err error)
+	CleanupRuntimeDetails(ctx context.Context, details model.InstanceRuntimeDetails) error
+}
