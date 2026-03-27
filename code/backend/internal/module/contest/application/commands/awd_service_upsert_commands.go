@@ -7,7 +7,6 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -38,28 +37,9 @@ func (s *AWDService) UpsertServiceCheck(ctx context.Context, contestID, roundID 
 		defenseScore = round.DefenseScore
 	}
 
-	now := time.Now()
-	var record *model.AWDTeamService
-	if err := s.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
-		var txErr error
-		record, txErr = txRepo.UpsertServiceCheck(ctx, roundID, req.TeamID, req.ChallengeID, req.ServiceStatus, checkResult, defenseScore, now)
-		if txErr != nil {
-			return txErr
-		}
-		return txRepo.RecalculateContestTeamScores(ctx, contestID)
-	}); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if err := s.repo.RebuildContestScoreboardCache(ctx, s.redis, contestID); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
+	record, err := s.upsertServiceCheckAndRecalculate(ctx, contestID, roundID, req, checkResult, defenseScore, time.Now())
 	if err != nil {
 		return nil, err
 	}
-	if err := syncAWDServiceStatusField(ctx, s.redis, contestID, roundID, currentRoundID, req.TeamID, req.ChallengeID, req.ServiceStatus); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	return contestdomain.AWDTeamServiceRespFromModel(record, team.Name), nil
+	return s.buildUpsertServiceCheckResp(ctx, contestID, roundID, req, team, record)
 }
