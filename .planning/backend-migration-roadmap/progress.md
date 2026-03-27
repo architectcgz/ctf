@@ -335,3 +335,7 @@
   - `contest` AWD relation repository 已从单文件拆为 contest/challenge relation 与 team/member relation 两段
   - `AWDRepository` 对外接口与 relation 查询行为保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-submission-scoring-split-phase4`：
+  - `contest` submission scoring 已从单文件拆为入口编排、事务内计分更新与事务外 scoreboard sync 三段
+  - `SubmissionService` 对外提交流程、动态计分与 scoreboard rebuild 回退行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
