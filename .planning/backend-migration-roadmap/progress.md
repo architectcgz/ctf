@@ -359,3 +359,7 @@
   - `contest` AWD current round support 已从单文件拆为入口编排、active round materialize 主路径与 running/redis fallback 三段
   - `AWDService` 当前轮次解析 helper 的对外函数签名、materialize 与 fallback 行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-participation-admin-query-split-phase4`：
+  - `contest` participation admin query 已从单文件拆为 registration admin query、announcement query 与 contest existence support 三段
+  - `ParticipationService` admin 查询接口、分页行为与返回结构保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
