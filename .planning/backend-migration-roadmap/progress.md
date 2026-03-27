@@ -220,3 +220,7 @@
   - `contest` AWD query 已从单文件拆为 list 与 round summary 两段
   - `AWDService` 对外类型与构造函数保持不变，query 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-status-updater-split-phase2`：
+  - `contest` status updater 已从单文件拆为 runner 与 support 两段
+  - `StatusUpdater` 对外类型与构造函数保持不变，jobs 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
