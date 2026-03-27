@@ -299,3 +299,7 @@
   - `contest` AWD list query 已从单文件拆为 round、service、attack log 三段
   - `AWDService` 对外查询接口与返回结构保持不变，queries 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-create-join-command-split-phase3`：
+  - `contest` team create/join command 已从单文件拆为 create 与 join 两段
+  - `TeamService` 对外命令接口与建队/入队行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
