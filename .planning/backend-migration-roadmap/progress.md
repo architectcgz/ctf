@@ -403,3 +403,7 @@
   - `contest` AWD round runtime 已从单文件拆为调度入口/锁管理、轮次同步运行时与对外桥接方法三段
   - `AWDRoundUpdater` 的对外接口、调度和轮次同步行为保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-create-command-split-phase4`：
+  - `contest` team create command 已从单文件拆为入口编排与邀请码重试创建 support 两段
+  - `TeamService.CreateTeam` 的对外接口、冲突错误语义与返回结构保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
