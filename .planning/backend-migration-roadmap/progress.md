@@ -319,3 +319,7 @@
   - `contest` handler 已从单文件拆为 contest command 与 query 两段
   - `Handler` 对外路由、参数绑定与响应行为保持不变，HTTP 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-participation-command-handler-split-phase3`：
+  - `contest` participation command handler 已从单文件拆为 registration/review 与 announcement 两段
+  - `ParticipationHandler` 对外路由、参数校验与响应行为保持不变，HTTP 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
