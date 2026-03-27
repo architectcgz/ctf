@@ -291,3 +291,7 @@
   - `contest` scoreboard list query 已从单文件拆为查询主流程与分页/key/item 组装 support 两段
   - `ScoreboardService` 对外查询行为、冻结榜切换与返回结构保持不变，queries 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-participation-registration-command-split-phase3`：
+  - `contest` participation registration command 已从单文件拆为报名与审核两段
+  - `ParticipationService` 对外命令接口与报名/审核行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
