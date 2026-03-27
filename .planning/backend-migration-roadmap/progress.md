@@ -387,3 +387,7 @@
   - `contest` team membership repository 已从单文件拆为 team 生命周期事务与成员加入/离队事务两段
   - `TeamRepository` 对外接口、成员事务与 registration 绑定行为保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-service-upsert-command-split-phase4`：
+  - `contest` AWD service upsert command 已从单文件拆为入口编排、事务写入重算与后置同步响应三段
+  - `AWDService.UpsertServiceCheck` 的对外接口、返回结构与业务行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
