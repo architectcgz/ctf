@@ -279,3 +279,7 @@
   - `contest` AWD round plan 已从单文件拆为 plan 计算、round reconcile 与 redis lock 三段
   - `AWDRoundUpdater` 对外 round runtime 行为保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-membership-repository-split-phase3`：
+  - `contest` team membership repository 已从单文件拆为成员事务流程与 registration/team 绑定 support 两段
+  - `TeamRepository` 对外成员管理行为保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
