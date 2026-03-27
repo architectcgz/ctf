@@ -371,3 +371,7 @@
   - `contest` AWD validation support 已从单文件拆为 contest/round 校验、resource 校验加载与 team 归属解析三段
   - `AWDService` 校验 helper 的对外函数签名、错误映射与返回行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-summary-support-split-phase4`：
+  - `contest` AWD summary support 已从单文件拆为主汇总入口、service 维度汇总与 attack 维度汇总三段
+  - AWD round summary 的输出结构、排序与计数逻辑保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
