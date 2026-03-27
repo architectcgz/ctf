@@ -745,7 +745,17 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
-	challengeCommandService := challengecmd.NewChallengeService(challengeRepo, imageRepo)
+	challengeCommandService := challengecmd.NewChallengeService(
+		challengeRepo,
+		imageRepo,
+		challengeRepo,
+		nil,
+		challengecmd.SelfCheckConfig{
+			RuntimeCreateTimeout: cfg.Container.CreateTimeout,
+			FlagGlobalSecret:     cfg.Container.FlagGlobalSecret,
+		},
+		logger,
+	)
 	challengeQueryService := challengeqry.NewChallengeService(challengeRepo, cache, &challengeqry.Config{
 		SolvedCountCacheTTL: cfg.Challenge.SolvedCountCacheTTL,
 	}, logger)

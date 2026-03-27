@@ -150,6 +150,15 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.PublishChallenge,
 	)
+	adminAuthoring.POST("/challenges/:id/self-check",
+		ownerGuard,
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionAdminOp,
+			ResourceType:    "challenge_self_check",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.Handler.SelfCheckChallenge,
+	)
 	adminAuthoring.GET("/challenges/:id/writeup", ownerGuard, deps.challenge.WriteupHandler.GetAdmin)
 	adminAuthoring.PUT("/challenges/:id/writeup",
 		ownerGuard,
