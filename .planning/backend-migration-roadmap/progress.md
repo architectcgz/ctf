@@ -343,3 +343,7 @@
   - `contest` AWD service check result 已从单文件拆为入口编排、空实例 fallback 与多实例 probe 聚合三段
   - `AWDRoundUpdater` 对外服务检查流程、状态归纳与 check result JSON 结构保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-scoreboard-repository-split-phase4`：
+  - `contest` scoreboard repository 已从单文件拆为公共入口、mode-specific 查询分支与 aggregate time parsing support 三段
+  - `Repository.FindScoreboardTeamStats` 对外查询接口、AWD/非 AWD 统计行为与时间解析结果保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
