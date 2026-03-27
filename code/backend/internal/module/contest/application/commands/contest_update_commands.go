@@ -2,69 +2,24 @@ package commands
 
 import (
 	"context"
-	"errors"
 
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *ContestService) UpdateContest(ctx context.Context, id int64, req *dto.UpdateContestReq) (*dto.ContestResp, error) {
-	contest, err := s.repo.FindByID(ctx, id)
+	contest, err := s.loadContestForUpdate(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, err
 	}
-
-	if req.Status != nil && *req.Status != contest.Status {
-		if !domain.IsValidTransition(contest.Status, *req.Status) {
-			return nil, errcode.ErrInvalidStatusTransition
-		}
+	if err := validateContestUpdateRequest(contest, req); err != nil {
+		return nil, err
 	}
-
-	if contest.Status == model.ContestStatusRegistration || contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
-		if req.StartTime != nil {
-			return nil, errcode.ErrContestAlreadyStarted
-		}
-	}
-
-	if contest.Status == model.ContestStatusRunning || contest.Status == model.ContestStatusEnded {
-		if req.EndTime != nil {
-			return nil, errcode.ErrContestAlreadyStarted
-		}
-	}
-
-	if req.Mode != nil && *req.Mode != contest.Mode {
-		if contest.Status != model.ContestStatusDraft {
-			return nil, errcode.ErrCannotModifyAfterDraft
-		}
-		contest.Mode = *req.Mode
-	}
-
-	if req.Title != nil {
-		contest.Title = *req.Title
-	}
-	if req.Description != nil {
-		contest.Description = *req.Description
-	}
-	if req.StartTime != nil {
-		contest.StartTime = *req.StartTime
-	}
-	if req.EndTime != nil {
-		contest.EndTime = *req.EndTime
-	}
-
-	if !contest.EndTime.After(contest.StartTime) {
-		return nil, errcode.ErrInvalidTimeRange
-	}
-
-	if req.Status != nil {
-		contest.Status = *req.Status
+	if err := applyContestUpdateFields(contest, req); err != nil {
+		return nil, err
 	}
 
 	if err := s.repo.Update(ctx, contest); err != nil {
