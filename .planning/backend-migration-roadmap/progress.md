@@ -327,3 +327,7 @@
   - `contest` challenge command handler 已从单文件拆为 add 与 remove/update 两段
   - `ChallengeHandler` 对外路由、参数校验与响应行为保持不变，HTTP 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-round-handler-split-phase4`：
+  - `contest` AWD round handler 已从单文件拆为 round create/list、round checks、round summary 三段
+  - `AWDHandler` 对外路由、参数读取与响应行为保持不变，HTTP 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
