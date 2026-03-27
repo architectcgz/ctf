@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -38,19 +36,9 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		pageSize = 100
 	}
 
-	frozen := !live && contestdomain.IsFrozenContest(contest, time.Now())
-	key := rediskeys.RankContestTeamKey(contestID)
-	if frozen {
-		key = rediskeys.RankContestFrozenKey(contestID)
-		exists, existsErr := s.redis.Exists(ctx, key).Result()
-		if existsErr != nil {
-			return nil, errcode.ErrInternal.WithCause(existsErr)
-		}
-		if exists == 0 {
-			if snapshotErr := s.createSnapshotFromLive(ctx, contestID); snapshotErr != nil {
-				return nil, snapshotErr
-			}
-		}
+	frozen, key, err := s.resolveScoreboardKey(ctx, contest, contestID, live, time.Now())
+	if err != nil {
+		return nil, err
 	}
 
 	total, err := s.redis.ZCard(ctx, key).Result()
@@ -58,17 +46,13 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	start := int64((page - 1) * pageSize)
-	stop := start + int64(pageSize) - 1
+	start, stop := scoreboardPageBounds(page, pageSize)
 	results, err := s.redis.ZRevRangeWithScores(ctx, key, start, stop).Result()
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	teamIDs := make([]int64, 0, len(results))
-	for _, item := range results {
-		teamIDs = append(teamIDs, contestdomain.MemberToTeamID(item.Member))
-	}
+	teamIDs := scoreboardTeamIDs(results)
 
 	teams, err := s.repo.FindTeamsByIDs(ctx, teamIDs)
 	if err != nil {
@@ -78,25 +62,7 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	teamMap := make(map[int64]*model.Team, len(teams))
-	for _, team := range teams {
-		teamMap[team.ID] = team
-	}
-
-	items := make([]*dto.ScoreboardItem, 0, len(results))
-	for idx, item := range results {
-		teamID := teamIDs[idx]
-		team := teamMap[teamID]
-		stats := statsMap[teamID]
-		items = append(items, &dto.ScoreboardItem{
-			Rank:             int(start) + idx + 1,
-			TeamID:           teamID,
-			Score:            item.Score,
-			TeamName:         teamName(team),
-			SolvedCount:      stats.SolvedCount,
-			LastSubmissionAt: stats.LastSubmissionAt,
-		})
-	}
+	items := buildScoreboardItems(start, results, teamIDs, teams, statsMap)
 
 	return &dto.ScoreboardResp{
 		Contest: &dto.ScoreboardContestInfo{

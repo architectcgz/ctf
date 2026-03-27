@@ -287,3 +287,7 @@
   - `contest` repository 已从单文件拆为基础 CRUD/list 与状态推进仓储两段
   - `Repository` 对外接口与 contest 状态推进行为保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-scoreboard-list-query-split-phase3`：
+  - `contest` scoreboard list query 已从单文件拆为查询主流程与分页/key/item 组装 support 两段
+  - `ScoreboardService` 对外查询行为、冻结榜切换与返回结构保持不变，queries 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
