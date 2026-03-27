@@ -208,6 +208,7 @@ interface RawAdminChallengeItem {
   category: AdminChallengeListItem['category']
   difficulty: AdminChallengeListItem['difficulty']
   points: number
+  created_by?: string | number | null
   image_id?: string | number | null
   attachment_url?: string
   hints?: Array<{
@@ -611,6 +612,7 @@ function normalizeChallenge(
     difficulty: item.difficulty,
     points: item.points,
     status: item.status,
+    created_by: item.created_by == null ? undefined : String(item.created_by),
     image_id: item.image_id == null ? undefined : String(item.image_id),
     attachment_url: item.attachment_url,
     hints,

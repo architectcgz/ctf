@@ -108,6 +108,9 @@ func (r *Repository) List(query *dto.ChallengeQuery) ([]*model.Challenge, int64,
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
 	}
+	if query.CreatedBy != nil {
+		db = db.Where("created_by = ?", *query.CreatedBy)
+	}
 
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err

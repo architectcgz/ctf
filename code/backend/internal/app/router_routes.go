@@ -1,14 +1,21 @@
 package app
 
 import (
+	"errors"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
+	"ctf-platform/pkg/errcode"
+	"ctf-platform/pkg/response"
 )
 
 type adminRouteDeps struct {
@@ -32,14 +39,54 @@ type userRouteDeps struct {
 	teachingReadmodel *composition.TeachingReadmodelModule
 }
 
+type challengeLookup interface {
+	FindByID(id int64) (*model.Challenge, error)
+}
+
 func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middleware.AuditOptions) gin.HandlerFunc {
 	return middleware.Audit(recorder, options, logger)
+}
+
+func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		currentUser := authctx.MustCurrentUser(c)
+		if currentUser.Role == model.RoleAdmin {
+			c.Next()
+			return
+		}
+
+		challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			response.InvalidParams(c, "无效的ID")
+			c.Abort()
+			return
+		}
+
+		challenge, err := catalog.FindByID(challengeID)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				response.Error(c, errcode.ErrChallengeNotFound)
+			} else {
+				response.FromError(c, err)
+			}
+			c.Abort()
+			return
+		}
+		if challenge.CreatedBy == nil || *challenge.CreatedBy != currentUser.UserID {
+			response.Error(c, errcode.ErrForbidden)
+			c.Abort()
+			return
+		}
+
+		c.Next()
+	}
 }
 
 func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminRouteDeps) {
 	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
 		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
 	}
+	ownerGuard := challengeOwnerGuard(deps.challenge.Catalog)
 
 	adminAuthoring.POST("/images",
 		audit(middleware.AuditOptions{
@@ -75,8 +122,9 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.Handler.CreateChallenge,
 	)
 	adminAuthoring.GET("/challenges", deps.challenge.Handler.ListChallenges)
-	adminAuthoring.GET("/challenges/:id", deps.challenge.Handler.GetChallenge)
+	adminAuthoring.GET("/challenges/:id", ownerGuard, deps.challenge.Handler.GetChallenge)
 	adminAuthoring.PUT("/challenges/:id",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge",
@@ -85,6 +133,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.Handler.UpdateChallenge,
 	)
 	adminAuthoring.DELETE("/challenges/:id",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge",
@@ -93,6 +142,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.Handler.DeleteChallenge,
 	)
 	adminAuthoring.PUT("/challenges/:id/publish",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionAdminOp,
 			ResourceType:    "challenge",
@@ -100,8 +150,9 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.PublishChallenge,
 	)
-	adminAuthoring.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetAdmin)
+	adminAuthoring.GET("/challenges/:id/writeup", ownerGuard, deps.challenge.WriteupHandler.GetAdmin)
 	adminAuthoring.PUT("/challenges/:id/writeup",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_writeup",
@@ -110,6 +161,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.WriteupHandler.Upsert,
 	)
 	adminAuthoring.DELETE("/challenges/:id/writeup",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge_writeup",
@@ -117,8 +169,9 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.WriteupHandler.Delete,
 	)
-	adminAuthoring.GET("/challenges/:id/topology", deps.challenge.TopologyHandler.GetChallengeTopology)
+	adminAuthoring.GET("/challenges/:id/topology", ownerGuard, deps.challenge.TopologyHandler.GetChallengeTopology)
 	adminAuthoring.PUT("/challenges/:id/topology",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_topology",
@@ -127,6 +180,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		deps.challenge.TopologyHandler.SaveChallengeTopology,
 	)
 	adminAuthoring.DELETE("/challenges/:id/topology",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge_topology",
@@ -161,6 +215,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	)
 
 	adminAuthoring.PUT("/challenges/:id/flag",
+		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_flag",
@@ -168,7 +223,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.FlagHandler.ConfigureFlag,
 	)
-	adminAuthoring.GET("/challenges/:id/flag", deps.challenge.FlagHandler.GetFlagConfig)
+	adminAuthoring.GET("/challenges/:id/flag", ownerGuard, deps.challenge.FlagHandler.GetFlagConfig)
 }
 
 func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {

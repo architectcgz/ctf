@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -208,6 +209,133 @@ func TestFullRouter_ListInstancesMatchesContract(t *testing.T) {
 	}
 	if item.RemainingExtends != env.instance.MaxExtends-env.instance.ExtendCount {
 		t.Fatalf("expected remaining_extends %d, got %d", env.instance.MaxExtends-env.instance.ExtendCount, item.RemainingExtends)
+	}
+}
+
+func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+
+	createPayload := func(title string) map[string]any {
+		return map[string]any{
+			"title":       title,
+			"description": "ownership test challenge",
+			"category":    model.DimensionWeb,
+			"difficulty":  model.ChallengeDifficultyEasy,
+			"points":      100,
+			"image_id":    env.image.ID,
+		}
+	}
+
+	adminCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", createPayload("admin-owned"), adminHeaders)
+	assertFullRouterStatus(t, adminCreateResp, http.StatusOK)
+	var adminChallenge dto.ChallengeResp
+	decodeFullRouterData(t, adminCreateResp, &adminChallenge)
+
+	teacherCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", createPayload("teacher-owned"), teacherHeaders)
+	assertFullRouterStatus(t, teacherCreateResp, http.StatusOK)
+	var teacherChallenge dto.ChallengeResp
+	decodeFullRouterData(t, teacherCreateResp, &teacherChallenge)
+
+	listResp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/challenges?page=1&page_size=50", nil, teacherHeaders)
+	assertFullRouterStatus(t, listResp, http.StatusOK)
+	var listResult struct {
+		List []dto.ChallengeResp `json:"list"`
+	}
+	decodeFullRouterData(t, listResp, &listResult)
+
+	foundTeacherOwned := false
+	foundAdminOwned := false
+	for _, item := range listResult.List {
+		if item.ID == teacherChallenge.ID {
+			foundTeacherOwned = true
+		}
+		if item.ID == adminChallenge.ID {
+			foundAdminOwned = true
+		}
+	}
+	if !foundTeacherOwned {
+		t.Fatalf("teacher should see own challenge %d in list, got %+v", teacherChallenge.ID, listResult.List)
+	}
+	if foundAdminOwned {
+		t.Fatalf("teacher should not see admin challenge %d in list, got %+v", adminChallenge.ID, listResult.List)
+	}
+
+	for _, tc := range []struct {
+		name    string
+		method  string
+		path    string
+		payload any
+	}{
+		{name: "get detail", method: http.MethodGet, path: fmt.Sprintf("/api/v1/admin/challenges/%d", adminChallenge.ID)},
+		{name: "update challenge", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d", adminChallenge.ID), payload: map[string]any{"title": "forbidden-update"}},
+		{name: "configure flag", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/flag", adminChallenge.ID), payload: map[string]any{
+			"flag_type":   model.FlagTypeStatic,
+			"flag":        "flag{ownership-check}",
+			"flag_prefix": "flag",
+		}},
+		{name: "upsert writeup", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", adminChallenge.ID), payload: map[string]any{
+			"title":      "forbidden writeup",
+			"content":    "forbidden content",
+			"visibility": model.WriteupVisibilityPublic,
+		}},
+		{name: "save topology", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/topology", adminChallenge.ID), payload: map[string]any{
+			"entry_node_key": "web",
+			"nodes": []map[string]any{
+				{
+					"key":          "web",
+					"name":         "web",
+					"image_id":     env.image.ID,
+					"service_port": 80,
+					"inject_flag":  true,
+					"tier":         model.TopologyTierPublic,
+				},
+			},
+		}},
+	} {
+		resp := performFullRouterRequest(t, env.router, tc.method, tc.path, tc.payload, teacherHeaders)
+		if resp.Code != http.StatusForbidden {
+			t.Fatalf("%s should be forbidden, got status=%d body=%s", tc.name, resp.Code, resp.Body.String())
+		}
+	}
+
+	ownDetailResp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d", teacherChallenge.ID), nil, teacherHeaders)
+	assertFullRouterStatus(t, ownDetailResp, http.StatusOK)
+}
+
+func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+		"title":       "creator-marker",
+		"description": "creator marker challenge",
+		"category":    model.DimensionWeb,
+		"difficulty":  model.ChallengeDifficultyEasy,
+		"points":      100,
+		"image_id":    env.image.ID,
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var challengeData map[string]any
+	decodeFullRouterData(t, resp, &challengeData)
+	if _, ok := challengeData["created_by"]; !ok {
+		t.Fatalf("expected challenge response to include created_by, got %+v", challengeData)
+	}
+
+	challengeIDFloat, ok := challengeData["id"].(float64)
+	if !ok {
+		t.Fatalf("expected numeric challenge id, got %+v", challengeData["id"])
+	}
+
+	var createdBy sql.NullInt64
+	if err := env.db.Raw("SELECT created_by FROM challenges WHERE id = ?", int64(challengeIDFloat)).Scan(&createdBy).Error; err != nil {
+		t.Fatalf("query challenge created_by: %v", err)
+	}
+	if !createdBy.Valid || createdBy.Int64 != env.teacher.ID {
+		t.Fatalf("unexpected created_by=%+v, want %d", createdBy, env.teacher.ID)
 	}
 }
 
@@ -707,6 +835,7 @@ func seedFullRouterData(t *testing.T, env *fullRouterTestEnv) {
 		FlagHash:      flagcrypto.HashStaticFlag("flag{matrix}", salt),
 		FlagPrefix:    "flag",
 		AttachmentURL: "https://example.com/files/matrix.zip",
+		CreatedBy:     &env.teacher.ID,
 	}
 	if err := env.db.Create(env.challenge).Error; err != nil {
 		t.Fatalf("create challenge: %v", err)

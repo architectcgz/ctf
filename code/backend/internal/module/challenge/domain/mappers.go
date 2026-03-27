@@ -63,6 +63,7 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.Challenge
 		AttachmentURL: challenge.AttachmentURL,
 		Hints:         adminHints,
 		Status:        challenge.Status,
+		CreatedBy:     challenge.CreatedBy,
 		CreatedAt:     challenge.CreatedAt,
 		UpdatedAt:     challenge.UpdatedAt,
 	}

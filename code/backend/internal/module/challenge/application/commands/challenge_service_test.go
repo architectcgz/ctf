@@ -24,7 +24,7 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(&dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
 		Title:       "Test Challenge",
 		Description: "Test",
 		Category:    "web",
@@ -39,6 +39,9 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	if resp.Status != model.ChallengeStatusDraft {
 		t.Fatalf("unexpected status: %s", resp.Status)
 	}
+	if resp.CreatedBy == nil || *resp.CreatedBy != 1001 {
+		t.Fatalf("unexpected created_by: %+v", resp.CreatedBy)
+	}
 }
 
 func TestServiceCreateChallengeImageNotFound(t *testing.T) {
@@ -48,7 +51,7 @@ func TestServiceCreateChallengeImageNotFound(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	_, err := service.CreateChallenge(&dto.CreateChallengeReq{
+	_, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
 		ImageID: 999,
 	})
 	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
@@ -63,7 +66,7 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 	imageRepo := challengeinfra.NewImageRepository(db)
 	service := newTestService(repo, imageRepo)
 
-	resp, err := service.CreateChallenge(&dto.CreateChallengeReq{
+	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
 		Title:       "No Target Challenge",
 		Description: "No target required",
 		Category:    "misc",

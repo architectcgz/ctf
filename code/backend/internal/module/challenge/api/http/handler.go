@@ -4,6 +4,7 @@ import (
 	"context"
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 	"os"
@@ -20,7 +21,7 @@ type Handler struct {
 }
 
 type challengeCommandService interface {
-	CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
+	CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
 	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
 	PublishChallenge(id int64) error
@@ -44,7 +45,7 @@ func (h *Handler) CreateChallenge(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateChallenge(&req)
+	resp, err := h.commands.CreateChallenge(authctx.MustCurrentUser(c).UserID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
@@ -110,6 +111,10 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 	if err := c.ShouldBindQuery(&query); err != nil {
 		response.ValidationError(c, err)
 		return
+	}
+	currentUser := authctx.MustCurrentUser(c)
+	if currentUser.Role == model.RoleTeacher {
+		query.CreatedBy = &currentUser.UserID
 	}
 
 	result, err := h.queries.ListChallenges(&query)
