@@ -50,6 +50,7 @@ type ChallengeResp struct {
 	AttachmentURL string                    `json:"attachment_url,omitempty"`
 	Hints         []*ChallengeHintAdminResp `json:"hints,omitempty"`
 	Status        string                    `json:"status"`
+	CreatedBy     *int64                    `json:"created_by,omitempty"`
 	CreatedAt     time.Time                 `json:"created_at"`
 	UpdatedAt     time.Time                 `json:"updated_at"`
 }
@@ -58,6 +59,7 @@ type ChallengeQuery struct {
 	Category   string `form:"category"`
 	Difficulty string `form:"difficulty"`
 	Status     string `form:"status"`
+	CreatedBy  *int64 `form:"created_by"`
 	Keyword    string `form:"keyword"`
 	SortBy     string `form:"sort_by" binding:"omitempty,oneof=created_at difficulty"`
 	Page       int    `form:"page" binding:"omitempty,min=1"`

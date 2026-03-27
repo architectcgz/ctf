@@ -25,7 +25,7 @@ func NewChallengeService(repo challengeports.ChallengeCommandRepository, imageRe
 	}
 }
 
-func (s *ChallengeService) CreateChallenge(req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
+func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
 	if req.ImageID > 0 {
 		if _, err := s.imageRepo.FindByID(req.ImageID); err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -44,6 +44,7 @@ func (s *ChallengeService) CreateChallenge(req *dto.CreateChallengeReq) (*dto.Ch
 		ImageID:       req.ImageID,
 		AttachmentURL: strings.TrimSpace(req.AttachmentURL),
 		Status:        model.ChallengeStatusDraft,
+		CreatedBy:     &actorUserID,
 	}
 
 	hints, err := domain.NormalizeHintModels(req.Hints)

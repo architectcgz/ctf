@@ -35,6 +35,7 @@ type Challenge struct {
 	FlagHash      string         `gorm:"column:flag_hash;size:128"`
 	FlagSalt      string         `gorm:"column:flag_salt;size:64"`
 	FlagPrefix    string         `gorm:"column:flag_prefix;size:32;default:'flag'"`
+	CreatedBy     *int64         `gorm:"column:created_by"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
 	UpdatedAt     time.Time      `gorm:"column:updated_at"`
 	DeletedAt     gorm.DeletedAt `gorm:"column:deleted_at"`

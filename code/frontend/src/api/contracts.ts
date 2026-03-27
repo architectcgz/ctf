@@ -653,6 +653,7 @@ export interface AdminChallengeListItem {
   created_at: ISODateTime
   updated_at?: ISODateTime
   description?: string
+  created_by?: ID
   image_id?: string
   attachment_url?: string
   hints?: AdminChallengeHint[]
