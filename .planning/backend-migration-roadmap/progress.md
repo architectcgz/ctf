@@ -347,3 +347,7 @@
   - `contest` scoreboard repository 已从单文件拆为公共入口、mode-specific 查询分支与 aggregate time parsing support 三段
   - `Repository.FindScoreboardTeamStats` 对外查询接口、AWD/非 AWD 统计行为与时间解析结果保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-domain-split-phase4`：
+  - `contest` AWD domain helper 已从单文件拆为响应映射、check source/result support 与 flag/error support 三段
+  - AWD domain helper 对外函数签名、DTO 映射、check result 规范化与 flag 生成行为保持不变，domain 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
