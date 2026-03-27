@@ -2,19 +2,14 @@ package queries
 
 import (
 	"context"
-	"errors"
 
 	"ctf-platform/internal/dto"
-	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID int64, query *dto.ContestRegistrationQuery) (*dto.PageResult, error) {
-	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
-		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
+	if err := s.ensureContestExists(ctx, contestID); err != nil {
+		return nil, err
 	}
 
 	page := query.Page
@@ -56,29 +51,4 @@ func (s *ParticipationService) ListRegistrations(ctx context.Context, contestID 
 		Page:  page,
 		Size:  size,
 	}, nil
-}
-
-func (s *ParticipationService) ListAnnouncements(ctx context.Context, contestID int64) ([]*dto.ContestAnnouncementResp, error) {
-	if _, err := s.contestRepo.FindByID(ctx, contestID); err != nil {
-		if errors.Is(err, contestdomain.ErrContestNotFound) {
-			return nil, errcode.ErrContestNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	announcements, err := s.repo.ListAnnouncements(ctx, contestID)
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	result := make([]*dto.ContestAnnouncementResp, 0, len(announcements))
-	for _, item := range announcements {
-		result = append(result, &dto.ContestAnnouncementResp{
-			ID:        item.ID,
-			Title:     item.Title,
-			Content:   item.Content,
-			CreatedAt: item.CreatedAt,
-		})
-	}
-	return result, nil
 }
