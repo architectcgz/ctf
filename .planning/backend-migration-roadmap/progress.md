@@ -411,3 +411,7 @@
   - `contest` AWD score recalc 已从单文件拆为入口编排、数据加载与分数写回三段
   - `RecalculateAWDContestTeamScores` 的对外接口、累计计分与 `last_solve_at` 更新行为保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-domain-check-support-split-phase4`：
+  - `contest` AWD domain check support 已从单文件拆为 source 归一化与 check result JSON support 两段
+  - AWD domain helper 的对外函数签名、source 归一化与 check result parse/marshal 行为保持不变，domain 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
