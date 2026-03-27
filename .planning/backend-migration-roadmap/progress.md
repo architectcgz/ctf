@@ -375,3 +375,7 @@
   - `contest` AWD summary support 已从单文件拆为主汇总入口、service 维度汇总与 attack 维度汇总三段
   - AWD round summary 的输出结构、排序与计数逻辑保持不变，queries 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-attack-log-command-split-phase4`：
+  - `contest` AWD attack log command 已从单文件拆为入口编排、事务写入计分与后置同步响应三段
+  - `AWDService.CreateAttackLog` 的对外接口、事务计分与响应行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
