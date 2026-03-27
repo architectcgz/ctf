@@ -351,3 +351,7 @@
   - `contest` AWD domain helper 已从单文件拆为响应映射、check source/result support 与 flag/error support 三段
   - AWD domain helper 对外函数签名、DTO 映射、check result 规范化与 flag 生成行为保持不变，domain 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-submission-submit-split-phase4`：
+  - `contest` submission submit 已从单文件拆为入口编排、前置校验与 incorrect submission 处理三段
+  - `SubmissionService.SubmitFlagInContest` 对外提交接口、rate-limit、错误提交落库与正确提交编排行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
