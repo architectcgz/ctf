@@ -407,3 +407,7 @@
   - `contest` team create command 已从单文件拆为入口编排与邀请码重试创建 support 两段
   - `TeamService.CreateTeam` 的对外接口、冲突错误语义与返回结构保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-score-recalc-split-phase4`：
+  - `contest` AWD score recalc 已从单文件拆为入口编排、数据加载与分数写回三段
+  - `RecalculateAWDContestTeamScores` 的对外接口、累计计分与 `last_solve_at` 更新行为保持不变，infrastructure 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
