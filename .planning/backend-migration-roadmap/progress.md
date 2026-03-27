@@ -419,3 +419,7 @@
   - `contest` AWD score sync support 已从单文件拆为 source 归一化与时间解析两段
   - AWD infrastructure helper 的对外函数签名、source 归一化与时间解析行为保持不变，infrastructure 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-service-check-probe-split-phase4`：
+  - `contest` AWD service check probe 已从单文件拆为入口编排与 probe 聚合/状态归纳两段
+  - `AWDRoundUpdater` 的对外 service check 结果结构、错误码归纳与状态判定行为保持不变，jobs 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
