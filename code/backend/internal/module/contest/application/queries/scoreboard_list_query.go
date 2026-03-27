@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	redislib "github.com/redis/go-redis/v9"
-
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
@@ -115,27 +113,5 @@ func (s *ScoreboardService) getScoreboard(ctx context.Context, contestID int64, 
 			PageSize: pageSize,
 		},
 		Frozen: frozen,
-	}, nil
-}
-
-func (s *ScoreboardService) GetTeamRank(ctx context.Context, contestID, teamID int64) (*dto.TeamRankResp, error) {
-	key := rediskeys.RankContestTeamKey(contestID)
-	score, err := s.redis.ZScore(ctx, key, contestdomain.TeamIDToMember(teamID)).Result()
-	if err != nil {
-		if err == redislib.Nil {
-			return &dto.TeamRankResp{TeamID: teamID, Rank: 0, Score: 0}, nil
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	rank, err := s.redis.ZRevRank(ctx, key, contestdomain.TeamIDToMember(teamID)).Result()
-	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	return &dto.TeamRankResp{
-		TeamID: teamID,
-		Rank:   int(rank) + 1,
-		Score:  score,
 	}, nil
 }
