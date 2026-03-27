@@ -252,3 +252,10 @@
   - `contest` AWD service check command 已从单文件拆为 run checks 与 upsert service check 两段
   - `AWDService` 对外命令接口保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+
+## 2026-03-27
+
+- 完成 `contest-awd-round-support-split-phase3`：
+  - `contest` AWD round support 已从单文件拆为当前轮次解析/物化与 live window/current round id 两段
+  - `AWDService` 对外 round support 行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
