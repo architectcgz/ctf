@@ -355,3 +355,7 @@
   - `contest` submission submit 已从单文件拆为入口编排、前置校验与 incorrect submission 处理三段
   - `SubmissionService.SubmitFlagInContest` 对外提交接口、rate-limit、错误提交落库与正确提交编排行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-current-round-support-split-phase4`：
+  - `contest` AWD current round support 已从单文件拆为入口编排、active round materialize 主路径与 running/redis fallback 三段
+  - `AWDService` 当前轮次解析 helper 的对外函数签名、materialize 与 fallback 行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
