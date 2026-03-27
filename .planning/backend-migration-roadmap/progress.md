@@ -196,3 +196,7 @@
   - `contest` command 主流程已从单文件拆为 create 与 update 两段
   - `ContestService` 对外类型与构造函数保持不变，application 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-scoreboard-admin-split-phase2`：
+  - `contest` scoreboard admin command 已从单文件拆为 score rebuild 与 freeze/unfreeze 两段
+  - `ScoreboardAdminService` 对外类型与构造函数保持不变，application 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
