@@ -236,3 +236,7 @@
   - `contest` AWD check sync 已从单文件拆为入口、service check 编排与写回三段
   - `AWDRoundUpdater` 对外入口方法保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-probe-runtime-split-phase3`：
+  - `contest` AWD probe 已从单文件拆为 probe 结果类型定义与 probe runtime 两段
+  - `AWDRoundUpdater` 对外 probe 行为与结果结构保持不变，jobs 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
