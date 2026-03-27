@@ -307,3 +307,7 @@
   - `contest` team manage command 已从单文件拆为成员离队与队长侧 dismiss/kick 两段
   - `TeamService` 对外命令接口与离队/解散/踢人行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-team-command-handler-split-phase3`：
+  - `contest` team command handler 已从单文件拆为 create/join 与 leave/dismiss/kick 两段
+  - `TeamHandler` 对外路由与响应行为保持不变，HTTP 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
