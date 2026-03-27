@@ -2,12 +2,10 @@ package commands
 
 import (
 	"context"
-	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
-	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -61,30 +59,8 @@ func (s *AWDService) createAttackLog(
 		IsSuccess:      req.IsSuccess,
 		ScoreGained:    scoreGained,
 	}
-	now := time.Now()
-	if err := s.repo.WithinTransaction(ctx, func(txRepo contestports.AWDRepository) error {
-		if err := txRepo.CreateAttackLog(ctx, logRecord); err != nil {
-			return err
-		}
-		if req.IsSuccess {
-			if err := txRepo.ApplyAttackImpactToVictimService(ctx, round.ID, req.VictimTeamID, req.ChallengeID, scoreGained, now); err != nil {
-				return err
-			}
-		}
-		return txRepo.RecalculateContestTeamScores(ctx, contestID)
-	}); err != nil {
+	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
 		return nil, err
 	}
-	if err := s.repo.RebuildContestScoreboardCache(ctx, s.redis, contestID); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	currentRoundID, err := s.resolveCurrentRoundID(ctx, contestID)
-	if err != nil {
-		return nil, err
-	}
-	if err := syncAWDServiceStatusField(ctx, s.redis, contestID, roundID, currentRoundID, req.VictimTeamID, req.ChallengeID, model.AWDServiceStatusCompromised); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	return contestdomain.AWDAttackLogRespFromModel(logRecord, teams[req.AttackerTeamID].Name, teams[req.VictimTeamID].Name), nil
+	return s.buildAttackLogResponse(ctx, contestID, roundID, req, logRecord, teams)
 }
