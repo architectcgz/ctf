@@ -367,6 +367,9 @@ func classifyRouteAccess(method, path string) routeAccessLevel {
 		return routeAccessPublic
 	}
 	if strings.HasPrefix(path, "/api/v1/admin") {
+		if isTeacherAuthoringAdminRoute(path) {
+			return routeAccessTeacher
+		}
 		return routeAccessAdmin
 	}
 	if strings.HasPrefix(path, "/api/v1/teacher") {
@@ -376,6 +379,12 @@ func classifyRouteAccess(method, path string) routeAccessLevel {
 		return routeAccessTeacher
 	}
 	return routeAccessProtected
+}
+
+func isTeacherAuthoringAdminRoute(path string) bool {
+	return strings.HasPrefix(path, "/api/v1/admin/challenges") ||
+		strings.HasPrefix(path, "/api/v1/admin/images") ||
+		strings.HasPrefix(path, "/api/v1/admin/environment-templates")
 }
 
 func isPublicRoute(method, path string) bool {

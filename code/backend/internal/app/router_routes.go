@@ -36,21 +36,21 @@ func routeAudit(recorder auditlog.Recorder, logger *zap.Logger, options middlewa
 	return middleware.Audit(recorder, options, logger)
 }
 
-func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
+func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminRouteDeps) {
 	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
 		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
 	}
 
-	adminOnly.POST("/images",
+	adminAuthoring.POST("/images",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
 			ResourceType: "image",
 		}),
 		deps.challenge.ImageHandler.CreateImage,
 	)
-	adminOnly.GET("/images", deps.challenge.ImageHandler.ListImages)
-	adminOnly.GET("/images/:id", deps.challenge.ImageHandler.GetImage)
-	adminOnly.PUT("/images/:id",
+	adminAuthoring.GET("/images", deps.challenge.ImageHandler.ListImages)
+	adminAuthoring.GET("/images/:id", deps.challenge.ImageHandler.GetImage)
+	adminAuthoring.PUT("/images/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "image",
@@ -58,7 +58,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.ImageHandler.UpdateImage,
 	)
-	adminOnly.DELETE("/images/:id",
+	adminAuthoring.DELETE("/images/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "image",
@@ -67,16 +67,16 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		deps.challenge.ImageHandler.DeleteImage,
 	)
 
-	adminOnly.POST("/challenges",
+	adminAuthoring.POST("/challenges",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
 			ResourceType: "challenge",
 		}),
 		deps.challenge.Handler.CreateChallenge,
 	)
-	adminOnly.GET("/challenges", deps.challenge.Handler.ListChallenges)
-	adminOnly.GET("/challenges/:id", deps.challenge.Handler.GetChallenge)
-	adminOnly.PUT("/challenges/:id",
+	adminAuthoring.GET("/challenges", deps.challenge.Handler.ListChallenges)
+	adminAuthoring.GET("/challenges/:id", deps.challenge.Handler.GetChallenge)
+	adminAuthoring.PUT("/challenges/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge",
@@ -84,7 +84,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.Handler.UpdateChallenge,
 	)
-	adminOnly.DELETE("/challenges/:id",
+	adminAuthoring.DELETE("/challenges/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge",
@@ -92,7 +92,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.Handler.DeleteChallenge,
 	)
-	adminOnly.PUT("/challenges/:id/publish",
+	adminAuthoring.PUT("/challenges/:id/publish",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionAdminOp,
 			ResourceType:    "challenge",
@@ -100,8 +100,8 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.Handler.PublishChallenge,
 	)
-	adminOnly.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetAdmin)
-	adminOnly.PUT("/challenges/:id/writeup",
+	adminAuthoring.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetAdmin)
+	adminAuthoring.PUT("/challenges/:id/writeup",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_writeup",
@@ -109,7 +109,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.WriteupHandler.Upsert,
 	)
-	adminOnly.DELETE("/challenges/:id/writeup",
+	adminAuthoring.DELETE("/challenges/:id/writeup",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge_writeup",
@@ -117,8 +117,8 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.WriteupHandler.Delete,
 	)
-	adminOnly.GET("/challenges/:id/topology", deps.challenge.TopologyHandler.GetChallengeTopology)
-	adminOnly.PUT("/challenges/:id/topology",
+	adminAuthoring.GET("/challenges/:id/topology", deps.challenge.TopologyHandler.GetChallengeTopology)
+	adminAuthoring.PUT("/challenges/:id/topology",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_topology",
@@ -126,7 +126,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.TopologyHandler.SaveChallengeTopology,
 	)
-	adminOnly.DELETE("/challenges/:id/topology",
+	adminAuthoring.DELETE("/challenges/:id/topology",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "challenge_topology",
@@ -134,16 +134,16 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.TopologyHandler.DeleteChallengeTopology,
 	)
-	adminOnly.GET("/environment-templates", deps.challenge.TopologyHandler.ListTemplates)
-	adminOnly.POST("/environment-templates",
+	adminAuthoring.GET("/environment-templates", deps.challenge.TopologyHandler.ListTemplates)
+	adminAuthoring.POST("/environment-templates",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
 			ResourceType: "environment_template",
 		}),
 		deps.challenge.TopologyHandler.CreateTemplate,
 	)
-	adminOnly.GET("/environment-templates/:id", deps.challenge.TopologyHandler.GetTemplate)
-	adminOnly.PUT("/environment-templates/:id",
+	adminAuthoring.GET("/environment-templates/:id", deps.challenge.TopologyHandler.GetTemplate)
+	adminAuthoring.PUT("/environment-templates/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "environment_template",
@@ -151,7 +151,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.TopologyHandler.UpdateTemplate,
 	)
-	adminOnly.DELETE("/environment-templates/:id",
+	adminAuthoring.DELETE("/environment-templates/:id",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionDelete,
 			ResourceType:    "environment_template",
@@ -160,7 +160,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		deps.challenge.TopologyHandler.DeleteTemplate,
 	)
 
-	adminOnly.PUT("/challenges/:id/flag",
+	adminAuthoring.PUT("/challenges/:id/flag",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
 			ResourceType:    "challenge_flag",
@@ -168,7 +168,14 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.challenge.FlagHandler.ConfigureFlag,
 	)
-	adminOnly.GET("/challenges/:id/flag", deps.challenge.FlagHandler.GetFlagConfig)
+	adminAuthoring.GET("/challenges/:id/flag", deps.challenge.FlagHandler.GetFlagConfig)
+}
+
+func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
+	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
+		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
+	}
+
 	adminOnly.GET("/audit-logs", deps.ops.AuditHandler.ListAuditLogs)
 	adminOnly.GET("/dashboard", deps.ops.DashboardHandler.GetDashboard)
 	adminOnly.GET("/cheat-detection", deps.ops.RiskHandler.GetCheatDetection)
