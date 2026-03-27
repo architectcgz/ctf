@@ -228,3 +228,7 @@
   - `contest` AWD service check 结果生成已从单文件拆为结果类型定义与结果生成两段
   - `AWDRoundUpdater` 对外类型与相关返回结构保持不变，jobs 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-round-runtime-split-phase3`：
+  - `contest` AWD round updater 已从单文件拆为类型/启动入口与 runtime 编排两段
+  - `AWDRoundUpdater` 对外类型与构造函数保持不变，jobs 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
