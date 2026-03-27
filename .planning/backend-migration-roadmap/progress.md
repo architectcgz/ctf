@@ -379,3 +379,7 @@
   - `contest` AWD attack log command 已从单文件拆为入口编排、事务写入计分与后置同步响应三段
   - `AWDService.CreateAttackLog` 的对外接口、事务计分与响应行为保持不变，commands 文件边界进一步清晰
   - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
+- 完成 `contest-awd-attack-submit-command-split-phase4`：
+  - `contest` AWD attack submit command 已从单文件拆为入口编排与提交上下文解析/命中判定 support 两段
+  - `AWDService.SubmitAttack` 的对外接口、参数语义与提交流程行为保持不变，commands 文件边界进一步清晰
+  - `contest/...` 与相关 `internal/app` 定向测试覆盖本轮无行为变化拆分
