@@ -82,7 +82,7 @@ async function handleImportChange(event: Event): Promise<void> {
       <div class="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-primary"
+          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
           @click="emit('refresh')"
         >
           <RefreshCw class="h-4 w-4" />
@@ -90,7 +90,7 @@ async function handleImportChange(event: Event): Promise<void> {
         </button>
         <button
           type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-primary"
+          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
           @click="triggerImport"
         >
           <FileUp class="h-4 w-4" />
@@ -117,36 +117,36 @@ async function handleImportChange(event: Event): Promise<void> {
 
     <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
       <div
-        class="rounded-[30px] border border-emerald-500/20 bg-[linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+        class="rounded-[30px] border border-[var(--color-success)]/20 bg-[linear-gradient(145deg,rgba(63,185,80,0.12),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
       >
         <div
-          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/75"
+          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-success)]/75"
         >
           <span>Governance Deck</span>
           <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">实时列表</span>
         </div>
         <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前治理视角</h2>
-        <p class="mt-3 text-sm leading-7 text-emerald-50/80">
+        <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
           先收敛筛选条件，再决定是处理单个账号还是走批量导入，并及时观察当前治理状态。
         </p>
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
           <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">
               当前页用户
             </div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
-            <div class="mt-2 text-sm text-emerald-50/70">当前筛选结果内的本页样本数。</div>
+            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前筛选结果内的本页样本数。</div>
           </div>
           <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">活跃账号</div>
+            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">活跃账号</div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ activeCount }}</div>
-            <div class="mt-2 text-sm text-emerald-50/70">当前页处于 active 状态的用户数。</div>
+            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前页处于 active 状态的用户数。</div>
           </div>
           <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-emerald-100/60">教师角色</div>
+            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">教师角色</div>
             <div class="mt-2 text-2xl font-semibold text-white">{{ teacherCount }}</div>
-            <div class="mt-2 text-sm text-emerald-50/70">用于快速判断教学侧用户分布。</div>
+            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">用于快速判断教学侧用户分布。</div>
           </div>
         </div>
       </div>
@@ -193,7 +193,7 @@ async function handleImportChange(event: Event): Promise<void> {
         >
           <template #header>
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]"
             >
               <ShieldCheck class="h-5 w-5" />
             </div>
@@ -207,11 +207,11 @@ async function handleImportChange(event: Event): Promise<void> {
         <SectionCard title="筛选与导入" subtitle="先收敛治理视角，再做单个用户或批量动作。">
           <div class="grid gap-4">
             <label class="space-y-2">
-              <span class="text-sm text-slate-300">关键词</span>
+              <span class="text-sm text-[var(--color-text-secondary)]">关键词</span>
               <input
                 :value="keyword"
                 type="text"
-                class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                 placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
                 @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
               />
@@ -219,22 +219,22 @@ async function handleImportChange(event: Event): Promise<void> {
 
             <div class="grid gap-4 md:grid-cols-2">
               <label class="space-y-2">
-                <span class="text-sm text-slate-300">学生学号</span>
+                <span class="text-sm text-[var(--color-text-secondary)]">学生学号</span>
                 <input
                   :value="studentNo"
                   type="text"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   placeholder="按学号精确筛选"
                   @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
                 />
               </label>
 
               <label class="space-y-2">
-                <span class="text-sm text-slate-300">教师工号</span>
+                <span class="text-sm text-[var(--color-text-secondary)]">教师工号</span>
                 <input
                   :value="teacherNo"
                   type="text"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   placeholder="按工号精确筛选"
                   @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
                 />
@@ -243,10 +243,10 @@ async function handleImportChange(event: Event): Promise<void> {
 
             <div class="grid gap-4 md:grid-cols-2">
               <label class="space-y-2">
-                <span class="text-sm text-slate-300">角色</span>
+                <span class="text-sm text-[var(--color-text-secondary)]">角色</span>
                 <select
                   :value="roleFilter"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   @change="
                     emit(
                       'updateRoleFilter',
@@ -262,10 +262,10 @@ async function handleImportChange(event: Event): Promise<void> {
               </label>
 
               <label class="space-y-2">
-                <span class="text-sm text-slate-300">状态</span>
+                <span class="text-sm text-[var(--color-text-secondary)]">状态</span>
                 <select
                   :value="statusFilter"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   @change="
                     emit(
                       'updateStatusFilter',
@@ -286,21 +286,21 @@ async function handleImportChange(event: Event): Promise<void> {
 
         <SectionCard title="导入回执" subtitle="查看最近一次 CSV 导入结果。">
           <div class="rounded-2xl border border-border bg-surface-alt/60 p-5">
-            <p class="text-sm font-medium text-slate-100">CSV 格式</p>
-            <p class="mt-2 text-sm leading-6 text-slate-400">
+            <p class="text-sm font-medium text-[var(--color-text-primary)]">CSV 格式</p>
+            <p class="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
               按列顺序上传：`username,password,email,class_name,role,status,student_no,teacher_no,name`。首行可带表头；已存在用户名会执行更新。
             </p>
           </div>
 
           <div
             v-if="importResult"
-            class="mt-4 rounded-2xl border border-border bg-surface px-4 py-4 text-sm text-slate-300"
+            class="mt-4 rounded-2xl border border-border bg-surface px-4 py-4 text-sm text-[var(--color-text-secondary)]"
           >
             <p>
               创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
               {{ importResult.failed }}
             </p>
-            <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-rose-300">
+            <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
               <li
                 v-for="item in importResult.errors.slice(0, 5)"
                 :key="`${item.row}-${item.message}`"
@@ -348,15 +348,15 @@ async function handleImportChange(event: Event): Promise<void> {
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <p class="font-semibold text-slate-100">{{ user.name || user.username }}</p>
+                  <p class="font-semibold text-[var(--color-text-primary)]">{{ user.name || user.username }}</p>
                   <span
-                    class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-slate-200"
+                    class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-[var(--color-text-primary)]"
                     >{{ user.status }}</span
                   >
                 </div>
-                <p class="mt-1 text-sm text-slate-400">@{{ user.username }}</p>
-                <p class="mt-2 text-sm text-slate-400">{{ user.email || '未填写邮箱' }}</p>
-                <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                <p class="mt-1 text-sm text-[var(--color-text-muted)]">@{{ user.username }}</p>
+                <p class="mt-2 text-sm text-[var(--color-text-muted)]">{{ user.email || '未填写邮箱' }}</p>
+                <div class="mt-3 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
                   <span class="rounded-full border border-border px-3 py-1">
                     学号：{{ user.student_no || '未设置' }}
                   </span>
@@ -365,7 +365,7 @@ async function handleImportChange(event: Event): Promise<void> {
                   </span>
                 </div>
               </div>
-              <div class="text-right text-sm text-slate-400">
+              <div class="text-right text-sm text-[var(--color-text-muted)]">
                 <div>{{ user.class_name || '未分配班级' }}</div>
                 <div class="mt-1">{{ new Date(user.created_at).toLocaleString('zh-CN') }}</div>
               </div>
@@ -385,14 +385,14 @@ async function handleImportChange(event: Event): Promise<void> {
               <div class="flex gap-2">
                 <button
                   type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-sm text-slate-100 transition hover:border-primary"
+                  class="rounded-xl border border-border px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
                   @click="emit('openEditDialog', user)"
                 >
                   编辑
                 </button>
                 <button
                   type="button"
-                  class="rounded-xl border border-rose-500/30 px-3 py-1.5 text-sm text-rose-300 transition hover:bg-rose-500/10"
+                  class="rounded-xl border border-[var(--color-danger)]/30 px-3 py-1.5 text-sm text-[var(--color-danger)] transition hover:bg-[var(--color-danger)]/10"
                   @click="emit('deleteUser', user.id)"
                 >
                   删除
@@ -403,13 +403,13 @@ async function handleImportChange(event: Event): Promise<void> {
 
           <AppCard variant="panel" accent="neutral">
             <div
-              class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between"
+              class="flex flex-col gap-3 text-sm text-[var(--color-text-muted)] sm:flex-row sm:items-center sm:justify-between"
             >
               <span>共 {{ total }} 个用户</span>
               <div class="flex items-center gap-2">
                 <button
                   type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="page <= 1"
                   @click="emit('changePage', page - 1)"
                 >
@@ -418,7 +418,7 @@ async function handleImportChange(event: Event): Promise<void> {
                 <span>{{ page }} / {{ totalPages }}</span>
                 <button
                   type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+                  class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="page >= totalPages"
                   @click="emit('changePage', page + 1)"
                 >

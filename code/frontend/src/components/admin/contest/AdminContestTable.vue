@@ -34,7 +34,7 @@ function formatTime(value: string): string {
     <div class="overflow-hidden rounded-2xl border border-border">
       <table class="min-w-full divide-y divide-border">
         <thead class="bg-surface-alt/70">
-          <tr class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <tr class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
             <th class="px-4 py-3">竞赛</th>
             <th class="px-4 py-3">模式</th>
             <th class="px-4 py-3">状态</th>
@@ -50,13 +50,13 @@ function formatTime(value: string): string {
           >
             <td class="px-4 py-4 align-top">
               <div class="space-y-1">
-                <p class="font-medium text-slate-100">{{ contest.title }}</p>
-                <p class="text-sm text-slate-400">
+                <p class="font-medium text-[var(--color-text-primary)]">{{ contest.title }}</p>
+                <p class="text-sm text-[var(--color-text-muted)]">
                   {{ contest.description || '当前未填写竞赛描述。' }}
                 </p>
               </div>
             </td>
-            <td class="px-4 py-4 align-top text-sm text-slate-300">
+            <td class="px-4 py-4 align-top text-sm text-[var(--color-text-secondary)]">
               {{ getModeLabel(contest.mode) }}
             </td>
             <td class="px-4 py-4 align-top">
@@ -67,14 +67,14 @@ function formatTime(value: string): string {
                 {{ getStatusLabel(contest.status) }}
               </span>
             </td>
-            <td class="px-4 py-4 align-top text-sm text-slate-300">
+            <td class="px-4 py-4 align-top text-sm text-[var(--color-text-secondary)]">
               <p>{{ formatTime(contest.starts_at) }}</p>
-              <p class="mt-1 text-slate-500">至 {{ formatTime(contest.ends_at) }}</p>
+              <p class="mt-1 text-[var(--color-text-muted)]">至 {{ formatTime(contest.ends_at) }}</p>
             </td>
             <td class="px-4 py-4 align-top">
               <button
                 type="button"
-                class="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-slate-100 transition hover:border-primary hover:text-primary"
+                class="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary hover:text-primary"
                 @click="emit('edit', contest)"
               >
                 编辑
@@ -85,12 +85,12 @@ function formatTime(value: string): string {
       </table>
     </div>
 
-    <div class="flex flex-col gap-3 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+    <div class="flex flex-col gap-3 text-sm text-[var(--color-text-muted)] sm:flex-row sm:items-center sm:justify-between">
       <span>共 {{ total }} 场竞赛</span>
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+          class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
           :disabled="page <= 1"
           @click="emit('changePage', page - 1)"
         >
@@ -99,7 +99,7 @@ function formatTime(value: string): string {
         <span>{{ page }} / {{ totalPages }}</span>
         <button
           type="button"
-          class="rounded-xl border border-border px-3 py-1.5 text-slate-200 transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
+          class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
           :disabled="page >= totalPages"
           @click="emit('changePage', page + 1)"
         >

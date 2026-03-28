@@ -44,14 +44,14 @@ const statusClass = computed(() => {
   if (!props.instance) return 'text-[var(--color-text-muted)]'
 
   const classes: Record<InstanceStatus, string> = {
-    pending: 'text-amber-400',
-    creating: 'text-amber-400',
-    running: 'text-emerald-400',
+    pending: 'text-[var(--color-warning)]',
+    creating: 'text-[var(--color-warning)]',
+    running: 'text-[var(--color-success)]',
     expired: 'text-[var(--color-text-muted)]',
-    destroying: 'text-amber-400',
+    destroying: 'text-[var(--color-warning)]',
     destroyed: 'text-[var(--color-text-muted)]',
-    failed: 'text-rose-400',
-    crashed: 'text-rose-400',
+    failed: 'text-[var(--color-danger)]',
+    crashed: 'text-[var(--color-danger)]',
   }
   return classes[props.instance.status]
 })
@@ -97,7 +97,7 @@ const remainingExtendsLabel = computed(() => {
     <div v-else-if="instance" class="mt-5 space-y-5">
       <div class="rounded-xl bg-[var(--color-bg-base)] p-4">
         <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Remaining</div>
-        <div class="mt-2 text-2xl font-semibold" :class="isUrgent ? 'text-amber-300' : 'text-[var(--color-text-primary)]'">
+        <div class="mt-2 text-2xl font-semibold" :class="isUrgent ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-primary)]'">
           {{ remainingLabel }}
         </div>
         <div class="mt-2 text-xs text-[var(--color-text-secondary)]">
@@ -137,7 +137,7 @@ const remainingExtendsLabel = computed(() => {
         <div class="grid grid-cols-2 gap-3">
           <button
             type="button"
-            class="rounded-xl border border-sky-400/40 bg-sky-500/12 px-4 py-3 text-sm font-medium text-sky-950 transition-colors hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-base)] disabled:text-[var(--color-text-muted)]"
+            class="rounded-xl border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/10 px-4 py-3 text-sm font-medium text-[var(--color-primary-hover)] transition-colors hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-base)] disabled:text-[var(--color-text-muted)]"
             :disabled="!canExtend || extending"
             @click="emit('extend')"
           >
@@ -145,7 +145,7 @@ const remainingExtendsLabel = computed(() => {
           </button>
           <button
             type="button"
-            class="rounded-xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+            class="rounded-xl border border-[var(--color-danger)]/25 bg-[var(--color-danger)]/10 px-4 py-3 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/20 disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="destroying"
             @click="emit('destroy')"
           >
@@ -169,7 +169,7 @@ const remainingExtendsLabel = computed(() => {
       >
         {{ creating ? '正在创建实例...' : '启动靶机' }}
       </button>
-      <div v-else class="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+      <div v-else class="rounded-xl border border-[var(--color-success)]/25 bg-[var(--color-success)]/10 px-4 py-3 text-sm text-[var(--color-success)]">
         当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。
       </div>
     </div>

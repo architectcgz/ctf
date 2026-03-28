@@ -14,14 +14,14 @@
 
     <div
       v-if="loading"
-      class="py-8 text-center text-gray-500"
+      class="py-8 text-center text-[var(--color-text-muted)]"
     >
       加载中...
     </div>
 
     <div
       v-else-if="instances.length === 0"
-      class="text-center text-gray-500 py-8"
+      class="text-center text-[var(--color-text-muted)] py-8"
     >
       暂无运行中的实例
     </div>
@@ -57,7 +57,7 @@
               >
                 {{ formatCountdown(instance.expires_at) }}
               </div>
-              <div class="text-xs text-gray-500">
+              <div class="text-xs text-[var(--color-text-muted)]">
                 剩余时间
               </div>
             </div>
@@ -68,7 +68,7 @@
             class="space-y-2"
           >
             <div class="text-sm">
-              <span class="text-gray-600">访问地址：</span>
+              <span class="text-[var(--color-text-secondary)]">访问地址：</span>
               <button
                 type="button"
                 class="text-primary hover:underline"
@@ -85,7 +85,7 @@
               size="small"
               type="primary"
               plain
-              class="!border-sky-300 !bg-sky-50 !text-sky-900 hover:!bg-sky-100"
+              class="!border-[var(--color-primary)] !bg-[var(--color-primary-soft)] !text-[var(--color-primary-hover)] hover:!bg-[var(--color-primary-soft)]"
               @click="emit('extend', instance.id)"
             >
               延时 (剩余 {{ instance.remaining_extends }} 次)
@@ -150,10 +150,10 @@ function getTimeColor(expiresAt: string): string {
   const expires = new Date(expiresAt).getTime()
   const diff = expires - now.value
 
-  if (diff <= 0) return 'text-gray-500'
-  if (diff < 300000) return 'text-red-600'
-  if (diff < 600000) return 'text-orange-600'
-  return 'text-green-600'
+  if (diff <= 0) return 'text-[var(--color-text-muted)]'
+  if (diff < 300000) return 'text-[var(--color-danger)]'
+  if (diff < 600000) return 'text-[var(--color-warning)]'
+  return 'text-[var(--color-success)]'
 }
 
 function checkExpiringSoon() {

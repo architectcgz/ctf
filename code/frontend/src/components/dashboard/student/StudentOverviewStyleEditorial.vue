@@ -217,7 +217,7 @@ function timelineStatus(eventType: string): string {
             class="journal-rec-item flex w-full items-start gap-4 rounded-[18px] border px-4 py-4 text-left transition"
             @click="emit('openChallenge', item.challenge_id)"
           >
-            <div class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200/80 bg-slate-50 text-sm font-semibold text-slate-700 tech-font">
+            <div class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font">
               #{{ item.challenge_id }}
             </div>
             <div class="min-w-0 flex-1">
@@ -238,7 +238,7 @@ function timelineStatus(eventType: string): string {
                 <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
               </div>
               <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
-              <div class="mt-3 tech-font text-xs text-slate-500">flag{focus-{{ item.category }}-track}</div>
+              <div class="mt-3 tech-font text-xs text-[var(--color-text-muted)]">flag{focus-{{ item.category }}-track}</div>
             </div>
           </button>
         </div>

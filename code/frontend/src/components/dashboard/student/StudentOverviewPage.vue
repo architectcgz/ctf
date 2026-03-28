@@ -153,13 +153,13 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
                 <span
                   v-for="item in weakDimensions.slice(0, 3)"
                   :key="item"
-                  class="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200"
+                  class="rounded-full border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 px-3 py-1 text-xs font-medium text-[var(--color-warning)]"
                 >
                   {{ item }}
                 </span>
                 <span
                   v-if="weakDimensions.length === 0"
-                  class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200"
+                  class="rounded-full border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 px-3 py-1 text-xs font-medium text-[var(--color-success)]"
                 >
                   结构均衡
                 </span>
@@ -167,7 +167,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
             </AppCard>
             <AppCard variant="action" accent="primary">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <Radar class="h-4 w-4 text-sky-300" />
+                <Radar class="h-4 w-4 text-[var(--color-primary-hover)]" />
                 动态概览
               </div>
               <div class="mt-3 text-2xl font-semibold text-text-primary">{{ timeline.length }}</div>
@@ -175,7 +175,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
             </AppCard>
             <AppCard variant="action" accent="violet">
               <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <Sparkles class="h-4 w-4 text-fuchsia-300" />
+                <Sparkles class="h-4 w-4 text-[var(--color-cat-reverse)]" />
                 训练建议
               </div>
               <div class="mt-3 text-2xl font-semibold text-text-primary">{{ recommendations.length }}</div>

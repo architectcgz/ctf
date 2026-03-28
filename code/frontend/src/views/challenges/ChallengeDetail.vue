@@ -25,18 +25,18 @@
               <span
                 v-for="tag in challenge.tags"
                 :key="tag"
-                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-200"
+                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-[var(--color-text-primary)]"
               >
                 {{ tag }}
               </span>
             </div>
           </div>
-          <div class="rounded-xl border border-cyan-200/12 bg-slate-950/45 px-4 py-3 text-left lg:min-w-[148px] lg:text-right">
-            <div class="text-[11px] uppercase tracking-[0.22em] text-slate-200">Score</div>
-            <div class="mt-1 font-mono text-2xl font-bold text-white">{{ challenge.points }}<span class="ml-1 text-lg text-cyan-200">pts</span></div>
+          <div class="rounded-xl border border-[var(--color-border-muted)] bg-[var(--color-bg-elevated)]/45 px-4 py-3 text-left lg:min-w-[148px] lg:text-right">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-primary)]">Score</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-[var(--color-text-primary)]">{{ challenge.points }}<span class="ml-1 text-lg text-[var(--color-text-secondary)]">pts</span></div>
             <span
               v-if="challenge.is_solved"
-              class="mt-3 inline-flex rounded-full bg-emerald-500/18 px-3 py-1 text-sm font-medium text-emerald-200"
+              class="mt-3 inline-flex rounded-full bg-[var(--color-success)]/18 px-3 py-1 text-sm font-medium text-[var(--color-success)]"
             >
               已完成 ✓
             </span>
@@ -51,7 +51,7 @@
               <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">挑战描述</h2>
               <button
                 :disabled="writeupLoading"
-                class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d] disabled:cursor-not-allowed disabled:opacity-50"
+                class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
                 @click="toggleWriteup"
               >
                 {{ writeupLoading ? '加载题解中...' : writeupVisible ? '收起题解' : '查看题解' }}
@@ -60,7 +60,7 @@
             <div v-html="sanitizedDescription" class="prose prose-invert max-w-none text-[var(--color-text-secondary)]"></div>
             <button
               v-if="challenge.attachment_url"
-              class="mt-4 rounded-lg bg-[#21262d] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#30363d]"
+              class="mt-4 rounded-lg bg-[var(--color-bg-elevated)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-border-default)]"
               @click="downloadAttachment"
             >
               下载附件
@@ -75,7 +75,7 @@
               </div>
               <span
                 v-if="challenge.is_solved"
-                class="rounded-full bg-emerald-500/18 px-3 py-1 text-xs font-medium text-emerald-300"
+                class="rounded-full bg-[var(--color-success)]/18 px-3 py-1 text-xs font-medium text-[var(--color-success)]"
               >
                 已通过
               </span>
@@ -135,7 +135,7 @@
                   </button>
                   <span
                     v-else
-                    class="rounded bg-emerald-500/20 px-3 py-1 text-xs font-medium text-emerald-500"
+                    class="rounded bg-[var(--color-success)]/20 px-3 py-1 text-xs font-medium text-[var(--color-success)]"
                   >
                     已解锁
                   </span>
@@ -167,7 +167,7 @@
             </div>
             <div
               v-if="writeup.requires_spoiler_warning"
-              class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300"
+              class="mt-4 rounded-lg border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-4 py-3 text-sm text-[var(--color-warning)]"
             >
               你尚未完成该题。以下内容可能直接暴露解题思路，请谨慎阅读。
             </div>
@@ -195,7 +195,7 @@
           />
           <section
             v-else
-            class="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5 text-sm text-emerald-200"
+            class="rounded-2xl border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 p-5 text-sm text-[var(--color-success)]"
           >
             该题目不需要靶机，可直接分析题面并提交 Flag。
           </section>

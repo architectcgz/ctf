@@ -81,7 +81,7 @@ const primaryStats = computed(() => [
               <component :is="item.icon" class="h-5 w-5" />
             </div>
           </div>
-          <p class="mt-3 text-sm leading-6 text-slate-300/78">{{ item.description }}</p>
+          <p class="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]/78">{{ item.description }}</p>
         </article>
       </div>
     </section>
@@ -92,9 +92,9 @@ const primaryStats = computed(() => [
         :key="item.label"
         class="command-metric rounded-[22px] border px-5 py-4"
       >
-        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">{{ item.label }}</div>
+        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-text-muted)]">{{ item.label }}</div>
         <div class="mt-3 text-[30px] font-semibold tracking-tight text-white">{{ item.value }}</div>
-        <div class="mt-2 text-sm text-slate-300/72">{{ item.hint }}</div>
+        <div class="mt-2 text-sm text-[var(--color-text-secondary)]/72">{{ item.hint }}</div>
       </article>
     </section>
 
@@ -104,12 +104,12 @@ const primaryStats = computed(() => [
           <div>
             <div class="text-[11px] font-semibold uppercase tracking-[0.26em] text-cyan-100/62">Priority Queue</div>
             <h3 class="mt-2 text-2xl font-semibold text-white">优先训练队列</h3>
-            <p class="mt-2 text-sm leading-6 text-slate-300/76">保持同一份推荐逻辑，只把展示做成战情卡片。</p>
+            <p class="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]/76">保持同一份推荐逻辑，只把展示做成战情卡片。</p>
           </div>
           <ShieldAlert class="hidden h-10 w-10 text-cyan-100/72 md:block" />
         </div>
 
-        <div v-if="quickRecommendations.length === 0" class="mt-6 rounded-[22px] border border-dashed border-white/12 px-4 py-10 text-center text-sm text-slate-300/72">
+        <div v-if="quickRecommendations.length === 0" class="mt-6 rounded-[22px] border border-dashed border-white/12 px-4 py-10 text-center text-sm text-[var(--color-text-secondary)]/72">
           当前没有推荐题目，直接去挑战列表挑一道新题即可。
         </div>
 
@@ -128,13 +128,13 @@ const primaryStats = computed(() => [
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div class="text-base font-semibold text-white">{{ item.title }}</div>
-                  <div class="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{{ item.category }}</div>
+                  <div class="mt-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{{ item.category }}</div>
                 </div>
                 <span class="rounded-full px-2.5 py-1 text-xs font-medium" :class="difficultyClass(item.difficulty)">
                   {{ difficultyLabel(item.difficulty) }}
                 </span>
               </div>
-              <p class="mt-3 text-sm leading-6 text-slate-300/76">{{ item.reason }}</p>
+              <p class="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]/76">{{ item.reason }}</p>
             </div>
             <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-cyan-100/78" />
           </button>
@@ -151,18 +151,18 @@ const primaryStats = computed(() => [
             <span
               v-for="item in weakDimensions.slice(0, 4)"
               :key="item"
-              class="rounded-full border border-amber-400/22 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-100"
+              class="rounded-full border border-[var(--color-warning)]/22 bg-[var(--color-warning)]/10 px-3 py-1 text-xs font-medium text-[var(--color-warning)]"
             >
               {{ item }}
             </span>
             <span
               v-if="weakDimensions.length === 0"
-              class="rounded-full border border-emerald-400/22 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100"
+              class="rounded-full border border-[var(--color-success)]/22 bg-[var(--color-success)]/10 px-3 py-1 text-xs font-medium text-[var(--color-success)]"
             >
               结构均衡
             </span>
           </div>
-          <p class="mt-4 text-sm leading-6 text-slate-300/74">适合在继续训练前快速决定今天先解哪一类题。</p>
+          <p class="mt-4 text-sm leading-6 text-[var(--color-text-secondary)]/74">适合在继续训练前快速决定今天先解哪一类题。</p>
         </article>
 
         <article class="command-panel rounded-[28px] border px-6 py-6">
@@ -171,10 +171,10 @@ const primaryStats = computed(() => [
               <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/62">Recent Signal</div>
               <h3 class="mt-2 text-xl font-semibold text-white">近期速览</h3>
             </div>
-            <div class="text-sm text-slate-400">{{ timeline.length }} 条</div>
+            <div class="text-sm text-[var(--color-text-muted)]">{{ timeline.length }} 条</div>
           </div>
 
-          <div v-if="recentTimeline.length === 0" class="mt-5 rounded-[22px] border border-dashed border-white/12 px-4 py-10 text-center text-sm text-slate-300/72">
+          <div v-if="recentTimeline.length === 0" class="mt-5 rounded-[22px] border border-dashed border-white/12 px-4 py-10 text-center text-sm text-[var(--color-text-secondary)]/72">
             当前还没有训练动态。
           </div>
 
@@ -186,9 +186,9 @@ const primaryStats = computed(() => [
             >
               <div class="flex items-center justify-between gap-3">
                 <div class="text-sm font-medium text-white">{{ event.title }}</div>
-                <div class="text-xs text-slate-400">{{ formatDate(event.created_at) }}</div>
+                <div class="text-xs text-[var(--color-text-muted)]">{{ formatDate(event.created_at) }}</div>
               </div>
-              <div class="mt-2 text-sm leading-6 text-slate-300/74">{{ timelineSummary(event) }}</div>
+              <div class="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]/74">{{ timelineSummary(event) }}</div>
             </article>
           </div>
         </article>

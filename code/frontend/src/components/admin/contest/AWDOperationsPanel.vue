@@ -152,11 +152,11 @@ async function handleCreateAttackLog(payload: {
   <SectionCard title="AWD 运维视图" subtitle="把当前页中的 AWD 赛事切进轮次巡检、服务状态和攻击流水视角。">
     <div class="space-y-6">
       <label class="space-y-2">
-        <span class="text-sm text-slate-300">选择 AWD 赛事</span>
+        <span class="text-sm text-[var(--color-text-secondary)]">选择 AWD 赛事</span>
         <select
           id="awd-contest-selector"
           :value="selectedContestId || ''"
-          class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           :disabled="contests.length === 0"
           @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
         >

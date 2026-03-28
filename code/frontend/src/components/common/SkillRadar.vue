@@ -45,7 +45,7 @@ function ringPoints(scale) {
 </script>
 
 <template>
-  <div class="rounded-2xl border border-cyan-500/10 bg-[var(--color-bg-surface)] p-4">
+  <div class="rounded-2xl border border-[var(--color-primary)]/10 bg-[var(--color-bg-surface)] p-4">
     <svg viewBox="0 0 280 280" class="h-[280px] w-full">
       <polygon
         v-for="scale in rings"

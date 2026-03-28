@@ -126,58 +126,58 @@ function handleSubmit() {
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-attack-team">攻击队伍</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-team">攻击队伍</label>
           <select
             id="awd-attack-team"
             v-model="form.attacker_team_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择攻击队伍</option>
             <option v-for="team in teams" :key="team.id" :value="team.id">
               {{ team.name }}
             </option>
           </select>
-          <p v-if="fieldErrors.attacker_team_id" class="text-xs text-rose-400">{{ fieldErrors.attacker_team_id }}</p>
+          <p v-if="fieldErrors.attacker_team_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.attacker_team_id }}</p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-victim-team">受害队伍</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-victim-team">受害队伍</label>
           <select
             id="awd-victim-team"
             v-model="form.victim_team_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择受害队伍</option>
             <option v-for="team in teams" :key="team.id" :value="team.id">
               {{ team.name }}
             </option>
           </select>
-          <p v-if="fieldErrors.victim_team_id" class="text-xs text-rose-400">{{ fieldErrors.victim_team_id }}</p>
+          <p v-if="fieldErrors.victim_team_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.victim_team_id }}</p>
         </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-attack-challenge">题目</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-challenge">题目</label>
           <select
             id="awd-attack-challenge"
             v-model="form.challenge_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择题目</option>
             <option v-for="challenge in challengeOptions" :key="challenge.id" :value="challenge.challenge_id">
               {{ getChallengeLabel(challenge) }}
             </option>
           </select>
-          <p v-if="fieldErrors.challenge_id" class="text-xs text-rose-400">{{ fieldErrors.challenge_id }}</p>
+          <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.challenge_id }}</p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-attack-type">攻击类型</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-type">攻击类型</label>
           <select
             id="awd-attack-type"
             v-model="form.attack_type"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="flag_capture">Flag 获取</option>
             <option value="service_exploit">服务利用</option>
@@ -186,24 +186,24 @@ function handleSubmit() {
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="awd-attack-flag">提交 Flag</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-flag">提交 Flag</label>
         <input
           id="awd-attack-flag"
           v-model="form.submitted_flag"
           type="text"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           placeholder="可选，补录 flag_capture 时填写"
         >
       </div>
 
-      <label class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100">
+      <label class="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)]">
         <input v-model="form.is_success" type="checkbox" class="h-4 w-4 rounded border-border">
         <span>本次攻击判定成功</span>
       </label>
-      <p class="text-xs text-slate-400">
+      <p class="text-xs text-[var(--color-text-muted)]">
         人工补录仅进入当前轮复盘记录，不写入正式排行榜与实时竞赛得分。
       </p>
-      <p v-if="!hasTargets" class="text-xs text-amber-300">
+      <p v-if="!hasTargets" class="text-xs text-[var(--color-warning)]">
         至少需要 2 支队伍且已关联题目后，才能补录攻击日志。
       </p>
     </form>
@@ -212,7 +212,7 @@ function handleSubmit() {
       <div class="flex items-center justify-end gap-2">
         <button
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-slate-200 transition hover:border-primary"
+          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
           @click="closeDialog"
         >
           取消

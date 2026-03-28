@@ -133,8 +133,8 @@ const {
               class="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]"
               :class="
                 hasWriteup
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                  : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                  ? 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                  : 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
               "
             >
               {{ hasWriteup ? '已存在题解' : '尚未创建' }}

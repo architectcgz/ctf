@@ -102,46 +102,46 @@ function handleSubmit() {
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-username">用户名</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-username">用户名</label>
           <input
             id="user-username"
             v-model="localDraft.username"
             type="text"
             :disabled="mode === 'edit'"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="例如：alice"
           />
-          <p v-if="fieldErrors.username" class="text-xs text-rose-400">
+          <p v-if="fieldErrors.username" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.username }}
           </p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-name">姓名</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-name">姓名</label>
           <input
             id="user-name"
             v-model="localDraft.name"
             type="text"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             placeholder="例如：Alice Zhang"
           />
-          <p v-if="fieldErrors.name" class="text-xs text-rose-400">
+          <p v-if="fieldErrors.name" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.name }}
           </p>
         </div>
 
         <div class="space-y-2 sm:col-span-2">
-          <label class="text-sm font-medium text-slate-200" for="user-password">
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-password">
             {{ mode === 'create' ? '初始密码' : '重置密码（可选）' }}
           </label>
           <input
             id="user-password"
             v-model="localDraft.password"
             type="password"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             :placeholder="mode === 'create' ? '至少 8 位' : '留空则保持不变'"
           />
-          <p v-if="fieldErrors.password" class="text-xs text-rose-400">
+          <p v-if="fieldErrors.password" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.password }}
           </p>
         </div>
@@ -149,20 +149,20 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-email">邮箱</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-email">邮箱</label>
           <input
             id="user-email"
             v-model="localDraft.email"
             type="email"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             placeholder="user@example.com"
           />
-          <p v-if="fieldErrors.email" class="text-xs text-rose-400">{{ fieldErrors.email }}</p>
+          <p v-if="fieldErrors.email" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.email }}</p>
         </div>
 
         <div class="space-y-2">
           <label
-            class="text-sm font-medium text-slate-200"
+            class="text-sm font-medium text-[var(--color-text-primary)]"
             :for="localDraft.role === 'teacher' ? 'user-teacher-no' : 'user-student-no'"
           >
             {{ localDraft.role === 'teacher' ? '教师工号' : '学生学号' }}
@@ -171,7 +171,7 @@ function handleSubmit() {
             :id="localDraft.role === 'teacher' ? 'user-teacher-no' : 'user-student-no'"
             :value="localDraft.role === 'teacher' ? localDraft.teacher_no : localDraft.student_no"
             type="text"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             :placeholder="localDraft.role === 'teacher' ? '例如：T2024001' : '例如：20240001'"
             @input="
               localDraft.role === 'teacher'
@@ -184,12 +184,12 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-class-name">班级</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-class-name">班级</label>
           <input
             id="user-class-name"
             v-model="localDraft.class_name"
             type="text"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             placeholder="例如：Class A"
           />
         </div>
@@ -197,27 +197,27 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-role">角色</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-role">角色</label>
           <select
             id="user-role"
             v-model="localDraft.role"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option v-for="role in USER_ROLES" :key="role" :value="role">
               {{ role }}
             </option>
           </select>
-          <p class="text-xs text-slate-500">
+          <p class="text-xs text-[var(--color-text-muted)]">
             `student` 仅保留学号，`teacher` 仅保留工号，其他角色会忽略这两个字段。
           </p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="user-status">状态</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-status">状态</label>
           <select
             id="user-status"
             v-model="localDraft.status"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="active">active</option>
             <option value="inactive">inactive</option>
@@ -232,7 +232,7 @@ function handleSubmit() {
       <div class="flex items-center justify-end gap-2">
         <button
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-slate-200 transition hover:border-primary"
+          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
           @click="closeDialog"
         >
           取消

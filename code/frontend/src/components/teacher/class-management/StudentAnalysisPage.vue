@@ -180,7 +180,7 @@ const emit = defineEmits<{
             <AppCard as="button" variant="action" accent="warning" interactive class="text-left" @click="emit('openReportExport')">
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/16 bg-amber-500/10 text-amber-300">
+                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-warning)]/16 bg-[var(--color-warning)]/10 text-[var(--color-warning)]">
                     <FileDown class="h-4 w-4" />
                   </div>
                   <div>
@@ -188,7 +188,7 @@ const emit = defineEmits<{
                     <div class="mt-1 text-sm text-text-secondary">从当前教师路径直接进入报告导出。</div>
                   </div>
                 </div>
-                <ArrowLeftRight class="h-4 w-4 text-amber-300" />
+                <ArrowLeftRight class="h-4 w-4 text-[var(--color-warning)]" />
               </div>
             </AppCard>
           </div>
