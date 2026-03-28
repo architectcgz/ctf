@@ -66,37 +66,11 @@ watch(
   position: relative;
   isolation: isolate;
   min-height: calc(100vh - 5rem);
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 68%, transparent);
-  border-radius: 0;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-bg-surface) 99%, var(--color-bg-base)),
-    color-mix(in srgb, var(--color-bg-base) 100%, var(--color-bg-surface))
-  );
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
-}
-
-.workspace-main > :deep(*) {
-  position: relative;
-  min-height: calc(100vh - 7rem);
-  padding: 1rem;
-}
-
-:global([data-theme='light']) .workspace-main {
-  border-color: rgba(226, 232, 240, 0.78);
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.1);
 }
 
 @media (max-width: 767px) {
   .workspace-main {
     min-height: auto;
-  }
-
-  .workspace-main > :deep(*) {
-    min-height: auto;
-    padding: 0.75rem;
   }
 }
 </style>
