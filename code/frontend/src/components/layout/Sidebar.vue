@@ -108,11 +108,14 @@
         <button
           type="button"
           class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"
-          :class="collapsed ? 'w-12 justify-center px-0' : 'w-full'"
+          :class="collapsed ? 'w-12 justify-center px-0 border-transparent bg-transparent shadow-none' : 'w-full'"
           :title="collapsed ? 'CTF 靶场平台' : undefined"
           @click="emit('toggleCollapse')"
         >
-          <div class="sidebar-brand-mark tech-accent">
+          <div
+            class="sidebar-brand-mark tech-accent"
+            :style="collapsed ? { background: 'transparent', boxShadow: 'none' } : {}"
+          >
             CTF
           </div>
           <div v-if="!collapsed" class="min-w-0">
@@ -127,11 +130,10 @@
         <nav class="space-y-7">
           <section v-for="group in navGroups" :key="group.key" class="space-y-2.5">
             <div
+              v-if="!collapsed"
               class="sidebar-group-title px-2"
-              :class="collapsed ? 'text-center' : ''"
             >
-              <span v-if="!collapsed">{{ group.title }}</span>
-              <span v-else>{{ group.shortTitle }}</span>
+              {{ group.title }}
             </div>
 
             <div class="space-y-1.5">
@@ -477,7 +479,6 @@ async function navigate(item: NavItem): Promise<void> {
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border-default));
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
   font-size: 0.85rem;
   font-weight: 700;
@@ -567,8 +568,8 @@ async function navigate(item: NavItem): Promise<void> {
 
 .sidebar-item-idle:hover .sidebar-item-icon-wrap,
 .sidebar-child-idle:hover .sidebar-item-icon-wrap {
-  border-color: color-mix(in srgb, var(--color-primary) 26%, var(--color-border-default));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .sidebar-item-active,
@@ -583,10 +584,10 @@ async function navigate(item: NavItem): Promise<void> {
 
 .sidebar-item-active .sidebar-item-icon-wrap,
 .sidebar-child-active .sidebar-item-icon-wrap {
-  border-color: color-mix(in srgb, var(--color-primary) 32%, var(--color-border-default));
+  border-color: transparent;
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
   color: var(--color-primary);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  box-shadow: none;
 }
 
 .sidebar-child-list {
