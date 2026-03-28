@@ -2,7 +2,7 @@
   <div class="relative min-h-screen overflow-hidden bg-base text-text-primary">
     <div class="pointer-events-none absolute inset-0">
       <div class="absolute left-[12%] top-[10%] h-64 w-64 rounded-full bg-primary/14 blur-3xl" />
-      <div class="absolute bottom-[12%] right-[8%] h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+      <div class="absolute bottom-[12%] right-[8%] h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
       <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:28px_28px] opacity-30" />
     </div>
     <div class="relative mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 lg:px-8">

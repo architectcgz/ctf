@@ -102,38 +102,38 @@ function handleSubmit() {
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="contest-title">竞赛标题</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-title">竞赛标题</label>
         <input
           id="contest-title"
           v-model="localDraft.title"
           type="text"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           placeholder="例如：2026 春季校园 CTF"
         >
-        <p v-if="fieldErrors.title" class="text-xs text-rose-400">{{ fieldErrors.title }}</p>
+        <p v-if="fieldErrors.title" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.title }}</p>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="contest-mode">竞赛模式</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-mode">竞赛模式</label>
           <select
             id="contest-mode"
             v-model="localDraft.mode"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="fieldLocks.mode"
           >
             <option value="jeopardy">Jeopardy</option>
             <option value="awd">AWD</option>
           </select>
-          <p v-if="fieldLocks.mode" class="text-xs text-slate-500">竞赛进入 draft 之后不再允许修改模式。</p>
+          <p v-if="fieldLocks.mode" class="text-xs text-[var(--color-text-muted)]">竞赛进入 draft 之后不再允许修改模式。</p>
         </div>
 
         <div v-if="mode === 'edit'" class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="contest-status">状态</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-status">状态</label>
           <select
             id="contest-status"
             v-model="localDraft.status"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option
               v-for="option in statusOptions"
@@ -147,54 +147,54 @@ function handleSubmit() {
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="contest-description">竞赛描述</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-description">竞赛描述</label>
         <textarea
           id="contest-description"
           v-model="localDraft.description"
           rows="4"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           placeholder="描述赛制、参赛范围或报名说明。"
         />
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="contest-starts-at">开始时间</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-starts-at">开始时间</label>
           <input
             id="contest-starts-at"
             v-model="localDraft.starts_at"
             type="datetime-local"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="fieldLocks.starts_at"
           >
-          <p v-if="fieldErrors.starts_at" class="text-xs text-rose-400">{{ fieldErrors.starts_at }}</p>
-          <p v-else-if="fieldLocks.starts_at" class="text-xs text-slate-500">报名中、进行中、已结束状态禁止修改开始时间。</p>
+          <p v-if="fieldErrors.starts_at" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.starts_at }}</p>
+          <p v-else-if="fieldLocks.starts_at" class="text-xs text-[var(--color-text-muted)]">报名中、进行中、已结束状态禁止修改开始时间。</p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="contest-ends-at">结束时间</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="contest-ends-at">结束时间</label>
           <input
             id="contest-ends-at"
             v-model="localDraft.ends_at"
             type="datetime-local"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
             :disabled="fieldLocks.ends_at"
           >
-          <p v-if="fieldErrors.ends_at" class="text-xs text-rose-400">{{ fieldErrors.ends_at }}</p>
-          <p v-else-if="fieldLocks.ends_at" class="text-xs text-slate-500">进行中、已结束状态禁止修改结束时间。</p>
+          <p v-if="fieldErrors.ends_at" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.ends_at }}</p>
+          <p v-else-if="fieldLocks.ends_at" class="text-xs text-[var(--color-text-muted)]">进行中、已结束状态禁止修改结束时间。</p>
         </div>
       </div>
     </form>
 
     <template #footer>
       <div class="flex items-center justify-between gap-3">
-        <p class="text-xs text-slate-500">
+        <p class="text-xs text-[var(--color-text-muted)]">
           当前未接入删除接口。若需下线竞赛，请通过状态流转控制访问窗口。
         </p>
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="rounded-xl border border-border px-4 py-2 text-sm text-slate-200 transition hover:border-primary"
+            class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
             @click="closeDialog"
           >
             取消

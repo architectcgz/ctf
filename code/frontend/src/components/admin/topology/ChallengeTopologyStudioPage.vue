@@ -240,7 +240,7 @@ const {
           >
             <template #header>
               <div
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/12 text-amber-300"
+                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
               >
                 <GitBranch class="h-5 w-5" />
               </div>
@@ -313,8 +313,8 @@ const {
                 class="rounded-xl border px-3 py-2 text-sm font-medium transition"
                 :class="
                   interactionMode === 'allow'
-                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-300'
-                    : 'border-border text-text-primary hover:border-emerald-500/60'
+                    ? 'border-[var(--color-success)] bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                    : 'border-border text-text-primary hover:border-[var(--color-success)]/60'
                 "
                 @click="setInteractionMode('allow')"
               >
@@ -367,8 +367,8 @@ const {
               class="mb-4 rounded-2xl border px-4 py-3 text-sm"
               :class="
                 draftValidationIssues.length === 0
-                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
-                  : 'border-amber-500/20 bg-amber-500/10 text-amber-100'
+                  ? 'border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                  : 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
               "
             >
               <div class="font-medium">
@@ -376,7 +376,7 @@ const {
               </div>
               <div
                 v-if="draftValidationIssues.length === 0"
-                class="mt-1 text-xs text-emerald-100/80"
+                class="mt-1 text-xs text-[var(--color-success)]/80"
               >
                 当前草稿的入口、节点、网络和链路引用关系正常。
               </div>

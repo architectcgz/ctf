@@ -48,13 +48,13 @@ function dashboardPath(key: VariantKey): string {
       <div class="max-w-2xl">
         <div class="style-eyebrow">Preview Styles</div>
         <h2 class="mt-2 text-xl font-semibold text-white">同一份学生面板，提供 3 套可直接挑选的 UI 风格</h2>
-        <p class="mt-2 text-sm leading-7 text-slate-300/82">
+        <p class="mt-2 text-sm leading-7 text-[var(--color-text-secondary)]/82">
           当前预览：
           <span class="font-medium text-white">{{ activeVariantSummary?.title }}</span>
           。模块、数据、交互一致，只调整视觉语言与信息编排密度。
         </p>
       </div>
-      <div class="text-xs uppercase tracking-[0.28em] text-slate-400">URL: `dashboard/1..3`</div>
+      <div class="text-xs uppercase tracking-[0.28em] text-[var(--color-text-muted)]">URL: `dashboard/1..3`</div>
     </div>
 
     <div class="mt-5 grid gap-3 lg:grid-cols-3">
@@ -67,14 +67,14 @@ function dashboardPath(key: VariantKey): string {
       >
         <div class="flex items-start justify-between gap-4">
           <div>
-            <div class="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">方案 {{ item.key }}</div>
+            <div class="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--color-text-muted)]">方案 {{ item.key }}</div>
             <div class="mt-2 text-lg font-semibold text-white">{{ item.title }}</div>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/6 text-slate-100">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/12 bg-white/6 text-[var(--color-text-primary)]">
             <component :is="item.icon" class="h-5 w-5" />
           </div>
         </div>
-        <p class="mt-3 text-sm leading-6 text-slate-300/78">{{ item.summary }}</p>
+        <p class="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]/78">{{ item.summary }}</p>
       </RouterLink>
     </div>
   </section>

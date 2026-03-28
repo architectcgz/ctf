@@ -124,42 +124,42 @@ function handleSubmit() {
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-service-team">队伍</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-service-team">队伍</label>
           <select
             id="awd-service-team"
             v-model="form.team_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择队伍</option>
             <option v-for="team in teams" :key="team.id" :value="team.id">
               {{ team.name }}
             </option>
           </select>
-          <p v-if="fieldErrors.team_id" class="text-xs text-rose-400">{{ fieldErrors.team_id }}</p>
+          <p v-if="fieldErrors.team_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.team_id }}</p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-service-challenge">题目</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-service-challenge">题目</label>
           <select
             id="awd-service-challenge"
             v-model="form.challenge_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
             <option value="" disabled>请选择题目</option>
             <option v-for="challenge in challengeOptions" :key="challenge.id" :value="challenge.challenge_id">
               {{ getChallengeLabel(challenge) }}
             </option>
           </select>
-          <p v-if="fieldErrors.challenge_id" class="text-xs text-rose-400">{{ fieldErrors.challenge_id }}</p>
+          <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.challenge_id }}</p>
         </div>
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="awd-service-status">服务状态</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-service-status">服务状态</label>
         <select
           id="awd-service-status"
           v-model="form.service_status"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
         >
           <option value="up">正常</option>
           <option value="down">下线</option>
@@ -168,16 +168,16 @@ function handleSubmit() {
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="awd-service-check-result">检查结果 JSON</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-service-check-result">检查结果 JSON</label>
         <textarea
           id="awd-service-check-result"
           v-model="form.check_result_text"
           rows="6"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           placeholder='{"http_status":200,"latency_ms":38}'
         />
-        <p v-if="fieldErrors.check_result_text" class="text-xs text-rose-400">{{ fieldErrors.check_result_text }}</p>
-        <p v-else-if="!hasTargets" class="text-xs text-amber-300">
+        <p v-if="fieldErrors.check_result_text" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.check_result_text }}</p>
+        <p v-else-if="!hasTargets" class="text-xs text-[var(--color-warning)]">
           当前赛事缺少队伍或题目，暂时无法录入服务检查。
         </p>
       </div>
@@ -187,7 +187,7 @@ function handleSubmit() {
       <div class="flex items-center justify-end gap-2">
         <button
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-slate-200 transition hover:border-primary"
+          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
           @click="closeDialog"
         >
           取消

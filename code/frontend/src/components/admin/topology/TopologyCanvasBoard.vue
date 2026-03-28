@@ -170,16 +170,16 @@ onBeforeUnmount(() => {
       </div>
       <div class="flex flex-wrap gap-2 text-xs">
         <span
-          class="rounded-full border border-slate-500/30 bg-slate-500/10 px-3 py-1 text-slate-200"
+          class="rounded-full border border-[var(--color-text-muted)]/30 bg-[var(--color-text-muted)]/10 px-3 py-1 text-[var(--color-text-primary)]"
         >
           灰线：逻辑连线
         </span>
         <span
-          class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-emerald-200"
+          class="rounded-full border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-3 py-1 text-[var(--color-success)]"
         >
           绿线：allow
         </span>
-        <span class="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-rose-200">
+        <span class="rounded-full border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-3 py-1 text-[var(--color-danger)]">
           红线：deny
         </span>
       </div>
@@ -263,23 +263,23 @@ onBeforeUnmount(() => {
           x="0"
           y="12"
           text-anchor="middle"
-          class="fill-slate-300 text-[10px] uppercase tracking-[0.18em]"
+          class="fill-[var(--color-text-secondary)] text-[10px] uppercase tracking-[0.18em]"
         >
           {{ node.key }}
         </text>
-        <text x="0" y="30" text-anchor="middle" class="fill-slate-400 text-[9px]">
+        <text x="0" y="30" text-anchor="middle" class="fill-[var(--color-text-muted)] text-[9px]">
           {{ node.networks.join(', ') || 'no-network' }}
         </text>
 
         <g v-if="node.isEntry">
           <circle cx="38" cy="-36" r="10" fill="#f59e0b" />
-          <text x="38" y="-32" text-anchor="middle" class="fill-slate-950 text-[9px] font-bold">
+          <text x="38" y="-32" text-anchor="middle" class="fill-[#0f172a] text-[9px] font-bold">
             IN
           </text>
         </g>
         <g v-if="node.injectFlag">
           <circle cx="-38" cy="-36" r="10" fill="#22c55e" />
-          <text x="-38" y="-32" text-anchor="middle" class="fill-slate-950 text-[9px] font-bold">
+          <text x="-38" y="-32" text-anchor="middle" class="fill-[#0f172a] text-[9px] font-bold">
             F
           </text>
         </g>

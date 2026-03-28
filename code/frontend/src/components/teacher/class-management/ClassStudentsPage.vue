@@ -144,7 +144,7 @@ const activeRateText = computed(() => {
             :value="studentNoQuery"
             type="text"
             placeholder="输入学号后实时查询"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
           />
         </label>

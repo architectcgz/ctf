@@ -101,24 +101,24 @@ function handleSubmit() {
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="awd-round-number">轮次编号</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-number">轮次编号</label>
         <input
           id="awd-round-number"
           v-model.number="form.round_number"
           type="number"
           min="1"
           step="1"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
         >
-        <p v-if="fieldErrors.round_number" class="text-xs text-rose-400">{{ fieldErrors.round_number }}</p>
+        <p v-if="fieldErrors.round_number" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.round_number }}</p>
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-slate-200" for="awd-round-status">初始状态</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-status">初始状态</label>
         <select
           id="awd-round-status"
           v-model="form.status"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
         >
           <option value="pending">待开始</option>
           <option value="running">进行中</option>
@@ -128,29 +128,29 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-attack-score">攻击分</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-score">攻击分</label>
           <input
             id="awd-attack-score"
             v-model.number="form.attack_score"
             type="number"
             min="0"
             step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
-          <p v-if="fieldErrors.attack_score" class="text-xs text-rose-400">{{ fieldErrors.attack_score }}</p>
+          <p v-if="fieldErrors.attack_score" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.attack_score }}</p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-slate-200" for="awd-defense-score">防守分</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-defense-score">防守分</label>
           <input
             id="awd-defense-score"
             v-model.number="form.defense_score"
             type="number"
             min="0"
             step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-primary"
+            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
-          <p v-if="fieldErrors.defense_score" class="text-xs text-rose-400">{{ fieldErrors.defense_score }}</p>
+          <p v-if="fieldErrors.defense_score" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.defense_score }}</p>
         </div>
       </div>
     </form>
@@ -160,7 +160,7 @@ function handleSubmit() {
         <button
           id="awd-round-create-cancel"
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-slate-200 transition hover:border-primary"
+          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
           @click="closeDialog"
         >
           取消
