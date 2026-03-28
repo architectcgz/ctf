@@ -34,12 +34,6 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: '仪表盘', icon: 'LayoutDashboard' },
       },
       {
-        path: 'dashboard/:variant(\\d+)',
-        name: 'DashboardVariant',
-        component: () => import('@/views/dashboard/DashboardView.vue'),
-        meta: { requiresAuth: true, title: '仪表盘', icon: 'LayoutDashboard' },
-      },
-      {
         path: 'challenges',
         name: 'Challenges',
         component: () => import('@/views/challenges/ChallengeList.vue'),

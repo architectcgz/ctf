@@ -33,15 +33,12 @@ const recommendations = ref<RecommendationItem[]>([])
 const skillProfile = ref<SkillProfileData | null>(null)
 
 type DashboardPanelKey = 'category' | 'recommendation' | 'timeline' | 'difficulty'
-type DashboardVariantKey = '1' | '2' | '3'
-
 const validPanelKeys = new Set<DashboardPanelKey>([
   'category',
   'recommendation',
   'timeline',
   'difficulty',
 ])
-const validVariantKeys = new Set<DashboardVariantKey>(['1', '2', '3'])
 
 const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
 const weakDimensions = computed(() => getWeakDimensions(skillProfile.value).slice(0, 3))
@@ -84,13 +81,6 @@ const activePanel = computed<DashboardPanelKey | null>(() => {
     return panel as DashboardPanelKey
   }
   return null
-})
-const activeVariant = computed<DashboardVariantKey>(() => {
-  const variant = route.params.variant
-  if (typeof variant === 'string' && validVariantKeys.has(variant as DashboardVariantKey)) {
-    return variant as DashboardVariantKey
-  }
-  return '2'
 })
 const isOverview = computed(() => activePanel.value === null)
 const panelCopyMap: Record<DashboardPanelKey, { title: string; description: string }> = {
@@ -186,7 +176,7 @@ function openChallenge(challengeId: string): void {
 
     <div
       v-if="error"
-      class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600"
+      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
     >
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="loadDashboard">重试</button>
@@ -203,7 +193,6 @@ function openChallenge(challengeId: string): void {
     <template v-else-if="progress">
       <StudentOverviewVariantSwitcher
         v-if="isOverview"
-        :variant="activeVariant"
         :display-name="displayName"
         :class-name="authStore.user?.class_name"
         :progress="progress"
