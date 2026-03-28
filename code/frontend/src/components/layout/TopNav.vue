@@ -4,20 +4,13 @@
       <div class="flex min-w-0 items-center gap-2 md:gap-3">
         <button
           type="button"
-          class="topnav-icon-button md:hidden"
-          aria-label="打开导航"
-          @click="$emit('toggleSidebar')"
-        >
-          <Menu class="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          class="topnav-icon-button hidden md:inline-flex"
+          class="topnav-icon-button"
           :aria-label="sidebarCollapsed ? '展开导航' : '折叠导航'"
-          @click="$emit('toggleCollapse')"
+          @click="isMobile ? $emit('toggleSidebar') : $emit('toggleCollapse')"
         >
-          <PanelLeftClose v-if="!sidebarCollapsed" class="h-4 w-4" />
-          <PanelLeftOpen v-else class="h-4 w-4" />
+          <Menu class="h-4 w-4 md:hidden" />
+          <PanelLeftClose v-if="!sidebarCollapsed" class="hidden h-4 w-4 md:block" />
+          <PanelLeftOpen v-else class="hidden h-4 w-4 md:block" />
         </button>
 
         <div class="topnav-title-block min-w-0">
@@ -56,13 +49,12 @@
           </div>
           <button
             type="button"
-            class="topnav-icon-button h-9 w-9 sm:hidden"
+            class="topnav-icon-button h-9 w-9"
             aria-label="退出登录"
             @click="logout"
           >
             <LogOut class="h-4 w-4" />
           </button>
-          <ElButton class="hidden sm:inline-flex" size="small" type="primary" plain @click="logout">退出</ElButton>
         </div>
       </div>
     </div>
@@ -70,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
@@ -93,6 +85,11 @@ defineEmits<{
 
 const route = useRoute()
 const authStore = useAuthStore()
+
+const isMobile = ref(window.innerWidth < 768)
+function onResize() { isMobile.value = window.innerWidth < 768 }
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
 const { logout } = useAuth()
 const { theme, toggleTheme } = useTheme()
 
