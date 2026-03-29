@@ -39,6 +39,14 @@ type packManifest struct {
 	Flag  struct {
 		Mode string `yaml:"mode"`
 	} `yaml:"flag"`
+	Runtime struct {
+		Type  string `yaml:"type"`
+		Image struct {
+			Ref  string `yaml:"ref"`
+			Name string `yaml:"name"`
+			Tag  string `yaml:"tag"`
+		} `yaml:"image"`
+	} `yaml:"runtime"`
 	Attachments []packAttachment `yaml:"attachments"`
 }
 
@@ -62,6 +70,7 @@ type challengeSpec struct {
 	Difficulty  string
 	Points      int
 	ImageID     int64
+	ImageRef    string
 	Attachment  string
 	Hints       []hintSpec
 	FlagPrefix  string
@@ -102,6 +111,11 @@ func main() {
 	db, err := postgres.Open(cfg.Postgres)
 	if err != nil {
 		panic(fmt.Errorf("open postgres: %w", err))
+	}
+	if getenvBool("CHALLENGE_IMPORT_AUTO_MIGRATE", false) {
+		if err := db.AutoMigrate(&model.Image{}, &model.Challenge{}, &model.ChallengeHint{}); err != nil {
+			panic(fmt.Errorf("auto migrate import schema: %w", err))
+		}
 	}
 
 	packsDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
@@ -181,8 +195,13 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 	created := false
 	publishedNow := false
 	if err := db.Transaction(func(tx *gorm.DB) error {
+		resolvedImageID, err := resolveImportedImageID(tx, spec.Slug, spec.ImageRef)
+		if err != nil {
+			return err
+		}
+
 		var challenge model.Challenge
-		err := tx.Unscoped().
+		err = tx.Unscoped().
 			Where("title = ? AND category = ?", spec.Title, spec.Category).
 			First(&challenge).Error
 
@@ -195,7 +214,7 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 				Category:      spec.Category,
 				Difficulty:    spec.Difficulty,
 				Points:        spec.Points,
-				ImageID:       spec.ImageID,
+				ImageID:       chooseImportedImageID(spec.ImageID, resolvedImageID),
 				AttachmentURL: spec.Attachment,
 				Status:        model.ChallengeStatusDraft,
 				FlagPrefix:    spec.FlagPrefix,
@@ -210,7 +229,9 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 			return fmt.Errorf("find challenge %s: %w", spec.Slug, err)
 		default:
 			imageID := challenge.ImageID
-			if imageID == 0 && spec.ImageID > 0 {
+			if resolvedImageID > 0 {
+				imageID = resolvedImageID
+			} else if imageID == 0 && spec.ImageID > 0 {
 				imageID = spec.ImageID
 			}
 			attachment := challenge.AttachmentURL
@@ -352,11 +373,32 @@ func buildChallengeSpec(packDir string, manifest *packManifest) (*challengeSpec,
 		Difficulty:  difficulty,
 		Points:      points,
 		ImageID:     0,
+		ImageRef:    resolveRuntimeImageRef(manifest),
 		Attachment:  attachmentURL,
 		Hints:       hints,
 		FlagPrefix:  "flag",
 		FlagValue:   flagValue,
 	}, nil
+}
+
+func resolveRuntimeImageRef(manifest *packManifest) string {
+	if manifest == nil || strings.TrimSpace(manifest.Runtime.Type) != "container" {
+		return ""
+	}
+
+	if ref := strings.TrimSpace(manifest.Runtime.Image.Ref); ref != "" {
+		return ref
+	}
+
+	name := strings.TrimSpace(manifest.Runtime.Image.Name)
+	if name == "" {
+		return ""
+	}
+	tag := strings.TrimSpace(manifest.Runtime.Image.Tag)
+	if tag == "" {
+		tag = "latest"
+	}
+	return fmt.Sprintf("%s:%s", name, tag)
 }
 
 func firstAttachmentRelativePath(attachments []packAttachment) string {
@@ -432,6 +474,74 @@ func configureStaticFlag(tx *gorm.DB, challengeID int64, prefix, value string) e
 		return fmt.Errorf("configure static flag for challenge %d: %w", challengeID, err)
 	}
 	return nil
+}
+
+func chooseImportedImageID(specImageID, resolvedImageID int64) int64 {
+	if resolvedImageID > 0 {
+		return resolvedImageID
+	}
+	return specImageID
+}
+
+func resolveImportedImageID(tx *gorm.DB, slug, imageRef string) (int64, error) {
+	ref := strings.TrimSpace(imageRef)
+	if ref == "" {
+		return 0, nil
+	}
+	name, tag, err := splitImageRef(ref)
+	if err != nil {
+		return 0, fmt.Errorf("invalid image ref for %s: %w", slug, err)
+	}
+
+	var image model.Image
+	findErr := tx.Unscoped().
+		Where("name = ? AND tag = ?", name, tag).
+		First(&image).Error
+	switch {
+	case errors.Is(findErr, gorm.ErrRecordNotFound):
+		image = model.Image{
+			Name:        name,
+			Tag:         tag,
+			Description: fmt.Sprintf("Imported from challenge pack %s", slug),
+			Status:      model.ImageStatusAvailable,
+			Size:        0,
+		}
+		if err := tx.Create(&image).Error; err != nil {
+			return 0, fmt.Errorf("create image %s:%s for %s: %w", name, tag, slug, err)
+		}
+		return image.ID, nil
+	case findErr != nil:
+		return 0, fmt.Errorf("find image %s:%s for %s: %w", name, tag, slug, findErr)
+	default:
+		if err := tx.Model(&image).Updates(map[string]any{
+			"status":     model.ImageStatusAvailable,
+			"deleted_at": nil,
+			"updated_at": time.Now(),
+		}).Error; err != nil {
+			return 0, fmt.Errorf("update image %s:%s for %s: %w", name, tag, slug, err)
+		}
+		return image.ID, nil
+	}
+}
+
+func splitImageRef(imageRef string) (string, string, error) {
+	trimmed := strings.TrimSpace(imageRef)
+	if trimmed == "" {
+		return "", "", fmt.Errorf("empty image ref")
+	}
+
+	lastSlash := strings.LastIndex(trimmed, "/")
+	lastColon := strings.LastIndex(trimmed, ":")
+	if lastColon > lastSlash {
+		name := strings.TrimSpace(trimmed[:lastColon])
+		tag := strings.TrimSpace(trimmed[lastColon+1:])
+		if name == "" || tag == "" {
+			return "", "", fmt.Errorf("invalid image ref %q", imageRef)
+		}
+		return name, tag, nil
+	}
+
+	return trimmed, "latest", nil
 }
 
 func normalizeCategory(raw string) string {

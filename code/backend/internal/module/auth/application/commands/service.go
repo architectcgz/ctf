@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -46,7 +47,7 @@ func (s *service) Register(ctx context.Context, req *dto.RegisterReq) (*dto.Logi
 
 	user := &model.User{
 		Username:  req.Username,
-		Email:     req.Email,
+		Email:     strings.TrimSpace(req.Email),
 		ClassName: req.ClassName,
 		Role:      model.RoleStudent,
 		Status:    model.UserStatusActive,

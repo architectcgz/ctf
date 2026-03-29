@@ -63,13 +63,13 @@ function formatRemainingTime(seconds: number): string {
 function statusMeta(status: string): { label: string; chipClass: string } {
   switch (status) {
     case 'running':
-      return { label: '运行中', chipClass: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300' }
+      return { label: '运行中', chipClass: 'border-[var(--color-success)]/25 bg-[var(--color-success)]/10 text-[var(--color-success)]' }
     case 'creating':
-      return { label: '创建中', chipClass: 'border-cyan-500/25 bg-cyan-500/10 text-cyan-300' }
+      return { label: '创建中', chipClass: 'border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[var(--color-primary)]' }
     case 'expired':
-      return { label: '已过期', chipClass: 'border-amber-500/25 bg-amber-500/10 text-amber-300' }
+      return { label: '已过期', chipClass: 'border-[var(--color-warning)]/25 bg-[var(--color-warning)]/10 text-[var(--color-warning)]' }
     case 'failed':
-      return { label: '异常', chipClass: 'border-rose-500/25 bg-rose-500/10 text-rose-300' }
+      return { label: '异常', chipClass: 'border-[var(--color-danger)]/25 bg-[var(--color-danger)]/10 text-[var(--color-danger)]' }
     default:
       return { label: status, chipClass: 'border-border bg-elevated/70 text-text-secondary' }
   }
@@ -117,7 +117,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
       />
     </section>
 
-    <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+    <div v-if="error" class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]">
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
     </div>

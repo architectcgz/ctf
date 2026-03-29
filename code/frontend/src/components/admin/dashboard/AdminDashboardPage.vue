@@ -152,7 +152,7 @@ function usageTone(value: number | undefined): string {
       </div>
     </section>
 
-    <div v-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
+    <div v-if="error" class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]">
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
     </div>
@@ -173,7 +173,7 @@ function usageTone(value: number | undefined): string {
         <div class="space-y-6">
           <SectionCard title="告警栈" subtitle="把当前超过阈值的异常按卡片堆叠，方便值守时逐条处理。">
             <template #header>
-              <span class="rounded-full bg-red-500/12 px-3 py-1 text-xs font-semibold text-red-600">{{ alertCount }} 条</span>
+              <span class="rounded-full bg-[var(--color-danger)]/12 px-3 py-1 text-xs font-semibold text-[var(--color-danger)]">{{ alertCount }} 条</span>
             </template>
 
             <div v-if="alertCount === 0" class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
@@ -190,16 +190,16 @@ function usageTone(value: number | undefined): string {
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                      <Siren class="h-4 w-4 text-red-400" />
+                      <Siren class="h-4 w-4 text-[var(--color-danger)]" />
                       {{ alert.container_id }}
                     </div>
                     <p class="mt-2 text-sm leading-6 text-text-secondary">{{ alert.message }}</p>
                   </div>
-                  <span class="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-300">
+                  <span class="rounded-full border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-danger)]">
                     {{ alert.type.toUpperCase() }}
                   </span>
                 </div>
-                <div class="mt-4 text-xs uppercase tracking-[0.16em] text-red-200/80">
+                <div class="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--color-danger)]/80">
                   当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%
                 </div>
               </AppCard>

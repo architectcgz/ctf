@@ -22,35 +22,43 @@ const props = withDefaults(defineProps<{
   name: '能力画像',
 })
 
-const option = computed<EChartsOption>(() => ({
-  tooltip: { trigger: 'item' },
-  radar: {
-    indicator: props.indicators.map((indicator) => ({
-      name: indicator.name,
-      max: indicator.max ?? 100,
-    })),
-    splitArea: {
-      areaStyle: {
-        color: ['rgba(8, 145, 178, 0.04)'],
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
+const option = computed<EChartsOption>(() => {
+  const primary = cssVar('--color-primary')
+  const primaryHover = cssVar('--color-primary-hover')
+  return {
+    tooltip: { trigger: 'item' },
+    radar: {
+      indicator: props.indicators.map((indicator) => ({
+        name: indicator.name,
+        max: indicator.max ?? 100,
+      })),
+      splitArea: {
+        areaStyle: {
+          color: [`${primary}0a`],
+        },
       },
     },
-  },
-  series: [
-    {
-      name: props.name,
-      type: 'radar',
-      data: [
-        {
-          value: props.values,
-          name: props.name,
-          areaStyle: { color: 'rgba(8, 145, 178, 0.20)' },
-          lineStyle: { color: '#0891b2' },
-          itemStyle: { color: '#06b6d4' },
-        },
-      ],
-    },
-  ],
-}))
+    series: [
+      {
+        name: props.name,
+        type: 'radar',
+        data: [
+          {
+            value: props.values,
+            name: props.name,
+            areaStyle: { color: `${primary}33` },
+            lineStyle: { color: primary },
+            itemStyle: { color: primaryHover },
+          },
+        ],
+      },
+    ],
+  }
+})
 </script>
 
 <template>

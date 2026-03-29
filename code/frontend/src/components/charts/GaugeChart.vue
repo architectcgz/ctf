@@ -19,6 +19,10 @@ const props = withDefaults(defineProps<{
   name: '完成度',
 })
 
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
 const option = computed<EChartsOption>(() => ({
   series: [
     {
@@ -30,10 +34,10 @@ const option = computed<EChartsOption>(() => ({
       detail: {
         valueAnimation: true,
         formatter: '{value}',
-        color: '#e6edf3',
+        color: cssVar('--color-text-primary'),
       },
       title: {
-        color: '#8b949e',
+        color: cssVar('--color-text-secondary'),
       },
       data: [{ value: props.value, name: props.name }],
     },

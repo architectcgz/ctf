@@ -88,7 +88,7 @@
                   placeholder="flag{...}"
                   :disabled="challenge.is_solved"
                   class="flex-1 rounded-xl border bg-[var(--color-bg-base)] px-4 py-3 font-mono text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  :class="submitResult?.success ? 'border-green-500' : 'border-[#0891b2]'"
+                  :class="submitResult?.success ? 'border-[var(--color-success)]' : 'border-[#0891b2]'"
                   @keyup.enter="submitFlagHandler"
                 />
                 <button
@@ -99,7 +99,7 @@
                   {{ submitting ? '提交中...' : '提交' }}
                 </button>
               </div>
-              <div v-if="submitResult" :class="submitResult.success ? 'text-green-500' : 'text-red-500'" class="text-sm">
+              <div v-if="submitResult" :class="submitResult.success ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'" class="text-sm">
                 {{ submitResult.message }}
               </div>
             </div>

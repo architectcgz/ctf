@@ -174,7 +174,7 @@ onMounted(() => {
     </AppCard>
 
     <SectionCard title="操作流水" subtitle="按时间顺序展示匹配结果，明细字段做了摘要收敛，便于快速扫读。">
-      <div v-if="error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-600">
+      <div v-if="error" class="rounded-xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-4 py-4 text-sm text-[var(--color-danger)]">
         {{ error }}
         <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
       </div>

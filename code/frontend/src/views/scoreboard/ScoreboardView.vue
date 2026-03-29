@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import type { ContestStatus } from '@/api/contracts'
 import { useScoreboardView } from '@/composables/useScoreboardView'
@@ -12,7 +13,6 @@ const hasPartialFailure = computed(() => sections.value.some((section) => sectio
 
 function formatDateTime(value?: string): string {
   if (!value) return '未记录'
-
   return new Date(value).toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',
@@ -27,184 +27,162 @@ function formatContestWindow(startsAt: string, endsAt: string): string {
   return `${formatDateTime(startsAt)} ~ ${formatDateTime(endsAt)}`
 }
 
-function sectionStyle(status: ContestStatus): Record<string, string> {
-  return {
-    '--scoreboard-accent': getContestAccentColor(status),
-  }
+function sectionAccentStyle(status: ContestStatus): Record<string, string> {
+  return { '--scoreboard-accent': getContestAccentColor(status) }
 }
 
 function getRowClass(rank: number): string {
-  if (rank === 1) return 'scoreboard-row scoreboard-row--top1'
-  if (rank === 2) return 'scoreboard-row scoreboard-row--top2'
-  if (rank === 3) return 'scoreboard-row scoreboard-row--top3'
-  return 'scoreboard-row'
+  if (rank === 1) return 'sb-row sb-row--top1'
+  if (rank === 2) return 'sb-row sb-row--top2'
+  if (rank === 3) return 'sb-row sb-row--top3'
+  return 'sb-row'
 }
 
 function getRankPillClass(rank: number): string[] {
   return [
-    'scoreboard-rank-pill',
-    rank === 1 ? 'scoreboard-rank-pill--top1' : '',
-    rank === 2 ? 'scoreboard-rank-pill--top2' : '',
-    rank === 3 ? 'scoreboard-rank-pill--top3' : '',
+    'sb-rank-pill',
+    rank === 1 ? 'sb-rank-pill--top1' : '',
+    rank === 2 ? 'sb-rank-pill--top2' : '',
+    rank === 3 ? 'sb-rank-pill--top3' : '',
   ]
 }
 </script>
 
 <template>
-  <div class="scoreboard-view space-y-6">
-    <header class="scoreboard-header">
-      <div class="scoreboard-header__lead">
-        <h1 class="scoreboard-header__title">
-          排行榜
-        </h1>
-        <p class="scoreboard-header__hint">
-          {{ selectionHint }}
-        </p>
-      </div>
-      <div class="scoreboard-header__actions">
-        <button
-          type="button"
-          class="scoreboard-refresh"
-          @click="refresh"
-        >
-          刷新
-        </button>
-      </div>
-    </header>
+  <div class="journal-shell space-y-6">
+    <!-- Hero -->
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <div class="journal-eyebrow">Scoreboard</div>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            排行榜
+          </h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            {{ selectionHint }}
+          </p>
+        </div>
 
-    <section class="scoreboard-summary">
-      <div class="scoreboard-metric">
-        <div class="scoreboard-metric__label">
-          展示竞赛
-        </div>
-        <div class="scoreboard-metric__value">
-          {{ contestCount }}
-        </div>
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <BarChart2 class="h-5 w-5 text-[var(--journal-accent)]" />
+            总览
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="journal-note">
+              <div class="journal-note-label">展示竞赛</div>
+              <div class="journal-note-value">{{ contestCount }}</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">参赛队伍</div>
+              <div class="journal-note-value">{{ teamCount }}</div>
+            </div>
+          </div>
+          <div v-if="hasPartialFailure" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            部分竞赛加载失败
+          </div>
+        </article>
       </div>
-      <div class="scoreboard-metric">
-        <div class="scoreboard-metric__label">
-          排名队伍
-        </div>
-        <div class="scoreboard-metric__value">
-          {{ teamCount }}
-        </div>
-      </div>
-      <div
-        v-if="hasPartialFailure"
-        class="scoreboard-summary__warn"
-      >
-        部分竞赛加载失败
+
+      <div class="mt-4 flex justify-end">
+        <button type="button" class="sb-refresh-btn" @click="refresh">刷新</button>
       </div>
     </section>
 
-    <div
-      v-if="loading && !hasSections"
-      class="scoreboard-skeleton"
-    >
+    <!-- 加载骨架 -->
+    <div v-if="loading && !hasSections" class="space-y-3">
       <div
-        v-for="index in 3"
-        :key="index"
-        class="scoreboard-skeleton__row"
+        v-for="i in 3"
+        :key="i"
+        class="h-32 rounded-[22px] animate-pulse"
+        style="background: rgba(226,232,240,0.5)"
       />
     </div>
 
+    <!-- 空状态 -->
     <div
       v-else-if="!hasSections"
-      class="scoreboard-empty"
+      class="journal-panel rounded-[24px] border px-6 py-10 text-center text-sm text-[var(--journal-muted)]"
     >
       暂无可查看的竞赛排行榜
     </div>
 
-    <div
-      v-else
-      class="scoreboard-sections"
-    >
+    <!-- 竞赛分区列表 -->
+    <div v-else class="space-y-5">
       <article
         v-for="(section, index) in sections"
         :key="section.contest.id"
-        data-testid="scoreboard-card"
-        class="scoreboard-section"
-        :style="sectionStyle(section.contest.status)"
+        class="journal-log rounded-[24px] border px-6 py-5"
+        :style="sectionAccentStyle(section.contest.status)"
       >
-        <div class="scoreboard-section__line" />
-        <div class="scoreboard-section__content">
-          <header class="scoreboard-section__header">
-            <div class="scoreboard-section__prefix">
-              {{ String(index + 1).padStart(2, '0') }}
+        <!-- 分区头部 -->
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <div class="flex flex-wrap gap-2 items-center">
+              <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
+              <span class="sb-status-chip">{{ getStatusLabel(section.contest.status) }}</span>
+              <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
+              <span v-if="section.frozen" class="sb-frozen-chip">
+                <Shield class="h-3 w-3" /> 已冻结
+              </span>
             </div>
-            <div class="space-y-2">
-              <div class="scoreboard-section__title-wrap">
-                <h2 class="scoreboard-section__title">
-                  {{ section.contest.title }}
-                </h2>
-                <span class="scoreboard-status-chip">{{ getStatusLabel(section.contest.status) }}</span>
-                <span class="scoreboard-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
-                <span
-                  v-if="section.frozen"
-                  class="scoreboard-frozen-chip"
-                >排行榜已冻结</span>
-              </div>
-              <p class="scoreboard-section__window">
-                {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
-              </p>
-            </div>
-
-            <div class="scoreboard-section__meta">
-              {{ section.rows.length > 0 ? `展示前 ${section.rows.length} 支队伍` : '暂无排行队伍' }}
-            </div>
-          </header>
-
-          <div
-            v-if="section.error"
-            class="scoreboard-note scoreboard-note--danger"
-          >
-            该竞赛排行榜加载失败，请稍后重试
+            <h3 class="mt-2 font-semibold text-lg text-[var(--journal-ink)] leading-snug">
+              {{ section.contest.title }}
+            </h3>
+            <p class="mt-1 text-xs text-[var(--journal-muted)]">
+              {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
+            </p>
           </div>
-
-          <div
-            v-else-if="section.rows.length === 0"
-            class="scoreboard-note"
-          >
-            暂无排行榜数据
+          <div class="flex items-center gap-1.5 text-xs text-[var(--journal-muted)] shrink-0 pt-1">
+            <Users class="h-3.5 w-3.5" />
+            {{ section.rows.length > 0 ? `展示前 ${section.rows.length} 支队伍` : '暂无排行队伍' }}
           </div>
+        </div>
 
-          <div
-            v-else
-            class="scoreboard-table-wrap"
-          >
-            <table class="scoreboard-table">
-              <thead>
-                <tr>
-                  <th>排名</th>
-                  <th>队伍</th>
-                  <th>得分</th>
-                  <th>解题数</th>
-                  <th>最近得分</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="item in section.rows"
-                  :key="`${section.contest.id}-${item.team_id}`"
-                  :class="getRowClass(item.rank)"
-                >
-                  <td class="scoreboard-cell--rank">
-                    <span :class="getRankPillClass(item.rank)">
-                      {{ item.rank }}
-                    </span>
-                  </td>
-                  <td>{{ item.team_name }}</td>
-                  <td class="scoreboard-cell--mono">
-                    {{ item.score }}
-                  </td>
-                  <td>{{ item.solved_count }}</td>
-                  <td class="scoreboard-cell--muted">
-                    {{ formatDateTime(item.last_submission_at) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- 加载失败 -->
+        <div
+          v-if="section.error"
+          class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          该竞赛排行榜加载失败，请稍后重试
+        </div>
+
+        <!-- 暂无数据 -->
+        <div
+          v-else-if="section.rows.length === 0"
+          class="mt-4 text-sm text-[var(--journal-muted)]"
+        >
+          暂无排行榜数据
+        </div>
+
+        <!-- 排行表 -->
+        <div v-else class="mt-5 overflow-x-auto">
+          <table class="sb-table">
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>队伍</th>
+                <th>得分</th>
+                <th>解题数</th>
+                <th>最近得分</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in section.rows"
+                :key="`${section.contest.id}-${item.team_id}`"
+                :class="getRowClass(item.rank)"
+              >
+                <td class="sb-cell--rank">
+                  <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
+                </td>
+                <td>{{ item.team_name }}</td>
+                <td class="sb-cell--mono">{{ item.score }}</td>
+                <td>{{ item.solved_count }}</td>
+                <td class="sb-cell--muted">{{ formatDateTime(item.last_submission_at) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </article>
     </div>
@@ -212,337 +190,234 @@ function getRankPillClass(rank: number): string[] {
 </template>
 
 <style scoped>
-.scoreboard-view {
-  --scoreboard-accent: var(--color-primary);
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: #ffffff;
+  --journal-surface-subtle: rgba(248, 250, 252, 0.9);
+  --journal-accent: var(--color-primary);
 }
 
-.scoreboard-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.8rem 1rem;
-  padding-bottom: 0.95rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default));
+.journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 18rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.9));
+  border-color: var(--journal-border);
 }
 
-.scoreboard-header__lead {
-  min-width: 0;
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
 }
 
-.scoreboard-header__actions {
-  display: flex;
-  justify-content: flex-end;
+.journal-panel {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
 }
 
-.scoreboard-header__title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
+.journal-log {
+  background: var(--journal-surface);
+  border-color: var(--journal-border);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.scoreboard-header__hint {
-  margin-top: 0.35rem;
-  font-size: 0.86rem;
-  line-height: 1.6;
-  color: var(--color-text-muted);
-}
-
-.scoreboard-summary {
-  display: flex;
-  flex-wrap: wrap;
+.journal-eyebrow {
+  display: inline-flex;
   align-items: center;
-  gap: 0.7rem 1.15rem;
-  padding-bottom: 0.95rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 86%, var(--color-primary-soft));
-}
-
-.scoreboard-metric {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 7rem;
-}
-
-.scoreboard-metric__label {
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-}
-
-.scoreboard-metric__value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 1.08rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
 }
 
-.scoreboard-summary__warn {
-  border-left: 2px solid color-mix(in srgb, var(--color-danger) 62%, var(--color-border-default));
-  padding-left: 0.6rem;
+.journal-note {
+  border-radius: 1rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.65rem 0.85rem;
+}
+
+.journal-note-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-note-value {
+  margin-top: 0.4rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.sb-refresh-btn {
+  border-radius: 0.75rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.38rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--journal-ink);
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+
+.sb-refresh-btn:hover {
+  border-color: var(--journal-accent);
+}
+
+.sb-index {
   font-size: 0.78rem;
-  color: color-mix(in srgb, var(--color-danger) 82%, var(--color-text-primary));
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--journal-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.scoreboard-refresh {
-  border: 1px solid var(--color-border-default);
-  border-radius: 6px;
-  padding: 0.42rem 0.78rem;
-  font-size: 0.82rem;
-  color: var(--color-text-primary);
-  transition: border-color 180ms ease, color 180ms ease;
-}
-
-.scoreboard-refresh:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 56%, var(--color-border-default));
-  color: color-mix(in srgb, var(--color-primary) 72%, var(--color-text-primary));
-}
-
-.scoreboard-skeleton {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.scoreboard-skeleton__row {
-  height: 4.9rem;
-  border-bottom: 1px solid var(--color-border-default);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-primary-soft)),
-    transparent
-  );
-  background-size: 220% 100%;
-  animation: scoreSkeletonMove 1.25s linear infinite;
-}
-
-.scoreboard-empty {
-  padding: 1.1rem 0.2rem;
-  border-left: 2px solid color-mix(in srgb, var(--color-text-muted) 50%, var(--color-border-default));
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.scoreboard-sections {
-  display: grid;
-  gap: 1.2rem;
-}
-
-.scoreboard-section {
-  --scoreboard-accent: var(--color-primary);
-  display: grid;
-  grid-template-columns: 3px minmax(0, 1fr);
-  gap: 0.8rem;
-}
-
-.scoreboard-section__line {
-  width: 3px;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--scoreboard-accent) 80%, #ffffff),
-    color-mix(in srgb, var(--scoreboard-accent) 36%, transparent)
-  );
-}
-
-.scoreboard-section__content {
-  border-top: 1px solid var(--color-border-default);
-  padding-top: 0.72rem;
-}
-
-.scoreboard-section__header {
-  display: flex;
-  flex-wrap: wrap;
+.sb-status-chip {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 30%, transparent);
+  background: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 10%, transparent);
+  padding: 0.18rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 80%, var(--journal-ink));
 }
 
-.scoreboard-section__prefix {
-  min-width: 2rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  color: color-mix(in srgb, var(--scoreboard-accent) 74%, var(--color-text-secondary));
-}
-
-.scoreboard-section__title-wrap {
-  display: flex;
-  flex-wrap: wrap;
+.sb-mode-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-}
-
-.scoreboard-section__title {
-  font-size: 1.03rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.scoreboard-status-chip {
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--scoreboard-accent) 34%, transparent);
-  background: color-mix(in srgb, var(--scoreboard-accent) 10%, transparent);
-  padding: 0.16rem 0.55rem;
+  border: 1px solid var(--journal-border);
+  background: rgba(226, 232, 240, 0.4);
+  padding: 0.18rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.sb-frozen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.18rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: color-mix(in srgb, var(--scoreboard-accent) 84%, var(--color-text-primary));
+  color: #b45309;
 }
 
-.scoreboard-mode-chip {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 84%, var(--scoreboard-accent));
-  padding: 0.16rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--color-text-secondary);
-}
-
-.scoreboard-frozen-chip {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-warning) 36%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
-  padding: 0.16rem 0.55rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: color-mix(in srgb, var(--color-warning) 84%, var(--color-text-primary));
-}
-
-.scoreboard-section__window {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-}
-
-.scoreboard-section__meta {
-  font-size: 0.79rem;
-  color: var(--color-text-secondary);
-}
-
-.scoreboard-note {
-  margin-top: 0.72rem;
-  padding: 0.5rem 0.72rem;
-  border-left: 2px solid color-mix(in srgb, var(--color-text-muted) 46%, var(--color-border-default));
-  font-size: 0.83rem;
-  color: var(--color-text-secondary);
-}
-
-.scoreboard-note--danger {
-  border-left-color: color-mix(in srgb, var(--color-danger) 62%, var(--color-border-default));
-  color: color-mix(in srgb, var(--color-danger) 86%, var(--color-text-primary));
-}
-
-.scoreboard-table-wrap {
-  margin-top: 0.62rem;
-  overflow-x: auto;
-}
-
-.scoreboard-table {
-  min-width: 100%;
+.sb-table {
+  width: 100%;
   border-collapse: collapse;
+  font-size: 0.875rem;
 }
 
-.scoreboard-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 0.55rem 0.8rem;
-  border-bottom: 1px solid var(--color-border-default);
-  background: color-mix(in srgb, var(--color-bg-canvas) 92%, transparent);
+.sb-table th {
+  padding: 0.55rem 0.75rem;
   text-align: left;
-  font-size: 0.71rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--journal-muted);
+  border-bottom: 1px solid var(--journal-border);
 }
 
-.scoreboard-row {
-  border-bottom: 1px solid var(--color-border-subtle);
+.sb-row td {
+  padding: 0.65rem 0.75rem;
+  color: var(--journal-ink);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
 }
 
-.scoreboard-row td {
-  padding: 0.6rem 0.8rem;
-  font-size: 0.84rem;
-  color: var(--color-text-primary);
+.sb-row--top1 td {
+  background: rgba(234, 179, 8, 0.06);
 }
 
-.scoreboard-row:hover {
-  background: color-mix(in srgb, var(--scoreboard-accent) 5%, transparent);
+.sb-row--top2 td {
+  background: rgba(148, 163, 184, 0.06);
 }
 
-.scoreboard-row--top1 {
-  border-left: 2px solid #d97706;
+.sb-row--top3 td {
+  background: rgba(194, 65, 12, 0.06);
 }
 
-.scoreboard-row--top2 {
-  border-left: 2px solid #64748b;
+.sb-cell--rank {
+  width: 4rem;
 }
 
-.scoreboard-row--top3 {
-  border-left: 2px solid #c2410c;
+.sb-cell--mono {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--scoreboard-accent, var(--journal-accent)) 90%, var(--journal-ink));
 }
 
-.scoreboard-cell--rank,
-.scoreboard-cell--mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+.sb-cell--muted {
+  color: var(--journal-muted);
+  font-size: 0.8rem;
 }
 
-.scoreboard-cell--rank {
-  width: 5.2rem;
-}
-
-.scoreboard-cell--muted {
-  color: var(--color-text-secondary) !important;
-}
-
-.scoreboard-rank-pill {
+.sb-rank-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.9rem;
-  padding: 0.14rem 0.4rem;
-  border: 1px solid var(--color-border-default);
-  border-radius: 0.35rem;
+  min-width: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface-subtle);
+  padding: 0.1rem 0.5rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--journal-muted);
 }
 
-.scoreboard-rank-pill--top1 {
-  border-color: color-mix(in srgb, #d97706 56%, var(--color-border-default));
-  color: #d97706;
+.sb-rank-pill--top1 {
+  border-color: rgba(234, 179, 8, 0.5);
+  background: rgba(234, 179, 8, 0.1);
+  color: #92400e;
 }
 
-.scoreboard-rank-pill--top2 {
-  border-color: color-mix(in srgb, #64748b 56%, var(--color-border-default));
-  color: #64748b;
+.sb-rank-pill--top2 {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.12);
+  color: #475569;
 }
 
-.scoreboard-rank-pill--top3 {
-  border-color: color-mix(in srgb, #c2410c 56%, var(--color-border-default));
+.sb-rank-pill--top3 {
+  border-color: rgba(194, 65, 12, 0.4);
+  background: rgba(194, 65, 12, 0.08);
   color: #c2410c;
 }
 
-@media (max-width: 720px) {
-  .scoreboard-header__title {
-    font-size: 1.35rem;
-  }
-
-  .scoreboard-section {
-    grid-template-columns: 2px minmax(0, 1fr);
-    gap: 0.7rem;
-  }
-
-  .scoreboard-section__prefix {
-    width: 100%;
-    min-width: 100%;
-  }
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #f1f5f9;
+  --journal-muted: #94a3b8;
+  --journal-border: rgba(51, 65, 85, 0.72);
+  --journal-surface: rgba(15, 23, 42, 0.85);
+  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
 }
 
-@keyframes scoreSkeletonMove {
-  from {
-    background-position-x: 0%;
-  }
-  to {
-    background-position-x: 220%;
-  }
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .sb-frozen-chip {
+  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+  color: #fbbf24;
 }
 </style>

@@ -4,11 +4,12 @@ GO ?= go
 GOIMPORTS ?= goimports
 MIGRATE_VERSION ?= v4.18.3
 MIGRATE_TAGS ?= postgres
-MIGRATE ?= $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v4/cmd/migrate@$(MIGRATE_VERSION)
+MIGRATE_GOPROXY ?= https://goproxy.cn,direct
+MIGRATE ?= GOPROXY=$(MIGRATE_GOPROXY) $(GO) run -tags '$(MIGRATE_TAGS)' github.com/golang-migrate/migrate/v4/cmd/migrate@$(MIGRATE_VERSION)
 MIGRATIONS_DIR ?= ./migrations
-MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:5432/ctf?sslmode=disable
+MIGRATE_DATABASE_URL ?= postgres://postgres:postgres123456@127.0.0.1:15432/ctf?sslmode=disable
 
-.PHONY: run build test fmt imports check tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges import-challenge-packs
+.PHONY: run build docker-build test fmt imports check tidy infra-up infra-down migrate-up migrate-down migrate-create seed-demo-challenges import-challenge-packs
 
 run:
 	APP_ENV=$(APP_ENV) $(GO) run ./cmd/server
@@ -16,6 +17,9 @@ run:
 build:
 	mkdir -p bin
 	$(GO) build -o bin/$(APP_NAME) ./cmd/server
+
+docker-build:
+	docker build -t ctf-backend:local .
 
 test:
 	$(GO) test ./...
@@ -36,10 +40,10 @@ tidy:
 	$(GO) mod tidy
 
 infra-up:
-	docker compose -f docker-compose.dev.yml up -d
+	docker compose -f ../../docker/ctf/docker-compose.dev.yml up -d
 
 infra-down:
-	docker compose -f docker-compose.dev.yml down
+	docker compose -f ../../docker/ctf/docker-compose.dev.yml down
 
 migrate-up:
 	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DATABASE_URL)" up

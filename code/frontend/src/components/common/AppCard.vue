@@ -40,23 +40,23 @@ const accentMap: Record<AppCardAccent, AccentMeta> = {
   },
   success: {
     color: 'var(--color-success)',
-    softColor: 'rgba(63,185,80,0.12)',
-    borderColor: 'rgba(63,185,80,0.22)',
+    softColor: 'color-mix(in srgb, var(--color-success) 12%, transparent)',
+    borderColor: 'color-mix(in srgb, var(--color-success) 22%, transparent)',
   },
   warning: {
     color: 'var(--color-warning)',
-    softColor: 'rgba(210,153,34,0.12)',
-    borderColor: 'rgba(210,153,34,0.22)',
+    softColor: 'color-mix(in srgb, var(--color-warning) 12%, transparent)',
+    borderColor: 'color-mix(in srgb, var(--color-warning) 22%, transparent)',
   },
   danger: {
     color: 'var(--color-danger)',
-    softColor: 'rgba(248,81,73,0.12)',
-    borderColor: 'rgba(248,81,73,0.22)',
+    softColor: 'color-mix(in srgb, var(--color-danger) 12%, transparent)',
+    borderColor: 'color-mix(in srgb, var(--color-danger) 22%, transparent)',
   },
   violet: {
-    color: '#8b5cf6',
-    softColor: 'rgba(139,92,246,0.12)',
-    borderColor: 'rgba(139,92,246,0.22)',
+    color: 'var(--color-cat-reverse)',
+    softColor: 'color-mix(in srgb, var(--color-cat-reverse) 12%, transparent)',
+    borderColor: 'color-mix(in srgb, var(--color-cat-reverse) 22%, transparent)',
   },
   neutral: {
     color: 'var(--color-text-secondary)',

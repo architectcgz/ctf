@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowUpRight, Gauge, MoveRight, Radar } from 'lucide-vue-next'
-
-import AppCard from '@/components/common/AppCard.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
+import { ArrowUpRight, Gauge, MoveRight } from 'lucide-vue-next'
 
 import { progressRate } from './utils'
 
@@ -37,216 +34,267 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 </script>
 
 <template>
-  <div class="space-y-6">
-    <section class="grid gap-4 xl:grid-cols-[0.7fr_1.3fr]">
-      <div class="grid gap-4">
-        <AppCard
-          class="category-overview-card"
-          variant="hero"
-          accent="primary"
-          eyebrow="Coverage Overview"
-          title="覆盖概况"
-          subtitle="从整体覆盖率判断训练结构，再对照分类进度决定下一步优先补强的方向。"
-        >
-          <div class="grid gap-4 md:grid-cols-[auto_1fr] md:items-end">
-            <div class="text-5xl font-semibold tracking-tight text-text-primary">
-              {{ completionRate }}%
-            </div>
-            <AppCard class="category-overview-note" variant="action" accent="primary">
-              <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                <Radar class="h-4 w-4 text-primary" />
-                覆盖率代表已完成题目在全部分类题量中的占比
-              </div>
-              <div class="mt-2 text-sm leading-6 text-text-secondary">
-                先看覆盖率，再看强弱方向，最后回到分类进度板逐项补齐。
-              </div>
-            </AppCard>
+  <div class="journal-shell space-y-6">
+    <!-- Hero -->
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">Coverage Overview</div>
+          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            分类覆盖概况
+          </h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            从整体覆盖率判断训练结构，再对照分类进度决定下一步优先补强的方向。
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button class="journal-btn-primary" @click="emit('openChallenges')">去训练</button>
+            <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
           </div>
-        </AppCard>
+        </div>
 
-        <AppCard
-          variant="metric"
-          accent="success"
-          eyebrow="Strongest Direction"
-          :title="strongestCategory?.category || '-'"
-          :subtitle="
-            strongestCategory
-              ? `${strongestCategory.solved}/${strongestCategory.total}，完成 ${strongestCategory.rate}%`
-              : '暂无数据'
-          "
-        >
-          <template #header>
-            <div class="category-direction-icon category-direction-icon--success">
-              <ArrowUpRight class="h-4 w-4" />
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <Gauge class="h-5 w-5 text-[var(--journal-accent)]" />
+            结构快照
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">整体覆盖率</div>
+              <div class="journal-note-value">{{ completionRate }}%</div>
             </div>
-          </template>
-        </AppCard>
-
-        <AppCard
-          variant="metric"
-          accent="warning"
-          eyebrow="Weakest Direction"
-          :title="weakestCategory?.category || '-'"
-          :subtitle="
-            weakestCategory
-              ? `${weakestCategory.solved}/${weakestCategory.total}，完成 ${weakestCategory.rate}%`
-              : '暂无数据'
-          "
-        >
-          <template #header>
-            <div class="category-direction-icon category-direction-icon--warning">
-              <Gauge class="h-4 w-4" />
+            <div class="journal-note">
+              <div class="journal-note-label">分类数量</div>
+              <div class="journal-note-value">{{ rankedCategories.length }} 类</div>
             </div>
-          </template>
-        </AppCard>
+            <div class="journal-note">
+              <div class="journal-note-label">当前强项</div>
+              <div class="journal-note-value">{{ strongestCategory?.category || '-' }}</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">当前短板</div>
+              <div class="journal-note-value">{{ weakestCategory?.category || '-' }}</div>
+            </div>
+          </div>
+        </article>
       </div>
-
-      <SectionCard
-        title="分类进度板"
-        subtitle="把不同题型拆成独立进度轨道，方便快速识别训练结构是否均衡。"
-      >
-        <div
-          v-if="rankedCategories.length === 0"
-          class="rounded-2xl border border-dashed border-border px-4 py-12 text-center text-sm text-text-secondary"
-        >
-          当前还没有分类统计数据，先完成几道题再回来查看。
-        </div>
-
-        <div v-else class="space-y-4">
-          <AppCard
-            v-for="item in rankedCategories"
-            :key="item.category"
-            variant="action"
-            accent="neutral"
-          >
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-text-muted">
-                  {{ item.category }}
-                </div>
-                <div class="mt-2 text-xl font-semibold text-text-primary">{{ item.rate }}%</div>
-              </div>
-              <div class="text-right text-sm text-text-secondary">
-                <div>{{ item.solved }} / {{ item.total }}</div>
-                <div class="mt-1 text-xs uppercase tracking-[0.14em] text-text-muted">完成题数</div>
-              </div>
-            </div>
-            <div class="category-progress-track mt-4 h-3 rounded-full">
-              <div
-                class="h-3 rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.95),rgba(56,189,248,0.72))]"
-                :style="{ width: `${item.rate}%` }"
-              />
-            </div>
-          </AppCard>
-        </div>
-      </SectionCard>
     </section>
 
+    <!-- 强弱方向 -->
     <section class="grid gap-4 md:grid-cols-2">
-      <SectionCard title="建议动作" subtitle="先补最弱方向，再拉平整体训练结构。">
-        <div class="space-y-3">
-          <AppCard variant="action" accent="neutral">
-            如果最近一段时间只刷熟悉题型，整体完成率会上升，但结构会失衡。建议优先补 weakest
-            category，再回到强项巩固。
-          </AppCard>
-          <AppCard
-            as="button"
-            variant="action"
-            accent="primary"
-            interactive
-            class="flex w-full items-center justify-between text-left"
-            @click="emit('openChallenges')"
-          >
-            <span class="text-sm font-medium text-text-primary"
-              >打开挑战列表，按短板方向继续练习</span
-            >
-            <MoveRight class="h-4 w-4 text-primary" />
-          </AppCard>
+      <article class="journal-panel rounded-[24px] border px-6 py-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="journal-eyebrow">Strongest Direction</div>
+            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">{{ strongestCategory?.category || '-' }}</h3>
+          </div>
+          <div class="direction-icon direction-icon--success">
+            <ArrowUpRight class="h-4 w-4" />
+          </div>
         </div>
-      </SectionCard>
+        <div v-if="strongestCategory" class="mt-4">
+          <div class="flex items-end justify-between text-sm">
+            <span class="text-[var(--journal-muted)]">完成进度</span>
+            <span class="font-semibold text-[var(--journal-ink)]">{{ strongestCategory.solved }} / {{ strongestCategory.total }}</span>
+          </div>
+          <div class="category-track mt-2 h-2.5 rounded-full">
+            <div class="h-2.5 rounded-full bg-emerald-500" :style="{ width: `${strongestCategory.rate}%` }" />
+          </div>
+          <div class="mt-2 text-right text-xs font-semibold text-emerald-600">{{ strongestCategory.rate }}%</div>
+        </div>
+      </article>
 
-      <SectionCard title="结构判断" subtitle="看的是训练面，而不只是总分。">
-        <div class="grid gap-3 md:grid-cols-2">
-          <AppCard
-            variant="metric"
-            accent="success"
-            eyebrow="当前强项"
-            :title="strongestCategory?.category || '暂无数据'"
-          />
-          <AppCard
-            variant="metric"
-            accent="warning"
-            eyebrow="当前短板"
-            :title="weakestCategory?.category || '暂无数据'"
-          />
+      <article class="journal-panel rounded-[24px] border px-6 py-6">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="journal-eyebrow">Weakest Direction</div>
+            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">{{ weakestCategory?.category || '-' }}</h3>
+          </div>
+          <div class="direction-icon direction-icon--warning">
+            <Gauge class="h-4 w-4" />
+          </div>
         </div>
-      </SectionCard>
+        <div v-if="weakestCategory" class="mt-4">
+          <div class="flex items-end justify-between text-sm">
+            <span class="text-[var(--journal-muted)]">完成进度</span>
+            <span class="font-semibold text-[var(--journal-ink)]">{{ weakestCategory.solved }} / {{ weakestCategory.total }}</span>
+          </div>
+          <div class="category-track mt-2 h-2.5 rounded-full">
+            <div class="h-2.5 rounded-full bg-amber-400" :style="{ width: `${weakestCategory.rate}%` }" />
+          </div>
+          <div class="mt-2 text-right text-xs font-semibold text-amber-600">{{ weakestCategory.rate }}%</div>
+        </div>
+      </article>
+    </section>
+
+    <!-- 分类进度板 -->
+    <section class="journal-panel rounded-[24px] border px-6 py-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <div class="journal-eyebrow">Category Board</div>
+          <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">分类进度板</h3>
+        </div>
+        <button class="journal-btn-outline" @click="emit('openChallenges')">
+          <MoveRight class="h-3.5 w-3.5" />
+          去训练
+        </button>
+      </div>
+
+      <div
+        v-if="rankedCategories.length === 0"
+        class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+      >
+        当前还没有分类统计数据，先完成几道题再回来查看。
+      </div>
+
+      <div v-else class="mt-5 space-y-4">
+        <div
+          v-for="item in rankedCategories"
+          :key="item.category"
+          class="journal-log rounded-[18px] border px-5 py-4"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--journal-ink)]">
+              {{ item.category }}
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-semibold text-[var(--journal-ink)]">{{ item.rate }}%</span>
+              <span class="ml-2 text-xs text-[var(--journal-muted)]">{{ item.solved }}/{{ item.total }}</span>
+            </div>
+          </div>
+          <div class="category-track mt-3 h-2 rounded-full">
+            <div
+              class="h-2 rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.95),rgba(56,189,248,0.72))]"
+              :style="{ width: `${item.rate}%` }"
+            />
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-.category-overview-card {
-  border-color: color-mix(
-    in srgb,
-    var(--color-primary) 14%,
-    var(--color-border-default)
-  ) !important;
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--color-primary) 6%, var(--color-bg-surface)),
-    color-mix(in srgb, var(--color-bg-surface) 98%, var(--color-bg-base))
-  ) !important;
+.journal-shell {
+  --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
+  --journal-ink: #0f172a;
+  --journal-muted: #475569;
+  --journal-border: rgba(226, 232, 240, 0.72);
+  --journal-surface: #ffffff;
+  --journal-surface-subtle: #f8fafc;
+  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
 }
 
-.category-overview-note {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-primary) 7%, var(--color-bg-surface)),
-    color-mix(in srgb, var(--color-bg-surface) 99%, var(--color-bg-base))
-  ) !important;
+.journal-hero {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(191, 219, 254, 0.75), transparent 15rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
-.category-direction-icon {
+.journal-panel,
+.journal-log {
+  border-color: var(--journal-border);
+  background: var(--journal-surface);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.journal-brief {
+  border-color: var(--journal-border);
+  background: var(--journal-surface);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-log {
+  transition: all 0.2s ease-in-out;
+}
+
+.journal-log:hover {
+  border-color: #6366f1;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+}
+
+.journal-note {
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: var(--journal-surface-subtle);
+  padding: 0.95rem 1rem;
+}
+
+.journal-note-label,
+.journal-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.journal-note-value {
+  margin-top: 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.direction-icon {
   display: flex;
   height: 2.75rem;
   width: 2.75rem;
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  border: 1px solid rgba(226, 232, 240, 0.72);
+  background: #f8fafc;
 }
 
-.category-direction-icon--success {
-  color: var(--color-success);
-  border-color: color-mix(in srgb, var(--color-success) 18%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-success) 10%, var(--color-bg-surface));
+.direction-icon--success {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.08);
 }
 
-.category-direction-icon--warning {
-  color: var(--color-warning);
-  border-color: color-mix(in srgb, var(--color-warning) 18%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-warning) 10%, var(--color-bg-surface));
+.direction-icon--warning {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.08);
 }
 
-.category-progress-track {
-  background: color-mix(in srgb, var(--color-border-subtle) 60%, transparent);
+.category-track {
+  background: rgba(226, 232, 240, 0.6);
 }
 
-:global([data-theme='light']) .category-overview-card {
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--color-primary) 3%, white),
-    color-mix(in srgb, #f8fafc 98%, white)
-  ) !important;
+.journal-btn-primary {
+  border-radius: 10px;
+  background: var(--journal-accent);
+  padding: 0.45rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  transition: background 0.15s;
 }
 
-:global([data-theme='light']) .category-overview-note {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-primary) 4%, white),
-    color-mix(in srgb, #f8fafc 99%, white)
-  ) !important;
+.journal-btn-primary:hover {
+  background: var(--journal-accent-strong);
+}
+
+.journal-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--journal-border);
+  border-radius: 10px;
+  background: var(--journal-surface);
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+  transition: all 0.15s;
+}
+
+.journal-btn-outline:hover {
+  border-color: #6366f1;
+  color: var(--journal-accent-strong);
 }
 </style>
