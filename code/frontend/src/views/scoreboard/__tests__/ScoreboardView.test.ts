@@ -65,7 +65,12 @@ describe('ScoreboardView', () => {
       contest: {
         id: contestId,
         title: `${contestId}-title`,
-        status: contestId === 'contest-old' ? 'ended' : contestId === 'contest-frozen' ? 'frozen' : 'running',
+        status:
+          contestId === 'contest-old'
+            ? 'ended'
+            : contestId === 'contest-frozen'
+              ? 'frozen'
+              : 'running',
         started_at: '2026-03-12T00:00:00Z',
         ends_at: '2026-03-12T12:00:00Z',
       },

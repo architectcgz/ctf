@@ -70,31 +70,3 @@ select {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-
-/* 主内容区去卡片化：压平 surface 卡片、弱化圆角和阴影 */
-.decard-content {
-  --decard-border-strong: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
-}
-
-.decard-content [class*="shadow-"] {
-  box-shadow: none !important;
-}
-
-.decard-content [class*="rounded-["],
-.decard-content [class*="rounded-3xl"],
-.decard-content [class*="rounded-2xl"] {
-  border-radius: 0 !important;
-}
-
-.decard-content [class*="border"][class*="bg-surface"],
-.decard-content [class*="border"][class*="bg-elevated"],
-.decard-content [class*="border"][class*="bg-[var(--color-bg-surface)]"],
-.decard-content [class*="border"][class*="bg-[var(--color-bg-elevated)]"] {
-  background: transparent !important;
-  border-top-width: 0 !important;
-  border-right-width: 0 !important;
-  border-bottom-width: 1px !important;
-  border-bottom-color: var(--color-border-subtle) !important;
-  border-left-width: 2px !important;
-  border-left-color: var(--decard-border-strong) !important;
-}

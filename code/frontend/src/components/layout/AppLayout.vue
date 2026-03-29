@@ -26,7 +26,7 @@
           @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
         />
         <main
-          class="workspace-main decard-content mx-auto w-full max-w-[1600px] px-4 py-6 md:px-6 xl:px-8"
+          class="workspace-main mx-auto w-full max-w-[1600px] px-4 py-6 md:px-6 xl:px-8"
         >
           <RouterView />
         </main>

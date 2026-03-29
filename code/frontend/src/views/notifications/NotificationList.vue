@@ -5,7 +5,6 @@ import { Bell, Flag, GraduationCap, Info, RefreshCw, Trophy } from 'lucide-vue-n
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import { useNotificationStore } from '@/stores/notification'
@@ -22,9 +21,18 @@ async function fetchNotifications(params: { page: number; page_size: number }) {
   return data
 }
 
-const { list, total, page, pageSize, loading, changePage, refresh } =
+const { list, total, page, pageSize, loading, error, changePage, refresh } =
   usePagination<NotificationItem>(fetchNotifications)
 const unreadOnPage = computed(() => list.value.filter((item) => item.unread).length)
+const readOnPage = computed(() => list.value.length - unreadOnPage.value)
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
+const hasLoadError = computed(() => Boolean(error.value) && list.value.length === 0)
+const loadErrorMessage = computed(() => {
+  if (error.value instanceof Error && error.value.message.trim().length > 0) {
+    return error.value.message
+  }
+  return '通知加载失败，请稍后重试。'
+})
 
 function typeLabel(type: string): string {
   if (type === 'contest') return '竞赛'
@@ -89,141 +97,188 @@ async function markCurrentPageRead(): Promise<void> {
 onMounted(() => {
   refresh()
 })
+
+const summaryStats = computed(() => [
+  { key: 'page', label: '本页消息', value: list.value.length, helper: '当前分页已加载的通知数量' },
+  { key: 'unread', label: '未读消息', value: unreadOnPage.value, helper: '仍待你确认或处理的消息' },
+  { key: 'read', label: '已读消息', value: readOnPage.value, helper: '当前页中已经处理过的消息' },
+  { key: 'total', label: '总消息数', value: total.value, helper: '通知中心累计消息总数' },
+])
 </script>
 
 <template>
   <div class="journal-shell space-y-6">
-    <PageHeader
-      eyebrow="Notification Center"
-      title="通知中心"
-      description="统一查看系统、竞赛、团队和训练相关消息，未读状态与顶部铃铛保持同步。"
-    >
-      <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
-      <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
-        <RefreshCw class="h-4 w-4" />
-        刷新
-      </button>
-    </PageHeader>
-
-    <!-- 统计栏 -->
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 sm:grid-cols-3">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
-          <div class="journal-eyebrow">本页消息</div>
-          <div class="mt-2 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ list.length }}</div>
-          <div class="mt-1 text-sm text-[var(--journal-muted)]">当前分页已加载的通知数量</div>
+          <div class="journal-eyebrow">Notification Center</div>
+          <h2
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          >
+            通知中心
+          </h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            这里会显示系统、竞赛和训练相关通知。
+          </p>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
+            <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
+              <RefreshCw class="h-4 w-4" />
+              刷新
+            </button>
+          </div>
         </div>
-        <div>
-          <div class="journal-eyebrow">未读消息</div>
-          <div
-            class="mt-2 text-3xl font-semibold tracking-tight"
-            :style="{ color: unreadOnPage > 0 ? 'var(--color-warning)' : 'var(--color-success)' }"
-          >{{ unreadOnPage }}</div>
-          <div class="mt-1 text-sm text-[var(--journal-muted)]">当前分页仍未处理的通知数</div>
-        </div>
-        <div>
-          <div class="journal-eyebrow">总消息数</div>
-          <div class="mt-2 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ total }}</div>
-          <div class="mt-1 text-sm text-[var(--journal-muted)]">通知中心累计消息总数</div>
-        </div>
-      </div>
-    </section>
 
-    <!-- 消息列表 -->
-    <section class="journal-panel rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="mb-5 flex items-center justify-between">
-        <div>
-          <div class="journal-eyebrow">Messages</div>
-          <h2 class="mt-1 text-lg font-semibold text-[var(--journal-ink)]">消息列表</h2>
-        </div>
-        <p class="text-xs text-[var(--journal-muted)]">按时间倒序；点击未读消息自动标记已读</p>
-      </div>
-
-      <!-- 加载中 -->
-      <div v-if="loading" class="flex justify-center py-12">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]" />
-      </div>
-
-      <!-- 空状态 -->
-      <AppEmpty
-        v-else-if="list.length === 0"
-        icon="Inbox"
-        title="暂无通知"
-        description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
-      />
-
-      <!-- 列表 -->
-      <div v-else class="space-y-3">
-        <button
-          v-for="item in list"
-          :key="item.id"
-          type="button"
-          class="journal-notification-item w-full text-left"
-          :class="{ 'journal-notification-item--unread': item.unread }"
-          @click="handleMarkAsRead(item)"
-        >
-          <div class="flex items-start gap-3">
-            <!-- 图标 -->
-            <div
-              class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-              :style="{
-                borderColor: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 20%, transparent)`,
-                background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 10%, transparent)`,
-                color: accentColorMap[typeAccent(item.type)],
-              }"
-            >
-              <component :is="typeIcon(item.type)" class="h-5 w-5" />
-            </div>
-
-            <!-- 内容 -->
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <span
-                  class="rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider"
-                  :style="{
-                    background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 12%, transparent)`,
-                    color: accentColorMap[typeAccent(item.type)],
-                  }"
-                >{{ typeLabel(item.type) }}</span>
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <Bell class="h-5 w-5 text-[var(--journal-accent)]" />
+            当前消息概况
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div v-for="stat in summaryStats" :key="stat.key" class="journal-note">
+              <div class="journal-note-label">{{ stat.label }}</div>
+              <div
+                class="journal-note-value"
+                :style="
+                  stat.key === 'unread' && unreadOnPage > 0
+                    ? { color: 'var(--color-warning)' }
+                    : undefined
+                "
+              >
+                {{ stat.value }}
               </div>
-              <p class="mt-1 text-sm font-medium text-[var(--journal-ink)] line-clamp-1">{{ item.title }}</p>
-              <p class="mt-0.5 text-xs leading-5 text-[var(--journal-muted)] line-clamp-2">{{ item.content }}</p>
-            </div>
-
-            <!-- 时间 + 未读点 -->
-            <div class="shrink-0 text-right">
-              <div class="text-xs text-[var(--journal-muted)]">{{ formatDate(item.created_at) }}</div>
-              <div v-if="item.unread" class="mt-2 flex justify-end">
-                <span class="h-2 w-2 rounded-full" style="background: var(--journal-accent)" />
-              </div>
+              <div class="journal-note-helper">{{ stat.helper }}</div>
             </div>
           </div>
-        </button>
+        </article>
       </div>
+      <div class="journal-panel notification-board mt-6 rounded-[24px] border px-5 py-5 md:px-6">
+        <div class="notification-board-head gap-4">
+          <div>
+            <div class="journal-eyebrow notification-eyebrow-soft">Message Stream</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
+              按时间顺序处理所有提醒与动态
+            </h3>
+            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+              可以在这里查看消息，并按需标记已读。
+            </p>
+          </div>
 
-      <!-- 分页 -->
-      <div
-        v-if="!loading && total > 0"
-        class="mt-6 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between"
-        style="border-color: var(--journal-border)"
-      >
-        <span class="text-sm text-[var(--journal-muted)]">
-          共 {{ total }} 条，第 {{ page }} / {{ Math.ceil(total / pageSize) }} 页
-        </span>
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="journal-btn"
-            :disabled="page === 1"
-            @click="changePage(page - 1)"
-          >上一页</button>
-          <button
-            type="button"
-            class="journal-btn"
-            :disabled="page >= Math.ceil(total / pageSize)"
-            @click="changePage(page + 1)"
-          >下一页</button>
+          <div class="notification-filter-pill">
+            <Bell class="h-4 w-4" />
+            当前未读 {{ unreadOnPage }} 条
+          </div>
         </div>
+
+        <div class="notification-panel-divider" />
+
+        <div v-if="loading" class="flex justify-center py-12">
+          <div
+            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+          />
+        </div>
+
+        <AppEmpty
+          v-else-if="hasLoadError"
+          class="notification-empty-state"
+          icon="AlertTriangle"
+          title="通知加载失败"
+          :description="loadErrorMessage"
+        >
+          <template #action>
+            <button type="button" class="journal-btn" @click="refresh">重新加载</button>
+          </template>
+        </AppEmpty>
+
+        <AppEmpty
+          v-else-if="list.length === 0"
+          class="notification-empty-state"
+          icon="Inbox"
+          title="暂无通知"
+          description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
+        />
+
+        <template v-else>
+          <div class="notification-list mt-5 space-y-3">
+            <button
+              v-for="item in list"
+              :key="item.id"
+              type="button"
+              class="journal-notification-item w-full text-left"
+              :class="{ 'journal-notification-item--unread': item.unread }"
+              @click="handleMarkAsRead(item)"
+            >
+              <div class="flex items-start gap-3">
+                <div
+                  class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+                  :style="{
+                    borderColor: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 20%, transparent)`,
+                    background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 10%, transparent)`,
+                    color: accentColorMap[typeAccent(item.type)],
+                  }"
+                >
+                  <component :is="typeIcon(item.type)" class="h-5 w-5" />
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider"
+                      :style="{
+                        background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 12%, transparent)`,
+                        color: accentColorMap[typeAccent(item.type)],
+                      }"
+                      >{{ typeLabel(item.type) }}</span
+                    >
+                  </div>
+                  <p class="mt-1 text-sm font-medium text-[var(--journal-ink)] line-clamp-1">
+                    {{ item.title }}
+                  </p>
+                  <p class="mt-0.5 text-xs leading-5 text-[var(--journal-muted)] line-clamp-2">
+                    {{ item.content }}
+                  </p>
+                </div>
+
+                <div class="shrink-0 text-right">
+                  <div class="text-xs text-[var(--journal-muted)]">
+                    {{ formatDate(item.created_at) }}
+                  </div>
+                  <div v-if="item.unread" class="mt-2 flex justify-end">
+                    <span class="h-2 w-2 rounded-full" style="background: var(--journal-accent)" />
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div v-if="total > 0" class="notification-pagination">
+            <div>
+              <div class="journal-note-label">Page Control</div>
+              <div class="mt-2 text-sm text-[var(--journal-muted)]">
+                共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="journal-btn"
+                :disabled="page === 1"
+                @click="changePage(page - 1)"
+              >
+                上一页
+              </button>
+              <button
+                type="button"
+                class="journal-btn"
+                :disabled="page >= totalPages"
+                @click="changePage(page + 1)"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </section>
   </div>
@@ -244,27 +299,107 @@ onMounted(() => {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
 .journal-panel {
   border-color: var(--journal-border);
-  background: var(--journal-surface);
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+}
+
+.journal-brief {
+  border-color: var(--journal-border);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
 .journal-eyebrow {
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
-.journal-notification-item {
-  border-radius: 20px;
+.notification-eyebrow-soft {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.journal-note {
+  border-radius: 18px;
   border: 1px solid var(--journal-border);
-  background: var(--journal-surface-subtle);
+  background: rgba(248, 250, 252, 0.9);
+  padding: 0.95rem 1rem;
+}
+
+.journal-note-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.journal-note-value {
+  margin-top: 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--journal-muted);
+}
+
+.notification-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.notification-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-accent) 84%, #312e81);
+}
+
+.notification-panel-divider {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--journal-border);
+}
+
+.journal-notification-item {
+  border-radius: 18px;
+  border: 1px solid var(--journal-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
   padding: 1rem;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
   cursor: pointer;
 }
 
@@ -277,24 +412,38 @@ onMounted(() => {
   border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
 }
 
+.notification-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--journal-border);
+}
+
 .journal-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-default);
-  padding: 0.5rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.55rem 1rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  background: transparent;
-  transition: border-color 0.2s, color 0.2s;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
   cursor: pointer;
 }
 
 .journal-btn:hover:not(:disabled) {
   border-color: var(--journal-accent);
-  color: var(--journal-accent);
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
 }
 
 .journal-btn:disabled {
@@ -310,6 +459,13 @@ onMounted(() => {
 
 .journal-btn--primary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
+}
+
+:deep(.notification-empty-state) {
+  border-top-style: dashed;
+  border-bottom-style: dashed;
+  border-top-color: rgba(148, 163, 184, 0.58);
+  border-bottom-color: rgba(148, 163, 184, 0.58);
 }
 
 :global([data-theme='dark']) .journal-shell {
