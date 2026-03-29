@@ -118,104 +118,137 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 <template>
   <div class="journal-shell space-y-6">
-    <!-- Hero -->
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <div class="journal-eyebrow">Contest Center</div>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-            竞赛中心
-          </h2>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            统一查看所有竞赛窗口，快速识别正在进行、可报名和已结束的场次。
-          </p>
-        </div>
+      <div class="journal-eyebrow">Contest Center</div>
+      <h2
+        class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+      >
+        竞赛中心
+      </h2>
+      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        在这里查看当前可参加和已结束的竞赛。
+      </p>
 
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
-            竞赛态势
+      <div class="mt-5 grid gap-3 sm:grid-cols-2">
+        <article
+          v-for="stat in summaryMetrics"
+          :key="stat.key"
+          class="journal-metric rounded-[20px] border px-4 py-4"
+        >
+          <div
+            class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+          >
+            {{ stat.label }}
           </div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
-            <div v-for="stat in summaryMetrics" :key="stat.key" class="journal-note">
-              <div class="journal-note-label">{{ stat.label }}</div>
-              <div class="journal-note-value">{{ stat.value }}</div>
-            </div>
+          <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)] tech-font">
+            {{ stat.value }}
+          </div>
+          <div class="mt-2 text-xs leading-5 text-[var(--journal-muted)]">
+            {{ stat.hint }}
           </div>
         </article>
       </div>
-    </section>
 
-    <!-- 加载错误 -->
-    <div v-if="loadErrorMessage" class="journal-panel rounded-[24px] border px-5 py-5" role="alert">
-      <div class="text-sm font-semibold text-[var(--journal-ink)]">竞赛列表加载失败</div>
-      <div class="mt-1 text-sm text-[var(--journal-muted)]">{{ loadErrorMessage }}</div>
-      <button type="button" class="contest-btn mt-3" @click="refresh">重试</button>
-    </div>
-
-    <!-- 加载中骨架 -->
-    <div v-if="loading" class="space-y-3">
-      <div
-        v-for="i in 4"
-        :key="i"
-        class="h-24 rounded-[20px] animate-pulse"
-        style="background: rgba(226,232,240,0.5)"
-      />
-    </div>
-
-    <!-- 空状态 -->
-    <AppEmpty
-      v-else-if="list.length === 0 && !loadErrorMessage"
-      icon="Flag"
-      title="暂无竞赛"
-      description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
-    />
-
-    <!-- 竞赛列表 -->
-    <section v-else class="space-y-3">
-      <article
-        v-for="contest in list"
-        :key="contest.id"
-        class="contest-item journal-log rounded-[22px] border px-5 py-5 cursor-pointer"
-        :style="contestAccentStyle(contest.status)"
-        tabindex="0"
-        @click="openContest(contest)"
-        @keydown="onKeyboardOpen($event, contest)"
-      >
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap gap-2 items-center">
-              <span class="contest-badge">{{ getStatusLabel(contest.status) }}</span>
-              <span class="contest-mode">{{ getModeLabel(contest.mode) }}</span>
-            </div>
-            <h3 class="mt-2 font-semibold text-lg text-[var(--journal-ink)] leading-snug">
-              {{ contest.title }}
+      <div class="journal-panel contest-board mt-6 rounded-[24px] border px-5 py-5 md:px-6">
+        <div class="contest-board-head gap-4">
+          <div>
+            <div class="journal-eyebrow contest-eyebrow-soft">Contest Ledger</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
+              按竞赛节奏查看报名、进行与回看窗口
             </h3>
-            <div class="mt-2 flex flex-wrap gap-4">
-              <div class="flex items-center gap-1.5 text-xs text-[var(--journal-muted)]">
-                <CalendarRange class="h-3.5 w-3.5" />
-                <span>{{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}</span>
-              </div>
-              <div class="flex items-center gap-1.5 text-xs font-medium" :style="{ color: 'var(--contest-accent)' }">
-                <Clock3 class="h-3.5 w-3.5" />
-                <span>{{ getTimelineHint(contest) }}</span>
-              </div>
-            </div>
+            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+              可以直接查看时间和状态，并进入竞赛。
+            </p>
           </div>
 
-          <div class="flex items-center gap-3 shrink-0">
-            <Trophy class="h-5 w-5 opacity-60" :style="{ color: 'var(--contest-accent)' }" />
-            <button
-              type="button"
-              class="contest-action-btn"
-              :style="{ '--btn-color': 'var(--contest-accent)' }"
-              @click.stop="openContest(contest)"
-            >
-              {{ getContestActionLabel(contest.status) }}
-            </button>
+          <div class="contest-filter-pill">
+            <Trophy class="h-4 w-4" />
+            当前可见 {{ list.length }} 场
           </div>
         </div>
-      </article>
+
+        <div class="contest-panel-divider" />
+
+        <div v-if="loading" class="space-y-3 py-1">
+          <div
+            v-for="i in 4"
+            :key="i"
+            class="h-24 rounded-[18px] animate-pulse"
+            style="background: rgba(226, 232, 240, 0.5)"
+          />
+        </div>
+
+        <AppEmpty
+          v-else-if="loadErrorMessage"
+          class="contest-empty-state"
+          icon="AlertTriangle"
+          title="竞赛列表加载失败"
+          :description="loadErrorMessage"
+        >
+          <template #action>
+            <button type="button" class="contest-btn mt-3" @click="refresh">重试</button>
+          </template>
+        </AppEmpty>
+
+        <AppEmpty
+          v-else-if="list.length === 0"
+          class="contest-empty-state"
+          icon="Flag"
+          title="暂无竞赛"
+          description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
+        />
+
+        <div v-else class="contest-list mt-5 space-y-3">
+          <article
+            v-for="contest in list"
+            :key="contest.id"
+            class="contest-item journal-log rounded-[22px] border px-5 py-5 cursor-pointer"
+            :style="contestAccentStyle(contest.status)"
+            tabindex="0"
+            @click="openContest(contest)"
+            @keydown="onKeyboardOpen($event, contest)"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap gap-2 items-center">
+                  <span class="contest-badge">{{ getStatusLabel(contest.status) }}</span>
+                  <span class="contest-mode">{{ getModeLabel(contest.mode) }}</span>
+                </div>
+                <h3 class="mt-2 font-semibold text-lg text-[var(--journal-ink)] leading-snug">
+                  {{ contest.title }}
+                </h3>
+                <div class="mt-3 flex flex-wrap gap-4">
+                  <div class="flex items-center gap-1.5 text-xs text-[var(--journal-muted)]">
+                    <CalendarRange class="h-3.5 w-3.5" />
+                    <span
+                      >{{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-1.5 text-xs font-medium"
+                    :style="{ color: 'var(--contest-accent)' }"
+                  >
+                    <Clock3 class="h-3.5 w-3.5" />
+                    <span>{{ getTimelineHint(contest) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 shrink-0">
+                <Trophy class="h-5 w-5 opacity-60" :style="{ color: 'var(--contest-accent)' }" />
+                <button
+                  type="button"
+                  class="contest-action-btn"
+                  :style="{ '--btn-color': 'var(--contest-accent)' }"
+                  @click.stop="openContest(contest)"
+                >
+                  {{ getContestActionLabel(contest.status) }}
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -224,27 +257,52 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 .journal-shell {
   --journal-ink: #0f172a;
   --journal-muted: #64748b;
+  --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
   --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: rgba(248, 250, 252, 0.9);
-  --journal-accent: var(--color-primary);
+  --journal-surface: rgba(248, 250, 252, 0.9);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.08), transparent 18rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.9));
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
   border-color: var(--journal-border);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
 .journal-brief {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-metric {
+  border-color: var(--journal-border);
+  background: var(--journal-surface);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.journal-metric:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 35%, transparent);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
 
 .journal-panel {
-  background: var(--journal-surface-subtle);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
   border-color: var(--journal-border);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
 }
 
 .journal-log {
@@ -253,49 +311,120 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 }
 
 .journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
-  padding: 0.2rem 0.75rem;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
 .journal-note {
-  border-radius: 1rem;
+  border-radius: 14px;
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
-  padding: 0.65rem 0.85rem;
+  padding: 0.625rem 0.875rem;
 }
 
 .journal-note-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
 .journal-note-value {
-  margin-top: 0.4rem;
-  font-size: 1.25rem;
-  font-weight: 700;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--journal-ink);
 }
 
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--journal-muted);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-ready {
+  background: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  animation: pulse-dot 2s infinite;
+}
+
+.tech-font {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.contest-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.contest-eyebrow-soft {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.contest-panel-divider {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--journal-border);
+}
+
+.contest-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-accent) 84%, #312e81);
+}
+
+.contest-list {
+  position: relative;
+}
+
 .contest-item {
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  position: relative;
+  border-top-width: 3px;
+  border-top-color: color-mix(in srgb, var(--contest-accent) 58%, transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 .contest-item:hover,
 .contest-item:focus-visible {
   border-color: var(--contest-accent, var(--journal-accent)) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--contest-accent, var(--journal-accent)) 12%, transparent);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--contest-accent, var(--journal-accent)) 12%, transparent);
+  transform: translateY(-1px);
   outline: none;
 }
 
@@ -333,7 +462,9 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   font-weight: 600;
   color: color-mix(in srgb, var(--btn-color, var(--journal-accent)) 90%, var(--journal-ink));
   cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease;
 }
 
 .contest-action-btn:hover {
@@ -355,6 +486,13 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-btn:hover {
   border-color: var(--journal-accent);
+}
+
+:deep(.contest-empty-state) {
+  border-top-style: dashed;
+  border-bottom-style: dashed;
+  border-top-color: rgba(148, 163, 184, 0.58);
+  border-bottom-color: rgba(148, 163, 184, 0.58);
 }
 
 :global([data-theme='dark']) .journal-shell {

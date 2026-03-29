@@ -6,7 +6,6 @@ import { downloadReport, exportPersonalReport } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -105,17 +104,6 @@ onMounted(() => {
 
 <template>
   <div class="journal-shell space-y-6">
-    <PageHeader
-      eyebrow="My Account"
-      title="个人资料"
-      description="查看当前账号信息，并生成你的个人训练报告用于复盘和归档。"
-    >
-      <button type="button" class="journal-btn" @click="loadProfile">
-        <RefreshCw class="h-4 w-4" />
-        刷新
-      </button>
-    </PageHeader>
-
     <!-- 错误提示 -->
     <div
       v-if="error"
@@ -137,22 +125,33 @@ onMounted(() => {
     <div v-else class="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
       <!-- 账号信息 -->
       <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-        <div class="journal-eyebrow">Account Info</div>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-          {{ profile?.name || profile?.username || '—' }}
-        </h2>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          聚合你的账号身份、班级归属和基础资料，方便快速确认当前训练账号的信息状态。
-        </p>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="journal-eyebrow">My Account</div>
+            <h1
+              class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+            >
+              个人资料
+            </h1>
+            <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+              查看账号信息，也可以顺手导出个人报告。
+            </p>
+          </div>
+          <button type="button" class="journal-btn shrink-0" @click="loadProfile">
+            <RefreshCw class="h-4 w-4" />
+            刷新
+          </button>
+        </div>
+
+        <div class="journal-panel-divider" />
 
         <!-- 账号状态栏 -->
-        <div class="mt-5 rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3">
+        <div
+          class="rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3"
+        >
           <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
             <span class="status-dot status-dot-ready" />
             账号状态正常
-          </div>
-          <div class="mt-1 tech-font text-xs text-[var(--journal-muted)]">
-            uid://{{ profile?.id ?? '—' }}
           </div>
         </div>
 
@@ -162,8 +161,14 @@ onMounted(() => {
             :key="item.label"
             class="journal-metric rounded-[20px] border px-4 py-4"
           >
-            <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]">{{ item.label }}</div>
-            <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)] tech-font">{{ item.value }}</div>
+            <div
+              class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+            >
+              {{ item.label }}
+            </div>
+            <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)] tech-font">
+              {{ item.value }}
+            </div>
           </article>
         </div>
 
@@ -184,20 +189,25 @@ onMounted(() => {
               个人报告生成器
             </h2>
             <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              选择导出格式后创建任务，系统将自动跟踪生成状态并在就绪后提供下载。
+              在这里生成并下载个人报告。
             </p>
           </div>
-          <span class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold" :class="reportTaskMeta.chipClass">
+          <span
+            class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
+            :class="reportTaskMeta.chipClass"
+          >
             {{ reportTaskMeta.label }}
           </span>
         </div>
 
         <!-- 报告状态面板 -->
-        <div class="mt-5 rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3">
+        <div
+          class="mt-5 rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3"
+        >
           <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
-              <div class="text-sm font-medium text-[var(--journal-ink)]">报告任务状态</div>
+              <div class="text-sm font-medium text-[var(--journal-ink)]">当前状态</div>
             </div>
             <div class="flex items-center gap-2">
               <span
@@ -209,11 +219,13 @@ onMounted(() => {
                   'status-dot-danger': reportTaskMeta.status === 'failed',
                 }"
               />
-              <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{ reportTaskMeta.label }}</span>
+              <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
+                reportTaskMeta.label
+              }}</span>
             </div>
           </div>
-          <div v-if="latestReport" class="mt-1 tech-font text-xs text-[var(--journal-muted)]">
-            report://{{ latestReport.report_id }}
+          <div v-if="latestReport" class="mt-1 text-xs text-[var(--journal-muted)]">
+            报告编号：{{ latestReport.report_id }}
           </div>
         </div>
 
@@ -227,7 +239,7 @@ onMounted(() => {
             >
               <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
               <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
-              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合打印或归档留存</div>
+              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
             </label>
             <label
               class="journal-format-option"
@@ -235,7 +247,7 @@ onMounted(() => {
             >
               <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
               <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
-              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合数据筛选与二次分析</div>
+              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
             </label>
           </div>
         </fieldset>
@@ -248,7 +260,7 @@ onMounted(() => {
           @click="createReport"
         >
           <Loader2 v-if="exportLoading" class="h-4 w-4 animate-spin" />
-          {{ exportLoading ? '创建中…' : '创建导出任务' }}
+          {{ exportLoading ? '创建中…' : '生成个人报告' }}
         </button>
 
         <p v-if="exportError" class="mt-3 text-sm text-[var(--color-danger)]">
@@ -259,21 +271,41 @@ onMounted(() => {
         <template v-if="latestReport">
           <div class="mt-5 grid grid-cols-2 gap-3">
             <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]">格式</div>
-              <div class="mt-2 tech-font text-lg font-semibold text-[var(--journal-ink)]">{{ latestReportFormat.toUpperCase() }}</div>
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+              >
+                格式
+              </div>
+              <div class="mt-2 tech-font text-lg font-semibold text-[var(--journal-ink)]">
+                {{ latestReportFormat.toUpperCase() }}
+              </div>
             </article>
             <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]">创建时间</div>
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+              >
+                创建时间
+              </div>
               <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
                 {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '—' }}
               </div>
             </article>
             <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]">状态</div>
-              <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)]">{{ reportTaskMeta.label }}</div>
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+              >
+                状态
+              </div>
+              <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)]">
+                {{ reportTaskMeta.label }}
+              </div>
             </article>
             <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]">有效期</div>
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
+              >
+                有效期
+              </div>
               <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
                 {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
               </div>
@@ -308,7 +340,7 @@ onMounted(() => {
   --journal-border: rgba(226, 232, 240, 0.8);
   --journal-surface: rgba(248, 250, 252, 0.9);
   --journal-surface-subtle: rgba(241, 245, 249, 0.7);
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
@@ -325,6 +357,15 @@ onMounted(() => {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--journal-accent);
+}
+
+.journal-eyebrow-soft {
+  color: var(--journal-muted);
+}
+
+.journal-panel-divider {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--journal-border);
 }
 
 .journal-note {
@@ -358,7 +399,9 @@ onMounted(() => {
   border-color: var(--journal-border);
   background: var(--journal-surface);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .journal-format-option {
@@ -368,7 +411,9 @@ onMounted(() => {
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.75rem 1rem;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .journal-format-option:hover {
@@ -391,7 +436,9 @@ onMounted(() => {
   font-weight: 500;
   color: var(--color-text-primary);
   background: transparent;
-  transition: border-color 0.2s, color 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
   cursor: pointer;
 }
 
@@ -445,12 +492,17 @@ onMounted(() => {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .tech-font {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 :global([data-theme='dark']) .journal-shell {

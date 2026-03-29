@@ -65,8 +65,10 @@ describe('ChallengeList', () => {
     const wrapper = await mountPage()
 
     expect(wrapper.text()).toContain('靶场训练')
+    expect(wrapper.text()).toContain('当前题库概况')
     expect(wrapper.text()).toContain('Test Challenge')
-    expect(wrapper.text()).toContain('共 1 个挑战')
+    expect(wrapper.text()).toContain('题目总数')
+    expect(wrapper.text()).toContain('开始挑战')
   })
 
   it('应该显示空列表提示', async () => {

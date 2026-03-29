@@ -3,7 +3,6 @@ import { reactive, ref } from 'vue'
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
@@ -22,6 +21,24 @@ const passwordFieldErrors = reactive({
   newPassword: '',
   confirmPassword: '',
 })
+
+const securityStats = [
+  {
+    key: 'policy',
+    label: '密码策略',
+    value: '已启用',
+    helper: '最少 8 位并建议使用字母与数字混合',
+  },
+  { key: 'rotation', label: '建议轮换', value: '90 天', helper: '定期更新，降低长期暴露风险' },
+  { key: 'session', label: '安全通道', value: '在线', helper: '密码修改请求通过受保护会话提交' },
+  { key: 'scope', label: '同步范围', value: '全账号', helper: '更新后其他设备需重新登录验证' },
+]
+
+const passwordTips = [
+  '不要使用生日、姓名等易猜测信息',
+  '避免在多个平台复用同一密码',
+  '修改后其他设备需重新登录',
+]
 
 function resetPasswordErrors(): void {
   passwordError.value = null
@@ -83,30 +100,58 @@ async function submitPasswordChange(): Promise<void> {
 
 <template>
   <div class="journal-shell space-y-6">
-    <PageHeader
-      eyebrow="Security Settings"
-      title="安全设置"
-      description="修改登录密码。后续的安全能力也会统一收敛到这里。"
-    />
-
-    <!-- 修改密码 -->
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <!-- 左：表单 -->
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
-          <div class="journal-eyebrow">Password</div>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-            修改登录密码
+          <div class="journal-eyebrow">Security Console</div>
+          <h2
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          >
+            安全设置
           </h2>
-          <div class="mt-4 flex items-center gap-2 text-xs text-[var(--journal-muted)]">
-            <span class="status-dot status-dot-active" />
-            <span class="tech-font">session://secure-channel-active</span>
-          </div>
-          <p class="mt-3 max-w-xl text-sm leading-7 text-[var(--journal-muted)]">
-            建议使用至少 8 位、包含字母和数字的强密码，并定期更换以保护账号安全。
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            在这里修改密码和查看安全提示。
           </p>
 
-          <div class="mt-6 space-y-4">
+          <div class="mt-6 flex flex-wrap gap-3">
+            <div class="security-pill">
+              <span class="status-dot status-dot-active" />
+              密码策略已启用
+            </div>
+          </div>
+        </div>
+
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <KeyRound class="h-5 w-5 text-[var(--journal-accent)]" />
+            账户安全概况
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div v-for="stat in securityStats" :key="stat.key" class="journal-note">
+              <div class="journal-note-label">{{ stat.label }}</div>
+              <div class="journal-note-value" :class="{ 'tech-font': stat.key === 'rotation' }">
+                {{ stat.value }}
+              </div>
+              <div class="journal-note-helper">{{ stat.helper }}</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="journal-panel security-panel mt-6 rounded-[24px] border px-5 py-5 md:px-6">
+        <div class="security-panel-head gap-4">
+          <div>
+            <div class="journal-eyebrow security-eyebrow-soft">Password Update</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">密码修改与安全校验</h3>
+            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+              在这里修改密码并查看安全提示。
+            </p>
+          </div>
+        </div>
+
+        <div class="security-panel-divider" />
+
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
+          <form class="space-y-4" @submit.prevent="submitPasswordChange">
             <div class="space-y-1.5">
               <label class="journal-label">当前密码</label>
               <input
@@ -117,7 +162,9 @@ async function submitPasswordChange(): Promise<void> {
                 :class="{ 'journal-input--error': passwordFieldErrors.oldPassword }"
                 placeholder="输入当前密码"
               />
-              <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">{{ passwordFieldErrors.oldPassword }}</p>
+              <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">
+                {{ passwordFieldErrors.oldPassword }}
+              </p>
             </div>
 
             <div class="space-y-1.5">
@@ -130,7 +177,9 @@ async function submitPasswordChange(): Promise<void> {
                 :class="{ 'journal-input--error': passwordFieldErrors.newPassword }"
                 placeholder="至少 8 位"
               />
-              <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">{{ passwordFieldErrors.newPassword }}</p>
+              <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">
+                {{ passwordFieldErrors.newPassword }}
+              </p>
             </div>
 
             <div class="space-y-1.5">
@@ -143,7 +192,9 @@ async function submitPasswordChange(): Promise<void> {
                 :class="{ 'journal-input--error': passwordFieldErrors.confirmPassword }"
                 placeholder="再次输入新密码"
               />
-              <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">{{ passwordFieldErrors.confirmPassword }}</p>
+              <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">
+                {{ passwordFieldErrors.confirmPassword }}
+              </p>
             </div>
 
             <div
@@ -164,49 +215,27 @@ async function submitPasswordChange(): Promise<void> {
                 {{ passwordSaving ? '提交中…' : '更新密码' }}
               </button>
             </div>
-          </div>
+          </form>
+
+          <aside class="security-side space-y-4">
+            <div class="security-side-card rounded-[18px] border px-4 py-4">
+              <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
+                <span class="status-dot status-dot-active" />
+                修改后会同步退出其他设备
+              </div>
+              <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
+                提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
+              </p>
+            </div>
+
+            <div class="grid gap-3">
+              <div v-for="tip in passwordTips" :key="tip" class="journal-note security-tip-card">
+                <div class="journal-note-label">安全提示</div>
+                <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
+              </div>
+            </div>
+          </aside>
         </div>
-
-        <!-- 右：安全提示侧边栏 -->
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <KeyRound class="h-5 w-5 text-[var(--journal-accent)]" />
-            密码安全要求
-          </div>
-
-          <!-- 状态行 -->
-          <div class="mt-4 rounded-[16px] border border-[var(--journal-border)] bg-[var(--journal-surface)] px-4 py-3">
-            <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
-              <span class="status-dot status-dot-active" />
-              密码策略已激活
-            </div>
-            <div class="mt-1 tech-font text-xs text-[var(--journal-muted)]">policy://min-8-alphanumeric</div>
-          </div>
-
-          <div class="mt-4 space-y-3">
-            <div class="journal-note">
-              <div class="journal-note-label">最小长度</div>
-              <div class="journal-note-value tech-font">8 位</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">建议强度</div>
-              <div class="journal-note-value">字母 + 数字混合</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">更新频率</div>
-              <div class="journal-note-value">建议每 90 天</div>
-            </div>
-          </div>
-          <div class="mt-5 space-y-2">
-            <div
-              v-for="tip in ['不要使用生日、姓名等易猜测信息', '避免在多个平台复用同一密码', '修改后其他设备需重新登录']" :key="tip"
-              class="flex items-start gap-2 text-xs leading-5 text-[var(--journal-muted)]"
-            >
-              <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style="background: var(--journal-accent)" />
-              {{ tip }}
-            </div>
-          </div>
-        </article>
       </div>
     </section>
   </div>
@@ -221,7 +250,7 @@ async function submitPasswordChange(): Promise<void> {
   --journal-border: rgba(226, 232, 240, 0.8);
   --journal-surface: rgba(248, 250, 252, 0.9);
   --journal-surface-subtle: rgba(241, 245, 249, 0.7);
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
@@ -229,14 +258,26 @@ async function submitPasswordChange(): Promise<void> {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  border-radius: 16px !important;
+  overflow: hidden;
 }
 
 .journal-eyebrow {
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-accent);
+}
+
+.security-eyebrow-soft {
+  background: rgba(99, 102, 241, 0.06);
 }
 
 .journal-label {
@@ -248,18 +289,21 @@ async function submitPasswordChange(): Promise<void> {
 
 .journal-input {
   width: 100%;
-  border-radius: 14px;
+  border-radius: 1rem;
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
-  padding: 0.625rem 0.875rem;
+  padding: 0.7rem 0.95rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
-  transition: border-color 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .journal-input:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .journal-input--error {
@@ -275,20 +319,23 @@ async function submitPasswordChange(): Promise<void> {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-default);
-  padding: 0.5rem 1.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.55rem 1.15rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  background: transparent;
-  transition: border-color 0.2s, color 0.2s;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
   cursor: pointer;
 }
 
 .journal-btn:hover {
   border-color: var(--journal-accent);
-  color: var(--journal-accent);
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
 }
 
 .journal-btn:disabled {
@@ -309,40 +356,93 @@ async function submitPasswordChange(): Promise<void> {
 .journal-brief {
   border-color: var(--journal-border);
   background: var(--journal-surface-subtle);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.journal-panel {
+  border-color: var(--journal-border);
+  background: rgba(248, 250, 252, 0.9);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
 }
 
 .journal-note {
-  border-radius: 14px;
+  border-radius: 18px;
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
-  padding: 0.625rem 0.875rem;
+  padding: 0.9rem 0.95rem;
 }
 
 .journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
 .journal-note-value {
-  margin-top: 0.375rem;
-  font-size: 1rem;
+  margin-top: 0.55rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--journal-ink);
 }
 
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--journal-muted);
+}
+
 .tech-font {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
+}
+
+.security-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-accent) 84%, #312e81);
+}
+
+.security-pill--muted {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--journal-muted);
+}
+
+.security-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.security-panel-divider {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--journal-border);
+}
+
+.security-side-card {
+  border-color: var(--journal-border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+}
+
+.security-tip-card {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .journal-hero {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-}
-
-.journal-brief {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .status-dot {
@@ -360,8 +460,13 @@ async function submitPasswordChange(): Promise<void> {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 :global([data-theme='dark']) .journal-shell {
