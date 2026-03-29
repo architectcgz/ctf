@@ -31,10 +31,10 @@
               {{ instance.challenge_title }}
             </h3>
             <div class="flex gap-2">
-              <span class="rounded bg-[#06b6d4]/10 px-2 py-0.5 text-xs font-medium text-[#06b6d4]">
+              <span class="rounded bg-[var(--color-primary)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-primary)]">
                 {{ instance.category }}
               </span>
-              <span class="rounded bg-[#34d399]/10 px-2 py-0.5 text-xs font-medium text-[#34d399]">
+              <span class="rounded bg-[var(--color-success)]/10 px-2 py-0.5 text-xs font-medium text-[var(--color-success)]">
                 {{ instance.difficulty }}
               </span>
             </div>
@@ -86,7 +86,7 @@
                 class="font-mono"
                 :class="
                   instance.remaining < WARNING_THRESHOLD_SECONDS
-                    ? 'text-[#f59e0b] font-semibold'
+                    ? 'text-[var(--color-warning)] font-semibold'
                     : 'text-[var(--color-text-primary)]'
                 "
               >
@@ -99,13 +99,13 @@
             <button
               v-if="instance.status === 'running'"
               :disabled="instance.remaining_extends <= 0"
-              class="rounded-lg border border-sky-400/40 bg-sky-500/12 px-4 py-2 text-sm font-medium text-sky-950 transition-colors duration-150 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)]"
+              class="rounded-lg border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/10 px-4 py-2 text-sm font-medium text-[var(--color-primary)] transition-colors duration-150 hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-surface)] disabled:text-[var(--color-text-muted)]"
               @click="extendTime(instance.id)"
             >
               延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
             </button>
             <button
-              class="rounded-lg border border-[#ef4444]/20 bg-[#ef4444]/10 px-4 py-2 text-sm font-medium text-[#f87171] transition-colors duration-150 hover:bg-[#ef4444]/20"
+              class="rounded-lg border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-4 py-2 text-sm font-medium text-[var(--color-danger)] transition-colors duration-150 hover:bg-[var(--color-danger)]/20"
               @click="destroyInstance(instance.id)"
             >
               销毁

@@ -33,7 +33,7 @@
             </td>
             <td class="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{{ new Date(row.created_at).toLocaleString() }}</td>
             <td class="px-4 py-3">
-              <button class="rounded bg-red-500/20 px-3 py-1 text-xs text-red-500 transition-colors hover:bg-red-500/30" @click="handleDelete(row.id)">
+              <button class="rounded bg-[var(--color-danger)]/20 px-3 py-1 text-xs text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/30" @click="handleDelete(row.id)">
                 删除
               </button>
             </td>
@@ -76,7 +76,7 @@
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]" @click="dialogVisible = false">
+        <button class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-elevated)]" @click="dialogVisible = false">
           取消
         </button>
         <button

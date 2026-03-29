@@ -52,11 +52,11 @@ export function timelineTypeLabel(event: TimelineEvent): string {
 }
 
 export function timelineTypeTone(event: TimelineEvent): string {
-  if (event.type === 'challenge_detail_view') return 'border-indigo-500/30 bg-indigo-500/10 text-indigo-200'
-  if (event.type === 'instance_access') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200'
-  if (event.type === 'instance_proxy_request') return 'border-rose-500/30 bg-rose-500/10 text-rose-200'
-  if (event.type === 'solve') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
-  if (event.type === 'submit') return 'border-amber-500/30 bg-amber-500/10 text-amber-200'
-  if (event.type === 'hint') return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200'
-  return 'border-sky-500/30 bg-sky-500/10 text-sky-200'
+  if (event.type === 'challenge_detail_view') return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+  if (event.type === 'instance_access') return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+  if (event.type === 'instance_proxy_request') return 'border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+  if (event.type === 'solve') return 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+  if (event.type === 'submit') return 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+  if (event.type === 'hint') return 'border-[var(--color-cat-reverse)]/30 bg-[var(--color-cat-reverse)]/10 text-[var(--color-cat-reverse)]'
+  return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
 }

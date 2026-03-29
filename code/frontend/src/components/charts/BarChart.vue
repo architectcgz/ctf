@@ -17,19 +17,23 @@ const props = withDefaults(defineProps<{
   seriesName: '统计值',
 })
 
+function cssVar(name: string): string {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+}
+
 const option = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
   grid: { left: 16, right: 16, bottom: 16, top: 24, containLabel: true },
   xAxis: {
     type: 'category',
     data: props.categories,
-    axisLine: { lineStyle: { color: '#30363d' } },
-    axisLabel: { color: '#8b949e' },
+    axisLine: { lineStyle: { color: cssVar('--color-border-default') } },
+    axisLabel: { color: cssVar('--color-text-secondary') },
   },
   yAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: 'rgba(48, 54, 61, 0.5)' } },
-    axisLabel: { color: '#8b949e' },
+    splitLine: { lineStyle: { color: cssVar('--color-border-subtle') } },
+    axisLabel: { color: cssVar('--color-text-secondary') },
   },
   series: [
     {
@@ -37,7 +41,7 @@ const option = computed<EChartsOption>(() => ({
       type: 'bar',
       data: props.data,
       itemStyle: {
-        color: '#0891b2',
+        color: cssVar('--color-primary'),
         borderRadius: [8, 8, 0, 0],
       },
     },

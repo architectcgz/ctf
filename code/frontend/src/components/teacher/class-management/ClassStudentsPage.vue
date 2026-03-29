@@ -103,7 +103,7 @@ const activeRateText = computed(() => {
 
     <div
       v-if="error"
-      class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600"
+      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
     >
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>

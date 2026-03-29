@@ -214,7 +214,7 @@ const {
             <button
               v-if="hasWriteup"
               :disabled="deleting"
-              class="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-3 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              class="rounded-2xl border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-5 py-3 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/20 disabled:cursor-not-allowed disabled:opacity-60"
               @click="void handleDelete()"
             >
               <Trash2 class="mr-2 inline-flex h-4 w-4" />

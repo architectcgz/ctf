@@ -65,7 +65,7 @@ onMounted(() => {
     <div v-else class="space-y-6">
       <div
         v-if="error"
-        class="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-5 py-4 text-sm text-rose-200"
+        class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
       >
         {{ error }}
       </div>
@@ -103,7 +103,7 @@ onMounted(() => {
                   </p>
                 </div>
                 <span
-                  class="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700"
+                  class="rounded-full bg-[var(--color-warning)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-warning)]"
                 >
                   {{ suspect.submit_count }} 次
                 </span>
@@ -141,7 +141,7 @@ onMounted(() => {
                   </p>
                 </div>
                 <span
-                  class="rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-semibold text-cyan-700"
+                  class="rounded-full bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-primary)]"
                 >
                   {{ group.user_count }} 账号
                 </span>

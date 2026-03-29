@@ -15,6 +15,19 @@
   --color-warning: #d29922;
   --color-shadow-strong: rgba(0, 0, 0, 0.36);
   --color-shadow-soft: rgba(0, 0, 0, 0.18);
+  /* 分类色 */
+  --color-cat-web: #3b82f6;
+  --color-cat-pwn: #ef4444;
+  --color-cat-reverse: #8b5cf6;
+  --color-cat-crypto: #f59e0b;
+  --color-cat-misc: #10b981;
+  --color-cat-forensics: #06b6d4;
+  /* 难度色 */
+  --color-diff-beginner: #10b981;
+  --color-diff-easy: #3b82f6;
+  --color-diff-medium: #f59e0b;
+  --color-diff-hard: #ef4444;
+  --color-diff-insane: #7c3aed;
   --shell-sidebar-collapsed: 5.5rem;
   --shell-sidebar-expanded: 15.5rem;
 }

@@ -48,7 +48,7 @@
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-[#30363d]">
+        <tbody class="divide-y divide-[var(--color-border-default)]">
           <tr
             v-for="row in list"
             :key="row.id"
@@ -121,13 +121,13 @@
                 </button>
                 <button
                   v-if="row.status !== 'published'"
-                  class="rounded bg-emerald-500/20 px-3 py-1 text-xs text-emerald-500 transition-colors hover:bg-emerald-500/30"
+                  class="rounded bg-[var(--color-success)]/20 px-3 py-1 text-xs text-[var(--color-success)] transition-colors hover:bg-[var(--color-success)]/30"
                   @click="void publish(row)"
                 >
                   发布
                 </button>
                 <button
-                  class="rounded bg-red-500/20 px-3 py-1 text-xs text-red-500 transition-colors hover:bg-red-500/30"
+                  class="rounded bg-[var(--color-danger)]/20 px-3 py-1 text-xs text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/30"
                   @click="void remove(row.id)"
                 >
                   删除
@@ -289,7 +289,7 @@
                 <span class="text-sm font-medium text-[var(--color-text-primary)]">提示 {{ index + 1 }}</span>
                 <button
                   type="button"
-                  class="text-xs text-red-500 transition-colors hover:text-red-400"
+                  class="text-xs text-[var(--color-danger)] transition-colors hover:text-[var(--color-danger)]"
                   @click="removeHint(index)"
                 >
                   删除
@@ -374,7 +374,7 @@
       </ElForm>
       <template #footer>
         <button
-          class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[#21262d]"
+          class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-elevated)]"
           @click="dialogVisible = false"
         >
           取消

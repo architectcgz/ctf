@@ -4,7 +4,7 @@
 
 - 后端：位于 `code/backend/`，技术栈为 Go + Gin + Viper + Zap，分层目录为 `code/backend/cmd/`、`code/backend/internal/handler/`、`code/backend/internal/service/`、`code/backend/internal/repository/`、`code/backend/internal/model/`、`code/backend/internal/middleware/`、`code/backend/pkg/`
 - 前端：Vue 3 + Vite + TypeScript + Pinia + Vue Router + Element Plus
-- 开发依赖：可复用根目录 `infra/` 的共享 PostgreSQL + Redis，也可用 `code/backend/docker-compose.dev.yml` 单独启动一套
+- 开发依赖：可复用根目录 `infra/` 的共享 PostgreSQL + Redis，也可用 `docker/ctf/docker-compose.dev.yml` 启动 CTF 完整容器栈（`ctf-api` + `ctf-postgres` + `ctf-redis`）
 
 ## 启动方式
 
@@ -20,9 +20,10 @@ cd code/backend && make run
 cd code/frontend && npm run dev
 ```
 
-开发基础设施：
+开发容器栈（推荐，后端与依赖在同一个 Compose 项目中）：
 
 ```bash
+cd code/backend && make docker-build
 cd code/backend && make infra-up
 ```
 
@@ -32,7 +33,20 @@ cd code/backend && make infra-up
 cd code/backend && make infra-up-shared
 ```
 
-`code/backend/docker-compose.dev.yml` 的 PostgreSQL/Redis 端口仅绑定到 `127.0.0.1`，避免开发态暴露到局域网。
+`docker/ctf/docker-compose.dev.yml` 默认端口如下，并且仅绑定到 `127.0.0.1`，避免开发态暴露到局域网：
+
+- `ctf-api`: `8080`
+- `ctf-postgres`: `15432`
+- `ctf-redis`: `16379`
+
+Docker 编排规范见：`docs/docker-compose-rules.md`。
+
+强制要求摘要：
+
+- CTF 相关容器统一放在 `docker/ctf/` 下
+- CTF 相关容器统一由一个 Compose 项目管理（建议 `name: ctf`）
+- CTF 内部统一使用 `ctf-network`
+- 禁止 CTF 容器混用 Compose 与手工 `docker run`
 
 ## 当前骨架范围
 

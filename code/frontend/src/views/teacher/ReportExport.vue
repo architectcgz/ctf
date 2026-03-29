@@ -335,10 +335,10 @@ onMounted(() => {
                 class="rounded-full px-3 py-1 text-xs font-semibold"
                 :class="
                   latestExport.result.status === 'ready'
-                    ? 'bg-emerald-500/12 text-emerald-600'
+                    ? 'bg-[var(--color-success)]/12 text-[var(--color-success)]'
                     : latestExport.result.status === 'failed'
-                      ? 'bg-rose-500/12 text-rose-600'
-                      : 'bg-amber-500/12 text-amber-600'
+                      ? 'bg-[var(--color-danger)]/12 text-[var(--color-danger)]'
+                      : 'bg-[var(--color-warning)]/12 text-[var(--color-warning)]'
                 "
               >
                 {{
@@ -428,7 +428,7 @@ onMounted(() => {
 
       <div
         v-if="previewError"
-        class="border-b border-l-2 border-amber-300 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"
+        class="border-b border-l-2 border-[var(--color-warning)] bg-[var(--color-warning)]/8 px-4 py-3 text-sm text-[var(--color-warning)]"
       >
         {{ previewError }}
       </div>
