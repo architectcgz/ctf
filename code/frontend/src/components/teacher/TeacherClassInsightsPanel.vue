@@ -41,98 +41,87 @@ const weakDimensionStats = computed(() => {
 </script>
 
 <template>
-  <section class="teacher-insight-layout">
-    <section class="teacher-panel">
-      <header class="teacher-panel__header">
-        <h2 class="teacher-panel__title">
-          班级 Top 学生
-        </h2>
-        <p class="teacher-panel__subtitle">
-          {{
-            className
-              ? `${className} 当前按解题数和得分排序的前 5 名。`
-              : '当前班级按解题数和得分排序的前 5 名。'
-          }}
-        </p>
-      </header>
+  <section class="teacher-panel">
+    <div class="teacher-insight-layout">
+      <section class="teacher-subsection">
+        <header class="teacher-subsection__header">
+          <div class="journal-eyebrow">Students</div>
+          <h2 class="teacher-panel__title">班级 Top 学生</h2>
+          <p class="teacher-panel__subtitle">
+            {{
+              className
+                ? `${className} 当前按解题数和得分排序的前 5 名。`
+                : '当前班级按解题数和得分排序的前 5 名。'
+            }}
+          </p>
+        </header>
 
-      <AppEmpty
-        v-if="topStudents.length === 0"
-        icon="GraduationCap"
-        title="暂无学生数据"
-        description="当前班级还没有可用于排序的学生记录。"
-      />
+        <AppEmpty
+          v-if="topStudents.length === 0"
+          icon="GraduationCap"
+          title="暂无学生数据"
+          description="当前班级还没有可用于排序的学生记录。"
+        />
 
-      <div
-        v-else
-        class="top-student-list"
-      >
-        <article
-          v-for="(student, index) in topStudents"
-          :key="student.id"
-          class="top-student-item"
-        >
-          <div class="top-student-item__main">
-            <div class="top-student-item__name-wrap">
-              <span class="top-student-item__rank">
-                {{ index + 1 }}
-              </span>
-              <span class="top-student-item__name">{{ student.name || student.username }}</span>
+        <div v-else class="top-student-list">
+          <article
+            v-for="(student, index) in topStudents"
+            :key="student.id"
+            class="top-student-item"
+          >
+            <div class="top-student-item__main">
+              <div class="top-student-item__name-wrap">
+                <span class="top-student-item__rank">
+                  {{ index + 1 }}
+                </span>
+                <span class="top-student-item__name">{{ student.name || student.username }}</span>
+              </div>
+              <div class="top-student-item__meta">
+                @{{ student.username }}
+                <span v-if="student.weak_dimension"> · 薄弱项 {{ student.weak_dimension }}</span>
+              </div>
             </div>
-            <div class="top-student-item__meta">
-              @{{ student.username }}
-              <span v-if="student.weak_dimension"> · 薄弱项 {{ student.weak_dimension }}</span>
+            <div class="top-student-item__stats">
+              <div>{{ student.solved_count ?? 0 }} 题</div>
+              <div>{{ student.total_score ?? 0 }} 分</div>
             </div>
-          </div>
-          <div class="top-student-item__stats">
-            <div>{{ student.solved_count ?? 0 }} 题</div>
-            <div>{{ student.total_score ?? 0 }} 分</div>
-          </div>
-        </article>
-      </div>
-    </section>
+          </article>
+        </div>
+      </section>
 
-    <section class="teacher-panel">
-      <header class="teacher-panel__header">
-        <h2 class="teacher-panel__title">
-          薄弱维度分布
-        </h2>
-        <p class="teacher-panel__subtitle">
-          {{
-            className ? `${className} 当前学生最弱维度的分布情况。` : '当前班级学生最弱维度的分布情况。'
-          }}
-        </p>
-      </header>
+      <section class="teacher-subsection">
+        <header class="teacher-subsection__header">
+          <div class="journal-eyebrow">Weak Dimensions</div>
+          <h2 class="teacher-panel__title">薄弱维度分布</h2>
+          <p class="teacher-panel__subtitle">
+            {{
+              className
+                ? `${className} 当前学生最弱维度的分布情况。`
+                : '当前班级学生最弱维度的分布情况。'
+            }}
+          </p>
+        </header>
 
-      <AppEmpty
-        v-if="weakDimensionStats.length === 0"
-        icon="FileChartColumnIncreasing"
-        title="暂无维度分布"
-        description="当前班级还没有可用于聚合的能力画像数据。"
-      />
+        <AppEmpty
+          v-if="weakDimensionStats.length === 0"
+          icon="FileChartColumnIncreasing"
+          title="暂无维度分布"
+          description="当前班级还没有可用于聚合的能力画像数据。"
+        />
 
-      <div
-        v-else
-        class="dimension-list"
-      >
-        <div
-          v-for="item in weakDimensionStats"
-          :key="item.dimension"
-          class="dimension-item"
-        >
-          <div class="dimension-item__head">
-            <span class="dimension-item__name">{{ item.dimension }}</span>
-            <span class="dimension-item__count">{{ item.count }} 人</span>
-          </div>
-          <div class="dimension-item__bar">
-            <div
-              class="dimension-item__bar-fill"
-              :style="{ width: item.width }"
-            />
+        <div v-else class="dimension-list">
+          <div v-for="item in weakDimensionStats" :key="item.dimension" class="dimension-item">
+            <div class="dimension-item__head">
+              <span class="dimension-item__name">{{ item.dimension }}</span>
+              <span class="dimension-item__count">{{ item.count }} 人</span>
+            </div>
+            <div class="dimension-item__bar">
+              <div class="dimension-item__bar-fill" :style="{ width: item.width }" />
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -143,30 +132,60 @@ const weakDimensionStats = computed(() => {
 }
 
 .teacher-panel {
-  border-top: 1px solid var(--color-border-default);
-  padding-top: 0.95rem;
+  --panel-ink: var(--journal-ink, #0f172a);
+  --panel-muted: var(--journal-muted, #64748b);
+  --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
+  --panel-surface: var(--journal-surface, rgba(248, 250, 252, 0.9));
+  --panel-surface-subtle: var(--journal-surface-subtle, rgba(241, 245, 249, 0.7));
+  --panel-accent: var(--journal-accent, #4f46e5);
+  --panel-accent-strong: var(--journal-accent-strong, #4338ca);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-surface-subtle);
+  padding: 1.25rem 1.25rem 1.35rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
 }
 
-.teacher-panel__header {
-  margin-bottom: 0.72rem;
+.teacher-subsection + .teacher-subsection {
+  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  padding-top: 1.25rem;
+}
+
+.teacher-subsection__header {
+  margin-bottom: 1rem;
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.2rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--panel-accent-strong);
 }
 
 .teacher-panel__title {
-  font-size: 1.04rem;
+  margin-top: 0.75rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   font-size: 0.84rem;
   line-height: 1.65;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .top-student-list {
   display: grid;
-  gap: 0.56rem;
+  gap: 0.75rem;
 }
 
 .top-student-item {
@@ -174,8 +193,13 @@ const weakDimensionStats = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.9rem;
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding: 0.58rem 0.2rem 0.62rem;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+  padding: 0.2rem 0 0.95rem;
+}
+
+.top-student-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 .top-student-item__main {
@@ -192,10 +216,12 @@ const weakDimensionStats = computed(() => {
   display: inline-flex;
   min-width: 1.3rem;
   justify-content: center;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--panel-accent);
 }
 
 .top-student-item__name {
@@ -205,13 +231,13 @@ const weakDimensionStats = computed(() => {
   white-space: nowrap;
   font-size: 0.92rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .top-student-item__meta {
   margin-top: 0.2rem;
   font-size: 0.8rem;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .top-student-item__stats {
@@ -219,17 +245,22 @@ const weakDimensionStats = computed(() => {
   text-align: right;
   font-size: 0.78rem;
   line-height: 1.6;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .dimension-list {
   display: grid;
-  gap: 0.72rem;
+  gap: 0.82rem;
 }
 
 .dimension-item {
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding: 0.5rem 0.2rem 0.68rem;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+  padding: 0.2rem 0 0.85rem;
+}
+
+.dimension-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 .dimension-item__head {
@@ -242,24 +273,26 @@ const weakDimensionStats = computed(() => {
 .dimension-item__name {
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .dimension-item__count {
   font-size: 0.78rem;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .dimension-item__bar {
   margin-top: 0.4rem;
   height: 0.35rem;
   overflow: hidden;
-  background: var(--color-border-default);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-border) 84%, #ffffff);
 }
 
 .dimension-item__bar-fill {
   height: 100%;
-  background: color-mix(in srgb, var(--color-primary) 85%, white);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-accent) 85%, white);
 }
 
 @media (min-width: 1280px) {
