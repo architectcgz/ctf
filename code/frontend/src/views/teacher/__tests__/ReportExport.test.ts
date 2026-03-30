@@ -39,6 +39,11 @@ vi.mock('@/api/assessment', () => ({
 describe('ReportExport', () => {
   let pinia: ReturnType<typeof createPinia>
 
+  const dialogStub = {
+    props: ['modelValue'],
+    template: '<div v-if="modelValue"><slot name="header" /><slot /></div>',
+  }
+
   beforeEach(() => {
     pinia = createPinia()
     setActivePinia(pinia)
@@ -129,6 +134,7 @@ describe('ReportExport', () => {
       global: {
         plugins: [pinia],
         stubs: {
+          ElDialog: dialogStub,
           LineChart: true,
         },
       },
@@ -138,9 +144,18 @@ describe('ReportExport', () => {
 
     const classInput = wrapper.find('input[type="text"]')
     expect((classInput.element as HTMLInputElement).value).toBe('Class A')
+
+    const previewButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('打开报告预览'))
+    expect(previewButton).toBeTruthy()
+
+    await previewButton!.trigger('click')
+    await flushPromises()
+
     expect(getClassStudentsMock).toHaveBeenCalledWith('Class A')
     expect(getClassReviewMock).toHaveBeenCalledWith('Class A')
-    expect(wrapper.text()).toContain('当前报告预览')
+    expect(wrapper.text()).toContain('Live Preview')
     expect(wrapper.text()).toContain('班级活跃度需要补强')
 
     const exportButton = wrapper
@@ -173,6 +188,7 @@ describe('ReportExport', () => {
       global: {
         plugins: [pinia],
         stubs: {
+          ElDialog: dialogStub,
           LineChart: true,
         },
       },

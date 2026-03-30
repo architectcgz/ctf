@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
 import {
@@ -18,9 +18,6 @@ import type {
 } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import MetricCard from '@/components/common/MetricCard.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 import TeacherClassInsightsPanel from '@/components/teacher/TeacherClassInsightsPanel.vue'
 import TeacherClassReviewPanel from '@/components/teacher/TeacherClassReviewPanel.vue'
 import TeacherClassTrendPanel from '@/components/teacher/TeacherClassTrendPanel.vue'
@@ -50,6 +47,7 @@ const form = ref({
 const submitting = ref(false)
 const downloading = ref(false)
 const latestExport = ref<ExportRecord | null>(null)
+const previewDialogVisible = ref(false)
 const previewLoading = ref(false)
 const previewError = ref<string | null>(null)
 const previewClassName = ref('')
@@ -126,6 +124,11 @@ async function loadPreview(): Promise<void> {
   }
 }
 
+async function openPreviewDialog(): Promise<void> {
+  previewDialogVisible.value = true
+  await loadPreview()
+}
+
 async function handleExport(): Promise<void> {
   const className = normalizeClassName()
   if (!className) {
@@ -187,136 +190,156 @@ async function handleDownload(): Promise<void> {
     downloading.value = false
   }
 }
-
-onMounted(() => {
-  if (normalizeClassName()) {
-    void loadPreview()
-  }
-})
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      eyebrow="Teacher"
-      title="报告导出"
-      description="先查看当前班级报告预览，再决定是否创建导出任务下载 PDF 或 Excel 文件。"
-    >
-      <AppCard
-        variant="action"
-        accent="neutral"
-      >
-        当前账号：<span class="font-medium text-[var(--color-text-primary)]">{{
-          authStore.user?.username || '-'
-        }}</span>
-      </AppCard>
-    </PageHeader>
+  <div class="report-shell space-y-6">
+    <section class="report-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <div class="report-eyebrow">Teacher Export</div>
+          <h2
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          >
+            报告导出
+          </h2>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            先查看当前班级报告预览，再决定是否创建导出任务下载 PDF 或 Excel 文件。
+          </p>
+        </div>
 
-    <section class="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
-      <SectionCard
-        title="创建导出任务"
-        subtitle="预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。"
-      >
-        <AppCard
-          variant="hero"
-          accent="primary"
-          eyebrow="Export Task"
-          title="班级报告生成器"
-          subtitle="先确定班级和导出格式，再把任务交给后端。下载变为可选动作，不影响当前页面预览。"
-        >
-          <label class="block">
-            <span class="mb-2 block text-sm font-medium text-[var(--color-text-primary)]">班级名称</span>
-            <input
-              v-model="form.className"
-              type="text"
-              :placeholder="classNamePlaceholder"
-              class="w-full border border-l-2 border-[var(--color-border-default)] bg-transparent px-3 py-2.5 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-0"
-            >
-          </label>
-
-          <fieldset>
-            <legend class="mb-2 text-sm font-medium text-[var(--color-text-primary)]">
-              导出格式
-            </legend>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <label
-                class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
-                :class="
-                  form.format === 'pdf'
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
-                    : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
-                "
-              >
-                <input
-                  v-model="form.format"
-                  type="radio"
-                  value="pdf"
-                  class="mt-1"
-                >
-                <span>
-                  <span class="block font-medium text-[var(--color-text-primary)]">PDF</span>
-                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]">适合打印、归档和正式汇报。</span>
-                </span>
-              </label>
-
-              <label
-                class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
-                :class="
-                  form.format === 'excel'
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
-                    : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
-                "
-              >
-                <input
-                  v-model="form.format"
-                  type="radio"
-                  value="excel"
-                  class="mt-1"
-                >
-                <span>
-                  <span class="block font-medium text-[var(--color-text-primary)]">Excel</span>
-                  <span class="mt-1 block text-sm text-[var(--color-text-secondary)]">适合继续分析、筛选和二次加工。</span>
-                </span>
-              </label>
+        <article class="report-brief rounded-[24px] border px-5 py-5">
+          <div class="report-brief-title">当前导出概况</div>
+          <div class="mt-5 space-y-3">
+            <div class="report-note">
+              <div class="report-note-label">当前账号</div>
+              <div class="report-note-value">{{ authStore.user?.username || '-' }}</div>
+              <div class="report-note-helper">用于发起当前导出任务的账号</div>
             </div>
-          </fieldset>
+            <div class="report-note">
+              <div class="report-note-label">默认班级</div>
+              <div class="report-note-value">{{ authStore.user?.class_name || '未绑定' }}</div>
+              <div class="report-note-helper">留空时将优先使用当前账号绑定班级</div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="report-hero-divider" />
+
+      <div class="grid gap-6 xl:grid-cols-[1.25fr_0.9fr]">
+        <div>
+          <div class="report-section-head">
+            <div>
+              <div class="report-eyebrow report-eyebrow--soft">Export Task</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">创建导出任务</h3>
+              <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+                预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。
+              </p>
+            </div>
+          </div>
 
           <AppCard
-            variant="action"
-            accent="neutral"
+            class="report-card report-card--hero mt-5"
+            variant="hero"
+            accent="primary"
+            eyebrow="Export Task"
+            title="班级报告生成器"
+            subtitle="先确定班级和导出格式，再把任务交给后端。下载变为可选动作，不影响当前页面预览。"
           >
-            如果当前账号已绑定班级，可直接留空使用默认班级；管理员也可手动输入其他班级名称。
+            <label class="block">
+              <span class="mb-2 block text-sm font-medium text-[var(--color-text-primary)]"
+                >班级名称</span
+              >
+              <input
+                v-model="form.className"
+                type="text"
+                :placeholder="classNamePlaceholder"
+                class="w-full border border-l-2 border-[var(--color-border-default)] bg-transparent px-3 py-2.5 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-0"
+              />
+            </label>
+
+            <fieldset>
+              <legend class="mb-2 text-sm font-medium text-[var(--color-text-primary)]">
+                导出格式
+              </legend>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label
+                  class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
+                  :class="
+                    form.format === 'pdf'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
+                      : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
+                  "
+                >
+                  <input v-model="form.format" type="radio" value="pdf" class="mt-1" />
+                  <span>
+                    <span class="block font-medium text-[var(--color-text-primary)]">PDF</span>
+                    <span class="mt-1 block text-sm text-[var(--color-text-secondary)]"
+                      >适合打印、归档和正式汇报。</span
+                    >
+                  </span>
+                </label>
+
+                <label
+                  class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
+                  :class="
+                    form.format === 'excel'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
+                      : 'border-[var(--color-border-default)] bg-transparent hover:border-[var(--color-primary)]/50'
+                  "
+                >
+                  <input v-model="form.format" type="radio" value="excel" class="mt-1" />
+                  <span>
+                    <span class="block font-medium text-[var(--color-text-primary)]">Excel</span>
+                    <span class="mt-1 block text-sm text-[var(--color-text-secondary)]"
+                      >适合继续分析、筛选和二次加工。</span
+                    >
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <AppCard variant="action" accent="neutral" class="report-card report-card--action">
+              如果当前账号已绑定班级，可直接留空使用默认班级；管理员也可手动输入其他班级名称。
+            </AppCard>
+
+            <div class="flex flex-wrap gap-3">
+              <button
+                type="button"
+                :disabled="previewLoading"
+                class="report-btn"
+                @click="openPreviewDialog"
+              >
+                {{ previewLoading ? '加载预览中...' : '打开报告预览' }}
+              </button>
+
+              <button
+                type="button"
+                :disabled="submitting"
+                class="report-btn report-btn--primary"
+                @click="handleExport"
+              >
+                {{ submitting ? '提交中...' : '创建导出任务' }}
+              </button>
+            </div>
           </AppCard>
+        </div>
 
-          <div class="flex flex-wrap gap-3">
-            <button
-              type="button"
-              :disabled="previewLoading"
-              class="inline-flex items-center border border-[var(--color-border-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-              @click="loadPreview"
-            >
-              {{ previewLoading ? '加载预览中...' : '查看当前预览' }}
-            </button>
-
-            <button
-              type="button"
-              :disabled="submitting"
-              class="inline-flex items-center border border-[var(--color-primary)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-              @click="handleExport"
-            >
-              {{ submitting ? '提交中...' : '创建导出任务' }}
-            </button>
+        <div class="space-y-6">
+          <div class="report-section-head">
+            <div>
+              <div class="report-eyebrow report-eyebrow--soft">Latest Task</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">最近一次任务</h3>
+              <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+                导出状态、下载信息和任务元数据都在这里收口。
+              </p>
+            </div>
           </div>
-        </AppCard>
-      </SectionCard>
 
-      <div class="space-y-6">
-        <SectionCard
-          title="最近一次任务"
-          subtitle="导出状态、下载信息和任务元数据都在这里收口。"
-        >
           <AppEmpty
             v-if="!latestExport"
+            class="mt-5"
             title="还没有创建导出任务"
             description="先在左侧创建一次班级报告任务，这里会展示最近一次任务状态。"
             icon="FileChartColumnIncreasing"
@@ -324,8 +347,15 @@ onMounted(() => {
 
           <AppCard
             v-else
+            class="report-card report-card--hero"
             variant="hero"
-            :accent="latestExport.result.status === 'ready' ? 'success' : latestExport.result.status === 'failed' ? 'danger' : 'warning'"
+            :accent="
+              latestExport.result.status === 'ready'
+                ? 'success'
+                : latestExport.result.status === 'failed'
+                  ? 'danger'
+                  : 'warning'
+            "
             eyebrow="Latest Task"
             :title="String(latestExport.result.report_id)"
             :subtitle="derivedDownloadHint"
@@ -353,35 +383,43 @@ onMounted(() => {
 
             <div class="grid grid-cols-2 gap-3 text-sm">
               <AppCard
+                class="report-card report-card--metric"
                 variant="metric"
                 accent="primary"
                 eyebrow="班级"
                 :title="latestExport.className"
               />
               <AppCard
+                class="report-card report-card--metric"
                 variant="metric"
                 accent="primary"
                 eyebrow="格式"
                 :title="latestExport.format.toUpperCase()"
               />
               <AppCard
+                class="report-card report-card--metric"
                 variant="metric"
                 accent="neutral"
                 eyebrow="创建时间"
                 :title="formatDate(latestExport.createdAt)"
               />
               <AppCard
+                class="report-card report-card--metric"
                 variant="metric"
                 accent="neutral"
                 eyebrow="过期时间"
-                :title="latestExport.result.expires_at ? formatDate(latestExport.result.expires_at) : '待生成完成后返回'"
+                :title="
+                  latestExport.result.expires_at
+                    ? formatDate(latestExport.result.expires_at)
+                    : '待生成完成后返回'
+                "
               />
             </div>
 
             <button
               type="button"
               :disabled="downloading || latestExport.result.status !== 'ready'"
-              class="inline-flex items-center border border-[var(--color-border-default)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+              class="report-btn"
               @click="handleDownload"
             >
               {{
@@ -395,36 +433,51 @@ onMounted(() => {
               }}
             </button>
           </AppCard>
-        </SectionCard>
 
-        <SectionCard
-          title="使用说明"
-          subtitle="导出链路和当前后端能力边界。"
-        >
-          <ol class="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
-            <li>1. 先点击“查看当前预览”，直接在页面内查看当前班级报告内容。</li>
-            <li>2. 确认需要留档时，再创建后台导出任务。</li>
-            <li>3. 若状态为“已就绪”，可直接下载；若为“生成中”，页面会自动轮询状态。</li>
-          </ol>
-        </SectionCard>
+          <div class="report-section-head">
+            <div>
+              <div class="report-eyebrow report-eyebrow--soft">Guide</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">使用说明</h3>
+              <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+                导出链路和当前后端能力边界。
+              </p>
+            </div>
+          </div>
+
+          <div class="report-guide mt-5">
+            <ol class="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+              <li>1. 先点击“查看当前预览”，直接在页面内查看当前班级报告内容。</li>
+              <li>2. 确认需要留档时，再创建后台导出任务。</li>
+              <li>3. 若状态为“已就绪”，可直接下载；若为“生成中”，页面会自动轮询状态。</li>
+            </ol>
+          </div>
+        </div>
       </div>
     </section>
 
-    <section class="space-y-6">
-      <PageHeader
-        eyebrow="Live Preview"
-        title="当前报告预览"
-        description="不下载也能直接查看当前班级的关键报告内容。"
-      >
-        <AppCard
-          variant="action"
-          accent="neutral"
-        >
-          预览班级：<span class="font-medium text-[var(--color-text-primary)]">{{
-            previewClassName || '未选择'
-          }}</span>
-        </AppCard>
-      </PageHeader>
+    <ElDialog
+      v-model="previewDialogVisible"
+      width="min(1180px, calc(100vw - 32px))"
+      top="4vh"
+      destroy-on-close
+      class="report-preview-dialog"
+    >
+      <template #header>
+        <div class="report-dialog-header">
+          <div>
+            <div class="report-eyebrow">Live Preview</div>
+            <h3 class="mt-3 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
+              当前报告预览
+            </h3>
+            <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
+              不下载也能直接查看当前班级的关键报告内容。
+            </p>
+          </div>
+          <div class="report-dialog-chip">
+            预览班级：{{ previewClassName || normalizeClassName() || '未选择' }}
+          </div>
+        </div>
+      </template>
 
       <div
         v-if="previewError"
@@ -433,10 +486,7 @@ onMounted(() => {
         {{ previewError }}
       </div>
 
-      <div
-        v-if="previewLoading"
-        class="grid gap-4 md:grid-cols-3"
-      >
+      <div v-if="previewLoading" class="grid gap-4 md:grid-cols-3">
         <div
           v-for="index in 3"
           :key="index"
@@ -445,25 +495,22 @@ onMounted(() => {
       </div>
 
       <template v-else-if="previewSummary">
-        <section class="grid gap-4 md:grid-cols-3">
-          <MetricCard
-            label="班级人数"
-            :value="previewSummary.student_count"
-            hint="当前预览班级纳入统计的学生数"
-            accent="success"
-          />
-          <MetricCard
-            label="平均解题"
-            :value="averageSolvedText"
-            hint="当前班级学生的人均解题数"
-            accent="warning"
-          />
-          <MetricCard
-            label="近 7 天活跃率"
-            :value="activeRateText"
-            hint="近 7 天至少有一次训练动作的学生占比"
-            accent="primary"
-          />
+        <section class="report-kpi-grid grid gap-3 md:grid-cols-3">
+          <article class="report-kpi-card report-kpi-card--success">
+            <div class="report-kpi-label">班级人数</div>
+            <div class="report-kpi-value">{{ previewSummary.student_count }}</div>
+            <div class="report-kpi-hint">当前预览班级纳入统计的学生数</div>
+          </article>
+          <article class="report-kpi-card report-kpi-card--warning">
+            <div class="report-kpi-label">平均解题</div>
+            <div class="report-kpi-value">{{ averageSolvedText }}</div>
+            <div class="report-kpi-hint">当前班级学生的人均解题数</div>
+          </article>
+          <article class="report-kpi-card report-kpi-card--primary">
+            <div class="report-kpi-label">近 7 天活跃率</div>
+            <div class="report-kpi-value">{{ activeRateText }}</div>
+            <div class="report-kpi-hint">近 7 天至少有一次训练动作的学生占比</div>
+          </article>
         </section>
 
         <TeacherClassTrendPanel
@@ -472,15 +519,9 @@ onMounted(() => {
           subtitle="直接查看当前班级训练事件、成功解题和活跃学生走势。"
         />
 
-        <TeacherClassReviewPanel
-          :review="previewReview"
-          :class-name="previewClassName"
-        />
+        <TeacherClassReviewPanel :review="previewReview" :class-name="previewClassName" />
 
-        <TeacherClassInsightsPanel
-          :students="previewStudents"
-          :class-name="previewClassName"
-        />
+        <TeacherClassInsightsPanel :students="previewStudents" :class-name="previewClassName" />
       </template>
 
       <AppEmpty
@@ -489,6 +530,280 @@ onMounted(() => {
         description="先选择班级并加载一次预览，这里会展示当前报告内容。"
         icon="FileChartColumnIncreasing"
       />
-    </section>
+    </ElDialog>
   </div>
 </template>
+
+<style scoped>
+.report-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: rgba(248, 250, 252, 0.9);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: rgba(79, 70, 229, 0.08);
+  --color-text-primary: var(--journal-ink);
+  --color-text-secondary: var(--journal-muted);
+  --color-text-muted: #94a3b8;
+  --color-border-default: var(--journal-border);
+  --color-border-subtle: rgba(226, 232, 240, 0.74);
+  --color-bg-surface: var(--journal-surface);
+  --color-bg-base: #f8fafc;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+:deep(.page-header) {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+:deep(.page-header__eyebrow) {
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-left: 1px solid rgba(99, 102, 241, 0.18) !important;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.2rem 0.72rem;
+  padding-left: 0.72rem !important;
+  letter-spacing: 0.2em;
+  color: var(--journal-accent);
+}
+
+.report-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.report-eyebrow--soft {
+  opacity: 0.88;
+}
+
+.report-hero {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.report-brief {
+  border-color: var(--journal-border);
+  background: var(--journal-surface-subtle);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.report-brief-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.report-note {
+  border-radius: 16px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.85rem 0.95rem;
+}
+
+.report-note-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.report-note-value {
+  margin-top: 0.45rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.report-note-helper {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+
+.report-hero-divider {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.report-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.report-guide {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  padding-top: 1.25rem;
+}
+
+:deep(.report-preview-dialog .el-dialog) {
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 20rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
+}
+
+:deep(.report-preview-dialog .el-dialog__header) {
+  margin-right: 0;
+  padding: 1.25rem 1.25rem 0;
+}
+
+:deep(.report-preview-dialog .el-dialog__body) {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.report-dialog-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-right: 2rem;
+}
+
+.report-dialog-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--journal-accent-strong);
+}
+
+.report-card {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: var(--journal-surface);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.report-card--hero {
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+}
+
+.report-card--action {
+  background: var(--journal-surface-subtle);
+}
+
+.report-card--metric {
+  background: var(--journal-surface-subtle);
+  box-shadow: none;
+}
+
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.55rem 1.05rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.report-btn:hover {
+  border-color: var(--journal-accent);
+  background: rgba(99, 102, 241, 0.06);
+  color: var(--journal-accent);
+}
+
+.report-btn--primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
+}
+
+.report-btn--primary:hover {
+  border-color: transparent;
+  background: var(--journal-accent-strong);
+  color: #fff;
+}
+
+.report-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.report-kpi-grid {
+  align-items: stretch;
+}
+
+.report-kpi-card {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: var(--journal-surface-subtle);
+  padding: 0.95rem 1rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.report-kpi-card--primary {
+  border-top: 3px solid rgba(79, 70, 229, 0.42);
+}
+
+.report-kpi-card--success {
+  border-top: 3px solid rgba(16, 185, 129, 0.36);
+}
+
+.report-kpi-card--warning {
+  border-top: 3px solid rgba(245, 158, 11, 0.38);
+}
+
+.report-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.report-kpi-value {
+  margin-top: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.report-kpi-hint {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+</style>

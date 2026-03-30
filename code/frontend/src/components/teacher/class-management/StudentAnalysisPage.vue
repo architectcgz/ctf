@@ -10,7 +10,6 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
-import MetricCard from '@/components/common/MetricCard.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
@@ -45,7 +44,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="teacher-analysis-shell space-y-6">
     <PageHeader
       eyebrow="Student Analysis"
       :title="selectedStudent?.name || selectedStudent?.username || '学员分析'"
@@ -57,49 +56,62 @@ const emit = defineEmits<{
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <AppCard
-        variant="hero"
-        accent="primary"
-        eyebrow="Focused Student"
-        :title="selectedStudent?.name || selectedStudent?.username || '未选择学员'"
-        subtitle="当前学员训练概览。"
-      >
-        <template #header>
-          <span
-            class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-            style="border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default)); background-color: var(--color-primary-soft); color: var(--color-primary);"
-          >
-            {{ selectedClassName || '未选择班级' }}
-          </span>
-        </template>
+      <article class="analysis-hero-card rounded-[30px] border px-6 py-6 md:px-8">
+        <div class="analysis-hero-head">
+          <div>
+            <div class="analysis-eyebrow">Focused Student</div>
+            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">
+              {{ selectedStudent?.name || selectedStudent?.username || '未选择学员' }}
+            </h2>
+            <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+              当前学员训练概览。
+            </p>
+          </div>
+          <span class="analysis-class-chip">{{ selectedClassName || '未选择班级' }}</span>
+        </div>
 
-        <div class="grid gap-3 md:grid-cols-3">
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">当前学员</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ selectedStudent?.username || '未选择' }}</div>
-            <div class="mt-2 text-sm text-cyan-50/70">当前聚焦的学生对象</div>
+        <div class="mt-6 grid gap-3 md:grid-cols-3">
+          <div class="analysis-note">
+            <div class="analysis-note-label">当前学员</div>
+            <div class="analysis-note-value">{{ selectedStudent?.username || '未选择' }}</div>
+            <div class="analysis-note-helper">当前聚焦的学生对象</div>
           </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">完成率</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ solvedRate }}%</div>
-            <div class="mt-2 text-sm text-cyan-50/70">基于当前学员训练数据计算</div>
+          <div class="analysis-note">
+            <div class="analysis-note-label">完成率</div>
+            <div class="analysis-note-value">{{ solvedRate }}%</div>
+            <div class="analysis-note-helper">基于当前学员训练数据计算</div>
           </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">薄弱维度</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ weakDimensions[0] || '暂无' }}</div>
-            <div class="mt-2 text-sm text-cyan-50/70">当前最需要补强的方向</div>
+          <div class="analysis-note">
+            <div class="analysis-note-label">薄弱维度</div>
+            <div class="analysis-note-value">{{ weakDimensions[0] || '暂无' }}</div>
+            <div class="analysis-note-helper">当前最需要补强的方向</div>
           </div>
         </div>
-      </AppCard>
+      </article>
 
-      <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <MetricCard label="同班学生" :value="students.length" hint="当前班级可切换的学生数量" accent="primary" />
-        <MetricCard label="推荐任务" :value="recommendations.length" hint="当前可布置的补强题目数" accent="success" />
-        <MetricCard label="查看方式" value="学生画像" hint="当前学员分析视图" accent="warning" />
+      <div class="teacher-kpi-grid grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+        <article class="teacher-kpi-card teacher-kpi-card--primary">
+          <div class="teacher-kpi-label">同班学生</div>
+          <div class="teacher-kpi-value">{{ students.length }}</div>
+          <div class="teacher-kpi-hint">当前班级可切换的学生数量</div>
+        </article>
+        <article class="teacher-kpi-card teacher-kpi-card--success">
+          <div class="teacher-kpi-label">推荐任务</div>
+          <div class="teacher-kpi-value">{{ recommendations.length }}</div>
+          <div class="teacher-kpi-hint">当前可布置的补强题目数</div>
+        </article>
+        <article class="teacher-kpi-card teacher-kpi-card--warning">
+          <div class="teacher-kpi-label">查看方式</div>
+          <div class="teacher-kpi-value">学生画像</div>
+          <div class="teacher-kpi-hint">当前学员分析视图</div>
+        </article>
       </div>
     </section>
 
-    <div v-if="error" class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]">
+    <div
+      v-if="error"
+      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
+    >
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
     </div>
@@ -114,9 +126,11 @@ const emit = defineEmits<{
                 :key="item.name"
                 type="button"
                 class="rounded-full px-4 py-2 text-sm font-medium transition"
-                :class="item.name === selectedClassName
-                  ? 'bg-[var(--color-primary)] text-white'
-                  : 'border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)] hover:border-[var(--color-primary)]/60'"
+                :class="
+                  item.name === selectedClassName
+                    ? 'bg-[var(--color-primary)] text-white'
+                    : 'border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)] hover:border-[var(--color-primary)]/60'
+                "
                 @click="emit('selectClass', item.name)"
               >
                 {{ item.name }} · {{ item.student_count || 0 }}
@@ -124,7 +138,11 @@ const emit = defineEmits<{
             </div>
 
             <div v-if="loadingClasses || loadingStudents" class="space-y-3">
-              <div v-for="index in 4" :key="index" class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]" />
+              <div
+                v-for="index in 4"
+                :key="index"
+                class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]"
+              />
             </div>
 
             <div v-else class="grid gap-3">
@@ -140,11 +158,15 @@ const emit = defineEmits<{
               >
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary">
+                    <div
+                      class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
+                    >
                       <GraduationCap class="h-4 w-4" />
                     </div>
                     <div>
-                      <div class="font-medium text-text-primary">{{ student.name || student.username }}</div>
+                      <div class="font-medium text-text-primary">
+                        {{ student.name || student.username }}
+                      </div>
                       <div class="mt-1 text-sm text-text-secondary">@{{ student.username }}</div>
                     </div>
                   </div>
@@ -162,10 +184,19 @@ const emit = defineEmits<{
 
         <SectionCard title="操作入口" subtitle="从分析页返回上一层，或者直接导出报告。">
           <div class="grid gap-3">
-            <AppCard as="button" variant="action" accent="primary" interactive class="text-left" @click="emit('openClassStudents')">
+            <AppCard
+              as="button"
+              variant="action"
+              accent="primary"
+              interactive
+              class="text-left"
+              @click="emit('openClassStudents')"
+            >
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
+                  >
                     <Users class="h-4 w-4" />
                   </div>
                   <div>
@@ -177,15 +208,26 @@ const emit = defineEmits<{
               </div>
             </AppCard>
 
-            <AppCard as="button" variant="action" accent="warning" interactive class="text-left" @click="emit('openReportExport')">
+            <AppCard
+              as="button"
+              variant="action"
+              accent="warning"
+              interactive
+              class="text-left"
+              @click="emit('openReportExport')"
+            >
               <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-warning)]/16 bg-[var(--color-warning)]/10 text-[var(--color-warning)]">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-warning)]/16 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
+                  >
                     <FileDown class="h-4 w-4" />
                   </div>
                   <div>
                     <div class="font-medium text-text-primary">导出班级报告</div>
-                    <div class="mt-1 text-sm text-text-secondary">从当前教师路径直接进入报告导出。</div>
+                    <div class="mt-1 text-sm text-text-secondary">
+                      从当前教师路径直接进入报告导出。
+                    </div>
                   </div>
                 </div>
                 <ArrowLeftRight class="h-4 w-4 text-[var(--color-warning)]" />
@@ -208,3 +250,178 @@ const emit = defineEmits<{
     </section>
   </div>
 </template>
+
+<style scoped>
+.teacher-analysis-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: rgba(248, 250, 252, 0.9);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: rgba(79, 70, 229, 0.08);
+  --color-text-primary: var(--journal-ink);
+  --color-text-secondary: var(--journal-muted);
+  --color-text-muted: #94a3b8;
+  --color-border-default: var(--journal-border);
+  --color-border-subtle: rgba(226, 232, 240, 0.74);
+  --color-bg-surface: var(--journal-surface);
+  --color-bg-base: #f8fafc;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+:deep(.page-header) {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+:deep(.page-header__eyebrow) {
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-left: 1px solid rgba(99, 102, 241, 0.18) !important;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.2rem 0.72rem;
+  padding-left: 0.72rem !important;
+  letter-spacing: 0.2em;
+  color: var(--journal-accent);
+}
+
+:deep(.section-card) {
+  padding: 1.1rem 1.1rem 1.05rem;
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  border-top: 1px solid var(--journal-border);
+  background: var(--journal-surface-subtle);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+}
+
+:deep(.section-card__header) {
+  margin-bottom: 1rem;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
+  padding-bottom: 0.75rem;
+}
+
+:deep(.section-card__body) {
+  padding-left: 0;
+}
+
+.analysis-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.analysis-hero-card {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.analysis-hero-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.analysis-class-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.3rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--journal-accent-strong);
+}
+
+.analysis-note {
+  border-radius: 16px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface-subtle);
+  padding: 0.85rem 0.95rem;
+}
+
+.analysis-note-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.analysis-note-value {
+  margin-top: 0.45rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.analysis-note-helper {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+
+.teacher-kpi-grid {
+  align-items: stretch;
+}
+
+.teacher-kpi-card {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: var(--journal-surface-subtle);
+  padding: 0.95rem 1rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.teacher-kpi-card--primary {
+  border-top: 3px solid rgba(79, 70, 229, 0.42);
+}
+
+.teacher-kpi-card--success {
+  border-top: 3px solid rgba(16, 185, 129, 0.36);
+}
+
+.teacher-kpi-card--warning {
+  border-top: 3px solid rgba(245, 158, 11, 0.38);
+}
+
+.teacher-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.teacher-kpi-value {
+  margin-top: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-kpi-hint {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+</style>

@@ -35,9 +35,8 @@ const series = computed(() => [
 <template>
   <section class="teacher-panel">
     <header class="teacher-panel__header">
-      <h2 class="teacher-panel__title">
-        {{ panelTitle }}
-      </h2>
+      <div class="journal-eyebrow">Trend</div>
+      <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
       <p class="teacher-panel__subtitle">
         {{ panelSubtitle }}
       </p>
@@ -50,43 +49,66 @@ const series = computed(() => [
       description="当前班级近 7 天还没有可用训练趋势。"
     />
 
-    <div
-      v-else
-      class="teacher-panel__chart"
-    >
-      <LineChart
-        :categories="categories"
-        :series="series"
-      />
+    <div v-else class="teacher-panel__chart">
+      <LineChart :categories="categories" :series="series" />
     </div>
   </section>
 </template>
 
 <style scoped>
 .teacher-panel {
-  border-top: 1px solid var(--color-border-default);
-  padding-top: 0.95rem;
+  --panel-ink: var(--journal-ink, #0f172a);
+  --panel-muted: var(--journal-muted, #64748b);
+  --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
+  --panel-surface: var(--journal-surface, rgba(248, 250, 252, 0.9));
+  --panel-surface-subtle: var(--journal-surface-subtle, rgba(241, 245, 249, 0.7));
+  --panel-accent: var(--journal-accent, #4f46e5);
+  --panel-accent-strong: var(--journal-accent-strong, #4338ca);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-surface-subtle);
+  padding: 1.25rem 1.25rem 1.35rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
 }
 
 .teacher-panel__header {
-  margin-bottom: 0.72rem;
+  margin-bottom: 1rem;
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.2rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--panel-accent-strong);
 }
 
 .teacher-panel__title {
-  font-size: 1.04rem;
+  margin-top: 0.75rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   font-size: 0.84rem;
   line-height: 1.65;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .teacher-panel__chart {
   overflow-x: auto;
-  padding-top: 0.3rem;
+  margin-top: 0.25rem;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-surface);
+  padding: 0.75rem;
 }
 </style>

@@ -158,9 +158,8 @@ watch(
 <template>
   <section class="teacher-panel">
     <header class="teacher-panel__header">
-      <h2 class="teacher-panel__title">
-        优先介入学生
-      </h2>
+      <div class="journal-eyebrow">Intervention</div>
+      <h2 class="teacher-panel__title">优先介入学生</h2>
       <p class="teacher-panel__subtitle">
         {{
           className
@@ -177,10 +176,7 @@ watch(
       description="当前班级学生的训练活跃度和解题表现暂时没有明显风险。"
     />
 
-    <div
-      v-else
-      class="intervention-list"
-    >
+    <div v-else class="intervention-list">
       <article
         v-for="item in candidates"
         :key="item.student.id"
@@ -191,9 +187,7 @@ watch(
             <div class="intervention-item__name">
               {{ item.student.name || item.student.username }}
             </div>
-            <div class="intervention-item__username">
-              @{{ item.student.username }}
-            </div>
+            <div class="intervention-item__username">@{{ item.student.username }}</div>
             <div class="intervention-item__reason">
               {{ item.reason }}
             </div>
@@ -209,9 +203,7 @@ watch(
               v-else-if="getRecommendation(item.student.id)"
               class="intervention-item__recommendation"
             >
-              <div class="intervention-item__recommendation-label">
-                建议训练题
-              </div>
+              <div class="intervention-item__recommendation-label">建议训练题</div>
               <div class="intervention-item__recommendation-title">
                 {{ getRecommendation(item.student.id)?.title }}
               </div>
@@ -239,41 +231,69 @@ watch(
 
 <style scoped>
 .teacher-panel {
-  border-top: 1px solid var(--color-border-default);
-  padding-top: 0.95rem;
+  --panel-ink: var(--journal-ink, #0f172a);
+  --panel-muted: var(--journal-muted, #64748b);
+  --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
+  --panel-surface: var(--journal-surface, rgba(248, 250, 252, 0.9));
+  --panel-surface-subtle: var(--journal-surface-subtle, rgba(241, 245, 249, 0.7));
+  --panel-accent: var(--journal-accent, #4f46e5);
+  --panel-accent-strong: var(--journal-accent-strong, #4338ca);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel-surface-subtle);
+  padding: 1.25rem 1.25rem 1.35rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
 }
 
 .teacher-panel__header {
-  margin-bottom: 0.72rem;
+  margin-bottom: 1rem;
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.06);
+  padding: 0.2rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--panel-accent-strong);
 }
 
 .teacher-panel__title {
-  font-size: 1.04rem;
+  margin-top: 0.75rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   font-size: 0.84rem;
   line-height: 1.65;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-list {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.85rem;
 }
 
 .intervention-item {
-  --intervention-accent: var(--color-primary);
-  border-bottom: 1px solid var(--color-border-subtle);
-  border-left: 2px solid var(--intervention-accent);
-  padding: 0.72rem 0.2rem 0.82rem 0.8rem;
+  --intervention-accent: var(--panel-accent);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--intervention-accent) 18%, var(--panel-border));
+  border-top-width: 3px;
+  border-top-color: color-mix(in srgb, var(--intervention-accent) 58%, transparent);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  padding: 1rem 1rem 1.05rem;
 }
 
 .intervention-item--primary {
-  --intervention-accent: var(--color-primary);
+  --intervention-accent: var(--panel-accent);
 }
 
 .intervention-item--warning {
@@ -297,28 +317,28 @@ watch(
 .intervention-item__name {
   font-size: 0.92rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .intervention-item__username {
   margin-top: 0.15rem;
   font-size: 0.79rem;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-item__reason {
   margin-top: 0.34rem;
   font-size: 0.84rem;
   line-height: 1.7;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-item__recommendation {
-  margin-top: 0.48rem;
-  border-left: 2px solid color-mix(in srgb, var(--intervention-accent) 66%, var(--color-border-default));
-  padding-left: 0.62rem;
+  margin-top: 0.85rem;
+  border-top: 1px dashed color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));
+  padding-top: 0.85rem;
   font-size: 0.82rem;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-item__recommendation-label {
@@ -326,27 +346,27 @@ watch(
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--intervention-accent) 76%, var(--color-text-secondary));
+  color: color-mix(in srgb, var(--intervention-accent) 76%, var(--panel-muted));
 }
 
 .intervention-item__recommendation-title {
   margin-top: 0.22rem;
   font-size: 0.86rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--panel-ink);
 }
 
 .intervention-item__recommendation-meta {
   margin-top: 0.1rem;
   font-size: 0.76rem;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-item__recommendation-reason {
   margin-top: 0.24rem;
   font-size: 0.82rem;
   line-height: 1.68;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 .intervention-item__stats {
@@ -354,7 +374,7 @@ watch(
   text-align: right;
   font-size: 0.78rem;
   line-height: 1.7;
-  color: var(--color-text-secondary);
+  color: var(--panel-muted);
 }
 
 @media (max-width: 768px) {
