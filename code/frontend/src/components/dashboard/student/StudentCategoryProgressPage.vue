@@ -213,8 +213,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
