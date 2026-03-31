@@ -327,7 +327,7 @@ function timelineStatus(eventType: string): string {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(191, 219, 254, 0.75), transparent 15rem),
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
     linear-gradient(180deg, #ffffff, #f8fafc);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
