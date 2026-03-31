@@ -28,7 +28,11 @@
         <main
           class="workspace-main mx-auto w-full max-w-[1600px] px-4 py-6 md:px-6 xl:px-8"
         >
-          <RouterView />
+          <div class="workspace-page" :class="pageShellClass">
+            <RouterView v-slot="{ Component }">
+              <component :is="Component" class="workspace-route-root" :class="routeRootClass" />
+            </RouterView>
+          </div>
         </main>
       </div>
     </div>
@@ -36,9 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { RouterView } from 'vue-router'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
 import TopNav from '@/components/layout/TopNav.vue'
@@ -48,6 +52,12 @@ const route = useRoute()
 const { start, status: notificationStatus } = useNotificationRealtime()
 const sidebarCollapsed = ref(false)
 const sidebarOpen = ref(false)
+const pageShellClass = computed(() =>
+  route.meta.contentLayout === 'bleed' ? 'workspace-page--bleed' : ''
+)
+const routeRootClass = computed(() =>
+  route.meta.contentLayout === 'bleed' ? 'workspace-route-root--bleed' : ''
+)
 
 onMounted(() => {
   void start()
@@ -66,6 +76,43 @@ watch(
   position: relative;
   isolation: isolate;
   min-height: calc(100vh - 5rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-page {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-page--bleed {
+  margin: -1.5rem -1rem;
+}
+
+.workspace-page--bleed :deep(.workspace-route-root--bleed) {
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace-page--bleed :deep(.dashboard-view.workspace-route-root--bleed > .journal-shell) {
+  flex: 1;
+  min-height: 100%;
+}
+
+@media (min-width: 768px) {
+  .workspace-page--bleed {
+    margin-inline: -1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .workspace-page--bleed {
+    margin-inline: -2rem;
+  }
 }
 
 @media (max-width: 767px) {

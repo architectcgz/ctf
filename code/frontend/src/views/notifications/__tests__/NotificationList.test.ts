@@ -95,6 +95,21 @@ describe('NotificationList', () => {
     expect(notificationApiMocks.markAsRead).not.toHaveBeenCalled()
   })
 
+  it('renders the page surface directly as a section inside the layout main area', async () => {
+    const { wrapper } = await mountPage()
+    const className = wrapper.attributes('class')
+
+    expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.classes()).toContain('journal-shell')
+    expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.classes()).toContain('space-y-6')
+    expect(className).not.toContain('-mx-4')
+    expect(className).not.toContain('-my-6')
+    expect(className).not.toContain('md:-mx-6')
+    expect(className).not.toContain('xl:-mx-8')
+    expect(className).not.toContain('md:min-h-[calc(100vh-5rem)]')
+  })
+
   it('keeps bulk mark-as-read action working on the list page', async () => {
     const { wrapper } = await mountPage()
     const store = useNotificationStore()

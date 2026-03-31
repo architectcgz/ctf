@@ -104,162 +104,157 @@ const summaryStats = computed(() => [
 </script>
 
 <template>
-  <div class="journal-shell space-y-6">
-    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Notification Center</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
-            通知中心
-          </h2>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            这里会显示系统、竞赛和训练相关通知。
-          </p>
-
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
-            <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
-              <RefreshCw class="h-4 w-4" />
-              刷新
-            </button>
-          </div>
-        </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <Bell class="h-5 w-5 text-[var(--journal-accent)]" />
-            当前消息概况
-          </div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div v-for="stat in summaryStats" :key="stat.key" class="journal-note">
-              <div class="journal-note-label">{{ stat.label }}</div>
-              <div
-                class="journal-note-value"
-                :style="
-                  stat.key === 'unread' && unreadOnPage > 0
-                    ? { color: 'var(--color-warning)' }
-                    : undefined
-                "
-              >
-                {{ stat.value }}
-              </div>
-              <div class="journal-note-helper">{{ stat.helper }}</div>
-            </div>
-          </div>
-        </article>
-      </div>
-      <div class="notification-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <div v-if="loading" class="flex justify-center py-12">
-          <div
-            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-          />
-        </div>
-
-        <AppEmpty
-          v-else-if="hasLoadError"
-          class="notification-empty-state"
-          icon="AlertTriangle"
-          title="通知加载失败"
-          :description="loadErrorMessage"
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+      <div>
+        <div class="journal-eyebrow">Notification Center</div>
+        <h2
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
         >
-          <template #action>
-            <button type="button" class="journal-btn" @click="refresh">重新加载</button>
-          </template>
-        </AppEmpty>
+          通知中心
+        </h2>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          这里会显示系统、竞赛和训练相关通知。
+        </p>
 
-        <AppEmpty
-          v-else-if="list.length === 0"
-          class="notification-empty-state"
-          icon="Inbox"
-          title="暂无通知"
-          description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
-        />
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
+          <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
+            <RefreshCw class="h-4 w-4" />
+            刷新
+          </button>
+        </div>
+      </div>
 
-        <template v-else>
-          <div class="notification-list mt-5">
-            <button
-              v-for="item in list"
-              :key="item.id"
-              type="button"
-              class="journal-notification-item w-full text-left"
-              :class="{ 'journal-notification-item--unread': item.unread }"
-              @click="openNotificationDetail(item)"
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+          <Bell class="h-5 w-5 text-[var(--journal-accent)]" />
+          当前消息概况
+        </div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div v-for="stat in summaryStats" :key="stat.key" class="journal-note">
+            <div class="journal-note-label">{{ stat.label }}</div>
+            <div
+              class="journal-note-value"
+              :style="
+                stat.key === 'unread' && unreadOnPage > 0
+                  ? { color: 'var(--color-warning)' }
+                  : undefined
+              "
             >
-              <div class="flex items-start gap-3">
-                <div
-                  class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-                  :style="{
-                    borderColor: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 20%, transparent)`,
-                    background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 10%, transparent)`,
-                    color: accentColorMap[typeAccent(item.type)],
-                  }"
-                >
-                  <component :is="typeIcon(item.type)" class="h-5 w-5" />
-                </div>
+              {{ stat.value }}
+            </div>
+            <div class="journal-note-helper">{{ stat.helper }}</div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="notification-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
+      <div v-if="loading" class="flex justify-center py-12">
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        />
+      </div>
 
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span
-                      class="rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider"
-                      :style="{
-                        background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 12%, transparent)`,
-                        color: accentColorMap[typeAccent(item.type)],
-                      }"
-                      >{{ typeLabel(item.type) }}</span
-                    >
-                  </div>
-                  <p class="mt-1 text-sm font-medium text-[var(--journal-ink)] line-clamp-1">
-                    {{ item.title }}
-                  </p>
-                  <p class="mt-0.5 text-xs leading-5 text-[var(--journal-muted)] line-clamp-2">
-                    {{ item.content }}
-                  </p>
-                </div>
+      <AppEmpty
+        v-else-if="hasLoadError"
+        class="notification-empty-state"
+        icon="AlertTriangle"
+        title="通知加载失败"
+        :description="loadErrorMessage"
+      >
+        <template #action>
+          <button type="button" class="journal-btn" @click="refresh">重新加载</button>
+        </template>
+      </AppEmpty>
 
-                <div class="shrink-0 text-right">
-                  <div class="text-xs text-[var(--journal-muted)]">
-                    {{ formatDate(item.created_at) }}
-                  </div>
-                  <div v-if="item.unread" class="mt-2 flex justify-end">
-                    <span class="h-2 w-2 rounded-full" style="background: var(--journal-accent)" />
-                  </div>
+      <AppEmpty
+        v-else-if="list.length === 0"
+        class="notification-empty-state"
+        icon="Inbox"
+        title="暂无通知"
+        description="新的系统、竞赛、团队和训练消息会在这里汇总展示。"
+      />
+
+      <template v-else>
+        <div class="notification-list mt-5">
+          <button
+            v-for="item in list"
+            :key="item.id"
+            type="button"
+            class="journal-notification-item w-full text-left"
+            :class="{ 'journal-notification-item--unread': item.unread }"
+            @click="openNotificationDetail(item)"
+          >
+            <div class="flex items-start gap-3">
+              <div
+                class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
+                :style="{
+                  borderColor: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 20%, transparent)`,
+                  background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 10%, transparent)`,
+                  color: accentColorMap[typeAccent(item.type)],
+                }"
+              >
+                <component :is="typeIcon(item.type)" class="h-5 w-5" />
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider"
+                    :style="{
+                      background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 12%, transparent)`,
+                      color: accentColorMap[typeAccent(item.type)],
+                    }"
+                    >{{ typeLabel(item.type) }}</span
+                  >
+                </div>
+                <p class="mt-1 text-sm font-medium text-[var(--journal-ink)] line-clamp-1">
+                  {{ item.title }}
+                </p>
+                <p class="mt-0.5 text-xs leading-5 text-[var(--journal-muted)] line-clamp-2">
+                  {{ item.content }}
+                </p>
+              </div>
+
+              <div class="shrink-0 text-right">
+                <div class="text-xs text-[var(--journal-muted)]">
+                  {{ formatDate(item.created_at) }}
+                </div>
+                <div v-if="item.unread" class="mt-2 flex justify-end">
+                  <span class="h-2 w-2 rounded-full" style="background: var(--journal-accent)" />
                 </div>
               </div>
+            </div>
+          </button>
+        </div>
+
+        <div v-if="total > 0" class="notification-pagination">
+          <div>
+            <div class="journal-note-label">Page Control</div>
+            <div class="mt-2 text-sm text-[var(--journal-muted)]">
+              共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" class="journal-btn" :disabled="page === 1" @click="changePage(page - 1)">
+              上一页
+            </button>
+            <button
+              type="button"
+              class="journal-btn"
+              :disabled="page >= totalPages"
+              @click="changePage(page + 1)"
+            >
+              下一页
             </button>
           </div>
-
-          <div v-if="total > 0" class="notification-pagination">
-            <div>
-              <div class="journal-note-label">Page Control</div>
-              <div class="mt-2 text-sm text-[var(--journal-muted)]">
-                共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="journal-btn"
-                :disabled="page === 1"
-                @click="changePage(page - 1)"
-              >
-                上一页
-              </button>
-              <button
-                type="button"
-                class="journal-btn"
-                :disabled="page >= totalPages"
-                @click="changePage(page + 1)"
-              >
-                下一页
-              </button>
-            </div>
-          </div>
-        </template>
-      </div>
-    </section>
-  </div>
+        </div>
+      </template>
+    </div>
+  </section>
 </template>
 
 <style scoped>
