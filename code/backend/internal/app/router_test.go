@@ -253,6 +253,35 @@ func TestBuildRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	}
 }
 
+func TestRouterRateLimitStrategyUsesUserAndLoginPrincipalKeys(t *testing.T) {
+	t.Parallel()
+
+	content, err := os.ReadFile("router.go")
+	if err != nil {
+		t.Fatalf("read router.go: %v", err)
+	}
+
+	source := string(content)
+	expected := []string{
+		`protected.Use(middleware.RateLimitByUser(`,
+		`middleware.RateLimitByLoginPrincipalAndIP(`,
+	}
+	for _, marker := range expected {
+		if !strings.Contains(source, marker) {
+			t.Fatalf("router should include rate limit marker %s", marker)
+		}
+	}
+
+	blocked := []string{
+		`engine.Use(middleware.RateLimitByIP(rateChecker, "global"`,
+	}
+	for _, marker := range blocked {
+		if strings.Contains(source, marker) {
+			t.Fatalf("router should not keep global IP rate limit marker %s", marker)
+		}
+	}
+}
+
 func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 	t.Parallel()
 

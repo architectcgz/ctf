@@ -83,15 +83,23 @@ auth:
 
 rate_limit:
   redis_key_prefix: ctf:ratelimit
+  anonymous:
+    enabled: true
+    limit: 300
+    window: 1m
   global:
     enabled: true
-    limit: 120
+    limit: 600
     window: 1m
   login:
     enabled: true
     limit: 10
     window: 1m
     lock_duration: 15m
+  login_ip:
+    enabled: true
+    limit: 300
+    window: 1m
   flag_submit:
     enabled: true
     limit: 5

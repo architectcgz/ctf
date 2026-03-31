@@ -108,8 +108,10 @@ type CASConfig struct {
 
 type RateLimitConfig struct {
 	RedisKeyPrefix string                `mapstructure:"redis_key_prefix"`
+	Anonymous      RateLimitPolicyConfig `mapstructure:"anonymous"`
 	Global         RateLimitPolicyConfig `mapstructure:"global"`
 	Login          RateLimitPolicyConfig `mapstructure:"login"`
+	LoginIP        RateLimitPolicyConfig `mapstructure:"login_ip"`
 	FlagSubmit     RateLimitPolicyConfig `mapstructure:"flag_submit"`
 }
 
@@ -448,13 +450,19 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.cas.validate_path", "/serviceValidate")
 	v.SetDefault("auth.cas.auto_provision", false)
 	v.SetDefault("rate_limit.redis_key_prefix", "ctf:ratelimit")
+	v.SetDefault("rate_limit.anonymous.enabled", true)
+	v.SetDefault("rate_limit.anonymous.limit", 300)
+	v.SetDefault("rate_limit.anonymous.window", time.Minute)
 	v.SetDefault("rate_limit.global.enabled", true)
-	v.SetDefault("rate_limit.global.limit", 120)
+	v.SetDefault("rate_limit.global.limit", 600)
 	v.SetDefault("rate_limit.global.window", time.Minute)
 	v.SetDefault("rate_limit.login.enabled", true)
 	v.SetDefault("rate_limit.login.limit", 10)
 	v.SetDefault("rate_limit.login.window", time.Minute)
 	v.SetDefault("rate_limit.login.lock_duration", 15*time.Minute)
+	v.SetDefault("rate_limit.login_ip.enabled", true)
+	v.SetDefault("rate_limit.login_ip.limit", 300)
+	v.SetDefault("rate_limit.login_ip.window", time.Minute)
 	v.SetDefault("rate_limit.flag_submit.enabled", true)
 	v.SetDefault("rate_limit.flag_submit.limit", 5)
 	v.SetDefault("rate_limit.flag_submit.window", time.Minute)
