@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { Bell, Flag, GraduationCap, Info, RefreshCw, Trophy } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
@@ -12,6 +13,7 @@ import { formatDate } from '@/utils/format'
 
 const toast = useToast()
 const notificationStore = useNotificationStore()
+const router = useRouter()
 
 async function fetchNotifications(params: { page: number; page_size: number }) {
   const data = await getNotifications(params)
@@ -64,18 +66,8 @@ const accentColorMap: Record<NotificationAccent, string> = {
   primary: 'var(--color-primary)',
 }
 
-async function handleMarkAsRead(item: NotificationItem): Promise<void> {
-  if (!item.unread) return
-  try {
-    await markAsRead(String(item.id))
-    const target = list.value.find((entry) => String(entry.id) === String(item.id))
-    if (target) {
-      target.unread = false
-    }
-    notificationStore.markAsRead(String(item.id))
-  } catch (error) {
-    toast.error('标记已读失败')
-  }
+function openNotificationDetail(item: NotificationItem): void {
+  void router.push(`/notifications/${encodeURIComponent(String(item.id))}`)
 }
 
 async function markCurrentPageRead(): Promise<void> {
@@ -84,10 +76,15 @@ async function markCurrentPageRead(): Promise<void> {
 
   const results = await Promise.allSettled(unreadItems.map((item) => markAsRead(String(item.id))))
   const failedCount = results.filter((result) => result.status === 'rejected').length
-  list.value.forEach((item) => {
-    if (item.unread) item.unread = false
+  unreadItems.forEach((item, index) => {
+    if (results[index]?.status === 'fulfilled') {
+      const target = list.value.find((entry) => String(entry.id) === String(item.id))
+      if (target) {
+        target.unread = false
+      }
+      notificationStore.markAsRead(String(item.id))
+    }
   })
-  notificationStore.markAllRead()
 
   if (failedCount > 0) {
     toast.warning(`部分通知标记失败（${failedCount} 条）`)
@@ -188,7 +185,7 @@ const summaryStats = computed(() => [
               type="button"
               class="journal-notification-item w-full text-left"
               :class="{ 'journal-notification-item--unread': item.unread }"
-              @click="handleMarkAsRead(item)"
+              @click="openNotificationDetail(item)"
             >
               <div class="flex items-start gap-3">
                 <div
