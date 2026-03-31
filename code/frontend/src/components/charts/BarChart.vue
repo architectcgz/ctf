@@ -23,7 +23,14 @@ function cssVar(name: string): string {
 
 const option = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
-  grid: { left: 16, right: 16, bottom: 16, top: 24, containLabel: true },
+  grid: {
+    left: 16,
+    right: 16,
+    bottom: 16,
+    top: 24,
+    outerBoundsMode: 'same',
+    outerBoundsContain: 'axisLabel',
+  },
   xAxis: {
     type: 'category',
     data: props.categories,
