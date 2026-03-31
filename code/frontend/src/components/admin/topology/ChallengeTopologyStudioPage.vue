@@ -262,29 +262,39 @@ const {
 
         <section class="topology-workbench grid gap-6 xl:grid-cols-[1fr_360px]">
           <div class="space-y-6">
-            <div class="flex items-center gap-1 rounded-2xl border border-border bg-surface p-1">
+            <div class="flex items-center gap-2">
+              <div class="flex flex-1 items-center gap-1 rounded-2xl border border-border bg-surface p-1">
+                <button
+                  v-for="tab in [
+                    { id: 'visual', label: '画布', icon: Layout },
+                    { id: 'compute', label: '节点', icon: Server },
+                    { id: 'network', label: '网络', icon: Network },
+                    { id: 'policy', label: '策略', icon: ShieldCheck },
+                  ]"
+                  :key="tab.id"
+                  type="button"
+                  class="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition"
+                  :class="
+                    activeWorkbenchTab === tab.id
+                      ? 'bg-primary text-white shadow-md'
+                      : 'text-text-secondary hover:bg-surface-subtle hover:text-text-primary'
+                  "
+                  @click="activeWorkbenchTab = (tab.id as any)"
+                >
+                  <component
+                    :is="tab.icon"
+                    class="h-4 w-4"
+                  />
+                  <span class="hidden sm:inline">{{ tab.label }}</span>
+                </button>
+              </div>
               <button
-                v-for="tab in [
-                  { id: 'visual', label: '图形画布', icon: Layout },
-                  { id: 'compute', label: '节点编排', icon: Server },
-                  { id: 'network', label: '网络分段', icon: Network },
-                  { id: 'policy', label: '链路策略', icon: ShieldCheck },
-                ]"
-                :key="tab.id"
                 type="button"
-                class="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition"
-                :class="
-                  activeWorkbenchTab === tab.id
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-text-secondary hover:bg-surface-subtle hover:text-text-primary'
-                "
-                @click="activeWorkbenchTab = (tab.id as any)"
+                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-surface text-text-secondary transition hover:border-primary hover:text-primary"
+                title="刷新数据"
+                @click="void reloadAll()"
               >
-                <component
-                  :is="tab.icon"
-                  class="h-4 w-4"
-                />
-                {{ tab.label }}
+                <RefreshCw class="h-4 w-4" />
               </button>
             </div>
 
