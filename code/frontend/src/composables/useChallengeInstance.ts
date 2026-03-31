@@ -1,4 +1,4 @@
-import { ref, watch, type MaybeRefOrGetter, toValue } from 'vue'
+import { onUnmounted, ref, watch, type MaybeRefOrGetter, toValue } from 'vue'
 
 import { createInstance } from '@/api/challenge'
 import {
@@ -11,6 +11,8 @@ import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import { useToast } from '@/composables/useToast'
 
+const CHALLENGE_INSTANCE_POLL_INTERVAL_MS = 3000
+
 export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | undefined>) {
   const toast = useToast()
 
@@ -20,11 +22,41 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
   const opening = ref(false)
   const extending = ref(false)
   const destroying = ref(false)
+  let pollingTimer: number | null = null
 
-  async function refresh() {
+  function isWaitingStatus(status: InstanceData['status'] | undefined) {
+    return status === 'pending' || status === 'creating'
+  }
+
+  function clearPollingTimer() {
+    if (pollingTimer !== null) {
+      window.clearTimeout(pollingTimer)
+      pollingTimer = null
+    }
+  }
+
+  function schedulePolling() {
+    if (pollingTimer !== null) return
+    pollingTimer = window.setTimeout(() => {
+      pollingTimer = null
+      void refresh({ silent: true })
+    }, CHALLENGE_INSTANCE_POLL_INTERVAL_MS)
+  }
+
+  function syncPollingState() {
+    const currentChallengeId = toValue(challengeId)
+    if (!currentChallengeId || !instance.value || !isWaitingStatus(instance.value.status)) {
+      clearPollingTimer()
+      return
+    }
+    schedulePolling()
+  }
+
+  async function refresh(options?: { silent?: boolean }) {
     const currentChallengeId = toValue(challengeId)
     if (!currentChallengeId) {
       instance.value = null
+      clearPollingTimer()
       return
     }
 
@@ -33,9 +65,12 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
       const instances = await getMyInstances()
       instance.value = instances.find((item) => String(item.challenge_id) === currentChallengeId) ?? null
     } catch (error) {
-      toast.error('加载实例状态失败')
+      if (!options?.silent) {
+        toast.error('加载实例状态失败')
+      }
     } finally {
       loading.value = false
+      syncPollingState()
     }
   }
 
@@ -46,7 +81,16 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     creating.value = true
     try {
       instance.value = await createInstance(currentChallengeId)
-      toast.success('实例创建成功')
+      if (instance.value.status === 'pending') {
+        toast.info('实例已进入排队，正在等待创建')
+      } else if (instance.value.status === 'creating') {
+        toast.info('实例创建中，请稍候')
+      } else if (instance.value.status === 'running') {
+        toast.success('实例创建成功')
+      } else {
+        toast.info('实例状态已更新，请稍后查看')
+      }
+      syncPollingState()
     } catch (error) {
       if (error instanceof ApiError && error.message.includes('不需要靶机')) {
         toast.error('该题目不需要靶机，请直接提交 Flag')
@@ -106,6 +150,7 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     try {
       await apiDestroyInstance(instance.value.id)
       instance.value = null
+      clearPollingTimer()
       toast.success('实例已销毁')
     } catch (error) {
       toast.error('销毁实例失败')
@@ -117,10 +162,15 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
   watch(
     () => toValue(challengeId),
     () => {
+      clearPollingTimer()
       void refresh()
     },
     { immediate: true }
   )
+
+  onUnmounted(() => {
+    clearPollingTimer()
+  })
 
   return {
     instance,

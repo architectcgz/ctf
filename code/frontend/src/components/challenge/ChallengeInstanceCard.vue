@@ -62,8 +62,22 @@ const remainingLabel = computed(() => {
   return formatted.value
 })
 
+function formatEta(seconds?: number) {
+  if (typeof seconds !== 'number' || seconds <= 0) return '预计时间计算中'
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  if (minutes <= 0) return `${secs} 秒`
+  return `${minutes} 分 ${secs} 秒`
+}
+
 const canOpen = computed(() => props.instance?.status === 'running')
 const canExtend = computed(() => canOpen.value && (props.instance?.remaining_extends ?? 0) > 0)
+const isWaiting = computed(
+  () => props.instance?.status === 'pending' || props.instance?.status === 'creating'
+)
+const isFailed = computed(
+  () => props.instance?.status === 'failed' || props.instance?.status === 'crashed'
+)
 const createdAtLabel = computed(() => {
   if (!props.instance?.created_at) return ''
   return formatTime(props.instance.created_at)
@@ -72,6 +86,46 @@ const createdAtLabel = computed(() => {
 const remainingExtendsLabel = computed(() => {
   if (!props.instance) return '0 次'
   return `${props.instance.remaining_extends} 次`
+})
+
+const queueLabel = computed(() => {
+  if (!props.instance || !isWaiting.value) return ''
+  if (typeof props.instance.queue_position === 'number' && props.instance.queue_position > 0) {
+    return `当前排队：第 ${props.instance.queue_position} 位`
+  }
+  return '当前排队：排队信息同步中'
+})
+
+const etaLabel = computed(() => {
+  if (!props.instance || !isWaiting.value) return ''
+  return `预计等待：${formatEta(props.instance.eta_seconds)}`
+})
+
+const progressLabel = computed(() => {
+  if (!props.instance || !isWaiting.value || typeof props.instance.progress !== 'number') return ''
+  const normalized = Math.max(0, Math.min(100, Math.round(props.instance.progress)))
+  return `创建进度：${normalized}%`
+})
+
+const accessLabel = computed(() => {
+  if (!props.instance) return ''
+  if (canOpen.value) {
+    return props.instance.access_url || '通过右侧按钮打开代理访问'
+  }
+  if (isWaiting.value) {
+    return '实例仍在排队/创建中，完成后可打开目标'
+  }
+  if (isFailed.value) {
+    return '实例不可访问，请销毁后重新启动'
+  }
+  return props.instance.access_url || '--'
+})
+
+const openButtonLabel = computed(() => {
+  if (props.opening) return '正在打开...'
+  if (isWaiting.value) return '等待实例就绪'
+  if (isFailed.value) return '实例不可用'
+  return '打开目标'
 })
 </script>
 
@@ -109,7 +163,7 @@ const remainingExtendsLabel = computed(() => {
         <div class="rounded-xl border border-[var(--color-border-default)] px-4 py-3">
           <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Access</div>
           <div class="mt-2 break-all font-mono text-[var(--color-text-primary)]">
-            {{ instance.access_url || '通过右侧按钮打开代理访问' }}
+            {{ accessLabel }}
           </div>
         </div>
 
@@ -123,6 +177,23 @@ const remainingExtendsLabel = computed(() => {
             <div class="mt-2 text-lg font-semibold" :class="statusClass">{{ statusLabel }}</div>
           </div>
         </div>
+
+        <div
+          v-if="isWaiting"
+          class="rounded-xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-4 py-3 text-xs leading-6 text-[var(--color-warning)]"
+        >
+          <div>实例正在排队创建，系统会自动刷新状态。</div>
+          <div>{{ queueLabel }}</div>
+          <div>{{ etaLabel }}</div>
+          <div v-if="progressLabel">{{ progressLabel }}</div>
+        </div>
+        <div
+          v-else-if="isFailed"
+          class="rounded-xl border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 text-xs leading-6 text-[var(--color-danger)]"
+        >
+          <div>实例创建失败或运行异常，当前目标不可访问。</div>
+          <div>建议先销毁当前实例，再重新启动。</div>
+        </div>
       </div>
 
       <div class="space-y-3">
@@ -132,7 +203,7 @@ const remainingExtendsLabel = computed(() => {
           :disabled="!canOpen || opening"
           @click="emit('open')"
         >
-          {{ opening ? '正在打开...' : '打开目标' }}
+          {{ openButtonLabel }}
         </button>
         <div class="grid grid-cols-2 gap-3">
           <button
