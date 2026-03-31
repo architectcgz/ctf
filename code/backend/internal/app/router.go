@@ -70,9 +70,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	engine.Use(middleware.AccessLog(log))
 
 	rateChecker := ratelimitpkg.NewChecker(cache, cfg.RateLimit.RedisKeyPrefix)
-	if cfg.RateLimit.Global.Enabled {
-		engine.Use(middleware.RateLimitByIP(rateChecker, "global", cfg.RateLimit.Global.Limit, cfg.RateLimit.Global.Window))
-	}
 
 	healthSvc := healthService.NewService(cfg, db, cache)
 	health := healthHandler.NewHandler(healthSvc)
@@ -99,11 +96,19 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	apiV1.GET("/health/redis", health.GetRedis)
 
 	authGroup := apiV1.Group("/auth")
-	if cfg.RateLimit.Login.Enabled {
-		authGroup.Use(middleware.RateLimitByIP(rateChecker, "auth", cfg.RateLimit.Login.Limit, cfg.RateLimit.Login.Window))
+	if cfg.RateLimit.Anonymous.Enabled {
+		authGroup.Use(middleware.RateLimitByIP(rateChecker, "auth:anonymous", cfg.RateLimit.Anonymous.Limit, cfg.RateLimit.Anonymous.Window))
 	}
 	authGroup.POST("/register", authModule.Handler.Register)
-	authGroup.POST("/login", authModule.Handler.Login)
+	loginHandlers := make([]gin.HandlerFunc, 0, 3)
+	if cfg.RateLimit.LoginIP.Enabled {
+		loginHandlers = append(loginHandlers, middleware.RateLimitByIP(rateChecker, "auth:login_ip", cfg.RateLimit.LoginIP.Limit, cfg.RateLimit.LoginIP.Window))
+	}
+	if cfg.RateLimit.Login.Enabled {
+		loginHandlers = append(loginHandlers, middleware.RateLimitByLoginPrincipalAndIP(rateChecker, "auth:login_principal", cfg.RateLimit.Login.Limit, cfg.RateLimit.Login.Window))
+	}
+	loginHandlers = append(loginHandlers, authModule.Handler.Login)
+	authGroup.POST("/login", loginHandlers...)
 	authGroup.POST("/refresh", authModule.Handler.Refresh)
 	authGroup.GET("/cas/status", authModule.Handler.CASStatus)
 	authGroup.GET("/cas/login", authModule.Handler.CASLogin)
@@ -111,6 +116,9 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(identityModule.TokenService))
+	if cfg.RateLimit.Global.Enabled {
+		protected.Use(middleware.RateLimitByUser(rateChecker, "global", cfg.RateLimit.Global.Limit, cfg.RateLimit.Global.Window))
+	}
 	protected.POST("/auth/logout", authModule.Handler.Logout)
 	protected.GET("/auth/profile", authModule.Handler.Profile)
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)

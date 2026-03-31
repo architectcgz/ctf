@@ -1,7 +1,11 @@
 package middleware
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +24,16 @@ func RateLimitByIP(checker *ratelimitpkg.Checker, scope string, limit int, windo
 func RateLimitByUser(checker *ratelimitpkg.Checker, scope string, limit int, window time.Duration) gin.HandlerFunc {
 	return rateLimitMiddleware(checker, scope, limit, window, func(c *gin.Context) string {
 		return strconv.FormatInt(MustCurrentUser(c).UserID, 10)
+	})
+}
+
+func RateLimitByLoginPrincipalAndIP(checker *ratelimitpkg.Checker, scope string, limit int, window time.Duration) gin.HandlerFunc {
+	return rateLimitMiddleware(checker, scope, limit, window, func(c *gin.Context) string {
+		principal := strings.ToLower(strings.TrimSpace(loginRateLimitPrincipal(c)))
+		if principal == "" {
+			principal = "_"
+		}
+		return principal + ":" + c.ClientIP()
 	})
 }
 
@@ -46,4 +60,39 @@ func rateLimitMiddleware(checker *ratelimitpkg.Checker, scope string, limit int,
 		}
 		c.Next()
 	}
+}
+
+func loginRateLimitPrincipal(c *gin.Context) string {
+	if c == nil || c.Request == nil {
+		return ""
+	}
+
+	if strings.Contains(strings.ToLower(c.GetHeader("Content-Type")), "application/json") {
+		return loginPrincipalFromJSONBody(c)
+	}
+	return strings.TrimSpace(c.PostForm("username"))
+}
+
+func loginPrincipalFromJSONBody(c *gin.Context) string {
+	if c.Request == nil || c.Request.Body == nil {
+		return ""
+	}
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.Request.Body = io.NopCloser(bytes.NewReader(nil))
+		return ""
+	}
+	c.Request.Body = io.NopCloser(bytes.NewReader(body))
+	if len(body) == 0 {
+		return ""
+	}
+
+	var payload struct {
+		Username string `json:"username"`
+	}
+	if err := json.Unmarshal(body, &payload); err != nil {
+		return ""
+	}
+	return strings.TrimSpace(payload.Username)
 }
