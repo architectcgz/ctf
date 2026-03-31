@@ -87,6 +87,45 @@ func TestInstanceServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t
 	}
 }
 
+func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         103,
+		Title:      "Queued Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1003,
+		UserID:      2,
+		ChallengeID: 103,
+		Status:      model.InstanceStatusPending,
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1003 || items[0].Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending instance to be visible, got %+v", items)
+	}
+}
+
 func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T) {
 	t.Parallel()
 

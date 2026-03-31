@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -69,11 +70,14 @@ func NewService(
 	scoreService ScoreUpdater,
 	assessmentService AssessmentService,
 	redis *redis.Client,
-	config *config.Config,
+	cfg *config.Config,
 	logger *zap.Logger,
 ) *Service {
 	if logger == nil {
 		logger = zap.NewNop()
+	}
+	if cfg == nil {
+		cfg = &config.Config{}
 	}
 	baseCtx, cancel := context.WithCancel(context.Background())
 	return &Service{
@@ -85,7 +89,7 @@ func NewService(
 		scoreService:      scoreService,
 		assessmentService: assessmentService,
 		redis:             redis,
-		config:            config,
+		config:            cfg,
 		logger:            logger,
 		baseCtx:           baseCtx,
 		cancel:            cancel,
@@ -141,6 +145,10 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		instance *model.Instance
 		reused   bool
 	)
+	initialStatus := model.InstanceStatusCreating
+	if s.schedulerEnabled() {
+		initialStatus = model.InstanceStatusPending
+	}
 	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
 		if err := txRepo.LockInstanceScope(userID, scope); err != nil {
 			return err
@@ -180,7 +188,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			TeamID:      scope.TeamID,
 			ChallengeID: challengeID,
 			HostPort:    hostPort,
-			Status:      model.InstanceStatusCreating,
+			Status:      initialStatus,
 			Nonce:       nonce,
 			ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
 			MaxExtends:  s.config.Container.MaxExtends,
@@ -198,28 +206,17 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if reused {
 		return domain.InstanceRespFromModel(instance), nil
 	}
+	if s.schedulerEnabled() {
+		s.logger.Info("实例已入启动队列",
+			zap.Int64("user_id", userID),
+			zap.Int64("challenge_id", challengeID),
+			zap.Int64("instance_id", instance.ID))
+		return domain.InstanceRespFromModel(instance), nil
+	}
 
-	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
-	defer cancel()
-
-	if err := s.createContainer(createCtx, instance, chal, flag); err != nil {
-		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
-		s.markInstanceFailed(instance)
+	if err := s.provisionInstance(ctx, instance, chal, flag); err != nil {
 		return nil, err
 	}
-
-	instance.Status = model.InstanceStatusRunning
-	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
-		s.logger.Error("更新实例状态失败", zap.Error(err))
-		s.markInstanceFailed(instance)
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	s.logger.Info("实例启动成功",
-		zap.Int64("user_id", userID),
-		zap.Int64("challenge_id", challengeID),
-		zap.Int64("instance_id", instance.ID))
-
 	return domain.InstanceRespFromModel(instance), nil
 }
 
@@ -233,6 +230,210 @@ func (s *Service) markInstanceFailed(instance *model.Instance) {
 	if err := s.instanceRepo.UpdateStatusAndReleasePort(instance.ID, model.InstanceStatusFailed); err != nil {
 		s.logger.Warn("更新失败实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 	}
+}
+
+func (s *Service) RunProvisioningLoop(ctx context.Context) {
+	if !s.schedulerEnabled() {
+		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	ticker := time.NewTicker(s.schedulerPollInterval())
+	defer ticker.Stop()
+
+	for {
+		if err := s.dispatchPendingInstances(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			s.logger.Warn("调度待启动实例失败", zap.Error(err))
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
+}
+
+func (s *Service) dispatchPendingInstances(ctx context.Context) error {
+	limit, err := s.availableProvisioningSlots(ctx)
+	if err != nil {
+		return err
+	}
+	if limit <= 0 {
+		return nil
+	}
+
+	instances, err := s.instanceRepo.ListPendingInstancesWithContext(ctx, limit)
+	if err != nil {
+		return err
+	}
+	for _, instance := range instances {
+		if instance == nil {
+			continue
+		}
+		claimed, err := s.instanceRepo.TryTransitionStatusWithContext(ctx, instance.ID, model.InstanceStatusPending, model.InstanceStatusCreating)
+		if err != nil {
+			return err
+		}
+		if !claimed {
+			continue
+		}
+
+		instanceID := instance.ID
+		s.runAsyncTask(func(taskCtx context.Context) {
+			s.processPendingInstance(taskCtx, instanceID)
+		})
+	}
+	return nil
+}
+
+func (s *Service) availableProvisioningSlots(ctx context.Context) (int, error) {
+	slots := s.schedulerMaxConcurrentStarts()
+	if slots <= 0 {
+		return 0, nil
+	}
+
+	creatingCount, err := s.instanceRepo.CountInstancesByStatusWithContext(ctx, []string{model.InstanceStatusCreating})
+	if err != nil {
+		return 0, err
+	}
+	slots -= int(creatingCount)
+	if slots <= 0 {
+		return 0, nil
+	}
+
+	maxActive := s.schedulerMaxActiveInstances()
+	if maxActive > 0 {
+		activeCount, err := s.instanceRepo.CountInstancesByStatusWithContext(ctx, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
+		if err != nil {
+			return 0, err
+		}
+		remainingCapacity := maxActive - int(activeCount)
+		if remainingCapacity <= 0 {
+			return 0, nil
+		}
+		if remainingCapacity < slots {
+			slots = remainingCapacity
+		}
+	}
+
+	batchSize := s.schedulerBatchSize()
+	if batchSize > 0 && batchSize < slots {
+		slots = batchSize
+	}
+	return slots, nil
+}
+
+func (s *Service) processPendingInstance(ctx context.Context, instanceID int64) {
+	instance, err := s.instanceRepo.FindByIDWithContext(ctx, instanceID)
+	if err != nil {
+		s.logger.Error("读取待启动实例失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+		return
+	}
+	if instance == nil || instance.Status != model.InstanceStatusCreating {
+		return
+	}
+
+	chal, err := s.challengeRepo.FindByID(instance.ChallengeID)
+	if err != nil {
+		s.logger.Error("读取题目失败", zap.Int64("instance_id", instanceID), zap.Int64("challenge_id", instance.ChallengeID), zap.Error(err))
+		s.markInstanceFailed(instance)
+		return
+	}
+
+	flag, err := s.buildProvisioningFlag(instance, chal)
+	if err != nil {
+		s.logger.Error("生成实例 Flag 失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+		s.markInstanceFailed(instance)
+		return
+	}
+
+	if err := s.provisionInstance(ctx, instance, chal, flag); err != nil {
+		s.logger.Warn("实例异步启动失败", zap.Int64("instance_id", instanceID), zap.Error(err))
+	}
+}
+
+func (s *Service) provisionInstance(ctx context.Context, instance *model.Instance, chal *model.Challenge, flag string) error {
+	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
+	defer cancel()
+
+	if err := s.createContainer(createCtx, instance, chal, flag); err != nil {
+		s.logger.Error("容器创建失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
+		s.markInstanceFailed(instance)
+		return err
+	}
+
+	instance.Status = model.InstanceStatusRunning
+	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
+		s.logger.Error("更新实例状态失败", zap.Error(err), zap.Int64("instance_id", instance.ID))
+		s.markInstanceFailed(instance)
+		return errcode.ErrInternal.WithCause(err)
+	}
+
+	s.logger.Info("实例启动成功",
+		zap.Int64("user_id", instance.UserID),
+		zap.Int64("challenge_id", instance.ChallengeID),
+		zap.Int64("instance_id", instance.ID))
+	return nil
+}
+
+func (s *Service) buildProvisioningFlag(instance *model.Instance, chal *model.Challenge) (string, error) {
+	if instance == nil || chal == nil {
+		return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance or challenge is nil"))
+	}
+
+	switch chal.FlagType {
+	case model.FlagTypeDynamic:
+		if strings.TrimSpace(instance.Nonce) == "" {
+			return "", errcode.ErrInternal.WithCause(fmt.Errorf("instance nonce is empty"))
+		}
+		if strings.TrimSpace(s.config.Container.FlagGlobalSecret) == "" {
+			return "", errcode.ErrInternal.WithCause(fmt.Errorf("flag global secret is empty"))
+		}
+		subjectID := instance.UserID
+		if instance.TeamID != nil && *instance.TeamID > 0 {
+			subjectID = *instance.TeamID
+		}
+		return crypto.GenerateDynamicFlag(subjectID, chal.ID, s.config.Container.FlagGlobalSecret, instance.Nonce, chal.FlagPrefix), nil
+	case model.FlagTypeStatic:
+		return chal.FlagHash, nil
+	default:
+		return "", nil
+	}
+}
+
+func (s *Service) schedulerEnabled() bool {
+	return s != nil && s.config != nil && s.config.Container.Scheduler.Enabled
+}
+
+func (s *Service) schedulerPollInterval() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.PollInterval <= 0 {
+		return time.Second
+	}
+	return s.config.Container.Scheduler.PollInterval
+}
+
+func (s *Service) schedulerBatchSize() int {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.BatchSize <= 0 {
+		return 1
+	}
+	return s.config.Container.Scheduler.BatchSize
+}
+
+func (s *Service) schedulerMaxConcurrentStarts() int {
+	if s == nil || s.config == nil || s.config.Container.Scheduler.MaxConcurrentStarts <= 0 {
+		return 1
+	}
+	return s.config.Container.Scheduler.MaxConcurrentStarts
+}
+
+func (s *Service) schedulerMaxActiveInstances() int {
+	if s == nil || s.config == nil {
+		return 0
+	}
+	return s.config.Container.Scheduler.MaxActiveInstances
 }
 
 func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {

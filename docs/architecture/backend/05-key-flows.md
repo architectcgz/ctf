@@ -22,8 +22,15 @@
 
 ### 1.1 流程描述
 
-用户请求启动靶机实例时，系统需要完成前置校验、资源分配、容器创建、Flag 注入等一系列操作。
-整个流程是一个**有状态的编排过程**，任何步骤失败都需要回滚已创建的资源，避免资源泄漏。
+用户请求启动靶机实例时，系统需要完成前置校验、实例占位、资源调度、容器创建、Flag 注入等一系列操作。
+
+当前实现（2026-03-31）已经切换为**两段式编排**：
+
+- HTTP 请求阶段只负责校验、预留端口、写入 `instances(status=pending)`；
+- 后台 `practice_instance_scheduler` 以受控并发推进 `pending -> creating -> running`；
+- 如果显式关闭 `container.scheduler.enabled`，仍可回退到同步启动路径。
+
+这样可以把 Docker 冷启动从 HTTP 请求里剥离出来，避免 50 人同时开题时接口直接超时。
 
 ### 1.2 时序图
 
@@ -31,165 +38,78 @@
 sequenceDiagram
     participant 用户
     participant API as API Gateway
-    participant IS as InstanceService
-    participant Redis
-    participant Docker
+    participant PS as PracticeService
     participant PG as PostgreSQL
+    participant SCH as ProvisioningScheduler
+    participant Docker
 
     用户->>API: 启动请求
-    API->>IS: 鉴权+限流
+    API->>PS: 鉴权+限流
+    PS->>PG: 事务内锁用户/队伍作用域
+    PS->>PG: 检查已有实例与用户配额
+    PS->>PG: 预留 host_port + INSERT instance(status=pending)
+    PG-->>PS: instance_id
+    PS-->>API: 返回 instance(status=pending)
+    API-->>用户: 排队中
 
-    IS->>Redis: SETNX 并发锁 (user:{uid}:instance:lock)
-    Redis-->>IS: OK/FAIL
-
-    IS->>PG: 查询用户实例数
-    PG-->>IS: 当前实例数 N
-
-    Note over IS: 校验: N < max_instances_per_user
-    Note over IS: 校验: 竞赛状态 = running
-    Note over IS: 校验: 靶机镜像存在且可用
-
-    IS->>PG: INSERT instance (status=creating)
-    PG-->>IS: instance_id
-
-    IS->>Docker: 创建 Docker Network
-    Docker-->>IS: network_id
-
-    IS->>IS: 生成 instance_nonce
-    IS->>IS: 计算动态 Flag（HMAC-SHA256(global_secret+contest_salt, uid+challenge_id+instance_nonce)）
-
-    IS->>Docker: 创建容器(flag, 资源限制)
-    Docker-->>IS: container_id
-
-    IS->>Docker: 启动容器
-    Docker-->>IS: OK
-
-    IS->>Docker: 健康检查(重试3次, 间隔2s)
-    Docker-->>IS: healthy
-
-    IS->>PG: UPDATE instance (status=running, container_id, network_id, access_url, instance_nonce, expires_at)
-    PG-->>IS: OK
-
-    IS->>Redis: 释放并发锁
-    IS-->>API: 返回访问地址
-    API-->>用户: 访问地址
+    loop 后台轮询
+        SCH->>PG: count(creating), count(creating+running)
+        alt 有可用容量
+            SCH->>PG: 查询最早 pending 实例
+            SCH->>PG: 原子更新 pending -> creating
+            SCH->>Docker: 创建网络/容器并启动
+            alt 成功
+                SCH->>PG: UPDATE instance(status=running, runtime/access_url)
+            else 失败
+                SCH->>PG: UPDATE instance(status=failed) + 释放端口
+            end
+        else 容量不足
+            Note over SCH: 保持 pending，等待下一轮
+        end
+    end
 ```
 
 ### 1.3 关键决策点
 
 | 决策点 | 方案 | 理由 |
 |--------|------|------|
-| 并发控制 | Redis SETNX `user:{uid}:instance:lock`，TTL 30s | 防止同一用户并发发起多个启动请求，TTL 兜底防死锁 |
-| 实例数限制 | 数据库 `SELECT COUNT(*) WHERE user_id=? AND status IN ('pending','creating','running')` | 以数据库为准，Redis 锁仅防并发，不做计数 |
+| 用户/队伍并发控制 | 数据库事务内 `SELECT ... FOR UPDATE` 锁用户或队伍记录 | 不依赖进程内锁，多后端实例也能成立 |
+| 实例数限制 | 数据库 `COUNT(*) WHERE status IN ('pending','creating','running')` | 排队态也计入占位，防止一个用户在高峰期刷满队列 |
+| 启动节流 | `container.scheduler.max_concurrent_starts` | 显式限制同一时刻的 Docker 冷启动数 |
+| 宿主机容量保护 | `container.scheduler.max_active_instances` 控制 `creating + running` | 不再默认宿主机可以无限接单 |
 | Flag 生成算法 | `HMAC-SHA256(global_secret + contest_salt, uid + ":" + challenge_id + ":" + instance_nonce)` | 三层密钥分离（详见 01 ADR-004）：global_secret 环境变量注入、contest_salt 每赛独立加密存储、instance_nonce 每实例随机 |
 | 资源限制 | Docker `--memory`、`--cpus`、`--pids-limit` 从 challenge 配置读取 | 防止恶意容器耗尽宿主机资源 |
 | 网络隔离 | 每个实例独立 Docker Network，仅暴露指定端口 | 防止实例间横向渗透 |
-| 健康检查 | 启动后轮询 3 次，间隔 2s，检测指定端口是否可达 | 确保容器真正就绪后再返回用户 |
+| 同步/异步切换 | `container.scheduler.enabled` 控制 | 测试环境或小规模环境可回退同步启动 |
 | 实例有效期 | `expires_at = now() + challenge.duration`，默认 2 小时 | 防止资源长期占用，到期自动回收 |
 
 ### 1.4 异常处理
 
 | 异常场景 | 处理策略 | 回滚操作 |
 |----------|----------|----------|
-| 用户并发实例数超限 | 返回 429，提示"已达最大实例数" | 释放 Redis 锁 |
-| 竞赛不在 running 状态 | 返回 403，提示"竞赛未开始或已结束" | 释放 Redis 锁 |
-| 镜像不存在 | 返回 500，记录告警日志 | 释放 Redis 锁，更新实例状态为 failed |
-| Docker Network 创建失败 | 返回 500，记录错误 | 释放 Redis 锁，更新实例状态为 failed |
+| 用户并发实例数超限 | 返回 429，提示"已达最大实例数" | 不创建实例记录 |
+| 竞赛不在 running 状态 | 返回 403，提示"竞赛未开始或已结束" | 不创建实例记录 |
+| 端口预留失败 | 返回 500 | 回滚事务，不留下脏实例 |
+| 调度器抢占失败 | 其他后端已领取该实例，当前 worker 跳过 | 无需回滚 |
 | 容器创建/启动失败 | 返回 500，记录错误 | 删除已创建的 Network，更新实例状态为 failed |
-| 健康检查超时（3 次均失败） | 返回 500，提示"启动超时" | 停止并删除容器、删除 Network，更新实例状态为 failed |
-| 宿主机资源不足 | 返回 503，引导用户进入排队 | 释放 Redis 锁；排队状态由 Redis 队列维护（如已创建 instance 记录则更新为 pending） |
-| 数据库写入失败 | 返回 500 | 停止并删除容器、删除 Network，释放 Redis 锁 |
+| 宿主机容量达到上限 | 实例继续停留在 pending | 不回滚，等待下一轮调度 |
+| 数据库写入运行态失败 | 返回 500 | 停止并删除容器、删除 Network，并释放端口 |
 
-### 1.5 回滚编排（补偿模式）
+### 1.5 当前实现说明
 
-```go
-// 使用 defer 栈实现资源回滚，任何步骤失败时按逆序清理
-func (s *InstanceService) StartInstance(ctx context.Context, req *StartReq) (*Instance, error) {
-    // 1. 获取 Redis 分布式锁
-    lockKey := fmt.Sprintf("user:%d:instance:lock", req.UserID)
-    acquired, err := s.redis.SetNX(ctx, lockKey, "1", 30*time.Second).Result()
-    if !acquired {
-        return nil, ErrConcurrentRequest
-    }
-    defer s.redis.Del(ctx, lockKey)
+当前代码没有单独引入 Redis 队列，而是直接复用 `instances` 表作为排队事实源：
 
-    // 2. 前置校验（实例数、竞赛状态、镜像）
-    // ...省略校验逻辑...
-
-    // 3. 创建数据库记录（status=creating）
-    instance, err := s.repo.CreateInstance(ctx, &Instance{Status: StatusCreating, ...})
-    if err != nil {
-        return nil, err
-    }
-
-    // 4. 资源创建与回滚栈
-    var cleanups []func()
-    defer func() {
-        if err != nil {
-            for i := len(cleanups) - 1; i >= 0; i-- {
-                cleanups[i]()
-            }
-            _ = s.repo.UpdateInstanceStatus(ctx, instance.ID, StatusFailed)
-        }
-    }()
-
-    // 5. 创建 Docker Network
-    networkID, err := s.docker.CreateNetwork(ctx, instance.ID)
-    if err != nil {
-        return nil, fmt.Errorf("创建网络失败: %w", err)
-    }
-    cleanups = append(cleanups, func() { _ = s.docker.RemoveNetwork(ctx, networkID) })
-
-    // 6. 生成动态 Flag（三层密钥分离，详见 01 ADR-004）
-    flag := s.generateFlag(s.config.GlobalSecret, contest.Salt, req.UserID, req.ChallengeID, instance.Nonce)
-
-    // 7. 创建并启动容器
-    containerID, err := s.docker.CreateAndStart(ctx, &ContainerConfig{
-        Image:     challenge.Image,
-        Flag:      flag,
-        Memory:    challenge.MemoryLimit,
-        CPUs:      challenge.CPULimit,
-        PidsLimit: challenge.PidsLimit,
-        NetworkID: networkID,
-        Ports:     challenge.ExposedPorts,
-    })
-    if err != nil {
-        return nil, fmt.Errorf("创建容器失败: %w", err)
-    }
-    cleanups = append(cleanups, func() {
-        _ = s.docker.StopContainer(ctx, containerID, 5*time.Second)
-        _ = s.docker.RemoveContainer(ctx, containerID)
-    })
-
-    // 8. 健康检查
-    if err := s.waitForHealthy(ctx, containerID, 3, 2*time.Second); err != nil {
-        return nil, fmt.Errorf("健康检查超时: %w", err)
-    }
-
-    // 9. 更新数据库（status=running）
-    err = s.repo.UpdateInstance(ctx, instance.ID, &InstanceUpdate{
-        Status:      StatusRunning,
-        ContainerID: containerID,
-        NetworkID:   networkID,
-        AccessURL:   buildAccessURL(containerID, challenge.ExposedPorts),
-        ExpiresAt:   time.Now().Add(challenge.Duration),
-    })
-    if err != nil {
-        return nil, err
-    }
-
-    // 成功，清空回滚栈
-    cleanups = nil
-    return instance, nil
-}
-```
+- `StartChallengeWithContext` 在事务内完成用户/队伍作用域加锁、实例复用判断、用户配额判断、端口预留和 `status=pending` 的实例创建；
+- `RunProvisioningLoop` 周期性扫描最早的 `pending` 实例，并通过原子状态推进把任务领取到当前 worker；
+- 领取成功后再调用运行时编排能力创建容器，最终把实例更新为 `running` 或 `failed`。
 
 ### 1.6 并发与一致性考虑
 
-- **同一用户并发启动**：Redis SETNX 互斥锁保证同一时刻只有一个启动请求在执行，TTL 30s 兜底防死锁。
-- **实例计数准确性**：以数据库 `status IN ('creating','running')` 为准，不依赖 Redis 计数，避免缓存与数据库不一致。
-- **资源泄漏防护**：defer 回滚栈 + 定时孤儿资源清理（见流程 5）双重保障。
-- **幂等性**：同一请求重复提交时，Redis 锁会拒绝第二次请求；如果锁已释放但实例已存在，通过数据库唯一约束 `(user_id, challenge_id, status=running)` 防止重复创建。
+- **同一用户并发启动**：事务内锁用户或队伍记录，保证检查已有实例、计数、端口预留和实例占位是串行的。
+- **多后端实例抢任务**：调度器先查 `pending`，再执行 `UPDATE ... WHERE status='pending'` 抢占；只有一个实例能成功推进到 `creating`。
+- **实例计数准确性**：用户配额按 `pending + creating + running` 统计；宿主机容量按 `creating + running` 统计。
+- **资源泄漏防护**：容器创建失败时立即走补偿清理，运行中实例仍由既有过期清理器和孤儿资源清理器兜底。
+- **同步回退**：当 `container.scheduler.enabled=false` 时，仍允许使用同步创建路径，便于测试和小规模部署。
 
 ---
 
@@ -1017,202 +937,101 @@ sequenceDiagram
 
 ### 9.1 流程描述
 
-竞赛开始瞬间，大量用户同时请求启动靶机实例，可能导致 Docker daemon 过载。
-排队机制将突发请求缓冲到 Redis List 中，由后台消费者按顺序处理容器创建，
-实现**削峰填谷**。前端通过轮询获取排队位置，超时自动取消。
+竞赛开始瞬间，大量用户同时请求启动靶机实例，最容易被打满的是 Docker 冷启动和宿主机资源，而不是 Go HTTP 协程。
 
-### 9.2 数据结构设计
+当前实现采用**数据库持久化排队 + 后台调度器**：
+
+- HTTP 线程只写入 `instances(status=pending)` 并立即返回；
+- 后台调度器周期性扫描最早的 `pending` 实例；
+- 调度器在推进前先检查全局启动并发上限和全局活跃实例上限；
+- 只有拿到容量配额的实例才会被原子推进到 `creating` 并真正触发 Docker 编排。
+
+### 9.2 当前实现的数据结构
 
 ```
-Redis Key 设计：
+instances.status:
+  pending  -> 已占位，等待后台调度
+  creating -> 已被某个 worker 抢占，正在创建容器
+  running  -> 创建成功，用户可访问
+  failed   -> 启动失败，端口已释放
 
-# 排队队列（FIFO）
-ctf:queue:instance:{contest_id}     -> List (元素为 JSON: {request_id, user_id, challenge_id, enqueue_at})
-
-# 排队状态（每个请求的处理状态）
-ctf:queue:status:{request_id}       -> Hash {
-                                         status: "queued" | "processing" | "completed" | "failed" | "cancelled",
-                                         position: 当前排队位置（仅 queued 状态有效）,
-                                         instance_id: 实例ID（仅 completed 状态有效）,
-                                         error: 错误信息（仅 failed 状态有效）,
-                                         enqueue_at: 入队时间戳
-                                       }
-                                       TTL = 10 分钟
-
-# 用户排队标记（防重复入队）
-ctf:queue:user:{cid}:{uid}          -> String (value=request_id, TTL=10分钟)
-
-# 队列长度监控
-ctf:queue:metrics:{contest_id}      -> Hash {length, avg_wait_ms, processing_count}
+container.scheduler:
+  enabled                -> 是否启用异步启动流水线
+  poll_interval          -> worker 扫描 pending 的周期
+  batch_size             -> 单轮最多领取多少个 pending 实例
+  max_concurrent_starts  -> 全局同时允许多少个 creating
+  max_active_instances   -> 全局 creating + running 的硬上限
 ```
 
-### 9.3 时序图 — 请求入队
+### 9.3 时序图 — 请求入队与后台消费
 
 ```mermaid
 sequenceDiagram
     participant 用户
     participant API as API Gateway
-    participant QS as QueueService
-    participant Redis
+    participant PS as PracticeService
+    participant PG as PostgreSQL
+    participant SCH as ProvisioningScheduler
+    participant Docker
 
     用户->>API: 启动靶机
-    API->>QS: 鉴权+限流
+    API->>PS: 鉴权+限流
+    PS->>PG: 事务内锁用户/队伍 + 写入 pending 实例
+    PG-->>PS: instance_id
+    PS-->>API: {instance_id, status=pending}
+    API-->>用户: 已排队
 
-    QS->>Redis: LLEN ctf:queue:instance:{cid} 检查队列长度
-    Redis-->>QS: length
-
-    Note over QS: length > max_queue_size: 返回503 队列已满
-
-    QS->>Redis: GET ctf:queue:user:{cid}:{uid} 检查用户是否已在队列中
-    Redis-->>QS: exists/not
-
-    Note over QS: 已在队列: 返回现有request_id
-
-    Note over QS: 生成 request_id (UUID v7)
-
-    QS->>Redis: RPUSH ctf:queue:instance:{cid} {request_json} 入队
-    Redis-->>QS: OK
-
-    QS->>Redis: HSET ctf:queue:status:{request_id} status=queued EXPIRE 600s
-    Redis-->>QS: OK
-
-    QS-->>API: {request_id, position}
-    API-->>用户: 排队中
-```
-
-### 9.4 时序图 — 前端轮询排队位置
-
-```mermaid
-sequenceDiagram
-    participant 用户
-    participant API as API Gateway
-    participant QS as QueueService
-    participant Redis
-
-    用户->>API: 轮询状态 (request_id)
-    API->>QS: 转发请求
-
-    QS->>Redis: HGETALL ctf:queue:status:{request_id}
-    Redis-->>QS: status_data
-
-    Note over QS: status=queued: 计算当前位置
-
-    QS->>Redis: LPOS ctf:queue:instance:{cid} {request_id}
-    Redis-->>QS: position
-
-    QS-->>API: {status, position, est_wait_s}
-    API-->>用户: 排队位置
-
-    Note over 用户: status=completed 时返回 instance_id
-    Note over 用户: status=failed 时返回错误信息
-    Note over 用户: 前端轮询间隔: 3s
-```
-
-### 9.5 时序图 — 消费者处理
-
-```mermaid
-sequenceDiagram
-    participant QC as QueueConsumer
-    participant Redis
-    participant IS as InstanceService
-    participant PG as PostgreSQL
-
-    QC->>Redis: BLPOP ctf:queue:instance:{cid} timeout=5s (阻塞弹出)
-    Redis-->>QC: request_json
-
-    Note over QC: 检查是否超时: now()-enqueue_at > queue_timeout
-
-    alt 超时
-        QC->>Redis: HSET status=cancelled
-    else 未超时
-        QC->>Redis: HSET status=processing
-
-        QC->>IS: 调用实例启动流程 (复用流程1的逻辑)
-        IS-->>QC: instance/error
-
-        alt 成功
-            QC->>Redis: HSET status=completed, instance_id=xxx
-        else 失败
-            QC->>Redis: HSET status=failed, error=xxx
+    loop poll_interval
+        SCH->>PG: count(creating), count(creating+running)
+        alt 仍有容量
+            SCH->>PG: 查询最早 pending 实例
+            SCH->>PG: 原子更新 pending -> creating
+            SCH->>Docker: 创建网络/容器并启动
+            alt 成功
+                SCH->>PG: UPDATE running + access_url
+            else 失败
+                SCH->>PG: UPDATE failed + 释放端口
+            end
+        else 容量不足
+            Note over SCH: 保持 pending，等待下一轮
         end
     end
-
-    Note over QC: 继续 BLPOP 下一个
 ```
 
-### 9.6 关键决策点
+### 9.4 关键决策点
 
 | 决策点 | 方案 | 理由 |
 |--------|------|------|
-| 队列实现 | Redis List（RPUSH 入队，BLPOP 出队） | FIFO 语义，BLPOP 阻塞等待避免空轮询，性能优异 |
-| 消费者并发度 | 可配置的 N 个 goroutine 并发消费（默认 5） | 控制 Docker daemon 并发压力，可根据宿主机性能调整 |
-| 排队超时 | 入队后超过配置时间（默认 5 分钟）自动取消 | 避免用户无限等待，超时后用户可重新排队 |
-| 位置查询 | Redis `LPOS` 命令（Redis 6.0.6+） | O(N) 但队列长度有限（max_queue_size），性能可接受 |
-| 状态 TTL | 10 分钟 | 比排队超时长一倍，确保前端能查到最终状态后自然过期 |
-| 重复排队防护 | 入队前检查用户是否已有 queued/processing 状态的请求 | 防止同一用户重复排队占位 |
-| 队列容量上限 | `max_queue_size` 可配置，默认 200 | 超过上限直接拒绝，避免队列无限增长 |
+| 队列持久化 | 直接复用 `instances` 表的 `pending` 状态 | 不引入第二套排队事实源，进程重启后天然可恢复 |
+| 抢占方式 | 查询 oldest pending + `UPDATE ... WHERE status='pending'` | 多后端实例下只有一个 worker 会成功领取任务 |
+| 启动并发度 | `container.scheduler.max_concurrent_starts` | 把 Docker 冷启动并发限制从 API 层剥离成可配置阈值 |
+| 宿主机总容量 | `container.scheduler.max_active_instances` | 让宿主机容量有硬上限，不再默认单机无限接单 |
+| 前端状态感知 | 直接复用实例查询接口读取 `pending/creating/running/failed` | 先落地最小闭环，不额外引入 request_id/位置接口 |
 
-### 9.7 异常处理
+### 9.5 异常处理
 
 | 异常场景 | 处理策略 |
 |----------|----------|
-| 队列已满（超过 max_queue_size） | 返回 503，提示"当前排队人数过多，请稍后再试" |
-| 消费者宕机（BLPOP 中断） | 重启后自动恢复消费；已弹出但未处理的请求通过超时机制自动取消 |
+| 容量已满 | 新实例保持 `pending`，等待下一轮调度 |
+| worker 宕机/进程重启 | 未领取的实例仍在 `pending`；`creating` 失败实例由补偿和清理任务收敛 |
 | 实例创建失败 | 标记 status=failed，前端轮询到后提示用户重试 |
-| Redis 不可用 | 降级为直接创建（跳过排队），但限制并发度；记录告警 |
-| 排队超时 | 消费者弹出后检查 enqueue_at，超时则标记 cancelled 并跳过 |
-| 用户主动取消 | 前端调用取消接口，标记 status=cancelled；消费者弹出后检查状态，已取消则跳过 |
+| 调度关闭 | 回退为同步启动路径，但保留同一套实例状态机 |
 
-### 9.8 并发与一致性考虑
+### 9.6 并发与一致性考虑
 
-- **BLPOP 的原子性**：Redis BLPOP 保证每个元素只被一个消费者弹出，多个消费者 goroutine 不会重复处理同一请求。
-- **入队与重复检查的竞态**：用户快速点击两次可能导致两次入队。解决方案：使用 Redis Lua 脚本将"检查是否已排队 + RPUSH"合并为原子操作。
+- **入队幂等**：用户或队伍作用域先加数据库锁，再检查 `pending/creating/running` 实例，所以重复点击不会产生多个排队实例。
+- **多 worker 互斥**：`TryTransitionStatusWithContext(id, pending, creating)` 是真正的抢占点，只有一个后端实例会成功。
+- **容量判断**：当前实现把 `creating` 视为正在消耗启动并发，把 `creating + running` 视为宿主机活跃容量；`pending` 只占用户配额，不占宿主机容量。
+- **后续演进**：如果未来需要排队位置、超时取消、可重投递，可在保持 `pending` 状态机不变的前提下，把调度事实源从数据库扫描演进为 Redis Stream / MQ。
 
-```lua
--- 原子入队 Lua 脚本：防止重复排队
--- KEYS[1] = ctf:queue:instance:{cid}
--- KEYS[2] = ctf:queue:status:{request_id}
--- KEYS[3] = ctf:queue:user:{cid}:{uid} (用户排队标记)
--- ARGV[1] = request_json
--- ARGV[2] = max_queue_size
--- ARGV[3] = status_ttl_seconds
--- ARGV[4] = request_id
-
--- 1. 检查用户是否已在排队
-if redis.call('EXISTS', KEYS[3]) == 1 then
-    return {-1, redis.call('GET', KEYS[3])}  -- 返回已有的 request_id
-end
-
--- 2. 检查队列长度
-local length = redis.call('LLEN', KEYS[1])
-if length >= tonumber(ARGV[2]) then
-    return {-2, length}  -- 队列已满
-end
-
--- 3. 入队
-redis.call('RPUSH', KEYS[1], ARGV[1])
-
--- 4. 设置状态
-redis.call('HSET', KEYS[2], 'status', 'queued', 'enqueue_at', redis.call('TIME')[1])
-redis.call('EXPIRE', KEYS[2], tonumber(ARGV[3]))
-
--- 5. 标记用户已排队
-redis.call('SET', KEYS[3], ARGV[4], 'EX', tonumber(ARGV[3]))
-
-return {length + 1, ARGV[4]}  -- 返回位置和 request_id
-```
-
-- **消费者弹出后宕机**：BLPOP 弹出后如果消费者宕机，该请求会丢失。可接受的原因：用户轮询超时后会发现 status key 过期（无状态），前端提示"排队超时，请重试"。如需更强保障，可改用 Redis Stream 的 consumer group（XREADGROUP + XACK），支持消息确认和重投递。
-- **排队与直接创建的切换**：通过配置开关 `queue.enabled` 控制。非高峰期关闭排队，请求直接走流程 1 的实例启动逻辑。高峰期开启后，所有启动请求统一入队。判断标准：当前运行中的实例数超过阈值时自动开启排队。
-
-### 9.9 监控指标
+### 9.7 监控指标
 
 | 指标 | 采集方式 | 告警阈值 |
 |------|----------|----------|
-| 队列长度 | Redis LLEN，每 10s 采集 | > max_queue_size × 80% |
-| 平均等待时间 | 消费者处理时记录 `now() - enqueue_at` | > 3 分钟 |
-| 消费者处理速率 | 每分钟处理的请求数 | < 预期吞吐量的 50% |
-| 超时取消率 | cancelled / total | > 20% |
+| pending 数量 | `COUNT(status='pending')` | 持续增长且 5 分钟不下降 |
+| creating 数量 | `COUNT(status='creating')` | 长时间等于 `max_concurrent_starts` |
+| 活跃实例数 | `COUNT(status IN ('creating','running'))` | 接近 `max_active_instances` |
+| 平均启动耗时 | `running.updated_at - pending.created_at` | 显著高于基线 |
 | 创建失败率 | failed / (completed + failed) | > 10% |
 
 ---

@@ -387,7 +387,7 @@ CREATE TABLE instances (
     network_id      VARCHAR(128)    DEFAULT NULL,            -- Docker 网络 ID
     access_url      VARCHAR(512)    DEFAULT NULL,            -- 用户访问地址（如 http://ip:port）
     instance_nonce  VARCHAR(64)     DEFAULT NULL,            -- 动态 Flag 的实例随机值（建议 base64url(32bytes)）；用于服务端重算校验
-    status          VARCHAR(16)     NOT NULL DEFAULT 'creating', -- pending/creating/running/expired/destroying/destroyed/failed/crashed
+    status          VARCHAR(16)     NOT NULL DEFAULT 'pending', -- pending/creating/running/expired/destroying/destroyed/failed/crashed
     started_at      TIMESTAMPTZ     DEFAULT NULL,            -- 容器实际启动时间
     expires_at      TIMESTAMPTZ     NOT NULL,                -- 过期时间
     extend_count    INT             NOT NULL DEFAULT 0,      -- 已延时次数

@@ -74,9 +74,13 @@ type PracticeRankingRepository interface {
 }
 
 type InstanceRepository interface {
+	FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error)
 	UpdateRuntime(instance *model.Instance) error
 	UpdateStatusAndReleasePort(id int64, status string) error
 	FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error)
+	ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error)
+	TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error)
+	CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error)
 }
 
 type RuntimeInstanceService interface {
