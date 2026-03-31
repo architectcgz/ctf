@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { CalendarClock, CircleCheckBig, Play, Send } from 'lucide-vue-next'
 
 import type { TimelineEvent } from '@/api/contracts'
-import { formatDate, formatTime } from '@/utils/format'
+import { formatTime } from '@/utils/format'
 
 import { timelineSummary, timelineTypeLabel, timelineTypeTone } from './utils'
 
@@ -38,16 +38,17 @@ const groupedTimeline = computed(() => {
 
 <template>
   <div class="journal-shell space-y-6">
-    <!-- Hero -->
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Training Timeline</div>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+          <h2
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          >
             训练节奏总览
           </h2>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            把成功解题、提交动作和实例操作放在同一视图里，更容易看清最近一段训练是否顺畅。
+            看最近训练记录和节奏变化。
           </p>
         </div>
 
@@ -76,89 +77,122 @@ const groupedTimeline = computed(() => {
           </div>
         </article>
       </div>
-    </section>
 
-    <!-- 节奏信号 -->
-    <section class="grid gap-4 md:grid-cols-3">
-      <article class="journal-panel rounded-[24px] border px-6 py-5">
-        <div class="flex items-center gap-3">
-          <div class="stat-icon stat-icon--success">
-            <CircleCheckBig class="h-5 w-5" />
-          </div>
-          <div class="journal-eyebrow">成功信号</div>
-        </div>
-        <div class="mt-4 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ solveCount }}</div>
-        <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-          次成功解题。若偏低，建议回到推荐页选更适合当前阶段的题目。
-        </div>
-      </article>
+      <div class="timeline-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
+        <section class="timeline-section">
+          <div class="journal-eyebrow journal-eyebrow-soft">Rhythm Signals</div>
+          <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">节奏信号</h3>
+          <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+            先看整体节奏，再回到下方时间线定位具体动作。
+          </p>
 
-      <article class="journal-panel rounded-[24px] border px-6 py-5">
-        <div class="flex items-center gap-3">
-          <div class="stat-icon stat-icon--warning">
-            <Send class="h-5 w-5" />
-          </div>
-          <div class="journal-eyebrow">提交密度</div>
-        </div>
-        <div class="mt-4 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ submitCount }}</div>
-        <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-          次提交。若提交多但成功少，说明方向可能跑偏，需要回看能力画像。
-        </div>
-      </article>
-
-      <article class="journal-panel rounded-[24px] border px-6 py-5">
-        <div class="flex items-center gap-3">
-          <div class="stat-icon stat-icon--primary">
-            <Play class="h-5 w-5" />
-          </div>
-          <div class="journal-eyebrow">实例节奏</div>
-        </div>
-        <div class="mt-4 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ instanceCount }}</div>
-        <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-          次实例操作。操作多但提交少，通常代表分析阶段过长。
-        </div>
-      </article>
-    </section>
-
-    <!-- 时间线 -->
-    <section class="journal-panel rounded-[24px] border px-6 py-6">
-      <div class="journal-eyebrow">Timeline Log</div>
-      <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">训练时间线</h3>
-
-      <div
-        v-if="groupedTimeline.length === 0"
-        class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
-      >
-        当前还没有训练动态。
-      </div>
-
-      <div v-else class="mt-5 space-y-8">
-        <section v-for="group in groupedTimeline" :key="group.date">
-          <div class="mb-3 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-muted)]">
-            {{ group.date }}
-          </div>
-          <div class="space-y-3">
-            <article
-              v-for="event in group.events"
-              :key="event.id"
-              class="journal-log rounded-[18px] border px-5 py-4"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div class="flex items-start gap-3">
-                  <span class="status-dot mt-1.5 shrink-0" :class="`status-dot-${event.type === 'solve' ? 'solved' : event.type.includes('instance') ? 'ready' : 'idle'}`" />
-                  <div>
-                    <div class="text-sm font-semibold text-[var(--journal-ink)]">{{ event.title }}</div>
-                    <div class="mt-1 text-sm leading-6 text-[var(--journal-muted)]">{{ timelineSummary(event) }}</div>
-                  </div>
+          <div class="timeline-signal-list mt-5">
+            <article class="timeline-signal-item">
+              <div class="flex items-start gap-3">
+                <div class="stat-icon stat-icon--success">
+                  <CircleCheckBig class="h-5 w-5" />
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="rounded-full border px-2.5 py-1 text-xs font-medium" :class="timelineTypeTone(event)">
-                    {{ timelineTypeLabel(event) }}
-                  </span>
-                  <span class="tech-font text-xs text-[var(--journal-muted)]">{{ formatTime(event.created_at) }}</span>
+                <div>
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">成功信号</div>
+                  <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
+                    {{ solveCount }}
+                  </div>
+                  <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                    成功解题偏少时，适合先回到推荐页选更贴近当前阶段的题目。
+                  </p>
                 </div>
               </div>
             </article>
+
+            <article class="timeline-signal-item">
+              <div class="flex items-start gap-3">
+                <div class="stat-icon stat-icon--warning">
+                  <Send class="h-5 w-5" />
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">提交密度</div>
+                  <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
+                    {{ submitCount }}
+                  </div>
+                  <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                    提交多但成功少，通常说明方向跑偏，需要回看能力画像或题目切入点。
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="timeline-signal-item">
+              <div class="flex items-start gap-3">
+                <div class="stat-icon stat-icon--primary">
+                  <Play class="h-5 w-5" />
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">实例节奏</div>
+                  <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
+                    {{ instanceCount }}
+                  </div>
+                  <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                    实例操作多但提交少，通常代表分析阶段过长，适合更快进入验证。
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="timeline-section">
+          <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
+          <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练时间线</h3>
+          <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+            按日期回看最近的提交、解题和实例操作。
+          </p>
+
+          <div
+            v-if="groupedTimeline.length === 0"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+          >
+            当前还没有训练动态。
+          </div>
+
+          <div v-else class="timeline-group-list mt-5">
+            <section v-for="group in groupedTimeline" :key="group.date" class="timeline-group">
+              <div class="timeline-group-date">{{ group.date }}</div>
+              <div class="timeline-event-list">
+                <article
+                  v-for="event in group.events"
+                  :key="event.id"
+                  class="timeline-event-item"
+                >
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                      <span
+                        class="status-dot mt-1.5 shrink-0"
+                        :class="`status-dot-${event.type === 'solve' ? 'solved' : event.type.includes('instance') ? 'ready' : 'idle'}`"
+                      />
+                      <div>
+                        <div class="text-sm font-semibold text-[var(--journal-ink)]">
+                          {{ event.title }}
+                        </div>
+                        <div class="mt-1 text-sm leading-6 text-[var(--journal-muted)]">
+                          {{ timelineSummary(event) }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="rounded-full border px-2.5 py-1 text-xs font-medium"
+                        :class="timelineTypeTone(event)"
+                      >
+                        {{ timelineTypeLabel(event) }}
+                      </span>
+                      <span class="tech-font text-xs text-[var(--journal-muted)]">{{
+                        formatTime(event.created_at)
+                      }}</span>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
           </div>
         </section>
       </div>
@@ -175,57 +209,57 @@ const groupedTimeline = computed(() => {
   --journal-border: rgba(226, 232, 240, 0.72);
   --journal-surface: #ffffff;
   --journal-surface-subtle: #f8fafc;
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(191, 219, 254, 0.75), transparent 15rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-}
-
-.journal-panel,
-.journal-log {
-  border-color: var(--journal-border);
-  background: var(--journal-surface);
-}
-
-.journal-panel {
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
 .journal-brief {
   border-color: var(--journal-border);
-  background: var(--journal-surface);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
-.journal-log {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-  transition: all 0.2s ease-in-out;
-}
-
-.journal-log:hover {
-  border-color: #6366f1;
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  background: var(--journal-surface-subtle);
 }
 
 .journal-note {
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: var(--journal-surface-subtle);
-  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  padding: 0.875rem 1rem;
 }
 
-.journal-note-label,
-.journal-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.26em;
+.journal-note-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--journal-muted);
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-eyebrow-soft {
+  color: var(--journal-muted);
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .journal-note-value {
@@ -233,6 +267,91 @@ const groupedTimeline = computed(() => {
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--journal-ink);
+}
+
+.timeline-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.timeline-section + .timeline-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.timeline-signal-list,
+.timeline-group-list {
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.timeline-signal-item {
+  padding: 1rem 1.1rem;
+}
+
+.timeline-signal-item + .timeline-signal-item {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.timeline-group {
+  padding: 1rem 1.1rem;
+}
+
+.timeline-group + .timeline-group {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.timeline-group-date {
+  margin-bottom: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+  padding: 0.28rem 0.72rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.timeline-event-list {
+  position: relative;
+}
+
+.timeline-event-item {
+  position: relative;
+  padding: 0.95rem 0 0.95rem 1.1rem;
+}
+
+.timeline-event-item::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed rgba(148, 163, 184, 0.5);
+}
+
+.timeline-event-item:first-child {
+  padding-top: 0.25rem;
+}
+
+.timeline-event-item:first-child::before {
+  top: 0.65rem;
+}
+
+.timeline-event-item:last-child {
+  padding-bottom: 0.2rem;
+}
+
+.timeline-event-item:last-child::before {
+  bottom: 0.55rem;
+}
+
+.timeline-event-item + .timeline-event-item {
+  border-top: 1px dashed rgba(148, 163, 184, 0.42);
 }
 
 .stat-icon {
@@ -285,12 +404,50 @@ const groupedTimeline = computed(() => {
 }
 
 .tech-font {
-  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 @keyframes dot-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38); }
-  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@media (min-width: 1280px) {
+  .timeline-signal-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .timeline-signal-item + .timeline-signal-item {
+    border-top: 0;
+    border-left: 1px dashed rgba(148, 163, 184, 0.58);
+  }
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #f1f5f9;
+  --journal-muted: #94a3b8;
+  --journal-border: rgba(51, 65, 85, 0.72);
+  --journal-surface: rgba(15, 23, 42, 0.85);
+  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .journal-note,
+:global([data-theme='dark']) .timeline-signal-list,
+:global([data-theme='dark']) .timeline-group-list {
+  background: rgba(15, 23, 42, 0.42);
 }
 </style>

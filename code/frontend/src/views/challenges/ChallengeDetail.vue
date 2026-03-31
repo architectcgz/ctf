@@ -1,14 +1,15 @@
 <template>
-  <div class="mx-auto max-w-7xl space-y-6">
+  <div class="journal-shell mx-auto max-w-7xl space-y-6">
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"></div>
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"></div>
     </div>
 
     <div v-else-if="challenge" class="space-y-6">
-      <div class="rounded-2xl border border-[var(--color-border-default)] bg-[linear-gradient(135deg,rgba(8,47,73,0.88),rgba(15,23,42,0.96))] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
+      <div class="journal-hero p-6 md:p-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-3">
-            <h1 class="text-3xl font-bold text-white">{{ challenge.title }}</h1>
+            <div class="journal-eyebrow">Challenge Detail</div>
+            <h1 class="text-3xl font-bold text-[var(--journal-ink)]">{{ challenge.title }}</h1>
             <div class="flex flex-wrap gap-2">
               <span
                 class="rounded-full px-3 py-1 text-sm font-medium"
@@ -25,15 +26,15 @@
               <span
                 v-for="tag in challenge.tags"
                 :key="tag"
-                class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-[var(--color-text-primary)]"
+                class="rounded-full border border-[var(--journal-border)] bg-white/60 px-3 py-1 text-sm text-[var(--journal-ink)]"
               >
                 {{ tag }}
               </span>
             </div>
           </div>
-          <div class="rounded-xl border border-[var(--color-border-muted)] bg-[var(--color-bg-elevated)]/45 px-4 py-3 text-left lg:min-w-[148px] lg:text-right">
-            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-primary)]">Score</div>
-            <div class="mt-1 font-mono text-2xl font-bold text-[var(--color-text-primary)]">{{ challenge.points }}<span class="ml-1 text-lg text-[var(--color-text-secondary)]">pts</span></div>
+          <div class="challenge-score-card px-4 py-3 text-left lg:min-w-[148px] lg:text-right">
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--journal-muted)]">Score</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-[var(--journal-ink)]">{{ challenge.points }}<span class="ml-1 text-lg text-[var(--journal-muted)]">pts</span></div>
             <span
               v-if="challenge.is_solved"
               class="mt-3 inline-flex rounded-full bg-[var(--color-success)]/18 px-3 py-1 text-sm font-medium text-[var(--color-success)]"
@@ -46,32 +47,32 @@
 
       <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <main class="space-y-6">
-          <div class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+          <div class="challenge-panel p-6">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">挑战描述</h2>
+              <h2 class="text-lg font-semibold text-[var(--journal-ink)]">挑战描述</h2>
               <button
                 :disabled="writeupLoading"
-                class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-elevated)] disabled:cursor-not-allowed disabled:opacity-50"
+                class="challenge-btn-outline"
                 @click="toggleWriteup"
               >
                 {{ writeupLoading ? '加载题解中...' : writeupVisible ? '收起题解' : '查看题解' }}
               </button>
             </div>
-            <div v-html="sanitizedDescription" class="prose prose-invert max-w-none text-[var(--color-text-secondary)]"></div>
+            <div v-html="sanitizedDescription" class="prose challenge-prose max-w-none"></div>
             <button
               v-if="challenge.attachment_url"
-              class="mt-4 rounded-lg bg-[var(--color-bg-elevated)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-border-default)]"
+              class="challenge-btn-outline mt-4"
               @click="downloadAttachment"
             >
               下载附件
             </button>
           </div>
 
-          <div class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6">
+          <div class="challenge-panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">Flag 提交</h2>
-                <div class="mt-1 text-sm text-[var(--color-text-secondary)]">保持在当前题目页即可提交答案，不需要离开题面。</div>
+                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">Flag 提交</h2>
+                <div class="mt-1 text-sm text-[var(--journal-muted)]">保持在当前题目页即可提交答案。</div>
               </div>
               <span
                 v-if="challenge.is_solved"
@@ -87,13 +88,13 @@
                   type="text"
                   placeholder="flag{...}"
                   :disabled="challenge.is_solved"
-                  class="flex-1 rounded-xl border bg-[var(--color-bg-base)] px-4 py-3 font-mono text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  class="challenge-input flex-1 rounded-xl border px-4 py-3 font-mono transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   :class="submitResult?.success ? 'border-[var(--color-success)]' : 'border-[#0891b2]'"
                   @keyup.enter="submitFlagHandler"
                 />
                 <button
                   :disabled="challenge.is_solved || submitting"
-                  class="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="challenge-btn-primary rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                   @click="submitFlagHandler"
                 >
                   {{ submitting ? '提交中...' : '提交' }}
@@ -107,28 +108,28 @@
 
           <div
             v-if="challenge.hints.length > 0"
-            class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+            class="challenge-panel p-6"
           >
-            <h2 class="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">提示系统</h2>
-            <div class="space-y-4">
+            <h2 class="mb-4 text-lg font-semibold text-[var(--journal-ink)]">提示系统</h2>
+            <div class="hint-list">
               <div
                 v-for="hint in challenge.hints"
                 :key="hint.id"
-                class="rounded-lg border border-[var(--color-border-default)] bg-[var(--color-bg-base)] p-4"
+                class="hint-item"
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <div class="text-sm font-medium text-[var(--color-text-primary)]">
+                    <div class="text-sm font-medium text-[var(--journal-ink)]">
                       Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
                     </div>
-                    <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--color-text-secondary)]">
+                    <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--journal-muted)]">
                       解锁消耗：{{ hint.cost_points }} 分
                     </div>
                   </div>
                   <button
                     v-if="!hint.is_unlocked"
                     :disabled="unlockingLevel === hint.level"
-                    class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-50"
+                    class="challenge-btn-primary rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                     @click="unlockHintHandler(hint.level)"
                   >
                     {{ unlockingLevel === hint.level ? '解锁中...' : '解锁提示' }}
@@ -140,10 +141,10 @@
                     已解锁
                   </span>
                 </div>
-                <div v-if="hint.is_unlocked" class="mt-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+                <div v-if="hint.is_unlocked" class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
                   {{ hint.content }}
                 </div>
-                <div v-else class="mt-3 text-sm text-[var(--color-text-muted)]">
+                <div v-else class="mt-3 text-sm text-[var(--journal-muted)]">
                   解锁后显示提示内容
                 </div>
               </div>
@@ -152,15 +153,15 @@
 
           <div
             v-if="writeupVisible && writeup"
-            class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-6"
+            class="challenge-panel p-6"
           >
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">题解</h2>
-                <div class="mt-2 text-sm text-[var(--color-text-secondary)]">{{ writeup.title }}</div>
+                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">题解</h2>
+                <div class="mt-2 text-sm text-[var(--journal-muted)]">{{ writeup.title }}</div>
               </div>
               <div
-                class="rounded bg-[var(--color-bg-base)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                class="rounded bg-[var(--journal-surface-subtle)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--journal-muted)]"
               >
                 {{ writeup.visibility }}
               </div>
@@ -173,7 +174,7 @@
             </div>
             <div
               v-html="sanitizedWriteup"
-              class="prose prose-invert mt-4 max-w-none text-[var(--color-text-secondary)]"
+              class="prose challenge-prose mt-4 max-w-none"
             ></div>
           </div>
         </main>
@@ -432,3 +433,130 @@ watch(
   { immediate: true }
 )
 </script>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #4f46e5;
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: #ffffff;
+  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+}
+
+.journal-hero {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.challenge-score-card {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.challenge-panel {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+
+.challenge-btn-outline {
+  border-radius: 10px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--journal-ink);
+  transition: all 0.15s;
+}
+
+.challenge-btn-outline:hover {
+  border-color: var(--journal-accent);
+  color: var(--journal-accent);
+}
+
+.challenge-btn-primary {
+  background: var(--journal-accent);
+}
+
+.challenge-btn-primary:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.challenge-input {
+  background: rgba(248, 250, 252, 0.92);
+  color: var(--journal-ink);
+}
+
+.challenge-input::placeholder {
+  color: var(--journal-muted);
+}
+
+.challenge-prose {
+  color: var(--journal-muted);
+}
+
+.challenge-prose :deep(h1),
+.challenge-prose :deep(h2),
+.challenge-prose :deep(h3),
+.challenge-prose :deep(strong),
+.challenge-prose :deep(code) {
+  color: var(--journal-ink);
+}
+
+.hint-list {
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.hint-item {
+  padding: 1rem 1.1rem;
+}
+
+.hint-item + .hint-item {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #f1f5f9;
+  --journal-muted: #94a3b8;
+  --journal-border: rgba(51, 65, 85, 0.72);
+  --journal-surface: rgba(15, 23, 42, 0.85);
+  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .challenge-score-card,
+:global([data-theme='dark']) .challenge-panel,
+:global([data-theme='dark']) .hint-list,
+:global([data-theme='dark']) .challenge-btn-outline,
+:global([data-theme='dark']) .challenge-input {
+  background: rgba(15, 23, 42, 0.42);
+}
+</style>

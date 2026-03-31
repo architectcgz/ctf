@@ -100,11 +100,14 @@ async function handleDownload(): Promise<void> {
 onMounted(() => {
   loadProfile()
 })
+
+onUnmounted(() => {
+  stopPolling()
+})
 </script>
 
 <template>
   <div class="journal-shell space-y-6">
-    <!-- 错误提示 -->
     <div
       v-if="error"
       class="rounded-[20px] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/8 px-5 py-4 text-sm text-[var(--color-warning)]"
@@ -112,222 +115,211 @@ onMounted(() => {
       {{ error }}
     </div>
 
-    <!-- 加载骨架 -->
-    <div v-if="loading" class="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-      <div class="journal-hero rounded-[30px] border px-6 py-6">
-        <div class="h-64 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
+    <section v-if="loading" class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="space-y-6">
+        <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
+          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+        </div>
       </div>
-      <div class="journal-hero rounded-[30px] border px-6 py-6">
-        <div class="h-64 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
-      </div>
-    </div>
+    </section>
 
-    <div v-else class="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-      <!-- 账号信息 -->
-      <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">My Account</div>
-            <h1
-              class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-            >
-              个人资料
-            </h1>
-            <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-              查看账号信息，也可以顺手导出个人报告。
-            </p>
-          </div>
-          <button type="button" class="journal-btn shrink-0" @click="loadProfile">
-            <RefreshCw class="h-4 w-4" />
-            刷新
-          </button>
-        </div>
-
-        <div class="journal-panel-divider" />
-
-        <!-- 账号状态栏 -->
-        <div
-          class="rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3"
-        >
-          <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
-            <span class="status-dot status-dot-ready" />
-            账号状态正常
-          </div>
-        </div>
-
-        <div v-if="profile" class="mt-5 grid gap-3 sm:grid-cols-2">
-          <article
-            v-for="item in profileFields"
-            :key="item.label"
-            class="journal-metric rounded-[20px] border px-4 py-4"
+    <section v-else class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_minmax(300px,0.96fr)] xl:items-start">
+        <div>
+          <div class="journal-eyebrow">My Account</div>
+          <h1
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
           >
-            <div
-              class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-            >
-              {{ item.label }}
-            </div>
-            <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)] tech-font">
-              {{ item.value }}
-            </div>
-          </article>
-        </div>
-
-        <AppEmpty
-          v-else
-          title="暂无用户信息"
-          description="当前没有可展示的用户信息。"
-          icon="UsersRound"
-        />
-      </section>
-
-      <!-- 个人报告导出 -->
-      <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">Personal Export</div>
-            <h2 class="mt-3 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
-              个人报告生成器
-            </h2>
-            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              在这里生成并下载个人报告。
-            </p>
-          </div>
-          <span
-            class="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
-            :class="reportTaskMeta.chipClass"
-          >
-            {{ reportTaskMeta.label }}
-          </span>
-        </div>
-
-        <!-- 报告状态面板 -->
-        <div
-          class="mt-5 rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-3"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
-              <div class="text-sm font-medium text-[var(--journal-ink)]">当前状态</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span
-                class="status-dot"
-                :class="{
-                  'status-dot-ready': reportTaskMeta.status === 'ready',
-                  'status-dot-warning': reportTaskMeta.status === 'processing',
-                  'status-dot-idle': reportTaskMeta.status === 'idle',
-                  'status-dot-danger': reportTaskMeta.status === 'failed',
-                }"
-              />
-              <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
-                reportTaskMeta.label
-              }}</span>
-            </div>
-          </div>
-          <div v-if="latestReport" class="mt-1 text-xs text-[var(--journal-muted)]">
-            报告编号：{{ latestReport.report_id }}
-          </div>
-        </div>
-
-        <!-- 格式选择 -->
-        <fieldset class="mt-5">
-          <legend class="mb-3 text-sm font-medium text-[var(--journal-ink)]">导出格式</legend>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <label
-              class="journal-format-option"
-              :class="{ 'journal-format-option--active': reportFormat === 'pdf' }"
-            >
-              <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
-              <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
-              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
-            </label>
-            <label
-              class="journal-format-option"
-              :class="{ 'journal-format-option--active': reportFormat === 'excel' }"
-            >
-              <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
-              <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
-              <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
-            </label>
-          </div>
-        </fieldset>
-
-        <!-- 创建按钮 -->
-        <button
-          type="button"
-          class="journal-btn journal-btn--primary mt-4 w-full justify-center"
-          :disabled="exportLoading"
-          @click="createReport"
-        >
-          <Loader2 v-if="exportLoading" class="h-4 w-4 animate-spin" />
-          {{ exportLoading ? '创建中…' : '生成个人报告' }}
-        </button>
-
-        <p v-if="exportError" class="mt-3 text-sm text-[var(--color-danger)]">
-          {{ exportError }}
-        </p>
-
-        <!-- 最近报告状态 -->
-        <template v-if="latestReport">
-          <div class="mt-5 grid grid-cols-2 gap-3">
-            <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div
-                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-              >
-                格式
-              </div>
-              <div class="mt-2 tech-font text-lg font-semibold text-[var(--journal-ink)]">
-                {{ latestReportFormat.toUpperCase() }}
-              </div>
-            </article>
-            <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div
-                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-              >
-                创建时间
-              </div>
-              <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
-                {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '—' }}
-              </div>
-            </article>
-            <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div
-                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-              >
-                状态
-              </div>
-              <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)]">
-                {{ reportTaskMeta.label }}
-              </div>
-            </article>
-            <article class="journal-metric rounded-[18px] border px-4 py-4">
-              <div
-                class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-              >
-                有效期
-              </div>
-              <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
-                {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
-              </div>
-            </article>
-          </div>
-
-          <p v-if="latestReport.error_message" class="mt-3 text-sm text-[var(--color-danger)]">
-            {{ latestReport.error_message }}
+            个人资料
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            查看账号信息，并在这里生成个人报告。
           </p>
 
-          <button
-            type="button"
-            class="journal-btn journal-btn--download mt-4 w-full justify-center"
-            :disabled="latestReport.status !== 'ready'"
-            @click="handleDownload"
-          >
-            <FileDown class="h-4 w-4" />
-            下载最近报告
-          </button>
-        </template>
-      </section>
-    </div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <div class="profile-pill">
+              <span class="status-dot status-dot-ready" />
+              账号状态正常
+            </div>
+            <button type="button" class="journal-btn" @click="loadProfile">
+              <RefreshCw class="h-4 w-4" />
+              刷新
+            </button>
+          </div>
+        </div>
+
+        <aside class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <ShieldCheck class="h-5 w-5 text-[var(--journal-accent)]" />
+            当前概况
+          </div>
+          <div class="mt-5 space-y-3">
+            <div class="journal-note">
+              <div class="journal-note-label">报告状态</div>
+              <div class="mt-2 flex items-center gap-2 text-sm font-semibold text-[var(--journal-ink)]">
+                <span
+                  class="status-dot"
+                  :class="{
+                    'status-dot-ready': reportTaskMeta.status === 'ready',
+                    'status-dot-warning': reportTaskMeta.status === 'processing',
+                    'status-dot-idle': reportTaskMeta.status === 'idle',
+                    'status-dot-danger': reportTaskMeta.status === 'failed',
+                  }"
+                />
+                {{ reportTaskMeta.label }}
+              </div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">最近生成</div>
+              <div class="journal-note-value">
+                {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '尚未生成' }}
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="profile-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
+        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
+          <section class="profile-section">
+            <div class="profile-section-head">
+              <div class="journal-eyebrow journal-eyebrow-soft">Account Info</div>
+              <h2 class="mt-3 flex items-center gap-3 text-xl font-semibold text-[var(--journal-ink)]">
+                <UserCircle2 class="h-5 w-5 text-[var(--journal-accent)]" />
+                账号信息
+              </h2>
+            </div>
+
+            <div v-if="profile" class="profile-field-list mt-5">
+              <article v-for="item in profileFields" :key="item.label" class="profile-field-item">
+                <div class="journal-note-label">{{ item.label }}</div>
+                <div class="mt-2 text-base font-semibold text-[var(--journal-ink)] tech-font">
+                  {{ item.value }}
+                </div>
+              </article>
+            </div>
+
+            <AppEmpty
+              v-else
+              title="暂无用户信息"
+              description="当前没有可展示的用户信息。"
+              icon="UsersRound"
+            />
+          </section>
+
+          <section class="profile-section profile-section--report">
+            <div class="profile-section-head">
+              <div class="journal-eyebrow journal-eyebrow-soft">Personal Export</div>
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <h2 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">个人报告</h2>
+                <span class="journal-chip" :class="reportTaskMeta.chipClass">
+                  {{ reportTaskMeta.label }}
+                </span>
+              </div>
+            </div>
+
+            <div class="profile-status mt-5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+                  <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
+                  当前状态
+                </div>
+                <div class="flex items-center gap-2 text-sm font-semibold text-[var(--journal-ink)]">
+                  <span
+                    class="status-dot"
+                    :class="{
+                      'status-dot-ready': reportTaskMeta.status === 'ready',
+                      'status-dot-warning': reportTaskMeta.status === 'processing',
+                      'status-dot-idle': reportTaskMeta.status === 'idle',
+                      'status-dot-danger': reportTaskMeta.status === 'failed',
+                    }"
+                  />
+                  {{ reportTaskMeta.label }}
+                </div>
+              </div>
+              <div v-if="latestReport" class="mt-2 text-xs text-[var(--journal-muted)]">
+                报告编号：{{ latestReport.report_id }}
+              </div>
+            </div>
+
+            <fieldset class="mt-5">
+              <legend class="mb-3 text-sm font-medium text-[var(--journal-ink)]">导出格式</legend>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label
+                  class="journal-format-option"
+                  :class="{ 'journal-format-option--active': reportFormat === 'pdf' }"
+                >
+                  <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
+                  <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
+                </label>
+                <label
+                  class="journal-format-option"
+                  :class="{ 'journal-format-option--active': reportFormat === 'excel' }"
+                >
+                  <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
+                  <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
+                </label>
+              </div>
+            </fieldset>
+
+            <button
+              type="button"
+              class="journal-btn journal-btn--primary mt-4 w-full justify-center"
+              :disabled="exportLoading"
+              @click="createReport"
+            >
+              <Loader2 v-if="exportLoading" class="h-4 w-4 animate-spin" />
+              {{ exportLoading ? '创建中…' : '生成个人报告' }}
+            </button>
+
+            <p v-if="exportError" class="mt-3 text-sm text-[var(--color-danger)]">
+              {{ exportError }}
+            </p>
+
+            <template v-if="latestReport">
+              <div class="profile-report-meta mt-5">
+                <div class="profile-report-meta__item">
+                  <div class="journal-note-label">格式</div>
+                  <div class="mt-2 text-base font-semibold text-[var(--journal-ink)] tech-font">
+                    {{ latestReportFormat.toUpperCase() }}
+                  </div>
+                </div>
+                <div class="profile-report-meta__item">
+                  <div class="journal-note-label">创建时间</div>
+                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
+                    {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '—' }}
+                  </div>
+                </div>
+                <div class="profile-report-meta__item">
+                  <div class="journal-note-label">有效期</div>
+                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
+                    {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
+                  </div>
+                </div>
+              </div>
+
+              <p v-if="latestReport.error_message" class="mt-3 text-sm text-[var(--color-danger)]">
+                {{ latestReport.error_message }}
+              </p>
+
+              <button
+                type="button"
+                class="journal-btn journal-btn--download mt-4 w-full justify-center"
+                :disabled="latestReport.status !== 'ready'"
+                @click="handleDownload"
+              >
+                <FileDown class="h-4 w-4" />
+                下载最近报告
+              </button>
+            </template>
+          </section>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -346,39 +338,44 @@ onMounted(() => {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
 .journal-eyebrow {
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-}
-
-.journal-panel-divider {
-  margin: 1.5rem 0;
-  border-top: 1px solid var(--journal-border);
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.625rem 0.875rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  padding: 0.875rem 1rem;
 }
 
 .journal-note-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
@@ -390,26 +387,30 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
+.profile-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  background: rgba(16, 185, 129, 0.08);
+  padding: 0.55rem 0.95rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--journal-ink);
+}
+
 .journal-brief {
   border-color: var(--journal-border);
   background: var(--journal-surface-subtle);
-}
-
-.journal-metric {
-  border-color: var(--journal-border);
-  background: var(--journal-surface);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
 }
 
 .journal-format-option {
   display: block;
   cursor: pointer;
   border-radius: 16px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(248, 250, 252, 0.88));
   padding: 0.75rem 1rem;
   transition:
     border-color 0.2s,
@@ -462,6 +463,75 @@ onMounted(() => {
   background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
+.journal-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.chip--primary {
+  color: var(--journal-accent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+}
+
+.chip--success {
+  color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+}
+
+.chip--warning {
+  color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.chip--danger {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+}
+
+.profile-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.profile-section {
+  min-width: 0;
+}
+
+.profile-section--report {
+  position: relative;
+}
+
+.profile-section-head {
+  min-height: 5rem;
+}
+
+.profile-field-list,
+.profile-report-meta {
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.profile-field-item,
+.profile-report-meta__item {
+  padding: 1rem 1.1rem;
+}
+
+.profile-field-item + .profile-field-item,
+.profile-report-meta__item + .profile-report-meta__item {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.profile-status {
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+  padding: 1rem 1.1rem;
+}
+
 .status-dot {
   display: inline-block;
   width: 7px;
@@ -505,6 +575,21 @@ onMounted(() => {
   font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
+@media (min-width: 1280px) {
+  .profile-section--report {
+    padding-left: 1.5rem;
+  }
+
+  .profile-section--report::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0;
+    bottom: 0;
+    border-left: 1px dashed rgba(148, 163, 184, 0.6);
+  }
+}
+
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: #f1f5f9;
   --journal-muted: #94a3b8;
@@ -517,5 +602,13 @@ onMounted(() => {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
     linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .journal-note,
+:global([data-theme='dark']) .journal-format-option,
+:global([data-theme='dark']) .profile-status,
+:global([data-theme='dark']) .profile-field-list,
+:global([data-theme='dark']) .profile-report-meta {
+  background: rgba(15, 23, 42, 0.42);
 }
 </style>

@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Activity, AlertTriangle, ArrowRight, ShieldAlert, Siren, SquareStack } from 'lucide-vue-next'
+import { AlertTriangle, ArrowRight, ShieldAlert, SquareStack } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
 import AppCard from '@/components/common/AppCard.vue'
-import MetricCard from '@/components/common/MetricCard.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 
 const props = defineProps<{
   dashboard: AdminDashboardData | null
@@ -30,24 +27,10 @@ const healthSummary = computed(() => {
 })
 
 const quickSignals = computed(() => [
-  {
-    label: '系统健康',
-    value: healthSummary.value.label,
-    description: `当前有 ${alertCount.value} 条资源告警`,
-    icon: ShieldAlert,
-  },
-  {
-    label: 'CPU 水位',
-    value: formatPercent(props.dashboard?.cpu_usage),
-    description: '用于判断容器资源是否接近瓶颈',
-    icon: Activity,
-  },
-  {
-    label: '告警态势',
-    value: `${alertCount.value} 条`,
-    description: '优先处理持续高于阈值的容器',
-    icon: AlertTriangle,
-  },
+  { label: '在线用户', value: props.dashboard?.online_users ?? 0, helper: '当前在线账号', accent: 'primary' as const },
+  { label: '活跃容器', value: props.dashboard?.active_containers ?? 0, helper: '正在运行的实例', accent: 'success' as const },
+  { label: '平均 CPU', value: formatPercent(props.dashboard?.cpu_usage), helper: '当前资源水位', accent: healthSummary.value.accent },
+  { label: '平均内存', value: formatPercent(props.dashboard?.memory_usage), helper: '结合阈值判断回收', accent: healthSummary.value.accent },
 ])
 
 const sortedContainers = computed(() =>
@@ -83,165 +66,149 @@ function usageTone(value: number | undefined): string {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      eyebrow="Control Plane"
-      title="系统值守台"
-      description="查看平台状态、资源告警和待处理事项。"
-    >
-      <ElButton plain @click="emit('openAuditLog')">审计日志</ElButton>
-      <ElButton type="primary" @click="emit('openCheatDetection')">风险研判</ElButton>
-    </PageHeader>
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <div class="journal-eyebrow">Admin Console</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            系统值守台
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            在这里查看平台状态、异常和当前资源热点。
+          </p>
 
-    <section class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-      <div
-        class="rounded-[30px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
-        :style="{
-          borderColor: healthSummary.accent === 'danger' ? 'rgba(248,81,73,0.22)' : healthSummary.accent === 'warning' ? 'rgba(210,153,34,0.22)' : 'rgba(63,185,80,0.22)',
-          background: healthSummary.accent === 'danger'
-            ? 'linear-gradient(145deg,rgba(127,29,29,0.55),rgba(15,23,42,0.94))'
-            : healthSummary.accent === 'warning'
-              ? 'linear-gradient(145deg,rgba(120,53,15,0.48),rgba(15,23,42,0.94))'
-              : 'linear-gradient(145deg,rgba(20,83,45,0.5),rgba(15,23,42,0.94))',
-        }"
-      >
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/72">
-          <span>Operations Pulse</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">状态：{{ healthSummary.label }}</span>
-        </div>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前平台运行{{ healthSummary.label }}</h2>
-        <p class="mt-3 text-sm leading-7 text-white/78">
-          查看平台运行状态，并定位当前需要处理的告警与热点。
-        </p>
-
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">在线用户</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ dashboard?.online_users ?? 0 }}</div>
-            <div class="mt-2 text-sm text-white/70">当前仍在平台活动的用户数</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">活跃容器</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ dashboard?.active_containers ?? 0 }}</div>
-            <div class="mt-2 text-sm text-white/70">正在运行的靶场与竞赛容器</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-white/60">资源告警</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ alertCount }}</div>
-            <div class="mt-2 text-sm text-white/70">需要管理员优先处理的异常数量</div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openAuditLog')">
+              审计日志
+            </button>
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('openCheatDetection')">
+              风险研判
+            </button>
           </div>
         </div>
+
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="journal-note-label">当前状态</div>
+              <div class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">
+                {{ healthSummary.label }}
+              </div>
+              <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                当前共有 {{ alertCount }} 条需要处理的资源告警。
+              </p>
+            </div>
+            <div class="journal-brief-icon">
+              <ShieldAlert class="h-5 w-5" />
+            </div>
+          </div>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div v-for="item in quickSignals" :key="item.label" class="journal-note">
+              <div class="journal-note-label">{{ item.label }}</div>
+              <div class="journal-note-value">{{ item.value }}</div>
+              <div class="journal-note-helper">{{ item.helper }}</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="journal-divider mt-6" />
+
+      <div v-if="error" class="admin-feedback admin-feedback-danger">
+        {{ error }}
+        <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
       </div>
 
-      <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard
-          v-for="item in quickSignals"
-          :key="item.label"
-          variant="metric"
-          :accent="item.label === '告警态势' ? 'warning' : 'primary'"
-          :eyebrow="item.label"
-          :title="item.value"
-        >
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
-              <component :is="item.icon" class="h-5 w-5" />
-            </div>
-          </template>
-          <div class="text-sm leading-6 text-text-secondary">{{ item.description }}</div>
-        </AppCard>
+      <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-[18px] bg-[var(--journal-surface)]" />
       </div>
-    </section>
 
-    <div v-if="error" class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]">
-      {{ error }}
-      <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-    </div>
+      <template v-else-if="dashboard">
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <AppCard
+            v-for="item in quickSignals"
+            :key="item.label"
+            variant="metric"
+            :accent="item.accent"
+            :eyebrow="item.label"
+            :title="String(item.value)"
+            :subtitle="item.helper"
+          />
+        </div>
 
-    <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <div v-for="index in 4" :key="index" class="h-32 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]" />
-    </div>
+        <div class="journal-divider mt-6" />
 
-    <template v-else-if="dashboard">
-      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="在线用户" :value="dashboard.online_users" hint="当前仍在平台内活动的用户数" accent="primary" />
-        <MetricCard label="活跃容器" :value="dashboard.active_containers" hint="处于运行状态的靶场与竞赛容器总数" accent="success" />
-        <MetricCard label="平均 CPU" :value="formatPercent(dashboard.cpu_usage)" hint="超过 75% 时建议重点关注" :accent="healthSummary.accent" />
-        <MetricCard label="平均内存" :value="formatPercent(dashboard.memory_usage)" hint="结合容器上限判断是否需要回收资源" :accent="healthSummary.accent" />
-      </section>
-
-      <section class="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-        <div class="space-y-6">
-          <SectionCard title="告警栈" subtitle="把当前超过阈值的异常按卡片堆叠，方便值守时逐条处理。">
-            <template #header>
-              <span class="rounded-full bg-[var(--color-danger)]/12 px-3 py-1 text-xs font-semibold text-[var(--color-danger)]">{{ alertCount }} 条</span>
-            </template>
-
-            <div v-if="alertCount === 0" class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
-              当前没有资源告警。
+        <section class="space-y-4">
+          <div class="admin-section-head">
+            <div>
+              <div class="journal-note-label">Alert Stack</div>
+              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">当前告警</h2>
             </div>
+            <div class="admin-pill">
+              <AlertTriangle class="h-4 w-4" />
+              {{ alertCount }} 条
+            </div>
+          </div>
 
-            <div v-else class="space-y-3">
-              <AppCard
-                v-for="alert in dashboard.alerts"
-                :key="`${alert.container_id}-${alert.type}`"
-                variant="action"
-                accent="danger"
-              >
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                      <Siren class="h-4 w-4 text-[var(--color-danger)]" />
-                      {{ alert.container_id }}
-                    </div>
-                    <p class="mt-2 text-sm leading-6 text-text-secondary">{{ alert.message }}</p>
+          <div v-if="alertCount === 0" class="admin-empty">
+            当前没有资源告警。
+          </div>
+
+          <div v-else class="space-y-3">
+            <AppCard
+              v-for="alert in dashboard.alerts"
+              :key="`${alert.container_id}-${alert.type}`"
+              variant="action"
+              accent="danger"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
+                    <AlertTriangle class="h-4 w-4 text-[var(--color-danger)]" />
+                    {{ alert.container_id }}
                   </div>
-                  <span class="rounded-full border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-danger)]">
-                    {{ alert.type.toUpperCase() }}
-                  </span>
+                  <p class="mt-2 text-sm leading-6 text-text-secondary">{{ alert.message }}</p>
                 </div>
-                <div class="mt-4 text-xs uppercase tracking-[0.16em] text-[var(--color-danger)]/80">
-                  当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%
-                </div>
-              </AppCard>
-            </div>
-          </SectionCard>
+                <span class="admin-tag admin-tag-danger">
+                  {{ alert.type.toUpperCase() }}
+                </span>
+              </div>
+              <div class="mt-4 text-xs text-text-secondary">
+                当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%
+              </div>
+            </AppCard>
+          </div>
 
-          <SectionCard title="立即动作" subtitle="值守时最常见的两条下一步。">
-            <div class="grid gap-3">
-              <AppCard
-                as="button"
-                variant="action"
-                accent="warning"
-                interactive
-                class="cursor-pointer"
-                @click="emit('openCheatDetection')"
-              >
-                <div>
-                  <div class="text-sm font-medium text-text-primary">进入风险研判</div>
-                  <div class="mt-1 text-sm text-text-secondary">当资源和异常都开始上升时，先确认是否伴随异常操作模式。</div>
-                </div>
-                <ArrowRight class="h-4 w-4 text-primary" />
-              </AppCard>
-              <AppCard
-                as="button"
-                variant="action"
-                accent="primary"
-                interactive
-                class="cursor-pointer"
-                @click="emit('openAuditLog')"
-              >
-                <div>
-                  <div class="text-sm font-medium text-text-primary">查看审计日志</div>
-                  <div class="mt-1 text-sm text-text-secondary">用于追踪高负载容器背后的管理动作和访问行为。</div>
-                </div>
-                <ArrowRight class="h-4 w-4 text-primary" />
-              </AppCard>
-            </div>
-          </SectionCard>
-        </div>
+          <div class="grid gap-3 lg:grid-cols-2">
+            <button type="button" class="admin-action-row" @click="emit('openCheatDetection')">
+              <div>
+                <div class="text-sm font-medium text-text-primary">进入风险研判</div>
+                <div class="mt-1 text-sm text-text-secondary">先看异常行为，再判断是否需要深挖容器与账号。</div>
+              </div>
+              <ArrowRight class="h-4 w-4 text-primary" />
+            </button>
+            <button type="button" class="admin-action-row" @click="emit('openAuditLog')">
+              <div>
+                <div class="text-sm font-medium text-text-primary">查看审计日志</div>
+                <div class="mt-1 text-sm text-text-secondary">结合操作记录，快速定位异常来源。</div>
+              </div>
+              <ArrowRight class="h-4 w-4 text-primary" />
+            </button>
+          </div>
+        </section>
 
-      <SectionCard title="资源热点" subtitle="按负载查看当前容器资源情况。">
-          <div v-if="sortedContainers.length === 0" class="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
+        <div class="journal-divider mt-6" />
+
+        <section class="space-y-4">
+          <div class="admin-section-head">
+            <div>
+              <div class="journal-note-label">Resource Hotspots</div>
+              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">资源热点</h2>
+            </div>
+          </div>
+
+          <div v-if="sortedContainers.length === 0" class="admin-empty">
             暂无容器运行数据。
           </div>
 
@@ -288,8 +255,214 @@ function usageTone(value: number | undefined): string {
               </div>
             </AppCard>
           </div>
-        </SectionCard>
-      </section>
-    </template>
+        </section>
+      </template>
+    </section>
   </div>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--journal-muted);
+}
+
+.journal-brief-icon {
+  display: inline-flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--journal-accent);
+}
+
+.journal-divider {
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.admin-btn-primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--journal-ink);
+}
+
+.admin-btn-ghost:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  color: var(--journal-accent);
+}
+
+.admin-feedback {
+  margin-bottom: 1rem;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  font-size: 0.875rem;
+}
+
+.admin-feedback-danger {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(254, 242, 242, 0.9);
+  color: #b91c1c;
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.06);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--journal-accent);
+}
+
+.admin-tag {
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-tag-danger {
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.admin-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border-radius: 16px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+.admin-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid rgba(226, 232, 240, 0.86);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.95rem 1rem;
+  text-align: left;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.admin-action-row:hover {
+  border-color: rgba(37, 99, 235, 0.24);
+  background: rgba(248, 250, 252, 0.95);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+
+@media (max-width: 767px) {
+  .journal-hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+</style>

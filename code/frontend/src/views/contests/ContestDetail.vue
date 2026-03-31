@@ -93,7 +93,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
     <div
       v-else-if="contest"
-      class="space-y-6"
+      class="contest-shell-card rounded-[30px] border px-6 py-6 md:px-8"
     >
       <section class="contest-hero">
         <div class="contest-hero__kicker">
@@ -492,6 +492,20 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 <style scoped>
 .contest-detail-view {
   --contest-accent: var(--color-primary);
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: #ffffff;
+  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+.contest-shell-card {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--contest-accent) 8%, transparent), transparent 20rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
 .contest-loading {
@@ -517,15 +531,20 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-hero {
   padding: 0.2rem 0 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--contest-accent) 24%, var(--color-border-default));
 }
 
 .contest-hero__kicker {
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--contest-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--contest-accent) 8%, transparent);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.17em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text-secondary) 82%, #9be7f5);
+  color: color-mix(in srgb, var(--contest-accent) 84%, var(--journal-ink));
 }
 
 .contest-hero__title {
@@ -533,14 +552,14 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   font-size: clamp(1.4rem, 3.5vw, 2rem);
   font-weight: 700;
   line-height: 1.2;
-  color: var(--color-text-primary);
+  color: var(--journal-ink);
 }
 
 .contest-hero__desc {
   margin-top: 0.56rem;
   font-size: 0.9rem;
   line-height: 1.7;
-  color: var(--color-text-secondary);
+  color: var(--journal-muted);
 }
 
 .contest-hero__chips {
@@ -564,8 +583,8 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-chip--neutral {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 90%, transparent);
-  color: var(--color-text-secondary);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 90%, transparent);
+  color: var(--journal-muted);
 }
 
 .contest-hero__meta {
@@ -580,7 +599,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   align-items: center;
   gap: 0.38rem;
   font-size: 0.8rem;
-  color: var(--color-text-secondary);
+  color: var(--journal-muted);
 }
 
 .contest-hero__meta-item--strong {
@@ -591,19 +610,24 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-kpis {
   display: grid;
   gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .contest-kpi {
-  border-left: 2px solid color-mix(in srgb, var(--contest-accent) 44%, var(--color-border-default));
-  padding: 0.1rem 0 0.1rem 0.72rem;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.56);
+  padding: 0.9rem 1rem;
 }
 
 .contest-kpi__label {
-  font-size: 11px;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text-secondary) 84%, #b8ecf7);
+  color: var(--journal-muted);
 }
 
 .contest-kpi__value {
@@ -611,23 +635,24 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--color-text-primary);
+  color: var(--journal-ink);
 }
 
 .contest-kpi__hint {
   margin-top: 0.32rem;
   font-size: 0.78rem;
   line-height: 1.5;
-  color: var(--color-text-secondary);
+  color: var(--journal-muted);
 }
 
 .contest-panel {
-  border-top: 1px solid var(--color-border-default);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
   padding-top: 0.9rem;
+  margin-top: 1.5rem;
 }
 
 .contest-panel--flag {
-  border-top-color: color-mix(in srgb, var(--contest-accent) 36%, var(--color-border-default));
+  border-top-color: rgba(148, 163, 184, 0.58);
 }
 
 .contest-panel__header {
@@ -643,18 +668,18 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: color-mix(in srgb, var(--contest-accent) 82%, var(--color-text-primary));
+  color: color-mix(in srgb, var(--contest-accent) 82%, var(--journal-ink));
 }
 
 .contest-panel__title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--journal-ink);
 }
 
 .contest-panel__meta {
   font-size: 0.78rem;
-  color: var(--color-text-secondary);
+  color: var(--journal-muted);
 }
 
 .contest-btn {
@@ -687,9 +712,9 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-btn--ghost {
-  border-color: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  color: var(--color-text-primary);
-  background: transparent;
+  border-color: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  color: var(--journal-ink);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .contest-btn--ghost:hover {

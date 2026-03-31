@@ -192,66 +192,65 @@ onMounted(() => {
           </div>
         </article>
       </div>
-    </section>
-
-    <section class="journal-panel challenge-filter-panel rounded-[24px] border px-5 py-5 md:px-6">
-      <div class="challenge-filter-head gap-4">
-        <div>
-          <div class="journal-eyebrow challenge-eyebrow-soft">Challenge Filters</div>
-          <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-            按关键词、分类和难度收束训练范围
-          </h3>
-          <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-            用关键词、分类和难度快速筛选题目。
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="challenge-filter-pill">
-            <Filter class="h-4 w-4" />
-            激活筛选 {{ activeFilterCount }} 项
+      <div class="challenge-filter-panel mt-6">
+        <div class="challenge-filter-head gap-4">
+          <div>
+            <div class="journal-eyebrow">Challenge Filters</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
+              按关键词、分类和难度收束训练范围
+            </h3>
+            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
+              用关键词、分类和难度快速筛选题目。
+            </p>
           </div>
-          <button
-            v-if="hasActiveFilters"
-            type="button"
-            class="challenge-btn challenge-btn-ghost"
-            @click="resetFilters"
-          >
-            清空筛选
-          </button>
-        </div>
-      </div>
 
-      <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_repeat(2,minmax(0,220px))]">
-        <div class="relative">
-          <Search
-            class="challenge-search-icon absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--journal-muted)]"
-          />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜索挑战标题或标签..."
-            class="challenge-input"
-            @input="onSearch"
-          />
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="challenge-filter-pill">
+              <Filter class="h-4 w-4" />
+              激活筛选 {{ activeFilterCount }} 项
+            </div>
+            <button
+              v-if="hasActiveFilters"
+              type="button"
+              class="challenge-btn challenge-btn-ghost"
+              @click="resetFilters"
+            >
+              清空筛选
+            </button>
+          </div>
         </div>
-        <select v-model="categoryFilter" class="challenge-select" @change="onFilterChange">
-          <option value="">全部分类</option>
-          <option value="web">Web</option>
-          <option value="pwn">Pwn</option>
-          <option value="reverse">逆向</option>
-          <option value="crypto">密码</option>
-          <option value="misc">杂项</option>
-          <option value="forensics">取证</option>
-        </select>
-        <select v-model="difficultyFilter" class="challenge-select" @change="onFilterChange">
-          <option value="">全部难度</option>
-          <option value="beginner">入门</option>
-          <option value="easy">简单</option>
-          <option value="medium">中等</option>
-          <option value="hard">困难</option>
-          <option value="insane">地狱</option>
-        </select>
+
+        <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_repeat(2,minmax(0,220px))]">
+          <div class="relative">
+            <Search
+              class="challenge-search-icon absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--journal-muted)]"
+            />
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索挑战标题或标签..."
+              class="challenge-input"
+              @input="onSearch"
+            />
+          </div>
+          <select v-model="categoryFilter" class="challenge-select" @change="onFilterChange">
+            <option value="">全部分类</option>
+            <option value="web">Web</option>
+            <option value="pwn">Pwn</option>
+            <option value="reverse">逆向</option>
+            <option value="crypto">密码</option>
+            <option value="misc">杂项</option>
+            <option value="forensics">取证</option>
+          </select>
+          <select v-model="difficultyFilter" class="challenge-select" @change="onFilterChange">
+            <option value="">全部难度</option>
+            <option value="beginner">入门</option>
+            <option value="easy">简单</option>
+            <option value="medium">中等</option>
+            <option value="hard">困难</option>
+            <option value="insane">地狱</option>
+          </select>
+        </div>
       </div>
 
       <div class="challenge-panel-divider" />
@@ -426,14 +425,6 @@ onMounted(() => {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
-.journal-panel {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
-}
-
 .journal-eyebrow {
   font-size: 0.7rem;
   font-weight: 700;
@@ -478,9 +469,14 @@ onMounted(() => {
   justify-content: space-between;
 }
 
+.challenge-filter-panel {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  padding-top: 1.25rem;
+}
+
 .challenge-panel-divider {
   margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px dashed rgba(148, 163, 184, 0.62);
 }
 
 :deep(.challenge-empty-state) {
@@ -599,15 +595,13 @@ onMounted(() => {
   border-color: var(--journal-border);
   border-radius: 16px !important;
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.045);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.82));
   cursor: pointer;
 }
 
 .challenge-card:hover {
   border-color: rgba(99, 102, 241, 0.28);
-  box-shadow: 0 18px 30px rgba(15, 23, 42, 0.07);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.9));
 }
 
 .challenge-card-code {
@@ -662,7 +656,7 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.7);
+  border-top: 1px dashed rgba(148, 163, 184, 0.56);
   padding-top: 1rem;
 }
 

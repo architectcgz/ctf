@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Blocks, GitBranch, Link2, Plus, RefreshCw, Save, ShieldBan, Trash2 } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { Blocks, GitBranch, Link2, Plus, RefreshCw, Save, ShieldBan, Trash2, Layout, Server, Network, ShieldCheck } from 'lucide-vue-next'
 
 import {
   useChallengeTopologyStudioPage,
@@ -30,6 +30,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   back: []
 }>()
+
+const activeWorkbenchTab = ref<'visual' | 'compute' | 'network' | 'policy'>('visual')
 
 const {
   loading,
@@ -110,8 +112,10 @@ const {
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div :class="['topology-page', { 'topology-page--template-library': isTemplateLibraryMode }]">
     <PageHeader
+      v-if="!isTemplateLibraryMode"
+      :class="isTemplateLibraryMode ? 'topology-page-header' : undefined"
       :eyebrow="pageHeader.eyebrow"
       :title="pageHeader.title"
       :description="pageHeader.description"
@@ -119,7 +123,11 @@ const {
       <button
         v-if="!isTemplateLibraryMode"
         type="button"
-        class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+        :class="
+          isTemplateLibraryMode
+            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
+            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
+        "
         @click="emit('back')"
       >
         返回挑战详情
@@ -127,7 +135,11 @@ const {
       <button
         v-else
         type="button"
-        class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+        :class="
+          isTemplateLibraryMode
+            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
+            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
+        "
         @click="handleResetTemplateEditor"
       >
         <Plus class="h-4 w-4" />
@@ -135,7 +147,11 @@ const {
       </button>
       <button
         type="button"
-        class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+        :class="
+          isTemplateLibraryMode
+            ? 'topology-toolbar-btn topology-toolbar-btn--ghost'
+            : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'
+        "
         @click="void reloadAll()"
       >
         <RefreshCw class="h-4 w-4" />
@@ -144,7 +160,11 @@ const {
       <button
         v-if="!isTemplateLibraryMode"
         type="button"
-        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+        :class="
+          isTemplateLibraryMode
+            ? 'topology-toolbar-btn topology-toolbar-btn--primary'
+            : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'
+        "
         :disabled="saving"
         @click="void handleSaveTopology()"
       >
@@ -154,118 +174,994 @@ const {
     </PageHeader>
 
     <div
-      v-if="loading"
+      v-if="loading && !isTemplateLibraryMode"
       class="flex justify-center py-16"
     >
       <AppLoading>{{ loadingText }}</AppLoading>
     </div>
 
+    <section
+      v-else-if="loading && isTemplateLibraryMode"
+      class="template-library-main rounded-[30px] border px-6 py-6 md:px-8"
+    >
+      <div class="flex justify-center py-12">
+        <AppLoading>{{ loadingText }}</AppLoading>
+      </div>
+    </section>
+
     <template v-else>
-      <section class="grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
-        <div
-          class="rounded-[30px] border border-primary/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.22),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
-        >
-          <div
-            class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75"
-          >
-            <span>{{ heroEyebrow }}</span>
-            <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
-          </div>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">
-            {{ heroTitle }}
-          </h2>
-          <p class="mt-3 max-w-3xl text-sm leading-7 text-cyan-50/80">
-            {{ heroDescription }}
-          </p>
+      <section
+        v-if="isTemplateLibraryMode"
+        class="template-library-main rounded-[30px] border px-6 py-6 md:px-8"
+      >
+        <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
+          <div class="topology-hero-lead topology-hero-lead--library">
+            <div class="topology-hero-kicker">
+              <span>{{ heroEyebrow }}</span>
+              <span class="topology-hero-badge">真实接口</span>
+            </div>
+            <h2 class="topology-hero-title">
+              {{ heroTitle }}
+            </h2>
+            <p class="topology-hero-description">
+              {{ heroDescription }}
+            </p>
 
-          <div class="mt-6 grid gap-3 md:grid-cols-4">
-            <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                网络
+            <div class="topology-summary-grid">
+              <div class="topology-summary-tile">
+                <div class="topology-summary-label">网络</div>
+                <div class="topology-summary-value">{{ topologySummary.networks }}</div>
               </div>
-              <div class="mt-2 text-2xl font-semibold text-white">
-                {{ topologySummary.networks }}
+              <div class="topology-summary-tile">
+                <div class="topology-summary-label">节点</div>
+                <div class="topology-summary-value">{{ topologySummary.nodes }}</div>
               </div>
-            </div>
-            <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                节点
+              <div class="topology-summary-tile">
+                <div class="topology-summary-label">连线</div>
+                <div class="topology-summary-value">{{ topologySummary.links }}</div>
               </div>
-              <div class="mt-2 text-2xl font-semibold text-white">
-                {{ topologySummary.nodes }}
-              </div>
-            </div>
-            <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                连线
-              </div>
-              <div class="mt-2 text-2xl font-semibold text-white">
-                {{ topologySummary.links }}
-              </div>
-            </div>
-            <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-              <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                策略
-              </div>
-              <div class="mt-2 text-2xl font-semibold text-white">
-                {{ topologySummary.policies }}
+              <div class="topology-summary-tile">
+                <div class="topology-summary-label">策略</div>
+                <div class="topology-summary-value">{{ topologySummary.policies }}</div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-          <AppCard
-            variant="metric"
-            accent="primary"
-            :eyebrow="statusCard.eyebrow"
-            :title="statusCard.title"
-            :subtitle="statusCard.subtitle"
-          >
-            <template #header>
-              <div
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
-              >
-                <Blocks class="h-5 w-5" />
-              </div>
-            </template>
-          </AppCard>
+          <div class="topology-hero-aside topology-hero-aside--library grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+            <AppCard
+              variant="metric"
+              accent="primary"
+              :eyebrow="statusCard.eyebrow"
+              :title="statusCard.title"
+              :subtitle="statusCard.subtitle"
+            >
+              <template #header>
+                <div class="template-metric-icon template-metric-icon--primary">
+                  <Blocks class="h-5 w-5" />
+                </div>
+              </template>
+            </AppCard>
 
-          <AppCard
-            variant="metric"
-            accent="warning"
-            :eyebrow="secondaryCard.eyebrow"
-            :title="secondaryCard.title"
-            :subtitle="secondaryCard.subtitle"
-          >
-            <template #header>
-              <div
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
-              >
-                <GitBranch class="h-5 w-5" />
-              </div>
-            </template>
-          </AppCard>
+            <AppCard
+              variant="metric"
+              accent="warning"
+              :eyebrow="secondaryCard.eyebrow"
+              :title="secondaryCard.title"
+              :subtitle="secondaryCard.subtitle"
+            >
+              <template #header>
+                <div class="template-metric-icon template-metric-icon--warning">
+                  <GitBranch class="h-5 w-5" />
+                </div>
+              </template>
+            </AppCard>
+          </div>
+        </section>
 
-          <AppCard
-            variant="metric"
-            accent="danger"
-            eyebrow="运行时约束"
-            title="粗粒度"
-            subtitle="当前只支持节点级 allow/deny，不支持端口级 ACL。"
-          >
-            <template #header>
-              <div
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-danger/20 bg-danger/12 text-danger"
+        <div class="template-library-divider" />
+
+        <section class="topology-workbench grid gap-6 xl:grid-cols-[1fr_360px]">
+          <div class="space-y-6">
+            <div class="flex items-center gap-1 rounded-2xl border border-border bg-surface p-1">
+              <button
+                v-for="tab in [
+                  { id: 'visual', label: '图形画布', icon: Layout },
+                  { id: 'compute', label: '节点编排', icon: Server },
+                  { id: 'network', label: '网络分段', icon: Network },
+                  { id: 'policy', label: '链路策略', icon: ShieldCheck },
+                ]"
+                :key="tab.id"
+                type="button"
+                class="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition"
+                :class="
+                  activeWorkbenchTab === tab.id
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'text-text-secondary hover:bg-surface-subtle hover:text-text-primary'
+                "
+                @click="activeWorkbenchTab = (tab.id as any)"
               >
-                <ShieldBan class="h-5 w-5" />
+                <component
+                  :is="tab.icon"
+                  class="h-4 w-4"
+                />
+                {{ tab.label }}
+              </button>
+            </div>
+
+            <div
+              v-if="activeWorkbenchTab === 'visual'"
+              class="space-y-6"
+            >
+              <SectionCard
+                title="图形画布"
+                subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
+              >
+                <div class="mb-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
+                    :class="
+                      interactionMode === 'pan'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-text-primary hover:border-primary'
+                    "
+                    @click="setInteractionMode('pan')"
+                  >
+                    浏览
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
+                    :class="
+                      interactionMode === 'add-node'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-text-primary hover:border-primary'
+                    "
+                    @click="setInteractionMode('add-node')"
+                  >
+                    新增节点
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
+                    :class="
+                      interactionMode === 'link'
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-text-primary hover:border-primary'
+                    "
+                    @click="setInteractionMode('link')"
+                  >
+                    连线模式
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
+                    :class="
+                      interactionMode === 'allow'
+                        ? 'border-[var(--color-success)] bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                        : 'border-border text-text-primary hover:border-[var(--color-success)]/60'
+                    "
+                    @click="setInteractionMode('allow')"
+                  >
+                    allow
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border px-3 py-2 text-sm font-medium transition"
+                    :class="
+                      interactionMode === 'deny'
+                        ? 'border-danger bg-danger/10 text-danger'
+                        : 'border-border text-text-primary hover:border-danger/60'
+                    "
+                    @click="setInteractionMode('deny')"
+                  >
+                    deny
+                  </button>
+                  <button
+                    type="button"
+                    class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm font-medium text-danger transition hover:bg-danger/15"
+                    @click="removeSelectedCanvasItem"
+                  >
+                    删除选中
+                  </button>
+                </div>
+
+                <div
+                  class="mb-4 rounded-2xl border border-border bg-elevated px-4 py-3 text-sm text-text-secondary"
+                >
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      class="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs text-primary"
+                    >
+                      当前模式：{{ canvasModeLabel }}
+                    </span>
+                    <span
+                      class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-secondary"
+                    >
+                      {{ selectedCanvasSummary }}
+                    </span>
+                    <span
+                      class="rounded-full border border-border-subtle bg-surface px-2.5 py-1 text-xs text-text-muted"
+                    >
+                      `Esc` 取消 / `Delete` 删除
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  class="mb-4 rounded-2xl border px-4 py-3 text-sm"
+                  :class="
+                    draftValidationIssues.length === 0
+                      ? 'border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                      : 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+                  "
+                >
+                  <div class="font-medium">
+                    {{ draftValidationIssues.length === 0 ? '基础校验已通过' : '基础校验发现问题' }}
+                  </div>
+                  <ul
+                    v-if="draftValidationIssues.length > 0"
+                    class="mt-2 space-y-1 text-xs"
+                  >
+                    <li
+                      v-for="issue in draftValidationIssues"
+                      :key="issue"
+                    >
+                      {{ issue }}
+                    </li>
+                  </ul>
+                </div>
+
+                <TopologyCanvasBoard
+                  :graph="canvasGraph"
+                  :interaction-mode="interactionMode"
+                  :pending-source-node-key="pendingSourceNodeKey"
+                  :selected-node-key="selectedNodeKey"
+                  :selected-edge-id="selectedEdgeId"
+                  @select-node="handleCanvasSelectNode"
+                  @select-edge="handleCanvasSelectEdge"
+                  @create-node-at="handleCanvasCreateNode"
+                  @create-edge="handleCanvasCreateEdge"
+                  @clear-pending="pendingSourceNodeKey = null"
+                  @update-position="updateNodePosition"
+                />
+
+                <div class="mt-4 grid gap-4">
+                  <div class="rounded-2xl border border-border bg-elevated p-4">
+                    <div class="text-sm font-semibold text-text-primary">
+                      画布快速编辑
+                    </div>
+
+                    <div
+                      v-if="!selectedNodeDraft && !selectedEdgeMeta"
+                      class="mt-3 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                    >
+                      请在画布中选择一个节点或连线进行快速配置
+                    </div>
+
+                    <div
+                      v-else-if="selectedNodeDraft"
+                      class="mt-3 space-y-4"
+                    >
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <label class="space-y-2">
+                          <span class="text-sm text-text-secondary">节点名称</span>
+                          <input
+                            v-model="selectedNodeDraft.name"
+                            type="text"
+                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                          >
+                        </label>
+                        <label class="space-y-2">
+                          <span class="text-sm text-text-secondary">服务端口</span>
+                          <input
+                            :value="selectedNodeDraft.service_port ?? ''"
+                            type="number"
+                            min="1"
+                            max="65535"
+                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                            @input="
+                              updateCanvasQuickNumber(
+                                'service_port',
+                                ($event.target as HTMLInputElement).value,
+                                selectedNodeDraft
+                              )
+                            "
+                          >
+                        </label>
+                      </div>
+
+                      <div class="space-y-2">
+                        <div class="text-sm text-text-secondary">
+                          所属网络
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                          <label
+                            v-for="network in draft.networks"
+                            :key="network.uid"
+                            class="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary transition hover:border-primary"
+                          >
+                            <input
+                              :checked="selectedNodeDraft.network_keys.includes(network.key)"
+                              type="checkbox"
+                              class="h-4 w-4 rounded border-border bg-transparent"
+                              @change="
+                                toggleSelectedNodeNetwork(
+                                  network.key,
+                                  ($event.target as HTMLInputElement).checked
+                                )
+                              "
+                            >
+                            <span>{{ network.name || network.key }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      v-else-if="selectedEdgeMeta"
+                      class="mt-3 space-y-4"
+                    >
+                      <div class="grid gap-3 md:grid-cols-2">
+                        <label class="space-y-2">
+                          <span class="text-sm text-text-secondary">源节点</span>
+                          <select
+                            :value="selectedEdgeSourceKey"
+                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                            @change="
+                              updateSelectedEdgeSourceKey(($event.target as HTMLSelectElement).value)
+                            "
+                          >
+                            <option
+                              v-for="node in nodeOptions"
+                              :key="node.key"
+                              :value="node.key"
+                            >
+                              {{ node.label }}
+                            </option>
+                          </select>
+                        </label>
+                        <label class="space-y-2">
+                          <span class="text-sm text-text-secondary">目标节点</span>
+                          <select
+                            :value="selectedEdgeTargetKey"
+                            class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                            @change="
+                              updateSelectedEdgeTargetKey(($event.target as HTMLSelectElement).value)
+                            "
+                          >
+                            <option
+                              v-for="node in nodeOptions"
+                              :key="node.key"
+                              :value="node.key"
+                            >
+                              {{ node.label }}
+                            </option>
+                          </select>
+                        </label>
+                      </div>
+
+                      <label class="space-y-2">
+                        <span class="text-sm text-text-secondary">边类型</span>
+                        <select
+                          :value="selectedEdgeKind"
+                          class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                          @change="
+                            handleSelectedEdgeKindChange(($event.target as HTMLSelectElement).value)
+                          "
+                        >
+                          <option value="link">logic link</option>
+                          <option value="allow">allow</option>
+                          <option value="deny">deny</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
+            </div>
+
+            <div
+              v-else-if="activeWorkbenchTab === 'compute'"
+              class="space-y-6"
+            >
+              <SectionCard
+                title="入口节点"
+                subtitle="实例访问入口和当前草稿的保存范围。"
+              >
+                <div class="grid gap-4">
+                  <label class="space-y-2">
+                    <span class="text-sm text-text-secondary">入口节点</span>
+                    <select
+                      v-model="draft.entry_node_key"
+                      class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option
+                        v-for="node in nodeOptions"
+                        :key="node.key"
+                        :value="node.key"
+                      >
+                        {{ node.label }} ({{ node.key }})
+                      </option>
+                    </select>
+                  </label>
+                </div>
+              </SectionCard>
+
+              <SectionCard
+                title="节点编排"
+                subtitle="节点支持单独镜像、资源限制、网络归属和环境变量。"
+              >
+                <div class="space-y-4">
+                  <TopologyNodeEditor
+                    v-for="(node, index) in draft.nodes"
+                    :key="node.uid"
+                    :data-node-editor="node.key"
+                    :model-value="node"
+                    :index="index"
+                    :images="images"
+                    :networks="draft.networks"
+                    :removable="draft.nodes.length > 1"
+                    :selected="selectedNodeKey === node.key"
+                    @update:model-value="draft.nodes[index] = $event"
+                    @remove="removeNode(node.uid)"
+                  />
+                </div>
+
+                <template #footer>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                    @click="addNode"
+                  >
+                    <Plus class="h-4 w-4" />
+                    添加节点
+                  </button>
+                </template>
+              </SectionCard>
+            </div>
+
+            <div
+              v-else-if="activeWorkbenchTab === 'network'"
+              class="space-y-6"
+            >
+              <SectionCard
+                title="网络分段"
+                subtitle="一个节点可以挂多个网络，运行时会创建多个 Docker Network。"
+              >
+                <div class="space-y-3">
+                  <div
+                    v-for="network in draft.networks"
+                    :key="network.uid"
+                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[0.9fr_1fr_0.9fr_auto_auto]"
+                  >
+                    <input
+                      v-model="network.key"
+                      type="text"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                      placeholder="network key"
+                    >
+                    <input
+                      v-model="network.name"
+                      type="text"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                      placeholder="网络名称"
+                    >
+                    <input
+                      v-model="network.cidr"
+                      type="text"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                      placeholder="CIDR（可选）"
+                    >
+                    <label
+                      class="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary"
+                    >
+                      <input
+                        v-model="network.internal"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-border bg-transparent"
+                      >
+                      internal
+                    </label>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      :disabled="draft.networks.length <= 1"
+                      @click="removeNetwork(network.uid)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <template #footer>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                    @click="addNetwork"
+                  >
+                    <Plus class="h-4 w-4" />
+                    添加网络
+                  </button>
+                </template>
+              </SectionCard>
+            </div>
+
+            <div
+              v-else-if="activeWorkbenchTab === 'policy'"
+              class="space-y-6"
+            >
+              <SectionCard
+                title="拓扑连线"
+                subtitle="用于表达逻辑依赖关系，不直接等同于运行时 ACL。"
+              >
+                <div
+                  v-if="draft.links.length === 0"
+                  class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                >
+                  暂无逻辑连线
+                </div>
+                <div
+                  v-else
+                  class="space-y-3"
+                >
+                  <div
+                    v-for="link in draft.links"
+                    :key="link.uid"
+                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_auto]"
+                  >
+                    <select
+                      v-model="link.from_node_key"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option value="">
+                        选择源节点
+                      </option>
+                      <option
+                        v-for="node in nodeOptions"
+                        :key="node.key"
+                        :value="node.key"
+                      >
+                        {{ node.label }}
+                      </option>
+                    </select>
+                    <select
+                      v-model="link.to_node_key"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option value="">
+                        选择目标节点
+                      </option>
+                      <option
+                        v-for="node in nodeOptions"
+                        :key="node.key"
+                        :value="node.key"
+                      >
+                        {{ node.label }}
+                      </option>
+                    </select>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      @click="draft.links = draft.links.filter((item) => item.uid !== link.uid)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <template #footer>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                    @click="addLink"
+                  >
+                    <Link2 class="h-4 w-4" />
+                    添加连线
+                  </button>
+                </template>
+              </SectionCard>
+
+              <SectionCard
+                title="链路策略"
+                subtitle="当前前端只开放粗粒度节点 allow/deny，细粒度端口策略尚未支持。"
+              >
+                <div
+                  v-if="draft.policies.length === 0"
+                  class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                >
+                  暂无链路策略
+                </div>
+                <div
+                  v-else
+                  class="space-y-3"
+                >
+                  <div
+                    v-for="policy in draft.policies"
+                    :key="policy.uid"
+                    class="grid gap-3 rounded-2xl border border-border bg-elevated p-4 md:grid-cols-[1fr_1fr_0.7fr_auto]"
+                  >
+                    <select
+                      v-model="policy.source_node_key"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option value="">
+                        选择源节点
+                      </option>
+                      <option
+                        v-for="node in nodeOptions"
+                        :key="node.key"
+                        :value="node.key"
+                      >
+                        {{ node.label }}
+                      </option>
+                    </select>
+                    <select
+                      v-model="policy.target_node_key"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option value="">
+                        选择目标节点
+                      </option>
+                      <option
+                        v-for="node in nodeOptions"
+                        :key="node.key"
+                        :value="node.key"
+                      >
+                        {{ node.label }}
+                      </option>
+                    </select>
+                    <select
+                      v-model="policy.action"
+                      class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
+                    >
+                      <option value="allow">
+                        allow
+                      </option>
+                      <option value="deny">
+                        deny
+                      </option>
+                    </select>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger transition hover:bg-danger/15"
+                      @click="draft.policies = draft.policies.filter((item) => item.uid !== policy.uid)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <template #footer>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                    @click="addPolicy"
+                  >
+                    <ShieldBan class="h-4 w-4" />
+                    添加策略
+                  </button>
+                </template>
+              </SectionCard>
+            </div>
+          </div>
+
+          <div class="topology-side-stack topology-side-stack--library">
+            <SectionCard
+              title="模板库"
+              :subtitle="
+                isTemplateLibraryMode
+                  ? '从模板库载入后可直接编辑并覆盖模板，或另存为新模板。'
+                  : '可按模板快速回填编辑器，或直接应用到挑战。'
+              "
+            >
+              <div class="space-y-3">
+                <div class="template-focus-card">
+                  <div class="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
+                    当前模板
+                  </div>
+                  <div class="mt-2 text-sm text-text-primary">
+                    {{ selectedTemplateSummary }}
+                  </div>
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <button
+                      v-if="selectedTemplate"
+                      type="button"
+                      class="template-action-btn"
+                      @click="loadTemplateIntoDraft(selectedTemplate)"
+                    >
+                      重新载入当前模板
+                    </button>
+                    <button
+                      v-if="selectedTemplate"
+                      type="button"
+                      class="template-action-btn"
+                      @click="clearTemplateSelection"
+                    >
+                      清空模板选择
+                    </button>
+                  </div>
+                </div>
+
+                <div class="template-search-row">
+                  <input
+                    v-model="templateKeyword"
+                    type="text"
+                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
+                    placeholder="按模板名称搜索"
+                  >
+                  <button
+                    type="button"
+                    class="template-action-btn"
+                    @click="void loadTemplates()"
+                  >
+                    搜索
+                  </button>
+                </div>
+
+                <div
+                  v-if="templates.length === 0"
+                  class="template-empty-state"
+                >
+                  当前没有模板数据
+                </div>
+
+                <div
+                  v-else
+                  class="template-library-list"
+                >
+                  <article
+                    v-for="template in templates"
+                    :key="template.id"
+                    :class="[
+                      'template-library-item',
+                      selectedTemplateId === template.id
+                        ? 'template-library-item--active'
+                        : 'template-library-item--idle',
+                    ]"
+                  >
+                    <div class="min-w-0">
+                      <div class="truncate text-base font-bold text-text-primary">
+                        {{ template.name }}
+                      </div>
+                      <div class="mt-1 line-clamp-2 text-xs leading-relaxed text-text-secondary">
+                        {{ template.description || '无描述' }}
+                      </div>
+                      <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                        <span class="flex items-center gap-1">
+                          <Layout class="h-3 w-3" />
+                          {{ template.entry_node_key }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                          <Server class="h-3 w-3" />
+                          {{ template.nodes.length }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                          <Network class="h-3 w-3" />
+                          {{ template.networks?.length || 0 }}
+                        </span>
+                        <span class="flex items-center gap-1">
+                          <RefreshCw class="h-3 w-3" />
+                          {{ template.usage_count }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        class="template-action-btn flex-1"
+                        @click="loadTemplateIntoDraft(template)"
+                      >
+                        载入编辑
+                      </button>
+                      <button
+                        type="button"
+                        class="template-action-btn template-action-btn--danger"
+                        :disabled="templateBusy"
+                        @click="void handleDeleteTemplate(template.id)"
+                      >
+                        <Trash2 class="h-3 w-3" />
+                      </button>
+                    </div>
+                  </article>
+                </div>
               </div>
-            </template>
-          </AppCard>
-        </div>
+            </SectionCard>
+
+            <SectionCard
+              title="模板写回"
+              subtitle="在独立模板库中可新建空白草稿、载入现有模板后覆盖，或另存为新模板。"
+            >
+              <div class="template-writeback-form">
+                <label class="space-y-2">
+                  <span class="text-sm text-text-secondary">模板名称</span>
+                  <input
+                    v-model="templateName"
+                    type="text"
+                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
+                    placeholder="例如 双节点 Web + DB"
+                  >
+                </label>
+
+                <label class="space-y-2">
+                  <span class="text-sm text-text-secondary">模板描述</span>
+                  <textarea
+                    v-model="templateDescription"
+                    rows="4"
+                    class="w-full rounded-xl border border-border bg-elevated px-3 py-3 text-sm text-text-primary outline-none transition focus:border-primary"
+                    placeholder="说明这个模板的适用场景"
+                  />
+                </label>
+
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="template-action-btn flex-1"
+                    @click="handleResetTemplateEditor"
+                  >
+                    新建
+                  </button>
+                  <button
+                    type="button"
+                    class="template-action-btn template-action-btn--primary flex-1"
+                    :disabled="templateBusy"
+                    @click="void handleCreateTemplate()"
+                  >
+                    <Plus class="h-4 w-4" />
+                    另存为
+                  </button>
+                  <button
+                    type="button"
+                    class="template-action-btn flex-1"
+                    :disabled="templateBusy || !selectedTemplateId"
+                    @click="void handleUpdateTemplate()"
+                  >
+                    覆盖
+                  </button>
+                </div>
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="当前边界"
+              subtitle="避免把未生效能力继续暴露成可用配置。"
+            >
+              <div class="template-boundary-list">
+                <AppCard
+                  variant="action"
+                  accent="warning"
+                  eyebrow="已开放"
+                  subtitle="多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。"
+                >
+                  <template #default />
+                </AppCard>
+                <AppCard
+                  variant="action"
+                  accent="danger"
+                  eyebrow="暂未开放"
+                  subtitle="protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。"
+                >
+                  <template #default />
+                </AppCard>
+                <AppCard
+                  variant="action"
+                  accent="neutral"
+                  eyebrow="建议"
+                  subtitle="继续开放高级能力前，先补参数校验、可视化提示和误操作保护。"
+                >
+                  <template #default />
+                </AppCard>
+              </div>
+            </SectionCard>
+          </div>
+        </section>
       </section>
 
-      <section class="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+      <template v-else>
+        <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
+          <div class="rounded-[30px] border border-primary/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.22),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
+            <div
+              class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75"
+            >
+              <span>{{ heroEyebrow }}</span>
+              <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
+            </div>
+            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">
+              {{ heroTitle }}
+            </h2>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-cyan-50/80">
+              {{ heroDescription }}
+            </p>
+
+            <div class="mt-6 grid gap-3 md:grid-cols-4">
+              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
+                  网络
+                </div>
+                <div class="mt-2 text-2xl font-semibold text-white">
+                  {{ topologySummary.networks }}
+                </div>
+              </div>
+              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
+                  节点
+                </div>
+                <div class="mt-2 text-2xl font-semibold text-white">
+                  {{ topologySummary.nodes }}
+                </div>
+              </div>
+              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
+                  连线
+                </div>
+                <div class="mt-2 text-2xl font-semibold text-white">
+                  {{ topologySummary.links }}
+                </div>
+              </div>
+              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
+                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
+                  策略
+                </div>
+                <div class="mt-2 text-2xl font-semibold text-white">
+                  {{ topologySummary.policies }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="topology-hero-aside grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+            <AppCard
+              variant="metric"
+              accent="primary"
+              :eyebrow="statusCard.eyebrow"
+              :title="statusCard.title"
+              :subtitle="statusCard.subtitle"
+            >
+              <template #header>
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
+                >
+                  <Blocks class="h-5 w-5" />
+                </div>
+              </template>
+            </AppCard>
+
+            <AppCard
+              variant="metric"
+              accent="warning"
+              :eyebrow="secondaryCard.eyebrow"
+              :title="secondaryCard.title"
+              :subtitle="secondaryCard.subtitle"
+            >
+              <template #header>
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
+                >
+                  <GitBranch class="h-5 w-5" />
+                </div>
+              </template>
+            </AppCard>
+
+            <AppCard
+              variant="metric"
+              accent="danger"
+              eyebrow="运行时约束"
+              title="粗粒度"
+              subtitle="当前只支持节点级 allow/deny，不支持端口级 ACL。"
+            >
+              <template #header>
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-danger/20 bg-danger/12 text-danger"
+                >
+                  <ShieldBan class="h-5 w-5" />
+                </div>
+              </template>
+            </AppCard>
+          </div>
+        </section>
+
+        <section class="topology-workbench grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
         <div class="space-y-6">
           <SectionCard
             title="图形画布"
@@ -896,7 +1792,7 @@ const {
           </SectionCard>
         </div>
 
-        <div class="space-y-6">
+        <div :class="isTemplateLibraryMode ? 'topology-side-stack topology-side-stack--library' : 'space-y-6'">
           <SectionCard
             title="模板库"
             :subtitle="
@@ -906,7 +1802,7 @@ const {
             "
           >
             <div class="space-y-3">
-              <div class="rounded-2xl border border-border bg-elevated px-4 py-4">
+              <div :class="isTemplateLibraryMode ? 'template-focus-card' : 'rounded-2xl border border-border bg-elevated px-4 py-4'">
                 <div class="text-xs font-semibold uppercase tracking-[0.22em] text-text-muted">
                   当前模板
                 </div>
@@ -933,7 +1829,7 @@ const {
                 </div>
               </div>
 
-              <div class="grid gap-3 md:grid-cols-[1fr_auto]">
+              <div :class="isTemplateLibraryMode ? 'template-search-row' : 'grid gap-3 md:grid-cols-[1fr_auto]'">
                 <input
                   v-model="templateKeyword"
                   type="text"
@@ -951,23 +1847,32 @@ const {
 
               <div
                 v-if="templates.length === 0"
-                class="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted"
+                :class="isTemplateLibraryMode ? 'template-empty-state' : 'rounded-xl border border-dashed border-border px-4 py-6 text-sm text-text-muted'"
               >
                 当前没有模板数据
               </div>
 
               <div
                 v-else
-                class="space-y-3"
+                :class="isTemplateLibraryMode ? 'template-library-list' : 'space-y-3'"
               >
                 <article
                   v-for="template in templates"
                   :key="template.id"
-                  class="rounded-2xl border p-4 transition"
                   :class="
-                    selectedTemplateId === template.id
-                      ? 'border-primary bg-primary/8'
-                      : 'border-border bg-elevated'
+                    isTemplateLibraryMode
+                      ? [
+                          'template-library-item',
+                          selectedTemplateId === template.id
+                            ? 'template-library-item--active'
+                            : 'template-library-item--idle',
+                        ]
+                      : [
+                          'rounded-2xl border p-4 transition',
+                          selectedTemplateId === template.id
+                            ? 'border-primary bg-primary/8'
+                            : 'border-border bg-elevated',
+                        ]
                   "
                 >
                   <div class="min-w-0">
@@ -988,7 +1893,7 @@ const {
                   <div class="mt-4 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      class="rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
+                      :class="isTemplateLibraryMode ? 'template-action-btn' : 'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'"
                       @click="loadTemplateIntoDraft(template)"
                     >
                       {{ isTemplateLibraryMode ? '载入编辑' : '载入草稿' }}
@@ -996,7 +1901,7 @@ const {
                     <button
                       v-if="!isTemplateLibraryMode"
                       type="button"
-                      class="rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary"
+                      :class="isTemplateLibraryMode ? 'template-action-btn' : 'rounded-xl border border-border px-3 py-2 text-xs font-medium text-text-primary transition hover:border-primary'"
                       @click="resetTemplateForm(template)"
                     >
                       选中
@@ -1004,7 +1909,7 @@ const {
                     <button
                       v-if="!isTemplateLibraryMode"
                       type="button"
-                      class="rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90"
+                      :class="isTemplateLibraryMode ? 'template-action-btn template-action-btn--primary' : 'rounded-xl bg-primary px-3 py-2 text-xs font-medium text-white transition hover:opacity-90'"
                       :disabled="templateBusy"
                       @click="void handleApplyTemplate(template)"
                     >
@@ -1012,7 +1917,7 @@ const {
                     </button>
                     <button
                       type="button"
-                      class="rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15"
+                      :class="isTemplateLibraryMode ? 'template-action-btn template-action-btn--danger' : 'rounded-xl border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-medium text-danger transition hover:bg-danger/15'"
                       :disabled="templateBusy"
                       @click="void handleDeleteTemplate(template.id)"
                     >
@@ -1032,7 +1937,7 @@ const {
                 : '把当前编辑器草稿保存为新模板，或覆盖已选中的模板。'
             "
           >
-            <div class="space-y-4">
+            <div :class="isTemplateLibraryMode ? 'template-writeback-form' : 'space-y-4'">
               <label class="space-y-2">
                 <span class="text-sm text-text-secondary">模板名称</span>
                 <input
@@ -1057,14 +1962,14 @@ const {
                 <button
                   v-if="isTemplateLibraryMode"
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                  :class="isTemplateLibraryMode ? 'template-action-btn' : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
                   @click="handleResetTemplateEditor"
                 >
                   新建空白草稿
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                  :class="isTemplateLibraryMode ? 'template-action-btn template-action-btn--primary' : 'inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90'"
                   :disabled="templateBusy"
                   @click="void handleCreateTemplate()"
                 >
@@ -1073,7 +1978,7 @@ const {
                 </button>
                 <button
                   type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary"
+                  :class="isTemplateLibraryMode ? 'template-action-btn' : 'inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-text-primary transition hover:border-primary'"
                   :disabled="templateBusy || !selectedTemplateId"
                   @click="void handleUpdateTemplate()"
                 >
@@ -1087,36 +1992,39 @@ const {
             title="当前边界"
             subtitle="避免把未生效能力继续暴露成可用配置。"
           >
-            <AppCard
-              variant="action"
-              accent="warning"
-              eyebrow="已开放"
-              subtitle="多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。"
-            >
-              <template #default />
-            </AppCard>
-            <AppCard
-              variant="action"
-              accent="danger"
-              eyebrow="暂未开放"
-              subtitle="protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。"
-            >
-              <template #default />
-            </AppCard>
-            <AppCard
-              variant="action"
-              accent="neutral"
-              eyebrow="建议"
-              subtitle="继续开放高级能力前，先补参数校验、可视化提示和误操作保护。"
-            >
-              <template #default />
-            </AppCard>
+            <div :class="isTemplateLibraryMode ? 'template-boundary-list' : 'space-y-4'">
+              <AppCard
+                variant="action"
+                accent="warning"
+                eyebrow="已开放"
+                subtitle="多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。"
+              >
+                <template #default />
+              </AppCard>
+              <AppCard
+                variant="action"
+                accent="danger"
+                eyebrow="暂未开放"
+                subtitle="protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。"
+              >
+                <template #default />
+              </AppCard>
+              <AppCard
+                variant="action"
+                accent="neutral"
+                eyebrow="建议"
+                subtitle="继续开放高级能力前，先补参数校验、可视化提示和误操作保护。"
+              >
+                <template #default />
+              </AppCard>
+            </div>
           </SectionCard>
         </div>
       </section>
+      </template>
 
       <AppEmpty
-        v-if="!challenge"
+        v-if="!challenge && !isTemplateLibraryMode"
         title="挑战不存在"
         description="无法读取当前挑战的基础信息，请返回挑战列表后重试。"
         icon="Blocks"
@@ -1124,3 +2032,434 @@ const {
     </template>
   </div>
 </template>
+
+<style scoped>
+.topology-page--template-library {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.topology-page--template-library .template-library-main {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 20rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.topology-page--template-library .template-library-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.topology-page--template-library .template-library-divider {
+  margin: 1rem 0;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.topology-page--template-library .topology-hero-aside--library {
+  align-self: start;
+  border-left: 1px dashed rgba(148, 163, 184, 0.62);
+  padding-left: 1rem;
+}
+
+.topology-page--template-library .template-metric-icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+}
+
+.topology-page--template-library .template-metric-icon--primary {
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .template-metric-icon--warning {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+
+.topology-page--template-library .template-metric-icon--danger {
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.topology-page--template-library .topology-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.topology-page--template-library .topology-toolbar-btn--ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library .topology-toolbar-btn--ghost:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .topology-toolbar-btn--primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.topology-page--template-library .topology-toolbar-btn--primary:hover {
+  background: #1d4ed8;
+}
+
+.topology-page--template-library .topology-hero-lead--library {
+  padding: 0;
+}
+
+.topology-page--template-library .topology-hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .topology-hero-badge {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.28rem 0.6rem;
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .topology-hero-title {
+  margin-top: 0.85rem;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library .topology-hero-description {
+  margin-top: 0.9rem;
+  max-width: 46rem;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .topology-summary-grid {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.topology-page--template-library .topology-summary-tile {
+  border: 1px solid var(--journal-border);
+  border-radius: 14px;
+  background: var(--journal-surface);
+  padding: 0.95rem 1rem;
+}
+
+.topology-page--template-library .topology-summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .topology-summary-value {
+  margin-top: 0.5rem;
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library :deep(.page-header) {
+  border-color: var(--journal-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.06), transparent 20rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.topology-page--template-library :deep(.page-header__eyebrow) {
+  border-left-width: 0;
+  padding-left: 0;
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library :deep(.section-card) {
+  padding: 1.1rem 0 0.15rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.topology-page--template-library :deep(.section-card__header) {
+  margin-bottom: 1rem;
+  align-items: center;
+  border-bottom: 0;
+  padding: 0.95rem 1.1rem 0.95rem 1.35rem;
+  border-radius: 18px;
+  border: 1px dashed rgba(148, 163, 184, 0.42);
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0) 72%);
+}
+
+.topology-page--template-library :deep(.section-card__header h2) {
+  font-size: 1.1rem;
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library :deep(.section-card__header p) {
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library :deep(.section-card__body) {
+  padding-left: 0;
+}
+
+.topology-page--template-library :deep(.topology-hero-aside--library > section) {
+  padding: 0.2rem 0 0.9rem 1rem;
+  border-bottom-color: rgba(148, 163, 184, 0.62);
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.05), transparent 72%);
+}
+
+.topology-page--template-library :deep(.topology-hero-aside--library > section:last-child) {
+  border-bottom: 0;
+  padding-bottom: 0.2rem;
+}
+
+.topology-page--template-library :deep(.topology-hero-aside--library > section h2) {
+  font-size: 1.45rem;
+}
+
+.topology-page--template-library :deep(.topology-hero-aside--library > section p) {
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library :deep(.section-card__body > .rounded-2xl),
+.topology-page--template-library :deep(.section-card__body > .rounded-xl),
+.topology-page--template-library :deep([data-node-editor]),
+.topology-page--template-library :deep(.topology-canvas-board__root) {
+  box-shadow: none;
+}
+
+.topology-page--template-library :deep([data-node-editor]) {
+  border-color: var(--journal-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.topology-page--template-library :deep([data-node-editor].border-primary) {
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.topology-page--template-library :deep(input),
+.topology-page--template-library :deep(select),
+.topology-page--template-library :deep(textarea) {
+  border-color: var(--journal-border);
+  background: var(--journal-surface);
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library :deep(input:focus),
+.topology-page--template-library :deep(select:focus),
+.topology-page--template-library :deep(textarea:focus) {
+  border-color: rgba(37, 99, 235, 0.42);
+  outline: none;
+}
+
+.topology-page--template-library :deep(.topology-canvas-board__surface) {
+  border-color: rgba(148, 163, 184, 0.36);
+}
+
+.topology-page--template-library .topology-workbench {
+  gap: 1.25rem;
+}
+
+.topology-page--template-library .topology-side-stack--library {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.96));
+  padding: 0.35rem 1rem 0.85rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.topology-page--template-library .topology-side-stack--library :deep(.section-card:first-child) {
+  padding-top: 0.5rem;
+  border-top: 0;
+}
+
+.topology-page--template-library .topology-side-stack--library :deep(.section-card) {
+  padding-top: 1rem;
+}
+
+.topology-page--template-library .template-focus-card,
+.topology-page--template-library .template-empty-state {
+  border: 1px solid var(--journal-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 1rem;
+}
+
+.topology-page--template-library .template-search-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.topology-page--template-library .template-library-list,
+.topology-page--template-library .template-writeback-form,
+.topology-page--template-library .template-boundary-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.topology-page--template-library .template-library-item {
+  border-radius: 16px;
+  padding: 1rem;
+  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+}
+
+.topology-page--template-library .template-library-item--idle {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.topology-page--template-library .template-library-item--idle:hover {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.topology-page--template-library .template-library-item--active {
+  border: 1px solid rgba(37, 99, 235, 0.34);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.94));
+}
+
+.topology-page--template-library .template-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  border: 1px solid var(--journal-border);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.52rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition: all 150ms ease;
+}
+
+.topology-page--template-library .template-action-btn:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .template-action-btn--primary {
+  background: var(--journal-accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+.topology-page--template-library .template-action-btn--primary:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.topology-page--template-library .template-action-btn--danger {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(254, 242, 242, 0.92);
+  color: #dc2626;
+}
+
+:global([data-theme='dark']) .topology-page--template-library {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .topology-page--template-library :deep(.page-header),
+:global([data-theme='dark']) .topology-page--template-library .template-library-main {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+
+:global([data-theme='dark']) .topology-page--template-library :deep(.section-card__header) {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.14), rgba(15, 23, 42, 0) 72%);
+}
+
+:global([data-theme='dark']) .topology-page--template-library .topology-side-stack--library {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.88));
+}
+
+:global([data-theme='dark']) .topology-page--template-library .topology-hero-aside--library {
+  border-left-color: rgba(96, 165, 250, 0.24);
+}
+
+@media (max-width: 1023px) {
+  .topology-page--template-library .topology-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topology-page--template-library .topology-hero-aside--library {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .topology-page--template-library :deep(.topology-hero-aside--library > section) {
+    padding-left: 0;
+    background: transparent;
+  }
+}
+
+@media (max-width: 767px) {
+  .topology-page--template-library .topology-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-page--template-library .template-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-page--template-library .topology-hero-lead--library {
+    padding: 0;
+  }
+}
+</style>

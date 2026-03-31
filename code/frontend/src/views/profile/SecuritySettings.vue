@@ -137,21 +137,14 @@ async function submitPasswordChange(): Promise<void> {
           </div>
         </article>
       </div>
-      <div class="journal-panel security-panel mt-6 rounded-[24px] border px-5 py-5 md:px-6">
-        <div class="security-panel-head gap-4">
-          <div>
-            <div class="journal-eyebrow security-eyebrow-soft">Password Update</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">密码修改与安全校验</h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              在这里修改密码并查看安全提示。
-            </p>
-          </div>
-        </div>
-
-        <div class="security-panel-divider" />
-
+      <div class="security-panel mt-6 px-1 pt-5 md:px-2 md:pt-6">
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.92fr)]">
           <form class="space-y-4" @submit.prevent="submitPasswordChange">
+            <div class="security-section-head">
+              <div class="journal-eyebrow">Password</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">密码修改</h3>
+            </div>
+
             <div class="space-y-1.5">
               <label class="journal-label">当前密码</label>
               <input
@@ -217,8 +210,13 @@ async function submitPasswordChange(): Promise<void> {
             </div>
           </form>
 
-          <aside class="security-side space-y-4">
-            <div class="security-side-card rounded-[18px] border px-4 py-4">
+          <aside class="security-side">
+            <div class="security-section-head">
+              <div class="journal-eyebrow">Security Tips</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">安全提示</h3>
+            </div>
+
+            <div class="security-side-lead">
               <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
                 <span class="status-dot status-dot-active" />
                 修改后会同步退出其他设备
@@ -228,8 +226,8 @@ async function submitPasswordChange(): Promise<void> {
               </p>
             </div>
 
-            <div class="grid gap-3">
-              <div v-for="tip in passwordTips" :key="tip" class="journal-note security-tip-card">
+            <div class="security-tip-list">
+              <div v-for="tip in passwordTips" :key="tip" class="security-tip-item">
                 <div class="journal-note-label">安全提示</div>
                 <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
               </div>
@@ -274,10 +272,6 @@ async function submitPasswordChange(): Promise<void> {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.security-eyebrow-soft {
-  background: rgba(99, 102, 241, 0.06);
 }
 
 .journal-label {
@@ -361,14 +355,6 @@ async function submitPasswordChange(): Promise<void> {
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
-.journal-panel {
-  border-color: var(--journal-border);
-  background: rgba(248, 250, 252, 0.9);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
-}
-
 .journal-note {
   border-radius: 18px;
   border: 1px solid var(--journal-border);
@@ -420,25 +406,44 @@ async function submitPasswordChange(): Promise<void> {
   color: var(--journal-muted);
 }
 
-.security-panel-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+.security-panel {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
 }
 
-.security-panel-divider {
-  margin: 1.5rem 0;
-  border-top: 1px solid var(--journal-border);
+.security-section-head {
+  margin-bottom: 1rem;
 }
 
-.security-side-card {
-  border-color: var(--journal-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+.security-side {
+  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  padding-top: 1rem;
 }
 
-.security-tip-card {
-  background: rgba(255, 255, 255, 0.82);
+.security-side-lead {
+  padding-bottom: 1rem;
+}
+
+.security-tip-list {
+  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+}
+
+.security-tip-item {
+  padding: 1rem 0;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+}
+
+.security-tip-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (min-width: 1280px) {
+  .security-side {
+    border-top: 0;
+    border-left: 1px dashed rgba(148, 163, 184, 0.62);
+    padding-top: 0;
+    padding-left: 1.5rem;
+  }
 }
 
 .journal-hero {

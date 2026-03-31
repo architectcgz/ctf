@@ -149,26 +149,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         </article>
       </div>
 
-      <div class="journal-panel contest-board mt-6 rounded-[24px] border px-5 py-5 md:px-6">
-        <div class="contest-board-head gap-4">
-          <div>
-            <div class="journal-eyebrow contest-eyebrow-soft">Contest Ledger</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-              按竞赛节奏查看报名、进行与回看窗口
-            </h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              可以直接查看时间和状态，并进入竞赛。
-            </p>
-          </div>
-
-          <div class="contest-filter-pill">
-            <Trophy class="h-4 w-4" />
-            当前可见 {{ list.length }} 场
-          </div>
-        </div>
-
-        <div class="contest-panel-divider" />
-
+      <div class="contest-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
         <div v-if="loading" class="space-y-3 py-1">
           <div
             v-for="i in 4"
@@ -198,12 +179,16 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
           description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
         />
 
-        <div v-else class="contest-list mt-5 space-y-3">
+        <div v-else class="contest-list mt-5">
           <article
             v-for="contest in list"
             :key="contest.id"
-            class="contest-item journal-log rounded-[22px] border px-5 py-5 cursor-pointer"
-            :style="contestAccentStyle(contest.status)"
+            class="contest-item journal-log px-5 py-5 cursor-pointer"
+            :style="{
+              ...contestAccentStyle(contest.status),
+              borderLeftWidth: '3px',
+              borderLeftColor: 'var(--contest-accent)',
+            }"
             tabindex="0"
             @click="openContest(contest)"
             @keydown="onKeyboardOpen($event, contest)"
@@ -297,14 +282,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
 
-.journal-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
-}
-
 .journal-log {
   background: var(--journal-surface);
   border-color: var(--journal-border);
@@ -375,56 +352,34 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   }
 }
 
-.contest-board-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.contest-eyebrow-soft {
-  background: rgba(99, 102, 241, 0.06);
-}
-
-.contest-panel-divider {
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-border);
-}
-
-.contest-filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
-  padding: 0.48rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 84%, #312e81);
+.contest-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
 }
 
 .contest-list {
   position: relative;
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  overflow: hidden;
 }
 
 .contest-item {
   position: relative;
-  border-top-width: 3px;
-  border-top-color: color-mix(in srgb, var(--contest-accent) 58%, transparent);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.56);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 252, 0.76));
   transition:
     border-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 180ms ease;
+    background 180ms ease;
+}
+
+.contest-item:last-child {
+  border-bottom: 0;
 }
 
 .contest-item:hover,
 .contest-item:focus-visible {
-  border-color: var(--contest-accent, var(--journal-accent)) !important;
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--contest-accent, var(--journal-accent)) 12%, transparent);
-  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.88));
   outline: none;
 }
 
