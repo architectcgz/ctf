@@ -3,7 +3,10 @@
     <div
       v-for="item in toasts"
       :key="item.id"
-      class="group relative overflow-hidden rounded-[22px] border border-border bg-surface px-4 py-3.5 shadow-[0_18px_40px_var(--color-shadow-soft)]"
+      :class="[
+        'app-toast-item group relative overflow-hidden rounded-[22px] border border-border px-4 py-3.5 shadow-[0_18px_40px_var(--color-shadow-soft)]',
+        theme === 'light' ? 'bg-white' : 'bg-surface',
+      ]"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"
@@ -19,7 +22,11 @@
             class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
             :style="toneMeta(item.type).iconWrapStyle"
           >
-            <component :is="toneMeta(item.type).icon" class="h-5 w-5" :style="{ color: toneMeta(item.type).accentColor }" />
+            <component
+              :is="toneMeta(item.type).icon"
+              class="h-5 w-5"
+              :style="{ color: toneMeta(item.type).accentColor }"
+            />
           </div>
 
           <div class="min-w-0">
@@ -49,10 +56,12 @@
 import type { Component } from 'vue'
 import { AlertTriangle, CheckCircle2, Info, OctagonX } from 'lucide-vue-next'
 
+import { useTheme } from '@/composables/useTheme'
 import { provideToast, type ToastType, useToast, useToastState } from '@/composables/useToast'
 
 provideToast()
 
+const { theme } = useTheme()
 const toast = useToast()
 const { toasts } = useToastState()
 
