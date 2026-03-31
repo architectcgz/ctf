@@ -2,8 +2,12 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -97,6 +101,73 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 	return nil
 }
 
+func (s *NotificationService) PublishAdminNotification(ctx context.Context, actorUserID int64, req *dto.AdminNotificationPublishReq) (*dto.AdminNotificationPublishResp, error) {
+	if req == nil || req.AudienceRules.Mode != "union" || len(req.AudienceRules.Rules) == 0 {
+		return nil, errcode.ErrInvalidParams
+	}
+
+	recipientSet := make(map[int64]struct{})
+	for _, rule := range req.AudienceRules.Rules {
+		userIDs, err := s.resolveAudienceRule(ctx, rule)
+		if err != nil {
+			return nil, err
+		}
+		for _, userID := range userIDs {
+			recipientSet[userID] = struct{}{}
+		}
+	}
+
+	recipientIDs := make([]int64, 0, len(recipientSet))
+	for userID := range recipientSet {
+		recipientIDs = append(recipientIDs, userID)
+	}
+	sort.Slice(recipientIDs, func(i, j int) bool { return recipientIDs[i] < recipientIDs[j] })
+
+	audienceRules, err := json.Marshal(req.AudienceRules)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	batch := &model.NotificationBatch{
+		Type:           req.Type,
+		Title:          req.Title,
+		Content:        req.Content,
+		Link:           req.Link,
+		AudienceMode:   req.AudienceRules.Mode,
+		AudienceRules:  string(audienceRules),
+		RecipientCount: len(recipientIDs),
+		CreatedBy:      actorUserID,
+	}
+
+	notifications := make([]*model.Notification, 0, len(recipientIDs))
+	for _, userID := range recipientIDs {
+		notifications = append(notifications, &model.Notification{
+			UserID:  userID,
+			Type:    req.Type,
+			Title:   req.Title,
+			Content: req.Content,
+			Link:    req.Link,
+		})
+	}
+	if err := s.repo.CreateBatch(ctx, batch, notifications); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	if s.manager != nil {
+		for _, item := range notifications {
+			s.manager.SendToUser(item.UserID, ctfws.Envelope{
+				Type:      "notification.created",
+				Payload:   toNotificationInfo(item),
+				Timestamp: time.Now().UTC(),
+			})
+		}
+	}
+
+	return &dto.AdminNotificationPublishResp{
+		BatchID:        batch.ID,
+		RecipientCount: len(notifications),
+	}, nil
+}
+
 func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificationID int64) error {
 	notification, err := s.repo.FindByID(ctx, notificationID, userID)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -142,4 +213,117 @@ func toNotificationInfo(notification *model.Notification) dto.NotificationInfo {
 		CreatedAt: notification.CreatedAt,
 		ReadAt:    notification.ReadAt,
 	}
+}
+
+func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule dto.NotificationAudienceRuleReq) ([]int64, error) {
+	switch rule.Type {
+	case dto.NotificationAudienceTypeAll:
+		userIDs, err := s.repo.ListAllUserIDs(ctx)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return userIDs, nil
+	case dto.NotificationAudienceTypeRole:
+		roles, err := normalizeRoleSlice(rule.Values)
+		if err != nil {
+			return nil, errcode.ErrInvalidParams
+		}
+		if len(roles) == 0 {
+			return nil, errcode.ErrInvalidParams
+		}
+		userIDs, err := s.repo.ListUserIDsByRoles(ctx, roles)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return userIDs, nil
+	case dto.NotificationAudienceTypeClass:
+		classNames := normalizeStringSlice(rule.Values)
+		if len(classNames) == 0 {
+			return nil, errcode.ErrInvalidParams
+		}
+		userIDs, err := s.repo.ListUserIDsByClasses(ctx, classNames)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return userIDs, nil
+	case dto.NotificationAudienceTypeUser:
+		userIDs, err := normalizeUserIDSlice(rule.Values)
+		if err != nil {
+			return nil, errcode.ErrInvalidParams
+		}
+		if len(userIDs) == 0 {
+			return nil, errcode.ErrInvalidParams
+		}
+		resolvedIDs, err := s.repo.ListExistingUserIDs(ctx, userIDs)
+		if err != nil {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		return resolvedIDs, nil
+	default:
+		return nil, errcode.ErrInvalidParams
+	}
+}
+
+func normalizeStringSlice(values []string) []string {
+	set := make(map[string]struct{}, len(values))
+	for _, raw := range values {
+		value := strings.TrimSpace(raw)
+		if value == "" {
+			continue
+		}
+		set[value] = struct{}{}
+	}
+	result := make([]string, 0, len(set))
+	for value := range set {
+		result = append(result, value)
+	}
+	sort.Strings(result)
+	return result
+}
+
+func normalizeInt64Slice(values []int64) []int64 {
+	set := make(map[int64]struct{}, len(values))
+	for _, value := range values {
+		if value <= 0 {
+			continue
+		}
+		set[value] = struct{}{}
+	}
+	result := make([]int64, 0, len(set))
+	for value := range set {
+		result = append(result, value)
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i] < result[j] })
+	return result
+}
+
+func normalizeUserIDSlice(values []string) ([]int64, error) {
+	parsed := make([]int64, 0, len(values))
+	for _, raw := range values {
+		value := strings.TrimSpace(raw)
+		if value == "" {
+			continue
+		}
+		userID, err := strconv.ParseInt(value, 10, 64)
+		if err != nil || userID <= 0 {
+			return nil, errcode.ErrInvalidParams
+		}
+		parsed = append(parsed, userID)
+	}
+	return normalizeInt64Slice(parsed), nil
+}
+
+func normalizeRoleSlice(values []string) ([]string, error) {
+	roles := normalizeStringSlice(values)
+	allowed := map[string]struct{}{
+		model.RoleStudent: {},
+		model.RoleTeacher: {},
+		model.RoleAdmin:   {},
+	}
+	for _, role := range roles {
+		if _, ok := allowed[role]; !ok {
+			return nil, errcode.ErrInvalidParams
+		}
+	}
+	return roles, nil
 }

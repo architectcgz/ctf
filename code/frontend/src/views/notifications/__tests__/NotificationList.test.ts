@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationList from '../NotificationList.vue'
 import { useNotificationStore } from '@/stores/notification'
+import { useAuthStore } from '@/stores/auth'
 
 const notificationApiMocks = vi.hoisted(() => ({
   getNotifications: vi.fn(),
@@ -31,10 +32,17 @@ function createTestRouter() {
   })
 }
 
-async function mountPage() {
+async function mountPage(role: 'student' | 'teacher' | 'admin' = 'student') {
   const router = createTestRouter()
   await router.push('/notifications')
   await router.isReady()
+  const authStore = useAuthStore()
+  authStore.user = {
+    id: 'u-1',
+    username: 'tester',
+    role,
+  }
+  authStore.accessToken = 'token'
 
   const wrapper = mount(NotificationList, {
     global: {
@@ -125,5 +133,13 @@ describe('NotificationList', () => {
 
     expect(notificationApiMocks.markAsRead).toHaveBeenCalledWith('1')
     expect(store.unreadCount).toBe(0)
+  })
+
+  it('shows publish entry for admin and hides for non-admin users', async () => {
+    const adminPage = await mountPage('admin')
+    expect(adminPage.wrapper.text()).toContain('发布通知')
+
+    const teacherPage = await mountPage('teacher')
+    expect(teacherPage.wrapper.text()).not.toContain('发布通知')
   })
 })

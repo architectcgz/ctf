@@ -1,19 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Bell, Flag, GraduationCap, Info, RefreshCw, Trophy } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import AdminNotificationPublishDrawer from '@/components/notifications/AdminNotificationPublishDrawer.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
+import { useAuthStore } from '@/stores/auth'
 import { useNotificationStore } from '@/stores/notification'
 import { formatDate } from '@/utils/format'
 
 const toast = useToast()
+const authStore = useAuthStore()
 const notificationStore = useNotificationStore()
 const router = useRouter()
+const publishDrawerOpen = ref(false)
 
 async function fetchNotifications(params: { page: number; page_size: number }) {
   const data = await getNotifications(params)
@@ -101,6 +105,21 @@ const summaryStats = computed(() => [
   { key: 'read', label: '已读消息', value: readOnPage.value, helper: '当前页中已经处理过的消息' },
   { key: 'total', label: '总消息数', value: total.value, helper: '通知中心累计消息总数' },
 ])
+
+const canPublishNotification = computed(() => authStore.isAdmin)
+
+function openPublishDrawer(): void {
+  publishDrawerOpen.value = true
+}
+
+function closePublishDrawer(): void {
+  publishDrawerOpen.value = false
+}
+
+async function handlePublishSuccess(): Promise<void> {
+  closePublishDrawer()
+  await refresh()
+}
 </script>
 
 <template>
@@ -120,6 +139,14 @@ const summaryStats = computed(() => [
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3">
+          <button
+            v-if="canPublishNotification"
+            type="button"
+            class="journal-btn journal-btn--primary"
+            @click="openPublishDrawer"
+          >
+            发布通知
+          </button>
           <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
           <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
             <RefreshCw class="h-4 w-4" />
@@ -254,6 +281,11 @@ const summaryStats = computed(() => [
         </div>
       </template>
     </div>
+    <AdminNotificationPublishDrawer
+      :open="publishDrawerOpen"
+      @close="closePublishDrawer"
+      @published="handlePublishSuccess"
+    />
   </section>
 </template>
 

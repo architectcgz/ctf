@@ -1018,6 +1018,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 	peerHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 
@@ -1193,12 +1194,57 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected cheat detection response: %+v", cheat)
 	}
 
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    model.NotificationTypeSystem,
+		"title":   "全员通知",
+		"content": "full-router matrix admin publish",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "all"},
+			},
+		},
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var publishResult dto.AdminNotificationPublishResp
+	decodeFullRouterData(t, resp, &publishResult)
+	if publishResult.BatchID <= 0 || publishResult.RecipientCount < 4 {
+		t.Fatalf("unexpected publish result: %+v", publishResult)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    model.NotificationTypeSystem,
+		"title":   "teacher forbidden",
+		"content": "teacher should not publish",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "all"},
+			},
+		},
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/notifications", map[string]any{
+		"type":    model.NotificationTypeSystem,
+		"title":   "invalid audience",
+		"content": "missing roles",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "role"},
+			},
+		},
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusBadRequest)
+
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/notifications?page=1&page_size=10", nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var notificationPage map[string]any
 	decodeFullRouterData(t, resp, &notificationPage)
-	if int(notificationPage["total"].(float64)) < 1 {
+	if int(notificationPage["total"].(float64)) < 2 {
 		t.Fatalf("unexpected notifications page: %+v", notificationPage)
 	}
 

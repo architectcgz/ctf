@@ -403,8 +403,6 @@ function handleImportChange(event: Event): void {
         </div>
       </section>
 
-    </section>
-
     <input
       ref="importInput"
       type="file"
@@ -412,7 +410,7 @@ function handleImportChange(event: Event): void {
       class="hidden"
       @change="handleImportChange"
     />
-  </div>
+  </section>
 </template>
 
 <style scoped>
