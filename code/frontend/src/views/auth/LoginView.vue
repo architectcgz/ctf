@@ -52,10 +52,17 @@
 
             <ElForm class="mt-8" :model="form" label-position="top" @submit.prevent="onSubmit">
               <ElFormItem label="用户名">
-                <ElInput v-model="form.username" autocomplete="username" size="large" />
+                <ElInput
+                  ref="usernameInput"
+                  v-model="form.username"
+                  autocomplete="username"
+                  size="large"
+                  @keyup.enter="onSubmit"
+                />
               </ElFormItem>
               <ElFormItem label="密码">
                 <ElInput
+                  ref="passwordInput"
                   v-model="form.password"
                   type="password"
                   autocomplete="current-password"
@@ -101,7 +108,7 @@
 
 <script setup lang="ts">
 import { BellRing, GraduationCap, ShieldCheck } from 'lucide-vue-next'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, useTemplateRef } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { sanitizeRedirectPath } from '@/router/guards'
@@ -121,6 +128,8 @@ const route = useRoute()
 
 const loading = ref(false)
 const form = reactive({ username: '', password: '' })
+const usernameInput = useTemplateRef<{ input?: HTMLInputElement }>('usernameInput')
+const passwordInput = useTemplateRef<{ input?: HTMLInputElement }>('passwordInput')
 const highlights = [
   { label: '场景', value: '训练 / 竞赛 / 教学三条链路统一接入' },
   { label: '通知', value: '实时推送关键事件，减少轮询感知成本' },
@@ -145,6 +154,9 @@ const features = [
 ]
 
 async function onSubmit() {
+  form.username = usernameInput.value?.input?.value || form.username
+  form.password = passwordInput.value?.input?.value || form.password
+
   if (!form.username || !form.password) return
   loading.value = true
   try {
