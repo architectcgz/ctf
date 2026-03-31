@@ -93,6 +93,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/notifications/NotificationList.vue'),
         meta: { requiresAuth: true, title: '通知', icon: 'Bell' },
       },
+      {
+        path: 'notifications/:id',
+        name: 'NotificationDetail',
+        component: () => import('@/views/notifications/NotificationDetail.vue'),
+        meta: { requiresAuth: true, title: '通知详情' },
+      },
 
       // Teacher
       {
