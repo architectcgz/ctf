@@ -1243,6 +1243,32 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	}
 }
 
+func TestFullRouter_AdminImagesCapsOversizedPageSize(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/images?page=1&page_size=200", nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var payload struct {
+		List []dto.ImageResp `json:"list"`
+		Page int             `json:"page"`
+		Size int             `json:"page_size"`
+	}
+	decodeFullRouterData(t, resp, &payload)
+
+	if payload.Page != 1 {
+		t.Fatalf("expected page=1, got %d", payload.Page)
+	}
+	if payload.Size != 100 {
+		t.Fatalf("expected capped page_size=100, got %d", payload.Size)
+	}
+	if len(payload.List) == 0 {
+		t.Fatal("expected image list to contain seeded records")
+	}
+}
+
 func assertFullRouterStatus(t *testing.T, resp *httptest.ResponseRecorder, want int) {
 	t.Helper()
 	if resp.Code != want {

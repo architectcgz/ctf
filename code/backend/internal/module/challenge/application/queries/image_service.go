@@ -42,6 +42,9 @@ func (s *ImageService) ListImages(query *dto.ImageQuery) (*dto.PageResult, error
 	if size < 1 {
 		size = s.config.Pagination.DefaultPageSize
 	}
+	if size > s.config.Pagination.MaxPageSize {
+		size = s.config.Pagination.MaxPageSize
+	}
 
 	offset := (page - 1) * size
 	images, total, err := s.repo.List(query.Name, query.Status, offset, size)
