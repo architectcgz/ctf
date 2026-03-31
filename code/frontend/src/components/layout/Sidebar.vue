@@ -33,8 +33,8 @@
         </button>
       </div>
 
-      <div class="mt-6 min-h-0 flex-1 overflow-y-auto">
-        <nav class="space-y-7">
+      <div class="mt-6 flex min-h-0 flex-1 overflow-y-auto">
+        <nav class="flex min-h-full flex-col space-y-7">
           <section v-for="group in navGroups" :key="group.key" class="space-y-2.5">
             <div class="sidebar-group-title px-2">
               {{ group.title }}
@@ -101,7 +101,7 @@
     </aside>
 
     <aside
-      class="sidebar-shell sidebar-shell-desktop sticky top-0 hidden h-screen shrink-0 px-3 py-4 md:flex md:flex-col"
+      class="sidebar-shell sidebar-shell-desktop sticky top-0 hidden min-h-screen shrink-0 self-stretch px-3 py-4 md:flex md:flex-col"
       :class="collapsed ? 'w-[var(--shell-sidebar-collapsed)]' : 'w-[var(--shell-sidebar-expanded)]'"
     >
       <div class="sidebar-brand-row px-1">
@@ -126,8 +126,8 @@
         </button>
       </div>
 
-      <div class="mt-6 min-h-0 flex-1 overflow-y-auto">
-        <nav class="space-y-7">
+      <div class="mt-6 flex min-h-0 flex-1 overflow-y-auto">
+        <nav class="flex min-h-full flex-col space-y-7">
           <section v-for="group in navGroups" :key="group.key" class="space-y-2.5">
             <div
               v-if="!collapsed"
