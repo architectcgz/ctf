@@ -8,6 +8,7 @@ import { useToast } from '@/composables/useToast'
 import { getProfile } from '@/api/auth'
 import type { UserRole } from '@/utils/constants'
 import { resolveRouteTitle } from '@/utils/routeTitle'
+import { redirectToErrorStatusPage } from '@/utils/errorStatusPage'
 
 NProgress.configure({ showSpinner: false })
 
@@ -100,5 +101,6 @@ export function setupRouterGuards(router: Router): void {
 
   router.onError((error) => {
     console.error('Router error:', error)
+    redirectToErrorStatusPage(500)
   })
 }

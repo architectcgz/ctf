@@ -10,6 +10,7 @@ import NProgress from 'nprogress'
 import { useAuthStore } from '@/stores/auth'
 import { AUTH_ERROR_CODES, mapErrorCode } from '@/utils/errorMap'
 import { useToast } from '@/composables/useToast'
+import { redirectToErrorStatusPage, shouldRedirectToErrorStatusPage } from '@/utils/errorStatusPage'
 
 export interface ApiEnvelope<T> {
   code: number
@@ -196,7 +197,7 @@ instance.interceptors.response.use(
         pendingRequests.forEach(({ reject }) => reject(refreshErr))
         authStore.logout()
         toast.error(humanizeError(refreshErr))
-        window.location.assign('/login')
+        redirectToErrorStatusPage(401, error.config?.url)
         return Promise.reject(refreshErr)
       } finally {
         isRefreshing = false
@@ -212,7 +213,26 @@ instance.interceptors.response.use(
       if (shouldToast(error.config)) {
         toast.warning(retryMessage)
       }
+      redirectToErrorStatusPage(429, error.config?.url)
       return Promise.reject(error)
+    }
+
+    if (status === 401 && !isRefreshRequest(error.config)) {
+      const unauthorizedError = toApiError(
+        code,
+        error.response?.data?.request_id,
+        status,
+        '登录状态已失效，请重新登录',
+        error.response?.data?.message
+      )
+      if (shouldToast(error.config)) {
+        toast.error(unauthorizedError.message)
+      }
+      if (shouldRedirectToErrorStatusPage(status, error.config?.url)) {
+        authStore.logout()
+        redirectToErrorStatusPage(status, error.config?.url)
+      }
+      return Promise.reject(unauthorizedError)
     }
 
     const mapped = mapErrorCode(code)
@@ -249,6 +269,7 @@ instance.interceptors.response.use(
     if (shouldToast(error.config)) {
       toast.error(apiError.message)
     }
+    redirectToErrorStatusPage(status, error.config?.url)
     return Promise.reject(apiError)
   }
 )
