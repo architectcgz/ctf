@@ -117,22 +117,6 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
     return typeMap[type] || fallbackTypeMeta
   }
 
-  function notificationCardStyle(unread: boolean): Record<string, string> {
-    if (unread) {
-      return {
-        borderColor: 'color-mix(in srgb, var(--color-primary) 22%, var(--color-border-default))',
-        background:
-          'linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 10%, transparent), rgba(15, 23, 42, 0.38))',
-        boxShadow: '0 18px 36px var(--color-shadow-soft)',
-      }
-    }
-
-    return {
-      borderColor: 'var(--color-border-default)',
-      backgroundColor: 'color-mix(in srgb, var(--color-bg-base) 62%, transparent)',
-    }
-  }
-
   function updatePanelPosition() {
     if (!trigger.value) {
       return
@@ -140,7 +124,7 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
 
     const rect = trigger.value.getBoundingClientRect()
     const viewportPadding = 12
-    const panelWidth = Math.min(420, window.innerWidth - viewportPadding * 2)
+    const panelWidth = Math.min(440, window.innerWidth - viewportPadding * 2)
     const left = Math.min(
       Math.max(viewportPadding, rect.right - panelWidth),
       window.innerWidth - panelWidth - viewportPadding
@@ -167,20 +151,9 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
     void router.push('/notifications')
   }
 
-  async function markAsRead(id: string) {
-    const target = store.notifications.find((item) => item.id === id)
-    if (!target?.unread) {
-      return
-    }
-
-    try {
-      await markAsReadApi(id)
-    } catch {
-      toast.error('标记已读失败')
-      return
-    }
-
-    store.markAsRead(id)
+  function goToNotificationDetail(id: string) {
+    close()
+    void router.push(`/notifications/${encodeURIComponent(id)}`)
   }
 
   async function markAllRead() {
@@ -191,11 +164,15 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
 
     const results = await Promise.allSettled(unreadItems.map((item) => markAsReadApi(item.id)))
     const failedCount = results.filter((result) => result.status === 'rejected').length
+    unreadItems.forEach((item, index) => {
+      if (results[index]?.status === 'fulfilled') {
+        store.markAsRead(item.id)
+      }
+    })
+
     if (failedCount > 0) {
       toast.warning(`部分通知标记失败（${failedCount} 条）`)
     }
-
-    store.markAllRead()
   }
 
   watch(open, (isOpen) => {
@@ -238,11 +215,10 @@ export function useNotificationDropdown(realtimeStatus: () => WebSocketStatus) {
     statusMeta,
     statusPillStyle,
     typeMeta,
-    notificationCardStyle,
     close,
     toggleOpen,
     goToNotifications,
-    markAsRead,
+    goToNotificationDetail,
     markAllRead,
   }
 }
