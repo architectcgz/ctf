@@ -26,7 +26,14 @@ function cssVar(name: string): string {
 const option = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
   legend: { textStyle: { color: cssVar('--color-text-secondary') } },
-  grid: { left: 16, right: 16, bottom: 16, top: 32, containLabel: true },
+  grid: {
+    left: 16,
+    right: 16,
+    bottom: 16,
+    top: 32,
+    outerBoundsMode: 'same',
+    outerBoundsContain: 'axisLabel',
+  },
   xAxis: {
     type: 'category',
     data: props.categories,
