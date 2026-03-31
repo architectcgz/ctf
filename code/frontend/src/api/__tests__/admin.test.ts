@@ -33,6 +33,7 @@ import {
   getUsers,
   listAdminContestChallenges,
   listContestAWDRoundAttacks,
+  publishAdminNotification,
   runContestAWDRoundCheck,
   saveChallengeTopology,
   saveChallengeWriteup,
@@ -517,6 +518,41 @@ describe('admin contest api contract', () => {
       status: 'active',
       roles: ['teacher'],
       created_at: '2026-03-01T00:00:00.000Z',
+    })
+  })
+
+  it('应该请求管理员通知发布接口并归一化批次回执', async () => {
+    requestMock.mockResolvedValue({
+      batch_id: 88,
+      recipient_count: 56,
+    })
+
+    const result = await publishAdminNotification({
+      type: 'system',
+      title: '维护通知',
+      content: '今晚 23:00 进行维护。',
+      audience_rules: {
+        mode: 'union',
+        rules: [{ type: 'all' }],
+      },
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/notifications',
+      data: {
+        type: 'system',
+        title: '维护通知',
+        content: '今晚 23:00 进行维护。',
+        audience_rules: {
+          mode: 'union',
+          rules: [{ type: 'all' }],
+        },
+      },
+    })
+    expect(result).toEqual({
+      batch_id: '88',
+      recipient_count: 56,
     })
   })
 

@@ -18,11 +18,31 @@ func (r *stubNotificationQueryRepository) Create(_ context.Context, _ *model.Not
 	return nil
 }
 
+func (r *stubNotificationQueryRepository) CreateBatch(_ context.Context, _ *model.NotificationBatch, _ []*model.Notification) error {
+	return nil
+}
+
 func (r *stubNotificationQueryRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]model.Notification, int64, error) {
 	return nil, 0, nil
 }
 
 func (r *stubNotificationQueryRepository) FindByID(_ context.Context, _, _ int64) (*model.Notification, error) {
+	return nil, nil
+}
+
+func (r *stubNotificationQueryRepository) ListAllUserIDs(_ context.Context) ([]int64, error) {
+	return nil, nil
+}
+
+func (r *stubNotificationQueryRepository) ListUserIDsByRoles(_ context.Context, _ []string) ([]int64, error) {
+	return nil, nil
+}
+
+func (r *stubNotificationQueryRepository) ListUserIDsByClasses(_ context.Context, _ []string) ([]int64, error) {
+	return nil, nil
+}
+
+func (r *stubNotificationQueryRepository) ListExistingUserIDs(_ context.Context, _ []int64) ([]int64, error) {
 	return nil, nil
 }
 
