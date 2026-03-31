@@ -49,6 +49,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	externalDeps := buildPracticeModuleExternalDeps(challenge, runtime, assessment)
 	service := buildPracticeHandler(root, deps, externalDeps)
 	service.SetEventBus(root.Events)
+	root.RegisterBackgroundJob(NewLoopBackgroundJob("practice_instance_scheduler", service.RunProvisioningLoop))
 
 	return &PracticeModule{
 		BackgroundCloser: service,

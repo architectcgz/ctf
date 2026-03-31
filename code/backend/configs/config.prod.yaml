@@ -25,3 +25,11 @@ auth:
   refresh_cookie_secure: true
   private_key_path: /etc/ctf/keys/private.pem
   public_key_path: /etc/ctf/keys/public.pem
+
+container:
+  scheduler:
+    enabled: true
+    poll_interval: 1s
+    batch_size: 4
+    max_concurrent_starts: 4
+    max_active_instances: 60

@@ -25,6 +25,7 @@ type Instance struct {
 
 // 状态常量
 const (
+	InstanceStatusPending  = "pending"
 	InstanceStatusCreating = "creating"
 	InstanceStatusRunning  = "running"
 	InstanceStatusStopped  = "stopped"

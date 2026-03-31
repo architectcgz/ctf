@@ -70,6 +70,22 @@ func (r *Repository) FindByID(id int64) (*model.Instance, error) {
 	return &instance, nil
 }
 
+func (r *Repository) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var instance model.Instance
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&instance).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &instance, nil
+}
+
 func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.User, error) {
 	var user model.User
 	if err := r.db.WithContext(ctx).Where("id = ?", userID).First(&user).Error; err != nil {
@@ -84,7 +100,7 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,
-		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -98,7 +114,7 @@ func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.I
 func (r *Repository) FindByContestUserID(contestID, userID int64) ([]*model.Instance, error) {
 	var instances []*model.Instance
 	err := r.db.Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND status IN ?", contestID, userID,
-		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
@@ -107,7 +123,7 @@ func (r *Repository) FindByContestUserID(contestID, userID int64) ([]*model.Inst
 func (r *Repository) FindByContestUserAndChallenge(contestID, userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("contest_id = ? AND user_id = ? AND team_id IS NULL AND challenge_id = ? AND status IN ?",
-		contestID, userID, challengeID, []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		contestID, userID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -121,7 +137,7 @@ func (r *Repository) FindByContestUserAndChallenge(contestID, userID, challengeI
 func (r *Repository) FindByContestTeamID(contestID, teamID int64) ([]*model.Instance, error) {
 	var instances []*model.Instance
 	err := r.db.Where("contest_id = ? AND team_id = ? AND status IN ?", contestID, teamID,
-		[]string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		[]string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Order("created_at DESC").
 		Find(&instances).Error
 	return instances, err
@@ -130,7 +146,7 @@ func (r *Repository) FindByContestTeamID(contestID, teamID int64) ([]*model.Inst
 func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("contest_id = ? AND team_id = ? AND challenge_id = ? AND status IN ?",
-		contestID, teamID, challengeID, []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		contestID, teamID, challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -212,7 +228,7 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 		Table("instances AS inst").
 		Select("DISTINCT inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
 		Order("inst.created_at DESC").
 		Scan(&instances).Error
@@ -239,7 +255,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		}, ", ")).
 		Joins("JOIN challenges c ON c.id = inst.challenge_id").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
-		Where("inst.status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning}).
+		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
 		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
 		Order("inst.created_at DESC").
 		Scan(&rows).Error
@@ -393,6 +409,58 @@ func (r *Repository) CountRunning() (int64, error) {
 	var count int64
 	err := r.db.Model(&model.Instance{}).
 		Where("status = ?", model.InstanceStatusRunning).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *Repository) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if limit <= 0 {
+		return []*model.Instance{}, nil
+	}
+
+	instances := make([]*model.Instance, 0, limit)
+	err := r.db.WithContext(ctx).
+		Where("status = ?", model.InstanceStatusPending).
+		Order("created_at ASC, id ASC").
+		Limit(limit).
+		Find(&instances).Error
+	if err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
+func (r *Repository) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	result := r.db.WithContext(ctx).Model(&model.Instance{}).
+		Where("id = ? AND status = ?", id, fromStatus).
+		Updates(map[string]any{
+			"status":     toStatus,
+			"updated_at": time.Now(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if len(statuses) == 0 {
+		return 0, nil
+	}
+
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.Instance{}).
+		Where("status IN ?", statuses).
 		Count(&count).Error
 	return count, err
 }

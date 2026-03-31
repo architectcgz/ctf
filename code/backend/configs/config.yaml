@@ -131,6 +131,12 @@ container:
   public_host: localhost
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
+  scheduler:
+    enabled: true
+    poll_interval: 1s
+    batch_size: 4
+    max_concurrent_starts: 4
+    max_active_instances: 60
 
 pagination:
   default_page_size: 20

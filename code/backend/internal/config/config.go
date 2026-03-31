@@ -123,28 +123,37 @@ type RateLimitPolicyConfig struct {
 }
 
 type ContainerConfig struct {
-	DefaultCPUQuota      float64       `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
-	DefaultMemory        int64         `mapstructure:"default_memory"`    // 内存限制（字节）
-	DefaultPidsLimit     int64         `mapstructure:"default_pids_limit"`
-	ReadonlyRootfs       bool          `mapstructure:"readonly_rootfs"`
-	RunAsUser            string        `mapstructure:"run_as_user"`
-	AllowedCapabilities  []string      `mapstructure:"allowed_capabilities"`
-	Seccomp              string        `mapstructure:"seccomp"`
-	PortRangeStart       int           `mapstructure:"port_range_start"`
-	PortRangeEnd         int           `mapstructure:"port_range_end"`
-	DefaultExposedPort   int           `mapstructure:"default_exposed_port"`
-	MaxConcurrentPerUser int           `mapstructure:"max_concurrent_per_user"`
-	DefaultTTL           time.Duration `mapstructure:"default_ttl"`
-	MaxExtends           int           `mapstructure:"max_extends"`
-	ExtendDuration       time.Duration `mapstructure:"extend_duration"`
-	CleanupInterval      string        `mapstructure:"cleanup_interval"`
-	CleanupLockTTL       time.Duration `mapstructure:"cleanup_lock_ttl"`
-	OrphanGracePeriod    time.Duration `mapstructure:"orphan_grace_period"`
-	CreateTimeout        time.Duration `mapstructure:"create_timeout"`
-	FlagGlobalSecret     string        `mapstructure:"flag_global_secret"`
-	PublicHost           string        `mapstructure:"public_host"`
-	ProxyTicketTTL       time.Duration `mapstructure:"proxy_ticket_ttl"`
-	ProxyBodyPreviewSize int           `mapstructure:"proxy_body_preview_size"`
+	DefaultCPUQuota      float64                  `mapstructure:"default_cpu_quota"` // CPU 核心数，如 0.5 表示 0.5 核
+	DefaultMemory        int64                    `mapstructure:"default_memory"`    // 内存限制（字节）
+	DefaultPidsLimit     int64                    `mapstructure:"default_pids_limit"`
+	ReadonlyRootfs       bool                     `mapstructure:"readonly_rootfs"`
+	RunAsUser            string                   `mapstructure:"run_as_user"`
+	AllowedCapabilities  []string                 `mapstructure:"allowed_capabilities"`
+	Seccomp              string                   `mapstructure:"seccomp"`
+	PortRangeStart       int                      `mapstructure:"port_range_start"`
+	PortRangeEnd         int                      `mapstructure:"port_range_end"`
+	DefaultExposedPort   int                      `mapstructure:"default_exposed_port"`
+	MaxConcurrentPerUser int                      `mapstructure:"max_concurrent_per_user"`
+	DefaultTTL           time.Duration            `mapstructure:"default_ttl"`
+	MaxExtends           int                      `mapstructure:"max_extends"`
+	ExtendDuration       time.Duration            `mapstructure:"extend_duration"`
+	CleanupInterval      string                   `mapstructure:"cleanup_interval"`
+	CleanupLockTTL       time.Duration            `mapstructure:"cleanup_lock_ttl"`
+	OrphanGracePeriod    time.Duration            `mapstructure:"orphan_grace_period"`
+	CreateTimeout        time.Duration            `mapstructure:"create_timeout"`
+	FlagGlobalSecret     string                   `mapstructure:"flag_global_secret"`
+	PublicHost           string                   `mapstructure:"public_host"`
+	ProxyTicketTTL       time.Duration            `mapstructure:"proxy_ticket_ttl"`
+	ProxyBodyPreviewSize int                      `mapstructure:"proxy_body_preview_size"`
+	Scheduler            ContainerSchedulerConfig `mapstructure:"scheduler"`
+}
+
+type ContainerSchedulerConfig struct {
+	Enabled             bool          `mapstructure:"enabled"`
+	PollInterval        time.Duration `mapstructure:"poll_interval"`
+	BatchSize           int           `mapstructure:"batch_size"`
+	MaxConcurrentStarts int           `mapstructure:"max_concurrent_starts"`
+	MaxActiveInstances  int           `mapstructure:"max_active_instances"`
 }
 
 type PaginationConfig struct {
@@ -299,6 +308,20 @@ func (c *Config) Validate() error {
 	}
 	if c.Container.ProxyBodyPreviewSize <= 0 {
 		return fmt.Errorf("container.proxy_body_preview_size must be greater than 0")
+	}
+	if c.Container.Scheduler.Enabled {
+		if c.Container.Scheduler.PollInterval <= 0 {
+			return fmt.Errorf("container.scheduler.poll_interval must be greater than 0")
+		}
+		if c.Container.Scheduler.BatchSize <= 0 {
+			return fmt.Errorf("container.scheduler.batch_size must be greater than 0")
+		}
+		if c.Container.Scheduler.MaxConcurrentStarts <= 0 {
+			return fmt.Errorf("container.scheduler.max_concurrent_starts must be greater than 0")
+		}
+		if c.Container.Scheduler.MaxActiveInstances < 0 {
+			return fmt.Errorf("container.scheduler.max_active_instances must be greater than or equal to 0")
+		}
 	}
 	if c.Recommendation.WeakThreshold < 0 || c.Recommendation.WeakThreshold > 1 {
 		return fmt.Errorf("recommendation.weak_threshold must be between 0 and 1")
@@ -488,6 +511,11 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)
 	v.SetDefault("container.proxy_body_preview_size", 1024)
+	v.SetDefault("container.scheduler.enabled", true)
+	v.SetDefault("container.scheduler.poll_interval", time.Second)
+	v.SetDefault("container.scheduler.batch_size", 4)
+	v.SetDefault("container.scheduler.max_concurrent_starts", 4)
+	v.SetDefault("container.scheduler.max_active_instances", 60)
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)

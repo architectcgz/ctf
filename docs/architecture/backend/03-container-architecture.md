@@ -1188,7 +1188,16 @@ func (cm *containerManager) PrePullImages(ctx context.Context, gameID uint64) er
 
 ### 8.3 排队机制设计
 
-当资源水位达到高水位或容器池耗尽时，新请求进入排队队列：
+当前代码已落地的是**数据库持久化排队 + 后台调度器**，不是独立的 Redis 队列：
+
+- 开题请求先写入 `instances(status=pending)`；
+- 后台 `practice_instance_scheduler` 周期性领取最早的 `pending` 实例；
+- 调度器受 `max_concurrent_starts` 和 `max_active_instances` 双阈值保护；
+- 真正的容器创建发生在 `pending -> creating -> running` 的后台推进阶段。
+
+在此基础上，后续如果需要排队位置、超时取消、消息确认和重投递，再演进到 Redis Stream / MQ。
+
+概念流程如下：
 
 ```mermaid
 flowchart TD
@@ -1206,30 +1215,10 @@ flowchart TD
     QUEUE -->|"资源释放，轮到该请求"| CREATE
 ```
 
-```go
-// 排队机制核心结构
-type CreateQueue struct {
-    mu       sync.Mutex
-    queue    []*QueueItem
-    maxSize  int           // 队列最大长度，默认 500
-    timeout  time.Duration // 排队超时时间，默认 5min
-}
-
-type QueueItem struct {
-    RequestID   string
-    UserID      uint64
-    ChallengeID uint64
-    EnqueuedAt  time.Time
-    Position    int    // 当前排队位置
-    NotifyCh    chan *Instance // 创建完成后通知
-}
-```
-
-**前端排队体验：**
-- 用户发起创建请求后，如进入排队，前端展示当前排队位置和预估等待时间
-- 通过 WebSocket 实时推送排队位置变化
-- 预估等待时间 = 当前位置 x 平均创建耗时（滑动窗口统计）
-- 排队超时（5 分钟）后自动取消，提示用户稍后重试
+当前前端体验是：
+- 用户发起创建请求后立即拿到 `instance_id` 和 `status=pending`
+- 前端通过现有实例查询接口轮询实例状态，而不是轮询独立 `request_id`
+- 当状态推进到 `running` 后再展示访问地址
 
 ## 9. 多物理机扩展方案（预留）
 
@@ -1451,10 +1440,13 @@ container:
     pool_size: 20
     warmup_minutes: 30
 
-  # 排队配置
-  queue:
-    max_size: 500
-    timeout: "5m"
+  # 启动调度配置
+  scheduler:
+    enabled: true
+    poll_interval: "1s"
+    batch_size: 4
+    max_concurrent_starts: 4
+    max_active_instances: 60
 
   # 镜像缓存配置
   image_cache:

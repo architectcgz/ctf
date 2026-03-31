@@ -81,7 +81,7 @@ func (r *Repository) LockInstanceScope(userID int64, scope practiceports.Instanc
 
 func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	query := r.db.Model(&model.Instance{}).
-		Where("challenge_id = ? AND status IN ?", challengeID, []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("challenge_id = ? AND status IN ?", challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
 	case scope.TeamID != nil && scope.ContestID != nil:
@@ -104,7 +104,7 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 
 func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
 	query := r.db.Model(&model.Instance{}).
-		Where("status IN ?", []string{model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
 	case scope.TeamID != nil && scope.ContestID != nil:

@@ -2,6 +2,9 @@ package commands
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -16,10 +19,77 @@ import (
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	"ctf-platform/internal/module/practice/testsupport"
+	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
+	practiceports "ctf-platform/internal/module/practice/ports"
+	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
 )
+
+type stubPracticeRuntimeService struct {
+	cleanupRuntimeFn  func(instance *model.Instance) error
+	createTopologyFn  func(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error)
+	createContainerFn func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (containerID, networkID string, hostPort, servicePort int, err error)
+}
+
+func (s *stubPracticeRuntimeService) CleanupRuntime(instance *model.Instance) error {
+	if s.cleanupRuntimeFn == nil {
+		return nil
+	}
+	return s.cleanupRuntimeFn(instance)
+}
+
+func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *practiceports.TopologyCreateRequest) (*practiceports.TopologyCreateResult, error) {
+	if s.createTopologyFn == nil {
+		return nil, errors.New("unexpected CreateTopology call")
+	}
+	return s.createTopologyFn(ctx, req)
+}
+
+func (s *stubPracticeRuntimeService) CreateContainer(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+	if s.createContainerFn == nil {
+		return "", "", 0, 0, errors.New("unexpected CreateContainer call")
+	}
+	return s.createContainerFn(ctx, imageName, env, reservedHostPort)
+}
+
+func requireEventually(t *testing.T, timeout time.Duration, check func() bool) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if check() {
+			return
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatal("condition was not satisfied before timeout")
+}
+
+func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	dsn := fmt.Sprintf("%s/%s.sqlite", t.TempDir(), strings.ReplaceAll(t.Name(), "/", "_"))
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(
+		&model.Image{},
+		&model.Challenge{},
+		&model.ChallengeTopology{},
+		&model.User{},
+		&model.Team{},
+		&model.Instance{},
+		&model.PortAllocation{},
+		&model.Submission{},
+	); err != nil {
+		t.Fatalf("migrate practice command tables: %v", err)
+	}
+	return db
+}
 
 type stubAssessmentService struct {
 	updateFn func(ctx context.Context, userID int64, dimension string) error
@@ -74,6 +144,10 @@ func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(chall
 type stubPracticeInstanceStore struct {
 }
 
+func (s *stubPracticeInstanceStore) FindByIDWithContext(ctx context.Context, id int64) (*model.Instance, error) {
+	return nil, nil
+}
+
 func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) error {
 	return nil
 }
@@ -86,8 +160,20 @@ func (s *stubPracticeInstanceStore) FindByUserAndChallenge(userID, challengeID i
 	return nil, nil
 }
 
+func (s *stubPracticeInstanceStore) ListPendingInstancesWithContext(ctx context.Context, limit int) ([]*model.Instance, error) {
+	return []*model.Instance{}, nil
+}
+
+func (s *stubPracticeInstanceStore) TryTransitionStatusWithContext(ctx context.Context, id int64, fromStatus, toStatus string) (bool, error) {
+	return false, nil
+}
+
+func (s *stubPracticeInstanceStore) CountInstancesByStatusWithContext(ctx context.Context, statuses []string) (int64, error) {
+	return 0, nil
+}
+
 func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
-	db := testsupport.SetupPracticeTestDB(t)
+	db := newPracticeCommandTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create image: %v", err)
@@ -330,4 +416,305 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("expected practice.flag_accepted event to be published")
 	}
+}
+
+func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        101,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         201,
+		Title:      "Queued Web",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    101,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.User{ID: 42, Username: "student-42", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	var createCalls atomic.Int32
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				createCalls.Add(1)
+				return "container-sync", "network-sync", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultExposedPort:   8080,
+				PublicHost:           "127.0.0.1",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartChallengeWithContext(context.Background(), 42, 201)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() error = %v", err)
+	}
+	if resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending status, got %+v", resp)
+	}
+	if createCalls.Load() != 0 {
+		t.Fatalf("expected no synchronous container creation, got %d calls", createCalls.Load())
+	}
+
+	var stored model.Instance
+	if err := db.First(&stored, resp.ID).Error; err != nil {
+		t.Fatalf("load pending instance: %v", err)
+	}
+	if stored.Status != model.InstanceStatusPending {
+		t.Fatalf("expected stored pending instance, got %+v", stored)
+	}
+}
+
+func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        102,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         202,
+		Title:      "Queued Runner",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    102,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.User{ID: 43, Username: "student-43", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				return "container-queued", "network-queued", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultExposedPort:   8080,
+				PublicHost:           "127.0.0.1",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartChallengeWithContext(context.Background(), 43, 202)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() error = %v", err)
+	}
+	if resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending status, got %+v", resp)
+	}
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go service.RunProvisioningLoop(runCtx)
+
+	requireEventually(t, time.Second, func() bool {
+		var instance model.Instance
+		if err := db.First(&instance, resp.ID).Error; err != nil {
+			return false
+		}
+		return instance.Status == model.InstanceStatusRunning && instance.ContainerID == "container-queued"
+	})
+}
+
+func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        103,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	for _, challengeID := range []int64{203, 204} {
+		if err := db.Create(&model.Challenge{
+			ID:         challengeID,
+			Title:      "Queued Capacity",
+			Category:   model.DimensionWeb,
+			Difficulty: model.ChallengeDifficultyEasy,
+			Points:     100,
+			ImageID:    103,
+			Status:     model.ChallengeStatusPublished,
+			FlagType:   model.FlagTypeStatic,
+			FlagHash:   "flag{static}",
+			CreatedAt:  now,
+			UpdatedAt:  now,
+		}).Error; err != nil {
+			t.Fatalf("create challenge %d: %v", challengeID, err)
+		}
+	}
+	for _, userID := range []int64{51, 52} {
+		if err := db.Create(&model.User{ID: userID, Username: fmt.Sprintf("student-%d", userID), Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+			t.Fatalf("create user %d: %v", userID, err)
+		}
+	}
+
+	started := make(chan int, 2)
+	release := make(chan struct{})
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				started <- reservedHostPort
+				<-release
+				return "container-capacity", "network-capacity", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultExposedPort:   8080,
+				PublicHost:           "127.0.0.1",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           2,
+					MaxConcurrentStarts: 2,
+					MaxActiveInstances:  1,
+				},
+			},
+		},
+		nil,
+	)
+
+	first, err := service.StartChallengeWithContext(context.Background(), 51, 203)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+	}
+	second, err := service.StartChallengeWithContext(context.Background(), 52, 204)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+	}
+
+	runCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go service.RunProvisioningLoop(runCtx)
+
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("expected one pending instance to start provisioning")
+	}
+
+	var firstInstance model.Instance
+	if err := db.First(&firstInstance, first.ID).Error; err != nil {
+		t.Fatalf("load first instance: %v", err)
+	}
+	var secondInstance model.Instance
+	if err := db.First(&secondInstance, second.ID).Error; err != nil {
+		t.Fatalf("load second instance: %v", err)
+	}
+
+	statuses := []string{firstInstance.Status, secondInstance.Status}
+	pendingCount := 0
+	creatingCount := 0
+	for _, status := range statuses {
+		if status == model.InstanceStatusPending {
+			pendingCount++
+		}
+		if status == model.InstanceStatusCreating {
+			creatingCount++
+		}
+	}
+	if pendingCount != 1 || creatingCount != 1 {
+		t.Fatalf("expected one creating and one pending instance, got %+v", statuses)
+	}
+
+	close(release)
 }
