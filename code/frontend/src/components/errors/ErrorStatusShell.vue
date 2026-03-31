@@ -1,0 +1,199 @@
+<script setup lang="ts">
+import { computed, type Component } from 'vue'
+import { RouterLink } from 'vue-router'
+
+import { useAuthStore } from '@/stores/auth'
+
+interface Props {
+  statusCode: string
+  kicker: string
+  title: string
+  description: string
+  icon: Component
+  primaryIcon: Component
+  secondaryIcon: Component
+  accent?: 'warning' | 'danger' | 'primary'
+  primaryTo?: string
+  primaryLabel?: string
+  secondaryTo?: string
+  secondaryLabel?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  accent: 'primary',
+  primaryTo: '',
+  primaryLabel: '',
+  secondaryTo: '/notifications',
+  secondaryLabel: '打开通知中心',
+})
+
+const authStore = useAuthStore()
+
+const accentValueMap: Record<NonNullable<Props['accent']>, string> = {
+  primary: 'var(--color-primary)',
+  warning: 'var(--color-warning)',
+  danger: 'var(--color-danger)',
+}
+
+const dynamicHomePath = computed(() => {
+  if (!authStore.isLoggedIn) return '/login'
+  if (authStore.isAdmin) return '/admin/dashboard'
+  if (authStore.isTeacher) return '/teacher/dashboard'
+  return '/dashboard'
+})
+
+const dynamicHomeLabel = computed(() => {
+  if (!authStore.isLoggedIn) return '返回登录页'
+  if (authStore.isAdmin) return '返回管理工作台'
+  if (authStore.isTeacher) return '返回教师工作台'
+  return '返回学习工作台'
+})
+
+const resolvedPrimaryTo = computed(() => props.primaryTo || dynamicHomePath.value)
+const resolvedPrimaryLabel = computed(() => props.primaryLabel || dynamicHomeLabel.value)
+const accentVars = computed(() => ({
+  '--error-accent': accentValueMap[props.accent],
+}))
+</script>
+
+<template>
+  <section class="error-status-view" :style="accentVars">
+    <div class="error-status-kicker">
+      <component :is="icon" class="h-4 w-4" />
+      <span>{{ kicker }}</span>
+    </div>
+
+    <div class="error-status-grid">
+      <div class="error-status-copy">
+        <h1 class="error-status-title">
+          {{ title }}
+        </h1>
+        <p class="error-status-text">
+          {{ description }}
+        </p>
+
+        <div class="error-status-actions">
+          <RouterLink
+            :to="resolvedPrimaryTo"
+            class="error-status-action error-status-action-primary"
+          >
+            <component :is="primaryIcon" class="h-4 w-4" />
+            {{ resolvedPrimaryLabel }}
+          </RouterLink>
+          <RouterLink
+            :to="secondaryTo"
+            class="error-status-action error-status-action-secondary"
+          >
+            <component :is="secondaryIcon" class="h-4 w-4" />
+            {{ secondaryLabel }}
+          </RouterLink>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.error-status-view {
+  min-height: calc(100vh - 11rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-inline: auto;
+  width: min(64rem, 100%);
+  padding: 2.75rem 1rem 3.25rem;
+}
+
+.error-status-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  padding-left: 0.72rem;
+  border-left: 2px solid color-mix(in srgb, var(--error-accent) 55%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--error-accent) 82%, var(--color-text-primary));
+}
+
+.error-status-grid {
+  margin-top: 1rem;
+  display: block;
+}
+
+.error-status-copy {
+  min-width: 0;
+}
+
+.error-status-title {
+  font-size: clamp(1.7rem, 3.2vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.error-status-text {
+  margin-top: 0.8rem;
+  max-width: 56ch;
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--color-text-secondary);
+}
+
+.error-status-actions {
+  margin-top: 1.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.error-status-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 0.58rem 0.9rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.error-status-action-primary {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 94%, #0b4f60), color-mix(in srgb, var(--color-primary-hover) 78%, #0b4f60));
+  color: #f8feff;
+}
+
+.error-status-action-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.error-status-action-secondary {
+  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 78%, transparent);
+  color: var(--color-text-primary);
+}
+
+.error-status-action-secondary:hover {
+  border-color: color-mix(in srgb, var(--error-accent) 28%, var(--color-primary) 22%, transparent);
+}
+
+@media (max-width: 767px) {
+  .error-status-view {
+    min-height: calc(100vh - 9.5rem);
+    justify-content: flex-start;
+    padding-top: 1.9rem;
+  }
+}
+
+:global([data-theme='light']) .error-status-action-secondary {
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, #f1f5f9);
+}
+</style>

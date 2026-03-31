@@ -1,0 +1,75 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { mount, RouterLinkStub } from '@vue/test-utils'
+
+import UnauthorizedView from '../UnauthorizedView.vue'
+import TooManyRequestsView from '../TooManyRequestsView.vue'
+import InternalServerErrorView from '../InternalServerErrorView.vue'
+import BadGatewayView from '../BadGatewayView.vue'
+import ServiceUnavailableView from '../ServiceUnavailableView.vue'
+import GatewayTimeoutView from '../GatewayTimeoutView.vue'
+
+describe('additional error views', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+  })
+
+  it('renders 401 with login-oriented recovery action', () => {
+    const wrapper = mount(UnauthorizedView, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+
+    const links = wrapper.findAllComponents(RouterLinkStub)
+
+    expect(wrapper.text()).toContain('401')
+    expect(wrapper.text()).toContain('登录状态已失效')
+    expect(links[0]?.props('to')).toBe('/login')
+  })
+
+  it('renders 429 with a safe workspace return action', () => {
+    const wrapper = mount(TooManyRequestsView, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+
+    const links = wrapper.findAllComponents(RouterLinkStub)
+
+    expect(wrapper.text()).toContain('429')
+    expect(wrapper.text()).toContain('请求过于频繁')
+    expect(links[0]?.props('to')).toBe('/dashboard')
+  })
+
+  it('renders server-side failure pages with workspace recovery actions', () => {
+    const pages = [
+      { component: InternalServerErrorView, code: '500', text: '系统内部错误' },
+      { component: BadGatewayView, code: '502', text: '上游服务响应异常' },
+      { component: ServiceUnavailableView, code: '503', text: '服务暂时不可用' },
+      { component: GatewayTimeoutView, code: '504', text: '服务响应超时' },
+    ]
+
+    for (const page of pages) {
+      const wrapper = mount(page.component, {
+        global: {
+          stubs: {
+            RouterLink: RouterLinkStub,
+          },
+        },
+      })
+
+      const links = wrapper.findAllComponents(RouterLinkStub)
+
+      expect(wrapper.text()).toContain(page.code)
+      expect(wrapper.text()).toContain(page.text)
+      expect(links[0]?.props('to')).toBe('/dashboard')
+      expect(links[1]?.props('to')).toBe('/notifications')
+    }
+  })
+})
