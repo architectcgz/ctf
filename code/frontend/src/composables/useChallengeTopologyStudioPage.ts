@@ -464,9 +464,20 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   }
 
   function addNode() {
-    const next = createEmptyNodeDraft(draft.value.nodes.length + 1)
+    const nodeCount = draft.value.nodes.length
+    const next = createEmptyNodeDraft(nodeCount + 1)
+
+    const existingKeys = new Set(draft.value.nodes.map((n) => n.key))
+    let counter = nodeCount + 1
+    while (existingKeys.has(next.key)) {
+      counter++
+      next.key = `node-${counter}`
+      next.name = `节点 ${counter}`
+    }
+
     next.network_keys = [draft.value.networks[0]?.key || 'default']
-    draft.value.nodes = [...draft.value.nodes, next]
+    draft.value.nodes.push(next)
+
     if (!draft.value.entry_node_key) {
       draft.value.entry_node_key = next.key
     }
@@ -531,13 +542,26 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   }
 
   function handleCanvasCreateNode(position: CanvasNodePosition) {
-    const next = createEmptyNodeDraft(draft.value.nodes.length + 1)
-    next.network_keys = [draft.value.networks[0]?.key || 'default']
-    draft.value.nodes = [...draft.value.nodes, next]
-    nodePositions.value = {
-      ...nodePositions.value,
-      [next.key]: clampCanvasPosition(position),
+    const nodeCount = draft.value.nodes.length
+    const next = createEmptyNodeDraft(nodeCount + 1)
+
+    // Ensure key is truly unique to avoid key collision watch overhead
+    const existingKeys = new Set(draft.value.nodes.map((n) => n.key))
+    let finalKey = next.key
+    let counter = nodeCount + 1
+    while (existingKeys.has(finalKey)) {
+      counter++
+      finalKey = `node-${counter}`
     }
+    next.key = finalKey
+    next.name = `节点 ${counter}`
+
+    next.network_keys = [draft.value.networks[0]?.key || 'default']
+
+    // Batch position and node update
+    nodePositions.value[next.key] = clampCanvasPosition(position)
+    draft.value.nodes.push(next)
+
     selectedNodeKey.value = next.key
     selectedEdgeId.value = null
     interactionMode.value = 'pan'
@@ -790,7 +814,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   })
 
   watch(
-    () => draft.value.nodes.map((node) => node.key).join('|'),
+    () => draft.value.nodes.length,
     () => {
       nodePositions.value = normalizeCanvasPositions(draft.value, nodePositions.value)
       if (

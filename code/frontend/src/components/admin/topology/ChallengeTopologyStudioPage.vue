@@ -276,7 +276,7 @@ const {
                   class="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition"
                   :class="
                     activeWorkbenchTab === tab.id
-                      ? 'bg-primary text-white shadow-md'
+                      ? 'bg-[var(--color-primary)] text-white shadow-md'
                       : 'text-text-secondary hover:bg-surface-subtle hover:text-text-primary'
                   "
                   @click="activeWorkbenchTab = (tab.id as any)"
@@ -1010,7 +1010,7 @@ const {
                     class="template-action-btn flex-1"
                     @click="handleResetTemplateEditor"
                   >
-                    新建
+                    新建空白模板
                   </button>
                   <button
                     type="button"

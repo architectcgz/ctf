@@ -121,13 +121,20 @@ function handleCanvasClick(event: MouseEvent) {
     return
   }
   const svg = svgRef.value
-  if (!svg || event.target !== svg) {
+  if (!svg) {
     return
   }
-  const rect = svg.getBoundingClientRect()
+
+  const pt = svg.createSVGPoint()
+  pt.x = event.clientX
+  pt.y = event.clientY
+
+  // Transform screen coordinates to SVG coordinates
+  const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse())
+
   emit('createNodeAt', {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top,
+    x: svgP.x,
+    y: svgP.y,
   })
 }
 
@@ -187,8 +194,8 @@ onBeforeUnmount(() => {
 
     <svg
       ref="svgRef"
-      viewBox="0 0 920 420"
-      class="h-[420px] w-full rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.96))]"
+      viewBox="0 0 920 600"
+      class="h-[600px] w-full rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.96))]"
       @click="handleCanvasClick"
       @pointermove="moveDrag"
       @pointerup="stopDrag"
@@ -205,7 +212,7 @@ onBeforeUnmount(() => {
         </pattern>
       </defs>
 
-      <rect x="0" y="0" width="920" height="420" fill="url(#topology-grid)" />
+      <rect x="0" y="0" width="920" height="600" fill="url(#topology-grid)" />
 
       <path
         v-for="edge in edgePaths"

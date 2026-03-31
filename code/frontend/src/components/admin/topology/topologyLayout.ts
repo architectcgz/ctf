@@ -28,11 +28,11 @@ export interface TopologyCanvasGraph {
 }
 
 const CANVAS_WIDTH = 920
-const CANVAS_HEIGHT = 420
-const NODE_MIN_X = 110
-const NODE_MAX_X = 810
-const NODE_MIN_Y = 90
-const NODE_MAX_Y = 330
+const CANVAS_HEIGHT = 600
+const NODE_MIN_X = 52
+const NODE_MAX_X = 868
+const NODE_MIN_Y = 62
+const NODE_MAX_Y = 540
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
