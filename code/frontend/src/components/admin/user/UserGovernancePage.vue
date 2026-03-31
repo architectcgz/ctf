@@ -3,18 +3,14 @@ import { computed, useTemplateRef } from 'vue'
 import {
   FileUp,
   RefreshCw,
-  ShieldCheck,
   UserPlus,
   UsersRound,
   UserRoundCheck,
 } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
@@ -51,61 +47,364 @@ const emit = defineEmits<{
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const activeCount = computed(() => props.list.filter((item) => item.status === 'active').length)
-const teacherCount = computed(
-  () => props.list.filter((item) => item.roles.includes('teacher')).length
-)
+const teacherCount = computed(() => props.list.filter((item) => item.roles.includes('teacher')).length)
+const importSummary = computed(() => {
+  if (!props.importResult) return '暂无导入记录'
+  return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
+})
+
+function getUserAccentColor(status: UserStatus): string {
+  switch (status) {
+    case 'active':
+      return '#2563eb'
+    case 'locked':
+      return '#f59e0b'
+    case 'banned':
+      return '#dc2626'
+    case 'inactive':
+      return '#64748b'
+    default:
+      return '#2563eb'
+  }
+}
+
+function getUserStatusStyle(status: UserStatus): Record<string, string> {
+  const accent = getUserAccentColor(status)
+  return {
+    color: accent,
+    borderColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
+    backgroundColor: `color-mix(in srgb, ${accent} 10%, white)`,
+  }
+}
+
+function getUserIdentity(user: AdminUserListItem): string {
+  if (user.roles.includes('admin') || user.roles.includes('teacher')) {
+    return user.teacher_no || '未设置'
+  }
+  if (user.roles.includes('student')) {
+    return user.student_no || '未设置'
+  }
+  return '未设置'
+}
 
 function triggerImport(): void {
   importInput.value?.click()
 }
 
-async function handleImportChange(event: Event): Promise<void> {
+function handleImportChange(event: Event): void {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
 
-  try {
-    emit('importFile', file)
-  } finally {
-    input.value = ''
-  }
+  emit('importFile', file)
+  input.value = ''
 }
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      eyebrow="User Governance"
-      title="用户治理台"
-      description="查看用户状态、筛选结果和导入回执。"
-    >
-      <div class="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
-          @click="emit('refresh')"
-        >
-          <RefreshCw class="h-4 w-4" />
-          刷新列表
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
-          @click="triggerImport"
-        >
-          <FileUp class="h-4 w-4" />
-          批量导入
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-          @click="emit('openCreateDialog')"
-        >
-          <UserPlus class="h-4 w-4" />
-          创建用户
-        </button>
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">User Governance</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            用户治理台
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            在这里筛选账号、批量导入并处理用户状态。
+          </p>
+
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+              <RefreshCw class="h-4 w-4" />
+              刷新列表
+            </button>
+            <button type="button" class="admin-btn admin-btn-ghost" @click="triggerImport">
+              <FileUp class="h-4 w-4" />
+              批量导入
+            </button>
+            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+              <UserPlus class="h-4 w-4" />
+              创建用户
+            </button>
+          </div>
+        </div>
+
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
+            当前治理概况
+          </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">用户总量</div>
+              <div class="journal-note-value">{{ total }}</div>
+              <div class="journal-note-helper">当前筛选条件下的用户总数</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">活跃账号</div>
+              <div class="journal-note-value">{{ activeCount }}</div>
+              <div class="journal-note-helper">当前页处于 active 的账号</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">教师角色</div>
+              <div class="journal-note-value">{{ teacherCount }}</div>
+              <div class="journal-note-helper">当前页教师账号数量</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">导入回执</div>
+              <div class="journal-note-value">{{ importSummary }}</div>
+              <div class="journal-note-helper">最近一次导入结果</div>
+            </div>
+          </div>
+        </article>
       </div>
-    </PageHeader>
+      <div class="journal-divider mt-6" />
+
+      <div class="admin-section-head admin-section-head-intro">
+        <div>
+          <div class="journal-note-label">Filters</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选与导入</h2>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-4">
+        <label class="space-y-2">
+          <span class="text-sm text-[var(--journal-muted)]">关键词</span>
+          <input
+            :value="keyword"
+            type="text"
+            class="admin-input"
+            placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
+            @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">学生学号</span>
+            <input
+              :value="studentNo"
+              type="text"
+              class="admin-input"
+              placeholder="按学号筛选"
+              @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
+            />
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">教师工号</span>
+            <input
+              :value="teacherNo"
+              type="text"
+              class="admin-input"
+              placeholder="按工号筛选"
+              @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
+            />
+          </label>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">角色</span>
+            <select
+              :value="roleFilter"
+              class="admin-input"
+              @change="emit('updateRoleFilter', ($event.target as HTMLSelectElement).value as UserFilterRole)"
+            >
+              <option value="all">全部角色</option>
+              <option value="student">student</option>
+              <option value="teacher">teacher</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">状态</span>
+            <select
+              :value="statusFilter"
+              class="admin-input"
+              @change="
+                emit(
+                  'updateStatusFilter',
+                  ($event.target as HTMLSelectElement).value as UserFilterStatus
+                )
+              "
+            >
+              <option value="all">全部状态</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+              <option value="locked">locked</option>
+              <option value="banned">banned</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="journal-divider mt-6" />
+
+      <section class="space-y-4">
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">Users</div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
+          </div>
+        </div>
+
+        <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+          <AppLoading>正在同步用户列表...</AppLoading>
+        </div>
+
+        <AppEmpty
+          v-else-if="list.length === 0"
+          title="暂无用户"
+          description="当前筛选条件下没有匹配用户。"
+          icon="UsersRound"
+        >
+          <template #action>
+            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+              创建第一个用户
+            </button>
+          </template>
+        </AppEmpty>
+
+        <template v-else>
+          <div class="user-table-shell">
+            <table class="user-table min-w-full text-sm">
+              <thead class="user-table-head">
+                <tr>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">用户</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">姓名</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">邮箱</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">角色</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">状态</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">班级</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">学号 / 工号</th>
+                  <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">创建时间</th>
+                  <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">操作</th>
+                </tr>
+              </thead>
+              <tbody class="user-table-body">
+                <tr v-for="user in list" :key="user.id" class="user-table-row">
+                  <td class="px-4 py-3 align-top">
+                    <div class="min-w-0">
+                      <span class="text-sm text-[var(--journal-muted)]">@{{ user.username }}</span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 align-top text-[var(--journal-ink)]">
+                    {{ user.name || user.username }}
+                  </td>
+                  <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                    {{ user.email || '未填写邮箱' }}
+                  </td>
+                  <td class="px-4 py-3 align-top">
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="role in user.roles"
+                        :key="`${user.id}-${role}`"
+                        class="admin-role-chip"
+                      >
+                        <UserRoundCheck class="h-3.5 w-3.5" />
+                        {{ role }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 align-top">
+                    <span class="admin-status-chip" :style="getUserStatusStyle(user.status)">
+                      {{ user.status }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                    {{ user.class_name || '未分配班级' }}
+                  </td>
+                  <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                    <div class="text-sm">
+                      {{ getUserIdentity(user) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                    {{ new Date(user.created_at).toLocaleString('zh-CN') }}
+                  </td>
+                  <td class="px-4 py-3 align-top">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
+                        @click="emit('openEditDialog', user)"
+                      >
+                        编辑
+                      </button>
+                      <button
+                        type="button"
+                        class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
+                        @click="emit('deleteUser', user.id)"
+                      >
+                        删除
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="admin-pagination">
+            <span>共 {{ total }} 个用户</span>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="page <= 1"
+                @click="emit('changePage', page - 1)"
+              >
+                上一页
+              </button>
+              <span>{{ page }} / {{ totalPages }}</span>
+              <button
+                type="button"
+                class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="page >= totalPages"
+                @click="emit('changePage', page + 1)"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        </template>
+      </section>
+
+      <div class="journal-divider mt-6" />
+
+      <section class="space-y-4">
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">Import Receipt</div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入回执</h2>
+          </div>
+        </div>
+
+        <div class="journal-note">
+          <div class="journal-note-helper">
+            CSV 列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
+          </div>
+        </div>
+
+        <div v-if="importResult" class="admin-receipt">
+          <p>
+            创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败 {{ importResult.failed }}
+          </p>
+          <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
+            <li v-for="item in importResult.errors.slice(0, 5)" :key="`${item.row}-${item.message}`">
+              第 {{ item.row }} 行：{{ item.message }}
+            </li>
+          </ul>
+        </div>
+        <div v-else class="admin-empty">
+          还没有导入记录。
+        </div>
+      </section>
+
+    </section>
 
     <input
       ref="importInput"
@@ -114,321 +413,292 @@ async function handleImportChange(event: Event): Promise<void> {
       class="hidden"
       @change="handleImportChange"
     />
-
-    <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <div
-        class="rounded-[30px] border border-[var(--color-success)]/20 bg-[linear-gradient(145deg,rgba(63,185,80,0.12),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
-      >
-        <div
-          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-success)]/75"
-        >
-          <span>Governance Deck</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">实时列表</span>
-        </div>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前治理视角</h2>
-        <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
-          先收敛筛选条件，再决定是处理单个账号还是走批量导入，并及时观察当前治理状态。
-        </p>
-
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">
-              当前页用户
-            </div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前筛选结果内的本页样本数。</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">活跃账号</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ activeCount }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前页处于 active 状态的用户数。</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-success)]/60">教师角色</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ teacherCount }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">用于快速判断教学侧用户分布。</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard
-          variant="metric"
-          accent="primary"
-          eyebrow="用户总量"
-          :title="String(total)"
-          subtitle="当前筛选条件下的用户总数。"
-        >
-          <template #header>
-            <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
-            >
-              <UsersRound class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard
-          variant="metric"
-          accent="primary"
-          eyebrow="导入回执"
-          :title="importResult ? `${importResult.created}/${importResult.updated}` : '--'"
-          subtitle="创建数 / 更新数。失败行会在左下方导入回执内展示。"
-        >
-          <template #header>
-            <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
-            >
-              <FileUp class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard
-          variant="metric"
-          accent="success"
-          eyebrow="治理状态"
-          title="稳定"
-          subtitle="创建、编辑、删除与导入都已经切到真实接口。"
-        >
-          <template #header>
-            <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]"
-            >
-              <ShieldCheck class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-      </div>
-    </section>
-
-    <section class="grid gap-6 xl:grid-cols-[0.94fr_1.06fr]">
-      <div class="space-y-6">
-        <SectionCard title="筛选与导入" subtitle="先收敛治理视角，再做单个用户或批量动作。">
-          <div class="grid gap-4">
-            <label class="space-y-2">
-              <span class="text-sm text-[var(--color-text-secondary)]">关键词</span>
-              <input
-                :value="keyword"
-                type="text"
-                class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
-                @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-              />
-            </label>
-
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--color-text-secondary)]">学生学号</span>
-                <input
-                  :value="studentNo"
-                  type="text"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  placeholder="按学号精确筛选"
-                  @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-                />
-              </label>
-
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--color-text-secondary)]">教师工号</span>
-                <input
-                  :value="teacherNo"
-                  type="text"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  placeholder="按工号精确筛选"
-                  @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
-                />
-              </label>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--color-text-secondary)]">角色</span>
-                <select
-                  :value="roleFilter"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  @change="
-                    emit(
-                      'updateRoleFilter',
-                      ($event.target as HTMLSelectElement).value as UserFilterRole
-                    )
-                  "
-                >
-                  <option value="all">全部角色</option>
-                  <option value="student">student</option>
-                  <option value="teacher">teacher</option>
-                  <option value="admin">admin</option>
-                </select>
-              </label>
-
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--color-text-secondary)]">状态</span>
-                <select
-                  :value="statusFilter"
-                  class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                  @change="
-                    emit(
-                      'updateStatusFilter',
-                      ($event.target as HTMLSelectElement).value as UserFilterStatus
-                    )
-                  "
-                >
-                  <option value="all">全部状态</option>
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                  <option value="locked">locked</option>
-                  <option value="banned">banned</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="导入回执" subtitle="查看最近一次 CSV 导入结果。">
-          <div class="rounded-2xl border border-border bg-surface-alt/60 p-5">
-            <p class="text-sm font-medium text-[var(--color-text-primary)]">CSV 格式</p>
-            <p class="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              按列顺序上传：`username,password,email,class_name,role,status,student_no,teacher_no,name`。首行可带表头；已存在用户名会执行更新。
-            </p>
-          </div>
-
-          <div
-            v-if="importResult"
-            class="mt-4 rounded-2xl border border-border bg-surface px-4 py-4 text-sm text-[var(--color-text-secondary)]"
-          >
-            <p>
-              创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
-              {{ importResult.failed }}
-            </p>
-            <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
-              <li
-                v-for="item in importResult.errors.slice(0, 5)"
-                :key="`${item.row}-${item.message}`"
-              >
-                第 {{ item.row }} 行：{{ item.message }}
-              </li>
-            </ul>
-          </div>
-          <div
-            v-else
-            class="mt-4 rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-text-secondary"
-          >
-            还没有导入记录，执行一次 CSV 导入后会在这里看到回执。
-          </div>
-        </SectionCard>
-      </div>
-
-      <SectionCard
-        title="用户编排"
-        subtitle="当前页保留创建、编辑、删除和分页；布局改成治理视角下的用户卡片清单。"
-      >
-        <div v-if="loading && list.length === 0" class="flex justify-center py-10">
-          <AppLoading>正在同步用户列表...</AppLoading>
-        </div>
-
-        <AppEmpty
-          v-else-if="list.length === 0"
-          title="暂无用户"
-          description="当前筛选条件下没有匹配用户。你可以调整筛选，或者直接创建新用户。"
-          icon="UsersRound"
-        >
-          <template #action>
-            <button
-              type="button"
-              class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-              @click="emit('openCreateDialog')"
-            >
-              创建第一个用户
-            </button>
-          </template>
-        </AppEmpty>
-
-        <div v-else class="space-y-4">
-          <AppCard v-for="user in list" :key="user.id" variant="action" accent="neutral">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <p class="font-semibold text-[var(--color-text-primary)]">{{ user.name || user.username }}</p>
-                  <span
-                    class="rounded-full bg-surface-alt px-3 py-1 text-xs font-semibold text-[var(--color-text-primary)]"
-                    >{{ user.status }}</span
-                  >
-                </div>
-                <p class="mt-1 text-sm text-[var(--color-text-muted)]">@{{ user.username }}</p>
-                <p class="mt-2 text-sm text-[var(--color-text-muted)]">{{ user.email || '未填写邮箱' }}</p>
-                <div class="mt-3 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
-                  <span class="rounded-full border border-border px-3 py-1">
-                    学号：{{ user.student_no || '未设置' }}
-                  </span>
-                  <span class="rounded-full border border-border px-3 py-1">
-                    工号：{{ user.teacher_no || '未设置' }}
-                  </span>
-                </div>
-              </div>
-              <div class="text-right text-sm text-[var(--color-text-muted)]">
-                <div>{{ user.class_name || '未分配班级' }}</div>
-                <div class="mt-1">{{ new Date(user.created_at).toLocaleString('zh-CN') }}</div>
-              </div>
-            </div>
-
-            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="role in user.roles"
-                  :key="`${user.id}-${role}`"
-                  class="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
-                >
-                  <UserRoundCheck class="mr-1 inline h-3.5 w-3.5" />
-                  {{ role }}
-                </span>
-              </div>
-              <div class="flex gap-2">
-                <button
-                  type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
-                  @click="emit('openEditDialog', user)"
-                >
-                  编辑
-                </button>
-                <button
-                  type="button"
-                  class="rounded-xl border border-[var(--color-danger)]/30 px-3 py-1.5 text-sm text-[var(--color-danger)] transition hover:bg-[var(--color-danger)]/10"
-                  @click="emit('deleteUser', user.id)"
-                >
-                  删除
-                </button>
-              </div>
-            </div>
-          </AppCard>
-
-          <AppCard variant="panel" accent="neutral">
-            <div
-              class="flex flex-col gap-3 text-sm text-[var(--color-text-muted)] sm:flex-row sm:items-center sm:justify-between"
-            >
-              <span>共 {{ total }} 个用户</span>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="page <= 1"
-                  @click="emit('changePage', page - 1)"
-                >
-                  上一页
-                </button>
-                <span>{{ page }} / {{ totalPages }}</span>
-                <button
-                  type="button"
-                  class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="page >= totalPages"
-                  @click="emit('changePage', page + 1)"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
-          </AppCard>
-        </div>
-      </SectionCard>
-    </section>
   </div>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.journal-divider,
+.journal-divider {
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-section-head-intro {
+  position: relative;
+  padding: 1rem 1.1rem 1rem 1.35rem;
+  border: 1px dashed rgba(148, 163, 184, 0.42);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0) 72%);
+}
+
+.admin-section-head-intro::before {
+  content: '';
+  position: absolute;
+  left: 0.82rem;
+  top: 0.95rem;
+  bottom: 0.95rem;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.92), rgba(59, 130, 246, 0.2));
+}
+
+.admin-section-head-intro .journal-note-label {
+  color: var(--journal-accent);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.admin-btn-compact {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.user-action-btn {
+  min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.8rem;
+  font-size: 0.8125rem;
+}
+
+.admin-btn-primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--journal-ink);
+}
+
+.admin-btn-ghost:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  color: var(--journal-accent);
+}
+
+.admin-btn-danger {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(254, 242, 242, 0.9);
+  color: #dc2626;
+}
+
+.admin-input {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-ink);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.admin-input:focus {
+  border-color: rgba(37, 99, 235, 0.42);
+}
+
+.admin-receipt {
+  border-radius: 16px;
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-ink);
+}
+
+.admin-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border-radius: 16px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+.user-table-shell {
+  overflow: hidden;
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: var(--journal-surface);
+}
+
+.user-table {
+  border-collapse: collapse;
+}
+
+.user-table-head {
+  background: var(--journal-surface-subtle);
+}
+
+.user-table-body {
+  background: var(--journal-surface);
+}
+
+.user-table-row {
+  border-top: 1px solid var(--journal-border);
+  transition: background 180ms ease;
+}
+
+.user-table-row:hover,
+.user-table-row:focus-within {
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.admin-status-chip,
+.admin-inline-chip,
+.admin-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.34rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.admin-status-chip {
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--journal-accent);
+}
+
+.admin-inline-chip {
+  border: 1px solid var(--journal-border);
+  background: rgba(248, 250, 252, 0.92);
+  color: var(--journal-muted);
+}
+
+.admin-role-chip {
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--journal-accent);
+}
+
+.admin-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  padding: 1rem 1.1rem 1.05rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+
+:global([data-theme='dark']) .admin-section-head-intro {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.14), rgba(15, 23, 42, 0) 72%);
+}
+
+@media (max-width: 767px) {
+  .journal-hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .user-table-shell {
+    overflow-x: auto;
+  }
+}
+</style>
