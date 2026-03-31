@@ -97,6 +97,10 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
+    expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.classes()).toContain('journal-shell')
+    expect(wrapper.classes()).toContain('journal-hero')
+    expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('提示系统')
   })

@@ -39,6 +39,9 @@ describe('InstanceList', () => {
     await new Promise((resolve) => setTimeout(resolve, 50))
 
     expect(wrapper.exists()).toBe(true)
+    expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.classes()).toContain('journal-hero')
+    expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('我的实例')
     expect(wrapper.text()).toContain('SQL 注入基础')
   })

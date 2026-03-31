@@ -1,6 +1,5 @@
 <template>
-  <div class="journal-shell">
-    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <section class="journal-shell journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8">
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Challenge Authoring</div>
@@ -159,7 +158,6 @@
         </div>
       </template>
       </div>
-    </section>
 
     <ElDialog
       v-model="dialogVisible"
@@ -386,7 +384,7 @@
         </button>
       </template>
     </ElDialog>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">

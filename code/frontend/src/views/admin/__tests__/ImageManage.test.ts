@@ -44,6 +44,10 @@ describe('ImageManage', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    expect(wrapper.exists()).toBe(true)
+    expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.classes()).toContain('journal-shell')
+    expect(wrapper.classes()).toContain('journal-hero')
+    expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.text()).toContain('镜像管理')
   })
 })

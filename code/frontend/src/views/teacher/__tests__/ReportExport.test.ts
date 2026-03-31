@@ -142,6 +142,11 @@ describe('ReportExport', () => {
 
     await flushPromises()
 
+    expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.classes()).toContain('report-shell')
+    expect(wrapper.classes()).toContain('report-hero')
+    expect(wrapper.classes()).toContain('min-h-full')
+
     const classInput = wrapper.find('input[type="text"]')
     expect((classInput.element as HTMLInputElement).value).toBe('Class A')
 
