@@ -369,6 +369,30 @@ export interface NotificationItem {
   created_at: ISODateTime
 }
 
+export type NotificationAudienceRule =
+  | { type: 'all' }
+  | { type: 'role'; values: UserRole[] }
+  | { type: 'class'; values: string[] }
+  | { type: 'user'; values: string[] }
+
+export interface NotificationAudienceRules {
+  mode: 'union'
+  rules: NotificationAudienceRule[]
+}
+
+export interface AdminNotificationPublishPayload {
+  type: NotificationType
+  title: string
+  content: string
+  link?: string
+  audience_rules: NotificationAudienceRules
+}
+
+export interface AdminNotificationPublishResult {
+  batch_id: ID
+  recipient_count: number
+}
+
 export interface TeacherClassItem {
   name: string
   student_count?: number

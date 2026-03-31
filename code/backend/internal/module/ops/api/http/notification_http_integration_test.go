@@ -198,6 +198,101 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	}
 }
 
+func TestHTTP_AdminNotificationPublishRequiresAdminAndValidPayload(t *testing.T) {
+	env := newNotificationIntegrationEnv(t)
+
+	admin := createNotificationUser(t, env.db, "admin_notify", model.RoleAdmin)
+	student := createNotificationUser(t, env.db, "student_notify", model.RoleStudent)
+	adminTokens, err := env.tokenService.IssueTokens(admin.ID, admin.Username, admin.Role)
+	if err != nil {
+		t.Fatalf("issue admin tokens: %v", err)
+	}
+	studentTokens, err := env.tokenService.IssueTokens(student.ID, student.Username, student.Role)
+	if err != nil {
+		t.Fatalf("issue student tokens: %v", err)
+	}
+
+	publishPayload := map[string]any{
+		"type":    model.NotificationTypeSystem,
+		"title":   "系统公告",
+		"content": "admin publish integration test",
+		"audience_rules": map[string]any{
+			"mode": "union",
+			"rules": []map[string]any{
+				{"type": "all"},
+			},
+		},
+	}
+
+	adminResp := performNotificationJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/admin/notifications",
+		publishPayload,
+		map[string]string{"Authorization": "Bearer " + adminTokens.AccessToken},
+	)
+	if adminResp.Code != http.StatusOK {
+		t.Fatalf("unexpected publish status: %d body=%s", adminResp.Code, adminResp.Body.String())
+	}
+	adminBody := decodeNotificationEnvelope(t, adminResp)
+	result := decodeNotificationJSON[dto.AdminNotificationPublishResp](t, adminBody.Data)
+	if result.BatchID <= 0 || result.RecipientCount < 2 {
+		t.Fatalf("unexpected publish result: %+v", result)
+	}
+
+	forbiddenResp := performNotificationJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/admin/notifications",
+		publishPayload,
+		map[string]string{"Authorization": "Bearer " + studentTokens.AccessToken},
+	)
+	if forbiddenResp.Code != http.StatusForbidden {
+		t.Fatalf("expected student forbidden, got %d body=%s", forbiddenResp.Code, forbiddenResp.Body.String())
+	}
+
+	invalidResp := performNotificationJSONRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		"/api/v1/admin/notifications",
+		map[string]any{
+			"type":    model.NotificationTypeSystem,
+			"title":   "系统公告",
+			"content": "invalid",
+			"audience_rules": map[string]any{
+				"mode": "union",
+				"rules": []map[string]any{
+					{"type": "role"},
+				},
+			},
+		},
+		map[string]string{"Authorization": "Bearer " + adminTokens.AccessToken},
+	)
+	if invalidResp.Code != http.StatusBadRequest {
+		t.Fatalf("expected validation failed, got %d body=%s", invalidResp.Code, invalidResp.Body.String())
+	}
+
+	listResp := performNotificationJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/notifications?page=1&page_size=10",
+		nil,
+		map[string]string{"Authorization": "Bearer " + studentTokens.AccessToken},
+	)
+	if listResp.Code != http.StatusOK {
+		t.Fatalf("unexpected list status: %d body=%s", listResp.Code, listResp.Body.String())
+	}
+	listBody := decodeNotificationEnvelope(t, listResp)
+	listData := decodeNotificationJSON[notificationTestPage](t, listBody.Data)
+	if listData.Total < 1 || len(listData.List) < 1 {
+		t.Fatalf("expected student to receive published notification, got %+v", listData)
+	}
+}
+
 func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	t.Helper()
 
@@ -220,7 +315,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &model.Notification{}); err != nil {
+	if err := db.AutoMigrate(&model.Role{}, &model.User{}, &model.UserRole{}, &model.NotificationBatch{}, &model.Notification{}); err != nil {
 		t.Fatalf("auto migrate schema: %v", err)
 	}
 	seedNotificationRoles(t, db)
@@ -270,6 +365,9 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	protected.POST("/auth/ws-ticket", authHandler.IssueWSTicket)
 	protected.GET("/notifications", notificationHandler.ListNotifications)
 	protected.PUT("/notifications/:id/read", middleware.ParseInt64Param("id"), notificationHandler.MarkAsRead)
+	adminOnly := protected.Group("/admin")
+	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
+	adminOnly.POST("/notifications", notificationHandler.PublishAdminNotification)
 	router.GET("/ws/notifications", notificationHandler.ServeWS)
 
 	return &notificationIntegrationEnv{

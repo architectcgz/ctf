@@ -84,6 +84,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.PortAllocation{},
 	&model.UserScore{},
 	&model.AuditLog{},
+	&model.NotificationBatch{},
 	&model.Notification{},
 	&model.SkillProfile{},
 	&model.Contest{},

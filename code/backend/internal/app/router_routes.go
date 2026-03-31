@@ -243,6 +243,13 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	adminOnly.GET("/audit-logs", deps.ops.AuditHandler.ListAuditLogs)
 	adminOnly.GET("/dashboard", deps.ops.DashboardHandler.GetDashboard)
 	adminOnly.GET("/cheat-detection", deps.ops.RiskHandler.GetCheatDetection)
+	adminOnly.POST("/notifications",
+		audit(middleware.AuditOptions{
+			Action:       model.AuditActionAdminOp,
+			ResourceType: "notification_batch",
+		}),
+		deps.ops.NotificationHandler.PublishAdminNotification,
+	)
 
 	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",

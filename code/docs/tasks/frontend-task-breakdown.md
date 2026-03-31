@@ -5,15 +5,15 @@
 - 范围：`/home/azhi/workspace/projects/ctf/code/frontend`
 - 目标：记录前端任务拆分、当前完成状态、剩余待办与后续执行顺序
 - 流水线：`leader -> requirements-analyst（按需） -> frontend-engineer -> code-reviewer -> test-engineer`
-- 最后更新：2026-03-07
+- 最后更新：2026-03-31
 
 ## 当前判断
 
 - 前端主线能力已完成当前主线后端的联调准备：鉴权守卫、学员端、管理端、教师端、通知链路和竞赛详情关键交互均已接上真实接口。
 - 教师端相关后端接口已补齐并合入主线，不再阻塞 `TeacherDashboard` / `ClassManagement`。
-- 通知能力已完成前后端闭环：
-  - 后端：`POST /auth/ws-ticket`、`GET /notifications`、`PUT /notifications/:id/read`、`GET /ws/notifications`
-  - 前端：通知下拉、通知中心、WebSocket 实时同步
+- 通知能力已完成前后端闭环，并补齐管理员发布能力：
+  - 后端：`POST /auth/ws-ticket`、`GET /notifications`、`PUT /notifications/:id/read`、`GET /ws/notifications`、`POST /admin/notifications`
+  - 前端：通知下拉、通知中心、WebSocket 实时同步、管理员在 `/notifications` 页内发布通知
 - 管理端 `UserManage`、`CheatDetection` 已从降级态切回真实接口页；报告导出也已补状态查询与轮询。
 - 当前如果继续联调，重点已经从“补接口缺口”转向“按业务流实际验证”。
 
@@ -27,6 +27,7 @@
 | F3 教师侧报告导出       | ✅ 完成 | 完成教师端报告导出                    | `f666799` |
 | F4 教师侧班级与教学概览 | ✅ 完成 | 完成教学概览、班级管理                | `766f29e` |
 | F6 通知实时链路         | ✅ 完成 | 完成 ws-ticket + WebSocket 通知同步   | `6fccfb8` |
+| F8 管理员通知发布       | ✅ 完成 | 在通知中心完成发布抽屉与目标范围投递 | 当前工作树 |
 | F7 联调缺口补齐         | ✅ 完成 | 补齐用户管理、作弊检测、报告状态查询  | `df2a7ab` |
 
 ## 已完成质量闭环
@@ -104,18 +105,21 @@
    - `GET /notifications`
    - `PUT /notifications/:id/read`
    - `GET /ws/notifications`
+   - `POST /admin/notifications`
 
 ## 当前风险与注意事项
 
 1. `ContestManage` 仍有一个显式边界：后端未提供删除竞赛接口，所以前端继续隐藏删除能力。
 2. 公开竞赛 API 的历史枚举差异已经在客户端做了归一化；如果后续继续扩展竞赛域，建议抽成共享 mapper，避免多处维护。
-3. 本轮“联调缺口补齐”已单独补 review 文档，后续继续扩展时沿用相同留档方式。
+3. 管理员通知发布当前前端只开放单一目标范围选择；后端契约已支持 union 规则模型，后续若要做混合投递，需要再补交互设计。
+4. 本轮“联调缺口补齐”已单独补 review 文档，后续继续扩展时沿用相同留档方式。
 
 ## 建议执行顺序
 
 1. 当前前端任务拆分中的联调缺口已经收口，可以直接按业务流做后续联调。
-2. 若后续继续做公开竞赛流程扩展，优先统一 `contest` 共享契约。
-3. 后续新增批次继续保持 `code-reviewer -> test-engineer` 闭环。
+2. 若通知中心后续继续扩展，优先补“发布历史 / 批次详情 / 混合目标范围”而不是重写收件箱页。
+3. 若后续继续做公开竞赛流程扩展，优先统一 `contest` 共享契约。
+4. 后续新增批次继续保持 `code-reviewer -> test-engineer` 闭环。
 
 ## 交付物
 
@@ -124,3 +128,4 @@
 - 前端验证命令：
   - `npm run test:run`
   - `npm run typecheck`
+  - `npm run build`

@@ -20,6 +20,7 @@ type notificationAuthContextKey struct{}
 
 type notificationCommandService interface {
 	MarkAsRead(ctx context.Context, userID, notificationID int64) error
+	PublishAdminNotification(ctx context.Context, actorUserID int64, req *dto.AdminNotificationPublishReq) (*dto.AdminNotificationPublishResp, error)
 }
 
 type notificationQueryService interface {
@@ -72,6 +73,22 @@ func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+func (h *NotificationHandler) PublishAdminNotification(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	var req dto.AdminNotificationPublishReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+
+	result, err := h.commands.PublishAdminNotification(c.Request.Context(), authUser.UserID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, result)
 }
 
 func (h *NotificationHandler) ServeWS(c *gin.Context) {
