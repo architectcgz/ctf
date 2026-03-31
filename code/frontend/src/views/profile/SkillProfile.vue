@@ -33,8 +33,10 @@ const difficultyColorMap: Record<string, string> = {
 </script>
 
 <template>
-  <div class="journal-shell space-y-6">
-    <section v-if="loading" class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div v-if="loading" class="space-y-6">
       <div class="space-y-6">
         <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(300px,0.94fr)]">
@@ -44,15 +46,15 @@ const difficultyColorMap: Record<string, string> = {
         <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
         <div class="h-56 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
       </div>
-    </section>
+    </div>
 
-    <section v-else-if="error" class="journal-hero rounded-[30px] border px-6 py-8 text-center">
+    <div v-else-if="error" class="py-8 text-center">
       <TriangleAlert class="mx-auto h-10 w-10 text-[var(--color-danger)]" />
       <p class="mt-3 text-sm text-[var(--color-danger)]">{{ error }}</p>
       <button type="button" class="journal-btn journal-btn--primary mt-4" @click="loadCurrentData">
         重试
       </button>
-    </section>
+    </div>
 
     <!-- 空状态 -->
     <AppEmpty
@@ -62,7 +64,7 @@ const difficultyColorMap: Record<string, string> = {
       icon="Radar"
     />
 
-    <section v-else class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+    <div v-else class="flex flex-1 flex-col">
       <div>
         <div class="journal-eyebrow">Skill Profile</div>
         <h2
@@ -144,23 +146,23 @@ const difficultyColorMap: Record<string, string> = {
               </div>
 
               <div class="skill-weak-wrap">
-              <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
-              <div class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]">
-                <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
-                薄弱项提示
-              </div>
-              <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
-                <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
-                  <div class="journal-note-label">建议加强</div>
-                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">{{ dim }}</div>
+                <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
+                <div class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]">
+                  <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
+                  薄弱项提示
                 </div>
-              </div>
-              <div v-else class="skill-weak-list mt-5">
-                <div class="skill-weak-item">
-                  <div class="journal-note-label">当前状态</div>
-                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">暂时没有明显短板</div>
+                <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
+                  <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
+                    <div class="journal-note-label">建议加强</div>
+                    <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">{{ dim }}</div>
+                  </div>
                 </div>
-              </div>
+                <div v-else class="skill-weak-list mt-5">
+                  <div class="skill-weak-item">
+                    <div class="journal-note-label">当前状态</div>
+                    <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">暂时没有明显短板</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -217,8 +219,8 @@ const difficultyColorMap: Record<string, string> = {
           </div>
         </section>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 </template>
 
 <style scoped>

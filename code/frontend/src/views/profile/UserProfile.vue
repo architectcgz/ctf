@@ -107,7 +107,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="journal-shell space-y-6">
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+  >
     <div
       v-if="error"
       class="rounded-[20px] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/8 px-5 py-4 text-sm text-[var(--color-warning)]"
@@ -115,7 +117,7 @@ onUnmounted(() => {
       {{ error }}
     </div>
 
-    <section v-if="loading" class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+    <div v-if="loading" class="space-y-6">
       <div class="space-y-6">
         <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
@@ -123,9 +125,9 @@ onUnmounted(() => {
           <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section v-else class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+    <div v-else class="flex flex-1 flex-col">
       <div class="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_minmax(300px,0.96fr)] xl:items-start">
         <div>
           <div class="journal-eyebrow">My Account</div>
@@ -319,8 +321,8 @@ onUnmounted(() => {
           </section>
         </div>
       </div>
-    </section>
-  </div>
+    </div>
+  </section>
 </template>
 
 <style scoped>

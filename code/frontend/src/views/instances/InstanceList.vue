@@ -25,147 +25,148 @@ const {
 </script>
 
 <template>
-  <div class="journal-shell space-y-6">
-    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div>
-          <div class="journal-eyebrow">Instance Console</div>
-          <h1
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
-            我的实例
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            管理正在运行的靶机实例，查看剩余时间并执行延时或销毁。
-          </p>
-        </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="text-sm font-medium text-[var(--journal-ink)]">当前运行概况</div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">运行中</div>
-              <div class="journal-note-value">{{ runningCount }}</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">实例上限</div>
-              <div class="journal-note-value">{{ maxInstances }}</div>
-            </div>
-          </div>
-        </article>
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div>
+        <div class="journal-eyebrow">Instance Console</div>
+        <h1
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+        >
+          我的实例
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          管理正在运行的靶机实例，查看剩余时间并执行延时或销毁。
+        </p>
       </div>
 
-      <div class="instance-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <div v-if="loading" class="flex justify-center py-12">
-          <div
-            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-          />
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="text-sm font-medium text-[var(--journal-ink)]">当前运行概况</div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="journal-note">
+            <div class="journal-note-label">运行中</div>
+            <div class="journal-note-value">{{ runningCount }}</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">实例上限</div>
+            <div class="journal-note-value">{{ maxInstances }}</div>
+          </div>
         </div>
+      </article>
+    </div>
 
+    <div class="instance-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
+      <div v-if="loading" class="flex justify-center py-12">
         <div
-          v-else-if="instances.length === 0"
-          class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        />
+      </div>
+
+      <div
+        v-else-if="instances.length === 0"
+        class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
+      >
+        <div class="text-sm text-[var(--journal-muted)]">暂无运行中的实例</div>
+        <router-link
+          to="/challenges"
+          class="mt-3 inline-block text-sm text-[var(--journal-accent)] hover:underline"
         >
-          <div class="text-sm text-[var(--journal-muted)]">暂无运行中的实例</div>
-          <router-link to="/challenges" class="mt-3 inline-block text-sm text-[var(--journal-accent)] hover:underline">
-            前往靶场列表创建实例
-          </router-link>
-        </div>
+          前往靶场列表创建实例
+        </router-link>
+      </div>
 
-        <div v-else class="instance-list">
-          <article v-for="instance in instances" :key="instance.id" class="instance-item">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-              <div class="min-w-0">
-                <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-                  {{ instance.challenge_title }}
-                </h3>
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <span
-                    class="rounded-full bg-[var(--journal-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--journal-accent)]"
-                  >
-                    {{ instance.category }}
-                  </span>
-                  <span
-                    class="rounded-full bg-[var(--color-success)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]"
-                  >
-                    {{ instance.difficulty }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="instance-status text-sm">
-                <span :class="getInstanceStatusClass(instance.status)">●</span>
-                <span class="text-[var(--journal-muted)]">{{
-                  getInstanceStatusLabel(instance.status)
-                }}</span>
-              </div>
-            </div>
-
-            <div v-if="instance.status === 'running'" class="instance-meta mt-5">
-              <div class="instance-meta__row">
-                <span class="instance-meta__label">地址</span>
-                <div class="flex flex-wrap items-center justify-end gap-2">
-                  <span class="font-mono text-sm text-[var(--journal-ink)]">
-                    {{
-                      instance.access_url ||
-                      (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                    }}
-                  </span>
-                  <button
-                    class="instance-action-link"
-                    @click="
-                      copyAddress(
-                        instance.access_url ||
-                          (instance.ssh_info
-                            ? `${instance.ssh_info.host}:${instance.ssh_info.port}`
-                            : '')
-                      )
-                    "
-                  >
-                    复制
-                  </button>
-                  <button
-                    v-if="instance.access_url"
-                    class="instance-action-link"
-                    @click="openTarget(instance.id)"
-                  >
-                    打开目标
-                  </button>
-                </div>
-              </div>
-
-              <div class="instance-meta__row">
-                <span class="instance-meta__label">剩余</span>
+      <div v-else class="instance-list">
+        <article v-for="instance in instances" :key="instance.id" class="instance-item">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="min-w-0">
+              <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
+                {{ instance.challenge_title }}
+              </h3>
+              <div class="mt-3 flex flex-wrap gap-2">
                 <span
-                  class="font-mono text-sm"
-                  :class="
-                    instance.remaining < WARNING_THRESHOLD_SECONDS
-                      ? 'font-semibold text-[var(--color-warning)]'
-                      : 'text-[var(--journal-ink)]'
-                  "
+                  class="rounded-full bg-[var(--journal-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--journal-accent)]"
                 >
-                  {{ formatRemainingTime(instance.remaining) }}
+                  {{ instance.category }}
+                </span>
+                <span
+                  class="rounded-full bg-[var(--color-success)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]"
+                >
+                  {{ instance.difficulty }}
                 </span>
               </div>
             </div>
 
-            <div class="mt-5 flex flex-wrap gap-3">
-              <button
-                v-if="instance.status === 'running'"
-                :disabled="instance.remaining_extends <= 0"
-                class="journal-btn journal-btn--primary"
-                @click="extendTime(instance.id)"
-              >
-                延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
-              </button>
-              <button class="journal-btn journal-btn--danger" @click="destroyInstance(instance.id)">
-                销毁
-              </button>
+            <div class="instance-status text-sm">
+              <span :class="getInstanceStatusClass(instance.status)">●</span>
+              <span class="text-[var(--journal-muted)]">{{
+                getInstanceStatusLabel(instance.status)
+              }}</span>
             </div>
-          </article>
-        </div>
+          </div>
+
+          <div v-if="instance.status === 'running'" class="instance-meta mt-5">
+            <div class="instance-meta__row">
+              <span class="instance-meta__label">地址</span>
+              <div class="flex flex-wrap items-center justify-end gap-2">
+                <span class="font-mono text-sm text-[var(--journal-ink)]">
+                  {{
+                    instance.access_url ||
+                    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                  }}
+                </span>
+                <button
+                  class="instance-action-link"
+                  @click="
+                    copyAddress(
+                      instance.access_url ||
+                        (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                    )
+                  "
+                >
+                  复制
+                </button>
+                <button
+                  v-if="instance.access_url"
+                  class="instance-action-link"
+                  @click="openTarget(instance.id)"
+                >
+                  打开目标
+                </button>
+              </div>
+            </div>
+
+            <div class="instance-meta__row">
+              <span class="instance-meta__label">剩余</span>
+              <span
+                class="font-mono text-sm"
+                :class="
+                  instance.remaining < WARNING_THRESHOLD_SECONDS
+                    ? 'font-semibold text-[var(--color-warning)]'
+                    : 'text-[var(--journal-ink)]'
+                "
+              >
+                {{ formatRemainingTime(instance.remaining) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button
+              v-if="instance.status === 'running'"
+              :disabled="instance.remaining_extends <= 0"
+              class="journal-btn journal-btn--primary"
+              @click="extendTime(instance.id)"
+            >
+              延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
+            </button>
+            <button class="journal-btn journal-btn--danger" @click="destroyInstance(instance.id)">
+              销毁
+            </button>
+          </div>
+        </article>
       </div>
-    </section>
+    </div>
 
     <div
       v-if="showWarning"
@@ -185,7 +186,7 @@ const {
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>

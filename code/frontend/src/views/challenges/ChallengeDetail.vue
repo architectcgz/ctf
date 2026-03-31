@@ -1,11 +1,13 @@
 <template>
-  <div class="journal-shell mx-auto max-w-7xl space-y-6">
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border p-6 md:p-8"
+  >
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"></div>
     </div>
 
     <div v-else-if="challenge" class="space-y-6">
-      <div class="journal-hero p-6 md:p-8">
+      <div class="challenge-panel p-6 md:p-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-3">
             <div class="journal-eyebrow">Challenge Detail</div>
@@ -203,7 +205,7 @@
         </aside>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">

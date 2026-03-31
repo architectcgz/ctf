@@ -117,8 +117,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 </script>
 
 <template>
-  <div class="journal-shell space-y-6">
-    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8">
       <div class="journal-eyebrow">Contest Center</div>
       <h2
         class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
@@ -235,7 +234,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         </div>
       </div>
     </section>
-  </div>
 </template>
 
 <style scoped>

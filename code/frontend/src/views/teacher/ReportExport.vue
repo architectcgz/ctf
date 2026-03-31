@@ -193,8 +193,10 @@ async function handleDownload(): Promise<void> {
 </script>
 
 <template>
-  <div class="report-shell space-y-6">
-    <section class="report-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <section
+    class="report-shell report-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div>
       <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div class="report-eyebrow">Teacher Export</div>
@@ -453,7 +455,7 @@ async function handleDownload(): Promise<void> {
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
     <ElDialog
       v-model="previewDialogVisible"
@@ -531,7 +533,7 @@ async function handleDownload(): Promise<void> {
         icon="FileChartColumnIncreasing"
       />
     </ElDialog>
-  </div>
+  </section>
 </template>
 
 <style scoped>

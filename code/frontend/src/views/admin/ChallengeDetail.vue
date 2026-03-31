@@ -1,6 +1,5 @@
 <template>
-  <div class="journal-shell">
-    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <section class="journal-shell journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8">
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div class="journal-eyebrow">Challenge Detail</div>
@@ -115,7 +114,6 @@
       </div>
     </div>
     </section>
-  </div>
 </template>
 
 <script setup lang="ts">
