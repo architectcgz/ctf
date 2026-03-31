@@ -67,6 +67,37 @@ export function formatRemainingTime(seconds: number): string {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
+function formatEtaSeconds(seconds?: number): string {
+  if (typeof seconds !== 'number' || seconds <= 0) return '预计时间计算中'
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  if (minutes <= 0) return `${secs} 秒`
+  return `${minutes} 分 ${secs} 秒`
+}
+
+export function getInstanceWaitingHint(
+  instance: Pick<InstanceListItem, 'status' | 'queue_position' | 'eta_seconds' | 'progress'>
+): string {
+  if (instance.status !== 'pending' && instance.status !== 'creating') {
+    return ''
+  }
+
+  const details: string[] = ['实例正在排队创建']
+
+  if (typeof instance.queue_position === 'number' && instance.queue_position > 0) {
+    details.push(`队列第 ${instance.queue_position} 位`)
+  }
+
+  details.push(`预计等待 ${formatEtaSeconds(instance.eta_seconds)}`)
+
+  if (typeof instance.progress === 'number') {
+    const progress = Math.max(0, Math.min(100, Math.round(instance.progress)))
+    details.push(`进度 ${progress}%`)
+  }
+
+  return details.join('，')
+}
+
 export function useInstanceListPage() {
   const toast = useToast()
   const { copy } = useClipboard()
@@ -82,6 +113,12 @@ export function useInstanceListPage() {
   const maxInstances = MAX_INSTANCES
   const runningCount = computed(
     () => instances.value.filter((instance) => instance.status === 'running').length
+  )
+  const waitingCount = computed(
+    () =>
+      instances.value.filter(
+        (instance) => instance.status === 'pending' || instance.status === 'creating'
+      ).length
   )
 
   async function loadInstances() {
@@ -224,6 +261,7 @@ export function useInstanceListPage() {
     maxInstances,
     instances,
     runningCount,
+    waitingCount,
     showWarning,
     warningInstance,
     copyAddress,

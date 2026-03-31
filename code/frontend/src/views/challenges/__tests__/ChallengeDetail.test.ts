@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
@@ -84,6 +84,11 @@ describe('ChallengeDetail', () => {
     instanceApiMocks.requestInstanceAccess.mockReset()
   })
 
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
   it('应该渲染挑战详情', async () => {
     await router.push('/challenges/1')
     await router.isReady()
@@ -153,6 +158,69 @@ describe('ChallengeDetail', () => {
     expect(router.currentRoute.value.fullPath).toBe('/challenges/1')
     expect(wrapper.text()).toContain('打开目标')
     expect(wrapper.text()).toContain('靶机实例')
+  })
+
+  it('createInstance 返回 pending 时应显示等待文案并触发轮询', async () => {
+    vi.useFakeTimers()
+    challengeApiMocks.createInstance.mockResolvedValueOnce({
+      id: 'inst-1',
+      challenge_id: '1',
+      status: 'pending',
+      access_url: '',
+      flag_type: 'static',
+      expires_at: '2099-01-01T00:00:00Z',
+      remaining_extends: 2,
+      created_at: '2026-03-12T00:00:00.000Z',
+      queue_position: 3,
+      eta_seconds: 120,
+      progress: 18,
+    })
+    instanceApiMocks.getMyInstances.mockReset()
+    instanceApiMocks.getMyInstances
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'inst-1',
+          challenge_id: 1,
+          status: 'running',
+          access_url: 'http://127.0.0.1:30000',
+          flag_type: 'static',
+          expires_at: '2099-01-01T00:00:00Z',
+          remaining_extends: 2,
+          created_at: '2026-03-12T00:00:00.000Z',
+          challenge_title: 'Test Challenge',
+          category: 'web',
+          difficulty: 'easy',
+        },
+      ])
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await vi.advanceTimersByTimeAsync(100)
+
+    const startButton = wrapper.findAll('button').find((node) => node.text().includes('启动靶机'))
+    expect(startButton).toBeTruthy()
+
+    await startButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('实例正在排队创建')
+    expect(wrapper.text()).toContain('等待实例就绪')
+    expect(instanceApiMocks.getMyInstances).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(3000)
+    await wrapper.vm.$nextTick()
+
+    expect(instanceApiMocks.getMyInstances).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toContain('打开目标')
   })
 
   it('已存在实例时应直接显示实例信息', async () => {

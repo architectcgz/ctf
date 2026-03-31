@@ -5,6 +5,7 @@ import {
   formatRemainingTime,
   getInstanceStatusClass,
   getInstanceStatusLabel,
+  getInstanceWaitingHint,
   useInstanceListPage,
 } from '@/composables/useInstanceListPage'
 
@@ -13,6 +14,7 @@ const {
   maxInstances,
   instances,
   runningCount,
+  waitingCount,
   showWarning,
   warningInstance,
   copyAddress,
@@ -37,16 +39,20 @@ const {
           我的实例
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          管理正在运行的靶机实例，查看剩余时间并执行延时或销毁。
+          管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
         </p>
       </div>
 
       <article class="journal-brief rounded-[24px] border px-5 py-5">
         <div class="text-sm font-medium text-[var(--journal-ink)]">当前运行概况</div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
           <div class="journal-note">
             <div class="journal-note-label">运行中</div>
             <div class="journal-note-value">{{ runningCount }}</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">等待创建</div>
+            <div class="journal-note-value">{{ waitingCount }}</div>
           </div>
           <div class="journal-note">
             <div class="journal-note-label">实例上限</div>
@@ -67,7 +73,7 @@ const {
         v-else-if="instances.length === 0"
         class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
       >
-        <div class="text-sm text-[var(--journal-muted)]">暂无运行中的实例</div>
+        <div class="text-sm text-[var(--journal-muted)]">暂无运行中或等待创建的实例</div>
         <router-link
           to="/challenges"
           class="mt-3 inline-block text-sm text-[var(--journal-accent)] hover:underline"
@@ -149,6 +155,12 @@ const {
                 {{ formatRemainingTime(instance.remaining) }}
               </span>
             </div>
+          </div>
+          <div
+            v-else-if="instance.status === 'pending' || instance.status === 'creating'"
+            class="mt-5 rounded-[14px] border border-[var(--journal-border)]/80 bg-[var(--journal-surface-subtle)] px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
+          >
+            {{ getInstanceWaitingHint(instance) }}
           </div>
 
           <div class="mt-5 flex flex-wrap gap-3">
