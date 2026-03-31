@@ -12,6 +12,7 @@ const (
 type Notification struct {
 	ID        int64      `gorm:"column:id;primaryKey"`
 	UserID    int64      `gorm:"column:user_id"`
+	BatchID   *int64     `gorm:"column:batch_id"`
 	Type      string     `gorm:"column:type"`
 	Title     string     `gorm:"column:title"`
 	Content   string     `gorm:"column:content"`

@@ -12,6 +12,8 @@ import type {
   AdminContestTeamData,
   AdminChallengeHint,
   AdminChallengeListItem,
+  AdminNotificationPublishPayload,
+  AdminNotificationPublishResult,
   AdminChallengeWriteupData,
   AdminCheatDetectionData,
   AdminDashboardData,
@@ -23,7 +25,6 @@ import type {
   ChallengeTopologyData,
   ContestMode,
   ContestDetailData,
-  ContestListItem,
   ContestScoreboardData,
   ContestStatus,
   EnvironmentTemplateData,
@@ -131,6 +132,11 @@ interface RawAWDAttackLogItem {
   is_success: boolean
   score_gained: number
   created_at: string
+}
+
+interface RawAdminNotificationPublishResult {
+  batch_id: string | number
+  recipient_count: number
 }
 
 interface RawAWDRoundSummaryItem {
@@ -752,6 +758,21 @@ function normalizeCheatDetection(data: RawCheatDetectionData): AdminCheatDetecti
 
 export async function getDashboard(): Promise<AdminDashboardData> {
   return request<AdminDashboardData>({ method: 'GET', url: '/admin/dashboard' })
+}
+
+export async function publishAdminNotification(
+  data: AdminNotificationPublishPayload
+): Promise<AdminNotificationPublishResult> {
+  const response = await request<RawAdminNotificationPublishResult>({
+    method: 'POST',
+    url: '/admin/notifications',
+    data,
+  })
+
+  return {
+    batch_id: String(response.batch_id),
+    recipient_count: response.recipient_count,
+  }
 }
 
 export async function getUsers(params?: UserListParams): Promise<PageResult<AdminUserListItem>> {
