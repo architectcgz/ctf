@@ -4,7 +4,6 @@ import { computed, ref } from 'vue'
 import type { ContestDetailData } from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
 
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
@@ -149,57 +148,55 @@ async function handleCreateAttackLog(payload: {
 </script>
 
 <template>
-  <SectionCard title="AWD 运维视图" subtitle="把当前页中的 AWD 赛事切进轮次巡检、服务状态和攻击流水视角。">
-    <div class="space-y-6">
-      <label class="space-y-2">
-        <span class="text-sm text-[var(--color-text-secondary)]">选择 AWD 赛事</span>
-        <select
-          id="awd-contest-selector"
-          :value="selectedContestId || ''"
-          class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          :disabled="contests.length === 0"
-          @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
-        >
-          <option v-for="contest in contests" :key="contest.id" :value="contest.id">
-            {{ contest.title }}
-          </option>
-        </select>
-      </label>
+  <div class="space-y-6">
+    <label class="space-y-2">
+      <span class="text-sm text-[var(--color-text-secondary)]">选择 AWD 赛事</span>
+      <select
+        id="awd-contest-selector"
+        :value="selectedContestId || ''"
+        class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
+        :disabled="contests.length === 0"
+        @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
+      >
+        <option v-for="contest in contests" :key="contest.id" :value="contest.id">
+          {{ contest.title }}
+        </option>
+      </select>
+    </label>
 
-      <AppEmpty
-        v-if="contests.length === 0"
-        title="当前页没有 AWD 赛事"
-        description="先切到包含 AWD 比赛的筛选结果或分页，这里才会展示可操作的攻防运营面板。"
-        icon="Flag"
-      />
+    <AppEmpty
+      v-if="contests.length === 0"
+      title="当前页没有 AWD 赛事"
+      description="先切到包含 AWD 比赛的筛选结果或分页，这里才会展示可操作的攻防运营面板。"
+      icon="Flag"
+    />
 
-      <AWDRoundInspector
-        v-else-if="selectedContest"
-        :contest="selectedContest"
-        :rounds="rounds"
-        :selected-round-id="selectedRoundId"
-        :services="services"
-        :attacks="attacks"
-        :challenge-links="challengeLinks"
-        :summary="summary"
-        :scoreboard-rows="scoreboardRows"
-        :scoreboard-frozen="scoreboardFrozen"
-        :loading-rounds="loadingRounds"
-        :loading-round-detail="loadingRoundDetail"
-        :checking="checking"
-        :should-auto-refresh="shouldAutoRefresh"
-        :can-record-service-checks="canRecordServiceChecks"
-        :can-record-attack-logs="canRecordAttackLogs"
-        :service-check-hint="serviceCheckHint"
-        :attack-log-hint="attackLogHint"
-        @refresh="refresh"
-        @open-create-round-dialog="openRoundDialog"
-        @open-service-check-dialog="openServiceCheckDialog"
-        @open-attack-log-dialog="openAttackLogDialog"
-        @run-selected-round-check="runSelectedRoundCheck"
-        @update:selected-round-id="updateSelectedRoundId"
-      />
-    </div>
+    <AWDRoundInspector
+      v-else-if="selectedContest"
+      :contest="selectedContest"
+      :rounds="rounds"
+      :selected-round-id="selectedRoundId"
+      :services="services"
+      :attacks="attacks"
+      :challenge-links="challengeLinks"
+      :summary="summary"
+      :scoreboard-rows="scoreboardRows"
+      :scoreboard-frozen="scoreboardFrozen"
+      :loading-rounds="loadingRounds"
+      :loading-round-detail="loadingRoundDetail"
+      :checking="checking"
+      :should-auto-refresh="shouldAutoRefresh"
+      :can-record-service-checks="canRecordServiceChecks"
+      :can-record-attack-logs="canRecordAttackLogs"
+      :service-check-hint="serviceCheckHint"
+      :attack-log-hint="attackLogHint"
+      @refresh="refresh"
+      @open-create-round-dialog="openRoundDialog"
+      @open-service-check-dialog="openServiceCheckDialog"
+      @open-attack-log-dialog="openAttackLogDialog"
+      @run-selected-round-check="runSelectedRoundCheck"
+      @update:selected-round-id="updateSelectedRoundId"
+    />
 
     <AWDRoundCreateDialog
       :open="roundDialogOpen"
@@ -226,5 +223,5 @@ async function handleCreateAttackLog(payload: {
       @update:open="updateAttackLogDialogOpen"
       @save="handleCreateAttackLog"
     />
-  </SectionCard>
+  </div>
 </template>

@@ -153,26 +153,7 @@ const summaryStats = computed(() => [
           </div>
         </article>
       </div>
-      <div class="journal-panel notification-board mt-6 rounded-[24px] border px-5 py-5 md:px-6">
-        <div class="notification-board-head gap-4">
-          <div>
-            <div class="journal-eyebrow notification-eyebrow-soft">Message Stream</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-              按时间顺序处理所有提醒与动态
-            </h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              可以在这里查看消息，并按需标记已读。
-            </p>
-          </div>
-
-          <div class="notification-filter-pill">
-            <Bell class="h-4 w-4" />
-            当前未读 {{ unreadOnPage }} 条
-          </div>
-        </div>
-
-        <div class="notification-panel-divider" />
-
+      <div class="notification-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
         <div v-if="loading" class="flex justify-center py-12">
           <div
             class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
@@ -200,7 +181,7 @@ const summaryStats = computed(() => [
         />
 
         <template v-else>
-          <div class="notification-list mt-5 space-y-3">
+          <div class="notification-list mt-5">
             <button
               v-for="item in list"
               :key="item.id"
@@ -304,14 +285,6 @@ const summaryStats = computed(() => [
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
-.journal-panel {
-  border-color: var(--journal-border);
-  background: rgba(248, 250, 252, 0.9);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
-}
-
 .journal-brief {
   border-color: var(--journal-border);
   background: rgba(255, 255, 255, 0.8);
@@ -332,10 +305,6 @@ const summaryStats = computed(() => [
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.notification-eyebrow-soft {
-  background: rgba(99, 102, 241, 0.06);
 }
 
 .journal-note {
@@ -367,35 +336,21 @@ const summaryStats = computed(() => [
   color: var(--journal-muted);
 }
 
-.notification-board-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+.notification-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
 }
 
-.notification-filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
-  padding: 0.48rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 84%, #312e81);
-}
-
-.notification-panel-divider {
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-border);
+.notification-list {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  overflow: hidden;
 }
 
 .journal-notification-item {
-  border-radius: 18px;
-  border: 1px solid var(--journal-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+  border: 0;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.56);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 252, 0.76));
   padding: 1rem;
   transition:
     border-color 0.2s,
@@ -403,13 +358,20 @@ const summaryStats = computed(() => [
   cursor: pointer;
 }
 
+.journal-notification-item:last-child {
+  border-bottom: 0;
+}
+
 .journal-notification-item:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface-subtle));
+  background: color-mix(in srgb, var(--journal-accent) 4%, rgba(255, 255, 255, 0.88));
 }
 
 .journal-notification-item--unread {
-  border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 4%, rgba(255, 255, 255, 0.9)),
+    rgba(248, 250, 252, 0.78)
+  );
 }
 
 .notification-pagination {
@@ -420,7 +382,7 @@ const summaryStats = computed(() => [
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px dashed rgba(148, 163, 184, 0.62);
 }
 
 .journal-btn {
@@ -480,9 +442,5 @@ const summaryStats = computed(() => [
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
     linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
-}
-
-:global([data-theme='dark']) .journal-panel {
-  background: rgba(15, 23, 42, 0.6);
 }
 </style>

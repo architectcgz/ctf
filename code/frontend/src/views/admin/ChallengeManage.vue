@@ -1,167 +1,165 @@
 <template>
-  <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">
-        挑战管理
-      </h1>
-      <button
-        class="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-primary)]/90"
-        @click="void openDialog()"
-      >
-        创建挑战
-      </button>
-    </div>
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">Challenge Authoring</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            挑战管理
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            在这里查看题目状态，并继续进入详情、编排和题解。
+          </p>
 
-    <div
-      v-if="loading"
-      class="flex items-center justify-center py-12"
-    >
-      <div
-        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-border-default)] border-t-[var(--color-primary)]"
-      />
-    </div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button class="admin-btn admin-btn-primary" @click="void openDialog()">
+              创建挑战
+            </button>
+          </div>
+        </div>
 
-    <div
-      v-else
-      class="overflow-hidden rounded-lg border border-[var(--color-border-default)]"
-    >
-      <table class="w-full">
-        <thead class="bg-[var(--color-bg-surface)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              标题
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              分类
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              难度
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              分值
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              状态
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-[var(--color-text-primary)]">
-              操作
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--color-border-default)]">
-          <tr
-            v-for="row in list"
-            :key="row.id"
-            class="transition-colors hover:bg-[var(--color-bg-elevated)]"
-          >
-            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">
-              {{ row.title }}
-            </td>
-            <td class="px-4 py-3">
-              <span
-                class="rounded px-2 py-1 text-xs font-medium"
-                :style="{
-                  backgroundColor: getCategoryColor(row.category) + '20',
-                  color: getCategoryColor(row.category),
-                }"
-              >
-                {{ getCategoryLabel(row.category) }}
-              </span>
-            </td>
-            <td class="px-4 py-3">
-              <span
-                class="rounded px-2 py-1 text-xs font-medium"
-                :style="{
-                  backgroundColor: getDifficultyColor(row.difficulty) + '20',
-                  color: getDifficultyColor(row.difficulty),
-                }"
-              >
-                {{ getDifficultyLabel(row.difficulty) }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-sm text-[var(--color-text-primary)]">
-              {{ row.points }}
-            </td>
-            <td class="px-4 py-3">
-              <span
-                class="rounded px-2 py-1 text-xs font-medium"
-                :style="{
-                  backgroundColor: getStatusColor(row.status) + '20',
-                  color: getStatusColor(row.status),
-                }"
-              >
-                {{ getStatusLabel(row.status) }}
-              </span>
-            </td>
-            <td class="px-4 py-3">
-              <div class="flex gap-2">
-                <button
-                  class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90"
-                  @click="$router.push(`/admin/challenges/${row.id}`)"
-                >
-                  查看
-                </button>
-                <button
-                  class="rounded border border-[var(--color-primary)]/40 px-3 py-1 text-xs text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
-                  @click="$router.push(`/admin/challenges/${row.id}/topology`)"
-                >
-                  编排
-                </button>
-                <button
-                  class="rounded border border-[var(--color-primary)]/40 px-3 py-1 text-xs text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/10"
-                  @click="$router.push(`/admin/challenges/${row.id}/writeup`)"
-                >
-                  题解
-                </button>
-                <button
-                  class="rounded bg-[var(--color-primary)] px-3 py-1 text-xs text-white transition-colors hover:bg-[var(--color-primary)]/90"
-                  @click="void openDialog(row)"
-                >
-                  编辑
-                </button>
-                <button
-                  v-if="row.status !== 'published'"
-                  class="rounded bg-[var(--color-success)]/20 px-3 py-1 text-xs text-[var(--color-success)] transition-colors hover:bg-[var(--color-success)]/30"
-                  @click="void publish(row)"
-                >
-                  发布
-                </button>
-                <button
-                  class="rounded bg-[var(--color-danger)]/20 px-3 py-1 text-xs text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/30"
-                  @click="void remove(row.id)"
-                >
-                  删除
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div
-      v-if="!loading && total > 0"
-      class="flex items-center justify-between"
-    >
-      <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 条</span>
-      <div class="flex items-center gap-2">
-        <button
-          :disabled="page === 1"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page - 1)"
-        >
-          上一页
-        </button>
-        <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-        <button
-          :disabled="page >= Math.ceil(total / pageSize)"
-          class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
-          @click="changePage(page + 1)"
-        >
-          下一页
-        </button>
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="journal-note-label">题库概况</div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">题目总量</div>
+              <div class="journal-note-value">{{ total }}</div>
+              <div class="journal-note-helper">当前题库中可管理的题目</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">当前页</div>
+              <div class="journal-note-value">{{ list.length }}</div>
+              <div class="journal-note-helper">当前分页中的题目数量</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">已发布</div>
+              <div class="journal-note-value">{{ publishedCount }}</div>
+              <div class="journal-note-helper">当前页已开放训练的题目</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">草稿</div>
+              <div class="journal-note-value">{{ draftCount }}</div>
+              <div class="journal-note-helper">仍待发布或继续补充的题目</div>
+            </div>
+          </div>
+        </article>
       </div>
-    </div>
+      <div class="journal-divider" />
+
+      <div class="space-y-3">
+      <div
+        v-if="loading"
+        class="flex items-center justify-center py-12"
+      >
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        />
+      </div>
+
+      <template v-else>
+        <div v-if="list.length === 0" class="admin-empty">
+          当前还没有题目。
+        </div>
+
+        <div v-else class="space-y-3">
+          <article v-for="row in list" :key="row.id" class="challenge-row">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-base font-semibold text-[var(--journal-ink)]">{{ row.title }}</h2>
+                  <span
+                    class="admin-status-chip"
+                    :style="{
+                      backgroundColor: getStatusColor(row.status) + '18',
+                      color: getStatusColor(row.status),
+                    }"
+                  >
+                    {{ getStatusLabel(row.status) }}
+                  </span>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <span
+                    class="admin-inline-chip"
+                    :style="{
+                      backgroundColor: getCategoryColor(row.category) + '16',
+                      color: getCategoryColor(row.category),
+                    }"
+                  >
+                    {{ getCategoryLabel(row.category) }}
+                  </span>
+                  <span
+                    class="admin-inline-chip"
+                    :style="{
+                      backgroundColor: getDifficultyColor(row.difficulty) + '16',
+                      color: getDifficultyColor(row.difficulty),
+                    }"
+                  >
+                    {{ getDifficultyLabel(row.difficulty) }}
+                  </span>
+                  <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="journal-divider mt-4" />
+
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}`)">
+                查看
+              </button>
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/topology`)">
+                编排
+              </button>
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/writeup`)">
+                题解
+              </button>
+              <button class="admin-btn admin-btn-primary admin-btn-compact" @click="void openDialog(row)">
+                编辑
+              </button>
+              <button
+                v-if="row.status !== 'published'"
+                class="admin-btn admin-btn-success admin-btn-compact"
+                @click="void publish(row)"
+              >
+                发布
+              </button>
+              <button
+                class="admin-btn admin-btn-danger admin-btn-compact"
+                @click="void remove(row.id)"
+              >
+                删除
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <div
+          v-if="total > 0"
+          class="admin-pagination mt-4"
+        >
+          <span>共 {{ total }} 条</span>
+          <div class="flex items-center gap-2">
+            <button
+              :disabled="page === 1"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
+              @click="changePage(page - 1)"
+            >
+              上一页
+            </button>
+            <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
+            <button
+              :disabled="page >= Math.ceil(total / pageSize)"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
+              @click="changePage(page + 1)"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+      </template>
+      </div>
+    </section>
 
     <ElDialog
       v-model="dialogVisible"
@@ -392,6 +390,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useAdminChallenges } from '@/composables/useAdminChallenges'
 import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus } from '@/api/contracts'
 const {
@@ -413,6 +412,9 @@ const {
   publish,
   remove,
 } = useAdminChallenges()
+
+const publishedCount = computed(() => list.value.filter((item) => item.status === 'published').length)
+const draftCount = computed(() => list.value.filter((item) => item.status === 'draft').length)
 
 function getCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
@@ -466,3 +468,177 @@ function getStatusColor(status: ChallengeStatus): string {
   return { draft: '#8b949e', published: '#10b981', archived: '#6e7681' }[status]
 }
 </script>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero,
+.journal-panel {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.journal-divider {
+  margin-block: 1rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.challenge-row {
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 1rem;
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.admin-btn-compact {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.admin-btn-primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--journal-ink);
+}
+
+.admin-btn-success {
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  background: rgba(236, 253, 245, 0.9);
+  color: #059669;
+}
+
+.admin-btn-danger {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(254, 242, 242, 0.9);
+  color: #dc2626;
+}
+
+.admin-status-chip,
+.admin-inline-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.34rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.admin-inline-chip {
+  border: 1px solid transparent;
+}
+
+.admin-inline-chip-neutral {
+  background: rgba(241, 245, 249, 0.95);
+  color: var(--journal-muted);
+}
+
+.admin-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border-radius: 16px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+.admin-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  padding-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero,
+:global([data-theme='dark']) .journal-panel {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+</style>

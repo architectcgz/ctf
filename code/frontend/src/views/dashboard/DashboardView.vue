@@ -15,7 +15,6 @@ import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficu
 import StudentOverviewVariantSwitcher from '@/components/dashboard/student/StudentOverviewVariantSwitcher.vue'
 import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 
@@ -154,26 +153,6 @@ function openChallenge(challengeId: string): void {
 
 <template>
   <div class="dashboard-view space-y-6">
-    <PageHeader
-      class="dashboard-view__header"
-      eyebrow="Student Workspace"
-      :title="
-        isOverview
-          ? `${displayName} 的训练仪表盘`
-          : panelHeader?.title || `${displayName} 的训练仪表盘`
-      "
-      :description="
-        isOverview
-          ? '汇总当前得分、解题进度、近期训练动态与推荐靶场，帮助你快速判断下一步训练重点。'
-          : panelHeader?.description || ''
-      "
-    >
-      <template v-if="isOverview">
-        <ElButton plain @click="router.push({ name: 'SkillProfile' })">能力画像</ElButton>
-        <ElButton type="primary" @click="router.push({ name: 'Challenges' })">继续训练</ElButton>
-      </template>
-    </PageHeader>
-
     <div
       v-if="error"
       class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
@@ -226,62 +205,3 @@ function openChallenge(challengeId: string): void {
     </template>
   </div>
 </template>
-
-<style scoped>
-.dashboard-view :deep(.journal-hero),
-.dashboard-view :deep(.journal-brief),
-.dashboard-view :deep(.journal-panel),
-.dashboard-view :deep(.journal-metric),
-.dashboard-view :deep(.journal-note),
-.dashboard-view :deep(.journal-rec-item),
-.dashboard-view :deep(.journal-log),
-.dashboard-view :deep(.command-hero),
-.dashboard-view :deep(.command-highlight),
-.dashboard-view :deep(.command-panel),
-.dashboard-view :deep(.command-metric),
-.dashboard-view :deep(.command-status-card),
-.dashboard-view :deep(.command-rec-item),
-.dashboard-view :deep(.signal-hero),
-.dashboard-view :deep(.signal-panel),
-.dashboard-view :deep(.signal-stat),
-.dashboard-view :deep(.signal-rec-item),
-.dashboard-view :deep(.signal-log),
-.dashboard-view :deep(.signal-summary) {
-  border-radius: 16px !important;
-  overflow: hidden;
-}
-
-:global([data-theme='light']) .dashboard-view :deep(.journal-hero),
-:global([data-theme='light']) .dashboard-view :deep(.journal-brief),
-:global([data-theme='light']) .dashboard-view :deep(.journal-panel),
-:global([data-theme='light']) .dashboard-view :deep(.journal-metric),
-:global([data-theme='light']) .dashboard-view :deep(.journal-note),
-:global([data-theme='light']) .dashboard-view :deep(.journal-rec-item),
-:global([data-theme='light']) .dashboard-view :deep(.journal-log) {
-  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
-}
-
-@media (max-width: 767px) {
-  .dashboard-view :deep(.journal-hero),
-  .dashboard-view :deep(.journal-brief),
-  .dashboard-view :deep(.journal-panel),
-  .dashboard-view :deep(.journal-metric),
-  .dashboard-view :deep(.journal-note),
-  .dashboard-view :deep(.journal-rec-item),
-  .dashboard-view :deep(.journal-log),
-  .dashboard-view :deep(.command-hero),
-  .dashboard-view :deep(.command-highlight),
-  .dashboard-view :deep(.command-panel),
-  .dashboard-view :deep(.command-metric),
-  .dashboard-view :deep(.command-status-card),
-  .dashboard-view :deep(.command-rec-item),
-  .dashboard-view :deep(.signal-hero),
-  .dashboard-view :deep(.signal-panel),
-  .dashboard-view :deep(.signal-stat),
-  .dashboard-view :deep(.signal-rec-item),
-  .dashboard-view :deep(.signal-log),
-  .dashboard-view :deep(.signal-summary) {
-    border-radius: 12px !important;
-  }
-}
-</style>

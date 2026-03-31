@@ -4,10 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin'
 import type { AuditLogItem } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -115,20 +112,47 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader eyebrow="Audit Trail" title="审计日志" description="按动作、资源类型和执行人快速检索关键管理操作与提交流水。" />
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">Audit Trail</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">审计日志</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            按动作、资源类型和执行人快速检索关键记录。
+          </p>
+        </div>
 
-    <AppCard
-      variant="hero"
-      accent="primary"
-      eyebrow="Audit Filters"
-      title="筛选审计轨迹"
-      subtitle="按动作、资源类型和执行人筛选日志。"
-    >
-      <div class="grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="journal-note-label">筛选视角</div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">动作</div>
+              <div class="journal-note-value">{{ filters.action || '全部' }}</div>
+              <div class="journal-note-helper">当前检索动作</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">资源</div>
+              <div class="journal-note-value">{{ filters.resource_type || '全部' }}</div>
+              <div class="journal-note-helper">当前资源类型</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="journal-divider" />
+
+      <div class="space-y-3">
+      <div class="admin-section-head">
+        <div>
+          <div class="journal-note-label">Filters</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选条件</h2>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
         <select
           v-model="filters.action"
-          class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)]"
+          class="admin-input"
         >
           <option value="">全部动作</option>
           <option value="login">登录</option>
@@ -144,7 +168,7 @@ onMounted(() => {
           v-model="filters.resource_type"
           type="text"
           placeholder="资源类型，如 challenge"
-          class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)]"
+          class="admin-input"
         />
 
         <input
@@ -152,12 +176,12 @@ onMounted(() => {
           type="number"
           min="1"
           placeholder="执行人 ID"
-          class="rounded-xl border border-[var(--color-border-default)] bg-[var(--color-bg-base)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)]"
+          class="admin-input"
         />
 
         <button
           type="button"
-          class="rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)]"
+          class="admin-btn admin-btn-primary"
           @click="applyFilters"
         >
           应用筛选
@@ -165,15 +189,23 @@ onMounted(() => {
 
         <button
           type="button"
-          class="rounded-xl border border-[var(--color-border-default)] px-4 py-3 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)]"
+          class="admin-btn admin-btn-ghost"
           @click="resetFilters"
         >
           重置
         </button>
       </div>
-    </AppCard>
 
-    <SectionCard title="操作流水" subtitle="按时间顺序展示匹配结果，明细字段做了摘要收敛，便于快速扫读。">
+      <div class="journal-divider" />
+
+      <div class="space-y-3">
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">Logs</div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">操作流水</h2>
+          </div>
+        </div>
+
       <div v-if="error" class="rounded-xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-4 py-4 text-sm text-[var(--color-danger)]">
         {{ error }}
         <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
@@ -190,9 +222,9 @@ onMounted(() => {
         description="可以放宽动作、资源类型或执行人条件，再重新检索。"
       />
 
-      <div v-else class="overflow-hidden rounded-xl border border-[var(--color-border-default)]">
+      <div v-else class="overflow-hidden rounded-[18px] border border-[var(--journal-border)]">
         <table class="min-w-full divide-y divide-[var(--color-border-default)] text-sm">
-          <thead class="bg-[var(--color-bg-base)]">
+          <thead class="bg-[var(--journal-surface-subtle)]">
             <tr>
               <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">时间</th>
               <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">动作</th>
@@ -201,7 +233,7 @@ onMounted(() => {
               <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">明细</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--color-border-default)] bg-[var(--color-bg-surface)]">
+          <tbody class="divide-y divide-[var(--journal-border)] bg-[var(--journal-surface)]">
             <tr v-for="item in list" :key="item.id">
               <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ formatDate(item.created_at) }}</td>
               <td class="px-4 py-3">
@@ -219,13 +251,13 @@ onMounted(() => {
         </table>
       </div>
 
-      <div v-if="!loading && total > 0" class="mt-5 flex items-center justify-between">
-        <span class="text-sm text-[var(--color-text-secondary)]">共 {{ total }} 条记录</span>
+      <div v-if="!loading && total > 0" class="admin-pagination mt-4">
+        <span>共 {{ total }} 条记录</span>
         <div class="flex items-center gap-2">
           <button
             type="button"
             :disabled="page === 1"
-            class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
             @click="changePage(page - 1)"
           >
             上一页
@@ -234,13 +266,152 @@ onMounted(() => {
           <button
             type="button"
             :disabled="page >= totalPages"
-            class="rounded-lg border border-[var(--color-border-default)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] transition hover:border-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
             @click="changePage(page + 1)"
           >
             下一页
           </button>
         </div>
       </div>
-    </SectionCard>
+      </div>
+      </div>
+    </section>
   </div>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero,
+.journal-panel {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+}
+
+.journal-eyebrow,
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.journal-divider {
+  margin-block: 1rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-input {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-ink);
+  outline: none;
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-btn-compact {
+  min-height: 2.35rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.admin-btn-primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--journal-ink);
+}
+
+.admin-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  padding-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero,
+:global([data-theme='dark']) .journal-panel {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+</style>

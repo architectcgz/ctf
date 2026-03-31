@@ -119,7 +119,13 @@ describe('DashboardView', () => {
       },
     ])
     assessmentApiMocks.getRecommendations.mockResolvedValue([
-      { challenge_id: '12', title: 'crypto-lab', category: 'crypto', difficulty: 'medium', reason: '补强密码维度' },
+      {
+        challenge_id: '12',
+        title: 'crypto-lab',
+        category: 'crypto',
+        difficulty: 'medium',
+        reason: '补强密码维度',
+      },
     ])
     assessmentApiMocks.getSkillProfile.mockResolvedValue({
       dimensions: [
@@ -131,18 +137,21 @@ describe('DashboardView', () => {
 
   it('应该展示学生仪表盘内容', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'student-1',
-      username: 'alice',
-      role: 'student',
-      class_name: 'Class A',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
 
     const wrapper = mountDashboard()
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('alice 的训练仪表盘')
+    expect(wrapper.text()).toContain('Training Journal')
     expect(wrapper.text()).toContain('alice 的极简训练面板')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
@@ -156,51 +165,60 @@ describe('DashboardView', () => {
     routeState.query = { panel: 'recommendation' }
 
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'student-1',
-      username: 'alice',
-      role: 'student',
-      class_name: 'Class A',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
 
     const wrapper = mountDashboard()
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('训练建议')
+    expect(wrapper.text()).toContain('Priority Focus')
     expect(wrapper.text()).toContain('补短板计划')
     expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('优先修复的能力维度')
+    expect(wrapper.text()).toContain('推荐摘要')
   })
 
-  it('应该根据路由参数展示第二套风格', async () => {
+  it('应该在带 variant 参数时继续展示当前首页风格', async () => {
     routeState.params = { variant: '2' }
 
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'student-1',
-      username: 'alice',
-      role: 'student',
-      class_name: 'Class A',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
 
     const wrapper = mountDashboard()
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Clean SaaS')
+    expect(wrapper.text()).toContain('Training Journal')
     expect(wrapper.text()).toContain('alice 的极简训练面板')
     expect(wrapper.text()).toContain('推荐训练队列')
   })
 
   it('应该把教师用户重定向到教师首页', async () => {
     const authStore = useAuthStore()
-    authStore.setAuth({
-      id: 'teacher-1',
-      username: 'teacher',
-      role: 'teacher',
-      class_name: 'Class A',
-    }, 'token')
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
 
     mountDashboard()
     await flushPromises()

@@ -45,16 +45,17 @@ const nextFocus = computed(
 
 <template>
   <div class="journal-shell space-y-6">
-    <!-- Hero -->
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Difficulty Ladder</div>
-          <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+          <h2
+            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          >
             难度层级总览
           </h2>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            观察不同难度的覆盖情况，判断训练是否长期停留在舒适区，并给出下一阶段更适合推进的台阶。
+            看不同难度的完成情况和下一步训练重点。
           </p>
         </div>
 
@@ -70,102 +71,118 @@ const nextFocus = computed(
                 <div class="journal-note-value">{{ difficultyLabel(nextFocus.difficulty) }}</div>
               </div>
               <div class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
-                当前覆盖率最低：{{ nextFocus.rate }}%（{{ nextFocus.solved }}/{{ nextFocus.total }}），优先突破此难度层。
+                当前覆盖率最低：{{ nextFocus.rate }}%（{{ nextFocus.solved }}/{{
+                  nextFocus.total
+                }}），适合优先突破。
               </div>
             </div>
             <div v-else class="text-sm text-[var(--journal-muted)]">
-              暂无数据，完成更多题目后将给出建议。
+              暂无数据，完成更多题目后会给出建议。
             </div>
           </div>
         </article>
       </div>
-    </section>
 
-    <!-- 难度卡片 bento -->
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      <article
-        v-for="item in orderedStats"
-        :key="item.difficulty"
-        class="journal-metric rounded-[24px] border px-5 py-5"
-      >
-        <div class="journal-eyebrow">{{ difficultyLabel(item.difficulty) }}</div>
-        <div class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">{{ item.rate }}%</div>
-        <div class="mt-1 text-sm text-[var(--journal-muted)]">{{ item.solved }} / {{ item.total }}</div>
-        <div class="mt-4 h-2 rounded-full" style="background: rgba(226,232,240,0.5)">
+      <div class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
+        <section class="difficulty-section">
+          <div class="journal-eyebrow journal-eyebrow-soft">Difficulty Layer View</div>
+          <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">难度层级视图</h3>
+
           <div
-            class="h-2 rounded-full transition-all"
-            :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
-          />
-        </div>
-      </article>
-    </section>
-
-    <!-- 详细视图 + 解读 -->
-    <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <!-- 进度条列表 -->
-      <article class="journal-panel rounded-[24px] border px-6 py-6">
-        <div class="journal-eyebrow">Difficulty Layer View</div>
-        <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">难度层级视图</h3>
-
-        <div
-          v-if="orderedStats.length === 0"
-          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
-        >
-          暂无难度统计数据。
-        </div>
-
-        <div v-else class="mt-5 space-y-4">
-          <div
-            v-for="item in orderedStats"
-            :key="item.difficulty"
-            class="journal-log rounded-[18px] border px-5 py-4"
+            v-if="orderedStats.length === 0"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
-            <div class="flex items-center justify-between gap-3">
-              <div class="text-sm font-semibold text-[var(--journal-ink)]">{{ difficultyLabel(item.difficulty) }}</div>
-              <div class="text-sm font-semibold text-[var(--journal-ink)]">{{ item.rate }}%</div>
-            </div>
-            <div class="mt-1 text-xs text-[var(--journal-muted)]">{{ item.solved }} / {{ item.total }} 题</div>
-            <div class="mt-3 h-2 rounded-full" style="background: rgba(226,232,240,0.5)">
-              <div
-                class="h-2 rounded-full transition-all"
-                :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
-              />
-            </div>
+            暂无难度统计数据。
           </div>
-        </div>
-      </article>
 
-      <!-- 解读 -->
-      <div class="space-y-4">
-        <article class="journal-panel rounded-[24px] border px-6 py-5">
-          <div class="flex items-start gap-3">
-            <div class="stat-icon stat-icon--success">
-              <ShieldCheck class="h-5 w-5" />
-            </div>
-            <div>
-              <div class="journal-eyebrow">Comfort Zone Check</div>
-              <h4 class="mt-1 text-base font-semibold text-[var(--journal-ink)]">是否停留在舒适区？</h4>
-              <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                若入门/简单覆盖率高而中等/困难覆盖率低，说明训练长期停留在舒适区，建议有意识地向更高难度迈进。
-              </p>
+          <div v-else class="difficulty-list mt-5">
+            <div
+              v-for="item in orderedStats"
+              :key="item.difficulty"
+              class="difficulty-item"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                  <div class="text-sm font-semibold text-[var(--journal-ink)]">
+                    {{ difficultyLabel(item.difficulty) }}
+                  </div>
+                  <div class="mt-1 text-xs text-[var(--journal-muted)]">
+                    {{ item.solved }} / {{ item.total }} 题
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
+                    {{ item.rate }}%
+                  </div>
+                </div>
+              </div>
+              <div class="mt-4 h-2 rounded-full bg-[rgba(226,232,240,0.65)]">
+                <div
+                  class="h-2 rounded-full transition-all"
+                  :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
+                />
+              </div>
             </div>
           </div>
-        </article>
+        </section>
 
-        <article class="journal-panel rounded-[24px] border px-6 py-5">
-          <div class="flex items-start gap-3">
-            <div class="stat-icon stat-icon--primary">
-              <Layers2 class="h-5 w-5" />
-            </div>
+        <section class="difficulty-section">
+          <div class="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
             <div>
-              <div class="journal-eyebrow">Difficulty Structure</div>
-              <h4 class="mt-1 text-base font-semibold text-[var(--journal-ink)]">难度结构分布</h4>
-              <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                健康的训练结构应呈现倒三角：低难度覆盖率最高，逐级递减。若分布反常，说明训练路径需要调整。
-              </p>
+              <div class="journal-eyebrow journal-eyebrow-soft">Difficulty Interpretation</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练解读</h3>
+
+              <div class="difficulty-insight-list mt-5">
+                <article class="difficulty-insight-item">
+                  <div class="flex items-start gap-3">
+                    <div class="stat-icon stat-icon--success">
+                      <ShieldCheck class="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-[var(--journal-ink)]">
+                        是否停留在舒适区？
+                      </div>
+                      <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                        若入门和简单覆盖率高，而中等和困难偏低，说明训练长期停留在舒适区，适合主动抬高强度。
+                      </p>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="difficulty-insight-item">
+                  <div class="flex items-start gap-3">
+                    <div class="stat-icon stat-icon--primary">
+                      <Layers2 class="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div class="text-sm font-semibold text-[var(--journal-ink)]">难度结构分布</div>
+                      <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                        健康的训练结构通常是低难度覆盖更高，再逐级递减。如果分布反常，说明路径需要调整。
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </div>
             </div>
+
+            <aside class="difficulty-focus">
+              <div class="journal-eyebrow journal-eyebrow-soft">Focus Card</div>
+              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">当前突破口</h3>
+              <div class="mt-5 rounded-[22px] border border-[var(--journal-border)]/60 bg-[var(--journal-surface)]/70 p-4">
+                <div v-if="nextFocus" class="space-y-3">
+                  <div class="journal-note-label">优先难度</div>
+                  <div class="text-lg font-semibold text-[var(--journal-ink)]">
+                    {{ difficultyLabel(nextFocus.difficulty) }}
+                  </div>
+                  <div class="text-sm leading-6 text-[var(--journal-muted)]">
+                    先把这个层级补到更稳定，再逐步推高整体训练强度。
+                  </div>
+                </div>
+                <div v-else class="text-sm text-[var(--journal-muted)]">等待训练数据。</div>
+              </div>
+            </aside>
           </div>
-        </article>
+        </section>
       </div>
     </section>
   </div>
@@ -180,50 +197,57 @@ const nextFocus = computed(
   --journal-border: rgba(226, 232, 240, 0.72);
   --journal-surface: #ffffff;
   --journal-surface-subtle: #f8fafc;
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(253, 230, 138, 0.5), transparent 15rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
-.journal-panel,
-.journal-metric,
-.journal-brief,
-.journal-log {
+.journal-brief {
   border-color: var(--journal-border);
-}
-
-.journal-panel,
-.journal-metric {
-  background: var(--journal-surface);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-}
-
-.journal-brief,
-.journal-log {
-  background: var(--journal-surface);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  background: var(--journal-surface-subtle);
 }
 
 .journal-note {
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: var(--journal-surface-subtle);
-  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  padding: 0.875rem 1rem;
 }
 
-.journal-note-label,
-.journal-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.26em;
+.journal-note-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--journal-muted);
+}
+
+.journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  background: rgba(99, 102, 241, 0.07);
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-eyebrow-soft {
+  color: var(--journal-muted);
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .journal-note-value {
@@ -231,6 +255,37 @@ const nextFocus = computed(
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--journal-ink);
+}
+
+.difficulty-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.difficulty-section + .difficulty-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.difficulty-list,
+.difficulty-insight-list {
+  border-radius: 22px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.difficulty-item,
+.difficulty-insight-item {
+  padding: 1rem 1.1rem;
+}
+
+.difficulty-item + .difficulty-item,
+.difficulty-insight-item + .difficulty-insight-item {
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+}
+
+.difficulty-focus {
+  position: relative;
 }
 
 .stat-icon {
@@ -257,6 +312,21 @@ const nextFocus = computed(
   background: rgba(79, 70, 229, 0.08);
 }
 
+@media (min-width: 1280px) {
+  .difficulty-focus {
+    padding-left: 1.5rem;
+  }
+
+  .difficulty-focus::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 0;
+    bottom: 0;
+    border-left: 1px dashed rgba(148, 163, 184, 0.6);
+  }
+}
+
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: #f1f5f9;
   --journal-muted: #94a3b8;
@@ -267,7 +337,14 @@ const nextFocus = computed(
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(120, 80, 20, 0.18), transparent 15rem),
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 18rem),
     linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .journal-note,
+:global([data-theme='dark']) .difficulty-list,
+:global([data-theme='dark']) .difficulty-insight-list,
+:global([data-theme='dark']) .difficulty-focus .rounded-\[22px\] {
+  background: rgba(15, 23, 42, 0.42);
 }
 </style>

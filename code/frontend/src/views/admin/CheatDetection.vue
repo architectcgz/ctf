@@ -4,11 +4,8 @@ import { useRouter } from 'vue-router'
 
 import { getCheatDetection } from '@/api/admin'
 import type { AdminCheatDetectionData } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -51,36 +48,68 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      eyebrow="Risk Triage"
-      title="作弊检测"
-      description="当前页已接入真实的 `/admin/cheat-detection` 接口，展示最近一轮基于审计日志聚合的高频提交账号和共享 IP 线索。"
-    />
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">Risk Triage</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">作弊检测</h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            查看高频提交账号和共享 IP 线索，并继续下钻到审计日志。
+          </p>
+        </div>
 
-    <div v-if="loading" class="flex justify-center py-10">
-      <AppLoading>正在加载风险线索...</AppLoading>
-    </div>
+        <article v-if="riskData" class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="journal-note-label">风险概况</div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">提交突增</div>
+              <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
+              <div class="journal-note-helper">最近窗口内提交次数异常的账号</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">共享 IP</div>
+              <div class="journal-note-value">{{ riskData.summary.shared_ip_groups }}</div>
+              <div class="journal-note-helper">最近 24 小时出现多账号复用的 IP 组</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="journal-divider" />
 
-    <div v-else class="space-y-6">
-      <div
-        v-if="error"
-        class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
-      >
-        {{ error }}
+      <div v-if="loading" class="flex justify-center py-10">
+        <AppLoading>正在加载风险线索...</AppLoading>
       </div>
 
-      <section v-if="riskData" class="grid gap-4 lg:grid-cols-3">
-        <AppCard variant="metric" accent="warning" eyebrow="Submit Burst" :title="String(riskData.summary.submit_burst_users)" subtitle="最近窗口内提交次数超过阈值的账号数。" />
-        <AppCard variant="metric" accent="primary" eyebrow="Shared IP" :title="String(riskData.summary.shared_ip_groups)" subtitle="最近 24 小时内存在多账号复用的 IP 组数。" />
-        <AppCard variant="metric" accent="danger" eyebrow="Affected Users" :title="String(riskData.summary.affected_users)" subtitle="当前聚合结果覆盖到的可疑账号总数。" />
-      </section>
+      <template v-else-if="riskData">
+        <div class="grid gap-3 md:grid-cols-3">
+          <div class="journal-note">
+            <div class="journal-note-label">Submit Burst</div>
+            <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
+            <div class="journal-note-helper">高频提交账号</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">Shared IP</div>
+            <div class="journal-note-value">{{ riskData.summary.shared_ip_groups }}</div>
+            <div class="journal-note-helper">共享 IP 组数</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">Affected Users</div>
+            <div class="journal-note-value">{{ riskData.summary.affected_users }}</div>
+            <div class="journal-note-helper">受影响账号数</div>
+          </div>
+        </div>
 
-      <section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard
-          title="高频提交账号"
-          subtitle="这些账号在最近窗口内的提交次数超过阈值，建议先结合审计日志复核。"
-        >
+        <div class="journal-divider" />
+
+        <div class="space-y-3">
+          <div class="admin-section-head">
+            <div>
+              <div class="journal-note-label">Burst Accounts</div>
+              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">高频提交账号</h2>
+            </div>
+          </div>
+
           <AppEmpty
             v-if="!riskData?.suspects.length"
             icon="UsersRound"
@@ -89,11 +118,10 @@ onMounted(() => {
           />
 
           <div v-else class="space-y-3">
-            <AppCard
+            <article
               v-for="suspect in riskData.suspects"
               :key="suspect.user_id"
-              variant="action"
-              accent="warning"
+              class="risk-row"
             >
               <div class="flex items-start justify-between gap-4">
                 <div>
@@ -111,14 +139,20 @@ onMounted(() => {
               <p class="mt-3 text-xs text-[var(--color-text-secondary)]">
                 最近出现时间：{{ new Date(suspect.last_seen_at).toLocaleString('zh-CN') }}
               </p>
-            </AppCard>
+            </article>
           </div>
-        </SectionCard>
+        </div>
 
-        <SectionCard
-          title="共享 IP 线索"
-          subtitle="同一 IP 在最近 24 小时内出现多个账号登录，适合作为第二层排查线索。"
-        >
+        <div class="journal-divider" />
+
+        <div class="space-y-3">
+          <div class="admin-section-head">
+            <div>
+              <div class="journal-note-label">Shared IP</div>
+              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">共享 IP 线索</h2>
+            </div>
+          </div>
+
           <AppEmpty
             v-if="!riskData?.shared_ips.length"
             icon="UsersRound"
@@ -127,11 +161,10 @@ onMounted(() => {
           />
 
           <div v-else class="space-y-3">
-            <AppCard
+            <article
               v-for="group in riskData.shared_ips"
               :key="group.ip"
-              variant="action"
-              accent="primary"
+              class="risk-row"
             >
               <div class="flex items-start justify-between gap-4">
                 <div>
@@ -146,24 +179,26 @@ onMounted(() => {
                   {{ group.user_count }} 账号
                 </span>
               </div>
-            </AppCard>
+            </article>
           </div>
-        </SectionCard>
-      </section>
+        </div>
 
-      <SectionCard
-        title="快速排查入口"
-        subtitle="保留直接跳转审计日志的入口，便于把自动聚合结果继续下钻到原始记录。"
-      >
+        <div class="journal-divider" />
+
+        <div class="space-y-3">
+          <div class="admin-section-head">
+            <div>
+              <div class="journal-note-label">Quick Actions</div>
+              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">快速排查入口</h2>
+            </div>
+          </div>
+
         <div class="grid gap-3 lg:grid-cols-2">
-          <AppCard
+          <button
             v-for="action in quickActions"
             :key="action.title"
-            as="button"
-            variant="action"
-            accent="warning"
-            interactive
-            class="cursor-pointer"
+            type="button"
+            class="quick-action-row"
             @click="openAudit(action.query)"
           >
             <div>
@@ -173,9 +208,131 @@ onMounted(() => {
               </p>
             </div>
             <span class="mt-0.5 text-sm font-medium text-[var(--color-primary)]">打开</span>
-          </AppCard>
+          </button>
+          </div>
         </div>
-      </SectionCard>
-    </div>
+      </template>
+
+      <div
+        v-else-if="error"
+        class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
+      >
+        {{ error }}
+      </div>
+
+      <div v-else class="admin-empty">
+        当前没有风险线索。
+      </div>
+    </section>
   </div>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero,
+.journal-panel {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+}
+
+.journal-eyebrow,
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.journal-divider {
+  margin-block: 1rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.risk-row,
+.quick-action-row {
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 1rem;
+}
+
+.admin-empty {
+  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border-radius: 16px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-muted);
+}
+
+.quick-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero,
+:global([data-theme='dark']) .journal-panel {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+</style>

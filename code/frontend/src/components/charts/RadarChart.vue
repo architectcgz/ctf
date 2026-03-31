@@ -18,8 +18,18 @@ const props = withDefaults(defineProps<{
   indicators: Indicator[]
   values: number[]
   name?: string
+  heightClass?: string
+  labelFontSize?: number
+  axisNameGap?: number
+  radius?: string | number
+  centerY?: string
 }>(), {
   name: '能力画像',
+  heightClass: 'h-80',
+  labelFontSize: 14,
+  axisNameGap: 18,
+  radius: '68%',
+  centerY: '50%',
 })
 
 function cssVar(name: string): string {
@@ -29,13 +39,22 @@ function cssVar(name: string): string {
 const option = computed<EChartsOption>(() => {
   const primary = cssVar('--color-primary')
   const primaryHover = cssVar('--color-primary-hover')
+  const axisLabelColor = cssVar('--color-text-primary') || cssVar('--color-text-secondary') || '#475569'
   return {
     tooltip: { trigger: 'item' },
     radar: {
+      center: ['50%', props.centerY],
+      radius: props.radius,
       indicator: props.indicators.map((indicator) => ({
         name: indicator.name,
         max: indicator.max ?? 100,
       })),
+      axisName: {
+        color: axisLabelColor,
+        fontSize: props.labelFontSize,
+        fontWeight: 600,
+      },
+      axisNameGap: props.axisNameGap,
       splitArea: {
         areaStyle: {
           color: [`${primary}0a`],
@@ -62,5 +81,5 @@ const option = computed<EChartsOption>(() => {
 </script>
 
 <template>
-  <VChart class="h-80 w-full" :option="option" autoresize />
+  <VChart :class="[props.heightClass, 'w-full']" :option="option" autoresize />
 </template>

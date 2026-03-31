@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Activity, ArrowRight, BellRing, BookOpenText, MapPinned, Sparkles, Trophy } from 'lucide-vue-next'
+import {
+  Activity,
+  ArrowRight,
+  BellRing,
+  MapPinned,
+  Sparkles,
+  Trophy,
+} from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
@@ -25,28 +32,35 @@ const storyMetrics = computed(() => [
   { label: '当前排名', value: `#${props.progress.rank ?? '-'}`, tone: 'accent' },
   { label: '完成率', value: `${props.completionRate}%`, tone: 'accent' },
 ])
-const radarIndicators = computed(() => props.skillDimensions.map((item) => ({ name: item.name, max: 100 })))
+const radarIndicators = computed(() =>
+  props.skillDimensions.map((item) => ({ name: item.name, max: 100 }))
+)
 const radarValues = computed(() => props.skillDimensions.map((item) => item.value))
 const rankSummary = computed(() => props.progress.rank ?? '-')
 const operationsSummary = computed(() => [
   {
     label: '环境状态',
-    value: quickRecommendations.value.length > 0 ? 'Ready' : 'Idle',
-    description: quickRecommendations.value.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
+    value: quickRecommendations.value.length > 0 ? '可训练' : '空闲',
+    description:
+      quickRecommendations.value.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
     status: quickRecommendations.value.length > 0 ? 'ready' : 'idle',
     icon: Activity,
   },
   {
     label: '能力分布',
     value: props.skillDimensions.length > 0 ? `${props.skillDimensions.length} 维` : '未生成',
-    description: props.skillDimensions.length > 0 ? '基于当前训练数据实时更新' : '完成更多题目后将自动生成',
+    description:
+      props.skillDimensions.length > 0 ? '基于当前训练数据实时更新' : '完成更多题目后将自动生成',
     status: props.skillDimensions.length > 0 ? 'ready' : 'idle',
     icon: MapPinned,
   },
   {
     label: '训练提示',
     value: props.weakDimensions[0] || '保持节奏',
-    description: props.weakDimensions.length > 0 ? `优先补强 ${props.weakDimensions.join(' / ')}` : '当前结构比较均衡，继续推进即可',
+    description:
+      props.weakDimensions.length > 0
+        ? `优先补强 ${props.weakDimensions.join(' / ')}`
+        : '当前结构比较均衡，继续推进即可',
     status: props.weakDimensions.length > 0 ? 'warning' : 'ready',
     icon: BellRing,
   },
@@ -79,196 +93,222 @@ function timelineStatus(eventType: string): string {
 <template>
   <div class="journal-shell space-y-6">
     <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Training Journal</div>
-          <h2 class="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-            {{ displayName }} 的极简训练面板
-          </h2>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            按 Clean SaaS 仪表盘的方式重排信息，并加入克制的 CTF 竞技细节。核心决策信息被压缩到首屏，同时保留稳定、专业和高可读性。
-          </p>
+      <div>
+        <div class="journal-eyebrow">Training Journal</div>
+        <h2
+          class="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+        >
+          {{ displayName }} 的极简训练面板
+        </h2>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          这里汇总了训练进度、推荐题目和最近动态。
+        </p>
 
-          <div class="mt-6 flex flex-wrap gap-3">
-            <ElButton type="primary" @click="emit('openChallenges')">继续训练</ElButton>
-            <ElButton plain @click="emit('openSkillProfile')">查看能力画像</ElButton>
-          </div>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <ElButton type="primary" @click="emit('openChallenges')">继续训练</ElButton>
+          <ElButton plain @click="emit('openSkillProfile')">查看能力画像</ElButton>
         </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <BookOpenText class="h-5 w-5 text-[var(--journal-accent)]" />
-            今日概览
-          </div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">训练班级</div>
-              <div class="journal-note-value">{{ className || '自由训练' }}</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">优先补强</div>
-              <div class="journal-note-value">{{ weakDimensions[0] || '暂无明显短板' }}</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">推荐任务</div>
-              <div class="journal-note-value">{{ recommendations.length }} 项</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">近期动态</div>
-              <div class="journal-note-value">{{ timeline.length }} 条</div>
-            </div>
-          </div>
-        </article>
       </div>
-    </section>
-
-    <section class="journal-bento">
-      <article class="journal-panel journal-radar-card rounded-[24px] border px-6 py-6">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">Skill Matrix</div>
-            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
-          </div>
-          <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
-        </div>
-        <div v-if="skillDimensions.length > 0" class="mt-4">
-          <RadarChart :indicators="radarIndicators" :values="radarValues" name="能力值" />
-        </div>
-        <div v-else class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]">
-          当前能力数据不足，完成更多题目后将生成雷达图。
-        </div>
-      </article>
-
-      <article class="journal-panel journal-rank-card rounded-[24px] border px-6 py-6">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">Leaderboard</div>
-            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
-          </div>
-          <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
-        </div>
-        <div class="mt-6 grid gap-3 md:grid-cols-2">
-          <article
-            v-for="item in storyMetrics"
-            :key="item.label"
-            class="journal-metric rounded-[18px] border px-4 py-4"
-            :class="item.tone === 'accent' ? 'journal-metric-accent' : ''"
-          >
-            <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-muted)]">{{ item.label }}</div>
-            <div class="mt-3 text-[30px] font-semibold tracking-tight text-[var(--journal-ink)]">{{ item.value }}</div>
-          </article>
-        </div>
-        <div class="mt-5 rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-4">
-          <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
-            <span class="status-dot status-dot-solved" />
-            当前排名已同步
-          </div>
-          <div class="mt-2 tech-font text-2xl font-semibold text-[var(--journal-ink)]">rank://{{ rankSummary }}</div>
-        </div>
-      </article>
-
-      <article class="journal-panel journal-ops-card rounded-[24px] border px-6 py-6">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">Operations</div>
-            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
-          </div>
-          <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
-        </div>
-        <div class="mt-5 space-y-3">
-          <article
-            v-for="item in operationsSummary"
-            :key="item.label"
-            class="rounded-[18px] border border-[var(--journal-border)] bg-[var(--journal-surface-subtle)] px-4 py-4"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <component :is="item.icon" class="h-4 w-4 text-[var(--journal-accent-strong)]" />
-                <div class="text-sm font-medium text-[var(--journal-ink)]">{{ item.label }}</div>
+      <div class="journal-board">
+        <section class="journal-bento">
+          <article class="journal-panel journal-radar-card px-6 py-6">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="journal-eyebrow">Skill Matrix</div>
+                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="status-dot" :class="`status-dot-${item.status}`" />
-                <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{ item.value }}</span>
+              <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+            </div>
+            <div v-if="skillDimensions.length > 0" class="mt-4">
+              <RadarChart :indicators="radarIndicators" :values="radarValues" name="能力值" />
+            </div>
+            <div
+              v-else
+              class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+            >
+              当前能力数据不足，完成更多题目后将生成雷达图。
+            </div>
+          </article>
+
+          <article class="journal-panel journal-rank-card px-6 py-6">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="journal-eyebrow">Leaderboard</div>
+                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
+              </div>
+              <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+            </div>
+            <div class="mt-6 grid gap-3 md:grid-cols-2">
+              <article
+                v-for="item in storyMetrics"
+                :key="item.label"
+                class="journal-metric px-4 py-4"
+                :class="item.tone === 'accent' ? 'journal-metric-accent' : ''"
+              >
+                <div
+                  class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-muted)]"
+                >
+                  {{ item.label }}
+                </div>
+                <div
+                  class="mt-3 text-[30px] font-semibold tracking-tight text-[var(--journal-ink)]"
+                >
+                  {{ item.value }}
+                </div>
+              </article>
+            </div>
+            <div class="journal-rank-summary mt-5 px-4 py-4">
+              <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
+                <span class="status-dot status-dot-solved" />
+                当前排名
+              </div>
+              <div class="mt-2 tech-font text-2xl font-semibold text-[var(--journal-ink)]">
+                #{{ rankSummary }}
               </div>
             </div>
-            <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.description }}</div>
           </article>
-        </div>
-      </article>
 
-      <article class="journal-panel journal-recommend-card rounded-[24px] border px-6 py-6">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow">Recommended Track</div>
-            <h3 class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">推荐训练队列</h3>
-          </div>
-          <Sparkles class="hidden h-10 w-10 text-[var(--journal-accent)] md:block" />
-        </div>
-
-        <div v-if="quickRecommendations.length === 0" class="mt-6 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]">
-          当前没有推荐题目，直接去挑战列表挑一道新题即可。
-        </div>
-
-        <div v-else class="mt-6 grid gap-3">
-          <button
-            v-for="item in quickRecommendations"
-            :key="item.challenge_id"
-            type="button"
-            class="journal-rec-item flex w-full items-start gap-4 rounded-[18px] border px-4 py-4 text-left transition"
-            @click="emit('openChallenge', item.challenge_id)"
-          >
-            <div class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font">
-              #{{ item.challenge_id }}
+          <article class="journal-panel journal-ops-card px-6 py-6">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="journal-eyebrow">Operations</div>
+                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
+              </div>
+              <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
             </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="space-y-2">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="status-dot" :class="`status-dot-${recommendationStatus(item.challenge_id)}`" />
-                    <div class="text-base font-semibold text-[var(--journal-ink)]">{{ item.title }}</div>
+            <div class="mt-5 space-y-3">
+              <article
+                v-for="item in operationsSummary"
+                :key="item.label"
+                class="journal-inline-item px-4 py-4"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <component
+                      :is="item.icon"
+                      class="h-4 w-4 text-[var(--journal-accent-strong)]"
+                    />
+                    <div class="text-sm font-medium text-[var(--journal-ink)]">
+                      {{ item.label }}
+                    </div>
                   </div>
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="category-chip" :class="categoryClass(item.category)">{{ item.category.toUpperCase() }}</span>
-                    <span class="rounded-full px-2.5 py-1 text-xs font-medium" :class="difficultyClass(item.difficulty)">
-                      <span class="difficulty-dot" :class="`difficulty-${item.difficulty}`" />
-                      {{ difficultyLabel(item.difficulty) }}
-                    </span>
+                  <div class="flex items-center gap-2">
+                    <span class="status-dot" :class="`status-dot-${item.status}`" />
+                    <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
+                      item.value
+                    }}</span>
                   </div>
                 </div>
-                <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
-              </div>
-              <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
-              <div class="mt-3 tech-font text-xs text-[var(--color-text-muted)]">flag{focus-{{ item.category }}-track}</div>
+                <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                  {{ item.description }}
+                </div>
+              </article>
             </div>
-          </button>
-        </div>
-      </article>
-
-      <article class="journal-panel journal-timeline-card rounded-[24px] border px-6 py-6">
-        <div class="journal-eyebrow">Recent Notes</div>
-        <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
-
-        <div v-if="recentTimeline.length === 0" class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]">
-          当前还没有训练动态。
-        </div>
-
-        <div v-else class="mt-5 space-y-3">
-          <article
-            v-for="event in recentTimeline"
-            :key="event.id"
-            class="journal-log rounded-[18px] border px-4 py-4"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex min-w-0 items-center gap-3">
-                <span class="status-dot shrink-0" :class="`status-dot-${timelineStatus(event.type)}`" />
-                <div class="truncate text-sm font-medium text-[var(--journal-ink)]">{{ event.title }}</div>
-              </div>
-              <div class="tech-font text-xs text-[var(--journal-muted)]">{{ formatDate(event.created_at) }}</div>
-            </div>
-            <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ timelineSummary(event) }}</div>
           </article>
-        </div>
-      </article>
+
+          <article class="journal-panel journal-recommend-card px-6 py-6">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="journal-eyebrow">Recommended Track</div>
+                <h3 class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">推荐训练队列</h3>
+              </div>
+              <Sparkles class="hidden h-10 w-10 text-[var(--journal-accent)] md:block" />
+            </div>
+
+            <div
+              v-if="quickRecommendations.length === 0"
+              class="mt-6 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+            >
+              当前没有推荐题目，直接去挑战列表挑一道新题即可。
+            </div>
+
+            <div v-else class="mt-6 grid gap-3">
+              <button
+                v-for="item in quickRecommendations"
+                :key="item.challenge_id"
+                type="button"
+                class="journal-rec-item flex w-full items-start gap-4 px-4 py-4 text-left transition"
+                @click="emit('openChallenge', item.challenge_id)"
+              >
+                <div
+                  class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font"
+                >
+                  #{{ item.challenge_id }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="space-y-2">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span
+                          class="status-dot"
+                          :class="`status-dot-${recommendationStatus(item.challenge_id)}`"
+                        />
+                        <div class="text-base font-semibold text-[var(--journal-ink)]">
+                          {{ item.title }}
+                        </div>
+                      </div>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="category-chip" :class="categoryClass(item.category)">{{
+                          item.category.toUpperCase()
+                        }}</span>
+                        <span
+                          class="rounded-full px-2.5 py-1 text-xs font-medium"
+                          :class="difficultyClass(item.difficulty)"
+                        >
+                          <span class="difficulty-dot" :class="`difficulty-${item.difficulty}`" />
+                          {{ difficultyLabel(item.difficulty) }}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
+                  </div>
+                  <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
+                    {{ item.reason }}
+                  </p>
+                </div>
+              </button>
+            </div>
+          </article>
+
+          <article class="journal-panel journal-timeline-card px-6 py-6">
+            <div class="journal-eyebrow">Recent Notes</div>
+            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
+
+            <div
+              v-if="recentTimeline.length === 0"
+              class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+            >
+              当前还没有训练动态。
+            </div>
+
+            <div v-else class="mt-5 space-y-3">
+              <article
+                v-for="event in recentTimeline"
+                :key="event.id"
+                class="journal-log px-4 py-4"
+              >
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <span
+                      class="status-dot shrink-0"
+                      :class="`status-dot-${timelineStatus(event.type)}`"
+                    />
+                    <div class="truncate text-sm font-medium text-[var(--journal-ink)]">
+                      {{ event.title }}
+                    </div>
+                  </div>
+                  <div class="tech-font text-xs text-[var(--journal-muted)]">
+                    {{ formatDate(event.created_at) }}
+                  </div>
+                </div>
+                <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                  {{ timelineSummary(event) }}
+                </div>
+              </article>
+            </div>
+          </article>
+        </section>
+      </div>
     </section>
   </div>
 </template>
@@ -281,8 +321,7 @@ function timelineStatus(eventType: string): string {
   --journal-muted: #475569;
   --journal-border: rgba(226, 232, 240, 0.72);
   --journal-surface: #ffffff;
-  --journal-surface-subtle: #f8fafc;
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
@@ -293,35 +332,30 @@ function timelineStatus(eventType: string): string {
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
 
-.journal-panel,
+.journal-board {
+  margin-top: 1.5rem;
+  border-top: 1px dashed rgba(148, 163, 184, 0.68);
+  padding-top: 1.25rem;
+}
+
+.journal-panel {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 .journal-metric,
-.journal-brief,
-.journal-log,
-.journal-rec-item {
-  border-color: var(--journal-border);
-}
-
-.journal-panel,
-.journal-metric {
-  background: var(--journal-surface);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-}
-
-.journal-brief,
 .journal-rec-item,
-.journal-log {
-  background: var(--journal-surface);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
-.journal-note {
+.journal-log,
+.journal-inline-item,
+.journal-rank-summary {
   border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: var(--journal-surface-subtle);
-  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
 }
 
-.journal-note-label,
 .journal-eyebrow {
   font-size: 11px;
   font-weight: 700;
@@ -330,51 +364,110 @@ function timelineStatus(eventType: string): string {
   color: #64748b;
 }
 
-.journal-note-value {
-  margin-top: 0.65rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .journal-bento {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 @media (min-width: 1280px) {
   .journal-bento {
     grid-template-columns: 1.1fr 0.92fr 0.88fr;
     grid-template-areas:
-      "radar rank ops"
-      "recommend recommend timeline";
+      'radar rank ops'
+      'recommend recommend timeline';
   }
 
-  .journal-radar-card { grid-area: radar; }
-  .journal-rank-card { grid-area: rank; }
-  .journal-ops-card { grid-area: ops; }
-  .journal-recommend-card { grid-area: recommend; }
-  .journal-timeline-card { grid-area: timeline; }
+  .journal-radar-card {
+    grid-area: radar;
+    position: relative;
+    padding-right: 1.5rem;
+  }
+
+  .journal-radar-card::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    right: -0.625rem;
+    bottom: 0.5rem;
+    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+  }
+  .journal-rank-card {
+    grid-area: rank;
+    position: relative;
+    padding-right: 1.5rem;
+  }
+
+  .journal-rank-card::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    right: -0.625rem;
+    bottom: 0.5rem;
+    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+  }
+  .journal-ops-card {
+    grid-area: ops;
+  }
+  .journal-recommend-card {
+    grid-area: recommend;
+    position: relative;
+    padding-right: 1.5rem;
+    padding-top: 1.75rem;
+  }
+
+  .journal-recommend-card::before {
+    content: '';
+    position: absolute;
+    top: -0.625rem;
+    left: 0;
+    right: 0.625rem;
+    border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  }
+
+  .journal-recommend-card::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem;
+    right: -0.625rem;
+    bottom: 0.5rem;
+    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+  }
+  .journal-timeline-card {
+    grid-area: timeline;
+    position: relative;
+    padding-top: 1.75rem;
+  }
+
+  .journal-timeline-card::before {
+    content: '';
+    position: absolute;
+    top: -0.625rem;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  }
 }
 
 .journal-metric-accent {
   background: linear-gradient(180deg, rgba(238, 242, 255, 0.9), rgba(248, 250, 252, 0.95));
 }
 
+.journal-inline-item + .journal-inline-item {
+  margin-top: 0.75rem;
+}
+
 .journal-rec-item:hover {
-  transform: translateY(-2px);
   border-color: #6366f1;
-  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .journal-log {
-  background: #ffffff;
   transition: all 0.2s ease-in-out;
 }
 
 .journal-log:hover {
   border-color: #6366f1;
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .category-chip {
@@ -387,16 +480,37 @@ function timelineStatus(eventType: string): string {
   letter-spacing: 0.04em;
 }
 
-.tag-web { background: #dbeafe; color: #1d4ed8; }
-.tag-pwn { background: #ede9fe; color: #6d28d9; }
-.tag-reverse { background: #fee2e2; color: #b91c1c; }
-.tag-crypto { background: #dcfce7; color: #15803d; }
-.tag-misc { background: #fef3c7; color: #b45309; }
-.tag-forensics { background: #e0f2fe; color: #0369a1; }
-.tag-default { background: #e2e8f0; color: #334155; }
+.tag-web {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.tag-pwn {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.tag-reverse {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.tag-crypto {
+  background: #dcfce7;
+  color: #15803d;
+}
+.tag-misc {
+  background: #fef3c7;
+  color: #b45309;
+}
+.tag-forensics {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+.tag-default {
+  background: #e2e8f0;
+  color: #334155;
+}
 
 .tech-font {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .status-dot {
@@ -433,14 +547,28 @@ function timelineStatus(eventType: string): string {
 }
 
 .difficulty-beginner,
-.difficulty-easy { background-color: #10b981; }
-.difficulty-medium { background-color: #f59e0b; }
-.difficulty-hard { background-color: #f97316; }
-.difficulty-insane { background-color: #ef4444; }
+.difficulty-easy {
+  background-color: #10b981;
+}
+.difficulty-medium {
+  background-color: #f59e0b;
+}
+.difficulty-hard {
+  background-color: #f97316;
+}
+.difficulty-insane {
+  background-color: #ef4444;
+}
 
 @keyframes dot-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38); }
-  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 </style>

@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 
 import AdminContestFormDialog from '@/components/admin/contest/AdminContestFormDialog.vue'
-import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 import ContestOrchestrationPage from '@/components/admin/contest/ContestOrchestrationPage.vue'
 import { useAdminContests } from '@/composables/useAdminContests'
 
@@ -102,17 +101,14 @@ function handleDialogOpenChange(value: boolean) {
       :page-size="pageSize"
       :loading="loading"
       :status-filter="statusFilter"
+      :awd-contests="awdContests"
+      :selected-awd-contest-id="selectedAwdContestId"
       @refresh="refresh"
       @open-create-dialog="openCreateDialog"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
       @change-page="changePage"
-    />
-
-    <AWDOperationsPanel
-      :contests="awdContests"
-      :selected-contest-id="selectedAwdContestId"
-      @update:selected-contest-id="updateSelectedAwdContestId"
+      @update:selected-awd-contest-id="updateSelectedAwdContestId"
     />
 
     <AdminContestFormDialog

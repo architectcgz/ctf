@@ -107,23 +107,7 @@ function getRankPillClass(rank: number): string[] {
           </div>
         </article>
       </div>
-      <div class="journal-panel scoreboard-board mt-6 rounded-[24px] border px-5 py-5 md:px-6">
-        <div class="scoreboard-board-head gap-4">
-          <div>
-            <div class="journal-eyebrow scoreboard-eyebrow-soft">Contest Boards</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-              把当前排行与历史排行放进一条连续视图里
-            </h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              可以直接刷新并查看每场竞赛的排行。
-            </p>
-          </div>
-
-          <button type="button" class="sb-refresh-btn" @click="refresh">刷新</button>
-        </div>
-
-        <div class="scoreboard-panel-divider" />
-
+      <div class="scoreboard-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
         <div v-if="loading && !hasSections" class="space-y-3 py-1">
           <div
             v-for="i in 3"
@@ -145,13 +129,17 @@ function getRankPillClass(rank: number): string[] {
           </template>
         </AppEmpty>
 
-        <div v-else class="scoreboard-sections mt-5 space-y-5">
+        <div v-else class="scoreboard-sections mt-5">
           <article
             v-for="(section, index) in sections"
             :key="section.contest.id"
             data-testid="scoreboard-card"
-            class="journal-log scoreboard-card rounded-[24px] border px-6 py-5"
-            :style="sectionAccentStyle(section.contest.status)"
+            class="journal-log scoreboard-card px-6 py-5"
+            :style="{
+              ...sectionAccentStyle(section.contest.status),
+              borderLeftWidth: '3px',
+              borderLeftColor: 'var(--scoreboard-accent)',
+            }"
           >
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
@@ -261,14 +249,6 @@ function getRankPillClass(rank: number): string[] {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
-.journal-panel {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
-}
-
 .journal-log {
   background: var(--journal-surface);
   border-color: var(--journal-border);
@@ -314,20 +294,15 @@ function getRankPillClass(rank: number): string[] {
   color: var(--journal-muted);
 }
 
-.scoreboard-board-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+.scoreboard-board {
+  border-top: 1px dashed rgba(148, 163, 184, 0.72);
 }
 
-.scoreboard-eyebrow-soft {
-  background: rgba(99, 102, 241, 0.06);
-}
-
-.scoreboard-panel-divider {
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-border);
+.scoreboard-sections {
+  border: 1px solid var(--journal-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.62);
+  overflow: hidden;
 }
 
 .sb-refresh-btn {
@@ -347,18 +322,17 @@ function getRankPillClass(rank: number): string[] {
 }
 
 .scoreboard-card {
-  border-top-width: 3px;
-  border-top-color: color-mix(
-    in srgb,
-    var(--scoreboard-accent, var(--journal-accent)) 58%,
-    transparent
-  );
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9));
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.56);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 252, 0.76));
+}
+
+.scoreboard-card:last-child {
+  border-bottom: 0;
 }
 
 .scoreboard-card-divider {
   margin: 1rem 0 1.1rem;
-  border-top: 1px solid rgba(148, 163, 184, 0.28);
+  border-top: 1px dashed rgba(148, 163, 184, 0.56);
 }
 
 .scoreboard-table-shell {

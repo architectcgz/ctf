@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { CalendarClock, Flag, RefreshCw, ShieldCheck, Trophy, UserPlus } from 'lucide-vue-next'
+import { CalendarClock, RefreshCw, Trophy, UserPlus } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
-import SectionCard from '@/components/common/SectionCard.vue'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
+import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 
 type StatusFilter = 'all' | Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
 
@@ -19,6 +17,8 @@ const props = defineProps<{
   pageSize: number
   loading: boolean
   statusFilter: StatusFilter
+  awdContests: ContestDetailData[]
+  selectedAwdContestId: string | null
 }>()
 
 const emit = defineEmits<{
@@ -27,136 +27,124 @@ const emit = defineEmits<{
   updateStatusFilter: [value: StatusFilter]
   openEditDialog: [contest: ContestDetailData]
   changePage: [page: number]
+  'update:selectedAwdContestId': [value: string]
 }>()
 
 const registeringCount = computed(() => props.list.filter((item) => item.status === 'registering').length)
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
+const awdCount = computed(() => props.awdContests.length)
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      eyebrow="Contest Orchestration"
-      title="赛事编排台"
-      description="查看赛事状态、筛选条件和当前赛事列表。"
-    >
-      <div class="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
-          @click="emit('refresh')"
-        >
-          <RefreshCw class="h-4 w-4" />
-          刷新列表
-        </button>
-        <button
-          type="button"
-          class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-          @click="emit('openCreateDialog')"
-        >
-          <UserPlus class="h-4 w-4" />
-          创建竞赛
-        </button>
-      </div>
-    </PageHeader>
+  <div class="journal-shell">
+    <section class="journal-hero rounded-[30px] border px-6 py-6 md:px-8">
+      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+        <div>
+          <div class="journal-eyebrow">Contest Orchestration</div>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+            赛事编排台
+          </h1>
+          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+            在这里查看赛事窗口、状态流转和 AWD 运维入口。
+          </p>
 
-    <section class="grid gap-4 xl:grid-cols-[1.06fr_0.94fr]">
-      <div class="rounded-[30px] border border-[var(--color-warning)]/20 bg-[linear-gradient(145deg,rgba(120,53,15,0.48),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-warning)]/75">
-          <span>Contest Timeline</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
-        </div>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">当前赛事编排视角</h2>
-        <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
-          重点关注赛事窗口和状态流转，便于快速判断当前哪些比赛需要创建、调整或持续跟进。
-        </p>
-
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-warning)]/60">当前页赛事</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ list.length }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前筛选结果内的本页赛事数。</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-warning)]/60">报名中</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ registeringCount }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">便于快速判断当前公开报名窗口。</div>
-          </div>
-          <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-warning)]/60">进行中</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ runningCount }}</div>
-            <div class="mt-2 text-sm text-[var(--color-text-secondary)]/70">当前正处于比赛中的场次数量。</div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+              <RefreshCw class="h-4 w-4" />
+              刷新列表
+            </button>
+            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+              <UserPlus class="h-4 w-4" />
+              创建竞赛
+            </button>
           </div>
         </div>
-      </div>
 
-      <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard variant="metric" accent="warning" eyebrow="赛事总量" :title="String(total)" subtitle="当前筛选条件下的赛事总数。">
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]">
-              <Trophy class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard variant="metric" accent="primary" eyebrow="接入边界" title="显式" subtitle="删除接口未提供，所以页面继续隐藏删除能力。">
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
-              <ShieldCheck class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-
-        <AppCard
-          variant="metric"
-          accent="primary"
-          eyebrow="状态筛选"
-          :title="statusFilter === 'all' ? '全部' : statusFilter"
-          subtitle="用于快速切到某个赛事阶段做编排调整。"
-        >
-          <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
-              <CalendarClock class="h-5 w-5" />
-            </div>
-          </template>
-        </AppCard>
-      </div>
-    </section>
-
-    <section class="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-      <div class="space-y-6">
-        <SectionCard title="状态窗口" subtitle="查看当前筛选条件和状态说明。">
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--color-text-secondary)]">状态筛选</span>
-            <select
-              :value="statusFilter"
-              class="w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-              @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)"
-            >
-              <option value="all">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="registering">报名中</option>
-              <option value="running">进行中</option>
-              <option value="frozen">已冻结</option>
-              <option value="ended">已结束</option>
-            </select>
-          </label>
-
-          <div class="mt-4 grid gap-3">
-            <AppCard variant="action" accent="success" eyebrow="已接入" subtitle="竞赛列表、创建、编辑都走真实接口。">
-              <template #default />
-            </AppCard>
-            <AppCard variant="action" accent="warning" eyebrow="受后端约束" subtitle="状态流转、时间字段可编辑范围与后端规则保持一致。">
-              <template #default />
-            </AppCard>
-            <AppCard variant="action" accent="neutral" eyebrow="暂未暴露" subtitle="删除接口主线未提供。">
-              <template #default />
-            </AppCard>
+        <article class="journal-brief rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
+            当前赛事概况
           </div>
-        </SectionCard>
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="journal-note">
+              <div class="journal-note-label">赛事总量</div>
+              <div class="journal-note-value">{{ total }}</div>
+              <div class="journal-note-helper">当前筛选条件下的赛事总数</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">报名中</div>
+              <div class="journal-note-value">{{ registeringCount }}</div>
+              <div class="journal-note-helper">当前页开放报名的赛事</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">进行中</div>
+              <div class="journal-note-value">{{ runningCount }}</div>
+              <div class="journal-note-helper">当前页正在进行的赛事</div>
+            </div>
+            <div class="journal-note">
+              <div class="journal-note-label">AWD</div>
+              <div class="journal-note-value">{{ awdCount }}</div>
+              <div class="journal-note-helper">当前页可直接进入运维视图</div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="journal-divider mt-6" />
+
+      <div class="admin-section-head admin-section-head-intro">
+        <div>
+          <div class="journal-note-label">Status Window</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">状态窗口</h2>
+        </div>
+        <div class="admin-pill">
+          <CalendarClock class="h-4 w-4" />
+          {{ statusFilter === 'all' ? '全部状态' : statusFilter }}
+        </div>
       </div>
 
-      <SectionCard title="赛事列表" subtitle="列表保留真实编辑能力，但页面语义切到“赛事编排”。">
+      <div class="mt-5 grid gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
+        <label class="space-y-2">
+          <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
+          <select
+            :value="statusFilter"
+            class="admin-input"
+            @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)"
+          >
+            <option value="all">全部状态</option>
+            <option value="draft">草稿</option>
+            <option value="registering">报名中</option>
+            <option value="running">进行中</option>
+            <option value="frozen">已冻结</option>
+            <option value="ended">已结束</option>
+          </select>
+        </label>
+
+        <div class="grid gap-3 md:grid-cols-3">
+          <div class="journal-note">
+            <div class="journal-note-label">列表状态</div>
+            <div class="journal-note-helper">创建、编辑和分页都在当前主卡片内完成。</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">时间窗口</div>
+            <div class="journal-note-helper">筛选后直接判断哪些比赛需要调整。</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">AWD 入口</div>
+            <div class="journal-note-helper">有 AWD 赛事时会在下方直接展开运维视图。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="journal-divider mt-6" />
+
+      <section class="space-y-4">
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">Contests</div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">赛事列表</h2>
+          </div>
+        </div>
+
         <div v-if="loading && list.length === 0" class="flex justify-center py-10">
           <AppLoading>正在同步竞赛列表...</AppLoading>
         </div>
@@ -164,15 +152,11 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
         <AppEmpty
           v-else-if="list.length === 0"
           title="暂无竞赛"
-          description="当前筛选条件下没有竞赛数据。你可以直接创建新竞赛，或者切换状态查看其他竞赛。"
-          icon="Flag"
+          description="当前筛选条件下没有竞赛数据。"
+          icon="Trophy"
         >
           <template #action>
-            <button
-              type="button"
-              class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-              @click="emit('openCreateDialog')"
-            >
+            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
               创建第一场竞赛
             </button>
           </template>
@@ -187,7 +171,213 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
           @edit="emit('openEditDialog', $event)"
           @change-page="emit('changePage', $event)"
         />
-      </SectionCard>
+      </section>
+
+      <div class="journal-divider mt-6" />
+
+      <section class="space-y-4">
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">AWD Operations</div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">AWD 运维视图</h2>
+          </div>
+        </div>
+
+        <AWDOperationsPanel
+          :contests="awdContests"
+          :selected-contest-id="selectedAwdContestId"
+          @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
+        />
+      </section>
     </section>
   </div>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
+  --journal-accent: #2563eb;
+  --journal-border: rgba(226, 232, 240, 0.84);
+  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+}
+
+.journal-hero {
+  border-color: var(--journal-border);
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border-radius: 16px !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+
+.journal-brief {
+  background: var(--journal-surface-subtle);
+  border-color: var(--journal-border);
+  border-radius: 16px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+}
+
+.journal-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.journal-note {
+  border-radius: 14px;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.75rem 0.875rem;
+}
+
+.journal-note-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-note-value {
+  margin-top: 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.journal-note-helper {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.journal-divider {
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-section-head-intro {
+  position: relative;
+  padding: 1rem 1.1rem 1rem 1.35rem;
+  border: 1px dashed rgba(148, 163, 184, 0.42);
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0) 72%);
+}
+
+.admin-section-head-intro::before {
+  content: '';
+  position: absolute;
+  left: 0.82rem;
+  top: 0.95rem;
+  bottom: 0.95rem;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.92), rgba(59, 130, 246, 0.2));
+}
+
+.admin-section-head-intro .journal-note-label {
+  color: var(--journal-accent);
+}
+
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.06);
+  padding: 0.48rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--journal-accent);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 150ms ease;
+}
+
+.admin-btn-primary {
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.admin-btn-ghost {
+  border: 1px solid var(--journal-border);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--journal-ink);
+}
+
+.admin-btn-ghost:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  color: var(--journal-accent);
+}
+
+.admin-input {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 1rem;
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  color: var(--journal-ink);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.admin-input:focus {
+  border-color: rgba(37, 99, 235, 0.42);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: #e2e8f0;
+  --journal-muted: #94a3b8;
+  --journal-accent: #60a5fa;
+  --journal-border: rgba(71, 85, 105, 0.78);
+  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+}
+
+:global([data-theme='dark']) .admin-section-head-intro {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.14), rgba(15, 23, 42, 0) 72%);
+}
+
+@media (max-width: 767px) {
+  .journal-hero {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+</style>
