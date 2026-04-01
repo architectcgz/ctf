@@ -60,6 +60,10 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 	return &user, nil
 }
 
+func (r *testReportRepository) FindContestByID(context.Context, int64) (*model.Contest, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+
 func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*assessmentdomain.PersonalReportStats, error) {
 	return &assessmentdomain.PersonalReportStats{}, nil
 }
@@ -82,6 +86,38 @@ func (r *testReportRepository) ListClassDimensionAverages(context.Context, strin
 
 func (r *testReportRepository) ListClassTopStudents(context.Context, string, int) ([]assessmentdomain.ClassTopStudent, error) {
 	return []assessmentdomain.ClassTopStudent{}, nil
+}
+
+func (r *testReportRepository) ListContestScoreboard(context.Context, int64) ([]assessmentdomain.ContestExportScoreboardItem, error) {
+	return []assessmentdomain.ContestExportScoreboardItem{}, nil
+}
+
+func (r *testReportRepository) ListContestChallenges(context.Context, int64) ([]assessmentdomain.ContestExportChallengeItem, error) {
+	return []assessmentdomain.ContestExportChallengeItem{}, nil
+}
+
+func (r *testReportRepository) ListContestTeams(context.Context, int64) ([]assessmentdomain.ContestExportTeamItem, error) {
+	return []assessmentdomain.ContestExportTeamItem{}, nil
+}
+
+func (r *testReportRepository) CountPublishedChallenges(context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (r *testReportRepository) GetStudentTimeline(context.Context, int64, int, int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error) {
+	return []assessmentdomain.ReviewArchiveTimelineEvent{}, nil
+}
+
+func (r *testReportRepository) GetStudentEvidence(context.Context, int64, *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+	return []assessmentdomain.ReviewArchiveEvidenceEvent{}, nil
+}
+
+func (r *testReportRepository) ListStudentWriteups(context.Context, int64) ([]assessmentdomain.ReviewArchiveWriteupItem, error) {
+	return []assessmentdomain.ReviewArchiveWriteupItem{}, nil
+}
+
+func (r *testReportRepository) ListStudentManualReviews(context.Context, int64) ([]assessmentdomain.ReviewArchiveManualReviewItem, error) {
+	return []assessmentdomain.ReviewArchiveManualReviewItem{}, nil
 }
 
 func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
@@ -186,11 +222,17 @@ func TestReportFilePathUsesXLSXExtensionForExcel(t *testing.T) {
 func TestReportFileExtension(t *testing.T) {
 	t.Parallel()
 
+	if got := reportFileExtension("json"); got != "json" {
+		t.Fatalf("expected json extension for json, got %s", got)
+	}
 	if got := reportFileExtension("excel"); got != "xlsx" {
 		t.Fatalf("expected xlsx extension for excel, got %s", got)
 	}
 	if got := reportFileExtension("pdf"); got != "pdf" {
 		t.Fatalf("expected pdf extension for pdf, got %s", got)
+	}
+	if got := reportFileExtension("json"); got != "json" {
+		t.Fatalf("expected json extension for json, got %s", got)
 	}
 }
 
@@ -205,6 +247,61 @@ func TestReportDownloadFileNameUsesRealExtension(t *testing.T) {
 
 	if got := reportDownloadFileName(report); got != "class-report-7.xlsx" {
 		t.Fatalf("expected xlsx download filename, got %s", got)
+	}
+}
+
+func TestWriteJSONReportCreatesJSONFile(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "archive.json")
+
+	if err := writeJSONReport(path, map[string]any{"type": "contest_export", "ok": true}); err != nil {
+		t.Fatalf("writeJSONReport() error = %v", err)
+	}
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if len(content) == 0 || content[0] != '{' {
+		t.Fatalf("expected json object content, got %q", string(content))
+	}
+}
+
+func TestValidateStudentReviewArchiveAccess(t *testing.T) {
+	t.Parallel()
+
+	teacher := &assessmentdomain.ReportUser{ID: 1, Role: model.RoleTeacher, ClassName: "class-a"}
+	admin := &assessmentdomain.ReportUser{ID: 2, Role: model.RoleAdmin}
+	student := &assessmentdomain.ReportUser{ID: 3, Role: model.RoleStudent, ClassName: "class-a"}
+	otherStudent := &assessmentdomain.ReportUser{ID: 4, Role: model.RoleStudent, ClassName: "class-b"}
+
+	if err := validateStudentReviewArchiveAccess(teacher, student); err != nil {
+		t.Fatalf("expected same-class teacher access, got %v", err)
+	}
+	if err := validateStudentReviewArchiveAccess(admin, otherStudent); err != nil {
+		t.Fatalf("expected admin access, got %v", err)
+	}
+
+	err := validateStudentReviewArchiveAccess(teacher, otherStudent)
+	appErr, ok := err.(*errcode.AppError)
+	if !ok || appErr.Code != errcode.ErrForbidden.Code {
+		t.Fatalf("expected forbidden error, got %#v", err)
+	}
+}
+
+func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     9,
+		Type:   model.ReportTypeContestExport,
+		Format: model.ReportFormatJSON,
+	}
+
+	if got := reportDownloadFileName(report); got != "contest_export-report-9.json" {
+		t.Fatalf("expected json download filename, got %s", got)
 	}
 }
 

@@ -731,15 +731,66 @@ export type RecommendationData = RecommendationItem[]
 ```ts
 export interface ReportExportData {
   report_id: ID
-  status: 'ready' | 'processing'
+  status: 'ready' | 'processing' | 'failed'
   download_url?: string     // status=ready 时返回
   expires_at?: ISODateTime
+  error_message?: string    // status=failed 时返回
 }
 ```
 
 ### 7.4 POST `/api/v1/reports/class`
 
 `data`：同 `ReportExportData`（大班级建议异步，status=processing；完成后通过通知推送下载地址）。
+
+### 7.5 POST `/api/v1/admin/contests/:id/export`
+
+请求体：
+
+```ts
+export interface CreateContestExportReq {
+  format?: 'json'
+}
+```
+
+`data`：同 `ReportExportData`。
+
+说明：
+
+- 第一版仅支持 `json`
+- 导出文件内容包含赛事基础信息、榜单结果、题目解出情况和队伍成员信息
+- 下载文件为 JSON，根对象当前包含：
+  - `generated_at`
+  - `contest`
+  - `scoreboard`
+  - `challenges`
+  - `teams`
+
+### 7.6 POST `/api/v1/teacher/students/:id/review-archive/export`
+
+请求体：
+
+```ts
+export interface CreateStudentReviewArchiveReq {
+  format?: 'json'
+}
+```
+
+`data`：同 `ReportExportData`。
+
+说明：
+
+- 第一版仅支持 `json`
+- 导出文件内容包含学生基础信息、训练摘要、时间线证据、writeup 评阅状态和人工审核记录
+- 教师仅可导出自己班级学生，管理员可导出任意学生
+- 下载文件为 JSON，根对象当前包含：
+  - `generated_at`
+  - `student`
+  - `summary`
+  - `skill_profile`
+  - `timeline`
+  - `evidence`
+  - `writeups`
+  - `manual_reviews`
 
 ---
 

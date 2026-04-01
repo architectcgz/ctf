@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -60,7 +62,7 @@ func (r *ReportRepository) MarkFailed(ctx context.Context, reportID int64, messa
 func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error) {
 	var user assessmentdomain.ReportUser
 	err := r.db.WithContext(ctx).Model(&model.User{}).
-		Select("id, username, class_name, role").
+		Select("id, username, COALESCE(name, '') AS name, class_name, role").
 		Where("id = ? AND deleted_at IS NULL", userID).
 		Scan(&user).Error
 	if err != nil {
@@ -70,6 +72,14 @@ func (r *ReportRepository) FindUserByID(ctx context.Context, userID int64) (*ass
 		return nil, fmt.Errorf("user not found")
 	}
 	return &user, nil
+}
+
+func (r *ReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+	var contest model.Contest
+	if err := r.db.WithContext(ctx).Where("id = ?", contestID).First(&contest).Error; err != nil {
+		return nil, err
+	}
+	return &contest, nil
 }
 
 func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (*assessmentdomain.PersonalReportStats, error) {
@@ -211,6 +221,463 @@ func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className s
 	return rows, err
 }
 
+type contestScoreboardRow struct {
+	TeamID              int64  `gorm:"column:team_id"`
+	TeamName            string `gorm:"column:team_name"`
+	Score               int    `gorm:"column:score"`
+	SolvedCount         int    `gorm:"column:solved_count"`
+	LastSubmissionAtRaw string `gorm:"column:last_submission_at"`
+}
+
+func (r *ReportRepository) ListContestScoreboard(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportScoreboardItem, error) {
+	rows := make([]contestScoreboardRow, 0)
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			t.id AS team_id,
+			t.name AS team_name,
+			t.total_score AS score,
+			COUNT(DISTINCT CASE
+				WHEN s.is_correct = TRUE THEN s.challenge_id
+			END) AS solved_count,
+			MAX(CASE WHEN s.is_correct = TRUE THEN s.submitted_at END) AS last_submission_at
+		FROM teams t
+		LEFT JOIN submissions s
+			ON s.contest_id = t.contest_id
+			AND s.team_id = t.id
+		WHERE t.contest_id = ? AND t.deleted_at IS NULL
+		GROUP BY t.id, t.name, t.total_score
+		ORDER BY t.total_score DESC, MAX(CASE WHEN s.is_correct = TRUE THEN s.submitted_at END) ASC, t.id ASC
+	`, contestID).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]assessmentdomain.ContestExportScoreboardItem, 0, len(rows))
+	for idx, row := range rows {
+		items = append(items, assessmentdomain.ContestExportScoreboardItem{
+			Rank:             idx + 1,
+			TeamID:           row.TeamID,
+			TeamName:         row.TeamName,
+			Score:            row.Score,
+			SolvedCount:      row.SolvedCount,
+			LastSubmissionAt: parseAggregateTime(row.LastSubmissionAtRaw),
+		})
+	}
+	return items, nil
+}
+
+func (r *ReportRepository) ListContestChallenges(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportChallengeItem, error) {
+	rows := make([]assessmentdomain.ContestExportChallengeItem, 0)
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			cc.id AS contest_challenge_id,
+			cc.challenge_id,
+			c.title,
+			c.category,
+			c.difficulty,
+			cc.points,
+			cc."order",
+			cc.is_visible,
+			COUNT(DISTINCT CASE
+				WHEN s.is_correct = TRUE THEN COALESCE(s.team_id, -s.user_id)
+			END) AS solve_count,
+			cc.first_blood_by,
+			NULLIF(fb.name, '') AS first_blood_team_name
+		FROM contest_challenges cc
+		JOIN challenges c ON c.id = cc.challenge_id
+		LEFT JOIN submissions s
+			ON s.contest_id = cc.contest_id
+			AND s.challenge_id = cc.challenge_id
+		LEFT JOIN teams fb ON fb.id = cc.first_blood_by
+		WHERE cc.contest_id = ? AND cc.deleted_at IS NULL
+		GROUP BY
+			cc.id, cc.challenge_id, c.title, c.category, c.difficulty,
+			cc.points, cc."order", cc.is_visible, cc.first_blood_by, fb.name
+		ORDER BY cc."order" ASC, cc.id ASC
+	`, contestID).Scan(&rows).Error
+	return rows, err
+}
+
+type contestTeamRow struct {
+	TeamID          int64  `gorm:"column:team_id"`
+	Name            string `gorm:"column:name"`
+	CaptainID       int64  `gorm:"column:captain_id"`
+	CaptainUsername string `gorm:"column:captain_username"`
+	MaxMembers      int    `gorm:"column:max_members"`
+	TotalScore      int    `gorm:"column:total_score"`
+	LastSolveAtRaw  string `gorm:"column:last_solve_at"`
+}
+
+type contestTeamMemberRow struct {
+	TeamID    int64      `gorm:"column:team_id"`
+	UserID    int64      `gorm:"column:user_id"`
+	Username  string     `gorm:"column:username"`
+	Name      string     `gorm:"column:name"`
+	ClassName string     `gorm:"column:class_name"`
+	JoinedAt  *time.Time `gorm:"column:joined_at"`
+}
+
+func (r *ReportRepository) ListContestTeams(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportTeamItem, error) {
+	teams := make([]contestTeamRow, 0)
+	if err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			t.id AS team_id,
+			t.name,
+			t.captain_id,
+			cu.username AS captain_username,
+			t.max_members,
+			t.total_score,
+			t.last_solve_at
+		FROM teams t
+		JOIN users cu ON cu.id = t.captain_id
+		WHERE t.contest_id = ? AND t.deleted_at IS NULL
+		ORDER BY t.total_score DESC, t.id ASC
+	`, contestID).Scan(&teams).Error; err != nil {
+		return nil, err
+	}
+
+	members := make([]contestTeamMemberRow, 0)
+	if err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			tm.team_id,
+			u.id AS user_id,
+			u.username,
+			COALESCE(u.name, '') AS name,
+			COALESCE(u.class_name, '') AS class_name,
+			tm.joined_at
+		FROM team_members tm
+		JOIN users u ON u.id = tm.user_id
+		WHERE tm.contest_id = ?
+		ORDER BY tm.team_id ASC, tm.joined_at ASC, tm.id ASC
+	`, contestID).Scan(&members).Error; err != nil {
+		return nil, err
+	}
+
+	memberMap := make(map[int64][]assessmentdomain.ContestExportTeamMember, len(teams))
+	for _, member := range members {
+		memberMap[member.TeamID] = append(memberMap[member.TeamID], assessmentdomain.ContestExportTeamMember{
+			UserID:    member.UserID,
+			Username:  member.Username,
+			Name:      member.Name,
+			ClassName: member.ClassName,
+			JoinedAt:  member.JoinedAt,
+		})
+	}
+
+	items := make([]assessmentdomain.ContestExportTeamItem, 0, len(teams))
+	for _, team := range teams {
+		teamMembers := memberMap[team.TeamID]
+		items = append(items, assessmentdomain.ContestExportTeamItem{
+			TeamID:          team.TeamID,
+			Name:            team.Name,
+			CaptainID:       team.CaptainID,
+			CaptainUsername: team.CaptainUsername,
+			MaxMembers:      team.MaxMembers,
+			TotalScore:      team.TotalScore,
+			LastSolveAt:     parseAggregateTime(team.LastSolveAtRaw),
+			MemberCount:     len(teamMembers),
+			Members:         teamMembers,
+		})
+	}
+	return items, nil
+}
+
+func (r *ReportRepository) CountPublishedChallenges(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.Challenge{}).
+		Where("status = ?", model.ChallengeStatusPublished).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error) {
+	if limit <= 0 {
+		limit = 200
+	}
+
+	rows := make([]assessmentdomain.ReviewArchiveTimelineEvent, 0)
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			events.type,
+			events.challenge_id,
+			COALESCE(c.title, '') AS title,
+			events.timestamp,
+			events.is_correct,
+			events.points,
+			events.detail
+		FROM (
+			SELECT
+				'instance_start' AS type,
+				i.challenge_id,
+				i.created_at AS timestamp,
+				NULL AS is_correct,
+				NULL AS points,
+				'启动练习实例' AS detail
+			FROM instances i
+			WHERE i.user_id = ?
+			UNION ALL
+			SELECT
+				'flag_submit' AS type,
+				s.challenge_id,
+				s.submitted_at AS timestamp,
+				s.is_correct,
+				CASE WHEN s.is_correct THEN c.points ELSE NULL END AS points,
+				CASE WHEN s.is_correct THEN '提交命中 Flag' ELSE '提交未命中 Flag' END AS detail
+			FROM submissions s
+			LEFT JOIN challenges c ON c.id = s.challenge_id
+			WHERE s.user_id = ? AND s.contest_id IS NULL
+			UNION ALL
+			SELECT
+				'hint_unlock' AS type,
+				hu.challenge_id,
+				hu.unlocked_at AS timestamp,
+				NULL AS is_correct,
+				NULL AS points,
+				CASE
+					WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title
+					ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示'
+				END AS detail
+			FROM challenge_hint_unlocks hu
+			JOIN challenge_hints h ON h.id = hu.challenge_hint_id
+			WHERE hu.user_id = ?
+			UNION ALL
+			SELECT
+				'instance_destroy' AS type,
+				i.challenge_id,
+				i.updated_at AS timestamp,
+				NULL AS is_correct,
+				NULL AS points,
+				'结束练习实例' AS detail
+			FROM instances i
+			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired', 'destroyed')
+		) events
+		LEFT JOIN challenges c ON c.id = events.challenge_id
+		ORDER BY events.timestamp DESC
+		LIMIT ? OFFSET ?
+	`, userID, userID, userID, userID, limit, offset).Scan(&rows).Error
+	return rows, err
+}
+
+func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+	events := make([]assessmentdomain.ReviewArchiveEvidenceEvent, 0)
+
+	accessRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+	}, 0)
+	accessQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
+		Select(strings.Join([]string{
+			"i.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"a.created_at AS timestamp",
+		}, ", ")).
+		Joins("JOIN instances i ON i.id = a.resource_id").
+		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
+		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_access")
+	if challengeID != nil {
+		accessQuery = accessQuery.Where("i.challenge_id = ?", *challengeID)
+	}
+	if err := accessQuery.Order("a.created_at ASC").Scan(&accessRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range accessRows {
+		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
+			Type:        "instance_access",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      "访问攻击目标",
+			Meta: map[string]any{
+				"event_stage": "access",
+			},
+		})
+	}
+
+	proxyRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	proxyQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
+		Select(strings.Join([]string{
+			"i.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"a.created_at AS timestamp",
+			"a.detail AS detail",
+		}, ", ")).
+		Joins("JOIN instances i ON i.id = a.resource_id").
+		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
+		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_proxy_request")
+	if challengeID != nil {
+		proxyQuery = proxyQuery.Where("i.challenge_id = ?", *challengeID)
+	}
+	if err := proxyQuery.Order("a.created_at ASC").Scan(&proxyRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range proxyRows {
+		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
+			Type:        "instance_proxy_request",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage": "exploit",
+			},
+		})
+	}
+
+	hintRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	hintQuery := r.db.WithContext(ctx).Table("challenge_hint_unlocks AS hu").
+		Select(strings.Join([]string{
+			"hu.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"hu.unlocked_at AS timestamp",
+			"CASE WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示' END AS detail",
+		}, ", ")).
+		Joins("JOIN challenge_hints h ON h.id = hu.challenge_hint_id").
+		Joins("LEFT JOIN challenges c ON c.id = hu.challenge_id").
+		Where("hu.user_id = ?", userID)
+	if challengeID != nil {
+		hintQuery = hintQuery.Where("hu.challenge_id = ?", *challengeID)
+	}
+	if err := hintQuery.Order("hu.unlocked_at ASC").Scan(&hintRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range hintRows {
+		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
+			Type:        "challenge_hint_unlock",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage": "analysis",
+			},
+		})
+	}
+
+	submissionRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		IsCorrect   bool      `gorm:"column:is_correct"`
+		Points      int       `gorm:"column:points"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	submissionQuery := r.db.WithContext(ctx).Table("submissions AS s").
+		Select(strings.Join([]string{
+			"s.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"s.submitted_at AS timestamp",
+			"s.is_correct AS is_correct",
+			"CASE WHEN s.is_correct THEN COALESCE(c.points, 0) ELSE 0 END AS points",
+			"CASE WHEN s.is_correct THEN '提交命中 Flag' ELSE '提交未命中 Flag' END AS detail",
+		}, ", ")).
+		Joins("LEFT JOIN challenges c ON c.id = s.challenge_id").
+		Where("s.user_id = ? AND s.contest_id IS NULL", userID)
+	if challengeID != nil {
+		submissionQuery = submissionQuery.Where("s.challenge_id = ?", *challengeID)
+	}
+	if err := submissionQuery.Order("s.submitted_at ASC").Scan(&submissionRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range submissionRows {
+		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
+			Type:        "challenge_submission",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage": "submit",
+				"is_correct":  row.IsCorrect,
+				"points":      row.Points,
+			},
+		})
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Timestamp.Before(events[j].Timestamp)
+	})
+	return events, nil
+}
+
+func (r *ReportRepository) ListStudentWriteups(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveWriteupItem, error) {
+	rows := make([]assessmentdomain.ReviewArchiveWriteupItem, 0)
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			sw.id,
+			sw.challenge_id,
+			c.title AS challenge_title,
+			sw.title,
+			sw.submission_status,
+			sw.review_status,
+			sw.submitted_at,
+			sw.reviewed_at,
+			sw.review_comment,
+			sw.updated_at,
+			COALESCE(reviewer.name, reviewer.username, '') AS reviewer_name
+		FROM submission_writeups sw
+		JOIN challenges c ON c.id = sw.challenge_id
+		LEFT JOIN users reviewer ON reviewer.id = sw.reviewed_by
+		WHERE sw.user_id = ?
+		ORDER BY sw.updated_at DESC, sw.id DESC
+	`, userID).Scan(&rows).Error
+	return rows, err
+}
+
+func (r *ReportRepository) ListStudentManualReviews(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveManualReviewItem, error) {
+	rows := make([]assessmentdomain.ReviewArchiveManualReviewItem, 0)
+	err := r.db.WithContext(ctx).Raw(`
+		SELECT
+			s.id,
+			s.challenge_id,
+			c.title AS challenge_title,
+			s.flag AS answer,
+			s.review_status,
+			s.submitted_at,
+			s.reviewed_at,
+			s.review_comment,
+			s.score,
+			COALESCE(reviewer.name, reviewer.username, '') AS reviewer_name
+		FROM submissions s
+		JOIN challenges c ON c.id = s.challenge_id
+		LEFT JOIN users reviewer ON reviewer.id = s.reviewed_by
+		WHERE s.user_id = ? AND c.flag_type = ?
+		ORDER BY s.updated_at DESC, s.id DESC
+	`, userID, model.FlagTypeManualReview).Scan(&rows).Error
+	return rows, err
+}
+
 func errcodeReportNotFound() error {
 	return gorm.ErrRecordNotFound
+}
+
+func parseAggregateTime(raw string) *time.Time {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil
+	}
+
+	layouts := []string{
+		time.RFC3339Nano,
+		"2006-01-02 15:04:05.999999999-07:00",
+		"2006-01-02 15:04:05.999999999",
+		"2006-01-02 15:04:05",
+	}
+	for _, layout := range layouts {
+		parsed, err := time.Parse(layout, trimmed)
+		if err == nil {
+			return &parsed
+		}
+	}
+	return nil
 }

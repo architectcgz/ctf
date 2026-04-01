@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -343,6 +344,168 @@ func TestFullRouter_ReportPreviewAndDownloadStateMatrix(t *testing.T) {
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", classReport.ReportID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/export", env.contest.ID), map[string]any{
+		"format": model.ReportFormatJSON,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var contestExport dto.ReportExportData
+	decodeFullRouterData(t, resp, &contestExport)
+	if contestExport.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected contest export processing status, got %+v", contestExport)
+	}
+
+	contestExportReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, model.ReportStatusReady, 5*time.Second)
+	if contestExportReady.DownloadURL == nil {
+		t.Fatalf("expected contest export download url, got %+v", contestExportReady)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", contestExport.ReportID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected json content-type, got %q", contentType)
+	}
+	if !strings.Contains(resp.Body.String(), "\"contest\"") {
+		t.Fatalf("expected contest export json payload, got %s", resp.Body.String())
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.otherStudent.ID), map[string]any{
+		"format": model.ReportFormatJSON,
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.student.ID), map[string]any{
+		"format": model.ReportFormatJSON,
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var reviewArchive dto.ReportExportData
+	decodeFullRouterData(t, resp, &reviewArchive)
+	if reviewArchive.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected review archive processing status, got %+v", reviewArchive)
+	}
+
+	reviewArchiveReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	if reviewArchiveReady.DownloadURL == nil {
+		t.Fatalf("expected review archive download url, got %+v", reviewArchiveReady)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", reviewArchive.ReportID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected json content-type, got %q", contentType)
+	}
+	if !strings.Contains(resp.Body.String(), "\"manual_reviews\"") {
+		t.Fatalf("expected review archive json payload, got %s", resp.Body.String())
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d", reviewArchive.ReportID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+}
+
+func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	otherTeacherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherTeacher.Username, "Password123"))
+
+	createContestSubmission(t, env, env.contest.ID, env.team.ID, env.student.ID, env.challenge.ID, 100)
+	secondChallenge := &model.Challenge{
+		Title:       "Export Matrix 2",
+		Description: "contest export second solve",
+		Category:    model.DimensionCrypto,
+		Difficulty:  model.ChallengeDifficultyEasy,
+		Points:      150,
+		Status:      model.ChallengeStatusPublished,
+		FlagType:    model.FlagTypeStatic,
+	}
+	if err := env.db.Create(secondChallenge).Error; err != nil {
+		t.Fatalf("create second challenge: %v", err)
+	}
+	secondContestChallenge := &model.ContestChallenge{
+		ContestID:   env.contest.ID,
+		ChallengeID: secondChallenge.ID,
+		Points:      150,
+		Order:       2,
+		IsVisible:   true,
+	}
+	if err := env.db.Create(secondContestChallenge).Error; err != nil {
+		t.Fatalf("create second contest challenge: %v", err)
+	}
+	createContestSubmission(t, env, env.contest.ID, env.team.ID, env.student.ID, secondChallenge.ID, 150)
+
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/admin/contests/%d/export", env.contest.ID), map[string]any{
+		"format": "json",
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	missingContestResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/contests/999999/export", map[string]any{
+		"format": "json",
+	}, adminHeaders)
+	assertFullRouterStatus(t, missingContestResp, http.StatusNotFound)
+
+	var contestExport dto.ReportExportData
+	decodeFullRouterData(t, resp, &contestExport)
+	if contestExport.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected contest export to start in processing state, got %+v", contestExport)
+	}
+
+	contestReady := waitForReportStatus(t, env, contestExport.ReportID, adminHeaders, model.ReportStatusReady, 5*time.Second)
+	if contestReady.DownloadURL == nil {
+		t.Fatalf("expected contest export download url after ready, got %+v", contestReady)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", contestExport.ReportID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected json content-type for contest export, got %q", contentType)
+	}
+	contestBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read contest export body: %v", err)
+	}
+	if !bytes.Contains(contestBody, []byte(`"contest"`)) || !bytes.Contains(contestBody, []byte(env.contest.Title)) {
+		t.Fatalf("expected contest export payload to contain contest metadata, got %s", string(contestBody))
+	}
+	if !bytes.Contains(contestBody, []byte(`"solved_count": 2`)) {
+		t.Fatalf("expected contest export scoreboard solved_count to include multiple solved challenges, got %s", string(contestBody))
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.student.ID), map[string]any{
+		"format": "json",
+	}, otherTeacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive/export", env.student.ID), map[string]any{
+		"format": "json",
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var reviewArchive dto.ReportExportData
+	decodeFullRouterData(t, resp, &reviewArchive)
+	if reviewArchive.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected review archive export to start in processing state, got %+v", reviewArchive)
+	}
+
+	reviewReady := waitForReportStatus(t, env, reviewArchive.ReportID, teacherHeaders, model.ReportStatusReady, 5*time.Second)
+	if reviewReady.DownloadURL == nil {
+		t.Fatalf("expected review archive download url after ready, got %+v", reviewReady)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/reports/%d/download", reviewArchive.ReportID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if contentType := resp.Header().Get("Content-Type"); contentType != "application/json" {
+		t.Fatalf("expected json content-type for review archive, got %q", contentType)
+	}
+	reviewBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read review archive body: %v", err)
+	}
+	if !bytes.Contains(reviewBody, []byte(`"student"`)) || !bytes.Contains(reviewBody, []byte(env.student.Username)) {
+		t.Fatalf("expected review archive payload to contain student metadata, got %s", string(reviewBody))
+	}
 }
 
 func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {

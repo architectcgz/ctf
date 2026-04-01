@@ -1267,9 +1267,10 @@ components:
         report_id: { $ref: "#/components/schemas/ID" }
         status:
           type: string
-          enum: [ready, processing]
+          enum: [ready, processing, failed]
         download_url: { type: string, nullable: true }
         expires_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        error_message: { type: string, nullable: true }
 
     ApiEnvelopeReportExportData:
       allOf:
@@ -2449,6 +2450,62 @@ paths:
             schema:
               type: object
               description: "请求体以实现为准；允许为空"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeReportExportData" }
+
+  /admin/contests/{id}/export:
+    post:
+      tags: [Reports, Admin]
+      summary: 导出赛事结果归档（JSON）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [json]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeReportExportData" }
+
+  /teacher/students/{id}/review-archive/export:
+    post:
+      tags: [Reports, Teacher]
+      summary: 导出学生复盘归档（JSON）
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                format:
+                  type: string
+                  enum: [json]
       responses:
         "200":
           description: OK
