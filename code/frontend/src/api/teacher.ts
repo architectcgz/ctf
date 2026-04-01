@@ -1,6 +1,7 @@
 import { request } from './request'
 
 import type {
+  TeacherEvidenceData,
   MyProgressData,
   RecommendationItem,
   ReportExportData,
@@ -27,6 +28,24 @@ interface RawTimelineItem {
 
 interface RawTimelineResponse {
   events: RawTimelineItem[]
+}
+
+interface RawTeacherEvidenceResponse {
+  summary: {
+    total_events: number
+    proxy_request_count: number
+    submit_count: number
+    success_count: number
+    challenge_id: string | number
+  }
+  events: Array<{
+    type: string
+    challenge_id: string | number
+    title: string
+    detail: string
+    timestamp: string
+    meta?: Record<string, unknown>
+  }>
 }
 
 export async function getClasses(): Promise<TeacherClassItem[]> {
@@ -181,6 +200,24 @@ export async function getStudentTimeline(id: string): Promise<TimelineEvent[]> {
       raw_type: item.type,
     },
   }))
+}
+
+export async function getStudentEvidence(id: string): Promise<TeacherEvidenceData> {
+  const payload = await request<RawTeacherEvidenceResponse>({
+    method: 'GET',
+    url: `/teacher/students/${encodeURIComponent(id)}/evidence`,
+  })
+
+  return {
+    summary: {
+      ...payload.summary,
+      challenge_id: String(payload.summary.challenge_id),
+    },
+    events: payload.events.map((item) => ({
+      ...item,
+      challenge_id: String(item.challenge_id),
+    })),
+  }
 }
 
 export async function getTeacherInstances(params?: {

@@ -54,6 +54,9 @@ import (
 	runtimecmd "ctf-platform/internal/module/runtime/application/commands"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
+	teachingreadmodelhttp "ctf-platform/internal/module/teaching_readmodel/api/http"
+	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
+	teachingreadmodelinfra "ctf-platform/internal/module/teaching_readmodel/infrastructure"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
 	"ctf-platform/pkg/errcode"
@@ -157,6 +160,23 @@ type flowTimelineResponse struct {
 		IsCorrect   *bool  `json:"is_correct"`
 		Points      *int   `json:"points"`
 		Detail      string `json:"detail"`
+	} `json:"events"`
+}
+
+type flowTeacherEvidenceReviewResponse struct {
+	Summary struct {
+		TotalEvents       int   `json:"total_events"`
+		ProxyRequestCount int   `json:"proxy_request_count"`
+		SubmitCount       int   `json:"submit_count"`
+		SuccessCount      int   `json:"success_count"`
+		ChallengeID       int64 `json:"challenge_id"`
+	} `json:"summary"`
+	Events []struct {
+		Type        string                 `json:"type"`
+		ChallengeID int64                  `json:"challenge_id"`
+		Title       string                 `json:"title"`
+		Detail      string                 `json:"detail"`
+		Meta        map[string]interface{} `json:"meta"`
 	} `json:"events"`
 }
 
@@ -544,6 +564,34 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, false, 0)
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, true, 100)
 
+	evidenceResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/teacher/students/"+strconv.FormatInt(env.student.ID, 10)+"/evidence?challenge_id="+strconv.FormatInt(challenge.ID, 10),
+		nil,
+		bearerHeaders(adminToken),
+		nil,
+	)
+	if evidenceResp.Code != http.StatusOK {
+		t.Fatalf("unexpected evidence status: %d body=%s", evidenceResp.Code, evidenceResp.Body.String())
+	}
+	evidenceBody := decodeFlowEnvelope(t, evidenceResp)
+	evidence := decodeFlowJSON[flowTeacherEvidenceReviewResponse](t, evidenceBody.Data)
+	if evidence.Summary.TotalEvents < 5 {
+		t.Fatalf("expected evidence summary to contain >= 5 events, got %+v", evidence.Summary)
+	}
+	if evidence.Summary.ProxyRequestCount < 1 {
+		t.Fatalf("expected evidence summary to count proxy request, got %+v", evidence.Summary)
+	}
+	if evidence.Summary.SubmitCount != 2 {
+		t.Fatalf("expected evidence summary to count 2 submissions, got %+v", evidence.Summary)
+	}
+	assertTeacherEvidenceHasEvent(t, evidence.Events, "instance_access", challenge.ID, "event_stage", "access")
+	assertTeacherEvidenceHasEvent(t, evidence.Events, "instance_proxy_request", challenge.ID, "event_stage", "exploit")
+	assertTeacherEvidenceHasEvent(t, evidence.Events, "challenge_hint_unlock", challenge.ID, "event_stage", "analysis")
+	assertTeacherEvidenceHasEvent(t, evidence.Events, "challenge_submission", challenge.ID, "event_stage", "submit")
+
 	auditResp := performFlowJSONRequest(
 		t,
 		env.router,
@@ -801,6 +849,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
 	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
+	teachingReadmodelRepo := teachingreadmodelinfra.NewRepository(db)
+	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, nil, logger)
+	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(teachingReadmodelService)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{})
 
 	admin := createFlowUser(t, db, "admin_user", "Password123", model.RoleAdmin)
@@ -849,6 +900,9 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	usersGroup := protected.Group("/users")
 	usersGroup.GET("/me/progress", practiceReadmodelHandler.GetProgress)
 	usersGroup.GET("/me/timeline", practiceReadmodelHandler.GetTimeline)
+	teacherGroup := protected.Group("/teacher")
+	teacherGroup.Use(middleware.RequireRole(model.RoleTeacher, model.RoleAdmin))
+	teacherGroup.GET("/students/:id/evidence", teachingReadmodelHandler.GetStudentEvidence)
 
 	t.Cleanup(func() {
 		if sqlDB, sqlErr := db.DB(); sqlErr == nil {
@@ -1143,6 +1197,37 @@ func assertTimelineHasHintUnlock(t *testing.T, events []struct {
 	}
 
 	t.Fatalf("expected timeline to contain hint unlock event challenge_id=%d", challengeID)
+}
+
+func assertTeacherEvidenceHasEvent(
+	t *testing.T,
+	events []struct {
+		Type        string                 `json:"type"`
+		ChallengeID int64                  `json:"challenge_id"`
+		Title       string                 `json:"title"`
+		Detail      string                 `json:"detail"`
+		Meta        map[string]interface{} `json:"meta"`
+	},
+	wantType string,
+	challengeID int64,
+	metaKey string,
+	metaValue string,
+) {
+	t.Helper()
+	for _, event := range events {
+		if event.Type != wantType || event.ChallengeID != challengeID {
+			continue
+		}
+		value, ok := event.Meta[metaKey]
+		if !ok {
+			t.Fatalf("expected evidence event %s to contain meta key %s: %+v", wantType, metaKey, event)
+		}
+		if value != metaValue {
+			t.Fatalf("expected evidence event %s meta[%s]=%s, got %+v", wantType, metaKey, metaValue, event.Meta)
+		}
+		return
+	}
+	t.Fatalf("expected evidence to contain event type=%s challenge_id=%d", wantType, challengeID)
 }
 
 func assertTimelineHasChallengeDetailView(t *testing.T, events []struct {

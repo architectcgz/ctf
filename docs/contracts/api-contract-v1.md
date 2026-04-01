@@ -617,6 +617,34 @@ export type TeacherStudentListData = TeacherStudentItem[]
 
 `data`：`MyProgressData`（或包含更细颗粒度的 challenge 列表；需确认）。
 
+### 6.4 GET `/api/v1/teacher/students/:id/evidence`
+
+`data`：
+
+```ts
+export interface TeacherEvidenceSummaryData {
+  total_events: number
+  proxy_request_count: number
+  submit_count: number
+  success_count: number
+  challenge_id: ID
+}
+
+export interface TeacherEvidenceEventData {
+  type: string
+  challenge_id: ID
+  title: string
+  detail: string
+  timestamp: ISODateTime
+  meta?: Record<string, unknown>
+}
+
+export interface TeacherEvidenceData {
+  summary: TeacherEvidenceSummaryData
+  events: TeacherEvidenceEventData[]
+}
+```
+
 ---
 
 ## 7. 技能评估与报告（`/users/*` `/reports/*`）

@@ -39,6 +39,15 @@ type TimelineEventRecord struct {
 	Detail      string
 }
 
+type EvidenceEventRecord struct {
+	Type        string
+	ChallengeID int64
+	Title       string
+	Timestamp   time.Time
+	Detail      string
+	Meta        map[string]any
+}
+
 type ClassSummary struct {
 	ClassName          string
 	StudentCount       int64
@@ -70,6 +79,7 @@ type Repository interface {
 	GetCategoryProgress(ctx context.Context, userID int64) ([]ProgressRow, error)
 	GetDifficultyProgress(ctx context.Context, userID int64) ([]ProgressRow, error)
 	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]TimelineEventRecord, error)
+	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]EvidenceEventRecord, error)
 	GetClassSummary(ctx context.Context, className string, since time.Time) (*ClassSummary, error)
 	GetClassTrend(ctx context.Context, className string, since time.Time, days int) (*ClassTrend, error)
 }
