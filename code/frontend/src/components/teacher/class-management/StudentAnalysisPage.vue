@@ -7,6 +7,7 @@ import type {
   SkillProfileData,
   TeacherEvidenceData,
   TeacherClassItem,
+  TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -30,6 +31,7 @@ const props = defineProps<{
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
+  writeupSubmissions: TeacherSubmissionWriteupItemData[]
   solvedRate: number
   weakDimensions: string[]
 }>()
@@ -246,6 +248,7 @@ const emit = defineEmits<{
         :recommendations="recommendations"
         :timeline="timeline"
         :evidence="evidence"
+        :writeup-submissions="writeupSubmissions"
         :loading="loadingDetails"
         empty-text="请先从左侧选择一名学生。"
         @open-challenge="emit('openChallenge', $event)"

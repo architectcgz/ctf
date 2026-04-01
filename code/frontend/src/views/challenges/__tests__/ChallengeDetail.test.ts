@@ -7,6 +7,8 @@ import ChallengeDetail from '../ChallengeDetail.vue'
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
   getChallengeWriteup: vi.fn(),
+  getMyChallengeWriteupSubmission: vi.fn(),
+  upsertChallengeWriteupSubmission: vi.fn(),
   submitFlag: vi.fn(),
   unlockHint: vi.fn(),
   createInstance: vi.fn(),
@@ -63,6 +65,18 @@ describe('ChallengeDetail', () => {
       requires_spoiler_warning: true,
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T01:00:00.000Z',
+    })
+    challengeApiMocks.getMyChallengeWriteupSubmission.mockResolvedValue(null)
+    challengeApiMocks.upsertChallengeWriteupSubmission.mockResolvedValue({
+      id: 'submission-1',
+      user_id: 'stu-1',
+      challenge_id: '1',
+      title: '我的复盘',
+      content: '先找回显，再定位注入。',
+      submission_status: 'draft',
+      review_status: 'pending',
+      created_at: '2026-03-12T00:00:00.000Z',
+      updated_at: '2026-03-12T00:30:00.000Z',
     })
     challengeApiMocks.submitFlag.mockReset()
     challengeApiMocks.unlockHint.mockReset()
@@ -132,6 +146,36 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).toContain('官方题解')
     expect(wrapper.text()).toContain('请谨慎阅读')
+  })
+
+  it('应该支持保存个人 writeup 草稿', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const titleInput = wrapper.find('input[placeholder*="完整链路"]')
+    const contentInput = wrapper.find('textarea')
+    const draftButton = wrapper.findAll('button').find((node) => node.text().includes('保存草稿'))
+
+    await titleInput.setValue('我的复盘')
+    await contentInput.setValue('先找回显，再定位注入。')
+    await draftButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(challengeApiMocks.upsertChallengeWriteupSubmission).toHaveBeenCalledWith('1', {
+      title: '我的复盘',
+      content: '先找回显，再定位注入。',
+      submission_status: 'draft',
+    })
+    expect(wrapper.text()).toContain('草稿')
   })
 
   it('启动靶机后应停留在题目页并显示实例卡片', async () => {

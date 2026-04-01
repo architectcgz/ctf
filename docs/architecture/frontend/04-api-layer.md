@@ -123,6 +123,9 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
 |------|------|------|
 | `getChallenges(params)` | GET | `/challenges` |
 | `getChallengeDetail(id)` | GET | `/challenges/:id` |
+| `getChallengeWriteup(id)` | GET | `/challenges/:id/writeup` |
+| `upsertMyChallengeWriteup(id, data)` | POST | `/challenges/:id/writeup-submissions` |
+| `getMyChallengeWriteup(id)` | GET | `/challenges/:id/writeup-submissions/me` |
 | `submitFlag(id, flag)` | POST | `/challenges/:id/submissions` |
 | `unlockHint(id, level)` | POST | `/challenges/:id/hints/:level/unlock` |
 | `createInstance(id)` | POST | `/challenges/:id/instances` |
@@ -175,6 +178,9 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
 | `getClassStudents(name)` | GET | `/teacher/classes/:name/students` |
 | `getStudentProgress(id)` | GET | `/teacher/students/:id/progress` |
 | `getStudentEvidence(id)` | GET | `/teacher/students/:id/evidence` |
+| `getTeacherWriteupSubmissions(params)` | GET | `/teacher/writeup-submissions` |
+| `getTeacherWriteupSubmission(id)` | GET | `/teacher/writeup-submissions/:id` |
+| `reviewTeacherWriteupSubmission(id, data)` | PUT | `/teacher/writeup-submissions/:id/review` |
 | `exportClassReport(data)` | POST | `/reports/class` |
 
 ### 2.8 管理后台 `api/admin.ts`

@@ -10,6 +10,7 @@ import {
   getStudentRecommendations,
   getStudentSkillProfile,
   getStudentTimeline,
+  getTeacherWriteupSubmissions,
 } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -17,6 +18,7 @@ import type {
   SkillProfileData,
   TeacherEvidenceData,
   TeacherClassItem,
+  TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -41,6 +43,7 @@ const skillProfile = ref<SkillProfileData | null>(null)
 const recommendations = ref<RecommendationItem[]>([])
 const timeline = ref<TimelineEvent[]>([])
 const evidence = ref<TeacherEvidenceData | null>(null)
+const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
 
 const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
 const solvedRate = computed(() => {
@@ -90,6 +93,7 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     recommendations.value = []
     timeline.value = []
     evidence.value = null
+    writeupSubmissions.value = []
     selectedStudentId.value = ''
     return
   }
@@ -98,12 +102,13 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
   selectedStudentId.value = studentId
 
   try {
-    const [nextProgress, nextProfile, nextRecommendations, nextTimeline, nextEvidence] = await Promise.all([
+    const [nextProgress, nextProfile, nextRecommendations, nextTimeline, nextEvidence, nextWriteups] = await Promise.all([
       getStudentProgress(studentId),
       getStudentSkillProfile(studentId),
       getStudentRecommendations(studentId),
       getStudentTimeline(studentId),
       getStudentEvidence(studentId),
+      getTeacherWriteupSubmissions({ student_id: studentId, page_size: 6 }),
     ])
 
     progress.value = nextProgress
@@ -111,6 +116,7 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     recommendations.value = nextRecommendations
     timeline.value = nextTimeline
     evidence.value = nextEvidence
+    writeupSubmissions.value = nextWriteups.list
   } finally {
     loadingDetails.value = false
   }
@@ -178,6 +184,7 @@ onMounted(() => {
     :recommendations="recommendations"
     :timeline="timeline"
     :evidence="evidence"
+    :writeup-submissions="writeupSubmissions"
     :solved-rate="solvedRate"
     :weak-dimensions="weakDimensions"
     @retry="initialize"

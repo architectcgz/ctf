@@ -16,6 +16,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("failed to open db: %v", err)
 	}
 	if err := db.AutoMigrate(
+		&model.User{},
 		&model.Challenge{},
 		&model.Image{},
 		&model.Instance{},
@@ -23,6 +24,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.ChallengeHint{},
 		&model.ChallengeHintUnlock{},
 		&model.ChallengeWriteup{},
+		&model.SubmissionWriteup{},
 		&model.ChallengeTopology{},
 		&model.EnvironmentTemplate{},
 	); err != nil {
