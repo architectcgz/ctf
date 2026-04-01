@@ -5,6 +5,7 @@ import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
+  TeacherEvidenceData,
   TeacherClassItem,
   TeacherStudentItem,
   TimelineEvent,
@@ -28,6 +29,7 @@ const props = defineProps<{
   skillProfile: SkillProfileData | null
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
+  evidence: TeacherEvidenceData | null
   solvedRate: number
   weakDimensions: string[]
 }>()
@@ -243,6 +245,7 @@ const emit = defineEmits<{
         :profile="skillProfile"
         :recommendations="recommendations"
         :timeline="timeline"
+        :evidence="evidence"
         :loading="loadingDetails"
         empty-text="请先从左侧选择一名学生。"
         @open-challenge="emit('openChallenge', $event)"

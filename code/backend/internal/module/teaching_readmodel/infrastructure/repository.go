@@ -301,6 +301,159 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 	return events, nil
 }
 
+func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]readmodelports.EvidenceEventRecord, error) {
+	events := make([]readmodelports.EvidenceEventRecord, 0)
+
+	accessRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+	}, 0)
+	accessQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
+		Select(strings.Join([]string{
+			"i.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"a.created_at AS timestamp",
+		}, ", ")).
+		Joins("JOIN instances i ON i.id = a.resource_id").
+		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
+		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_access")
+	if challengeID != nil {
+		accessQuery = accessQuery.Where("i.challenge_id = ?", *challengeID)
+	}
+	if err := accessQuery.Order("a.created_at ASC").Scan(&accessRows).Error; err != nil {
+		return nil, fmt.Errorf("get student evidence access rows: %w", err)
+	}
+	for _, row := range accessRows {
+		events = append(events, readmodelports.EvidenceEventRecord{
+			Type:        "instance_access",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      "访问攻击目标，开始与靶机进行实际交互",
+			Meta: map[string]any{
+				"event_stage": "access",
+			},
+		})
+	}
+
+	proxyRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	proxyQuery := r.db.WithContext(ctx).Table("audit_logs AS a").
+		Select(strings.Join([]string{
+			"i.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"a.created_at AS timestamp",
+			"a.detail AS detail",
+		}, ", ")).
+		Joins("JOIN instances i ON i.id = a.resource_id").
+		Joins("LEFT JOIN challenges c ON c.id = i.challenge_id").
+		Where("a.user_id = ? AND a.resource_type = ?", userID, "instance_proxy_request")
+	if challengeID != nil {
+		proxyQuery = proxyQuery.Where("i.challenge_id = ?", *challengeID)
+	}
+	if err := proxyQuery.Order("a.created_at ASC").Scan(&proxyRows).Error; err != nil {
+		return nil, fmt.Errorf("get student evidence proxy rows: %w", err)
+	}
+	for _, row := range proxyRows {
+		meta := buildTeacherEvidenceProxyMeta(row.Detail)
+		meta["event_stage"] = "exploit"
+		events = append(events, readmodelports.EvidenceEventRecord{
+			Type:        "instance_proxy_request",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      buildTeacherProxyTimelineDetail(row.Detail),
+			Meta:        meta,
+		})
+	}
+
+	hintRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	hintQuery := r.db.WithContext(ctx).Table("challenge_hint_unlocks AS hu").
+		Select(strings.Join([]string{
+			"hu.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"hu.unlocked_at AS timestamp",
+			"CASE WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示' END AS detail",
+		}, ", ")).
+		Joins("JOIN challenge_hints h ON h.id = hu.challenge_hint_id").
+		Joins("LEFT JOIN challenges c ON c.id = hu.challenge_id").
+		Where("hu.user_id = ?", userID)
+	if challengeID != nil {
+		hintQuery = hintQuery.Where("hu.challenge_id = ?", *challengeID)
+	}
+	if err := hintQuery.Order("hu.unlocked_at ASC").Scan(&hintRows).Error; err != nil {
+		return nil, fmt.Errorf("get student evidence hint rows: %w", err)
+	}
+	for _, row := range hintRows {
+		events = append(events, readmodelports.EvidenceEventRecord{
+			Type:        "challenge_hint_unlock",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage": "analysis",
+			},
+		})
+	}
+
+	submissionRows := make([]struct {
+		ChallengeID int64     `gorm:"column:challenge_id"`
+		Title       string    `gorm:"column:title"`
+		Timestamp   time.Time `gorm:"column:timestamp"`
+		IsCorrect   bool      `gorm:"column:is_correct"`
+		Points      int       `gorm:"column:points"`
+		Detail      string    `gorm:"column:detail"`
+	}, 0)
+	submissionQuery := r.db.WithContext(ctx).Table("submissions AS s").
+		Select(strings.Join([]string{
+			"s.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"s.submitted_at AS timestamp",
+			"s.is_correct AS is_correct",
+			"CASE WHEN s.is_correct THEN COALESCE(c.points, 0) ELSE 0 END AS points",
+			"CASE WHEN s.is_correct THEN '提交命中 Flag' ELSE '提交未命中 Flag' END AS detail",
+		}, ", ")).
+		Joins("LEFT JOIN challenges c ON c.id = s.challenge_id").
+		Where("s.user_id = ?", userID)
+	if challengeID != nil {
+		submissionQuery = submissionQuery.Where("s.challenge_id = ?", *challengeID)
+	}
+	if err := submissionQuery.Order("s.submitted_at ASC").Scan(&submissionRows).Error; err != nil {
+		return nil, fmt.Errorf("get student evidence submission rows: %w", err)
+	}
+	for _, row := range submissionRows {
+		events = append(events, readmodelports.EvidenceEventRecord{
+			Type:        "challenge_submission",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage": "submit",
+				"is_correct":  row.IsCorrect,
+				"points":      row.Points,
+			},
+		})
+	}
+
+	sort.Slice(events, func(i, j int) bool {
+		return events[i].Timestamp.Before(events[j].Timestamp)
+	})
+
+	return events, nil
+}
+
 func (r *Repository) listStudentAuditTimelineRows(ctx context.Context, userID int64) ([]timelineEventRow, error) {
 	rows := make([]timelineEventRow, 0)
 	if err := r.db.WithContext(ctx).Raw(`
@@ -624,4 +777,39 @@ func buildTeacherProxyTimelineDetail(rawDetail string) string {
 		summary += "，携带请求摘要"
 	}
 	return summary
+}
+
+func buildTeacherEvidenceProxyMeta(rawDetail string) map[string]any {
+	meta := map[string]any{}
+	if strings.TrimSpace(rawDetail) == "" {
+		return meta
+	}
+
+	var detail struct {
+		Method         string `json:"method"`
+		TargetPath     string `json:"target_path"`
+		TargetQuery    string `json:"target_query"`
+		Status         int    `json:"status"`
+		PayloadPreview string `json:"payload_preview"`
+	}
+	if err := json.Unmarshal([]byte(rawDetail), &detail); err != nil {
+		return meta
+	}
+
+	if value := strings.ToUpper(strings.TrimSpace(detail.Method)); value != "" {
+		meta["request_method"] = value
+	}
+	if value := strings.TrimSpace(detail.TargetPath); value != "" {
+		meta["target_path"] = value
+	}
+	if value := strings.TrimSpace(detail.TargetQuery); value != "" {
+		meta["target_query"] = value
+	}
+	if detail.Status > 0 {
+		meta["status_code"] = detail.Status
+	}
+	if value := strings.TrimSpace(detail.PayloadPreview); value != "" {
+		meta["payload_preview"] = value
+	}
+	return meta
 }

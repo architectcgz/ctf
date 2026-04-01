@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   getClasses,
   getClassStudents,
+  getStudentEvidence,
   getStudentProgress,
   getStudentRecommendations,
   getStudentSkillProfile,
@@ -14,6 +15,7 @@ import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
+  TeacherEvidenceData,
   TeacherClassItem,
   TeacherStudentItem,
   TimelineEvent,
@@ -38,6 +40,7 @@ const progress = ref<MyProgressData | null>(null)
 const skillProfile = ref<SkillProfileData | null>(null)
 const recommendations = ref<RecommendationItem[]>([])
 const timeline = ref<TimelineEvent[]>([])
+const evidence = ref<TeacherEvidenceData | null>(null)
 
 const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
 const solvedRate = computed(() => {
@@ -86,6 +89,7 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     skillProfile.value = null
     recommendations.value = []
     timeline.value = []
+    evidence.value = null
     selectedStudentId.value = ''
     return
   }
@@ -94,17 +98,19 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
   selectedStudentId.value = studentId
 
   try {
-    const [nextProgress, nextProfile, nextRecommendations, nextTimeline] = await Promise.all([
+    const [nextProgress, nextProfile, nextRecommendations, nextTimeline, nextEvidence] = await Promise.all([
       getStudentProgress(studentId),
       getStudentSkillProfile(studentId),
       getStudentRecommendations(studentId),
       getStudentTimeline(studentId),
+      getStudentEvidence(studentId),
     ])
 
     progress.value = nextProgress
     skillProfile.value = nextProfile
     recommendations.value = nextRecommendations
     timeline.value = nextTimeline
+    evidence.value = nextEvidence
   } finally {
     loadingDetails.value = false
   }
@@ -171,6 +177,7 @@ onMounted(() => {
     :skill-profile="skillProfile"
     :recommendations="recommendations"
     :timeline="timeline"
+    :evidence="evidence"
     :solved-rate="solvedRate"
     :weak-dimensions="weakDimensions"
     @retry="initialize"

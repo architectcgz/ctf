@@ -451,6 +451,28 @@ export interface TeacherStudentItem {
   progress?: MyProgressData
 }
 
+export interface TeacherEvidenceSummaryData {
+  total_events: number
+  proxy_request_count: number
+  submit_count: number
+  success_count: number
+  challenge_id: ID
+}
+
+export interface TeacherEvidenceEventData {
+  type: string
+  challenge_id: ID
+  title: string
+  detail: string
+  timestamp: ISODateTime
+  meta?: Record<string, unknown>
+}
+
+export interface TeacherEvidenceData {
+  summary: TeacherEvidenceSummaryData
+  events: TeacherEvidenceEventData[]
+}
+
 export interface TeacherInstanceItem {
   id: ID
   student_id: ID

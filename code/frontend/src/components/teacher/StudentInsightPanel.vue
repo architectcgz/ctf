@@ -11,6 +11,7 @@ import type {
   MyProgressData,
   RecommendationItem,
   SkillProfileData,
+  TeacherEvidenceData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -23,6 +24,7 @@ const props = defineProps<{
   profile: SkillProfileData | null
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
+  evidence: TeacherEvidenceData | null
   loading: boolean
   emptyText?: string
 }>()
@@ -235,6 +237,73 @@ function openChallenge(challengeId: string): void {
               </div>
             </AppCard>
           </div>
+        </SectionCard>
+
+        <SectionCard title="攻防证据链" subtitle="教师按关键动作查看该学员的利用过程。">
+          <AppEmpty
+            v-if="!evidence || evidence.events.length === 0"
+            title="暂无证据链数据"
+            description="当前学员还没有可用于复盘的攻击过程记录。"
+            icon="NotebookText"
+          />
+
+          <template v-else>
+            <div class="grid gap-3 md:grid-cols-4">
+              <article class="insight-kpi-card insight-kpi-card--primary">
+                <div class="insight-kpi-label">总事件数</div>
+                <div class="insight-kpi-value">{{ evidence.summary.total_events }}</div>
+                <div class="insight-kpi-hint">纳入教师复盘的动作总数</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--warning">
+                <div class="insight-kpi-label">利用请求</div>
+                <div class="insight-kpi-value">{{ evidence.summary.proxy_request_count }}</div>
+                <div class="insight-kpi-hint">经平台代理的利用请求次数</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--success">
+                <div class="insight-kpi-label">提交次数</div>
+                <div class="insight-kpi-value">{{ evidence.summary.submit_count }}</div>
+                <div class="insight-kpi-hint">当前题目的提交动作统计</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--primary">
+                <div class="insight-kpi-label">成功次数</div>
+                <div class="insight-kpi-value">{{ evidence.summary.success_count }}</div>
+                <div class="insight-kpi-hint">提交命中或利用成功的次数</div>
+              </article>
+            </div>
+
+            <div class="mt-5 space-y-3">
+              <AppCard
+                v-for="(event, index) in evidence.events"
+                :key="`${event.type}-${event.challenge_id}-${event.timestamp}-${index}`"
+                variant="panel"
+                accent="neutral"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">{{ event.title }}</div>
+                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ event.detail }}</div>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
+                      <span
+                        class="rounded-full border border-[var(--color-border-default)] px-2.5 py-1"
+                      >
+                        {{ String(event.meta?.event_stage || 'trace') }}
+                      </span>
+                      <span
+                        v-if="typeof event.meta?.method === 'string'"
+                        class="rounded-full border border-[var(--color-border-default)] px-2.5 py-1"
+                      >
+                        {{ String(event.meta?.method) }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right text-xs text-[var(--color-text-secondary)]">
+                    <div>{{ new Date(event.timestamp).toLocaleDateString('zh-CN') }}</div>
+                    <div class="mt-1">{{ new Date(event.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) }}</div>
+                  </div>
+                </div>
+              </AppCard>
+            </div>
+          </template>
         </SectionCard>
 
         <StudentTimelinePage :timeline="timeline" />
