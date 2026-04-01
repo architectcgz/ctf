@@ -642,6 +642,7 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/skill-profile", deps.assessment.Handler.GetStudentSkillProfile)
 	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
 	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
+	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
 
 	protected.POST("/reports/personal", deps.assessment.ReportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", deps.assessment.ReportHandler.GetReportStatus)

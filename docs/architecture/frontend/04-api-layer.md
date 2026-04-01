@@ -174,6 +174,7 @@ if (error.response?.status === 401 && error.response?.data?.code === 11002) {
 | `getClasses()` | GET | `/teacher/classes` |
 | `getClassStudents(name)` | GET | `/teacher/classes/:name/students` |
 | `getStudentProgress(id)` | GET | `/teacher/students/:id/progress` |
+| `getStudentEvidence(id)` | GET | `/teacher/students/:id/evidence` |
 | `exportClassReport(data)` | POST | `/reports/class` |
 
 ### 2.8 管理后台 `api/admin.ts`

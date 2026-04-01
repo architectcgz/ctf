@@ -19,6 +19,7 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentSkillProfile: vi.fn(),
   getStudentRecommendations: vi.fn(),
   getStudentTimeline: vi.fn(),
+  getStudentEvidence: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -117,6 +118,33 @@ describe('TeacherStudentAnalysis', () => {
         },
       },
     ])
+    teacherApiMocks.getStudentEvidence.mockResolvedValue({
+      summary: {
+        total_events: 5,
+        proxy_request_count: 1,
+        submit_count: 2,
+        success_count: 1,
+        challenge_id: '11',
+      },
+      events: [
+        {
+          type: 'instance_access',
+          challenge_id: '11',
+          title: 'web-1',
+          detail: '访问攻击目标，开始与靶机进行实际交互',
+          timestamp: '2026-03-11T09:40:00Z',
+          meta: { event_stage: 'access' },
+        },
+        {
+          type: 'instance_proxy_request',
+          challenge_id: '11',
+          title: 'web-1',
+          detail: '经平台代理发起 POST /login，请求返回 200，携带请求摘要',
+          timestamp: '2026-03-11T09:42:00Z',
+          meta: { event_stage: 'exploit', method: 'POST' },
+        },
+      ],
+    })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -139,6 +167,13 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('访问攻击目标')
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
+    expect(wrapper.text()).toContain('攻防证据链')
+    expect(wrapper.text()).toContain('总事件数')
+    expect(wrapper.text()).toContain('5')
+    expect(wrapper.text()).toContain('利用请求')
+    expect(wrapper.text()).toContain('POST /login')
+
+    expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
   })
 
   it('应该支持包含百分号的班级名路由参数', async () => {

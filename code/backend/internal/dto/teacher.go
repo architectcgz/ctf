@@ -84,6 +84,32 @@ type TeacherRecommendationItem struct {
 	Reason      string `json:"reason"`
 }
 
+type TeacherEvidenceQuery struct {
+	ChallengeID *int64 `form:"challenge_id" binding:"omitempty,min=1"`
+}
+
+type TeacherEvidenceSummary struct {
+	TotalEvents       int   `json:"total_events"`
+	ProxyRequestCount int   `json:"proxy_request_count"`
+	SubmitCount       int   `json:"submit_count"`
+	SuccessCount      int   `json:"success_count"`
+	ChallengeID       int64 `json:"challenge_id"`
+}
+
+type TeacherEvidenceEvent struct {
+	Type        string         `json:"type"`
+	ChallengeID int64          `json:"challenge_id"`
+	Title       string         `json:"title"`
+	Detail      string         `json:"detail"`
+	Timestamp   time.Time      `json:"timestamp"`
+	Meta        map[string]any `json:"meta,omitempty"`
+}
+
+type TeacherEvidenceResp struct {
+	Summary TeacherEvidenceSummary `json:"summary"`
+	Events  []TeacherEvidenceEvent `json:"events"`
+}
+
 type TeacherInstanceQuery struct {
 	ClassName string `form:"class_name" binding:"omitempty,max=128"`
 	Keyword   string `form:"keyword" binding:"omitempty,max=128"`
