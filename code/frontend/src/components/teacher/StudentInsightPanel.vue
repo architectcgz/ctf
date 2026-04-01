@@ -12,6 +12,7 @@ import type {
   RecommendationItem,
   SkillProfileData,
   TeacherEvidenceData,
+  TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
@@ -25,6 +26,7 @@ const props = defineProps<{
   recommendations: RecommendationItem[]
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
+  writeupSubmissions: TeacherSubmissionWriteupItemData[]
   loading: boolean
   emptyText?: string
 }>()
@@ -35,9 +37,45 @@ const emit = defineEmits<{
 
 const radarScores = computed(() => toRadarScores(props.profile))
 const weakDimensions = computed(() => getWeakDimensions(props.profile))
+const reviewedWriteupCount = computed(() =>
+  props.writeupSubmissions.filter((item) => item.review_status !== 'pending').length
+)
+const excellentWriteupCount = computed(() =>
+  props.writeupSubmissions.filter((item) => item.review_status === 'excellent').length
+)
 
 function openChallenge(challengeId: string): void {
   emit('openChallenge', challengeId)
+}
+
+function reviewStatusLabel(status: TeacherSubmissionWriteupItemData['review_status']): string {
+  switch (status) {
+    case 'reviewed':
+      return '已评阅'
+    case 'excellent':
+      return '优秀'
+    case 'needs_revision':
+      return '待修改'
+    default:
+      return '待评阅'
+  }
+}
+
+function reviewStatusClass(status: TeacherSubmissionWriteupItemData['review_status']): string {
+  switch (status) {
+    case 'excellent':
+      return 'writeup-chip writeup-chip--success'
+    case 'needs_revision':
+      return 'writeup-chip writeup-chip--warning'
+    case 'reviewed':
+      return 'writeup-chip writeup-chip--primary'
+    default:
+      return 'writeup-chip writeup-chip--muted'
+  }
+}
+
+function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
+  return status === 'submitted' ? '已提交' : '草稿'
 }
 </script>
 
@@ -239,6 +277,79 @@ function openChallenge(challengeId: string): void {
           </div>
         </SectionCard>
 
+        <SectionCard title="Writeup 状态" subtitle="查看当前学员最近提交的解题复盘与评阅结果。">
+          <AppEmpty
+            v-if="writeupSubmissions.length === 0"
+            title="暂无 writeup"
+            description="当前学员还没有提交解题复盘。"
+            icon="FileText"
+          />
+
+          <template v-else>
+            <div class="grid gap-3 md:grid-cols-3">
+              <article class="insight-kpi-card insight-kpi-card--primary">
+                <div class="insight-kpi-label">最近提交</div>
+                <div class="insight-kpi-value">{{ writeupSubmissions.length }}</div>
+                <div class="insight-kpi-hint">当前分析页展示的 writeup 数量</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--warning">
+                <div class="insight-kpi-label">已评阅</div>
+                <div class="insight-kpi-value">{{ reviewedWriteupCount }}</div>
+                <div class="insight-kpi-hint">教师已给出结果的复盘记录</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--success">
+                <div class="insight-kpi-label">优秀</div>
+                <div class="insight-kpi-value">{{ excellentWriteupCount }}</div>
+                <div class="insight-kpi-hint">可直接沉淀为班级样例的记录</div>
+              </article>
+            </div>
+
+            <div class="mt-5 grid gap-3">
+              <AppCard
+                v-for="item in writeupSubmissions"
+                :key="item.id"
+                variant="panel"
+                accent="neutral"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">
+                      {{ item.challenge_title }}
+                    </div>
+                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                      {{ item.title }}
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="writeup-chip writeup-chip--muted">
+                      {{ submissionStatusLabel(item.submission_status) }}
+                    </span>
+                    <span :class="reviewStatusClass(item.review_status)">
+                      {{ reviewStatusLabel(item.review_status) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="mt-4 rounded-2xl bg-[var(--color-bg-base)] px-4 py-3 text-sm leading-7 text-[var(--color-text-secondary)]">
+                  {{ item.content_preview || '暂无摘要' }}
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
+                  <span>最近更新：{{ new Date(item.updated_at).toLocaleString('zh-CN') }}</span>
+                  <button
+                    type="button"
+                    class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
+                    @click="openChallenge(item.challenge_id)"
+                  >
+                    打开挑战
+                    <ArrowRight class="h-4 w-4" />
+                  </button>
+                </div>
+              </AppCard>
+            </div>
+          </template>
+        </SectionCard>
+
         <SectionCard title="攻防证据链" subtitle="教师按关键动作查看该学员的利用过程。">
           <AppEmpty
             v-if="!evidence || evidence.events.length === 0"
@@ -327,6 +438,35 @@ function openChallenge(challengeId: string): void {
   --color-border-default: var(--journal-border);
   --color-bg-surface: var(--journal-surface);
   --color-bg-base: #f8fafc;
+}
+
+.writeup-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.writeup-chip--primary {
+  background: rgba(79, 70, 229, 0.12);
+  color: #4338ca;
+}
+
+.writeup-chip--success {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.writeup-chip--warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+.writeup-chip--muted {
+  background: rgba(148, 163, 184, 0.16);
+  color: #475569;
 }
 
 :deep(.section-card) {

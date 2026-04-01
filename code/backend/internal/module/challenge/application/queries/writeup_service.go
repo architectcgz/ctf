@@ -76,3 +76,121 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		UpdatedAt:              item.UpdatedAt,
 	}, nil
 }
+
+func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.SubmissionWriteupResp, error) {
+	challengeItem, err := s.repo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, err
+	}
+	if challengeItem.Status != model.ChallengeStatusPublished {
+		return nil, errcode.ErrChallengeNotPublish
+	}
+	item, err := s.repo.FindSubmissionWriteupByUserChallenge(userID, challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	return domain.SubmissionWriteupRespFromModel(item), nil
+}
+
+func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
+	if query == nil {
+		query = &dto.TeacherSubmissionWriteupQuery{}
+	}
+	normalized, err := normalizeTeacherSubmissionQuery(s.repo, requesterID, requesterRole, query)
+	if err != nil {
+		return nil, err
+	}
+
+	items, total, err := s.repo.ListTeacherSubmissionWriteups(normalized)
+	if err != nil {
+		return nil, err
+	}
+
+	respItems := make([]*dto.TeacherSubmissionWriteupItemResp, 0, len(items))
+	for _, item := range items {
+		respItems = append(respItems, domain.TeacherSubmissionWriteupItemRespFromRecord(item))
+	}
+
+	return &dto.PageResult{
+		List:  respItems,
+		Total: total,
+		Page:  normalized.Page,
+		Size:  normalized.Size,
+	}, nil
+}
+
+func (s *WriteupService) GetTeacherSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherSubmissionWriteupDetailResp, error) {
+	record, err := s.repo.GetTeacherSubmissionWriteupByID(submissionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	if err := ensureTeacherCanAccessQueryRecord(s.repo, requesterID, requesterRole, record); err != nil {
+		return nil, err
+	}
+	return domain.TeacherSubmissionWriteupDetailRespFromRecord(*record), nil
+}
+
+func normalizeTeacherSubmissionQuery(
+	repo challengeports.ChallengeWriteupRepository,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherSubmissionWriteupQuery,
+) (*dto.TeacherSubmissionWriteupQuery, error) {
+	normalized := *query
+	if normalized.Page <= 0 {
+		normalized.Page = 1
+	}
+	if normalized.Size <= 0 {
+		normalized.Size = 20
+	}
+	if requesterRole == model.RoleAdmin {
+		return &normalized, nil
+	}
+
+	requester, err := repo.FindUserByID(requesterID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrUnauthorized
+		}
+		return nil, err
+	}
+	if requester.ClassName == "" {
+		return nil, errcode.ErrForbidden
+	}
+	if normalized.ClassName != "" && normalized.ClassName != requester.ClassName {
+		return nil, errcode.ErrForbidden
+	}
+	normalized.ClassName = requester.ClassName
+	return &normalized, nil
+}
+
+func ensureTeacherCanAccessQueryRecord(
+	repo challengeports.ChallengeWriteupRepository,
+	requesterID int64,
+	requesterRole string,
+	record *challengeports.TeacherSubmissionWriteupRecord,
+) error {
+	if requesterRole == model.RoleAdmin {
+		return nil
+	}
+	requester, err := repo.FindUserByID(requesterID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrUnauthorized
+		}
+		return err
+	}
+	if requester.ClassName == "" || requester.ClassName != record.ClassName {
+		return errcode.ErrForbidden
+	}
+	return nil
+}

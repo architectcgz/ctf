@@ -85,6 +85,51 @@ export interface ChallengeWriteupData {
   updated_at: ISODateTime
 }
 
+export type SubmissionWriteupStatus = 'draft' | 'submitted'
+export type SubmissionWriteupReviewStatus = 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+
+export interface SubmissionWriteupData {
+  id: ID
+  user_id: ID
+  challenge_id: ID
+  contest_id?: ID
+  title: string
+  content: string
+  submission_status: SubmissionWriteupStatus
+  review_status: SubmissionWriteupReviewStatus
+  submitted_at?: ISODateTime
+  reviewed_by?: ID
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface TeacherSubmissionWriteupItemData {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  title: string
+  content_preview: string
+  submission_status: SubmissionWriteupStatus
+  review_status: SubmissionWriteupReviewStatus
+  submitted_at?: ISODateTime
+  reviewed_at?: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface TeacherSubmissionWriteupDetailData extends SubmissionWriteupData {
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_title: string
+  reviewer_name?: string
+}
+
 export type InstanceStatus =
   | 'pending'
   | 'creating'

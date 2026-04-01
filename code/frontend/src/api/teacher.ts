@@ -3,12 +3,14 @@ import { request } from './request'
 import type {
   TeacherEvidenceData,
   MyProgressData,
+  PageResult,
   RecommendationItem,
   ReportExportData,
   TeacherClassReviewData,
   SkillProfileData,
   TeacherClassItem,
   TeacherClassSummaryData,
+  TeacherSubmissionWriteupItemData,
   TeacherClassTrendData,
   TeacherInstanceItem,
   TeacherStudentItem,
@@ -46,6 +48,12 @@ interface RawTeacherEvidenceResponse {
     timestamp: string
     meta?: Record<string, unknown>
   }>
+}
+
+interface RawTeacherSubmissionWriteupItem extends Omit<TeacherSubmissionWriteupItemData, 'id' | 'user_id' | 'challenge_id'> {
+  id: string | number
+  user_id: string | number
+  challenge_id: string | number
 }
 
 export async function getClasses(): Promise<TeacherClassItem[]> {
@@ -215,6 +223,40 @@ export async function getStudentEvidence(id: string): Promise<TeacherEvidenceDat
     },
     events: payload.events.map((item) => ({
       ...item,
+      challenge_id: String(item.challenge_id),
+    })),
+  }
+}
+
+export async function getTeacherWriteupSubmissions(params?: {
+  student_id?: string
+  challenge_id?: string
+  class_name?: string
+  submission_status?: 'draft' | 'submitted'
+  review_status?: 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+  page?: number
+  page_size?: number
+}): Promise<PageResult<TeacherSubmissionWriteupItemData>> {
+  const payload = await request<PageResult<RawTeacherSubmissionWriteupItem>>({
+    method: 'GET',
+    url: '/teacher/writeup-submissions',
+    params: {
+      student_id: params?.student_id,
+      challenge_id: params?.challenge_id,
+      class_name: params?.class_name,
+      submission_status: params?.submission_status,
+      review_status: params?.review_status,
+      page: params?.page,
+      page_size: params?.page_size,
+    },
+  })
+
+  return {
+    ...payload,
+    list: payload.list.map((item) => ({
+      ...item,
+      id: String(item.id),
+      user_id: String(item.user_id),
       challenge_id: String(item.challenge_id),
     })),
   }

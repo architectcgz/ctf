@@ -20,6 +20,7 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentRecommendations: vi.fn(),
   getStudentTimeline: vi.fn(),
   getStudentEvidence: vi.fn(),
+  getTeacherWriteupSubmissions: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -145,6 +146,25 @@ describe('TeacherStudentAnalysis', () => {
         },
       ],
     })
+    teacherApiMocks.getTeacherWriteupSubmissions.mockResolvedValue({
+      list: [
+        {
+          id: 'writeup-1',
+          user_id: 'stu-1',
+          student_username: 'alice',
+          challenge_id: '11',
+          challenge_title: 'web-1',
+          title: '从回显到 flag',
+          content_preview: '先看登录回显，再确定注入点。',
+          submission_status: 'submitted',
+          review_status: 'excellent',
+          updated_at: '2026-03-11T11:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 6,
+    })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -168,12 +188,19 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
     expect(wrapper.text()).toContain('攻防证据链')
+    expect(wrapper.text()).toContain('Writeup 状态')
+    expect(wrapper.text()).toContain('从回显到 flag')
+    expect(wrapper.text()).toContain('优秀')
     expect(wrapper.text()).toContain('总事件数')
     expect(wrapper.text()).toContain('5')
     expect(wrapper.text()).toContain('利用请求')
     expect(wrapper.text()).toContain('POST /login')
 
     expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
+    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
+      student_id: 'stu-1',
+      page_size: 6,
+    })
   })
 
   it('应该支持包含百分号的班级名路由参数', async () => {

@@ -7,6 +7,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -104,4 +105,63 @@ func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallenge
 		CreatedAt:   item.CreatedAt,
 		UpdatedAt:   item.UpdatedAt,
 	}
+}
+
+func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.SubmissionWriteupResp {
+	return &dto.SubmissionWriteupResp{
+		ID:               item.ID,
+		UserID:           item.UserID,
+		ChallengeID:      item.ChallengeID,
+		ContestID:        item.ContestID,
+		Title:            item.Title,
+		Content:          item.Content,
+		SubmissionStatus: item.SubmissionStatus,
+		ReviewStatus:     item.ReviewStatus,
+		SubmittedAt:      item.SubmittedAt,
+		ReviewedBy:       item.ReviewedBy,
+		ReviewedAt:       item.ReviewedAt,
+		ReviewComment:    item.ReviewComment,
+		CreatedAt:        item.CreatedAt,
+		UpdatedAt:        item.UpdatedAt,
+	}
+}
+
+func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupItemResp {
+	return &dto.TeacherSubmissionWriteupItemResp{
+		ID:               item.Submission.ID,
+		UserID:           item.Submission.UserID,
+		StudentUsername:  item.StudentUsername,
+		StudentName:      item.StudentName,
+		ClassName:        item.ClassName,
+		ChallengeID:      item.Submission.ChallengeID,
+		ChallengeTitle:   item.ChallengeTitle,
+		Title:            item.Submission.Title,
+		ContentPreview:   buildContentPreview(item.Submission.Content),
+		SubmissionStatus: item.Submission.SubmissionStatus,
+		ReviewStatus:     item.Submission.ReviewStatus,
+		SubmittedAt:      item.Submission.SubmittedAt,
+		ReviewedAt:       item.Submission.ReviewedAt,
+		UpdatedAt:        item.Submission.UpdatedAt,
+	}
+}
+
+func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSubmissionWriteupRecord) *dto.TeacherSubmissionWriteupDetailResp {
+	resp := &dto.TeacherSubmissionWriteupDetailResp{
+		SubmissionWriteupResp: *SubmissionWriteupRespFromModel(&item.Submission),
+		StudentUsername:       item.StudentUsername,
+		StudentName:           item.StudentName,
+		ClassName:             item.ClassName,
+		ChallengeTitle:        item.ChallengeTitle,
+		ReviewerName:          item.ReviewerName,
+	}
+	return resp
+}
+
+func buildContentPreview(content string) string {
+	normalized := strings.Join(strings.Fields(strings.TrimSpace(content)), " ")
+	runes := []rune(normalized)
+	if len(runes) <= 96 {
+		return normalized
+	}
+	return string(runes[:96]) + "..."
 }

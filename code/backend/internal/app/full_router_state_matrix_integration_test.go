@@ -439,6 +439,8 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	otherTeacherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherTeacher.Username, "Password123"))
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 
 	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
@@ -613,6 +615,105 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	decodeFullRouterData(t, resp, &solvedWriteup)
 	if solvedWriteup.RequiresSpoilerWarning {
 		t.Fatalf("expected spoiler warning to clear after solve, got %+v", solvedWriteup)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
+		"title":             "首版草稿",
+		"content":           "先记录思路，再整理利用链。",
+		"submission_status": model.SubmissionWriteupStatusDraft,
+	}, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var draftSubmission dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &draftSubmission)
+	if draftSubmission.SubmissionStatus != model.SubmissionWriteupStatusDraft || draftSubmission.SubmittedAt != nil {
+		t.Fatalf("unexpected draft submission response: %+v", draftSubmission)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions/me", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var mySubmission dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &mySubmission)
+	if mySubmission.Title != "首版草稿" {
+		t.Fatalf("unexpected my submission payload: %+v", mySubmission)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
+		"title":             "正式复盘",
+		"content":           "1. 判断输入点\n2. 构造 payload\n3. 读取 flag",
+		"submission_status": model.SubmissionWriteupStatusSubmitted,
+	}, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var submittedWriteup dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &submittedWriteup)
+	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusSubmitted || submittedWriteup.SubmittedAt == nil {
+		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
+	}
+
+	resp = performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/teacher/writeup-submissions?student_id=%d&challenge_id=%d", env.peerStudent.ID, createdChallenge.ID),
+		nil,
+		teacherHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var teacherSubmissionList struct {
+		List     []dto.TeacherSubmissionWriteupItemResp `json:"list"`
+		Total    int64                                  `json:"total"`
+		Page     int                                    `json:"page"`
+		PageSize int                                    `json:"page_size"`
+	}
+	decodeFullRouterData(t, resp, &teacherSubmissionList)
+	if teacherSubmissionList.Total != 1 || len(teacherSubmissionList.List) != 1 {
+		t.Fatalf("unexpected teacher submission list: %+v", teacherSubmissionList)
+	}
+	if teacherSubmissionList.List[0].StudentUsername != env.peerStudent.Username || teacherSubmissionList.List[0].ChallengeID != createdChallenge.ID {
+		t.Fatalf("unexpected teacher submission list item: %+v", teacherSubmissionList.List[0])
+	}
+
+	resp = performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/teacher/writeup-submissions?student_id=%d", env.peerStudent.ID),
+		nil,
+		otherTeacherHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var inaccessibleList struct {
+		List  []dto.TeacherSubmissionWriteupItemResp `json:"list"`
+		Total int64                                  `json:"total"`
+	}
+	decodeFullRouterData(t, resp, &inaccessibleList)
+	if inaccessibleList.Total != 0 || len(inaccessibleList.List) != 0 {
+		t.Fatalf("expected other teacher to see empty submission list, got %+v", inaccessibleList)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/writeup-submissions/%d", submittedWriteup.ID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var teacherSubmissionDetail dto.TeacherSubmissionWriteupDetailResp
+	decodeFullRouterData(t, resp, &teacherSubmissionDetail)
+	if teacherSubmissionDetail.StudentUsername != env.peerStudent.Username || teacherSubmissionDetail.Content == "" {
+		t.Fatalf("unexpected teacher submission detail: %+v", teacherSubmissionDetail)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/teacher/writeup-submissions/%d/review", submittedWriteup.ID), map[string]any{
+		"review_status":  model.SubmissionWriteupReviewExcellent,
+		"review_comment": "利用链完整，建议加入优秀作业样例。",
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var reviewedSubmission dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &reviewedSubmission)
+	if reviewedSubmission.ReviewStatus != model.SubmissionWriteupReviewExcellent || reviewedSubmission.ReviewedAt == nil {
+		t.Fatalf("unexpected reviewed submission response: %+v", reviewedSubmission)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/environment-templates", map[string]any{
