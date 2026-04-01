@@ -794,9 +794,9 @@ export interface CreateStudentReviewArchiveReq {
 
 ---
 
-## 8. 管理后台（`/admin/*`）
+## 8. 管理与出题后台（`/admin/*` + `/authoring/*`）
 
-> 仅覆盖当前前端 `ctf/frontend/src/api/admin.ts` 中实际调用的接口；后端设计文档中存在更多管理员接口，未在此展开。
+> 仅覆盖当前前端 `ctf/frontend/src/api/admin.ts` 中实际调用的接口；其中用户与审计等“仅管理员”接口保留在 `/admin/*`，题目、镜像、拓扑、环境模板、题目包导入等共享出题接口统一收敛到 `/authoring/*`。
 
 ### 8.1 GET `/api/v1/admin/dashboard`
 
@@ -858,7 +858,69 @@ export interface AdminUserImportData {
 }
 ```
 
-### 8.6 GET `/api/v1/admin/challenges`（分页）
+### 8.5.1 POST `/api/v1/authoring/challenge-imports`
+
+请求体：`multipart/form-data`，字段 `file`
+
+`data`：
+
+```ts
+export interface AdminChallengeImportAttachment {
+  name: string
+  path: string
+}
+
+export interface AdminChallengeImportFlag {
+  type: 'static' | 'dynamic'
+  prefix?: string
+}
+
+export interface AdminChallengeImportRuntime {
+  type?: 'container'
+  image_ref?: string
+}
+
+export interface AdminChallengeImportExtensions {
+  topology: {
+    source?: string
+    enabled: boolean
+  }
+}
+
+export interface AdminChallengeImportPreview {
+  id: ID
+  file_name: string
+  slug: string
+  title: string
+  description: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  points: number
+  attachments?: AdminChallengeImportAttachment[]
+  hints?: AdminChallengeHint[]
+  flag: AdminChallengeImportFlag
+  runtime: AdminChallengeImportRuntime
+  extensions: AdminChallengeImportExtensions
+  warnings?: string[]
+  created_at: ISODateTime
+}
+```
+
+### 8.5.2 GET `/api/v1/authoring/challenge-imports/:id`
+
+`data`：同 `AdminChallengeImportPreview`
+
+### 8.5.3 POST `/api/v1/authoring/challenge-imports/:id/commit`
+
+`data`：
+
+```ts
+export interface AdminChallengeImportCommitData {
+  challenge: AdminChallengeListItem
+}
+```
+
+### 8.6 GET `/api/v1/authoring/challenges`（分页）
 
 `data`（缺少示例，需确认）：
 
@@ -877,7 +939,7 @@ export interface AdminChallengeListItem {
 export type AdminChallengeListData = PageResult<AdminChallengeListItem>
 ```
 
-### 8.7 POST `/api/v1/admin/challenges` / PUT `/api/v1/admin/challenges/:id`
+### 8.7 POST `/api/v1/authoring/challenges` / PUT `/api/v1/authoring/challenges/:id`
 
 `data`（缺少示例，需确认）：
 
@@ -887,11 +949,11 @@ export interface AdminChallengeUpsertData {
 }
 ```
 
-### 8.8 DELETE `/api/v1/admin/challenges/:id`
+### 8.8 DELETE `/api/v1/authoring/challenges/:id`
 
 `data`：`null`
 
-### 8.8.1 GET `/api/v1/admin/challenges/:id/flag` / PUT `/api/v1/admin/challenges/:id/flag`
+### 8.8.1 GET `/api/v1/authoring/challenges/:id/flag` / PUT `/api/v1/authoring/challenges/:id/flag`
 
 GET `data`：
 
@@ -930,9 +992,81 @@ export interface ConfigureChallengeFlagData {
 >   - `dynamic` 必填 `flag_prefix`
 >   - `regex` 必填 `flag_regex`，可选 `flag_prefix`
 >   - `manual_review` 无额外字段
-> - 当前前端在管理员题目详情页以内联配置卡直接消费该接口。
+> - 当前前端在出题后台题目详情页以内联配置卡直接消费该接口。
 
-### 8.9 GET `/api/v1/admin/images`（分页）
+### 8.8.2 POST `/api/v1/authoring/challenges/:id/self-check`
+
+`data`：
+
+```ts
+export interface ChallengeSelfCheckStepData {
+  name: string
+  passed: boolean
+  message: string
+}
+
+export interface ChallengeSelfCheckPhaseData {
+  passed: boolean
+  started_at: ISODateTime
+  ended_at: ISODateTime
+  steps: ChallengeSelfCheckStepData[]
+}
+
+export interface ChallengeSelfCheckRuntimeData extends ChallengeSelfCheckPhaseData {
+  access_url?: string
+  container_count: number
+  network_count: number
+}
+
+export interface ChallengeSelfCheckData {
+  challenge_id: ID
+  precheck: ChallengeSelfCheckPhaseData
+  runtime: ChallengeSelfCheckRuntimeData
+}
+```
+
+### 8.8.3 POST `/api/v1/authoring/challenges/:id/publish-requests`
+
+状态码：`202 Accepted`
+
+`data`：
+
+```ts
+export type AdminChallengePublishRequestStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+
+export interface AdminChallengePublishRequestData {
+  id: ID
+  challenge_id: ID
+  requested_by: ID
+  status: AdminChallengePublishRequestStatus
+  active: boolean
+  request_source: 'admin_publish' | string
+  failure_summary?: string
+  started_at?: ISODateTime
+  finished_at?: ISODateTime
+  published_at?: ISODateTime
+  created_at: ISODateTime
+  updated_at: ISODateTime
+  result?: ChallengeSelfCheckData
+}
+```
+
+说明：
+
+- 若当前题目已有 `queued` 或 `running` 的发布自检任务，再次提交会返回当前活动任务，而不是创建第二条并行任务。
+- 通过后题目会自动发布，并通知请求人。
+- 失败后题目保持 `draft`，并返回失败摘要供后台展示。
+
+### 8.8.4 GET `/api/v1/authoring/challenges/:id/publish-requests/latest`
+
+状态码：
+
+- `200 OK`：返回最近一次发布自检记录
+- `404 Not Found`：该题目还没有发布自检记录
+
+`data`：同 `AdminChallengePublishRequestData`
+
+### 8.9 GET `/api/v1/authoring/images`（分页）
 
 `data`（缺少示例，需确认）：
 
@@ -953,7 +1087,7 @@ export interface AdminImageListItem {
 export type AdminImageListData = PageResult<AdminImageListItem>
 ```
 
-### 8.10 POST `/api/v1/admin/images`
+### 8.10 POST `/api/v1/authoring/images`
 
 `data`（缺少示例，需确认）：
 
@@ -963,7 +1097,7 @@ export interface AdminImageCreateData {
 }
 ```
 
-### 8.11 DELETE `/api/v1/admin/images/:id`
+### 8.11 DELETE `/api/v1/authoring/images/:id`
 
 `data`：`null`
 
@@ -992,7 +1126,7 @@ export type AuditLogListData = PageResult<AuditLogItem>
 
 `data`：`PageResult<ContestListItem>`（管理视图可扩展更多字段；需确认）。
 
-### 8.14 GET `/api/v1/admin/challenges/:id/writeup` / PUT `/api/v1/admin/challenges/:id/writeup` / DELETE `/api/v1/admin/challenges/:id/writeup`
+### 8.14 GET `/api/v1/authoring/challenges/:id/writeup` / PUT `/api/v1/authoring/challenges/:id/writeup` / DELETE `/api/v1/authoring/challenges/:id/writeup`
 
 `data`：
 
@@ -1155,7 +1289,7 @@ export interface ReviewManualReviewSubmissionReq {
 
 `data`：`TeacherManualReviewSubmissionDetailData`
 
-### 8.21 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
+### 8.21 GET `/api/v1/authoring/challenges/:id/topology` / PUT `/api/v1/authoring/challenges/:id/topology` / DELETE `/api/v1/authoring/challenges/:id/topology`
 
 `data`：
 
@@ -1216,7 +1350,7 @@ export interface ChallengeTopologyData {
 
 > 说明：当前后端已支持在拓扑/模板配置中描述多网络分段与节点间链路策略；未显式提供 `networks` 时，后端会自动补一个默认网络并把所有节点挂到该网络。实例启动时会按 `network_keys` 创建并挂载多个 Docker Network，对“无端口/协议限定”的 `policies` 做节点级粗粒度隔离，并对带 `protocol` / `ports` 的策略按 `source_node_key -> target_node_key` 方向下发细粒度 ACL。
 
-### 8.16 GET `/api/v1/admin/environment-templates` / POST `/api/v1/admin/environment-templates` / GET `/api/v1/admin/environment-templates/:id` / PUT `/api/v1/admin/environment-templates/:id` / DELETE `/api/v1/admin/environment-templates/:id`
+### 8.16 GET `/api/v1/authoring/environment-templates` / POST `/api/v1/authoring/environment-templates` / GET `/api/v1/authoring/environment-templates/:id` / PUT `/api/v1/authoring/environment-templates/:id` / DELETE `/api/v1/authoring/environment-templates/:id`
 
 `data`：
 

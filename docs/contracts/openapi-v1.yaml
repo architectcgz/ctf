@@ -8,7 +8,7 @@ info:
     - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
     - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
     - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
-  x-last-updated: "2026-03-10"
+  x-last-updated: "2026-04-01"
 
 servers:
   - url: /api/v1
@@ -23,6 +23,7 @@ tags:
   - name: Assessment
   - name: Reports
   - name: Admin
+  - name: Authoring
 
 components:
   securitySchemes:
@@ -1406,6 +1407,109 @@ components:
           properties:
             data: { $ref: "#/components/schemas/AdminUserImportData" }
 
+    ChallengeImportAttachment:
+      type: object
+      required: [name, path]
+      properties:
+        name: { type: string }
+        path: { type: string }
+
+    ChallengeImportHint:
+      type: object
+      required: [level, content]
+      properties:
+        id: { $ref: "#/components/schemas/ID", nullable: true }
+        level: { type: integer, minimum: 1 }
+        title: { type: string, nullable: true }
+        cost_points: { type: integer, nullable: true, minimum: 0 }
+        content: { type: string }
+
+    ChallengeImportFlag:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [static, dynamic]
+        prefix: { type: string, nullable: true }
+
+    ChallengeImportRuntime:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [container]
+          nullable: true
+        image_ref: { type: string, nullable: true }
+
+    ChallengeImportTopologyExtension:
+      type: object
+      required: [enabled]
+      properties:
+        source: { type: string, nullable: true }
+        enabled: { type: boolean }
+
+    ChallengeImportExtensions:
+      type: object
+      required: [topology]
+      properties:
+        topology: { $ref: "#/components/schemas/ChallengeImportTopologyExtension" }
+
+    AdminChallengeImportPreviewData:
+      type: object
+      required:
+        [id, file_name, slug, title, description, category, difficulty, points, flag, runtime, extensions, created_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        file_name: { type: string }
+        slug: { type: string }
+        title: { type: string }
+        description: { type: string }
+        category: { $ref: "#/components/schemas/ChallengeCategory" }
+        difficulty: { $ref: "#/components/schemas/ChallengeDifficulty" }
+        points: { type: integer, minimum: 1 }
+        attachments:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/ChallengeImportAttachment" }
+        hints:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/ChallengeImportHint" }
+        flag: { $ref: "#/components/schemas/ChallengeImportFlag" }
+        runtime: { $ref: "#/components/schemas/ChallengeImportRuntime" }
+        extensions: { $ref: "#/components/schemas/ChallengeImportExtensions" }
+        warnings:
+          type: array
+          nullable: true
+          items: { type: string }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAdminChallengeImportPreviewData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeImportPreviewData" }
+
+    AdminChallengeImportCommitData:
+      type: object
+      required: [challenge]
+      properties:
+        challenge:
+          type: object
+          description: "导入确认后返回的题目详情字段以实现为准"
+          additionalProperties: true
+
+    ApiEnvelopeAdminChallengeImportCommitData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeImportCommitData" }
+
     AdminChallengeStatus:
       type: string
       enum: [draft, review, active, archived]
@@ -1454,6 +1558,84 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/AdminChallengeUpsertData" }
+
+    ChallengeSelfCheckStepData:
+      type: object
+      required: [name, passed, message]
+      properties:
+        name: { type: string }
+        passed: { type: boolean }
+        message: { type: string }
+
+    ChallengeSelfCheckPhaseData:
+      type: object
+      required: [passed, started_at, ended_at, steps]
+      properties:
+        passed: { type: boolean }
+        started_at: { $ref: "#/components/schemas/ISODateTime" }
+        ended_at: { $ref: "#/components/schemas/ISODateTime" }
+        steps:
+          type: array
+          items: { $ref: "#/components/schemas/ChallengeSelfCheckStepData" }
+
+    ChallengeSelfCheckRuntimeData:
+      allOf:
+        - $ref: "#/components/schemas/ChallengeSelfCheckPhaseData"
+        - type: object
+          required: [container_count, network_count]
+          properties:
+            access_url: { type: string, nullable: true }
+            container_count: { type: integer, minimum: 0 }
+            network_count: { type: integer, minimum: 0 }
+
+    ChallengeSelfCheckData:
+      type: object
+      required: [challenge_id, precheck, runtime]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        precheck: { $ref: "#/components/schemas/ChallengeSelfCheckPhaseData" }
+        runtime: { $ref: "#/components/schemas/ChallengeSelfCheckRuntimeData" }
+
+    ApiEnvelopeChallengeSelfCheckData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ChallengeSelfCheckData" }
+
+    AdminChallengePublishRequestStatus:
+      type: string
+      enum: [queued, running, succeeded, failed]
+
+    AdminChallengePublishRequestData:
+      type: object
+      required: [id, challenge_id, requested_by, status, active, request_source, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        requested_by: { $ref: "#/components/schemas/ID" }
+        status: { $ref: "#/components/schemas/AdminChallengePublishRequestStatus" }
+        active: { type: boolean }
+        request_source: { type: string }
+        failure_summary: { type: string, nullable: true }
+        started_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        finished_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        published_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+        result:
+          allOf:
+            - $ref: "#/components/schemas/ChallengeSelfCheckData"
+          nullable: true
+
+    ApiEnvelopeAdminChallengePublishRequestData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengePublishRequestData" }
 
     ImageSourceType:
       type: string
@@ -2625,9 +2807,69 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminUserImportData" }
 
-  /admin/challenges:
+  /authoring/challenge-imports:
+    post:
+      tags: [Authoring]
+      summary: 预览题目包导入结果
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeImportPreviewData" }
+
+  /authoring/challenge-imports/{id}:
     get:
-      tags: [Admin]
+      tags: [Authoring]
+      summary: 获取题目包导入预览
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeImportPreviewData" }
+
+  /authoring/challenge-imports/{id}/commit:
+    post:
+      tags: [Authoring]
+      summary: 确认导入题目包
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeImportCommitData" }
+
+  /authoring/challenges:
+    get:
+      tags: [Authoring]
       summary: 题目列表（分页）
       security:
         - bearerAuth: []
@@ -2645,7 +2887,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeListData" }
     post:
-      tags: [Admin]
+      tags: [Authoring]
       summary: 创建题目
       security:
         - bearerAuth: []
@@ -2663,9 +2905,9 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
 
-  /admin/challenges/{id}:
+  /authoring/challenges/{id}:
     put:
-      tags: [Admin]
+      tags: [Authoring]
       summary: 更新题目
       security:
         - bearerAuth: []
@@ -2688,7 +2930,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeUpsertData" }
     delete:
-      tags: [Admin]
+      tags: [Authoring]
       summary: 删除题目
       security:
         - bearerAuth: []
@@ -2704,9 +2946,65 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
 
-  /admin/images:
+  /authoring/challenges/{id}/self-check:
+    post:
+      tags: [Authoring]
+      summary: 题目同步自检
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeChallengeSelfCheckData" }
+
+  /authoring/challenges/{id}/publish-requests:
+    post:
+      tags: [Authoring]
+      summary: 提交题目发布自检
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "202":
+          description: Accepted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengePublishRequestData" }
+
+  /authoring/challenges/{id}/publish-requests/latest:
     get:
-      tags: [Admin]
+      tags: [Authoring]
+      summary: 查询最近一次题目发布自检
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengePublishRequestData" }
+        "404":
+          description: Not Found
+
+  /authoring/images:
+    get:
+      tags: [Authoring]
       summary: 镜像列表（分页）
       security:
         - bearerAuth: []
@@ -2724,7 +3022,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminImageListData" }
     post:
-      tags: [Admin]
+      tags: [Authoring]
       summary: 创建镜像记录/触发构建（字段集以实现为准）
       security:
         - bearerAuth: []
@@ -2742,9 +3040,9 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAdminImageCreateData" }
 
-  /admin/images/{id}:
+  /authoring/images/{id}:
     delete:
-      tags: [Admin]
+      tags: [Authoring]
       summary: 删除镜像
       security:
         - bearerAuth: []
@@ -3172,11 +3470,11 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/ID'
-  /admin/challenges/{id}/writeup:
+  /authoring/challenges/{id}/writeup:
     get:
       tags:
-      - Admin
-      summary: 'TODO: GET /admin/challenges/{id}/writeup'
+      - Authoring
+      summary: 'TODO: GET /authoring/challenges/{id}/writeup'
       responses:
         '200':
           description: OK
@@ -3194,8 +3492,8 @@ paths:
           $ref: '#/components/schemas/ID'
     put:
       tags:
-      - Admin
-      summary: 'TODO: PUT /admin/challenges/{id}/writeup'
+      - Authoring
+      summary: 'TODO: PUT /authoring/challenges/{id}/writeup'
       responses:
         '200':
           description: OK
@@ -3220,8 +3518,8 @@ paths:
               description: 'TODO: fill request schema'
     delete:
       tags:
-      - Admin
-      summary: 'TODO: DELETE /admin/challenges/{id}/writeup'
+      - Authoring
+      summary: 'TODO: DELETE /authoring/challenges/{id}/writeup'
       responses:
         '200':
           description: OK
@@ -3237,10 +3535,10 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/ID'
-  /admin/challenges/{id}/topology:
+  /authoring/challenges/{id}/topology:
     get:
       tags:
-      - Admin
+      - Authoring
       summary: 获取挑战拓扑
       responses:
         '200':
@@ -3259,7 +3557,7 @@ paths:
           $ref: '#/components/schemas/ID'
     put:
       tags:
-      - Admin
+      - Authoring
       summary: 保存挑战拓扑
       description: 支持保存多网络拓扑与细粒度 ACL；细粒度规则会在实例启动时真实下发。
       responses:
@@ -3285,7 +3583,7 @@ paths:
               $ref: '#/components/schemas/SaveChallengeTopologyRequest'
     delete:
       tags:
-      - Admin
+      - Authoring
       summary: 删除挑战拓扑
       responses:
         '200':
@@ -3302,10 +3600,10 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/ID'
-  /admin/environment-templates:
+  /authoring/environment-templates:
     get:
       tags:
-      - Admin
+      - Authoring
       summary: 获取环境模板列表
       responses:
         '200':
@@ -3318,7 +3616,7 @@ paths:
       - bearerAuth: []
     post:
       tags:
-      - Admin
+      - Authoring
       summary: 创建环境模板
       description: 支持创建带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
       responses:
@@ -3336,10 +3634,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'
-  /admin/environment-templates/{id}:
+  /authoring/environment-templates/{id}:
     get:
       tags:
-      - Admin
+      - Authoring
       summary: 获取环境模板详情
       responses:
         '200':
@@ -3358,7 +3656,7 @@ paths:
           $ref: '#/components/schemas/ID'
     put:
       tags:
-      - Admin
+      - Authoring
       summary: 更新环境模板
       description: 支持更新带细粒度 ACL 的环境模板；相关规则会在实例启动时真实下发。
       responses:
@@ -3384,7 +3682,7 @@ paths:
               $ref: '#/components/schemas/UpsertEnvironmentTemplateRequest'
     delete:
       tags:
-      - Admin
+      - Authoring
       summary: 删除环境模板
       responses:
         '200':

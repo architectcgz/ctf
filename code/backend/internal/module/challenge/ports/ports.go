@@ -15,6 +15,13 @@ type ChallengeCommandRepository interface {
 	UpdateWithHints(challenge *model.Challenge, hints []*model.ChallengeHint, replaceHints bool) error
 	Delete(id int64) error
 	HasRunningInstances(challengeID int64) (bool, error)
+	CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
+	FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error)
+	FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
+	FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error)
+	ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error)
+	TryStartPublishCheckJob(ctx context.Context, id int64, startedAt time.Time) (bool, error)
+	UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error
 }
 
 type ChallengeFlagRepository interface {

@@ -144,6 +144,10 @@ pagination:
 
 challenge:
   solved_count_cache_ttl: 5m
+  publish_check:
+    enabled: true
+    poll_interval: 2s
+    batch_size: 1
 
 score:
   cache_ttl: 5m

@@ -834,6 +834,49 @@ export interface AdminChallengeListItem {
   }
 }
 
+export type AdminChallengePublishRequestStatus = 'queued' | 'running' | 'succeeded' | 'failed'
+
+export interface ChallengeSelfCheckStepData {
+  name: string
+  passed: boolean
+  message: string
+}
+
+export interface ChallengeSelfCheckPhaseData {
+  passed: boolean
+  started_at: ISODateTime
+  ended_at: ISODateTime
+  steps: ChallengeSelfCheckStepData[]
+}
+
+export interface ChallengeSelfCheckRuntimeData extends ChallengeSelfCheckPhaseData {
+  access_url?: string
+  container_count: number
+  network_count: number
+}
+
+export interface ChallengeSelfCheckData {
+  challenge_id: ID
+  precheck: ChallengeSelfCheckPhaseData
+  runtime: ChallengeSelfCheckRuntimeData
+}
+
+export interface AdminChallengePublishRequestData {
+  id: ID
+  challenge_id: ID
+  status: AdminChallengePublishRequestStatus
+  active: boolean
+  requested_by?: ID
+  request_source?: string
+  failure_summary?: string
+  started_at?: ISODateTime
+  finished_at?: ISODateTime
+  published_at?: ISODateTime
+  result?: ChallengeSelfCheckData
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
 export interface AdminChallengeUpsertData {
   challenge: AdminChallengeListItem
 }

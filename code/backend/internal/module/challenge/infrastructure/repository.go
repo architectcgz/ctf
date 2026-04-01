@@ -4,7 +4,9 @@ import (
 	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	"errors"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -136,6 +138,72 @@ func (r *Repository) HasRunningInstances(challengeID int64) (bool, error) {
 		Where("challenge_id = ? AND status IN (?)", challengeID, []string{"creating", "running"}).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *Repository) CreatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+	return r.dbWithContext(ctx).Create(job).Error
+}
+
+func (r *Repository) FindPublishCheckJobByID(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+	var job model.ChallengePublishCheckJob
+	err := r.dbWithContext(ctx).Where("id = ?", id).First(&job).Error
+	return &job, err
+}
+
+func (r *Repository) FindActivePublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+	var job model.ChallengePublishCheckJob
+	err := r.dbWithContext(ctx).
+		Where("challenge_id = ? AND status IN ?", challengeID, []string{
+			model.ChallengePublishCheckStatusPending,
+			model.ChallengePublishCheckStatusRunning,
+		}).
+		Order("created_at DESC, id DESC").
+		First(&job).Error
+	return &job, err
+}
+
+func (r *Repository) FindLatestPublishCheckJobByChallengeID(ctx context.Context, challengeID int64) (*model.ChallengePublishCheckJob, error) {
+	var job model.ChallengePublishCheckJob
+	err := r.dbWithContext(ctx).
+		Where("challenge_id = ?", challengeID).
+		Order("created_at DESC, id DESC").
+		First(&job).Error
+	return &job, err
+}
+
+func (r *Repository) ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*model.ChallengePublishCheckJob, error) {
+	if limit <= 0 {
+		limit = 1
+	}
+	var jobs []*model.ChallengePublishCheckJob
+	err := r.dbWithContext(ctx).
+		Where("status = ?", model.ChallengePublishCheckStatusPending).
+		Order("created_at ASC, id ASC").
+		Limit(limit).
+		Find(&jobs).Error
+	return jobs, err
+}
+
+func (r *Repository) TryStartPublishCheckJob(ctx context.Context, id int64, startedAt time.Time) (bool, error) {
+	result := r.dbWithContext(ctx).
+		Model(&model.ChallengePublishCheckJob{}).
+		Where("id = ? AND status = ?", id, model.ChallengePublishCheckStatusPending).
+		Updates(map[string]any{
+			"status":     model.ChallengePublishCheckStatusRunning,
+			"started_at": startedAt,
+			"updated_at": startedAt,
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
+}
+
+func (r *Repository) UpdatePublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob) error {
+	if job == nil {
+		return errors.New("publish check job is nil")
+	}
+	return r.dbWithContext(ctx).Save(job).Error
 }
 
 func (r *Repository) CountByImageID(imageID int64) (int64, error) {

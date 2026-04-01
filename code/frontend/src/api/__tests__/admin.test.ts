@@ -18,12 +18,14 @@ vi.mock('@/api/request', () => ({
 import {
   createEnvironmentTemplate,
   createChallenge,
+  createChallengePublishRequest,
   createContest,
   configureChallengeFlag,
   deleteChallengeWriteup,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
   getChallengeDetail,
+  getLatestChallengePublishRequest,
   getContestAWDRoundSummary,
   getChallengeWriteup,
   getChallenges,
@@ -617,7 +619,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/admin/challenges',
+      url: '/authoring/challenges',
       params: { page: 1, page_size: 20 },
     })
     expect(result.list[0]).toEqual({
@@ -670,11 +672,11 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenNthCalledWith(1, {
       method: 'GET',
-      url: '/admin/challenges/12',
+      url: '/authoring/challenges/12',
     })
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'GET',
-      url: '/admin/challenges/12/flag',
+      url: '/authoring/challenges/12/flag',
     })
     expect(result.flag_config).toEqual({
       flag_type: 'regex',
@@ -694,6 +696,113 @@ describe('admin contest api contract', () => {
     ])
   })
 
+  it('应该提交发布检查请求并归一化最新请求状态', async () => {
+    requestMock
+      .mockResolvedValueOnce({
+        id: 41,
+        challenge_id: 12,
+        requested_by: 7,
+        status: 'running',
+        request_source: 'admin_publish',
+        active: true,
+        failure_summary: '',
+        started_at: '2026-04-01T08:00:01.000Z',
+        created_at: '2026-04-01T08:00:00.000Z',
+        updated_at: '2026-04-01T08:00:05.000Z',
+      })
+      .mockResolvedValueOnce({
+        id: 41,
+        challenge_id: 12,
+        requested_by: 7,
+        status: 'failed',
+        request_source: 'admin_publish',
+        active: false,
+        failure_summary: 'Flag 未配置',
+        started_at: '2026-04-01T08:00:01.000Z',
+        finished_at: '2026-04-01T08:01:00.000Z',
+        created_at: '2026-04-01T08:00:00.000Z',
+        updated_at: '2026-04-01T08:01:00.000Z',
+        result: {
+          challenge_id: 12,
+          precheck: {
+            passed: true,
+            started_at: '2026-04-01T08:00:01.000Z',
+            ended_at: '2026-04-01T08:00:03.000Z',
+            steps: [{ name: 'flag', passed: true, message: 'ok' }],
+          },
+          runtime: {
+            passed: false,
+            started_at: '2026-04-01T08:00:03.000Z',
+            ended_at: '2026-04-01T08:01:00.000Z',
+            access_url: 'http://127.0.0.1:18080',
+            container_count: 1,
+            network_count: 1,
+            steps: [{ name: 'http', passed: false, message: '503' }],
+          },
+        },
+      })
+
+    const created = await createChallengePublishRequest('12')
+    const latest = await getLatestChallengePublishRequest('12')
+
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'POST',
+      url: '/authoring/challenges/12/publish-requests',
+    })
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'GET',
+      url: '/authoring/challenges/12/publish-requests/latest',
+      suppressErrorToast: true,
+    })
+    expect(created).toEqual({
+      id: '41',
+      challenge_id: '12',
+      requested_by: '7',
+      status: 'running',
+      active: true,
+      request_source: 'admin_publish',
+      failure_summary: '',
+      started_at: '2026-04-01T08:00:01.000Z',
+      finished_at: undefined,
+      published_at: undefined,
+      result: undefined,
+      created_at: '2026-04-01T08:00:00.000Z',
+      updated_at: '2026-04-01T08:00:05.000Z',
+    })
+    expect(latest).toEqual({
+      id: '41',
+      challenge_id: '12',
+      requested_by: '7',
+      status: 'failed',
+      active: false,
+      request_source: 'admin_publish',
+      failure_summary: 'Flag 未配置',
+      started_at: '2026-04-01T08:00:01.000Z',
+      finished_at: '2026-04-01T08:01:00.000Z',
+      published_at: undefined,
+      result: {
+        challenge_id: '12',
+        precheck: {
+          passed: true,
+          started_at: '2026-04-01T08:00:01.000Z',
+          ended_at: '2026-04-01T08:00:03.000Z',
+          steps: [{ name: 'flag', passed: true, message: 'ok' }],
+        },
+        runtime: {
+          passed: false,
+          started_at: '2026-04-01T08:00:03.000Z',
+          ended_at: '2026-04-01T08:01:00.000Z',
+          access_url: 'http://127.0.0.1:18080',
+          container_count: 1,
+          network_count: 1,
+          steps: [{ name: 'http', passed: false, message: '503' }],
+        },
+      },
+      created_at: '2026-04-01T08:00:00.000Z',
+      updated_at: '2026-04-01T08:01:00.000Z',
+    })
+  })
+
   it('应该发送 manual review Flag 配置载荷', async () => {
     requestMock.mockResolvedValue({ message: 'ok' })
 
@@ -703,7 +812,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'PUT',
-      url: '/admin/challenges/12/flag',
+      url: '/authoring/challenges/12/flag',
       data: {
         flag_type: 'manual_review',
       },
@@ -744,7 +853,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'POST',
-      url: '/admin/challenges',
+      url: '/authoring/challenges',
       data: {
         title: '文件包含',
         description: 'LFI 训练',
@@ -801,7 +910,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/admin/images',
+      url: '/authoring/images',
       params: { page: 1, page_size: 20 },
     })
     expect(result.list[0]).toEqual({
@@ -845,7 +954,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/admin/challenges/11/topology',
+      url: '/authoring/challenges/11/topology',
       suppressErrorToast: true,
     })
     expect(result).toEqual({
@@ -910,7 +1019,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenCalledWith({
       method: 'PUT',
-      url: '/admin/challenges/11/topology',
+      url: '/authoring/challenges/11/topology',
       data: {
         entry_node_key: 'web',
         networks: [{ key: 'default', name: '默认网络' }],
@@ -937,7 +1046,7 @@ describe('admin contest api contract', () => {
     const detail = await getChallengeWriteup('11')
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/admin/challenges/11/writeup',
+      url: '/authoring/challenges/11/writeup',
       suppressErrorToast: true,
     })
     expect(detail).toEqual({
@@ -972,7 +1081,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenLastCalledWith({
       method: 'PUT',
-      url: '/admin/challenges/11/writeup',
+      url: '/authoring/challenges/11/writeup',
       data: {
         title: '官方题解',
         content: '## Updated',
@@ -991,7 +1100,7 @@ describe('admin contest api contract', () => {
     await deleteChallengeWriteup('12')
     expect(requestMock).toHaveBeenLastCalledWith({
       method: 'DELETE',
-      url: '/admin/challenges/12/writeup',
+      url: '/authoring/challenges/12/writeup',
     })
   })
 
@@ -1015,7 +1124,7 @@ describe('admin contest api contract', () => {
     const list = await getEnvironmentTemplates('双节点')
     expect(requestMock).toHaveBeenCalledWith({
       method: 'GET',
-      url: '/admin/environment-templates',
+      url: '/authoring/environment-templates',
       params: { keyword: '双节点' },
     })
     expect(list[0]).toMatchObject({
@@ -1051,7 +1160,7 @@ describe('admin contest api contract', () => {
 
     expect(requestMock).toHaveBeenLastCalledWith({
       method: 'POST',
-      url: '/admin/environment-templates',
+      url: '/authoring/environment-templates',
       data: {
         name: '三层模板',
         description: 'web app db',
