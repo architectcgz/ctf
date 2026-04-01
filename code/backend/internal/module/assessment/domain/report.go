@@ -92,11 +92,30 @@ type ContestExportTeamItem struct {
 }
 
 type ReviewArchiveSummary struct {
-	TotalChallenges int `json:"total_challenges"`
-	TotalSolved     int `json:"total_solved"`
-	TotalScore      int `json:"total_score"`
-	Rank            int `json:"rank"`
-	TotalAttempts   int `json:"total_attempts"`
+	TotalChallenges        int        `json:"total_challenges"`
+	TotalSolved            int        `json:"total_solved"`
+	TotalScore             int        `json:"total_score"`
+	Rank                   int        `json:"rank"`
+	TotalAttempts          int        `json:"total_attempts"`
+	TimelineEventCount     int        `json:"timeline_event_count"`
+	EvidenceEventCount     int        `json:"evidence_event_count"`
+	WriteupCount           int        `json:"writeup_count"`
+	ManualReviewCount      int        `json:"manual_review_count"`
+	HintUnlockCount        int        `json:"hint_unlock_count"`
+	CorrectSubmissionCount int        `json:"correct_submission_count"`
+	LastActivityAt         *time.Time `json:"last_activity_at,omitempty"`
+}
+
+type ReviewArchiveObservation struct {
+	Key      string `json:"key"`
+	Label    string `json:"label"`
+	Level    string `json:"level"`
+	Summary  string `json:"summary"`
+	Evidence string `json:"evidence,omitempty"`
+}
+
+type ReviewArchiveTeacherObservations struct {
+	Items []ReviewArchiveObservation `json:"items"`
 }
 
 type ReviewArchiveTimelineEvent struct {

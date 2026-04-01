@@ -212,6 +212,17 @@ function openChallenge(challengeId: string): void {
   router.push(`/challenges/${challengeId}`)
 }
 
+function openReviewArchivePage(): void {
+  if (!selectedStudentId.value || !selectedClassName.value) return
+  router.push({
+    name: 'TeacherStudentReviewArchive',
+    params: {
+      className: selectedClassName.value,
+      studentId: selectedStudentId.value,
+    },
+  })
+}
+
 async function downloadGeneratedReport(reportId: string): Promise<void> {
   downloadingReviewArchive.value = true
   try {
@@ -311,6 +322,7 @@ onMounted(() => {
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-class-students="router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })"
     @open-report-export="router.push({ name: 'ReportExport' })"
+    @open-review-archive="openReviewArchivePage"
     @export-review-archive="handleExportReviewArchive"
     @select-class="selectClass"
     @select-student="selectStudent"

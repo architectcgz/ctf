@@ -183,6 +183,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'teacher/classes/:className/students/:studentId/review-archive',
+        name: 'TeacherStudentReviewArchive',
+        component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '学生复盘归档',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'teacher/instances',
         name: 'TeacherInstanceManagement',
         component: () => import('@/views/teacher/InstanceManagement.vue'),

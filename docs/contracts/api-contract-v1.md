@@ -765,7 +765,58 @@ export interface CreateContestExportReq {
   - `challenges`
   - `teams`
 
-### 7.6 POST `/api/v1/teacher/students/:id/review-archive/export`
+### 7.6 GET `/api/v1/teacher/students/:id/review-archive`
+
+`data`：
+
+```ts
+export interface ReviewArchiveData {
+  generated_at: ISODateTime
+  student: {
+    id: ID
+    username: string
+    name?: string
+    class_name?: string
+  }
+  summary: {
+    total_challenges: number
+    total_solved: number
+    total_score: number
+    rank: number
+    total_attempts: number
+    timeline_event_count: number
+    evidence_event_count: number
+    writeup_count: number
+    manual_review_count: number
+    hint_unlock_count: number
+    correct_submission_count: number
+    last_activity_at?: ISODateTime
+  }
+  skill_profile: Array<{ dimension: string; score: number }>
+  timeline: Array<{ type: string; challenge_id: ID; title: string; timestamp: ISODateTime }>
+  evidence: Array<{ type: string; challenge_id: ID; title: string; timestamp: ISODateTime }>
+  writeups: Array<{ id: ID; challenge_id: ID; challenge_title: string; title: string }>
+  manual_reviews: Array<{ id: ID; challenge_id: ID; challenge_title: string; review_status: string }>
+  teacher_observations: {
+    items: Array<{
+      key: string
+      label: string
+      level: string
+      summary: string
+      evidence?: string
+    }>
+  }
+}
+```
+
+说明：
+
+- 返回与导出 JSON 同源的学生复盘归档聚合数据
+- 供教师/管理员在平台内直接查看完整复盘页
+- 教师仅可查看自己班级学生，管理员可查看任意学生
+- `teacher_observations` 为基于事件与评阅记录生成的可解释教学观察
+
+### 7.7 POST `/api/v1/teacher/students/:id/review-archive/export`
 
 请求体：
 
@@ -791,6 +842,7 @@ export interface CreateStudentReviewArchiveReq {
   - `evidence`
   - `writeups`
   - `manual_reviews`
+  - `teacher_observations`
 
 ---
 
