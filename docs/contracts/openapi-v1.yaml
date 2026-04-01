@@ -8,7 +8,7 @@ info:
     - 业务字段/返回结构以 `ctf/docs/contracts/api-contract-v1.md` 为准
     - 错误码以 `ctf/docs/architecture/backend/04-api-design.md` §3 为准
     - WebSocket 端点与消息格式见 `ctf/docs/contracts/api-contract-v1.md` §9（不在 OpenAPI 范围）
-  x-last-updated: "2026-03-10"
+  x-last-updated: "2026-04-01"
 
 servers:
   - url: /api/v1
@@ -1020,6 +1020,131 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/AwdRoundSummaryData" }
+
+    AwdTrafficStatusGroup:
+      type: string
+      enum: [success, redirect, client_error, server_error]
+
+    AwdTrafficTrendBucket:
+      type: object
+      required: [bucket_start_at, request_count, error_count]
+      properties:
+        bucket_start_at: { $ref: "#/components/schemas/ISODateTime" }
+        request_count: { type: integer, minimum: 0 }
+        error_count: { type: integer, minimum: 0 }
+
+    AwdTrafficTopTeam:
+      type: object
+      required: [team_id, team_name, request_count, error_count]
+      properties:
+        team_id: { $ref: "#/components/schemas/ID" }
+        team_name: { type: string }
+        request_count: { type: integer, minimum: 0 }
+        error_count: { type: integer, minimum: 0 }
+
+    AwdTrafficTopChallenge:
+      type: object
+      required: [challenge_id, challenge_title, request_count, error_count]
+      properties:
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        challenge_title: { type: string }
+        request_count: { type: integer, minimum: 0 }
+        error_count: { type: integer, minimum: 0 }
+
+    AwdTrafficTopPath:
+      type: object
+      required: [path, request_count, error_count, last_status_code]
+      properties:
+        path: { type: string }
+        request_count: { type: integer, minimum: 0 }
+        error_count: { type: integer, minimum: 0 }
+        last_status_code: { type: integer, minimum: 100, maximum: 599 }
+
+    AwdTrafficSummaryData:
+      type: object
+      required:
+        [round, contest_id, round_id, total_request_count, active_attacker_team_count, victim_team_count, error_request_count, unique_path_count, trend_buckets, top_attackers, top_victims, top_challenges, top_paths, top_error_paths]
+      properties:
+        round: { $ref: "#/components/schemas/AwdRound" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        round_id: { $ref: "#/components/schemas/ID" }
+        total_request_count: { type: integer, minimum: 0 }
+        active_attacker_team_count: { type: integer, minimum: 0 }
+        victim_team_count: { type: integer, minimum: 0 }
+        error_request_count: { type: integer, minimum: 0 }
+        unique_path_count: { type: integer, minimum: 0 }
+        latest_event_at:
+          allOf:
+            - $ref: "#/components/schemas/ISODateTime"
+          nullable: true
+        trend_buckets:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTrendBucket" }
+        top_attackers:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTopTeam" }
+        top_victims:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTopTeam" }
+        top_challenges:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTopChallenge" }
+        top_paths:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTopPath" }
+        top_error_paths:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficTopPath" }
+
+    ApiEnvelopeAwdTrafficSummaryData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdTrafficSummaryData" }
+
+    AwdTrafficEvent:
+      type: object
+      required:
+        [id, contest_id, round_id, attacker_team_id, attacker_team_name, victim_team_id, victim_team_name, challenge_id, challenge_title, method, path, status_code, status_group, is_error, source, occurred_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID" }
+        round_id: { $ref: "#/components/schemas/ID" }
+        attacker_team_id: { $ref: "#/components/schemas/ID" }
+        attacker_team_name: { type: string }
+        victim_team_id: { $ref: "#/components/schemas/ID" }
+        victim_team_name: { type: string }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        challenge_title: { type: string }
+        method: { type: string }
+        path: { type: string }
+        status_code: { type: integer, minimum: 100, maximum: 599 }
+        status_group: { $ref: "#/components/schemas/AwdTrafficStatusGroup" }
+        is_error: { type: boolean }
+        source: { type: string }
+        request_id: { type: string, nullable: true }
+        occurred_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    AwdTrafficEventPageData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/AwdTrafficEvent" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeAwdTrafficEventPageData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AwdTrafficEventPageData" }
 
     AwdCheckerRunData:
       type: object
@@ -3152,6 +3277,78 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeAwdRoundSummaryData" }
+  /admin/contests/{id}/awd/rounds/{rid}/traffic/summary:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 流量摘要
+      description: 基于 `awd_traffic_events` 事实表返回指定轮次的代理流量摘要、热点排行和趋势桶。
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdTrafficSummaryData" }
+  /admin/contests/{id}/awd/rounds/{rid}/traffic/events:
+    get:
+      tags: [Admin]
+      summary: 获取 AWD 流量明细
+      description: 返回指定轮次的代理流量明细，支持按攻击队、受害队、题目、状态组和路径关键字筛选。
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: path
+          name: rid
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: attacker_team_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: victim_team_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: challenge_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: status_group
+          schema: { $ref: "#/components/schemas/AwdTrafficStatusGroup" }
+        - in: query
+          name: path_keyword
+          schema:
+            type: string
+            maxLength: 200
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAwdTrafficEventPageData" }
   /challenges/{id}/writeup:
     get:
       tags:

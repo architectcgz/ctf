@@ -411,6 +411,76 @@ export interface AWDRoundSummaryData {
   items: AWDRoundSummaryItemData[]
 }
 
+export type AWDTrafficStatusGroup = 'success' | 'redirect' | 'client_error' | 'server_error'
+
+export interface AWDTrafficTopTeamData {
+  team_id: ID
+  team_name: string
+  request_count: number
+  error_count: number
+}
+
+export interface AWDTrafficTopChallengeData {
+  challenge_id: ID
+  challenge_title?: string
+  request_count: number
+  error_count: number
+}
+
+export interface AWDTrafficTopPathData {
+  path: string
+  request_count: number
+  error_count: number
+  last_status_code: number
+}
+
+export interface AWDTrafficTrendBucketData {
+  bucket_start_at: ISODateTime
+  bucket_end_at?: ISODateTime
+  request_count: number
+  error_count: number
+}
+
+export interface AWDTrafficSummaryData {
+  round?: AWDRoundData
+  contest_id: ID
+  round_id: ID
+  total_request_count: number
+  active_attacker_team_count: number
+  victim_team_count: number
+  unique_path_count: number
+  error_request_count: number
+  latest_event_at?: ISODateTime
+  top_attackers: AWDTrafficTopTeamData[]
+  top_victims: AWDTrafficTopTeamData[]
+  top_challenges: AWDTrafficTopChallengeData[]
+  top_paths: AWDTrafficTopPathData[]
+  top_error_paths: AWDTrafficTopPathData[]
+  trend_buckets: AWDTrafficTrendBucketData[]
+}
+
+export interface AWDTrafficEventData {
+  id: ID
+  contest_id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team_name?: string
+  victim_team_id: ID
+  victim_team_name?: string
+  challenge_id: ID
+  challenge_title?: string
+  method: string
+  path: string
+  status_code: number
+  status_group: AWDTrafficStatusGroup
+  is_error: boolean
+  source: string
+  request_id?: string
+  occurred_at: ISODateTime
+}
+
+export interface AWDTrafficEventPageData extends PageResult<AWDTrafficEventData> {}
+
 export interface AWDCheckerRunData {
   round: AWDRoundData
   services: AWDTeamServiceData[]

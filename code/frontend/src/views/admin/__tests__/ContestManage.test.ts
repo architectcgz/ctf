@@ -22,6 +22,8 @@ const contestMocks = vi.hoisted(() => ({
   listContestAWDRoundServices: vi.fn(),
   listContestAWDRoundAttacks: vi.fn(),
   getContestAWDRoundSummary: vi.fn(),
+  getContestAWDRoundTrafficSummary: vi.fn(),
+  listContestAWDRoundTrafficEvents: vi.fn(),
   runContestAWDRoundCheck: vi.fn(),
   runContestAWDCurrentRoundCheck: vi.fn(),
 }))
@@ -43,6 +45,8 @@ vi.mock('@/api/admin', async () => {
     listContestAWDRoundServices: contestMocks.listContestAWDRoundServices,
     listContestAWDRoundAttacks: contestMocks.listContestAWDRoundAttacks,
     getContestAWDRoundSummary: contestMocks.getContestAWDRoundSummary,
+    getContestAWDRoundTrafficSummary: contestMocks.getContestAWDRoundTrafficSummary,
+    listContestAWDRoundTrafficEvents: contestMocks.listContestAWDRoundTrafficEvents,
     runContestAWDRoundCheck: contestMocks.runContestAWDRoundCheck,
     runContestAWDCurrentRoundCheck: contestMocks.runContestAWDCurrentRoundCheck,
   }
@@ -72,6 +76,8 @@ describe('ContestManage', () => {
     contestMocks.listContestAWDRoundServices.mockReset()
     contestMocks.listContestAWDRoundAttacks.mockReset()
     contestMocks.getContestAWDRoundSummary.mockReset()
+    contestMocks.getContestAWDRoundTrafficSummary.mockReset()
+    contestMocks.listContestAWDRoundTrafficEvents.mockReset()
     contestMocks.runContestAWDRoundCheck.mockReset()
     contestMocks.runContestAWDCurrentRoundCheck.mockReset()
 
@@ -129,6 +135,27 @@ describe('ContestManage', () => {
         updated_at: '2026-03-11T00:00:00.000Z',
       },
       items: [],
+    })
+    contestMocks.getContestAWDRoundTrafficSummary.mockResolvedValue({
+      contest_id: '0',
+      round_id: '0',
+      total_request_count: 0,
+      active_attacker_team_count: 0,
+      victim_team_count: 0,
+      error_request_count: 0,
+      unique_path_count: 0,
+      latest_event_at: undefined,
+      top_attackers: [],
+      top_victims: [],
+      top_challenges: [],
+      top_error_paths: [],
+      trend_buckets: [],
+    })
+    contestMocks.listContestAWDRoundTrafficEvents.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
     })
     contestMocks.runContestAWDRoundCheck.mockResolvedValue({
       round: {
@@ -471,6 +498,167 @@ describe('ContestManage', () => {
         },
       ],
     })
+    contestMocks.getContestAWDRoundTrafficSummary.mockResolvedValue({
+      contest_id: 'awd-1',
+      round_id: 'round-1',
+      total_request_count: 18,
+      active_attacker_team_count: 2,
+      victim_team_count: 2,
+      error_request_count: 4,
+      unique_path_count: 5,
+      latest_event_at: '2026-03-15T09:04:40.000Z',
+      trend_buckets: [
+        {
+          bucket_start_at: '2026-03-15T09:00:00.000Z',
+          bucket_end_at: '2026-03-15T09:01:00.000Z',
+          request_count: 5,
+          error_count: 1,
+        },
+        {
+          bucket_start_at: '2026-03-15T09:01:00.000Z',
+          bucket_end_at: '2026-03-15T09:02:00.000Z',
+          request_count: 9,
+          error_count: 2,
+        },
+      ],
+      top_victims: [
+        {
+          team_id: 'team-1',
+          team_name: '蓝队一',
+          request_count: 11,
+          error_count: 3,
+        },
+      ],
+      top_attackers: [
+        {
+          team_id: 'team-2',
+          team_name: '红队一',
+          request_count: 12,
+          error_count: 4,
+        },
+      ],
+      top_challenges: [
+        {
+          challenge_id: 'challenge-1',
+          challenge_title: 'Traffic Alpha',
+          request_count: 10,
+          error_count: 4,
+        },
+      ],
+      top_error_paths: [
+        {
+          path: '/api/alpha',
+          request_count: 8,
+          error_count: 3,
+        },
+      ],
+    })
+    contestMocks.listContestAWDRoundTrafficEvents.mockImplementation(async (_contestId, _roundId, params) => {
+      const page = params?.page ?? 1
+      const pageSize = params?.page_size ?? 20
+      const statusGroup = params?.status_group
+      if (page === 2) {
+        return {
+          list: [
+            {
+              id: 'traffic-3',
+              contest_id: 'awd-1',
+              round_id: 'round-1',
+              occurred_at: '2026-03-15T09:05:30.000Z',
+              attacker_team_id: 'team-2',
+              attacker_team_name: '红队一',
+              victim_team_id: 'team-1',
+              victim_team_name: '蓝队一',
+              challenge_id: 'challenge-2',
+              challenge_title: 'Traffic Gamma',
+              method: 'GET',
+              path: '/api/gamma',
+              status_code: 302,
+              status_group: 'redirect',
+              is_error: false,
+              source: 'proxy_audit',
+              request_id: 'req-traffic-3',
+            },
+          ],
+          total: 21,
+          page,
+          page_size: pageSize,
+        }
+      }
+      if (statusGroup === 'server_error') {
+        return {
+          list: [
+            {
+              id: 'traffic-1',
+              contest_id: 'awd-1',
+              round_id: 'round-1',
+              occurred_at: '2026-03-15T09:04:10.000Z',
+              attacker_team_id: 'team-2',
+              attacker_team_name: '红队一',
+              victim_team_id: 'team-1',
+              victim_team_name: '蓝队一',
+              challenge_id: 'challenge-1',
+              challenge_title: 'Traffic Alpha',
+              method: 'POST',
+              path: '/api/alpha',
+              status_code: 500,
+              status_group: 'server_error',
+              is_error: true,
+              source: 'proxy_audit',
+              request_id: 'req-traffic-1',
+            },
+          ],
+          total: 1,
+          page,
+          page_size: pageSize,
+        }
+      }
+      return {
+        list: [
+          {
+            id: 'traffic-1',
+            contest_id: 'awd-1',
+            round_id: 'round-1',
+            occurred_at: '2026-03-15T09:04:10.000Z',
+            attacker_team_id: 'team-2',
+            attacker_team_name: '红队一',
+            victim_team_id: 'team-1',
+            victim_team_name: '蓝队一',
+            challenge_id: 'challenge-1',
+            challenge_title: 'Traffic Alpha',
+            method: 'POST',
+            path: '/api/alpha',
+            status_code: 500,
+            status_group: 'server_error',
+            is_error: true,
+            source: 'proxy_audit',
+            request_id: 'req-traffic-1',
+          },
+          {
+            id: 'traffic-2',
+            contest_id: 'awd-1',
+            round_id: 'round-1',
+            occurred_at: '2026-03-15T09:04:40.000Z',
+            attacker_team_id: 'team-1',
+            attacker_team_name: '蓝队一',
+            victim_team_id: 'team-2',
+            victim_team_name: '红队一',
+            challenge_id: 'challenge-2',
+            challenge_title: 'Traffic Beta',
+            method: 'GET',
+            path: '/api/beta',
+            status_code: 200,
+            status_group: 'success',
+            is_error: false,
+            source: 'proxy_audit',
+            request_id: 'req-traffic-2',
+          },
+        ],
+        total: 21,
+        page,
+        page_size: pageSize,
+      }
+    })
     contestMocks.getAdminContestLiveScoreboard.mockResolvedValue({
       contest: {
         id: 'awd-1',
@@ -549,6 +737,13 @@ describe('ContestManage', () => {
     expect(wrapper.text()).toContain('防守成功')
     expect(wrapper.text()).toContain('巡检 调度 1 / 手动 1')
     expect(wrapper.text()).toContain('日志 提交 1 / 人工 1 / 历史 0')
+    expect(wrapper.text()).toContain('攻击流量态势')
+    expect(wrapper.text()).toContain('趋势摘要')
+    expect(wrapper.text()).toContain('热点目标')
+    expect(wrapper.text()).toContain('热点攻击队')
+    expect(wrapper.text()).toContain('异常路径')
+    expect(wrapper.text()).toContain('Traffic Alpha')
+    expect(wrapper.text()).toContain('Traffic Beta')
     expect(wrapper.text()).toContain('实时排行榜')
     expect(wrapper.text()).toContain('#1')
     expect(wrapper.text()).toContain('150')
@@ -556,6 +751,15 @@ describe('ContestManage', () => {
     expect(contestMocks.listContestAWDRounds).toHaveBeenCalledWith('awd-1')
     expect(contestMocks.listContestAWDRoundServices).toHaveBeenCalledWith('awd-1', 'round-1')
     expect(contestMocks.getContestAWDRoundSummary).toHaveBeenCalledWith('awd-1', 'round-1')
+    expect(contestMocks.getContestAWDRoundTrafficSummary).toHaveBeenCalledWith('awd-1', 'round-1')
+    expect(contestMocks.listContestAWDRoundTrafficEvents).toHaveBeenCalledWith(
+      'awd-1',
+      'round-1',
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+      })
+    )
     expect(contestMocks.getAdminContestLiveScoreboard).toHaveBeenCalledWith('awd-1', { page: 1, page_size: 10 })
 
     await wrapper.find('#awd-service-filter-source').setValue('manual_selected_round')
@@ -573,6 +777,50 @@ describe('ContestManage', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('人工补录')
     expect(wrapper.text()).not.toContain('学员提交 成功 +100')
+
+    await wrapper.find('#awd-traffic-filter-status-group').setValue('server_error')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Traffic Alpha')
+    expect(wrapper.text()).not.toContain('Traffic Beta')
+    expect(contestMocks.listContestAWDRoundTrafficEvents).toHaveBeenLastCalledWith(
+      'awd-1',
+      'round-1',
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        status_group: 'server_error',
+      })
+    )
+
+    await wrapper.find('#awd-traffic-filter-path').setValue('alpha')
+    await wrapper.find('#awd-traffic-filter-search').trigger('click')
+    await flushPromises()
+    expect(contestMocks.listContestAWDRoundTrafficEvents).toHaveBeenLastCalledWith(
+      'awd-1',
+      'round-1',
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        status_group: 'server_error',
+        path_keyword: 'alpha',
+      })
+    )
+
+    const trafficNextPageButton = wrapper.find('#awd-traffic-page-next')
+    expect(trafficNextPageButton.attributes('disabled')).toBeDefined()
+    await trafficNextPageButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('Traffic Gamma')
+    expect(contestMocks.listContestAWDRoundTrafficEvents).toHaveBeenLastCalledWith(
+      'awd-1',
+      'round-1',
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        status_group: 'server_error',
+        path_keyword: 'alpha',
+      })
+    )
 
     await wrapper.find('#awd-export-services').trigger('click')
     expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith(

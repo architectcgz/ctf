@@ -73,6 +73,7 @@
 - `contests` 1:N `awd_rounds` — AWD 竞赛的轮次
 - `awd_rounds` + `teams` → `awd_team_services` — 每轮每队的服务状态
 - `awd_rounds` 1:N `awd_attack_logs` — 攻击日志
+- `awd_rounds` 1:N `awd_traffic_events` — 轮次代理流量事实表
 
 **技能评估：**
 - `skill_dimensions` 1:N `user_skill_profiles` N:1 `users` — 用户多维能力画像
@@ -107,6 +108,7 @@
 | `cheat_reports.type` | `flag_sharing`, `ip_collision`, `time_anomaly`, `similarity` | Flag 共享 / IP 碰撞 / 时间异常 / 答案相似 |
 | `cheat_reports.status` | `pending`, `confirmed`, `dismissed` | 待处理 / 已确认 / 已驳回 |
 | `awd_team_services.service_status` | `up`, `down`, `compromised` | 正常 / 宕机 / 被攻破 |
+| `awd_traffic_events.source` | `runtime_proxy` | 当前平台代理访问链路 |
 | `notifications.type` | `system`, `contest`, `challenge`, `team` | 系统通知 / 竞赛通知 / 靶机通知 / 队伍通知 |
 | `audit_logs.action` | `login`, `logout`, `create`, `update`, `delete`, `submit`, `admin_op` | 登录 / 登出 / 创建 / 更新 / 删除 / 提交 / 管理操作 |
 
@@ -748,6 +750,40 @@ CREATE INDEX idx_awd_attack_success ON awd_attack_logs(round_id, is_success) WHE
   -- 用途：统计每轮成功攻击次数（部分索引，只索引成功记录）
 ```
 
+### 8.4 awd_traffic_events — AWD 代理流量事实表
+
+```sql
+CREATE TABLE awd_traffic_events (
+    id               BIGSERIAL       PRIMARY KEY,
+    contest_id       BIGINT          NOT NULL REFERENCES contests(id) ON DELETE CASCADE,
+    round_id         BIGINT          NOT NULL REFERENCES awd_rounds(id) ON DELETE CASCADE,
+    attacker_team_id BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    victim_team_id   BIGINT          NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    challenge_id     BIGINT          NOT NULL REFERENCES challenges(id) ON DELETE RESTRICT,
+    method           VARCHAR(16)     NOT NULL,
+    path             VARCHAR(1024)   NOT NULL,
+    status_code      INT             NOT NULL,
+    source           VARCHAR(32)     NOT NULL DEFAULT 'runtime_proxy',
+    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+-- 索引
+CREATE INDEX idx_awd_traffic_round_created ON awd_traffic_events(round_id, created_at DESC, id DESC);
+  -- 用途：按轮次倒序拉取最新流量明细
+CREATE INDEX idx_awd_traffic_round_summary ON awd_traffic_events(round_id, method, path, status_code);
+  -- 用途：按轮次聚合热点路径、状态码和趋势
+CREATE INDEX idx_awd_traffic_attacker ON awd_traffic_events(round_id, attacker_team_id);
+  -- 用途：统计攻击方活跃度和队伍筛选
+CREATE INDEX idx_awd_traffic_victim ON awd_traffic_events(round_id, victim_team_id);
+  -- 用途：统计受害方热点和队伍筛选
+```
+
+说明：
+
+- 该表是 AWD 管理后台“攻击流量态势”能力的轻量事实表，只保存轮次、队伍、题目和路径级摘要。
+- 第一版不持久化请求体；若需要请求体预览，仍从通用审计链路读取。
+- `source` 当前固定为 `runtime_proxy`，为后续接入其他流量来源预留扩展位。
+
 ---
 
 ## 9. 技能评估模块
@@ -1145,6 +1181,7 @@ CREATE INDEX idx_notifications_user_type ON notifications(user_id, type, created
 | `instances` | `status IN ('stopped', 'expired', 'error')` AND `updated_at < NOW() - INTERVAL '30 days'` | 已终止实例保留 30 天 | `instances_archive` | 运行中实例永不归档 |
 | `awd_attack_logs` | 关联竞赛状态为 `archived` | 竞赛归档后 30 天 | `awd_attack_logs_archive` | 随竞赛生命周期归档 |
 | `awd_team_services` | 关联竞赛状态为 `archived` | 竞赛归档后 30 天 | `awd_team_services_archive` | 随竞赛生命周期归档 |
+| `awd_traffic_events` | 关联竞赛状态为 `archived` | 竞赛归档后 30 天 | `awd_traffic_events_archive` | 随竞赛生命周期归档 |
 | `notifications` | `created_at < NOW() - INTERVAL '90 days'` AND `is_read = TRUE` | 已读通知保留 90 天 | `notifications_archive` | 未读通知不归档 |
 | `hint_unlocks` | `created_at < NOW() - INTERVAL '365 days'` | 保留 1 年 | `hint_unlocks_archive` | 低频数据，年度归档即可 |
 

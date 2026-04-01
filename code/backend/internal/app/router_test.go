@@ -82,6 +82,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/admin/challenges/:id/flag", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/images", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/admin/contests", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/summary", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/events", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/scoreboard", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/submissions", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/teams", "internal/module/contest/api/http")

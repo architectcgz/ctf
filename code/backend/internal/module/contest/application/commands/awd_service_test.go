@@ -109,6 +109,14 @@ func (s *awdServiceForTest) GetRoundSummary(ctx context.Context, contestID, roun
 	return s.queries.GetRoundSummary(ctx, contestID, roundID)
 }
 
+func (s *awdServiceForTest) GetTrafficSummary(ctx context.Context, contestID, roundID int64) (*dto.AWDTrafficSummaryResp, error) {
+	return s.queries.GetTrafficSummary(ctx, contestID, roundID)
+}
+
+func (s *awdServiceForTest) ListTrafficEvents(ctx context.Context, contestID, roundID int64, req *dto.ListAWDTrafficEventsReq) (*dto.AWDTrafficEventPageResp, error) {
+	return s.queries.ListTrafficEvents(ctx, contestID, roundID, req)
+}
+
 func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	db := newAWDTestDB(t)
 	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
@@ -1125,6 +1133,135 @@ func TestAWDServiceSubmitAttackMaterializesMissingCurrentRound(t *testing.T) {
 	}
 }
 
+func TestAWDServiceGetTrafficSummaryBuildsAggregateMetrics(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+
+	createAWDContestFixture(t, db, 90, now)
+	createAWDRoundFixtureWithWindow(t, db, 901, 90, 3, 60, 40, now.Add(-10*time.Minute), now.Add(-5*time.Minute))
+	createAWDChallengeFixture(t, db, 9001, now)
+	createAWDChallengeFixture(t, db, 9002, now)
+	createAWDContestChallengeFixture(t, db, 90, 9001, now)
+	createAWDContestChallengeFixture(t, db, 90, 9002, now)
+	createAWDTeamFixture(t, db, 9101, 90, "Red", now)
+	createAWDTeamFixture(t, db, 9102, 90, "Blue", now)
+	createAWDTeamMemberFixture(t, db, 90, 9101, 9201, now)
+	createAWDTeamMemberFixture(t, db, 90, 9102, 9202, now)
+
+	if err := db.Create(&model.Instance{
+		ID:          9301,
+		UserID:      9202,
+		ContestID:   int64Ptr(90),
+		TeamID:      int64Ptr(9102),
+		ChallengeID: 9001,
+		ContainerID: "ctr-blue-web",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://blue-web.local",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create blue instance: %v", err)
+	}
+	if err := db.Create(&model.Instance{
+		ID:          9302,
+		UserID:      9201,
+		ContestID:   int64Ptr(90),
+		TeamID:      int64Ptr(9101),
+		ChallengeID: 9002,
+		ContainerID: "ctr-red-pwn",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://red-pwn.local",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create red instance: %v", err)
+	}
+
+	mustCreateAWDTrafficEvent(t, db, 9401, 90, 901, 9101, 9102, 9001, "GET", "/health", 200, now.Add(-9*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9402, 90, 901, 9101, 9102, 9001, "POST", "/admin/login", 500, now.Add(-8*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9403, 90, 901, 9102, 9101, 9002, "GET", "/index", 302, now.Add(-7*time.Minute))
+
+	summary, err := service.GetTrafficSummary(context.Background(), 90, 901)
+	if err != nil {
+		t.Fatalf("GetTrafficSummary() error = %v", err)
+	}
+	if summary.TotalRequests != 3 || summary.ErrorRequests != 1 {
+		t.Fatalf("unexpected traffic summary counts: %+v", summary)
+	}
+	if summary.ActiveAttackerTeams != 2 || summary.TargetedTeams != 2 {
+		t.Fatalf("unexpected active/targeted teams: %+v", summary)
+	}
+	if summary.UniquePathCount != 3 {
+		t.Fatalf("unexpected unique path count: %+v", summary)
+	}
+	if len(summary.TopAttackers) == 0 || summary.TopAttackers[0].TeamID != 9101 || summary.TopAttackers[0].RequestCount != 2 {
+		t.Fatalf("unexpected top attackers: %+v", summary.TopAttackers)
+	}
+	if len(summary.TopVictims) == 0 || summary.TopVictims[0].TeamID != 9102 || summary.TopVictims[0].RequestCount != 2 {
+		t.Fatalf("unexpected top victims: %+v", summary.TopVictims)
+	}
+	if len(summary.TopPaths) == 0 || summary.TopPaths[0].Path != "/admin/login" || summary.TopPaths[0].ErrorCount != 1 {
+		t.Fatalf("unexpected top paths: %+v", summary.TopPaths)
+	}
+	if len(summary.Trend) != 3 {
+		t.Fatalf("unexpected trend buckets: %+v", summary.Trend)
+	}
+}
+
+func TestAWDServiceListTrafficEventsSupportsFiltersAndPagination(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now().UTC().Truncate(time.Second)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+
+	createAWDContestFixture(t, db, 91, now)
+	createAWDRoundFixtureWithWindow(t, db, 911, 91, 4, 60, 40, now.Add(-20*time.Minute), now.Add(-10*time.Minute))
+	createAWDChallengeFixture(t, db, 91001, now)
+	createAWDContestChallengeFixture(t, db, 91, 91001, now)
+	createAWDTeamFixture(t, db, 9111, 91, "Alpha", now)
+	createAWDTeamFixture(t, db, 9112, 91, "Beta", now)
+	createAWDTeamMemberFixture(t, db, 91, 9111, 9211, now)
+	createAWDTeamMemberFixture(t, db, 91, 9112, 9212, now)
+
+	if err := db.Create(&model.Instance{
+		ID:          9311,
+		UserID:      9212,
+		ContestID:   int64Ptr(91),
+		TeamID:      int64Ptr(9112),
+		ChallengeID: 91001,
+		ContainerID: "ctr-beta-web",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://beta-web.local",
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create beta instance: %v", err)
+	}
+
+	mustCreateAWDTrafficEvent(t, db, 9411, 91, 911, 9111, 9112, 91001, "GET", "/api/status", 200, now.Add(-19*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9412, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 401, now.Add(-18*time.Minute))
+	mustCreateAWDTrafficEvent(t, db, 9413, 91, 911, 9111, 9112, 91001, "POST", "/admin/login", 500, now.Add(-17*time.Minute))
+
+	page, err := service.ListTrafficEvents(context.Background(), 91, 911, &dto.ListAWDTrafficEventsReq{
+		StatusGroup: "server_error",
+		PathKeyword: "login",
+		Page:        1,
+		Size:        1,
+	})
+	if err != nil {
+		t.Fatalf("ListTrafficEvents() error = %v", err)
+	}
+	if page.Total != 1 || len(page.List) != 1 {
+		t.Fatalf("unexpected traffic page: %+v", page)
+	}
+	if page.List[0].StatusCode != 500 || page.List[0].Path != "/admin/login" {
+		t.Fatalf("unexpected filtered traffic event: %+v", page.List[0])
+	}
+}
+
 func findAWDSummaryItem(items []*dto.AWDRoundSummaryItem, teamID int64) *dto.AWDRoundSummaryItem {
 	for _, item := range items {
 		if item.TeamID == teamID {
@@ -1135,3 +1272,38 @@ func findAWDSummaryItem(items []*dto.AWDRoundSummaryItem, teamID int64) *dto.AWD
 }
 
 func intPtr(v int) *int { return &v }
+
+func int64Ptr(v int64) *int64 { return &v }
+
+func mustCreateAWDTrafficEvent(
+	t *testing.T,
+	db *gorm.DB,
+	id int64,
+	contestID int64,
+	roundID int64,
+	attackerTeamID int64,
+	victimTeamID int64,
+	challengeID int64,
+	method string,
+	requestPath string,
+	statusCode int,
+	createdAt time.Time,
+) {
+	t.Helper()
+
+	if err := db.Create(&model.AWDTrafficEvent{
+		ID:             id,
+		ContestID:      contestID,
+		RoundID:        roundID,
+		AttackerTeamID: attackerTeamID,
+		VictimTeamID:   victimTeamID,
+		ChallengeID:    challengeID,
+		Method:         method,
+		Path:           requestPath,
+		StatusCode:     statusCode,
+		Source:         model.AWDTrafficSourceRuntimeProxy,
+		CreatedAt:      createdAt,
+	}).Error; err != nil {
+		t.Fatalf("create awd traffic event: %v", err)
+	}
+}

@@ -6,9 +6,11 @@ import {
   createContestAWDServiceCheck,
   getAdminContestLiveScoreboard,
   getContestAWDRoundSummary,
+  getContestAWDRoundTrafficSummary,
   listAdminContestChallenges,
   listContestTeams,
   listContestAWDRoundAttacks,
+  listContestAWDRoundTrafficEvents,
   listContestAWDRoundServices,
   listContestAWDRounds,
   runContestAWDRoundCheck,
@@ -18,6 +20,9 @@ import type {
   AWDAttackLogData,
   AWDRoundData,
   AWDRoundSummaryData,
+  AWDTrafficEventData,
+  AWDTrafficStatusGroup,
+  AWDTrafficSummaryData,
   AWDTeamServiceData,
   AdminContestChallengeData,
   AdminContestTeamData,
@@ -27,6 +32,29 @@ import type {
 import { useToast } from '@/composables/useToast'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
+const AWD_TRAFFIC_DEFAULT_PAGE_SIZE = 20
+
+interface AWDTrafficFilterState {
+  attacker_team_id: string
+  victim_team_id: string
+  challenge_id: string
+  status_group: 'all' | AWDTrafficStatusGroup
+  path_keyword: string
+  page: number
+  page_size: number
+}
+
+function createDefaultTrafficFilters(): AWDTrafficFilterState {
+  return {
+    attacker_team_id: '',
+    victim_team_id: '',
+    challenge_id: '',
+    status_group: 'all',
+    path_keyword: '',
+    page: 1,
+    page_size: AWD_TRAFFIC_DEFAULT_PAGE_SIZE,
+  }
+}
 
 function getSelectedRoundStorageKey(contestId: string): string {
   return `ctf_admin_awd_selected_round:${contestId}`
@@ -70,12 +98,18 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   const services = ref<AWDTeamServiceData[]>([])
   const attacks = ref<AWDAttackLogData[]>([])
   const summary = ref<AWDRoundSummaryData | null>(null)
+  const trafficSummary = ref<AWDTrafficSummaryData | null>(null)
+  const trafficEvents = ref<AWDTrafficEventData[]>([])
+  const trafficEventsTotal = ref(0)
+  const trafficFilters = ref<AWDTrafficFilterState>(createDefaultTrafficFilters())
   const scoreboardRows = ref<ScoreboardRow[]>([])
   const scoreboardFrozen = ref(false)
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
+  const loadingTrafficSummary = ref(false)
+  const loadingTrafficEvents = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
@@ -100,6 +134,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
   let roundsRequestToken = 0
   let roundDetailRequestToken = 0
+  let trafficEventsRequestToken = 0
   let syncingSelectedRound = false
   let autoRefreshTimer: ReturnType<typeof window.setInterval> | null = null
 
@@ -107,8 +142,24 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     services.value = []
     attacks.value = []
     summary.value = null
+    trafficSummary.value = null
+    trafficEvents.value = []
+    trafficEventsTotal.value = 0
     scoreboardRows.value = []
     scoreboardFrozen.value = false
+  }
+
+  function getTrafficEventsParams() {
+    const filters = trafficFilters.value
+    return {
+      attacker_team_id: filters.attacker_team_id || undefined,
+      victim_team_id: filters.victim_team_id || undefined,
+      challenge_id: filters.challenge_id || undefined,
+      status_group: filters.status_group === 'all' ? undefined : filters.status_group,
+      path_keyword: filters.path_keyword.trim() || undefined,
+      page: filters.page,
+      page_size: filters.page_size,
+    }
   }
 
   async function refreshRoundDetail(roundId = selectedRoundId.value) {
@@ -119,11 +170,16 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
     const requestToken = ++roundDetailRequestToken
     loadingRoundDetail.value = true
+    loadingTrafficSummary.value = true
+    loadingTrafficEvents.value = true
     try {
-      const [nextServices, nextAttacks, nextSummary, nextScoreboard] = await Promise.all([
+      const [nextServices, nextAttacks, nextSummary, nextTrafficSummary, nextTrafficEvents, nextScoreboard] =
+        await Promise.all([
         listContestAWDRoundServices(selectedContest.value.id, roundId),
         listContestAWDRoundAttacks(selectedContest.value.id, roundId),
         getContestAWDRoundSummary(selectedContest.value.id, roundId),
+        getContestAWDRoundTrafficSummary(selectedContest.value.id, roundId),
+        listContestAWDRoundTrafficEvents(selectedContest.value.id, roundId, getTrafficEventsParams()),
         getAdminContestLiveScoreboard(selectedContest.value.id, { page: 1, page_size: 10 }),
       ])
 
@@ -134,19 +190,92 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       services.value = nextServices
       attacks.value = nextAttacks
       summary.value = nextSummary
+      trafficSummary.value = nextTrafficSummary
+      trafficEvents.value = nextTrafficEvents.list
+      trafficEventsTotal.value = nextTrafficEvents.total
+      trafficFilters.value = {
+        ...trafficFilters.value,
+        page: nextTrafficEvents.page,
+        page_size: nextTrafficEvents.page_size,
+      }
       scoreboardRows.value = nextScoreboard.scoreboard.list
       scoreboardFrozen.value = nextScoreboard.frozen
     } finally {
       if (requestToken === roundDetailRequestToken) {
         loadingRoundDetail.value = false
+        loadingTrafficSummary.value = false
+        loadingTrafficEvents.value = false
       }
     }
+  }
+
+  async function refreshTrafficEvents(roundId = selectedRoundId.value) {
+    if (!selectedContest.value || !roundId) {
+      trafficEvents.value = []
+      trafficEventsTotal.value = 0
+      return
+    }
+
+    const requestToken = ++trafficEventsRequestToken
+    loadingTrafficEvents.value = true
+    try {
+      const result = await listContestAWDRoundTrafficEvents(
+        selectedContest.value.id,
+        roundId,
+        getTrafficEventsParams()
+      )
+      if (requestToken !== trafficEventsRequestToken) {
+        return
+      }
+      trafficEvents.value = result.list
+      trafficEventsTotal.value = result.total
+      trafficFilters.value = {
+        ...trafficFilters.value,
+        page: result.page,
+        page_size: result.page_size,
+      }
+    } finally {
+      if (requestToken === trafficEventsRequestToken) {
+        loadingTrafficEvents.value = false
+      }
+    }
+  }
+
+  async function applyTrafficFilters(
+    patch: Partial<
+      Pick<
+        AWDTrafficFilterState,
+        'attacker_team_id' | 'victim_team_id' | 'challenge_id' | 'status_group' | 'path_keyword'
+      >
+    >
+  ) {
+    trafficFilters.value = {
+      ...trafficFilters.value,
+      ...patch,
+      page: 1,
+    }
+    await refreshTrafficEvents(selectedRoundId.value)
+  }
+
+  async function setTrafficPage(page: number) {
+    const normalizedPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1
+    trafficFilters.value = {
+      ...trafficFilters.value,
+      page: normalizedPage,
+    }
+    await refreshTrafficEvents(selectedRoundId.value)
+  }
+
+  async function resetTrafficFilters() {
+    trafficFilters.value = createDefaultTrafficFilters()
+    await refreshTrafficEvents(selectedRoundId.value)
   }
 
   async function refresh(preferredRoundId?: string) {
     if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
       rounds.value = []
       selectedRoundId.value = null
+      trafficFilters.value = createDefaultTrafficFilters()
       teams.value = []
       challengeLinks.value = []
       clearRoundDetail()
@@ -277,7 +406,10 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
   watch(
     () => selectedContest.value?.id || null,
-    async () => {
+    async (nextContestId, previousContestId) => {
+      if (nextContestId !== previousContestId) {
+        trafficFilters.value = createDefaultTrafficFilters()
+      }
       await refresh()
     },
     { immediate: true }
@@ -342,12 +474,18 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     services,
     attacks,
     summary,
+    trafficSummary,
+    trafficEvents,
+    trafficEventsTotal,
+    trafficFilters,
     scoreboardRows,
     scoreboardFrozen,
     teams,
     challengeLinks,
     loadingRounds,
     loadingRoundDetail,
+    loadingTrafficSummary,
+    loadingTrafficEvents,
     checking,
     creatingRound,
     savingServiceCheck,
@@ -356,6 +494,10 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     shouldAutoRefresh,
     refresh,
     refreshRoundDetail,
+    refreshTrafficEvents,
+    applyTrafficFilters,
+    setTrafficPage,
+    resetTrafficFilters,
     runSelectedRoundCheck,
     createRound,
     createServiceCheck,

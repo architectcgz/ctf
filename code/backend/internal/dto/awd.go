@@ -116,3 +116,87 @@ type AWDCheckerRunResp struct {
 	Round    *AWDRoundResp         `json:"round"`
 	Services []*AWDTeamServiceResp `json:"services"`
 }
+
+type ListAWDTrafficEventsReq struct {
+	AttackerTeamID int64  `form:"attacker_team_id" binding:"omitempty,min=1"`
+	VictimTeamID   int64  `form:"victim_team_id" binding:"omitempty,min=1"`
+	ChallengeID    int64  `form:"challenge_id" binding:"omitempty,min=1"`
+	StatusGroup    string `form:"status_group" binding:"omitempty,oneof=success redirect client_error server_error"`
+	PathKeyword    string `form:"path_keyword" binding:"omitempty,max=200"`
+	Page           int    `form:"page" binding:"omitempty,min=1"`
+	Size           int    `form:"page_size" binding:"omitempty,min=1,max=100"`
+}
+
+type AWDTrafficTrendBucketResp struct {
+	BucketStart  time.Time `json:"bucket_start_at"`
+	RequestCount int       `json:"request_count"`
+	ErrorCount   int       `json:"error_count"`
+}
+
+type AWDTrafficTopTeamResp struct {
+	TeamID       int64  `json:"team_id"`
+	TeamName     string `json:"team_name"`
+	RequestCount int    `json:"request_count"`
+	ErrorCount   int    `json:"error_count"`
+}
+
+type AWDTrafficTopChallengeResp struct {
+	ChallengeID    int64  `json:"challenge_id"`
+	ChallengeTitle string `json:"challenge_title"`
+	RequestCount   int    `json:"request_count"`
+	ErrorCount     int    `json:"error_count"`
+}
+
+type AWDTrafficTopPathResp struct {
+	Path           string `json:"path"`
+	RequestCount   int    `json:"request_count"`
+	ErrorCount     int    `json:"error_count"`
+	LastStatusCode int    `json:"last_status_code"`
+}
+
+type AWDTrafficSummaryResp struct {
+	Round               *AWDRoundResp                 `json:"round"`
+	ContestID           int64                         `json:"contest_id"`
+	RoundID             int64                         `json:"round_id"`
+	TotalRequests       int                           `json:"total_request_count"`
+	ActiveAttackerTeams int                           `json:"active_attacker_team_count"`
+	TargetedTeams       int                           `json:"victim_team_count"`
+	ErrorRequests       int                           `json:"error_request_count"`
+	UniquePathCount     int                           `json:"unique_path_count"`
+	LatestEventAt       *time.Time                    `json:"latest_event_at,omitempty"`
+	Trend               []*AWDTrafficTrendBucketResp  `json:"trend_buckets"`
+	TopAttackers        []*AWDTrafficTopTeamResp      `json:"top_attackers"`
+	TopVictims          []*AWDTrafficTopTeamResp      `json:"top_victims"`
+	TopChallenges       []*AWDTrafficTopChallengeResp `json:"top_challenges"`
+	TopPaths            []*AWDTrafficTopPathResp      `json:"top_paths"`
+	TopErrorPaths       []*AWDTrafficTopPathResp      `json:"top_error_paths"`
+}
+
+type AWDTrafficEventResp struct {
+	ID               int64     `json:"id"`
+	ContestID        int64     `json:"contest_id"`
+	RoundID          int64     `json:"round_id"`
+	AttackerTeamID   int64     `json:"attacker_team_id"`
+	AttackerTeam     string    `json:"-"`
+	AttackerTeamName string    `json:"attacker_team_name"`
+	VictimTeamID     int64     `json:"victim_team_id"`
+	VictimTeam       string    `json:"-"`
+	VictimTeamName   string    `json:"victim_team_name"`
+	ChallengeID      int64     `json:"challenge_id"`
+	ChallengeTitle   string    `json:"challenge_title"`
+	Method           string    `json:"method"`
+	Path             string    `json:"path"`
+	StatusCode       int       `json:"status_code"`
+	StatusGroup      string    `json:"status_group"`
+	IsError          bool      `json:"is_error"`
+	Source           string    `json:"source"`
+	RequestID        string    `json:"request_id,omitempty"`
+	OccurredAt       time.Time `json:"occurred_at"`
+}
+
+type AWDTrafficEventPageResp struct {
+	List     []*AWDTrafficEventResp `json:"list"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+}
