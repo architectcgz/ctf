@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   edit: [contest: ContestDetailData]
+  export: [contest: ContestDetailData]
   changePage: [page: number]
 }>()
 
@@ -72,13 +73,22 @@ function formatTime(value: string): string {
               <p class="mt-1 text-[var(--color-text-muted)]">至 {{ formatTime(contest.ends_at) }}</p>
             </td>
             <td class="px-4 py-4 align-top">
-              <button
-                type="button"
-                class="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary hover:text-primary"
-                @click="emit('edit', contest)"
-              >
-                编辑
-              </button>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary hover:text-primary"
+                  @click="emit('edit', contest)"
+                >
+                  编辑
+                </button>
+                <button
+                  type="button"
+                  class="rounded-xl border border-border px-3 py-1.5 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary hover:text-primary"
+                  @click="emit('export', contest)"
+                >
+                  导出结果
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>

@@ -21,11 +21,11 @@ export function useReportStatusPolling() {
     stop()
     polling.value = true
 
-    void pollOnce(reportId, onUpdate)
-
     timer = window.setInterval(() => {
       void pollOnce(reportId, onUpdate)
     }, POLL_INTERVAL_MS)
+
+    void pollOnce(reportId, onUpdate)
   }
 
   function stop() {

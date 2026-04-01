@@ -20,7 +20,7 @@ describe('admin full-bleed hero roots', () => {
 
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
-      expect(source).toMatch(/<section class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
+      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
     }
   })
 })

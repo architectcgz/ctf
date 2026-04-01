@@ -2,7 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { downloadReport } from '@/api/assessment'
 import {
+  exportStudentReviewArchive,
   getClasses,
   getClassStudents,
   getTeacherManualReviewSubmission,
@@ -28,10 +30,14 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
+import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useToast } from '@/composables/useToast'
 import { getWeakDimensions } from '@/utils/skillProfile'
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
+const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
 const classes = ref<TeacherClassItem[]>([])
 const students = ref<TeacherStudentItem[]>([])
@@ -53,6 +59,9 @@ const manualReviewSubmissions = ref<TeacherManualReviewSubmissionItemData[]>([])
 const activeManualReview = ref<TeacherManualReviewSubmissionDetailData | null>(null)
 const manualReviewLoading = ref(false)
 const manualReviewSaving = ref(false)
+const reviewArchiveSubmitting = ref(false)
+const downloadingReviewArchive = ref(false)
+const pendingReviewArchiveReportId = ref<string | null>(null)
 
 const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
 const solvedRate = computed(() => {
@@ -203,6 +212,66 @@ function openChallenge(challengeId: string): void {
   router.push(`/challenges/${challengeId}`)
 }
 
+async function downloadGeneratedReport(reportId: string): Promise<void> {
+  downloadingReviewArchive.value = true
+  try {
+    const { blob, filename } = await downloadReport(reportId)
+    const objectUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(objectUrl)
+  } finally {
+    downloadingReviewArchive.value = false
+  }
+}
+
+async function handleExportReviewArchive(): Promise<void> {
+  if (!selectedStudentId.value) {
+    toast.warning('请先选择学生')
+    return
+  }
+
+  reviewArchiveSubmitting.value = true
+  try {
+    const result = await exportStudentReviewArchive(selectedStudentId.value, { format: 'json' })
+
+    if (result.status === 'ready') {
+      stopPolling()
+      await downloadGeneratedReport(result.report_id)
+      toast.success('复盘归档已生成并开始下载')
+      return
+    }
+
+    if (result.status === 'failed') {
+      stopPolling()
+      toast.error(result.error_message || '复盘归档生成失败')
+      return
+    }
+
+    pendingReviewArchiveReportId.value = result.report_id
+    startPolling(result.report_id, (next) => {
+      if (next.report_id !== pendingReviewArchiveReportId.value) return
+      if (next.status === 'ready') {
+        pendingReviewArchiveReportId.value = null
+        void downloadGeneratedReport(next.report_id)
+        toast.success('复盘归档已生成并开始下载')
+        return
+      }
+      if (next.status === 'failed') {
+        pendingReviewArchiveReportId.value = null
+        toast.error(next.error_message || '复盘归档生成失败')
+      }
+    })
+    toast.info('复盘归档开始生成，完成后会自动下载')
+  } finally {
+    reviewArchiveSubmitting.value = false
+  }
+}
+
 watch(
   () => [route.params.className, route.params.studentId],
   () => {
@@ -242,6 +311,7 @@ onMounted(() => {
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-class-students="router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })"
     @open-report-export="router.push({ name: 'ReportExport' })"
+    @export-review-archive="handleExportReviewArchive"
     @select-class="selectClass"
     @select-student="selectStudent"
     @open-challenge="openChallenge"
