@@ -1,10 +1,10 @@
-# Challenge Pack Specification v1 (challenge-pack-v1)
+# Challenge Pack Specification v1 (`challenge-pack-v1`)
 
-> 适用范围：CTF 靶场平台题目制作、审计、归档与后续导入
-> 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确哪些字段能映射到当前平台，哪些只是保留扩展。
-> 版本：v1.2 | 日期：2026-03-31
+> 适用范围：CTF 靶场平台题目制作、审计、归档、导入与发布前校验
+> 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确当前平台如何导入、校验与发布题目。
+> 版本：v1.3 | 日期：2026-04-01
 
-> 说明：截至 2026-03-31，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，且已新增后台 `challenge.yml` 题目包上传预览与确认导入接口，以及复用同一解析核心的 CLI 导入脚本。
+> 说明：截至 2026-04-01，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及复用同一解析核心的 CLI 导入脚本。
 > 因此本规范既是“作者侧源包规范”，也是当前实现中的导入契约；文中会显式标注哪些扩展字段仍处于保留状态。
 
 ---
@@ -46,10 +46,14 @@
 
 ## 4. 当前平台能力边界
 
-截至 2026-03-31，当前仓库内与题目包最相关的后端事实如下：
+截至 2026-04-01，当前仓库内与题目包最相关的后端事实如下：
 
 - 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
 - 题目发布已支持：`draft` -> `published`
+- 题目发布前自检已支持：
+  - 同步自检：`POST /api/v1/authoring/challenges/:id/self-check`
+  - 异步发布自检入队：`POST /api/v1/authoring/challenges/:id/publish-requests`
+  - 查询最近一次发布自检：`GET /api/v1/authoring/challenges/:id/publish-requests/latest`
 - Flag 已支持：`static` / `dynamic`
 - 动态 Flag 注入已支持：实例启动时通过环境变量 `FLAG` 注入容器；拓扑节点可按 `inject_flag` 控制是否注入
 - 镜像已支持：平台当前通过“已注册镜像”运行题目，不支持公开的在线 Dockerfile 构建导入
@@ -59,9 +63,12 @@
 
 当前已支持：
 
-- `POST /api/v1/admin/challenge-imports`
-- `GET /api/v1/admin/challenge-imports/:id`
-- `POST /api/v1/admin/challenge-imports/:id/commit`
+- `POST /api/v1/authoring/challenge-imports`
+- `GET /api/v1/authoring/challenge-imports/:id`
+- `POST /api/v1/authoring/challenge-imports/:id/commit`
+- `POST /api/v1/authoring/challenges/:id/self-check`
+- `POST /api/v1/authoring/challenges/:id/publish-requests`
+- `GET /api/v1/authoring/challenges/:id/publish-requests/latest`
 - CLI `cmd/import-challenge-packs` 复用同一 `challenge.yml` 解析逻辑
 
 当前明确不应在 v1 核心规范中写成“已支持”的能力：
@@ -350,6 +357,34 @@ runtime:
 - 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
 - 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程
 
+### 8.4 平台发布校验边界
+
+平台当前把“题目是否可发布”拆成两层：
+
+- 作者侧本地验证
+  - 强烈建议先做，但不是上传题目包的强制前置条件
+  - 目的：缩短反馈回路，尽早发现 Dockerfile、依赖、端口、初始化脚本或 Flag 配置问题
+- 平台侧发布自检
+  - 点击后台“发布”后，题目不会立刻公开，而是进入发布自检队列
+  - worker 会执行预检和真实运行时拉起
+  - 通过后自动发布
+  - 失败则保持 `draft`，并通知题目发布者
+
+平台自检负责确认“题目在平台环境里能被正确拉起和判定”，包括：
+
+- Flag 配置是否完整
+- 镜像引用是否可用
+- 拓扑或单容器运行请求是否能成功创建
+- 运行时资源是否能成功清理
+
+平台自检不负责证明以下内容：
+
+- 题目设计是否有教学价值
+- 题面是否足够清晰
+- 题目难度是否合适
+- 预期解法是否唯一或最优
+- 学生是否一定能按作者预期路径解出题目
+
 ---
 
 ## 9. 推荐制作流程
@@ -358,22 +393,50 @@ runtime:
 
 1. 本地制作题目源码、题面、Hint、附件与可选拓扑定义
 2. 本地构建并验证镜像
-3. 推送镜像或确保镜像在平台运行节点可见
-4. 生成 challenge pack 作为归档与审计材料
-5. 在平台中分别创建：
+3. 本地完成最小可用验证
+4. 推送镜像或确保镜像在平台运行节点可见
+5. 生成 challenge pack 作为归档与审计材料
+6. 在平台中分别创建：
    - 镜像
    - 题目
    - Flag
-   - 发布状态
    - 可选拓扑
    - 可选 Writeup
+7. 点击发布，进入平台发布自检队列
+8. 等待平台通知结果
+   - 通过：题目自动发布
+   - 失败：根据失败摘要回修后重新提交发布检查
 
-### 9.2 不推荐做法
+### 9.2 本地最小验证清单
+
+推荐至少覆盖以下检查：
+
+- 题目包结构检查
+  - `challenge.yml`
+  - `statement.md`
+  - 附件路径和引用路径存在
+- 镜像可用性检查
+  - `docker build` 成功
+  - 关键启动命令成功
+  - 暴露端口与题面描述一致
+- 运行时检查
+  - 服务可访问
+  - 初始化脚本能跑完
+  - 题目不会启动即崩溃
+- 判题检查
+  - 静态 Flag 可提交
+  - 动态 Flag 注入后能被题目读取
+- 清理检查
+  - 容器退出或删除后不会残留必须人工清理的关键资源
+
+### 9.3 不推荐做法
 
 - 在题目包中存放静态 Flag 明文
 - 把 `latest` 当作正式镜像版本
 - 用题目包假装描述 `manual` 判题，但平台端根本没有对应实现
 - 用单一 v1 文档同时要求“必须有 Dockerfile”和“只交付 registry 镜像”
+- 只在本地验证，从不走平台发布自检
+- 完全跳过本地验证，把平台自检当成唯一调试手段
 
 ---
 

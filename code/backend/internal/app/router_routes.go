@@ -89,6 +89,23 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	}
 	ownerGuard := challengeOwnerGuard(deps.challenge.Catalog)
 
+	adminAuthoring.POST("/challenge-imports",
+		audit(middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "challenge_import",
+		}),
+		deps.challenge.Handler.PreviewChallengeImport,
+	)
+	adminAuthoring.GET("/challenge-imports/:id", deps.challenge.Handler.GetChallengeImport)
+	adminAuthoring.POST("/challenge-imports/:id/commit",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "challenge_import_commit",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.Handler.CommitChallengeImport,
+	)
+
 	adminAuthoring.POST("/images",
 		audit(middleware.AuditOptions{
 			Action:       model.AuditActionCreate,
@@ -142,14 +159,18 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.DeleteChallenge,
 	)
-	adminAuthoring.PUT("/challenges/:id/publish",
+	adminAuthoring.POST("/challenges/:id/publish-requests",
 		ownerGuard,
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionAdminOp,
-			ResourceType:    "challenge",
+			ResourceType:    "challenge_publish_request",
 			ResourceIDParam: "id",
 		}),
-		deps.challenge.Handler.PublishChallenge,
+		deps.challenge.Handler.RequestPublishCheck,
+	)
+	adminAuthoring.GET("/challenges/:id/publish-requests/latest",
+		ownerGuard,
+		deps.challenge.Handler.GetLatestPublishCheck,
 	)
 	adminAuthoring.POST("/challenges/:id/self-check",
 		ownerGuard,
@@ -251,23 +272,6 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.ops.NotificationHandler.PublishAdminNotification,
 	)
-	adminOnly.POST("/challenge-imports",
-		audit(middleware.AuditOptions{
-			Action:       model.AuditActionCreate,
-			ResourceType: "challenge_import",
-		}),
-		deps.challenge.Handler.PreviewChallengeImport,
-	)
-	adminOnly.GET("/challenge-imports/:id", deps.challenge.Handler.GetChallengeImport)
-	adminOnly.POST("/challenge-imports/:id/commit",
-		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
-			ResourceType:    "challenge_import_commit",
-			ResourceIDParam: "id",
-		}),
-		deps.challenge.Handler.CommitChallengeImport,
-	)
-
 	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",
 		audit(middleware.AuditOptions{

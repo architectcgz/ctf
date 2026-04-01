@@ -2,14 +2,19 @@ package composition
 
 import (
 	"context"
+	"fmt"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	opscmd "ctf-platform/internal/module/ops/application/commands"
+	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 )
 
 type asyncTaskCloser interface {
@@ -43,18 +48,21 @@ type challengeModuleDeps struct {
 	runtimeProbe         challengeports.ChallengeRuntimeProbe
 }
 
-func BuildChallengeModule(root *Root, runtime *RuntimeModule) (*ChallengeModule, error) {
+func BuildChallengeModule(root *Root, runtime *RuntimeModule, ops *OpsModule) (*ChallengeModule, error) {
 	cfg := root.Config()
 	deps := buildChallengeModuleDeps(root, runtime)
 
 	imageCommandService, imageHandler := buildChallengeImageHandler(root, deps)
-	coreHandler := buildChallengeCoreHandler(root, deps)
+	coreService, coreHandler := buildChallengeCoreHandler(root, deps, ops)
 	flagHandler, flagValidator, err := buildChallengeFlagHandler(cfg, deps)
 	if err != nil {
 		return nil, err
 	}
 	topologyHandler := buildChallengeTopologyHandler(deps)
 	writeupHandler := buildChallengeWriteupHandler(deps)
+	if root.Config().Challenge.PublishCheck.Enabled {
+		root.RegisterBackgroundJob(NewLoopBackgroundJob("challenge_publish_check_worker", coreService.RunPublishCheckLoop))
+	}
 
 	return &ChallengeModule{
 		BackgroundCloser: imageCommandService,
@@ -102,7 +110,43 @@ func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challeng
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }
 
-func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps) *challengehttp.Handler {
+type challengePublishNotificationSender struct {
+	service *opscmd.NotificationService
+}
+
+func (s *challengePublishNotificationSender) SendChallengePublishCheckResult(ctx context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error {
+	if s == nil || s.service == nil {
+		return nil
+	}
+	title := "题目发布失败"
+	content := fmt.Sprintf("《%s》未通过平台自检。", challengeTitle)
+	if passed {
+		title = "题目发布成功"
+		content = fmt.Sprintf("《%s》已通过平台自检并自动发布。", challengeTitle)
+	} else if failureSummary != "" {
+		content = fmt.Sprintf("《%s》未通过平台自检：%s", challengeTitle, failureSummary)
+	}
+	link := fmt.Sprintf("/admin/challenges/%d", challengeID)
+	return s.service.SendNotification(ctx, userID, &dto.NotificationReq{
+		Type:    model.NotificationTypeChallenge,
+		Title:   title,
+		Content: content,
+		Link:    &link,
+	})
+}
+
+func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps, ops *OpsModule) (*challengecmd.ChallengeService, *challengehttp.Handler) {
+	var notifications challengecmd.ChallengeNotificationSender = nil
+	if ops != nil {
+		notifications = &challengePublishNotificationSender{
+			service: opscmd.NewNotificationService(
+				opsinfra.NewNotificationRepository(root.DB()),
+				root.Config().Pagination,
+				ops.WebSocketManager,
+				root.Logger().Named("challenge_publish_notification_service"),
+			),
+		}
+	}
 	challengeCommandService := challengecmd.NewChallengeService(
 		root.DB(),
 		deps.challengeCommandRepo,
@@ -110,15 +154,18 @@ func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps) *challengeh
 		deps.topologyRepo,
 		deps.runtimeProbe,
 		challengecmd.SelfCheckConfig{
-			RuntimeCreateTimeout: root.Config().Container.CreateTimeout,
-			FlagGlobalSecret:     root.Config().Container.FlagGlobalSecret,
+			RuntimeCreateTimeout:     root.Config().Container.CreateTimeout,
+			FlagGlobalSecret:         root.Config().Container.FlagGlobalSecret,
+			PublishCheckPollInterval: root.Config().Challenge.PublishCheck.PollInterval,
+			PublishCheckBatchSize:    root.Config().Challenge.PublishCheck.BatchSize,
 		},
 		root.Logger().Named("challenge_command_service"),
+		notifications,
 	)
 	challengeQueryService := challengeqry.NewChallengeService(deps.challengeQueryRepo, root.Cache(), &challengeqry.Config{
 		SolvedCountCacheTTL: root.Config().Challenge.SolvedCountCacheTTL,
 	}, root.Logger().Named("challenge_service"))
-	return challengehttp.NewHandler(challengeCommandService, challengeQueryService)
+	return challengeCommandService, challengehttp.NewHandler(challengeCommandService, challengeQueryService)
 }
 
 func buildChallengeFlagHandler(cfg *config.Config, deps challengeModuleDeps) (*challengehttp.FlagHandler, challengecontracts.FlagValidator, error) {

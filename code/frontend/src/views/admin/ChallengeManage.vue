@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { ChallengeCategory, ChallengeDifficulty, ChallengeStatus } from '@/api/contracts'
+import type {
+  AdminChallengePublishRequestData,
+  ChallengeCategory,
+  ChallengeDifficulty,
+  ChallengeStatus,
+} from '@/api/contracts'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
 import ChallengePackageImportReview from '@/components/admin/challenge/ChallengePackageImportReview.vue'
 import { useAdminChallenges } from '@/composables/useAdminChallenges'
@@ -80,6 +85,28 @@ function getStatusColor(status: ChallengeStatus): string {
   return { draft: '#64748b', published: '#059669', archived: '#6b7280' }[status]
 }
 
+function getPublishRequestLabel(request: AdminChallengePublishRequestData | null): string {
+  if (!request) return '未提交检查'
+
+  return {
+    queued: '等待检查',
+    running: '检查中',
+    succeeded: '检查通过',
+    failed: '检查失败',
+  }[request.status]
+}
+
+function getPublishRequestColor(request: AdminChallengePublishRequestData | null): string {
+  if (!request) return '#64748b'
+
+  return {
+    queued: '#d97706',
+    running: '#2563eb',
+    succeeded: '#059669',
+    failed: '#dc2626',
+  }[request.status]
+}
+
 async function handleSelectPackage(file: File) {
   await selectPackage(file)
 }
@@ -154,7 +181,7 @@ async function handleCommitPreview() {
           <h2 class="list-heading__title">已导入题目</h2>
         </div>
         <p class="list-heading__copy">
-          保留查看、编排、题解、发布和删除操作；手工创建与手工编辑入口已移除。
+          保留查看、编排、题解、发布检查和删除操作；手工创建与手工编辑入口已移除。
         </p>
       </header>
 
@@ -204,7 +231,23 @@ async function handleCommitPreview() {
                     {{ getDifficultyLabel(row.difficulty) }}
                   </span>
                   <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
+                  <span
+                    class="admin-inline-chip"
+                    :style="{
+                      backgroundColor: getPublishRequestColor(row.latestPublishRequest) + '16',
+                      color: getPublishRequestColor(row.latestPublishRequest),
+                    }"
+                  >
+                    {{ getPublishRequestLabel(row.latestPublishRequest) }}
+                  </span>
                 </div>
+
+                <p
+                  v-if="row.latestPublishRequest?.failure_summary"
+                  class="mt-3 text-sm text-[var(--color-danger)]"
+                >
+                  {{ row.latestPublishRequest.failure_summary }}
+                </p>
               </div>
             </div>
 
@@ -225,7 +268,7 @@ async function handleCommitPreview() {
                 class="admin-btn admin-btn-success admin-btn-compact"
                 @click="void publish(row)"
               >
-                发布
+                提交发布检查
               </button>
               <button class="admin-btn admin-btn-danger admin-btn-compact" @click="void remove(row.id)">
                 删除

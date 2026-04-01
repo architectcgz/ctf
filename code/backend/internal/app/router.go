@@ -133,13 +133,13 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	teacherOrAbove.Use(middleware.RequireRole(model.RoleTeacher))
 	teacherOrAbove.GET("/ping", middleware.RoleGuardPing("teacher"))
 
-	adminAuthoring := protected.Group("/admin")
-	adminAuthoring.Use(middleware.RequireRole(model.RoleTeacher))
+	authoring := protected.Group("/authoring")
+	authoring.Use(middleware.RequireRole(model.RoleTeacher))
 
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
 	adminOnly.GET("/ping", middleware.RoleGuardPing("admin"))
-	challengeModule, err := buildChallengeModule(root, runtimeModule)
+	challengeModule, err := buildChallengeModule(root, runtimeModule, opsModule)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +150,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
 	runtimeModule.BuildHandler(root, opsModule)
 
-	registerTeacherAuthoringRoutes(adminAuthoring, adminRouteDeps{
+	registerTeacherAuthoringRoutes(authoring, adminRouteDeps{
 		identityHandler: identityModule.AdminHandler,
 		auditLogger:     composition.NamedAuditLogger(log),
 		auditRecorder:   opsModule.AuditService,

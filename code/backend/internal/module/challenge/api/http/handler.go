@@ -26,7 +26,8 @@ type challengeCommandService interface {
 	CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error)
 	UpdateChallenge(id int64, req *dto.UpdateChallengeReq) error
 	DeleteChallenge(id int64) error
-	PublishChallenge(id int64) error
+	RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error)
+	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
 	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
@@ -132,21 +133,6 @@ func (h *Handler) ListChallenges(c *gin.Context) {
 	response.Success(c, result)
 }
 
-func (h *Handler) PublishChallenge(c *gin.Context) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.InvalidParams(c, "无效的ID")
-		return
-	}
-
-	if err := h.commands.PublishChallenge(id); err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, nil)
-}
-
 func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
@@ -212,6 +198,36 @@ func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 		return
 	}
 
+	response.Success(c, resp)
+}
+
+func (h *Handler) RequestPublishCheck(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的ID")
+		return
+	}
+
+	resp, err := h.commands.RequestPublishCheck(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.SuccessWithStatus(c, nethttp.StatusAccepted, resp)
+}
+
+func (h *Handler) GetLatestPublishCheck(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的ID")
+		return
+	}
+
+	resp, err := h.commands.GetLatestPublishCheck(c.Request.Context(), id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
 	response.Success(c, resp)
 }
 
