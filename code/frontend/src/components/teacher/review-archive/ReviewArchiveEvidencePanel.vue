@@ -1,0 +1,169 @@
+<script setup lang="ts">
+import type { ReviewArchiveEvidenceItemData, TimelineEvent } from '@/api/contracts'
+
+defineProps<{
+  timeline: TimelineEvent[]
+  evidence: ReviewArchiveEvidenceItemData[]
+}>()
+</script>
+
+<template>
+  <section class="archive-grid">
+    <article class="archive-panel">
+      <header class="archive-panel__header">
+        <div>
+          <div class="archive-panel__eyebrow">Timeline</div>
+          <h3 class="archive-panel__title">训练时间线</h3>
+        </div>
+      </header>
+      <div v-if="timeline.length === 0" class="archive-panel__empty">暂无时间线事件。</div>
+      <ol v-else class="timeline-list">
+        <li v-for="item in timeline" :key="item.id" class="timeline-item">
+          <div class="timeline-item__dot" />
+          <div class="timeline-item__body">
+            <div class="timeline-item__head">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.created_at }}</span>
+            </div>
+            <p>{{ item.detail || item.type }}</p>
+          </div>
+        </li>
+      </ol>
+    </article>
+
+    <article class="archive-panel">
+      <header class="archive-panel__header">
+        <div>
+          <div class="archive-panel__eyebrow">Evidence</div>
+          <h3 class="archive-panel__title">攻防证据链</h3>
+        </div>
+      </header>
+      <div v-if="evidence.length === 0" class="archive-panel__empty">暂无证据链事件。</div>
+      <div v-else class="evidence-list">
+        <article
+          v-for="item in evidence"
+          :key="`${item.type}-${item.challenge_id}-${item.timestamp}`"
+          class="evidence-item"
+        >
+          <div class="evidence-item__head">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.timestamp }}</span>
+          </div>
+          <p class="evidence-item__detail">{{ item.detail || item.type }}</p>
+          <div class="evidence-item__meta">
+            <span>challenge #{{ item.challenge_id }}</span>
+            <span>{{ item.type }}</span>
+          </div>
+        </article>
+      </div>
+    </article>
+  </section>
+</template>
+
+<style scoped>
+.archive-grid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+}
+
+.archive-panel {
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, #1e40af 18%, var(--color-border-default));
+}
+
+.archive-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, #cbd5e1 70%, white);
+}
+
+.archive-panel__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.archive-panel__title {
+  margin-top: 0.45rem;
+  font-size: 1.18rem;
+  color: #0f172a;
+}
+
+.archive-panel__empty {
+  padding: 1rem 0;
+  color: var(--color-text-secondary);
+}
+
+.timeline-list {
+  margin-top: 1rem;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 0.9rem;
+  padding-bottom: 1rem;
+}
+
+.timeline-item__dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 0.45rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1d4ed8, #f59e0b);
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.08);
+}
+
+.timeline-item__head,
+.evidence-item__head,
+.evidence-item__meta {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.timeline-item__head span,
+.evidence-item__head span,
+.evidence-item__meta {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.timeline-item__body p,
+.evidence-item__detail {
+  margin-top: 0.45rem;
+  line-height: 1.75;
+  color: #334155;
+}
+
+.evidence-list {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.evidence-item {
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, #1e40af 10%, var(--color-border-default));
+  border-radius: 18px;
+  background: rgba(248, 250, 252, 0.88);
+}
+
+.evidence-item__meta {
+  margin-top: 0.65rem;
+}
+
+@media (max-width: 1023px) {
+  .archive-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

@@ -24,6 +24,7 @@ const teacherApiMocks = vi.hoisted(() => ({
   getTeacherManualReviewSubmissions: vi.fn(),
   getTeacherManualReviewSubmission: vi.fn(),
   reviewTeacherManualReviewSubmission: vi.fn(),
+  exportStudentReviewArchive: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -213,6 +214,10 @@ describe('TeacherStudentAnalysis', () => {
       submitted_at: '2026-03-11T12:00:00Z',
       updated_at: '2026-03-11T12:20:00Z',
     })
+    teacherApiMocks.exportStudentReviewArchive.mockResolvedValue({
+      report_id: 'report-1',
+      status: 'processing',
+    })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -271,5 +276,33 @@ describe('TeacherStudentAnalysis', () => {
     await flushPromises()
 
     expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('100% 班级')
+  })
+
+  it('应该支持跳转到完整复盘页', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const reviewButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('完整复盘页'))
+
+    expect(reviewButton).toBeDefined()
+
+    await reviewButton?.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'TeacherStudentReviewArchive',
+      params: {
+        className: 'Class A',
+        studentId: 'stu-1',
+      },
+    })
   })
 })

@@ -671,6 +671,86 @@ export interface ReportExportData {
   error_message?: string
 }
 
+export interface ReviewArchiveStudentData {
+  id: ID
+  username: string
+  name?: string
+  class_name?: string
+}
+
+export interface ReviewArchiveSummaryData {
+  total_challenges: number
+  total_solved: number
+  total_score: number
+  rank: number
+  total_attempts: number
+  timeline_event_count: number
+  evidence_event_count: number
+  writeup_count: number
+  manual_review_count: number
+  hint_unlock_count: number
+  correct_submission_count: number
+  last_activity_at?: ISODateTime
+}
+
+export interface ReviewArchiveEvidenceItemData {
+  type: string
+  challenge_id: ID
+  title: string
+  detail?: string
+  timestamp: ISODateTime
+  meta?: Record<string, unknown>
+}
+
+export interface ReviewArchiveWriteupItemData {
+  id: ID
+  challenge_id: ID
+  challenge_title: string
+  title: string
+  submission_status: string
+  review_status: string
+  submitted_at?: ISODateTime
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  updated_at: ISODateTime
+  reviewer_name?: string
+}
+
+export interface ReviewArchiveManualReviewItemData {
+  id: ID
+  challenge_id: ID
+  challenge_title: string
+  answer: string
+  review_status: string
+  submitted_at: ISODateTime
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  score: number
+  reviewer_name?: string
+}
+
+export interface ReviewArchiveObservationItemData {
+  key: string
+  label: string
+  level: string
+  summary: string
+  evidence?: string
+}
+
+export interface ReviewArchiveData {
+  generated_at: ISODateTime
+  student: ReviewArchiveStudentData
+  summary: ReviewArchiveSummaryData
+  skill_profile: SkillProfileData
+  timeline: TimelineEvent[]
+  evidence: ReviewArchiveEvidenceItemData[]
+  writeups: ReviewArchiveWriteupItemData[]
+  manual_reviews: ReviewArchiveManualReviewItemData[]
+  teacher_observations: {
+    items: ReviewArchiveObservationItemData[]
+  }
+}
+
 export interface AdminContainerStat {
   container_id: string
   container_name: string

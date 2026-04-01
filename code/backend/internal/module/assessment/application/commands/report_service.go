@@ -70,18 +70,19 @@ type contestExportMeta struct {
 	FreezeTime  *time.Time `json:"freeze_time,omitempty"`
 }
 
-type reviewArchiveData struct {
-	GeneratedAt   time.Time                                        `json:"generated_at"`
-	Student       reviewArchiveStudent                             `json:"student"`
-	Summary       assessmentdomain.ReviewArchiveSummary            `json:"summary"`
-	SkillProfile  []*dto.SkillDimension                            `json:"skill_profile,omitempty"`
-	Timeline      []assessmentdomain.ReviewArchiveTimelineEvent    `json:"timeline"`
-	Evidence      []assessmentdomain.ReviewArchiveEvidenceEvent    `json:"evidence"`
-	Writeups      []assessmentdomain.ReviewArchiveWriteupItem      `json:"writeups"`
-	ManualReviews []assessmentdomain.ReviewArchiveManualReviewItem `json:"manual_reviews"`
+type ReviewArchiveData struct {
+	GeneratedAt         time.Time                                         `json:"generated_at"`
+	Student             ReviewArchiveStudent                              `json:"student"`
+	Summary             assessmentdomain.ReviewArchiveSummary             `json:"summary"`
+	SkillProfile        []*dto.SkillDimension                             `json:"skill_profile,omitempty"`
+	Timeline            []assessmentdomain.ReviewArchiveTimelineEvent     `json:"timeline"`
+	Evidence            []assessmentdomain.ReviewArchiveEvidenceEvent     `json:"evidence"`
+	Writeups            []assessmentdomain.ReviewArchiveWriteupItem       `json:"writeups"`
+	ManualReviews       []assessmentdomain.ReviewArchiveManualReviewItem  `json:"manual_reviews"`
+	TeacherObservations assessmentdomain.ReviewArchiveTeacherObservations `json:"teacher_observations"`
 }
 
-type reviewArchiveStudent struct {
+type ReviewArchiveStudent struct {
 	ID        int64  `json:"id"`
 	Username  string `json:"username"`
 	Name      string `json:"name,omitempty"`
@@ -251,6 +252,21 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 	})
 
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
+func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*ReviewArchiveData, error) {
+	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	if err != nil {
+		return nil, errcode.ErrUnauthorized
+	}
+	student, err := s.repo.FindUserByID(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrNotFound
+	}
+	if err := validateStudentReviewArchiveAccess(requester, student); err != nil {
+		return nil, err
+	}
+	return s.buildStudentReviewArchiveData(ctx, studentID)
 }
 
 func validateClassReportAccess(requester *assessmentdomain.ReportUser, className string) error {
@@ -566,7 +582,7 @@ func (s *ReportService) buildContestExportData(ctx context.Context, contestID in
 	}, nil
 }
 
-func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, studentID int64) (*reviewArchiveData, error) {
+func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, studentID int64) (*ReviewArchiveData, error) {
 	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {
 		return nil, errcode.ErrNotFound
@@ -606,27 +622,248 @@ func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, stude
 		skillProfile = skillProfileResp.Dimensions
 	}
 
-	return &reviewArchiveData{
+	summary := buildReviewArchiveSummary(int(totalChallenges), stats, timeline, evidence, writeups, manualReviews)
+
+	return &ReviewArchiveData{
 		GeneratedAt: time.Now(),
-		Student: reviewArchiveStudent{
+		Student: ReviewArchiveStudent{
 			ID:        student.ID,
 			Username:  student.Username,
 			Name:      student.Name,
 			ClassName: student.ClassName,
 		},
-		Summary: assessmentdomain.ReviewArchiveSummary{
-			TotalChallenges: int(totalChallenges),
-			TotalSolved:     stats.TotalSolved,
-			TotalScore:      stats.TotalScore,
-			Rank:            stats.Rank,
-			TotalAttempts:   stats.TotalAttempts,
-		},
-		SkillProfile:  skillProfile,
-		Timeline:      timeline,
-		Evidence:      evidence,
-		Writeups:      writeups,
-		ManualReviews: manualReviews,
+		Summary:             summary,
+		SkillProfile:        skillProfile,
+		Timeline:            timeline,
+		Evidence:            evidence,
+		Writeups:            writeups,
+		ManualReviews:       manualReviews,
+		TeacherObservations: buildReviewArchiveObservations(summary, evidence, writeups, manualReviews),
 	}, nil
+}
+
+func buildReviewArchiveSummary(
+	totalChallenges int,
+	stats *assessmentdomain.PersonalReportStats,
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+	writeups []assessmentdomain.ReviewArchiveWriteupItem,
+	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
+) assessmentdomain.ReviewArchiveSummary {
+	summary := assessmentdomain.ReviewArchiveSummary{
+		TotalChallenges:        totalChallenges,
+		TimelineEventCount:     len(timeline),
+		EvidenceEventCount:     len(evidence),
+		WriteupCount:           len(writeups),
+		ManualReviewCount:      len(manualReviews),
+		HintUnlockCount:        countHintUnlocks(timeline, evidence),
+		CorrectSubmissionCount: countCorrectSubmissions(timeline, evidence),
+		LastActivityAt:         latestReviewArchiveActivity(timeline, evidence, writeups, manualReviews),
+	}
+	if stats != nil {
+		summary.TotalSolved = stats.TotalSolved
+		summary.TotalScore = stats.TotalScore
+		summary.Rank = stats.Rank
+		summary.TotalAttempts = stats.TotalAttempts
+	}
+	return summary
+}
+
+func countHintUnlocks(
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) int {
+	count := 0
+	for _, item := range timeline {
+		if item.Type == "hint_unlock" {
+			count++
+		}
+	}
+	if count > 0 {
+		return count
+	}
+	for _, item := range evidence {
+		if item.Type == "challenge_hint_unlock" {
+			count++
+		}
+	}
+	return count
+}
+
+func countCorrectSubmissions(
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+) int {
+	count := 0
+	for _, item := range timeline {
+		if item.Type == "flag_submit" && item.IsCorrect != nil && *item.IsCorrect {
+			count++
+		}
+	}
+	if count > 0 {
+		return count
+	}
+	for _, item := range evidence {
+		if item.Type != "challenge_submission" {
+			continue
+		}
+		if item.Meta == nil {
+			continue
+		}
+		isCorrect, ok := item.Meta["is_correct"].(bool)
+		if ok && isCorrect {
+			count++
+		}
+	}
+	return count
+}
+
+func latestReviewArchiveActivity(
+	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+	writeups []assessmentdomain.ReviewArchiveWriteupItem,
+	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
+) *time.Time {
+	var latest *time.Time
+	record := func(candidate *time.Time) {
+		if candidate == nil || candidate.IsZero() {
+			return
+		}
+		if latest == nil || candidate.After(*latest) {
+			copyValue := *candidate
+			latest = &copyValue
+		}
+	}
+
+	for _, item := range timeline {
+		record(&item.Timestamp)
+	}
+	for _, item := range evidence {
+		record(&item.Timestamp)
+	}
+	for _, item := range writeups {
+		record(item.SubmittedAt)
+	}
+	for _, item := range manualReviews {
+		record(&item.SubmittedAt)
+	}
+	return latest
+}
+
+func buildReviewArchiveObservations(
+	summary assessmentdomain.ReviewArchiveSummary,
+	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
+	writeups []assessmentdomain.ReviewArchiveWriteupItem,
+	manualReviews []assessmentdomain.ReviewArchiveManualReviewItem,
+) assessmentdomain.ReviewArchiveTeacherObservations {
+	items := make([]assessmentdomain.ReviewArchiveObservation, 0, 4)
+
+	if summary.CorrectSubmissionCount > 0 && (hasSubmittedWriteup(writeups) || hasApprovedManualReview(manualReviews)) {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "training_closure",
+			Label:    "训练闭环",
+			Level:    "good",
+			Summary:  "已形成从利用到复盘输出的有效闭环。",
+			Evidence: fmt.Sprintf("命中正确提交 %d 次，复盘材料 %d 份，人工审核记录 %d 条。", summary.CorrectSubmissionCount, summary.WriteupCount, summary.ManualReviewCount),
+		})
+	} else if summary.CorrectSubmissionCount > 0 {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "training_closure",
+			Label:    "训练闭环",
+			Level:    "attention",
+			Summary:  "已完成解题，但复盘输出仍偏弱。",
+			Evidence: fmt.Sprintf("命中正确提交 %d 次，但当前复盘材料 %d 份。", summary.CorrectSubmissionCount, summary.WriteupCount),
+		})
+	}
+
+	if summary.HintUnlockCount > 0 {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "hint_usage",
+			Label:    "提示依赖",
+			Level:    "attention",
+			Summary:  "训练过程存在提示介入，适合回看关键转折点。",
+			Evidence: fmt.Sprintf("共记录提示解锁 %d 次。", summary.HintUnlockCount),
+		})
+	} else {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "hint_usage",
+			Label:    "提示依赖",
+			Level:    "good",
+			Summary:  "当前归档未记录提示依赖，独立推进迹象较强。",
+			Evidence: "未发现提示解锁事件。",
+		})
+	}
+
+	if hasRepeatedWrongSubmissions(evidence) {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "submission_stability",
+			Label:    "提交稳定性",
+			Level:    "attention",
+			Summary:  "存在连续错误提交，课堂复盘可重点回看试错节奏。",
+			Evidence: "证据链中存在至少 2 次连续未命中提交。",
+		})
+	}
+
+	if hasHandsOnExploit(evidence) {
+		items = append(items, assessmentdomain.ReviewArchiveObservation{
+			Key:      "hands_on_activity",
+			Label:    "实操参与",
+			Level:    "good",
+			Summary:  "实操交互记录充分，具备课堂演示价值。",
+			Evidence: "证据链中包含实例访问或平台代理请求。",
+		})
+	}
+
+	return assessmentdomain.ReviewArchiveTeacherObservations{Items: items}
+}
+
+func hasSubmittedWriteup(writeups []assessmentdomain.ReviewArchiveWriteupItem) bool {
+	for _, item := range writeups {
+		if item.SubmissionStatus == "submitted" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasApprovedManualReview(items []assessmentdomain.ReviewArchiveManualReviewItem) bool {
+	for _, item := range items {
+		if item.ReviewStatus == "approved" {
+			return true
+		}
+	}
+	return false
+}
+
+func hasRepeatedWrongSubmissions(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {
+	streak := 0
+	for _, item := range evidence {
+		if item.Type != "challenge_submission" || item.Meta == nil {
+			continue
+		}
+		isCorrect, ok := item.Meta["is_correct"].(bool)
+		if !ok {
+			continue
+		}
+		if isCorrect {
+			streak = 0
+			continue
+		}
+		streak++
+		if streak >= 2 {
+			return true
+		}
+	}
+	return false
+}
+
+func hasHandsOnExploit(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {
+	for _, item := range evidence {
+		if item.Type == "instance_access" || item.Type == "instance_proxy_request" {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *ReportService) renderReport(filePath, format string, data any) error {

@@ -506,6 +506,27 @@ func TestFullRouter_ContestAndReviewArchiveExportStateMatrix(t *testing.T) {
 	if !bytes.Contains(reviewBody, []byte(`"student"`)) || !bytes.Contains(reviewBody, []byte(env.student.Username)) {
 		t.Fatalf("expected review archive payload to contain student metadata, got %s", string(reviewBody))
 	}
+	if !bytes.Contains(reviewBody, []byte(`"teacher_observations"`)) {
+		t.Fatalf("expected review archive payload to contain teacher observations, got %s", string(reviewBody))
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive", env.student.ID), nil, otherTeacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive", env.student.ID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if body, err := io.ReadAll(resp.Body); err != nil {
+		t.Fatalf("read review archive view body: %v", err)
+	} else if !bytes.Contains(body, []byte(`"teacher_observations"`)) || !bytes.Contains(body, []byte(env.student.Username)) {
+		t.Fatalf("expected review archive view payload to contain observations and student username, got %s", string(body))
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive", env.student.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/students/%d/review-archive", env.student.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusForbidden)
 }
 
 func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {

@@ -19,7 +19,14 @@ import (
 )
 
 type testReportRepository struct {
-	db *gorm.DB
+	db              *gorm.DB
+	users           map[int64]*assessmentdomain.ReportUser
+	personalStats   *assessmentdomain.PersonalReportStats
+	totalChallenges int64
+	timeline        []assessmentdomain.ReviewArchiveTimelineEvent
+	evidence        []assessmentdomain.ReviewArchiveEvidenceEvent
+	writeups        []assessmentdomain.ReviewArchiveWriteupItem
+	manualReviews   []assessmentdomain.ReviewArchiveManualReviewItem
 }
 
 func (r *testReportRepository) Create(ctx context.Context, report *model.Report) error {
@@ -42,6 +49,13 @@ func (r *testReportRepository) MarkFailed(context.Context, int64, string) error 
 }
 
 func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error) {
+	if r != nil && r.users != nil {
+		user, ok := r.users[userID]
+		if !ok {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return user, nil
+	}
 	if r == nil || r.db == nil {
 		return nil, gorm.ErrRecordNotFound
 	}
@@ -65,6 +79,9 @@ func (r *testReportRepository) FindContestByID(context.Context, int64) (*model.C
 }
 
 func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*assessmentdomain.PersonalReportStats, error) {
+	if r != nil && r.personalStats != nil {
+		return r.personalStats, nil
+	}
 	return &assessmentdomain.PersonalReportStats{}, nil
 }
 
@@ -101,23 +118,62 @@ func (r *testReportRepository) ListContestTeams(context.Context, int64) ([]asses
 }
 
 func (r *testReportRepository) CountPublishedChallenges(context.Context) (int64, error) {
+	if r != nil && r.totalChallenges > 0 {
+		return r.totalChallenges, nil
+	}
 	return 0, nil
 }
 
 func (r *testReportRepository) GetStudentTimeline(context.Context, int64, int, int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error) {
+	if r != nil && r.timeline != nil {
+		return r.timeline, nil
+	}
 	return []assessmentdomain.ReviewArchiveTimelineEvent{}, nil
 }
 
 func (r *testReportRepository) GetStudentEvidence(context.Context, int64, *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error) {
+	if r != nil && r.evidence != nil {
+		return r.evidence, nil
+	}
 	return []assessmentdomain.ReviewArchiveEvidenceEvent{}, nil
 }
 
 func (r *testReportRepository) ListStudentWriteups(context.Context, int64) ([]assessmentdomain.ReviewArchiveWriteupItem, error) {
+	if r != nil && r.writeups != nil {
+		return r.writeups, nil
+	}
 	return []assessmentdomain.ReviewArchiveWriteupItem{}, nil
 }
 
 func (r *testReportRepository) ListStudentManualReviews(context.Context, int64) ([]assessmentdomain.ReviewArchiveManualReviewItem, error) {
+	if r != nil && r.manualReviews != nil {
+		return r.manualReviews, nil
+	}
 	return []assessmentdomain.ReviewArchiveManualReviewItem{}, nil
+}
+
+type testAssessmentProfileReader struct {
+	resp *dto.SkillProfileResp
+}
+
+func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context, int64) (*dto.SkillProfileResp, error) {
+	if r == nil || r.resp == nil {
+		return &dto.SkillProfileResp{}, nil
+	}
+	return r.resp, nil
+}
+
+func intPtr(value int) *int {
+	return &value
+}
+
+func findObservation(items []assessmentdomain.ReviewArchiveObservation, key string) *assessmentdomain.ReviewArchiveObservation {
+	for index := range items {
+		if items[index].Key == key {
+			return &items[index]
+		}
+	}
+	return nil
 }
 
 func TestWritePersonalPDFCreatesPDFFile(t *testing.T) {
@@ -288,6 +344,175 @@ func TestValidateStudentReviewArchiveAccess(t *testing.T) {
 	appErr, ok := err.(*errcode.AppError)
 	if !ok || appErr.Code != errcode.ErrForbidden.Code {
 		t.Fatalf("expected forbidden error, got %#v", err)
+	}
+}
+
+func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T) {
+	t.Parallel()
+
+	submittedAt := time.Date(2026, 4, 1, 9, 12, 0, 0, time.UTC)
+	reviewedAt := submittedAt.Add(8 * time.Minute)
+	lastEventAt := time.Date(2026, 4, 1, 9, 20, 0, 0, time.UTC)
+	wrong := false
+	correct := true
+
+	repo := &testReportRepository{
+		users: map[int64]*assessmentdomain.ReportUser{
+			7: {
+				ID:        7,
+				Username:  "alice",
+				Name:      "Alice",
+				ClassName: "class-a",
+				Role:      model.RoleStudent,
+			},
+		},
+		personalStats: &assessmentdomain.PersonalReportStats{
+			TotalScore:    100,
+			TotalSolved:   1,
+			TotalAttempts: 4,
+			Rank:          2,
+		},
+		totalChallenges: 5,
+		timeline: []assessmentdomain.ReviewArchiveTimelineEvent{
+			{
+				Type:        "hint_unlock",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   submittedAt,
+				Detail:      "解锁第 1 级提示",
+			},
+			{
+				Type:        "flag_submit",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   submittedAt.Add(3 * time.Minute),
+				IsCorrect:   &wrong,
+				Detail:      "提交未命中 Flag",
+			},
+			{
+				Type:        "flag_submit",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   lastEventAt,
+				IsCorrect:   &correct,
+				Points:      intPtr(100),
+				Detail:      "提交命中 Flag",
+			},
+		},
+		evidence: []assessmentdomain.ReviewArchiveEvidenceEvent{
+			{
+				Type:        "instance_access",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   submittedAt.Add(1 * time.Minute),
+				Detail:      "访问攻击目标",
+				Meta:        map[string]any{"event_stage": "access"},
+			},
+			{
+				Type:        "instance_proxy_request",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   submittedAt.Add(2 * time.Minute),
+				Detail:      "经平台代理发起 POST /login",
+				Meta:        map[string]any{"event_stage": "exploit", "method": "POST"},
+			},
+			{
+				Type:        "challenge_hint_unlock",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   submittedAt,
+				Detail:      "解锁第 1 级提示",
+				Meta:        map[string]any{"event_stage": "analysis"},
+			},
+			{
+				Type:        "challenge_submission",
+				ChallengeID: 11,
+				Title:       "web-1",
+				Timestamp:   lastEventAt,
+				Detail:      "提交命中 Flag",
+				Meta:        map[string]any{"event_stage": "submit", "is_correct": true, "points": 100},
+			},
+		},
+		writeups: []assessmentdomain.ReviewArchiveWriteupItem{
+			{
+				ID:               1,
+				ChallengeID:      11,
+				ChallengeTitle:   "web-1",
+				Title:            "从回显到 flag",
+				SubmissionStatus: "submitted",
+				ReviewStatus:     "excellent",
+				SubmittedAt:      &submittedAt,
+				ReviewedAt:       &reviewedAt,
+				ReviewComment:    "结构完整",
+				UpdatedAt:        reviewedAt,
+				ReviewerName:     "teacher-a",
+			},
+		},
+		manualReviews: []assessmentdomain.ReviewArchiveManualReviewItem{
+			{
+				ID:             2,
+				ChallengeID:    12,
+				ChallengeTitle: "misc-essay",
+				Answer:         "完整答案正文",
+				ReviewStatus:   "approved",
+				SubmittedAt:    submittedAt,
+				ReviewedAt:     &reviewedAt,
+				ReviewComment:  "通过",
+				Score:          100,
+				ReviewerName:   "teacher-a",
+			},
+		},
+	}
+
+	service := NewReportService(
+		repo,
+		&testAssessmentProfileReader{
+			resp: &dto.SkillProfileResp{
+				UserID: 7,
+				Dimensions: []*dto.SkillDimension{
+					{Dimension: "web", Score: 0.8},
+				},
+				UpdatedAt: submittedAt.Format(time.RFC3339),
+			},
+		},
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	data, err := service.buildStudentReviewArchiveData(context.Background(), 7)
+	if err != nil {
+		t.Fatalf("buildStudentReviewArchiveData() error = %v", err)
+	}
+
+	if data.Summary.HintUnlockCount != 1 {
+		t.Fatalf("expected 1 hint unlock, got %d", data.Summary.HintUnlockCount)
+	}
+	if data.Summary.CorrectSubmissionCount != 1 {
+		t.Fatalf("expected 1 correct submission, got %d", data.Summary.CorrectSubmissionCount)
+	}
+	if data.Summary.WriteupCount != 1 {
+		t.Fatalf("expected 1 writeup, got %d", data.Summary.WriteupCount)
+	}
+	if data.Summary.LastActivityAt == nil || !data.Summary.LastActivityAt.Equal(lastEventAt) {
+		t.Fatalf("expected last activity at %s, got %#v", lastEventAt, data.Summary.LastActivityAt)
+	}
+
+	if len(data.TeacherObservations.Items) == 0 {
+		t.Fatal("expected teaching observations to be generated")
+	}
+
+	closure := findObservation(data.TeacherObservations.Items, "training_closure")
+	if closure == nil || closure.Level != "good" {
+		t.Fatalf("expected training_closure observation, got %#v", closure)
+	}
+
+	hint := findObservation(data.TeacherObservations.Items, "hint_usage")
+	if hint == nil || hint.Level != "attention" {
+		t.Fatalf("expected hint_usage attention observation, got %#v", hint)
 	}
 }
 

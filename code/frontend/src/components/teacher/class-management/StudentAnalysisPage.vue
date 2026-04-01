@@ -47,6 +47,7 @@ const emit = defineEmits<{
   openClassManagement: []
   openClassStudents: []
   openReportExport: []
+  openReviewArchive: []
   exportReviewArchive: []
   selectClass: [className: string]
   selectStudent: [studentId: string]
@@ -66,6 +67,7 @@ const emit = defineEmits<{
       <ElButton plain @click="emit('openClassManagement')">班级管理</ElButton>
       <ElButton plain @click="emit('openClassStudents')">返回学生列表</ElButton>
       <ElButton plain @click="emit('openReportExport')">导出班级报告</ElButton>
+      <ElButton plain @click="emit('openReviewArchive')">完整复盘页</ElButton>
       <ElButton type="primary" @click="emit('exportReviewArchive')">导出复盘归档</ElButton>
     </PageHeader>
 
@@ -198,6 +200,32 @@ const emit = defineEmits<{
 
         <SectionCard title="操作入口" subtitle="从分析页返回上一层，或者直接导出班级报告与学生归档。">
           <div class="grid gap-3">
+            <AppCard
+              as="button"
+              variant="action"
+              accent="neutral"
+              interactive
+              class="text-left"
+              @click="emit('openReviewArchive')"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-primary)]/14 bg-[var(--color-primary)]/8 text-[var(--color-primary)]"
+                  >
+                    <FileDown class="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div class="font-medium text-text-primary">打开完整复盘页</div>
+                    <div class="mt-1 text-sm text-text-secondary">
+                      进入教学复盘视图，查看摘要、证据链和评阅记录。
+                    </div>
+                  </div>
+                </div>
+                <ArrowLeftRight class="h-4 w-4 text-[var(--color-primary)]" />
+              </div>
+            </AppCard>
+
             <AppCard
               as="button"
               variant="action"
