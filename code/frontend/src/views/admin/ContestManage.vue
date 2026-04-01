@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
+import { downloadReport } from '@/api/assessment'
+import { exportContestArchive } from '@/api/admin'
+import type { ContestDetailData } from '@/api/contracts'
 import AdminContestFormDialog from '@/components/admin/contest/AdminContestFormDialog.vue'
 import ContestOrchestrationPage from '@/components/admin/contest/ContestOrchestrationPage.vue'
+import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
+import { useToast } from '@/composables/useToast'
 import { useAdminContests } from '@/composables/useAdminContests'
 
 const AWD_SELECTED_CONTEST_STORAGE_KEY = 'ctf_admin_awd_selected_contest'
+const toast = useToast()
+const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
 function loadStoredSelectedAwdContestId(): string | null {
   if (typeof window === 'undefined') {
@@ -49,6 +56,9 @@ const {
 
 const selectedAwdContestId = ref<string | null>(loadStoredSelectedAwdContestId())
 const awdContests = computed(() => list.value.filter((item) => item.mode === 'awd'))
+const exportingContestId = ref<string | null>(null)
+const downloadingContestReport = ref(false)
+const pendingContestReportId = ref<string | null>(null)
 
 onMounted(() => {
   void refresh()
@@ -90,6 +100,61 @@ function handleDialogOpenChange(value: boolean) {
     closeDialog()
   }
 }
+
+async function downloadGeneratedReport(reportId: string): Promise<void> {
+  downloadingContestReport.value = true
+  try {
+    const { blob, filename } = await downloadReport(reportId)
+    const objectUrl = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = objectUrl
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(objectUrl)
+  } finally {
+    downloadingContestReport.value = false
+  }
+}
+
+async function handleExportContest(contest: ContestDetailData): Promise<void> {
+  exportingContestId.value = contest.id
+  try {
+    const result = await exportContestArchive(contest.id, { format: 'json' })
+
+    if (result.status === 'ready') {
+      stopPolling()
+      await downloadGeneratedReport(result.report_id)
+      toast.success(`赛事结果已导出：${contest.title}`)
+      return
+    }
+
+    if (result.status === 'failed') {
+      stopPolling()
+      toast.error(result.error_message || '赛事结果导出失败')
+      return
+    }
+
+    pendingContestReportId.value = result.report_id
+    startPolling(result.report_id, (next) => {
+      if (next.report_id !== pendingContestReportId.value) return
+      if (next.status === 'ready') {
+        pendingContestReportId.value = null
+        void downloadGeneratedReport(next.report_id)
+        toast.success(`赛事结果已导出：${contest.title}`)
+        return
+      }
+      if (next.status === 'failed') {
+        pendingContestReportId.value = null
+        toast.error(next.error_message || '赛事结果导出失败')
+      }
+    })
+    toast.info(`已开始导出赛事结果：${contest.title}`)
+  } finally {
+    exportingContestId.value = null
+  }
+}
 </script>
 
 <template>
@@ -107,6 +172,7 @@ function handleDialogOpenChange(value: boolean) {
       @open-create-dialog="openCreateDialog"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
+      @export-contest="handleExportContest"
       @change-page="changePage"
       @update:selected-awd-contest-id="updateSelectedAwdContestId"
     />

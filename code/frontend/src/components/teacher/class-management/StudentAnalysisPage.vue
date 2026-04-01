@@ -47,6 +47,7 @@ const emit = defineEmits<{
   openClassManagement: []
   openClassStudents: []
   openReportExport: []
+  exportReviewArchive: []
   selectClass: [className: string]
   selectStudent: [studentId: string]
   openChallenge: [challengeId: string]
@@ -64,7 +65,8 @@ const emit = defineEmits<{
     >
       <ElButton plain @click="emit('openClassManagement')">班级管理</ElButton>
       <ElButton plain @click="emit('openClassStudents')">返回学生列表</ElButton>
-      <ElButton type="primary" @click="emit('openReportExport')">导出报告</ElButton>
+      <ElButton plain @click="emit('openReportExport')">导出班级报告</ElButton>
+      <ElButton type="primary" @click="emit('exportReviewArchive')">导出复盘归档</ElButton>
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
@@ -194,7 +196,7 @@ const emit = defineEmits<{
           </div>
         </SectionCard>
 
-        <SectionCard title="操作入口" subtitle="从分析页返回上一层，或者直接导出报告。">
+        <SectionCard title="操作入口" subtitle="从分析页返回上一层，或者直接导出班级报告与学生归档。">
           <div class="grid gap-3">
             <AppCard
               as="button"
@@ -243,6 +245,32 @@ const emit = defineEmits<{
                   </div>
                 </div>
                 <ArrowLeftRight class="h-4 w-4 text-[var(--color-warning)]" />
+              </div>
+            </AppCard>
+
+            <AppCard
+              as="button"
+              variant="action"
+              accent="primary"
+              interactive
+              class="text-left"
+              @click="emit('exportReviewArchive')"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
+                  >
+                    <FileDown class="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div class="font-medium text-text-primary">导出学生复盘归档</div>
+                    <div class="mt-1 text-sm text-text-secondary">
+                      直接导出当前学生的时间线、证据和评阅记录。
+                    </div>
+                  </div>
+                </div>
+                <ArrowLeftRight class="h-4 w-4 text-primary" />
               </div>
             </AppCard>
           </div>

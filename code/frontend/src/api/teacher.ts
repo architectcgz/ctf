@@ -399,3 +399,19 @@ export async function destroyTeacherInstance(id: string): Promise<void> {
 export async function exportClassReport(data: Record<string, unknown>) {
   return request<ReportExportData>({ method: 'POST', url: '/reports/class', data })
 }
+
+export async function exportStudentReviewArchive(
+  studentId: string,
+  data?: { format?: 'json' }
+): Promise<ReportExportData> {
+  const payload = await request<ReportExportData & { report_id: string | number }>({
+    method: 'POST',
+    url: `/teacher/students/${encodeURIComponent(studentId)}/review-archive/export`,
+    data,
+  })
+
+  return {
+    ...payload,
+    report_id: String(payload.report_id),
+  }
+}

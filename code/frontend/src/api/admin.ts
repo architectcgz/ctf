@@ -36,6 +36,7 @@ import type {
   TopologyNodeData,
   TopologyTrafficPolicyData,
   WriteupVisibility,
+  ReportExportData,
 } from './contracts'
 import type { UserRole } from '@/utils/constants'
 
@@ -78,6 +79,22 @@ export interface AdminUserUpdatePayload {
   class_name?: string
   role?: UserRole
   status?: UserStatus
+}
+
+export async function exportContestArchive(
+  contestId: string,
+  data?: { format?: 'json' }
+): Promise<ReportExportData> {
+  const payload = await request<ReportExportData & { report_id: string | number }>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/export`,
+    data,
+  })
+
+  return {
+    ...payload,
+    report_id: String(payload.report_id),
+  }
 }
 
 interface RawContestItem {

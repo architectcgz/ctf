@@ -26,6 +26,7 @@ const emit = defineEmits<{
   openCreateDialog: []
   updateStatusFilter: [value: StatusFilter]
   openEditDialog: [contest: ContestDetailData]
+  exportContest: [contest: ContestDetailData]
   changePage: [page: number]
   'update:selectedAwdContestId': [value: string]
 }>()
@@ -168,6 +169,7 @@ const awdCount = computed(() => props.awdContests.length)
           :page-size="pageSize"
           :total="total"
           @edit="emit('openEditDialog', $event)"
+          @export="emit('exportContest', $event)"
           @change-page="emit('changePage', $event)"
         />
       </section>
