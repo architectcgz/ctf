@@ -22,6 +22,7 @@ type adminRouteDeps struct {
 	identityHandler *identityhttp.Handler
 	auditRecorder   auditlog.Recorder
 	auditLogger     *zap.Logger
+	assessment      *composition.AssessmentModule
 	challenge       *composition.ChallengeModule
 	contest         *composition.ContestModule
 	ops             *composition.OpsModule
@@ -335,6 +336,15 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			DetailBuilder:   middleware.DetailFromParams("id"),
 		}),
 		deps.contest.Handler.UnfreezeScoreboard,
+	)
+	adminOnly.POST("/contests/:id/export",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionAdminOp,
+			ResourceType:    "contest_export",
+			ResourceIDParam: "id",
+			DetailBuilder:   middleware.DetailFromParams("id"),
+		}),
+		deps.assessment.ReportHandler.CreateContestExport,
 	)
 	adminOnly.GET("/contests/:id/challenges", deps.contest.ChallengeHandler.ListAdminChallenges)
 	adminOnly.POST("/contests/:id/challenges",
@@ -652,6 +662,15 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
 	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
 	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
+	teacherOrAbove.POST("/students/:id/review-archive/export",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionAdminOp,
+			ResourceType:    "review_archive_export",
+			ResourceIDParam: "id",
+			DetailBuilder:   middleware.DetailFromParams("id"),
+		}),
+		deps.assessment.ReportHandler.CreateStudentReviewArchive,
+	)
 	teacherOrAbove.GET("/manual-review-submissions", deps.practice.Handler.ListTeacherManualReviewSubmissions)
 	teacherOrAbove.GET("/manual-review-submissions/:id", deps.practice.Handler.GetTeacherManualReviewSubmission)
 	teacherOrAbove.PUT("/manual-review-submissions/:id/review",

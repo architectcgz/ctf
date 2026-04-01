@@ -42,6 +42,52 @@
 - 第一版优先 JSON
 - 若当前报告导出链路成熟，可同时提供可下载文件地址
 
+## 当前落地方案
+
+- 直接复用现有 `reports` 导出任务链路与下载接口
+- 新增：
+  - `POST /api/v1/admin/contests/:id/export`
+  - `POST /api/v1/teacher/students/:id/review-archive/export`
+- 赛事导出当前包含：
+  - 赛事基础信息
+  - 榜单结果
+  - 题目解出情况
+  - 队伍与成员信息
+- 学生复盘归档当前包含：
+  - 学生基础信息
+  - 训练摘要
+  - 时间线与证据事件
+  - writeup 提交与评阅状态
+  - 人工审核记录
+
+## 当前实现说明
+
+- 两个新导出任务都会先写入 `reports` 表，再走异步生成，统一通过：
+  - `GET /api/v1/reports/:id`
+  - `GET /api/v1/reports/:id/download`
+  查询状态与下载文件
+- `reports.type` 扩展为：
+  - `contest_export`
+  - `review_archive`
+- `reports.format` 扩展支持：
+  - `json`
+- 赛事导出 JSON 当前结构分为：
+  - `contest`
+  - `scoreboard`
+  - `challenges`
+  - `teams`
+- 学生复盘归档 JSON 当前结构分为：
+  - `student`
+  - `summary`
+  - `skill_profile`
+  - `timeline`
+  - `evidence`
+  - `writeups`
+  - `manual_reviews`
+- 权限边界：
+  - 赛事导出仅管理员可发起
+  - 复盘归档由教师/管理员发起；教师仅能导出自己班级学生
+
 ## 最小交付
 
 - 至少一个赛事导出接口可用

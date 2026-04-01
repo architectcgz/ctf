@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"mime"
@@ -48,6 +49,43 @@ type classReportData struct {
 	AverageScore      float64
 	DimensionAverages []assessmentdomain.ClassDimensionAverage
 	TopStudents       []assessmentdomain.ClassTopStudent
+}
+
+type contestExportData struct {
+	GeneratedAt time.Time                                      `json:"generated_at"`
+	Contest     contestExportMeta                              `json:"contest"`
+	Scoreboard  []assessmentdomain.ContestExportScoreboardItem `json:"scoreboard"`
+	Challenges  []assessmentdomain.ContestExportChallengeItem  `json:"challenges"`
+	Teams       []assessmentdomain.ContestExportTeamItem       `json:"teams"`
+}
+
+type contestExportMeta struct {
+	ID          int64      `json:"id"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Mode        string     `json:"mode"`
+	Status      string     `json:"status"`
+	StartTime   time.Time  `json:"start_time"`
+	EndTime     time.Time  `json:"end_time"`
+	FreezeTime  *time.Time `json:"freeze_time,omitempty"`
+}
+
+type reviewArchiveData struct {
+	GeneratedAt   time.Time                                        `json:"generated_at"`
+	Student       reviewArchiveStudent                             `json:"student"`
+	Summary       assessmentdomain.ReviewArchiveSummary            `json:"summary"`
+	SkillProfile  []*dto.SkillDimension                            `json:"skill_profile,omitempty"`
+	Timeline      []assessmentdomain.ReviewArchiveTimelineEvent    `json:"timeline"`
+	Evidence      []assessmentdomain.ReviewArchiveEvidenceEvent    `json:"evidence"`
+	Writeups      []assessmentdomain.ReviewArchiveWriteupItem      `json:"writeups"`
+	ManualReviews []assessmentdomain.ReviewArchiveManualReviewItem `json:"manual_reviews"`
+}
+
+type reviewArchiveStudent struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	Name      string `json:"name,omitempty"`
+	ClassName string `json:"class_name,omitempty"`
 }
 
 func NewReportService(repo assessmentports.ReportRepository, assessmentService assessmentports.AssessmentProfileReader, cfg config.ReportConfig, logger *zap.Logger) *ReportService {
@@ -149,6 +187,72 @@ func (s *ReportService) CreateClassReport(ctx context.Context, requesterID int64
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
+func (s *ReportService) CreateContestExport(ctx context.Context, requesterID, contestID int64, req *dto.CreateContestExportReq) (*dto.ReportExportData, error) {
+	if _, err := s.repo.FindContestByID(ctx, contestID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrContestNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	format := s.normalizeArchiveFormat(req.Format)
+	report := &model.Report{
+		Type:   model.ReportTypeContest,
+		Format: format,
+		UserID: &requesterID,
+		Status: model.ReportStatusProcessing,
+	}
+	if err := s.repo.Create(ctx, report); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
+		filePath, expiresAt, genErr := s.generateContestExport(runCtx, report.ID, contestID, format)
+		if genErr != nil {
+			return genErr
+		}
+		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+	})
+
+	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
+func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req *dto.CreateStudentReviewArchiveReq) (*dto.ReportExportData, error) {
+	requester, err := s.repo.FindUserByID(ctx, requesterID)
+	if err != nil {
+		return nil, errcode.ErrUnauthorized
+	}
+	student, err := s.repo.FindUserByID(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrNotFound
+	}
+	if err := validateStudentReviewArchiveAccess(requester, student); err != nil {
+		return nil, err
+	}
+
+	format := s.normalizeArchiveFormat(req.Format)
+	report := &model.Report{
+		Type:      model.ReportTypeReview,
+		Format:    format,
+		UserID:    &requesterID,
+		ClassName: &student.ClassName,
+		Status:    model.ReportStatusProcessing,
+	}
+	if err := s.repo.Create(ctx, report); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
+		filePath, expiresAt, genErr := s.generateStudentReviewArchive(runCtx, report.ID, studentID, format)
+		if genErr != nil {
+			return genErr
+		}
+		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+	})
+
+	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
 func validateClassReportAccess(requester *assessmentdomain.ReportUser, className string) error {
 	if requester == nil || requester.ID <= 0 {
 		return errcode.ErrUnauthorized
@@ -157,6 +261,25 @@ func validateClassReportAccess(requester *assessmentdomain.ReportUser, className
 		return nil
 	}
 	if strings.TrimSpace(requester.ClassName) == "" || strings.TrimSpace(requester.ClassName) != className {
+		return errcode.ErrForbidden
+	}
+	return nil
+}
+
+func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.ReportUser) error {
+	if requester == nil || requester.ID <= 0 {
+		return errcode.ErrUnauthorized
+	}
+	if student == nil || student.ID <= 0 {
+		return errcode.ErrNotFound
+	}
+	if student.Role != model.RoleStudent {
+		return errcode.New(errcode.ErrInvalidParams.Code, "目标用户不是学生", errcode.ErrInvalidParams.HTTPStatus)
+	}
+	if requester.Role == model.RoleAdmin {
+		return nil
+	}
+	if strings.TrimSpace(requester.ClassName) == "" || requester.ClassName != student.ClassName {
 		return errcode.ErrForbidden
 	}
 	return nil
@@ -199,6 +322,8 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	contentType := reportContentType(report.Format)
 	if contentType == "" {
 		switch report.Format {
+		case model.ReportFormatJSON:
+			contentType = "application/json"
 		case model.ReportFormatPDF:
 			contentType = "application/pdf"
 		case model.ReportFormatExcel:
@@ -288,7 +413,7 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, data, nil); err != nil {
+	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
@@ -305,7 +430,41 @@ func (s *ReportService) generateClassReport(ctx context.Context, reportID int64,
 	if err != nil {
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, nil, data); err != nil {
+	if err := s.renderReport(filePath, format, data); err != nil {
+		return "", time.Time{}, err
+	}
+
+	return filePath, time.Now().Add(s.config.FileTTL), nil
+}
+
+func (s *ReportService) generateContestExport(ctx context.Context, reportID, contestID int64, format string) (string, time.Time, error) {
+	data, err := s.buildContestExportData(ctx, contestID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	filePath, err := s.reportFilePath(reportID, model.ReportTypeContest, format)
+	if err != nil {
+		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if err := s.renderReport(filePath, format, data); err != nil {
+		return "", time.Time{}, err
+	}
+
+	return filePath, time.Now().Add(s.config.FileTTL), nil
+}
+
+func (s *ReportService) generateStudentReviewArchive(ctx context.Context, reportID, studentID int64, format string) (string, time.Time, error) {
+	data, err := s.buildStudentReviewArchiveData(ctx, studentID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	filePath, err := s.reportFilePath(reportID, model.ReportTypeReview, format)
+	if err != nil {
+		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if err := s.renderReport(filePath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
@@ -367,19 +526,129 @@ func (s *ReportService) buildClassReportData(ctx context.Context, className stri
 	}, nil
 }
 
-func (s *ReportService) renderReport(filePath, format string, personal *personalReportData, class *classReportData) error {
-	switch format {
-	case model.ReportFormatExcel:
-		if personal != nil {
-			return writePersonalExcel(filePath, personal)
+func (s *ReportService) buildContestExportData(ctx context.Context, contestID int64) (*contestExportData, error) {
+	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
 		}
-		return writeClassExcel(filePath, class)
-	default:
-		if personal != nil {
-			return writePersonalPDF(filePath, personal)
-		}
-		return writeClassPDF(filePath, class)
+		return nil, errcode.ErrInternal.WithCause(err)
 	}
+
+	scoreboard, err := s.repo.ListContestScoreboard(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	challenges, err := s.repo.ListContestChallenges(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	teams, err := s.repo.ListContestTeams(ctx, contestID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	return &contestExportData{
+		GeneratedAt: time.Now(),
+		Contest: contestExportMeta{
+			ID:          contest.ID,
+			Title:       contest.Title,
+			Description: contest.Description,
+			Mode:        contest.Mode,
+			Status:      contest.Status,
+			StartTime:   contest.StartTime,
+			EndTime:     contest.EndTime,
+			FreezeTime:  contest.FreezeTime,
+		},
+		Scoreboard: scoreboard,
+		Challenges: challenges,
+		Teams:      teams,
+	}, nil
+}
+
+func (s *ReportService) buildStudentReviewArchiveData(ctx context.Context, studentID int64) (*reviewArchiveData, error) {
+	student, err := s.repo.FindUserByID(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrNotFound
+	}
+
+	stats, err := s.repo.GetPersonalStats(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	totalChallenges, err := s.repo.CountPublishedChallenges(ctx)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	timeline, err := s.repo.GetStudentTimeline(ctx, studentID, 200, 0)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	evidence, err := s.repo.GetStudentEvidence(ctx, studentID, nil)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	writeups, err := s.repo.ListStudentWriteups(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	manualReviews, err := s.repo.ListStudentManualReviews(ctx, studentID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	var skillProfile []*dto.SkillDimension
+	if s.assessmentService != nil {
+		skillProfileResp, skillErr := s.assessmentService.GetSkillProfileWithContext(ctx, studentID)
+		if skillErr != nil {
+			return nil, errcode.ErrInternal.WithCause(skillErr)
+		}
+		skillProfile = skillProfileResp.Dimensions
+	}
+
+	return &reviewArchiveData{
+		GeneratedAt: time.Now(),
+		Student: reviewArchiveStudent{
+			ID:        student.ID,
+			Username:  student.Username,
+			Name:      student.Name,
+			ClassName: student.ClassName,
+		},
+		Summary: assessmentdomain.ReviewArchiveSummary{
+			TotalChallenges: int(totalChallenges),
+			TotalSolved:     stats.TotalSolved,
+			TotalScore:      stats.TotalScore,
+			Rank:            stats.Rank,
+			TotalAttempts:   stats.TotalAttempts,
+		},
+		SkillProfile:  skillProfile,
+		Timeline:      timeline,
+		Evidence:      evidence,
+		Writeups:      writeups,
+		ManualReviews: manualReviews,
+	}, nil
+}
+
+func (s *ReportService) renderReport(filePath, format string, data any) error {
+	switch format {
+	case model.ReportFormatJSON:
+		return writeJSONReport(filePath, data)
+	case model.ReportFormatExcel:
+		switch payload := data.(type) {
+		case *personalReportData:
+			return writePersonalExcel(filePath, payload)
+		case *classReportData:
+			return writeClassExcel(filePath, payload)
+		}
+	default:
+		switch payload := data.(type) {
+		case *personalReportData:
+			return writePersonalPDF(filePath, payload)
+		case *classReportData:
+			return writeClassPDF(filePath, payload)
+		}
+	}
+	return errcode.ErrInternal.WithCause(fmt.Errorf("unsupported report payload"))
 }
 
 func (s *ReportService) reportFilePath(reportID int64, reportType, format string) (string, error) {
@@ -410,6 +679,8 @@ func (s *ReportService) safeReportPath(path string) (string, error) {
 
 func (s *ReportService) normalizeFormat(format string) string {
 	switch strings.ToLower(strings.TrimSpace(format)) {
+	case model.ReportFormatJSON:
+		return model.ReportFormatJSON
 	case model.ReportFormatExcel:
 		return model.ReportFormatExcel
 	case model.ReportFormatPDF:
@@ -419,7 +690,17 @@ func (s *ReportService) normalizeFormat(format string) string {
 	}
 }
 
+func (s *ReportService) normalizeArchiveFormat(format string) string {
+	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
+		return model.ReportFormatJSON
+	}
+	return model.ReportFormatJSON
+}
+
 func reportFileExtension(format string) string {
+	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
+		return "json"
+	}
 	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatExcel) {
 		return "xlsx"
 	}
@@ -628,6 +909,18 @@ func writeClassExcel(filePath string, data *classReportData) error {
 	setReportSheetLayout(file, summarySheet)
 	setReportSheetLayout(file, topSheet)
 	return file.SaveAs(filePath)
+}
+
+func writeJSONReport(filePath string, data any) error {
+	content, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	content = append(content, '\n')
+	if err := os.WriteFile(filePath, content, 0o644); err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
+	return nil
 }
 
 type summaryLine struct {

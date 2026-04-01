@@ -36,12 +36,21 @@ type ReportRepository interface {
 	MarkReady(ctx context.Context, reportID int64, filePath string, expiresAt time.Time) error
 	MarkFailed(ctx context.Context, reportID int64, message string) error
 	FindUserByID(ctx context.Context, userID int64) (*assessmentdomain.ReportUser, error)
+	FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error)
 	GetPersonalStats(ctx context.Context, userID int64) (*assessmentdomain.PersonalReportStats, error)
 	ListPersonalDimensionStats(ctx context.Context, userID int64) ([]assessmentdomain.ReportDimensionStat, error)
 	CountClassStudents(ctx context.Context, className string) (int, error)
 	GetClassAverageScore(ctx context.Context, className string) (float64, error)
 	ListClassDimensionAverages(ctx context.Context, className string) ([]assessmentdomain.ClassDimensionAverage, error)
 	ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentdomain.ClassTopStudent, error)
+	ListContestScoreboard(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportScoreboardItem, error)
+	ListContestChallenges(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportChallengeItem, error)
+	ListContestTeams(ctx context.Context, contestID int64) ([]assessmentdomain.ContestExportTeamItem, error)
+	CountPublishedChallenges(ctx context.Context) (int64, error)
+	GetStudentTimeline(ctx context.Context, userID int64, limit, offset int) ([]assessmentdomain.ReviewArchiveTimelineEvent, error)
+	GetStudentEvidence(ctx context.Context, userID int64, challengeID *int64) ([]assessmentdomain.ReviewArchiveEvidenceEvent, error)
+	ListStudentWriteups(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveWriteupItem, error)
+	ListStudentManualReviews(ctx context.Context, userID int64) ([]assessmentdomain.ReviewArchiveManualReviewItem, error)
 }
 
 type AssessmentProfileReader interface {

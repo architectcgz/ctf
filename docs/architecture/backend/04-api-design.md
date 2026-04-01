@@ -550,6 +550,7 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `GET` | `/api/v1/classes/:id/statistics` | T | 班级整体统计数据 |
 | `POST` | `/api/v1/reports/personal` | S,T | 导出个人能力报告（PDF） |
 | `POST` | `/api/v1/reports/class` | T | 导出班级报告（PDF） |
+| `POST` | `/api/v1/teacher/students/:id/review-archive/export` | T,A | 导出指定学员复盘归档（JSON） |
 
 ### 5.6 系统管理
 
@@ -557,6 +558,7 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 |------|------|------|------|
 | `GET` | `/api/v1/admin/dashboard` | A | 管理仪表盘（概览数据） |
 | `GET` | `/api/v1/admin/audit-logs` | A | 审计日志查询 |
+| `POST` | `/api/v1/admin/contests/:id/export` | A | 导出赛事结果归档（JSON） |
 | `GET` | `/api/v1/notifications` | @ | 我的通知列表 |
 | `PUT` | `/api/v1/notifications/:id/read` | @ | 标记通知为已读 |
 

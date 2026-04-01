@@ -15,6 +15,8 @@ import (
 type reportService interface {
 	CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error)
 	CreateClassReport(ctx context.Context, requesterID int64, req *dto.CreateClassReportReq) (*dto.ReportExportData, error)
+	CreateContestExport(ctx context.Context, requesterID, contestID int64, req *dto.CreateContestExportReq) (*dto.ReportExportData, error)
+	CreateStudentReviewArchive(ctx context.Context, requesterID, studentID int64, req *dto.CreateStudentReviewArchiveReq) (*dto.ReportExportData, error)
 	GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error)
 	GetStatus(ctx context.Context, reportID, requesterID int64, role string) (*dto.ReportExportData, error)
 }
@@ -56,6 +58,54 @@ func (h *ReportHandler) CreateClassReport(c *gin.Context) {
 
 	currentUser := authctx.MustCurrentUser(c)
 	resp, err := h.service.CreateClassReport(c.Request.Context(), currentUser.UserID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *ReportHandler) CreateContestExport(c *gin.Context) {
+	contestID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || contestID <= 0 {
+		response.InvalidParams(c, "无效的赛事ID")
+		return
+	}
+
+	var req dto.CreateContestExportReq
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.ValidationError(c, err)
+			return
+		}
+	}
+
+	currentUser := authctx.MustCurrentUser(c)
+	resp, err := h.service.CreateContestExport(c.Request.Context(), currentUser.UserID, contestID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *ReportHandler) CreateStudentReviewArchive(c *gin.Context) {
+	studentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || studentID <= 0 {
+		response.InvalidParams(c, "无效的学生ID")
+		return
+	}
+
+	var req dto.CreateStudentReviewArchiveReq
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.ValidationError(c, err)
+			return
+		}
+	}
+
+	currentUser := authctx.MustCurrentUser(c)
+	resp, err := h.service.CreateStudentReviewArchive(c.Request.Context(), currentUser.UserID, studentID, &req)
 	if err != nil {
 		response.FromError(c, err)
 		return
