@@ -17,8 +17,10 @@ const (
 	ChallengeStatusPublished = "published"
 	ChallengeStatusArchived  = "archived"
 
-	FlagTypeStatic  = "static"
-	FlagTypeDynamic = "dynamic"
+	FlagTypeStatic       = "static"
+	FlagTypeDynamic      = "dynamic"
+	FlagTypeRegex        = "regex"
+	FlagTypeManualReview = "manual_review"
 )
 
 type Challenge struct {
@@ -35,6 +37,7 @@ type Challenge struct {
 	FlagType      string         `gorm:"column:flag_type;default:'static'"`
 	FlagHash      string         `gorm:"column:flag_hash;size:128"`
 	FlagSalt      string         `gorm:"column:flag_salt;size:64"`
+	FlagRegex     string         `gorm:"column:flag_regex;size:512"`
 	FlagPrefix    string         `gorm:"column:flag_prefix;size:32;default:'flag'"`
 	CreatedBy     *int64         `gorm:"column:created_by"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`

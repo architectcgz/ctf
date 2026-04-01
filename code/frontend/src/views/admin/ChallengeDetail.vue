@@ -1,12 +1,20 @@
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div class="journal-eyebrow">Challenge Detail</div>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">靶场详情</h1>
-          <p class="mt-3 text-sm leading-7 text-[var(--journal-muted)]">查看题目状态、附件、Flag 配置和提示。</p>
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <div class="journal-eyebrow">
+          Challenge Detail
         </div>
-        <div class="flex flex-wrap items-center gap-3">
+        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">
+          靶场详情
+        </h1>
+        <p class="mt-3 text-sm leading-7 text-[var(--journal-muted)]">
+          查看题目状态、附件、Flag 配置和提示。
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-primary"
@@ -27,17 +35,23 @@
         >
           返回
         </button>
-        </div>
       </div>
-      <div class="journal-divider" />
+    </div>
+    <div class="journal-divider" />
 
-    <div v-if="loading" class="flex items-center justify-center py-12">
+    <div
+      v-if="loading"
+      class="flex items-center justify-center py-12"
+    >
       <div
         class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-      ></div>
+      />
     </div>
 
-    <div v-else-if="challenge" class="space-y-3">
+    <div
+      v-else-if="challenge"
+      class="space-y-3"
+    >
       <div class="space-y-3">
         <h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">
           {{ challenge.title }}
@@ -59,23 +73,26 @@
             <span class="text-[var(--color-text-secondary)]">状态：</span>
             <span class="text-[var(--color-text-primary)]">{{ challenge.status }}</span>
           </div>
-          <div v-if="challenge.image_id" class="col-span-2">
+          <div
+            v-if="challenge.image_id"
+            class="col-span-2"
+          >
             <span class="text-[var(--color-text-secondary)]">镜像：</span>
-            <span class="font-mono text-[var(--color-text-primary)]"
-              >ID #{{ challenge.image_id }}</span
-            >
+            <span class="font-mono text-[var(--color-text-primary)]">ID #{{ challenge.image_id }}</span>
           </div>
-          <div v-if="challenge.flag_config" class="col-span-2">
+          <div
+            v-if="challenge.flag_config"
+            class="col-span-2"
+          >
             <span class="text-[var(--color-text-secondary)]">Flag 配置：</span>
             <span class="font-mono text-[var(--color-text-primary)]">
-              {{
-                challenge.flag_config.configured
-                  ? `${challenge.flag_config.flag_type || 'unknown'} / ${challenge.flag_config.flag_prefix || 'flag'}`
-                  : '未配置'
-              }}
+              {{ flagConfigSummary }}
             </span>
           </div>
-          <div v-if="challenge.attachment_url" class="col-span-2">
+          <div
+            v-if="challenge.attachment_url"
+            class="col-span-2"
+          >
             <span class="text-[var(--color-text-secondary)]">附件：</span>
             <a
               :href="challenge.attachment_url"
@@ -87,14 +104,24 @@
             </a>
           </div>
         </div>
-        <div v-if="challenge.description" class="mt-4">
-          <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
+        <div
+          v-if="challenge.description"
+          class="mt-4"
+        >
+          <div class="text-sm text-[var(--color-text-secondary)]">
+            描述：
+          </div>
           <div class="mt-2 text-sm text-[var(--color-text-primary)]">
             {{ challenge.description }}
           </div>
         </div>
-        <div v-if="challenge.hints?.length" class="mt-4">
-          <div class="text-sm text-[var(--color-text-secondary)]">提示：</div>
+        <div
+          v-if="challenge.hints?.length"
+          class="mt-4"
+        >
+          <div class="text-sm text-[var(--color-text-secondary)]">
+            提示：
+          </div>
           <div class="mt-2 space-y-3">
             <div
               v-for="hint in challenge.hints"
@@ -104,40 +131,230 @@
               <div class="text-sm font-medium text-[var(--color-text-primary)]">
                 Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
               </div>
-              <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--color-text-secondary)]">
+              <div
+                v-if="hint.cost_points"
+                class="mt-1 text-xs text-[var(--color-text-secondary)]"
+              >
                 解锁消耗：{{ hint.cost_points }} 分
               </div>
-              <div class="mt-2 text-sm text-[var(--color-text-primary)]">{{ hint.content }}</div>
+              <div class="mt-2 text-sm text-[var(--color-text-primary)]">
+                {{ hint.content }}
+              </div>
             </div>
+          </div>
+        </div>
+
+        <div class="journal-panel mt-6 space-y-5 p-5 md:p-6">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <div class="journal-eyebrow">
+                Judge Mode
+              </div>
+              <h3 class="mt-3 text-lg font-semibold text-[var(--journal-ink)]">
+                判题模式配置
+              </h3>
+              <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                支持静态 Flag、动态前缀、正则判题和人工审核四种模式。保存后即时刷新当前题目配置。
+              </p>
+            </div>
+            <div class="flag-summary-chip">
+              {{ flagDraftSummary }}
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="flag-field">
+              <span class="flag-field-label">判题模式</span>
+              <select
+                v-model="flagType"
+                class="flag-field-input"
+              >
+                <option value="static">静态 Flag</option>
+                <option value="dynamic">动态前缀</option>
+                <option value="regex">正则匹配</option>
+                <option value="manual_review">人工审核</option>
+              </select>
+            </label>
+
+            <label
+              v-if="flagType === 'dynamic' || flagType === 'regex'"
+              class="flag-field"
+            >
+              <span class="flag-field-label">Flag 前缀</span>
+              <input
+                v-model="flagPrefix"
+                type="text"
+                placeholder="例如：flag"
+                class="flag-field-input"
+              >
+            </label>
+
+            <label
+              v-if="flagType === 'static'"
+              class="flag-field md:col-span-2"
+            >
+              <span class="flag-field-label">静态 Flag</span>
+              <input
+                v-model="flagValue"
+                type="text"
+                placeholder="例如：flag{demo}"
+                class="flag-field-input font-mono"
+              >
+            </label>
+
+            <label
+              v-if="flagType === 'regex'"
+              class="flag-field md:col-span-2"
+            >
+              <span class="flag-field-label">正则表达式</span>
+              <input
+                v-model="flagRegex"
+                type="text"
+                placeholder="例如：^flag\\{demo-[0-9]+\\}$"
+                class="flag-field-input font-mono"
+              >
+            </label>
+          </div>
+
+          <div
+            v-if="flagType === 'manual_review'"
+            class="rounded-2xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-4 py-4 text-sm leading-6 text-[var(--color-text-primary)]"
+          >
+            学生提交的答案将进入教师审核队列。审核通过后才会计分并更新通过状态。
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="text-sm text-[var(--journal-muted)]">
+              当前配置：{{ flagConfigSummary }}
+            </div>
+            <button
+              :disabled="saving"
+              class="admin-btn admin-btn-primary"
+              @click="saveFlagConfig"
+            >
+              {{ saving ? '保存中...' : '保存配置' }}
+            </button>
           </div>
         </div>
       </div>
     </div>
-    </section>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getChallengeDetail } from '@/api/admin'
+import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
 import { useToast } from '@/composables/useToast'
-import type { AdminChallengeListItem } from '@/api/contracts'
+import type { AdminChallengeFlagPayload } from '@/api/admin'
+import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 const loading = ref(true)
+const saving = ref(false)
 const challenge = ref<AdminChallengeListItem | null>(null)
+const flagType = ref<FlagType>('static')
+const flagValue = ref('')
+const flagRegex = ref('')
+const flagPrefix = ref('')
 
-onMounted(async () => {
+const flagConfigSummary = computed(() => summarizeFlagConfig(challenge.value?.flag_config))
+const flagDraftSummary = computed(() =>
+  summarizeFlagConfig({
+    configured: true,
+    flag_type: flagType.value,
+    flag_regex: flagRegex.value.trim() || undefined,
+    flag_prefix: flagPrefix.value.trim() || undefined,
+  })
+)
+
+function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): string {
+  if (!config?.configured) return '未配置'
+  switch (config.flag_type) {
+    case 'static':
+      return '静态 Flag'
+    case 'dynamic':
+      return `动态 Flag / 前缀 ${config.flag_prefix || 'flag'}`
+    case 'regex':
+      return `正则匹配 / ${config.flag_regex || '未填写'}`
+    case 'manual_review':
+      return '人工审核'
+    default:
+      return '未配置'
+  }
+}
+
+function hydrateFlagForm(item: AdminChallengeListItem | null): void {
+  const config = item?.flag_config
+  flagType.value = config?.flag_type ?? 'static'
+  flagValue.value = ''
+  flagRegex.value = config?.flag_regex ?? ''
+  flagPrefix.value = config?.flag_prefix ?? ''
+}
+
+async function loadChallenge() {
+  const id = route.params.id as string
   try {
-    challenge.value = await getChallengeDetail(route.params.id as string)
+    challenge.value = await getChallengeDetail(id)
+    hydrateFlagForm(challenge.value)
   } catch (error) {
     toast.error('加载失败')
     setTimeout(() => router.back(), 1500)
   } finally {
     loading.value = false
   }
+}
+
+async function saveFlagConfig() {
+  const id = route.params.id as string
+  const payload: AdminChallengeFlagPayload = {
+    flag_type: flagType.value,
+  }
+
+  if (flagType.value === 'static') {
+    if (!flagValue.value.trim()) {
+      toast.error('请填写静态 Flag')
+      return
+    }
+    payload.flag = flagValue.value.trim()
+  }
+
+  if (flagType.value === 'dynamic') {
+    if (!flagPrefix.value.trim()) {
+      toast.error('请填写动态 Flag 前缀')
+      return
+    }
+    payload.flag_prefix = flagPrefix.value.trim()
+  }
+
+  if (flagType.value === 'regex') {
+    if (!flagRegex.value.trim()) {
+      toast.error('请填写正则表达式')
+      return
+    }
+    payload.flag_regex = flagRegex.value.trim()
+    if (flagPrefix.value.trim()) {
+      payload.flag_prefix = flagPrefix.value.trim()
+    }
+  }
+
+  saving.value = true
+  try {
+    await configureChallengeFlag(id, payload)
+    toast.success('Flag 配置已保存')
+    loading.value = true
+    await loadChallenge()
+  } catch {
+    toast.error('保存 Flag 配置失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(() => {
+  void loadChallenge()
 })
 </script>
 
@@ -189,6 +406,50 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.75);
   color: var(--journal-ink);
 }
+
+.flag-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  background: rgba(37, 99, 235, 0.08);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--journal-accent);
+}
+
+.flag-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.flag-field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.flag-field-input {
+  min-height: 2.9rem;
+  border: 1px solid var(--journal-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.8rem 1rem;
+  font-size: 0.92rem;
+  color: var(--journal-ink);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.flag-field-input:focus {
+  border-color: rgba(37, 99, 235, 0.42);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
 :global([data-theme='dark']) .journal-hero,
 :global([data-theme='dark']) .journal-panel {
   background:
@@ -207,5 +468,4 @@ onMounted(async () => {
   --journal-border: rgba(71, 85, 105, 0.78);
   --journal-surface: rgba(15, 23, 42, 0.7);
 }
-
 </style>

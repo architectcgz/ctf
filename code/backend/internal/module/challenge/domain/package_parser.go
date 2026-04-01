@@ -76,9 +76,9 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 
 	flagType := strings.ToLower(strings.TrimSpace(manifest.Flag.Type))
 	switch flagType {
-	case model.FlagTypeStatic, model.FlagTypeDynamic:
+	case model.FlagTypeStatic, model.FlagTypeDynamic, model.FlagTypeRegex, model.FlagTypeManualReview:
 	default:
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static 或 dynamic"))
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex 或 manual_review"))
 	}
 
 	flagPrefix := strings.TrimSpace(manifest.Flag.Prefix)
@@ -87,8 +87,8 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 	}
 
 	flagValue := strings.TrimSpace(manifest.Flag.Value)
-	if flagType == model.FlagTypeStatic && flagValue == "" {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("静态题目必须提供 flag.value"))
+	if (flagType == model.FlagTypeStatic || flagType == model.FlagTypeRegex) && flagValue == "" {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("static/regex 题目必须提供 flag.value"))
 	}
 
 	points := manifest.Meta.Points

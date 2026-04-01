@@ -26,7 +26,7 @@ vi.mock('@/api/challenge', () => challengeApiMocks)
 vi.mock('@/api/instance', () => instanceApiMocks)
 
 describe('ChallengeDetail', () => {
-  let router: any
+  let router: ReturnType<typeof createRouter>
 
   beforeEach(() => {
     router = createRouter({
@@ -178,6 +178,39 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('草稿')
   })
 
+  it('manual review 提交后应显示待审核反馈', async () => {
+    challengeApiMocks.submitFlag.mockResolvedValue({
+      is_correct: false,
+      status: 'pending_review',
+      message: '答案已提交，等待教师审核',
+      submitted_at: '2026-03-12T01:00:00.000Z',
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.find('input[placeholder="flag{...}"]')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+
+    await flagInput.setValue('exploit chain answer')
+    await submitButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'exploit chain answer')
+    expect(wrapper.text()).toContain('答案已提交，等待教师审核')
+    expect(wrapper.text()).not.toContain('已完成 ✓')
+  })
+
   it('启动靶机后应停留在题目页并显示实例卡片', async () => {
     await router.push('/challenges/1')
     await router.isReady()
@@ -220,23 +253,21 @@ describe('ChallengeDetail', () => {
       progress: 18,
     })
     instanceApiMocks.getMyInstances.mockReset()
-    instanceApiMocks.getMyInstances
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([
-        {
-          id: 'inst-1',
-          challenge_id: 1,
-          status: 'running',
-          access_url: 'http://127.0.0.1:30000',
-          flag_type: 'static',
-          expires_at: '2099-01-01T00:00:00Z',
-          remaining_extends: 2,
-          created_at: '2026-03-12T00:00:00.000Z',
-          challenge_title: 'Test Challenge',
-          category: 'web',
-          difficulty: 'easy',
-        },
-      ])
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 'inst-1',
+        challenge_id: 1,
+        status: 'running',
+        access_url: 'http://127.0.0.1:30000',
+        flag_type: 'static',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 2,
+        created_at: '2026-03-12T00:00:00.000Z',
+        challenge_title: 'Test Challenge',
+        category: 'web',
+        difficulty: 'easy',
+      },
+    ])
 
     await router.push('/challenges/1')
     await router.isReady()

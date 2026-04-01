@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -576,6 +577,10 @@ func configureImportedFlag(
 		return configureImportedStaticFlag(tx, challengeID, prefix, value)
 	case model.FlagTypeDynamic:
 		return configureImportedDynamicFlag(tx, challengeID, prefix)
+	case model.FlagTypeRegex:
+		return configureImportedRegexFlag(tx, challengeID, prefix, value)
+	case model.FlagTypeManualReview:
+		return configureImportedManualReviewFlag(tx, challengeID, prefix)
 	default:
 		return errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
 	}
@@ -592,6 +597,7 @@ func configureImportedStaticFlag(tx *gorm.DB, challengeID int64, prefix, value s
 			"flag_type":   model.FlagTypeStatic,
 			"flag_salt":   salt,
 			"flag_hash":   crypto.HashStaticFlag(value, salt),
+			"flag_regex":  "",
 			"flag_prefix": prefix,
 			"updated_at":  time.Now(),
 		}).Error
@@ -604,6 +610,37 @@ func configureImportedDynamicFlag(tx *gorm.DB, challengeID int64, prefix string)
 			"flag_type":   model.FlagTypeDynamic,
 			"flag_salt":   "",
 			"flag_hash":   "",
+			"flag_regex":  "",
+			"flag_prefix": prefix,
+			"updated_at":  time.Now(),
+		}).Error
+}
+
+func configureImportedRegexFlag(tx *gorm.DB, challengeID int64, prefix, value string) error {
+	compiled, err := regexp.Compile(strings.TrimSpace(value))
+	if err != nil {
+		return errcode.ErrInvalidParams.WithCause(fmt.Errorf("regex flag 无效: %w", err))
+	}
+	return tx.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(map[string]any{
+			"flag_type":   model.FlagTypeRegex,
+			"flag_salt":   "",
+			"flag_hash":   "",
+			"flag_regex":  compiled.String(),
+			"flag_prefix": prefix,
+			"updated_at":  time.Now(),
+		}).Error
+}
+
+func configureImportedManualReviewFlag(tx *gorm.DB, challengeID int64, prefix string) error {
+	return tx.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(map[string]any{
+			"flag_type":   model.FlagTypeManualReview,
+			"flag_salt":   "",
+			"flag_hash":   "",
+			"flag_regex":  "",
 			"flag_prefix": prefix,
 			"updated_at":  time.Now(),
 		}).Error

@@ -21,6 +21,9 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentTimeline: vi.fn(),
   getStudentEvidence: vi.fn(),
   getTeacherWriteupSubmissions: vi.fn(),
+  getTeacherManualReviewSubmissions: vi.fn(),
+  getTeacherManualReviewSubmission: vi.fn(),
+  reviewTeacherManualReviewSubmission: vi.fn(),
 }))
 
 vi.mock('vue-router', async () => {
@@ -165,6 +168,51 @@ describe('TeacherStudentAnalysis', () => {
       page: 1,
       page_size: 6,
     })
+    teacherApiMocks.getTeacherManualReviewSubmissions.mockResolvedValue({
+      list: [
+        {
+          id: 'manual-1',
+          user_id: 'stu-1',
+          student_username: 'alice',
+          challenge_id: '12',
+          challenge_title: 'misc-essay',
+          answer_preview: '先提交利用思路，再说明证据链。',
+          review_status: 'pending',
+          submitted_at: '2026-03-11T12:00:00Z',
+          updated_at: '2026-03-11T12:10:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 6,
+    })
+    teacherApiMocks.getTeacherManualReviewSubmission.mockResolvedValue({
+      id: 'manual-1',
+      user_id: 'stu-1',
+      student_username: 'alice',
+      challenge_id: '12',
+      challenge_title: 'misc-essay',
+      answer: '完整答案正文',
+      is_correct: false,
+      score: 0,
+      review_status: 'pending',
+      submitted_at: '2026-03-11T12:00:00Z',
+      updated_at: '2026-03-11T12:10:00Z',
+    })
+    teacherApiMocks.reviewTeacherManualReviewSubmission.mockResolvedValue({
+      id: 'manual-1',
+      user_id: 'stu-1',
+      student_username: 'alice',
+      challenge_id: '12',
+      challenge_title: 'misc-essay',
+      answer: '完整答案正文',
+      is_correct: true,
+      score: 100,
+      review_status: 'approved',
+      review_comment: '通过',
+      submitted_at: '2026-03-11T12:00:00Z',
+      updated_at: '2026-03-11T12:20:00Z',
+    })
   })
 
   it('应该展示当前学员分析内容', async () => {
@@ -189,6 +237,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
     expect(wrapper.text()).toContain('攻防证据链')
     expect(wrapper.text()).toContain('Writeup 状态')
+    expect(wrapper.text()).toContain('人工审核题')
+    expect(wrapper.text()).toContain('misc-essay')
     expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('优秀')
     expect(wrapper.text()).toContain('总事件数')
@@ -198,6 +248,10 @@ describe('TeacherStudentAnalysis', () => {
 
     expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
     expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
+      student_id: 'stu-1',
+      page_size: 6,
+    })
+    expect(teacherApiMocks.getTeacherManualReviewSubmissions).toHaveBeenCalledWith({
       student_id: 'stu-1',
       page_size: 6,
     })

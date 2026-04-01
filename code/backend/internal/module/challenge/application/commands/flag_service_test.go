@@ -98,3 +98,83 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 		t.Fatal("expected dynamic flag validation success")
 	}
 }
+
+func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Challenge{
+		ID:        3,
+		Title:     "regex-flag",
+		Status:    model.ChallengeStatusDraft,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+
+	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("r", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	if err := service.ConfigureRegexFlag(3, `^flag\{user-[0-9]{3}\}$`, "flag"); err != nil {
+		t.Fatalf("ConfigureRegexFlag() error = %v", err)
+	}
+
+	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("r", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService(query) error = %v", err)
+	}
+
+	ok, err := queryService.ValidateFlag(0, 3, "flag{user-123}", "")
+	if err != nil {
+		t.Fatalf("ValidateFlag() error = %v", err)
+	}
+	if !ok {
+		t.Fatal("expected regex flag validation success")
+	}
+
+	cfg, err := queryService.GetFlagConfig(3)
+	if err != nil {
+		t.Fatalf("GetFlagConfig() error = %v", err)
+	}
+	if cfg.FlagType != model.FlagTypeRegex || cfg.FlagRegex != `^flag\{user-[0-9]{3}\}$` || !cfg.Configured {
+		t.Fatalf("unexpected regex flag config: %+v", cfg)
+	}
+}
+
+func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Challenge{
+		ID:        4,
+		Title:     "manual-review",
+		Status:    model.ChallengeStatusDraft,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+
+	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("m", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	if err := service.ConfigureManualReviewFlag(4); err != nil {
+		t.Fatalf("ConfigureManualReviewFlag() error = %v", err)
+	}
+
+	cfg, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("m", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService(query) error = %v", err)
+	}
+
+	flagCfg, err := cfg.GetFlagConfig(4)
+	if err != nil {
+		t.Fatalf("GetFlagConfig() error = %v", err)
+	}
+	if flagCfg.FlagType != model.FlagTypeManualReview || !flagCfg.Configured {
+		t.Fatalf("unexpected manual review flag config: %+v", flagCfg)
+	}
+}

@@ -139,7 +139,7 @@ export type InstanceStatus =
   | 'destroyed'
   | 'failed'
   | 'crashed'
-export type FlagType = 'static' | 'dynamic' | 'regex'
+export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
 
 export interface InstanceData {
   id: ID
@@ -170,9 +170,47 @@ export interface InstanceListItem extends InstanceData {
 
 export interface SubmitFlagData {
   is_correct: boolean
+  status: 'correct' | 'incorrect' | 'pending_review'
   message: string
   points?: number
   submitted_at: ISODateTime
+}
+
+export type TeacherManualReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface TeacherManualReviewSubmissionItemData {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  answer_preview: string
+  review_status: TeacherManualReviewStatus
+  submitted_at: ISODateTime
+  reviewed_at?: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface TeacherManualReviewSubmissionDetailData {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  answer: string
+  is_correct: boolean
+  score: number
+  review_status: TeacherManualReviewStatus
+  reviewed_by?: ID
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  submitted_at: ISODateTime
+  updated_at: ISODateTime
+  reviewer_name?: string
 }
 
 export interface UnlockHintData {
@@ -790,7 +828,8 @@ export interface AdminChallengeListItem {
   hints?: AdminChallengeHint[]
   flag_config?: {
     configured: boolean
-    flag_type?: Extract<FlagType, 'static' | 'dynamic'>
+    flag_type?: FlagType
+    flag_regex?: string
     flag_prefix?: string
   }
 }

@@ -5,12 +5,15 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   getClasses,
   getClassStudents,
+  getTeacherManualReviewSubmission,
+  getTeacherManualReviewSubmissions,
   getStudentEvidence,
   getStudentProgress,
   getStudentRecommendations,
   getStudentSkillProfile,
   getStudentTimeline,
   getTeacherWriteupSubmissions,
+  reviewTeacherManualReviewSubmission,
 } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -18,6 +21,8 @@ import type {
   SkillProfileData,
   TeacherEvidenceData,
   TeacherClassItem,
+  TeacherManualReviewSubmissionDetailData,
+  TeacherManualReviewSubmissionItemData,
   TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
@@ -44,6 +49,10 @@ const recommendations = ref<RecommendationItem[]>([])
 const timeline = ref<TimelineEvent[]>([])
 const evidence = ref<TeacherEvidenceData | null>(null)
 const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
+const manualReviewSubmissions = ref<TeacherManualReviewSubmissionItemData[]>([])
+const activeManualReview = ref<TeacherManualReviewSubmissionDetailData | null>(null)
+const manualReviewLoading = ref(false)
+const manualReviewSaving = ref(false)
 
 const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
 const solvedRate = computed(() => {
@@ -94,6 +103,8 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     timeline.value = []
     evidence.value = null
     writeupSubmissions.value = []
+    manualReviewSubmissions.value = []
+    activeManualReview.value = null
     selectedStudentId.value = ''
     return
   }
@@ -102,13 +113,14 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
   selectedStudentId.value = studentId
 
   try {
-    const [nextProgress, nextProfile, nextRecommendations, nextTimeline, nextEvidence, nextWriteups] = await Promise.all([
+    const [nextProgress, nextProfile, nextRecommendations, nextTimeline, nextEvidence, nextWriteups, nextManualReviews] = await Promise.all([
       getStudentProgress(studentId),
       getStudentSkillProfile(studentId),
       getStudentRecommendations(studentId),
       getStudentTimeline(studentId),
       getStudentEvidence(studentId),
       getTeacherWriteupSubmissions({ student_id: studentId, page_size: 6 }),
+      getTeacherManualReviewSubmissions({ student_id: studentId, page_size: 6 }),
     ])
 
     progress.value = nextProgress
@@ -117,8 +129,43 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
     timeline.value = nextTimeline
     evidence.value = nextEvidence
     writeupSubmissions.value = nextWriteups.list
+    manualReviewSubmissions.value = nextManualReviews.list
+    activeManualReview.value = null
   } finally {
     loadingDetails.value = false
+  }
+}
+
+async function openManualReview(submissionId: string): Promise<void> {
+  manualReviewLoading.value = true
+  try {
+    activeManualReview.value = await getTeacherManualReviewSubmission(submissionId)
+  } finally {
+    manualReviewLoading.value = false
+  }
+}
+
+async function reviewManualReview(payload: {
+  submissionId: string
+  reviewStatus: 'approved' | 'rejected'
+  reviewComment?: string
+}): Promise<void> {
+  manualReviewSaving.value = true
+  try {
+    activeManualReview.value = await reviewTeacherManualReviewSubmission(payload.submissionId, {
+      review_status: payload.reviewStatus,
+      review_comment: payload.reviewComment,
+    })
+    const currentStudentId = studentIdFromRoute()
+    if (currentStudentId) {
+      const nextManualReviews = await getTeacherManualReviewSubmissions({
+        student_id: currentStudentId,
+        page_size: 6,
+      })
+      manualReviewSubmissions.value = nextManualReviews.list
+    }
+  } finally {
+    manualReviewSaving.value = false
   }
 }
 
@@ -185,6 +232,10 @@ onMounted(() => {
     :timeline="timeline"
     :evidence="evidence"
     :writeup-submissions="writeupSubmissions"
+    :manual-review-submissions="manualReviewSubmissions"
+    :active-manual-review="activeManualReview"
+    :manual-review-loading="manualReviewLoading"
+    :manual-review-saving="manualReviewSaving"
     :solved-rate="solvedRate"
     :weak-dimensions="weakDimensions"
     @retry="initialize"
@@ -194,5 +245,7 @@ onMounted(() => {
     @select-class="selectClass"
     @select-student="selectStudent"
     @open-challenge="openChallenge"
+    @open-manual-review="openManualReview"
+    @review-manual-review="reviewManualReview"
   />
 </template>

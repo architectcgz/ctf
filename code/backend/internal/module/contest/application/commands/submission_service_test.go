@@ -135,6 +135,35 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 	}
 }
 
+func TestSubmissionServiceSubmitFlagInContestRejectsManualReviewChallenges(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(3)
+	challengeID := int64(103)
+	teamID := int64(31)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, 3001, "Manual", now)
+
+	flagService, err := challengecmd.NewFlagService(challengeinfra.NewRepository(db), "0123456789abcdef0123456789abcdef")
+	if err != nil {
+		t.Fatalf("new flag service: %v", err)
+	}
+	if err := flagService.ConfigureManualReviewFlag(challengeID); err != nil {
+		t.Fatalf("configure manual review flag: %v", err)
+	}
+
+	_, err = service.SubmitFlagInContest(context.Background(), 3001, contestID, challengeID, "answer text")
+	if err == nil {
+		t.Fatal("expected manual review challenge submit in contest to fail")
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %v", err)
+	}
+}
+
 func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *testing.T) {
 	service, redisClient, db := newContestSubmissionTestService(t)
 

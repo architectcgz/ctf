@@ -200,3 +200,81 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 		t.Fatalf("cleanup should not be called when startup failed before creating runtime details")
 	}
 }
+
+func TestChallengeSelfCheckFailsOnInvalidRegexFlag(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &model.Challenge{
+		Title:      "regex-invalid",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		FlagType:   model.FlagTypeRegex,
+		FlagRegex:  "[",
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(nil, repo, imageRepo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{}, zap.NewNop())
+
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
+	}
+	if resp.Precheck.Passed {
+		t.Fatalf("expected precheck failed for invalid regex, got %+v", resp.Precheck)
+	}
+	if len(resp.Precheck.Steps) == 0 || resp.Precheck.Steps[0].Passed {
+		t.Fatalf("expected flag_config step failure, got %+v", resp.Precheck.Steps)
+	}
+}
+
+func TestChallengeSelfCheckManualReviewSkipsFlagValidationFailure(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	image := &model.Image{
+		Name:   "ctf/web-manual",
+		Tag:    "latest",
+		Status: model.ImageStatusAvailable,
+	}
+	if err := db.Create(image).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	challenge := &model.Challenge{
+		Title:      "manual-review",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    image.ID,
+		FlagType:   model.FlagTypeManualReview,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{
+		containerResultAccessURL: "http://127.0.0.1:30002",
+		containerResultDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-manual"}},
+			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-manual"}},
+		},
+	}
+	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
+
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
+	}
+	if !resp.Precheck.Passed {
+		t.Fatalf("expected manual review challenge precheck passed, got %+v", resp.Precheck)
+	}
+	if !resp.Runtime.Passed {
+		t.Fatalf("expected manual review challenge runtime passed, got %+v", resp.Runtime)
+	}
+}

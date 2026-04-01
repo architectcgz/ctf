@@ -217,6 +217,62 @@ func TestChallengeImportGetRejectsDifferentAdmin(t *testing.T) {
 	}
 }
 
+func TestChallengeImportCommitSupportsRegexFlag(t *testing.T) {
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	router := buildChallengeImportRouter(service)
+
+	commit := previewAndCommitChallengeImport(
+		t,
+		router,
+		buildChallengeImportArchiveWithFlagConfig(t, "regex", `^flag\{import-[0-9]{2}\}$`, "flag"),
+	)
+	if commit.Challenge == nil {
+		t.Fatal("expected imported challenge response")
+	}
+
+	var stored model.Challenge
+	if err := db.First(&stored, commit.Challenge.ID).Error; err != nil {
+		t.Fatalf("load imported challenge: %v", err)
+	}
+	if stored.FlagType != model.FlagTypeRegex || stored.FlagRegex != `^flag\{import-[0-9]{2}\}$` {
+		t.Fatalf("expected regex flag persisted, got %+v", stored)
+	}
+}
+
+func TestChallengeImportCommitSupportsManualReviewFlag(t *testing.T) {
+	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
+	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
+
+	db := testsupport.SetupTestDB(t)
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := challengecmd.NewChallengeService(db, repo, imageRepo, nil, nil, challengecmd.SelfCheckConfig{}, zap.NewNop())
+	router := buildChallengeImportRouter(service)
+
+	commit := previewAndCommitChallengeImport(
+		t,
+		router,
+		buildChallengeImportArchiveWithFlagConfig(t, "manual_review", "", ""),
+	)
+	if commit.Challenge == nil {
+		t.Fatal("expected imported challenge response")
+	}
+
+	var stored model.Challenge
+	if err := db.First(&stored, commit.Challenge.ID).Error; err != nil {
+		t.Fatalf("load imported challenge: %v", err)
+	}
+	if stored.FlagType != model.FlagTypeManualReview {
+		t.Fatalf("expected manual review flag persisted, got %+v", stored)
+	}
+}
+
 func TestChallengeImportPreviewRejectsArchiveWithTooManyFiles(t *testing.T) {
 	t.Setenv("CHALLENGE_IMPORT_PREVIEW_DIR", t.TempDir())
 	t.Setenv("CHALLENGE_ATTACHMENT_STORAGE_DIR", t.TempDir())
@@ -290,11 +346,30 @@ func buildChallengeImportArchive(t *testing.T) []byte {
 	return buildChallengeImportArchiveForSlug(t, "web-sqli-101", "SQL Injection 101", 100)
 }
 
+func buildChallengeImportArchiveWithFlagConfig(t *testing.T, flagType, flagValue, flagPrefix string) []byte {
+	t.Helper()
+
+	return buildChallengeImportArchiveForSlugAndFlag(t, "web-sqli-101", "SQL Injection 101", 100, flagType, flagValue, flagPrefix)
+}
+
 func buildChallengeImportArchiveForSlug(t *testing.T, slug, title string, points int) []byte {
+	t.Helper()
+
+	return buildChallengeImportArchiveForSlugAndFlag(t, slug, title, points, "static", "flag{sqli_101}", "flag")
+}
+
+func buildChallengeImportArchiveForSlugAndFlag(t *testing.T, slug, title string, points int, flagType, flagValue, flagPrefix string) []byte {
 	t.Helper()
 
 	buffer := &bytes.Buffer{}
 	archive := zip.NewWriter(buffer)
+	flagBlock := "flag:\n  type: " + flagType + "\n"
+	if flagValue != "" {
+		flagBlock += "  value: " + flagValue + "\n"
+	}
+	if flagPrefix != "" {
+		flagBlock += "  prefix: " + flagPrefix + "\n"
+	}
 	files := map[string]string{
 		slug + `/challenge.yml`: `
 api_version: v1
@@ -312,10 +387,7 @@ content:
       name: web-sqli-101.zip
     - path: attachments/readme.txt
       name: readme.txt
-flag:
-  type: static
-  value: flag{sqli_101}
-  prefix: flag
+` + flagBlock + `
 hints:
   - level: 1
     title: Hint 1
