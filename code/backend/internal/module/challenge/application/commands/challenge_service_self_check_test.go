@@ -73,7 +73,7 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	repo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	probe := &fakeChallengeRuntimeProbe{}
-	service := NewChallengeService(repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -129,7 +129,7 @@ func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
 		},
 	}
-	service := NewChallengeService(repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {
@@ -184,7 +184,7 @@ func TestChallengeSelfCheckRuntimeStartupFailure(t *testing.T) {
 	probe := &fakeChallengeRuntimeProbe{
 		containerResultErr: errors.New("docker start failed"),
 	}
-	service := NewChallengeService(repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
+	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
 
 	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
 	if err != nil {

@@ -104,6 +104,7 @@ func buildChallengeImageHandler(root *Root, deps challengeModuleDeps) (*challeng
 
 func buildChallengeCoreHandler(root *Root, deps challengeModuleDeps) *challengehttp.Handler {
 	challengeCommandService := challengecmd.NewChallengeService(
+		root.DB(),
 		deps.challengeCommandRepo,
 		deps.imageRepo,
 		deps.topologyRepo,

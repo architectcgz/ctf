@@ -1,0 +1,33 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-hello-01
+  title: "Web-01 Hello Container"
+  category: web
+  difficulty: easy
+  points: 100
+  tags:
+    - kp:container-basics
+    - stack:python
+    - stack:flask
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 10
+    content: "先确认服务端口与路由是否正常。"
+
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/web-hello-01:20260312"
+
