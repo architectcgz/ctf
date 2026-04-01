@@ -299,6 +299,55 @@ func (s *QueryService) GetStudentTimeline(ctx context.Context, requesterID int64
 	return &dto.TimelineResp{Events: toTimelineEvents(events)}, nil
 }
 
+func (s *QueryService) GetStudentEvidence(ctx context.Context, requesterID int64, requesterRole string, studentID int64, query *dto.TeacherEvidenceQuery) (*dto.TeacherEvidenceResp, error) {
+	student, err := s.getAccessibleStudent(ctx, requesterID, requesterRole, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var challengeID *int64
+	if query != nil && query.ChallengeID != nil && *query.ChallengeID > 0 {
+		challengeID = query.ChallengeID
+	}
+
+	events, err := s.repo.GetStudentEvidence(ctx, student.ID, challengeID)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := &dto.TeacherEvidenceResp{
+		Events: make([]dto.TeacherEvidenceEvent, 0, len(events)),
+	}
+	for _, event := range events {
+		resp.Events = append(resp.Events, dto.TeacherEvidenceEvent{
+			Type:        event.Type,
+			ChallengeID: event.ChallengeID,
+			Title:       event.Title,
+			Detail:      event.Detail,
+			Timestamp:   event.Timestamp,
+			Meta:        event.Meta,
+		})
+		resp.Summary.TotalEvents++
+		switch event.Type {
+		case "instance_proxy_request":
+			resp.Summary.ProxyRequestCount++
+		case "challenge_submission":
+			resp.Summary.SubmitCount++
+			if isSuccess, ok := event.Meta["is_correct"].(bool); ok && isSuccess {
+				resp.Summary.SuccessCount++
+			}
+		}
+		if resp.Summary.ChallengeID == 0 {
+			resp.Summary.ChallengeID = event.ChallengeID
+		}
+	}
+	if challengeID != nil {
+		resp.Summary.ChallengeID = *challengeID
+	}
+
+	return resp, nil
+}
+
 func (s *QueryService) getAccessibleStudent(ctx context.Context, requesterID int64, requesterRole string, studentID int64) (*model.User, error) {
 	student, err := s.repo.FindUserByID(ctx, studentID)
 	if err != nil {

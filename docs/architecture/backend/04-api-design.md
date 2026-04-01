@@ -541,6 +541,7 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `GET` | `/api/v1/users/me/skill-profile` | S | 我的能力画像（雷达图数据） |
 | `GET` | `/api/v1/users/me/recommendations` | S | 个性化推荐靶场 |
 | `GET` | `/api/v1/users/:id/skill-profile` | T | 教师查看指定学员能力画像 |
+| `GET` | `/api/v1/teacher/students/:id/evidence` | T,A | 教师/管理员查看学员攻防证据链与复盘摘要 |
 | `GET` | `/api/v1/classes/:id/statistics` | T | 班级整体统计数据 |
 | `POST` | `/api/v1/reports/personal` | S,T | 导出个人能力报告（PDF） |
 | `POST` | `/api/v1/reports/class` | T | 导出班级报告（PDF） |
