@@ -560,6 +560,15 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.GET("/challenges/attachments/*path", deps.challenge.Handler.DownloadAttachment)
 	protected.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetPublished)
+	protected.POST("/challenges/:id/writeup-submissions",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "submission_writeup",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.UpsertSubmission,
+	)
+	protected.GET("/challenges/:id/writeup-submissions/me", deps.challenge.WriteupHandler.GetMySubmission)
 	protected.POST("/challenges/:id/instances",
 		audit(middleware.AuditOptions{
 			Action:        model.AuditActionCreate,
@@ -643,6 +652,16 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
 	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
 	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
+	teacherOrAbove.GET("/writeup-submissions", deps.challenge.WriteupHandler.ListTeacherSubmissions)
+	teacherOrAbove.GET("/writeup-submissions/:id", deps.challenge.WriteupHandler.GetTeacherSubmission)
+	teacherOrAbove.PUT("/writeup-submissions/:id/review",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "submission_writeup_review",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.ReviewSubmission,
+	)
 
 	protected.POST("/reports/personal", deps.assessment.ReportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", deps.assessment.ReportHandler.GetReportStatus)

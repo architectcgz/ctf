@@ -70,6 +70,134 @@
             </button>
           </div>
 
+          <div class="challenge-panel writeup-workbench p-6">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div class="max-w-2xl space-y-3">
+                <div class="journal-eyebrow">Writeup Studio</div>
+                <div>
+                  <h2 class="text-lg font-semibold text-[var(--journal-ink)]">解题过程复盘</h2>
+                  <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
+                    把思路、关键利用步骤和踩坑点整理成一份自己的 writeup。草稿可反复保存，正式提交后教师会在分析页看到你的状态与评语。
+                  </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <span class="writeup-status-pill writeup-status-pill--primary">
+                    {{ submissionStatusLabel(myWriteup?.submission_status) }}
+                  </span>
+                  <span
+                    v-if="myWriteup"
+                    class="writeup-status-pill"
+                    :class="reviewStatusClass(myWriteup.review_status)"
+                  >
+                    {{ reviewStatusLabel(myWriteup.review_status) }}
+                  </span>
+                  <span
+                    v-if="myWriteup?.submitted_at"
+                    class="writeup-status-pill writeup-status-pill--muted"
+                  >
+                    提交于 {{ formatWriteupTime(myWriteup.submitted_at) }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="writeup-side-note">
+                <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-accent)]">
+                  Review Focus
+                </div>
+                <div class="mt-3 text-sm leading-6 text-[var(--journal-ink)]">
+                  重点说明你如何定位突破口、怎样验证利用链、哪里走过弯路。
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+              <label class="writeup-field">
+                <span class="writeup-field-label">标题</span>
+                <input
+                  v-model="writeupTitle"
+                  type="text"
+                  maxlength="256"
+                  placeholder="例如：从回显异常到拿到 flag 的完整链路"
+                  class="challenge-input w-full rounded-2xl border px-4 py-3 text-sm transition-colors focus:outline-none"
+                />
+              </label>
+
+              <div class="writeup-meta-grid">
+                <div class="writeup-meta-card">
+                  <div class="writeup-meta-label">当前状态</div>
+                  <div class="writeup-meta-value">{{ submissionStatusLabel(myWriteup?.submission_status) }}</div>
+                </div>
+                <div class="writeup-meta-card">
+                  <div class="writeup-meta-label">评阅结果</div>
+                  <div class="writeup-meta-value">{{ reviewStatusLabel(myWriteup?.review_status) }}</div>
+                </div>
+              </div>
+            </div>
+
+            <label class="writeup-field mt-4 block">
+              <span class="writeup-field-label">正文</span>
+              <textarea
+                v-model="writeupContent"
+                rows="10"
+                placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
+                class="challenge-input writeup-textarea w-full rounded-[24px] border px-4 py-4 text-sm leading-7 transition-colors focus:outline-none"
+              />
+            </label>
+
+            <div
+              v-if="myWriteup?.review_comment"
+              class="writeup-feedback-panel mt-5"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-accent)]">
+                    Teacher Feedback
+                  </div>
+                  <div class="mt-2 text-sm text-[var(--journal-muted)]">
+                    {{ reviewStatusLabel(myWriteup.review_status) }}
+                  </div>
+                </div>
+                <div
+                  v-if="myWriteup.reviewed_at"
+                  class="text-xs text-[var(--journal-muted)]"
+                >
+                  {{ formatWriteupTime(myWriteup.reviewed_at) }}
+                </div>
+              </div>
+              <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--journal-ink)]">
+                {{ myWriteup.review_comment }}
+              </p>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="text-sm text-[var(--journal-muted)]">
+                {{
+                  submissionLoading
+                    ? '正在同步你的 writeup...'
+                    : myWriteup?.updated_at
+                      ? `最近更新：${formatWriteupTime(myWriteup.updated_at)}`
+                      : '还没有提交记录，可以先保存草稿。'
+                }}
+              </div>
+              <div class="flex flex-wrap gap-3">
+                <button
+                  :disabled="submissionLoading || submissionSaving !== null"
+                  class="challenge-btn-outline"
+                  @click="saveWriteup('draft')"
+                >
+                  {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
+                </button>
+                <button
+                  :disabled="submissionLoading || submissionSaving !== null"
+                  class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                  @click="saveWriteup('submitted')"
+                >
+                  {{ submissionSaving === 'submitted' ? '提交中...' : '正式提交' }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="challenge-panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -215,7 +343,9 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   downloadAttachment as downloadChallengeAttachment,
   getChallengeDetail,
+  getMyChallengeWriteupSubmission,
   getChallengeWriteup,
+  upsertChallengeWriteupSubmission,
   submitFlag,
   unlockHint,
 } from '@/api/challenge'
@@ -228,6 +358,9 @@ import type {
   ChallengeDifficulty,
   ChallengeDetailData,
   ChallengeWriteupData,
+  SubmissionWriteupData,
+  SubmissionWriteupReviewStatus,
+  SubmissionWriteupStatus,
 } from '@/api/contracts'
 
 const route = useRoute()
@@ -242,6 +375,11 @@ const submitting = ref(false)
 const writeupVisible = ref(false)
 const writeupLoading = ref(false)
 const writeup = ref<ChallengeWriteupData | null>(null)
+const myWriteup = ref<SubmissionWriteupData | null>(null)
+const submissionLoading = ref(false)
+const submissionSaving = ref<SubmissionWriteupStatus | null>(null)
+const writeupTitle = ref('')
+const writeupContent = ref('')
 const flagInput = ref('')
 const submitResult = ref<{ success: boolean; message: string } | null>(null)
 const unlockingLevel = ref<number | null>(null)
@@ -273,6 +411,11 @@ const sanitizedWriteup = computed(() => {
 
 const needTarget = computed(() => challenge.value?.need_target ?? true)
 
+function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
+  writeupTitle.value = item?.title ?? ''
+  writeupContent.value = item?.content ?? ''
+}
+
 async function loadChallenge() {
   const id = challengeId.value
   loading.value = true
@@ -283,6 +426,19 @@ async function loadChallenge() {
     router.push('/challenges')
   } finally {
     loading.value = false
+  }
+}
+
+async function loadMyWriteupSubmission() {
+  if (!challengeId.value) return
+  submissionLoading.value = true
+  try {
+    myWriteup.value = await getMyChallengeWriteupSubmission(challengeId.value)
+    hydrateSubmissionForm(myWriteup.value)
+  } catch {
+    toast.error('加载个人 writeup 失败')
+  } finally {
+    submissionLoading.value = false
   }
 }
 
@@ -377,6 +533,77 @@ async function downloadAttachment() {
   }
 }
 
+async function saveWriteup(status: SubmissionWriteupStatus) {
+  if (!challenge.value) return
+  if (!writeupTitle.value.trim() || !writeupContent.value.trim()) {
+    toast.error('请先补全 writeup 标题和正文')
+    return
+  }
+  submissionSaving.value = status
+  try {
+    const saved = await upsertChallengeWriteupSubmission(challenge.value.id, {
+      title: writeupTitle.value.trim(),
+      content: writeupContent.value.trim(),
+      submission_status: status,
+    })
+    myWriteup.value = saved
+    hydrateSubmissionForm(saved)
+    if (saved.submission_status === 'submitted' && status === 'draft') {
+      toast.success('writeup 已更新')
+    } else {
+      toast.success(status === 'submitted' ? 'writeup 已正式提交' : '草稿已保存')
+    }
+  } catch {
+    toast.error(status === 'submitted' ? '提交 writeup 失败' : '保存草稿失败')
+  } finally {
+    submissionSaving.value = null
+  }
+}
+
+function submissionStatusLabel(status?: SubmissionWriteupStatus): string {
+  if (status === 'submitted') return '已提交'
+  if (status === 'draft') return '草稿'
+  return '未开始'
+}
+
+function reviewStatusLabel(status?: SubmissionWriteupReviewStatus): string {
+  switch (status) {
+    case 'reviewed':
+      return '已评阅'
+    case 'excellent':
+      return '优秀'
+    case 'needs_revision':
+      return '待修改'
+    case 'pending':
+      return '待评阅'
+    default:
+      return '未评阅'
+  }
+}
+
+function reviewStatusClass(status?: SubmissionWriteupReviewStatus): string {
+  switch (status) {
+    case 'excellent':
+      return 'writeup-status-pill--success'
+    case 'needs_revision':
+      return 'writeup-status-pill--warning'
+    case 'reviewed':
+      return 'writeup-status-pill--primary'
+    default:
+      return 'writeup-status-pill--muted'
+  }
+}
+
+function formatWriteupTime(value?: string): string {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function getCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
     web: 'Web',
@@ -428,9 +655,12 @@ watch(
   () => {
     writeupVisible.value = false
     writeup.value = null
+    myWriteup.value = null
+    writeupTitle.value = ''
+    writeupContent.value = ''
     flagInput.value = ''
     submitResult.value = null
-    void loadChallenge()
+    void Promise.all([loadChallenge(), loadMyWriteupSubmission()])
   },
   { immediate: true }
 )
@@ -516,6 +746,102 @@ watch(
 
 .challenge-prose {
   color: var(--journal-muted);
+}
+
+.writeup-workbench {
+  background:
+    radial-gradient(circle at top right, rgba(79, 70, 229, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 244, 255, 0.96));
+}
+
+.writeup-side-note {
+  max-width: 18rem;
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 1rem 1.1rem;
+}
+
+.writeup-field {
+  display: block;
+}
+
+.writeup-field-label {
+  display: block;
+  margin-bottom: 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.writeup-meta-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.writeup-meta-card {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 0.95rem 1rem;
+}
+
+.writeup-meta-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--journal-muted);
+}
+
+.writeup-meta-value {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.writeup-textarea {
+  min-height: 16rem;
+}
+
+.writeup-status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.writeup-status-pill--primary {
+  background: rgba(79, 70, 229, 0.12);
+  color: #4338ca;
+}
+
+.writeup-status-pill--success {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+
+.writeup-status-pill--warning {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+.writeup-status-pill--muted {
+  background: rgba(148, 163, 184, 0.16);
+  color: #475569;
+}
+
+.writeup-feedback-panel {
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.74);
+  padding: 1.1rem 1.2rem;
 }
 
 .challenge-prose :deep(h1),

@@ -66,13 +66,21 @@
   - `user_id`
   - `challenge_id`
   - `contest_id`
-  - `status`
+  - `submission_status`
+  - `review_status`
   - `title`
   - `content`
   - `submitted_at`
   - `reviewed_by`
   - `reviewed_at`
   - `review_comment`
+
+## 已确认的首版落地
+
+- `submission_status` 拆为 `draft` / `submitted`
+- `review_status` 拆为 `pending` / `reviewed` / `excellent` / `needs_revision`
+- 首版仍按 `user_id + challenge_id` 唯一，`contest_id` 先保留为可空引用字段，不在当前学生提交流程中强制写入
+- 教师分析页首版不做独立评阅工作台，只调用教师列表接口展示该学生 writeup 状态摘要
 
 ## API 建议
 

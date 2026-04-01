@@ -7,6 +7,7 @@ import type {
   ChallengeWriteupData,
   InstanceData,
   PageResult,
+  SubmissionWriteupData,
   SubmitFlagData,
   UnlockHintData,
 } from './contracts'
@@ -33,6 +34,14 @@ interface RawChallengeWriteupData extends Omit<ChallengeWriteupData, 'id' | 'cha
   challenge_id: string | number
 }
 
+interface RawSubmissionWriteupData extends Omit<SubmissionWriteupData, 'id' | 'user_id' | 'challenge_id' | 'contest_id' | 'reviewed_by'> {
+  id: string | number
+  user_id: string | number
+  challenge_id: string | number
+  contest_id?: string | number
+  reviewed_by?: string | number
+}
+
 function normalizeChallengeListItem(item: RawChallengeListItem): ChallengeListItem {
   return {
     ...item,
@@ -56,6 +65,17 @@ function normalizeChallengeWriteup(item: RawChallengeWriteupData): ChallengeWrit
     ...item,
     id: String(item.id),
     challenge_id: String(item.challenge_id),
+  }
+}
+
+function normalizeSubmissionWriteup(item: RawSubmissionWriteupData): SubmissionWriteupData {
+  return {
+    ...item,
+    id: String(item.id),
+    user_id: String(item.user_id),
+    challenge_id: String(item.challenge_id),
+    contest_id: item.contest_id !== undefined ? String(item.contest_id) : undefined,
+    reviewed_by: item.reviewed_by !== undefined ? String(item.reviewed_by) : undefined,
   }
 }
 
@@ -90,6 +110,42 @@ export async function getChallengeWriteup(id: string): Promise<ChallengeWriteupD
     }
     throw error
   }
+}
+
+export async function getMyChallengeWriteupSubmission(id: string): Promise<SubmissionWriteupData | null> {
+  try {
+    const payload = await request<RawSubmissionWriteupData>({
+      method: 'GET',
+      url: `/challenges/${encodeURIComponent(id)}/writeup-submissions/me`,
+      suppressErrorToast: true,
+    })
+    return normalizeSubmissionWriteup(payload)
+  } catch (error) {
+    if (
+      (error instanceof ApiError && error.status === 404) ||
+      ((error as { name?: string; status?: number } | undefined)?.name === 'ApiError' &&
+        (error as { status?: number }).status === 404)
+    ) {
+      return null
+    }
+    throw error
+  }
+}
+
+export async function upsertChallengeWriteupSubmission(
+  id: string,
+  payload: {
+    title: string
+    content: string
+    submission_status: 'draft' | 'submitted'
+  }
+): Promise<SubmissionWriteupData> {
+  const response = await request<RawSubmissionWriteupData>({
+    method: 'POST',
+    url: `/challenges/${encodeURIComponent(id)}/writeup-submissions`,
+    data: payload,
+  })
+  return normalizeSubmissionWriteup(response)
 }
 
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {
