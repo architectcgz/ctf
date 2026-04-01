@@ -1358,11 +1358,111 @@ export interface AwdRoundSummaryData {
   round: AwdRoundData
   items: AwdRoundSummaryItem[]
 }
+
+export type AwdTrafficStatusGroup = 'success' | 'redirect' | 'client_error' | 'server_error'
+
+export interface AwdTrafficTrendBucketData {
+  bucket_start_at: ISODateTime
+  request_count: number
+  error_count: number
+}
+
+export interface AwdTrafficTopTeamData {
+  team_id: ID
+  team_name: string
+  request_count: number
+  error_count: number
+}
+
+export interface AwdTrafficTopChallengeData {
+  challenge_id: ID
+  challenge_title: string
+  request_count: number
+  error_count: number
+}
+
+export interface AwdTrafficTopPathData {
+  path: string
+  request_count: number
+  error_count: number
+  last_status_code: number
+}
+
+export interface AwdTrafficSummaryData {
+  round: AwdRoundData
+  contest_id: ID
+  round_id: ID
+  total_request_count: number
+  active_attacker_team_count: number
+  victim_team_count: number
+  error_request_count: number
+  unique_path_count: number
+  latest_event_at?: ISODateTime
+  trend_buckets: AwdTrafficTrendBucketData[]
+  top_attackers: AwdTrafficTopTeamData[]
+  top_victims: AwdTrafficTopTeamData[]
+  top_challenges: AwdTrafficTopChallengeData[]
+  top_paths: AwdTrafficTopPathData[]
+  top_error_paths: AwdTrafficTopPathData[]
+}
+
+export interface AwdTrafficEventData {
+  id: ID
+  contest_id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team_name: string
+  victim_team_id: ID
+  victim_team_name: string
+  challenge_id: ID
+  challenge_title: string
+  method: string
+  path: string
+  status_code: number
+  status_group: AwdTrafficStatusGroup
+  is_error: boolean
+  source: string
+  request_id?: string
+  occurred_at: ISODateTime
+}
+
+export type AwdTrafficEventPageData = PageResult<AwdTrafficEventData>
 ```
 
 > 说明：当前已补齐 AWD 轮次调度、最小版实例健康 Checker、真实容器 Flag 注入、基于当前轮 Flag 的真实攻击提交流程、短窗口的上一轮 Flag 兼容，以及队伍级共享实例模型。
 
-### 8.19.1 POST `/api/v1/contests/:id/awd/challenges/:cid/submissions`
+### 8.19.1 GET `/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/summary`
+
+`data`：`AwdTrafficSummaryData`
+
+> 说明：
+> - 数据源为 `awd_traffic_events` 轻量事实表，仅覆盖平台代理链路下的 AWD 共享实例访问流量。
+> - `top_paths` 表示本轮热点路径，`top_error_paths` 表示错误请求最集中的路径。
+> - 该接口展示的是“代理请求流量摘要”，不等价于“已确认攻击成功”；管理员需要结合攻击日志一起判断。
+
+### 8.19.2 GET `/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/events`
+
+`data`：`AwdTrafficEventPageData`
+
+查询参数：
+
+```ts
+export interface ListAwdTrafficEventsQuery {
+  attacker_team_id?: ID
+  victim_team_id?: ID
+  challenge_id?: ID
+  status_group?: AwdTrafficStatusGroup
+  path_keyword?: string
+  page?: number
+  page_size?: number
+}
+```
+
+> 说明：
+> - 按 `created_at DESC, id DESC` 返回，适合管理员查看最新代理流量。
+> - 第一版 `source` 固定为 `runtime_proxy`；`request_id` 目前预留，实际明细返回中可以省略。
+
+### 8.19.3 POST `/api/v1/contests/:id/awd/challenges/:cid/submissions`
 
 `data`：`AwdAttackLogData`
 

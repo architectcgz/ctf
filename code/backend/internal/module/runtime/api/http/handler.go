@@ -42,17 +42,28 @@ type runtimeService interface {
 	ProxyBodyPreviewSize() int
 }
 
-type Handler struct {
-	service       runtimeService
-	auditRecorder auditlog.Recorder
-	cookieConfig  CookieConfig
+type runtimeProxyTrafficRecorder interface {
+	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
 }
 
-func NewHandler(service runtimeService, auditRecorder auditlog.Recorder, cookieConfig CookieConfig) *Handler {
+type Handler struct {
+	service              runtimeService
+	auditRecorder        auditlog.Recorder
+	cookieConfig         CookieConfig
+	proxyTrafficRecorder runtimeProxyTrafficRecorder
+}
+
+func NewHandler(
+	service runtimeService,
+	auditRecorder auditlog.Recorder,
+	cookieConfig CookieConfig,
+	proxyTrafficRecorder runtimeProxyTrafficRecorder,
+) *Handler {
 	return &Handler{
-		service:       service,
-		auditRecorder: auditRecorder,
-		cookieConfig:  cookieConfig,
+		service:              service,
+		auditRecorder:        auditRecorder,
+		cookieConfig:         cookieConfig,
+		proxyTrafficRecorder: proxyTrafficRecorder,
 	}
 }
 
@@ -379,7 +390,7 @@ func (h *Handler) recordProxyAudit(
 	bodyCaptured bool,
 	bodyTruncated bool,
 ) {
-	if h.auditRecorder == nil || claims == nil {
+	if claims == nil {
 		return
 	}
 
@@ -400,15 +411,27 @@ func (h *Handler) recordProxyAudit(
 		detail["payload_truncated"] = true
 	}
 
-	_ = h.auditRecorder.Record(c.Request.Context(), auditlog.Entry{
-		UserID:       &claims.UserID,
-		Action:       proxyAuditAction(c.Request.Method),
-		ResourceType: "instance_proxy_request",
-		ResourceID:   &instanceID,
-		Detail:       detail,
-		IPAddress:    c.ClientIP(),
-		UserAgent:    stringPtr(c.Request.UserAgent()),
-	})
+	if h.auditRecorder != nil {
+		_ = h.auditRecorder.Record(c.Request.Context(), auditlog.Entry{
+			UserID:       &claims.UserID,
+			Action:       proxyAuditAction(c.Request.Method),
+			ResourceType: "instance_proxy_request",
+			ResourceID:   &instanceID,
+			Detail:       detail,
+			IPAddress:    c.ClientIP(),
+			UserAgent:    stringPtr(c.Request.UserAgent()),
+		})
+	}
+	if h.proxyTrafficRecorder != nil {
+		_ = h.proxyTrafficRecorder.RecordRuntimeProxyTrafficEvent(
+			c.Request.Context(),
+			instanceID,
+			claims.UserID,
+			c.Request.Method,
+			targetPath,
+			status,
+		)
+	}
 }
 
 func proxyAuditAction(method string) string {

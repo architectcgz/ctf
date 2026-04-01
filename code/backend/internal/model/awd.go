@@ -17,6 +17,8 @@ const (
 	AWDAttackSourceLegacy     = "legacy"
 	AWDAttackSourceManual     = "manual_attack_log"
 	AWDAttackSourceSubmission = "submission"
+
+	AWDTrafficSourceRuntimeProxy = "runtime_proxy"
 )
 
 type AWDRound struct {
@@ -70,4 +72,22 @@ type AWDAttackLog struct {
 
 func (AWDAttackLog) TableName() string {
 	return "awd_attack_logs"
+}
+
+type AWDTrafficEvent struct {
+	ID             int64     `gorm:"column:id;primaryKey"`
+	ContestID      int64     `gorm:"column:contest_id;not null;index"`
+	RoundID        int64     `gorm:"column:round_id;not null;index:idx_awd_traffic_round_created,priority:1;index:idx_awd_traffic_attacker,priority:1;index:idx_awd_traffic_victim,priority:1"`
+	AttackerTeamID int64     `gorm:"column:attacker_team_id;not null;index:idx_awd_traffic_attacker,priority:2"`
+	VictimTeamID   int64     `gorm:"column:victim_team_id;not null;index:idx_awd_traffic_victim,priority:2"`
+	ChallengeID    int64     `gorm:"column:challenge_id;not null;index"`
+	Method         string    `gorm:"column:method;size:16;not null"`
+	Path           string    `gorm:"column:path;size:1024;not null"`
+	StatusCode     int       `gorm:"column:status_code;not null"`
+	Source         string    `gorm:"column:source;size:32;not null;default:runtime_proxy;index"`
+	CreatedAt      time.Time `gorm:"column:created_at;index:idx_awd_traffic_round_created,priority:2,sort:desc"`
+}
+
+func (AWDTrafficEvent) TableName() string {
+	return "awd_traffic_events"
 }

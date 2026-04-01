@@ -1210,6 +1210,86 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusGone)
 }
 
+func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
+
+	awdTeam := createContestTeam(t, env, env.awdContest.ID, env.student.ID, "AWD-Traffic-Blue", 4)
+
+	proxyTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("awd-proxied:" + r.URL.Path))
+	}))
+	defer proxyTarget.Close()
+
+	if err := env.db.Model(&model.Instance{}).Where("id = ?", env.instance.ID).Updates(map[string]any{
+		"user_id":      env.student.ID,
+		"contest_id":   env.awdContest.ID,
+		"team_id":      awdTeam.ID,
+		"challenge_id": env.challenge.ID,
+		"access_url":   proxyTarget.URL,
+		"status":       model.InstanceStatusRunning,
+	}).Error; err != nil {
+		t.Fatalf("update awd instance scope: %v", err)
+	}
+
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/access", env.instance.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var access dto.InstanceAccessResp
+	decodeFullRouterData(t, resp, &access)
+	parsedAccessURL, err := url.Parse(access.AccessURL)
+	if err != nil {
+		t.Fatalf("parse access url: %v", err)
+	}
+	ticket := parsedAccessURL.Query().Get("ticket")
+	if ticket == "" {
+		t.Fatalf("expected proxy ticket in access url: %s", access.AccessURL)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/instances/%d/proxy/ping?ticket=%s", env.instance.ID, url.QueryEscape(ticket)), nil, nil)
+	if resp.Code != http.StatusFound {
+		t.Fatalf("expected proxy redirect, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	cookies := resp.Result().Cookies()
+	if len(cookies) == 0 {
+		t.Fatalf("expected proxy access cookie to be set")
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/instances/%d/proxy/ping", env.instance.ID), nil, map[string]string{
+		"Cookie": cookies[0].String(),
+	})
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	if body := resp.Body.String(); body != "awd-proxied:/ping" {
+		t.Fatalf("unexpected proxy body: %s", body)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/rounds/%d/traffic/summary", env.awdContest.ID, env.awdRound.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var summary dto.AWDTrafficSummaryResp
+	decodeFullRouterData(t, resp, &summary)
+	if summary.TotalRequests < 1 {
+		t.Fatalf("expected traffic requests in summary, got %+v", summary)
+	}
+	if len(summary.TopPaths) == 0 || summary.TopPaths[0].Path != "/ping" {
+		t.Fatalf("unexpected top paths summary: %+v", summary.TopPaths)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/contests/%d/awd/rounds/%d/traffic/events?page=1&page_size=20", env.awdContest.ID, env.awdRound.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var page dto.AWDTrafficEventPageResp
+	decodeFullRouterData(t, resp, &page)
+	if page.Total < 1 || len(page.List) == 0 {
+		t.Fatalf("expected traffic events page data, got %+v", page)
+	}
+	if page.List[0].Method != http.MethodGet || page.List[0].Path != "/ping" {
+		t.Fatalf("unexpected traffic event item: %+v", page.List[0])
+	}
+}
+
 func TestFullRouter_ContestChallengeAndScoreboardStateMatrix(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 

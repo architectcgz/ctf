@@ -75,3 +75,7 @@ type ProxyTicketStore interface {
 	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
 	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
 }
+
+type ProxyTrafficEventRecorder interface {
+	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
+}

@@ -97,6 +97,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.AWDRound{},
 	&model.AWDTeamService{},
 	&model.AWDAttackLog{},
+	&model.AWDTrafficEvent{},
 	&model.Report{},
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { ContestDetailData } from '@/api/contracts'
+import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
@@ -32,18 +32,27 @@ const {
   services,
   attacks,
   summary,
+  trafficSummary,
+  trafficEvents,
+  trafficEventsTotal,
+  trafficFilters,
   scoreboardRows,
   scoreboardFrozen,
   teams,
   challengeLinks,
   loadingRounds,
   loadingRoundDetail,
+  loadingTrafficSummary,
+  loadingTrafficEvents,
   checking,
   creatingRound,
   savingServiceCheck,
   savingAttackLog,
   shouldAutoRefresh,
   refresh,
+  applyTrafficFilters,
+  setTrafficPage,
+  resetTrafficFilters,
   runSelectedRoundCheck,
   createRound,
   createServiceCheck,
@@ -145,6 +154,24 @@ async function handleCreateAttackLog(payload: {
   await createAttackLog(payload)
   attackLogDialogOpen.value = false
 }
+
+async function handleApplyTrafficFilters(payload: {
+  attacker_team_id?: string
+  victim_team_id?: string
+  challenge_id?: string
+  status_group?: 'all' | AWDTrafficStatusGroup
+  path_keyword?: string
+}) {
+  await applyTrafficFilters(payload)
+}
+
+async function handleTrafficPageChange(page: number) {
+  await setTrafficPage(page)
+}
+
+async function handleResetTrafficFilters() {
+  await resetTrafficFilters()
+}
 </script>
 
 <template>
@@ -180,10 +207,16 @@ async function handleCreateAttackLog(payload: {
       :attacks="attacks"
       :challenge-links="challengeLinks"
       :summary="summary"
+      :traffic-summary="trafficSummary"
+      :traffic-events="trafficEvents"
+      :traffic-events-total="trafficEventsTotal"
+      :traffic-filters="trafficFilters"
       :scoreboard-rows="scoreboardRows"
       :scoreboard-frozen="scoreboardFrozen"
       :loading-rounds="loadingRounds"
       :loading-round-detail="loadingRoundDetail"
+      :loading-traffic-summary="loadingTrafficSummary"
+      :loading-traffic-events="loadingTrafficEvents"
       :checking="checking"
       :should-auto-refresh="shouldAutoRefresh"
       :can-record-service-checks="canRecordServiceChecks"
@@ -191,6 +224,9 @@ async function handleCreateAttackLog(payload: {
       :service-check-hint="serviceCheckHint"
       :attack-log-hint="attackLogHint"
       @refresh="refresh"
+      @apply-traffic-filters="handleApplyTrafficFilters"
+      @change-traffic-page="handleTrafficPageChange"
+      @reset-traffic-filters="handleResetTrafficFilters"
       @open-create-round-dialog="openRoundDialog"
       @open-service-check-dialog="openServiceCheckDialog"
       @open-attack-log-dialog="openAttackLogDialog"

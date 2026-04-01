@@ -524,6 +524,8 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `POST` | `/api/v1/admin/contests/:id/challenges/batch` | A | 批量添加题目到竞赛 |
 | `PUT` | `/api/v1/admin/contests/:id/status` | A | 管理员手动变更竞赛状态（发布/取消/紧急结束） |
 | `POST` | `/api/v1/admin/contests/:id/announcements` | A | 发布竞赛公告 |
+| `GET` | `/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/summary` | A | 获取 AWD 轮次代理流量摘要（趋势、热点路径、攻击方/受害方排行） |
+| `GET` | `/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/events` | A | 获取 AWD 轮次代理流量明细（支持按队伍、题目、状态组筛选） |
 | `GET` | `/api/v1/contests` | @ | 竞赛列表（公开视图） |
 | `GET` | `/api/v1/contests/:id` | @ | 竞赛详情 |
 | `POST` | `/api/v1/contests/:id/register` | S | 报名竞赛 |
@@ -538,6 +540,10 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `POST` | `/api/v1/contests/:id/challenges/:cid/instances` | S | 竞赛中启动靶机实例（校验竞赛状态=running/frozen、用户已报名） |
 | `GET` | `/api/v1/contests/:id/challenges` | S | 竞赛题目列表（学员视图，仅 running/frozen 状态可见） |
 | `GET` | `/api/v1/contests/:id/my-progress` | S | 我在该竞赛的解题进度 |
+
+> AWD 流量监控说明：
+> - 上述 `traffic/*` 接口基于 `awd_traffic_events` 事实表返回平台代理链路下的共享实例访问摘要。
+> - 该能力用于展示“攻击相关流量态势”，不直接等价于攻击成功判定；成功攻破仍以 `awd_attack_logs` 为准。
 
 ### 5.5 技能评估
 

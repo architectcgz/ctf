@@ -7,6 +7,14 @@ import type {
   AWDRoundMetricsData,
   AWDRoundSummaryData,
   AWDRoundSummaryItemData,
+  AWDTrafficEventData,
+  AWDTrafficEventPageData,
+  AWDTrafficStatusGroup,
+  AWDTrafficSummaryData,
+  AWDTrafficTopChallengeData,
+  AWDTrafficTopPathData,
+  AWDTrafficTopTeamData,
+  AWDTrafficTrendBucketData,
   AWDTeamServiceData,
   AdminContestChallengeData,
   AdminContestTeamData,
@@ -195,6 +203,72 @@ interface RawAWDRoundSummaryData {
   round: RawAWDRoundItem
   metrics?: RawAWDRoundMetricsData
   items: RawAWDRoundSummaryItem[]
+}
+
+interface RawAWDTrafficTopTeamItem {
+  team_id: string | number
+  team_name: string
+  request_count: number
+  error_count: number
+}
+
+interface RawAWDTrafficTopChallengeItem {
+  challenge_id: string | number
+  challenge_title?: string
+  request_count: number
+  error_count: number
+}
+
+interface RawAWDTrafficTopPathItem {
+  path: string
+  request_count: number
+  error_count: number
+  last_status_code?: number
+}
+
+interface RawAWDTrafficTrendBucketItem {
+  bucket_start_at: string
+  bucket_end_at?: string | null
+  request_count: number
+  error_count: number
+}
+
+interface RawAWDTrafficSummaryData {
+  round?: RawAWDRoundItem
+  contest_id: string | number
+  round_id: string | number
+  total_request_count: number
+  active_attacker_team_count: number
+  victim_team_count: number
+  unique_path_count: number
+  error_request_count: number
+  latest_event_at?: string
+  top_attackers: RawAWDTrafficTopTeamItem[]
+  top_victims: RawAWDTrafficTopTeamItem[]
+  top_challenges: RawAWDTrafficTopChallengeItem[]
+  top_paths?: RawAWDTrafficTopPathItem[]
+  top_error_paths: RawAWDTrafficTopPathItem[]
+  trend_buckets: RawAWDTrafficTrendBucketItem[]
+}
+
+interface RawAWDTrafficEventItem {
+  id: string | number
+  contest_id: string | number
+  round_id: string | number
+  attacker_team_id: string | number
+  attacker_team_name?: string
+  victim_team_id: string | number
+  victim_team_name?: string
+  challenge_id: string | number
+  challenge_title?: string
+  method: string
+  path: string
+  status_code: number
+  status_group?: AWDTrafficStatusGroup
+  is_error?: boolean
+  source: string
+  request_id?: string
+  occurred_at: string
 }
 
 interface RawAWDCheckerRunData {
@@ -461,6 +535,16 @@ export interface AdminAWDAttackLogPayload {
   is_success: boolean
 }
 
+export interface AdminAWDTrafficEventsParams {
+  attacker_team_id?: string
+  victim_team_id?: string
+  challenge_id?: string
+  status_group?: AWDTrafficStatusGroup
+  path_keyword?: string
+  page?: number
+  page_size?: number
+}
+
 function normalizeContestStatus(status: RawContestItem['status']): AdminContestStatus {
   if (status === 'registration') {
     return 'registering'
@@ -598,6 +682,102 @@ function normalizeAWDRoundSummary(item: RawAWDRoundSummaryData): AWDRoundSummary
     round: normalizeAWDRound(item.round),
     metrics: item.metrics ? normalizeAWDRoundMetrics(item.metrics) : undefined,
     items: item.items.map(normalizeAWDRoundSummaryItem),
+  }
+}
+
+function normalizeAWDTrafficTopTeam(item: RawAWDTrafficTopTeamItem): AWDTrafficTopTeamData {
+  return {
+    team_id: String(item.team_id),
+    team_name: item.team_name,
+    request_count: item.request_count,
+    error_count: item.error_count,
+  }
+}
+
+function normalizeAWDTrafficTopChallenge(
+  item: RawAWDTrafficTopChallengeItem
+): AWDTrafficTopChallengeData {
+  return {
+    challenge_id: String(item.challenge_id),
+    challenge_title: item.challenge_title,
+    request_count: item.request_count,
+    error_count: item.error_count,
+  }
+}
+
+function normalizeAWDTrafficTopPath(item: RawAWDTrafficTopPathItem): AWDTrafficTopPathData {
+  return {
+    path: item.path,
+    request_count: item.request_count,
+    error_count: item.error_count,
+    last_status_code: item.last_status_code ?? 0,
+  }
+}
+
+function normalizeAWDTrafficTrendBucket(
+  item: RawAWDTrafficTrendBucketItem
+): AWDTrafficTrendBucketData {
+  return {
+    bucket_start_at: item.bucket_start_at,
+    bucket_end_at: item.bucket_end_at || undefined,
+    request_count: item.request_count,
+    error_count: item.error_count,
+  }
+}
+
+function normalizeAWDTrafficSummary(item: RawAWDTrafficSummaryData): AWDTrafficSummaryData {
+  return {
+    round: item.round ? normalizeAWDRound(item.round) : undefined,
+    contest_id: String(item.contest_id),
+    round_id: String(item.round_id),
+    total_request_count: item.total_request_count,
+    active_attacker_team_count: item.active_attacker_team_count,
+    victim_team_count: item.victim_team_count,
+    unique_path_count: item.unique_path_count,
+    error_request_count: item.error_request_count,
+    latest_event_at: item.latest_event_at,
+    top_attackers: item.top_attackers.map(normalizeAWDTrafficTopTeam),
+    top_victims: item.top_victims.map(normalizeAWDTrafficTopTeam),
+    top_challenges: item.top_challenges.map(normalizeAWDTrafficTopChallenge),
+    top_paths: (item.top_paths || []).map(normalizeAWDTrafficTopPath),
+    top_error_paths: item.top_error_paths.map(normalizeAWDTrafficTopPath),
+    trend_buckets: item.trend_buckets.map(normalizeAWDTrafficTrendBucket),
+  }
+}
+
+function classifyAWDTrafficStatusGroup(statusCode: number): AWDTrafficStatusGroup {
+  if (statusCode >= 500) {
+    return 'server_error'
+  }
+  if (statusCode >= 400) {
+    return 'client_error'
+  }
+  if (statusCode >= 300) {
+    return 'redirect'
+  }
+  return 'success'
+}
+
+function normalizeAWDTrafficEvent(item: RawAWDTrafficEventItem): AWDTrafficEventData {
+  const statusGroup = item.status_group || classifyAWDTrafficStatusGroup(item.status_code)
+  return {
+    id: String(item.id),
+    contest_id: String(item.contest_id),
+    round_id: String(item.round_id),
+    attacker_team_id: String(item.attacker_team_id),
+    attacker_team_name: item.attacker_team_name,
+    victim_team_id: String(item.victim_team_id),
+    victim_team_name: item.victim_team_name,
+    challenge_id: String(item.challenge_id),
+    challenge_title: item.challenge_title,
+    method: item.method,
+    path: item.path,
+    status_code: item.status_code,
+    status_group: statusGroup,
+    is_error: item.is_error ?? (statusGroup === 'client_error' || statusGroup === 'server_error'),
+    source: item.source,
+    request_id: item.request_id,
+    occurred_at: item.occurred_at,
   }
 }
 
@@ -1381,6 +1561,33 @@ export async function getContestAWDRoundSummary(
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/rounds/${encodeURIComponent(roundId)}/summary`,
   })
   return normalizeAWDRoundSummary(response)
+}
+
+export async function getContestAWDRoundTrafficSummary(
+  contestId: string,
+  roundId: string
+): Promise<AWDTrafficSummaryData> {
+  const response = await request<RawAWDTrafficSummaryData>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/rounds/${encodeURIComponent(roundId)}/traffic/summary`,
+  })
+  return normalizeAWDTrafficSummary(response)
+}
+
+export async function listContestAWDRoundTrafficEvents(
+  contestId: string,
+  roundId: string,
+  params?: AdminAWDTrafficEventsParams
+): Promise<AWDTrafficEventPageData> {
+  const response = await request<PageResult<RawAWDTrafficEventItem>>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/rounds/${encodeURIComponent(roundId)}/traffic/events`,
+    params,
+  })
+  return {
+    ...response,
+    list: response.list.map(normalizeAWDTrafficEvent),
+  }
 }
 
 export async function getAdminContestLiveScoreboard(

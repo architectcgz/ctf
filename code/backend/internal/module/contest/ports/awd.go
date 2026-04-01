@@ -32,6 +32,7 @@ type AWDRepository interface {
 	CreateAttackLog(ctx context.Context, logRecord *model.AWDAttackLog) error
 	ApplyAttackImpactToVictimService(ctx context.Context, roundID, victimTeamID, challengeID int64, scoreGained int, updatedAt time.Time) error
 	ListAttackLogsByRound(ctx context.Context, roundID int64) ([]model.AWDAttackLog, error)
+	ListTrafficEvents(ctx context.Context, contestID, roundID int64) ([]AWDTrafficEventRecord, error)
 	RecalculateContestTeamScores(ctx context.Context, contestID int64) error
 	RebuildContestScoreboardCache(ctx context.Context, redis *redislib.Client, contestID int64) error
 }
@@ -54,6 +55,23 @@ type AWDServiceInstance struct {
 	TeamID      int64
 	ChallengeID int64
 	AccessURL   string
+}
+
+type AWDTrafficEventRecord struct {
+	ID               int64
+	ContestID        int64
+	RoundID          int64
+	AttackerTeamID   int64
+	AttackerTeamName string
+	VictimTeamID     int64
+	VictimTeamName   string
+	ChallengeID      int64
+	ChallengeTitle   string
+	Method           string
+	Path             string
+	StatusCode       int
+	Source           string
+	OccurredAt       time.Time
 }
 
 type AWDRoundManager interface {

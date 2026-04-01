@@ -454,6 +454,16 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		middleware.ParseInt64Param("rid"),
 		deps.contest.AWDHandler.ListAttackLogs,
 	)
+	adminOnly.GET("/contests/:id/awd/rounds/:rid/traffic/summary",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		deps.contest.AWDHandler.GetTrafficSummary,
+	)
+	adminOnly.GET("/contests/:id/awd/rounds/:rid/traffic/events",
+		middleware.ParseInt64Param("id"),
+		middleware.ParseInt64Param("rid"),
+		deps.contest.AWDHandler.ListTrafficEvents,
+	)
 	adminOnly.POST("/contests/:id/awd/rounds/:rid/attacks",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("rid"),

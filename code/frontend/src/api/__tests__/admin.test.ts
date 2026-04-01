@@ -25,6 +25,7 @@ import {
   getChallengeTopology,
   getChallengeDetail,
   getContestAWDRoundSummary,
+  getContestAWDRoundTrafficSummary,
   getChallengeWriteup,
   getChallenges,
   getCheatDetection,
@@ -34,6 +35,7 @@ import {
   getUsers,
   listAdminContestChallenges,
   listContestAWDRoundAttacks,
+  listContestAWDRoundTrafficEvents,
   publishAdminNotification,
   runContestAWDRoundCheck,
   saveChallengeTopology,
@@ -324,6 +326,229 @@ describe('admin contest api contract', () => {
         legacy_attack_log_count: 0,
       },
       items: [],
+    })
+  })
+
+  it('应该归一化 AWD 攻击流量摘要数据', async () => {
+    requestMock.mockResolvedValue({
+      round: {
+        id: 41,
+        contest_id: 7,
+        round_number: 3,
+        status: 'running',
+        started_at: '2026-03-12T10:00:00.000Z',
+        ended_at: null,
+        attack_score: 50,
+        defense_score: 40,
+        created_at: '2026-03-12T09:59:00.000Z',
+        updated_at: '2026-03-12T10:01:11.000Z',
+      },
+      contest_id: 7,
+      round_id: 41,
+      total_request_count: 18,
+      active_attacker_team_count: 3,
+      victim_team_count: 2,
+      error_request_count: 4,
+      unique_path_count: 7,
+      latest_event_at: '2026-03-12T10:01:11.000Z',
+      trend_buckets: [
+        {
+          bucket_start_at: '2026-03-12T10:00:00.000Z',
+          bucket_end_at: '2026-03-12T10:01:00.000Z',
+          request_count: 6,
+          error_count: 1,
+        },
+      ],
+      top_victims: [
+        {
+          team_id: 12,
+          team_name: 'Blue',
+          request_count: 9,
+          error_count: 2,
+        },
+      ],
+      top_attackers: [
+        {
+          team_id: 11,
+          team_name: 'Red',
+          request_count: 10,
+          error_count: 3,
+        },
+      ],
+      top_challenges: [
+        {
+          challenge_id: 101,
+          challenge_title: 'Web 1',
+          request_count: 11,
+          error_count: 4,
+        },
+      ],
+      top_paths: [
+        {
+          path: '/api/flag',
+          request_count: 8,
+          error_count: 3,
+          last_status_code: 500,
+        },
+      ],
+      top_error_paths: [
+        {
+          path: '/api/flag',
+          request_count: 8,
+          error_count: 3,
+          last_status_code: 500,
+        },
+      ],
+    })
+
+    const result = await getContestAWDRoundTrafficSummary('7', '41')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/7/awd/rounds/41/traffic/summary',
+    })
+    expect(result).toEqual({
+      round: {
+        id: '41',
+        contest_id: '7',
+        round_number: 3,
+        status: 'running',
+        started_at: '2026-03-12T10:00:00.000Z',
+        ended_at: undefined,
+        attack_score: 50,
+        defense_score: 40,
+        created_at: '2026-03-12T09:59:00.000Z',
+        updated_at: '2026-03-12T10:01:11.000Z',
+      },
+      contest_id: '7',
+      round_id: '41',
+      total_request_count: 18,
+      active_attacker_team_count: 3,
+      victim_team_count: 2,
+      error_request_count: 4,
+      unique_path_count: 7,
+      latest_event_at: '2026-03-12T10:01:11.000Z',
+      trend_buckets: [
+        {
+          bucket_start_at: '2026-03-12T10:00:00.000Z',
+          bucket_end_at: '2026-03-12T10:01:00.000Z',
+          request_count: 6,
+          error_count: 1,
+        },
+      ],
+      top_victims: [
+        {
+          team_id: '12',
+          team_name: 'Blue',
+          request_count: 9,
+          error_count: 2,
+        },
+      ],
+      top_attackers: [
+        {
+          team_id: '11',
+          team_name: 'Red',
+          request_count: 10,
+          error_count: 3,
+        },
+      ],
+      top_challenges: [
+        {
+          challenge_id: '101',
+          challenge_title: 'Web 1',
+          request_count: 11,
+          error_count: 4,
+        },
+      ],
+      top_paths: [
+        {
+          path: '/api/flag',
+          request_count: 8,
+          error_count: 3,
+          last_status_code: 500,
+        },
+      ],
+      top_error_paths: [
+        {
+          path: '/api/flag',
+          request_count: 8,
+          error_count: 3,
+          last_status_code: 500,
+        },
+      ],
+    })
+  })
+
+  it('应该归一化 AWD 攻击流量事件分页数据', async () => {
+    requestMock.mockResolvedValue({
+      list: [
+        {
+          id: 301,
+          contest_id: 7,
+          round_id: 41,
+          occurred_at: '2026-03-12T10:00:30.000Z',
+          attacker_team_id: 11,
+          attacker_team_name: 'Red',
+          victim_team_id: 12,
+          victim_team_name: 'Blue',
+          challenge_id: 101,
+          challenge_title: 'Web 1',
+          method: 'GET',
+          path: '/api/flag',
+          status_code: 500,
+          status_group: 'server_error',
+          is_error: true,
+          source: 'proxy_audit',
+          request_id: 'req-1',
+        },
+      ],
+      total: 23,
+      page: 2,
+      page_size: 20,
+    })
+
+    const result = await listContestAWDRoundTrafficEvents('7', '41', {
+      page: 2,
+      page_size: 20,
+      attacker_team_id: '11',
+      status_group: 'server_error',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/7/awd/rounds/41/traffic/events',
+      params: {
+        page: 2,
+        page_size: 20,
+        attacker_team_id: '11',
+        status_group: 'server_error',
+      },
+    })
+    expect(result).toEqual({
+      list: [
+        {
+          id: '301',
+          contest_id: '7',
+          round_id: '41',
+          occurred_at: '2026-03-12T10:00:30.000Z',
+          attacker_team_id: '11',
+          attacker_team_name: 'Red',
+          victim_team_id: '12',
+          victim_team_name: 'Blue',
+          challenge_id: '101',
+          challenge_title: 'Web 1',
+          method: 'GET',
+          path: '/api/flag',
+          status_code: 500,
+          status_group: 'server_error',
+          is_error: true,
+          source: 'proxy_audit',
+          request_id: 'req-1',
+        },
+      ],
+      total: 23,
+      page: 2,
+      page_size: 20,
     })
   })
 

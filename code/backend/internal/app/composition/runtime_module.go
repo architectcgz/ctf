@@ -3,6 +3,7 @@ package composition
 import (
 	"context"
 	"ctf-platform/internal/model"
+	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	opsports "ctf-platform/internal/module/ops/ports"
 	practiceports "ctf-platform/internal/module/practice/ports"
@@ -41,7 +42,8 @@ type RuntimeModule struct {
 }
 
 type runtimeHTTPDeps struct {
-	service runtimeHTTPService
+	service              runtimeHTTPService
+	proxyTrafficRecorder runtimeports.ProxyTrafficEventRecorder
 }
 
 type runtimePracticeDeps struct {
@@ -76,6 +78,7 @@ type runtimeModuleDeps struct {
 	containerStatsService *runtimeapp.ContainerStatsService
 	imageRuntime          challengeports.ImageRuntime
 	containerFiles        contestports.AWDContainerFileWriter
+	proxyTrafficRecorder  runtimeports.ProxyTrafficEventRecorder
 	containerPublicHost   string
 }
 
@@ -129,6 +132,7 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 		maintenanceService:    maintenanceService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
+		proxyTrafficRecorder:  contestinfra.NewAWDRepository(root.DB()),
 		imageRuntime:          runtimeapp.NewImageRuntimeService(engine),
 		containerFiles:        runtimeapp.NewContainerFileService(engine, log.Named("runtime_container_file_service")),
 		containerPublicHost:   cfg.Container.PublicHost,
@@ -156,6 +160,7 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.proxyTicketService,
 			root.Config().Container.ProxyBodyPreviewSize,
 		),
+		proxyTrafficRecorder: deps.proxyTrafficRecorder,
 	}
 }
 
@@ -258,6 +263,7 @@ func (m *RuntimeModule) BuildHandler(root *Root, ops *OpsModule) {
 			Secure:   cfg.Auth.RefreshCookieSecure,
 			SameSite: cfg.Auth.CookieSameSite(),
 		},
+		m.http.proxyTrafficRecorder,
 	)
 }
 
