@@ -4,7 +4,7 @@
 >
 > 机器可读版本：`ctf/docs/contracts/openapi-v1.yaml`（OpenAPI 3.0），应与本文保持一致。
 >
-> 最后更新：2026-03-10
+> 最后更新：2026-04-01
 
 ---
 
@@ -392,6 +392,52 @@ export interface ChallengeWriteupData {
 ```
 
 > 说明：当前后端仅在 Writeup 已公开或已到定时公开时间时返回该资源；`requires_spoiler_warning=true` 表示学员尚未解出题目，前端应先展示剧透提示。
+
+### 3.12 POST `/api/v1/challenges/:id/writeup-submissions`
+
+请求体：
+
+```ts
+export type SubmissionWriteupStatus = 'draft' | 'submitted'
+export type SubmissionWriteupReviewStatus = 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+
+export interface UpsertSubmissionWriteupReq {
+  title: string
+  content: string
+  submission_status: SubmissionWriteupStatus
+}
+```
+
+`data`：
+
+```ts
+export interface SubmissionWriteupData {
+  id: ID
+  user_id: ID
+  challenge_id: ID
+  contest_id?: ID
+  title: string
+  content: string
+  submission_status: SubmissionWriteupStatus
+  review_status: SubmissionWriteupReviewStatus
+  submitted_at?: ISODateTime
+  reviewed_by?: ID
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  created_at: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+> 说明：
+> - 同一学生对同一题目只有一条 `submission_writeup` 记录，接口语义为 upsert。
+> - 当 `submission_status='submitted'` 时，后端会回填 `submitted_at`，并将 `review_status` 置为 `pending`。
+
+### 3.13 GET `/api/v1/challenges/:id/writeup-submissions/me`
+
+`data`：`SubmissionWriteupData`
+
+> 说明：当前学生尚未提交时返回 `404`。
 
 ---
 
@@ -878,7 +924,77 @@ export interface AdminChallengeWriteupData {
 }
 ```
 
-### 8.15 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
+### 8.15 GET `/api/v1/teacher/writeup-submissions`
+
+查询参数：
+
+```ts
+export interface TeacherSubmissionWriteupQuery {
+  student_id?: ID
+  challenge_id?: ID
+  class_name?: string
+  submission_status?: SubmissionWriteupStatus
+  review_status?: SubmissionWriteupReviewStatus
+  page?: number
+  page_size?: number
+}
+```
+
+`data`：
+
+```ts
+export interface TeacherSubmissionWriteupItem {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  title: string
+  content_preview: string
+  submission_status: SubmissionWriteupStatus
+  review_status: SubmissionWriteupReviewStatus
+  submitted_at?: ISODateTime
+  reviewed_at?: ISODateTime
+  updated_at: ISODateTime
+}
+
+export type TeacherSubmissionWriteupListData = PageResult<TeacherSubmissionWriteupItem>
+```
+
+> 说明：
+> - `teacher` 角色查询时，后端会自动收敛到教师自己的 `class_name`，不会跨班查看。
+> - `admin` 角色可跨班检索。
+
+### 8.16 GET `/api/v1/teacher/writeup-submissions/:id`
+
+`data`：
+
+```ts
+export interface TeacherSubmissionWriteupDetail extends SubmissionWriteupData {
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_title: string
+  reviewer_name?: string
+}
+```
+
+### 8.17 PUT `/api/v1/teacher/writeup-submissions/:id/review`
+
+请求体：
+
+```ts
+export interface ReviewSubmissionWriteupReq {
+  review_status: SubmissionWriteupReviewStatus
+  review_comment?: string
+}
+```
+
+`data`：`SubmissionWriteupData`
+
+### 8.18 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
 
 `data`：
 

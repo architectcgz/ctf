@@ -1,6 +1,6 @@
 # CTF 靶场平台 API 设计规范
 
-> 版本：v1.0 | 更新日期：2026-03-01
+> 版本：v1.0 | 更新日期：2026-04-01
 
 > 接口契约：
 > - OpenAPI（机器可读）：`ctf/docs/contracts/openapi-v1.yaml`
@@ -477,6 +477,11 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 | `GET` | `/api/v1/admin/challenges/:id/writeup` | A | 获取 Writeup |
 | `PUT` | `/api/v1/admin/challenges/:id/writeup` | A | 创建/更新 Writeup |
 | `DELETE` | `/api/v1/admin/challenges/:id/writeup` | A | 删除 Writeup |
+| `POST` | `/api/v1/challenges/:id/writeup-submissions` | U | 学员保存/提交自己的 writeup |
+| `GET` | `/api/v1/challenges/:id/writeup-submissions/me` | U | 获取当前学员自己的 writeup |
+| `GET` | `/api/v1/teacher/writeup-submissions` | T | 教师按学生/班级/题目筛选 writeup |
+| `GET` | `/api/v1/teacher/writeup-submissions/:id` | T | 教师查看单条 writeup 详情 |
+| `PUT` | `/api/v1/teacher/writeup-submissions/:id/review` | T | 教师评阅 writeup |
 | `GET` | `/api/v1/admin/tags` | A | 标签列表 |
 | `POST` | `/api/v1/admin/tags` | A | 创建标签 |
 | `PUT` | `/api/v1/admin/tags/:id` | A | 更新标签 |

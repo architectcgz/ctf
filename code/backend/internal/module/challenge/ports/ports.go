@@ -44,11 +44,26 @@ type ChallengeImageUsageRepository interface {
 
 type ChallengeWriteupRepository interface {
 	FindByID(id int64) (*model.Challenge, error)
+	FindUserByID(userID int64) (*model.User, error)
 	FindWriteupByChallengeID(challengeID int64) (*model.ChallengeWriteup, error)
 	UpsertWriteup(writeup *model.ChallengeWriteup) error
 	DeleteWriteupByChallengeID(challengeID int64) error
 	FindReleasedWriteupByChallengeID(challengeID int64, now time.Time) (*model.ChallengeWriteup, error)
 	GetSolvedStatus(userID, challengeID int64) (bool, error)
+	FindSubmissionWriteupByUserChallenge(userID, challengeID int64) (*model.SubmissionWriteup, error)
+	FindSubmissionWriteupByID(id int64) (*model.SubmissionWriteup, error)
+	UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error
+	GetTeacherSubmissionWriteupByID(id int64) (*TeacherSubmissionWriteupRecord, error)
+	ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+}
+
+type TeacherSubmissionWriteupRecord struct {
+	Submission      model.SubmissionWriteup
+	StudentUsername string
+	StudentName     string
+	ClassName       string
+	ChallengeTitle  string
+	ReviewerName    string
 }
 
 type ChallengeTopologyRepository interface {
