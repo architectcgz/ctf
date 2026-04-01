@@ -15,6 +15,10 @@
   - 后端：`POST /auth/ws-ticket`、`GET /notifications`、`PUT /notifications/:id/read`、`GET /ws/notifications`、`POST /admin/notifications`
   - 前端：通知下拉、通知中心、WebSocket 实时同步、管理员在 `/notifications` 页内发布通知
 - 管理端 `UserManage`、`CheatDetection` 已从降级态切回真实接口页；报告导出也已补状态查询与轮询。
+- `ChallengeManage` 当前批次已切换到 package-first 设计方向：
+  - 主入口从“创建挑战”替换为“导入题目包”
+  - 前端改为上传预览 + 确认导入双阶段流程
+  - 旧手工创建/编辑对话框从主页面移除
 - 当前如果继续联调，重点已经从“补接口缺口”转向“按业务流实际验证”。
 
 ## 已完成任务
@@ -29,6 +33,7 @@
 | F6 通知实时链路         | ✅ 完成 | 完成 ws-ticket + WebSocket 通知同步   | `6fccfb8` |
 | F8 管理员通知发布       | ✅ 完成 | 在通知中心完成发布抽屉与目标范围投递 | 当前工作树 |
 | F7 联调缺口补齐         | ✅ 完成 | 补齐用户管理、作弊检测、报告状态查询  | `df2a7ab` |
+| F9 题目包导入替换       | 🚧 进行中 | `ChallengeManage` 正切换为 package-first 导入流 | 当前工作树 |
 
 ## 已完成质量闭环
 
@@ -112,7 +117,8 @@
 1. `ContestManage` 仍有一个显式边界：后端未提供删除竞赛接口，所以前端继续隐藏删除能力。
 2. 公开竞赛 API 的历史枚举差异已经在客户端做了归一化；如果后续继续扩展竞赛域，建议抽成共享 mapper，避免多处维护。
 3. 管理员通知发布当前前端只开放单一目标范围选择；后端契约已支持 union 规则模型，后续若要做混合投递，需要再补交互设计。
-4. 本轮“联调缺口补齐”已单独补 review 文档，后续继续扩展时沿用相同留档方式。
+4. `ChallengeManage` 新的导入流依赖后台 `challenge-imports` 接口；当前环境缺少前端依赖，`vitest` / `vue-tsc` 还未在本地执行。
+5. 本轮“联调缺口补齐”已单独补 review 文档，后续继续扩展时沿用相同留档方式。
 
 ## 建议执行顺序
 

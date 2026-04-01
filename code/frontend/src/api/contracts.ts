@@ -586,6 +586,46 @@ export interface AdminChallengeHint {
   content: string
 }
 
+export interface AdminChallengeImportAttachment {
+  name: string
+  path: string
+}
+
+export interface AdminChallengeImportFlag {
+  type: Extract<FlagType, 'static' | 'dynamic'>
+  prefix?: string
+}
+
+export interface AdminChallengeImportRuntime {
+  type?: string
+  image_ref?: string
+}
+
+export interface AdminChallengeImportExtensions {
+  topology: {
+    source?: string
+    enabled: boolean
+  }
+}
+
+export interface AdminChallengeImportPreview {
+  id: ID
+  file_name: string
+  slug: string
+  title: string
+  description: string
+  category: ChallengeCategory
+  difficulty: ChallengeDifficulty
+  points: number
+  attachments?: AdminChallengeImportAttachment[]
+  hints?: AdminChallengeHint[]
+  flag: AdminChallengeImportFlag
+  runtime: AdminChallengeImportRuntime
+  extensions: AdminChallengeImportExtensions
+  warnings?: string[]
+  created_at: ISODateTime
+}
+
 export interface AdminChallengeWriteupData {
   id: ID
   challenge_id: ID
@@ -689,6 +729,10 @@ export interface AdminChallengeListItem {
 }
 
 export interface AdminChallengeUpsertData {
+  challenge: AdminChallengeListItem
+}
+
+export interface AdminChallengeImportCommitData {
   challenge: AdminChallengeListItem
 }
 

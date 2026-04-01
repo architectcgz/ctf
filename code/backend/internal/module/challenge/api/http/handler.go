@@ -7,6 +7,8 @@ import (
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
+	"io"
+	nethttp "net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -26,6 +28,9 @@ type challengeCommandService interface {
 	DeleteChallenge(id int64) error
 	PublishChallenge(id int64) error
 	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
+	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
+	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
+	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
 }
 
 type challengeQueryService interface {
@@ -142,6 +147,58 @@ func (h *Handler) PublishChallenge(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+func (h *Handler) PreviewChallengeImport(c *gin.Context) {
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		response.InvalidParams(c, "缺少题目包文件")
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		response.InvalidParams(c, "无法读取题目包文件")
+		return
+	}
+	defer file.Close()
+
+	resp, err := h.commands.PreviewChallengeImport(
+		c.Request.Context(),
+		authctx.MustCurrentUser(c).UserID,
+		fileHeader.Filename,
+		file,
+	)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+}
+
+func (h *Handler) GetChallengeImport(c *gin.Context) {
+	resp, err := h.commands.GetChallengeImport(authctx.MustCurrentUser(c).UserID, strings.TrimSpace(c.Param("id")))
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *Handler) CommitChallengeImport(c *gin.Context) {
+	id := strings.TrimSpace(c.Param("id"))
+	if id == "" {
+		response.InvalidParams(c, "无效的导入 ID")
+		return
+	}
+
+	resp, err := h.commands.CommitChallengeImport(c.Request.Context(), authctx.MustCurrentUser(c).UserID, id)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, &dto.ChallengeImportCommitResp{Challenge: resp})
+}
+
 func (h *Handler) SelfCheckChallenge(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -206,10 +263,7 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 		return
 	}
 
-	baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
-	if baseDir == "" {
-		baseDir = "../../docs/challenges/packs"
-	}
+	baseDir := resolveChallengeAttachmentBaseDir(cleanPath)
 
 	baseAbs, err := filepath.Abs(baseDir)
 	if err != nil {
@@ -239,4 +293,20 @@ func (h *Handler) DownloadAttachment(c *gin.Context) {
 	}
 
 	c.FileAttachment(target, filepath.Base(target))
+}
+
+func resolveChallengeAttachmentBaseDir(relativePath string) string {
+	if strings.HasPrefix(relativePath, "imports/") {
+		baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_ATTACHMENT_STORAGE_DIR"))
+		if baseDir == "" {
+			baseDir = "./data/challenge-attachments"
+		}
+		return baseDir
+	}
+
+	baseDir := strings.TrimSpace(os.Getenv("CHALLENGE_PACKS_DIR"))
+	if baseDir == "" {
+		baseDir = "../../docs/challenges/packs"
+	}
+	return baseDir
 }

@@ -24,6 +24,7 @@ type SelfCheckConfig struct {
 }
 
 type ChallengeService struct {
+	db           *gorm.DB
 	repo         challengeports.ChallengeCommandRepository
 	imageRepo    challengeports.ImageRepository
 	topologyRepo challengeports.ChallengeTopologyRepository
@@ -33,6 +34,7 @@ type ChallengeService struct {
 }
 
 func NewChallengeService(
+	db *gorm.DB,
 	repo challengeports.ChallengeCommandRepository,
 	imageRepo challengeports.ImageRepository,
 	topologyRepo challengeports.ChallengeTopologyRepository,
@@ -47,6 +49,7 @@ func NewChallengeService(
 		cfg.RuntimeCreateTimeout = 60 * time.Second
 	}
 	return &ChallengeService{
+		db:           db,
 		repo:         repo,
 		imageRepo:    imageRepo,
 		topologyRepo: topologyRepo,
