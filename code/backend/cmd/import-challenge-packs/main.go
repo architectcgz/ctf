@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/infrastructure/postgres"
 	"ctf-platform/internal/model"
+	challengedomain "ctf-platform/internal/module/challenge/domain"
 	"ctf-platform/pkg/crypto"
 )
 
@@ -25,42 +25,6 @@ const (
 	defaultGlobalFlagSecret = "dev-integration-secret-123456789"
 	defaultPacksDir         = "../../docs/challenges/packs"
 )
-
-type packManifest struct {
-	Slug        string `yaml:"slug"`
-	Title       string `yaml:"title"`
-	Category    string `yaml:"category"`
-	Difficulty  string `yaml:"difficulty"`
-	Points      int    `yaml:"points"`
-	Description struct {
-		File string `yaml:"file"`
-	} `yaml:"description"`
-	Hints []packHint `yaml:"hints"`
-	Flag  struct {
-		Mode string `yaml:"mode"`
-	} `yaml:"flag"`
-	Runtime struct {
-		Type  string `yaml:"type"`
-		Image struct {
-			Ref  string `yaml:"ref"`
-			Name string `yaml:"name"`
-			Tag  string `yaml:"tag"`
-		} `yaml:"image"`
-	} `yaml:"runtime"`
-	Attachments []packAttachment `yaml:"attachments"`
-}
-
-type packHint struct {
-	Text  string `yaml:"text"`
-	Cost  int    `yaml:"cost"`
-	Title string `yaml:"title"`
-}
-
-type packAttachment struct {
-	Path string `yaml:"path"`
-	File string `yaml:"file"`
-	Name string `yaml:"name"`
-}
 
 type challengeSpec struct {
 	Slug        string
@@ -156,7 +120,7 @@ func importChallengePacks(db *gorm.DB, packsDir string, publish, forceFlag bool)
 		}
 
 		packDir := filepath.Join(packsDir, entry.Name())
-		manifestPath := filepath.Join(packDir, "manifest.yml")
+		manifestPath := filepath.Join(packDir, "challenge.yml")
 		if _, err := os.Stat(manifestPath); err != nil {
 			continue
 		}
@@ -182,12 +146,12 @@ func importChallengePacks(db *gorm.DB, packsDir string, publish, forceFlag bool)
 }
 
 func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, bool, error) {
-	manifest, err := readManifest(filepath.Join(packDir, "manifest.yml"))
+	parsed, err := challengedomain.ParseChallengePackageDir(packDir)
 	if err != nil {
 		return false, false, err
 	}
 
-	spec, err := buildChallengeSpec(packDir, manifest)
+	spec, err := buildChallengeSpec(parsed)
 	if err != nil {
 		return false, false, err
 	}
@@ -201,14 +165,13 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 		}
 
 		var challenge model.Challenge
-		err = tx.Unscoped().
-			Where("title = ? AND category = ?", spec.Title, spec.Category).
-			First(&challenge).Error
+		err = findChallengeForPackageUpsert(tx, spec.Slug, spec.Title, spec.Category, &challenge)
 
 		now := time.Now()
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
 			challenge = model.Challenge{
+				PackageSlug:   stringPtr(spec.Slug),
 				Title:         spec.Title,
 				Description:   spec.Description,
 				Category:      spec.Category,
@@ -240,7 +203,10 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 			}
 
 			updates := map[string]any{
+				"package_slug":   spec.Slug,
+				"title":          spec.Title,
 				"description":    spec.Description,
+				"category":       spec.Category,
 				"difficulty":     spec.Difficulty,
 				"points":         spec.Points,
 				"image_id":       imageID,
@@ -285,133 +251,69 @@ func importOnePack(db *gorm.DB, packDir string, publish, forceFlag bool) (bool, 
 	return created, publishedNow, nil
 }
 
-func readManifest(path string) (*packManifest, error) {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read manifest %s: %w", path, err)
+func findChallengeForPackageUpsert(
+	tx *gorm.DB,
+	packageSlug string,
+	title string,
+	category string,
+	challenge *model.Challenge,
+) error {
+	if challenge == nil {
+		return fmt.Errorf("challenge target is nil")
 	}
-	var manifest packManifest
-	if err := yaml.Unmarshal(content, &manifest); err != nil {
-		return nil, fmt.Errorf("parse manifest %s: %w", path, err)
+
+	slug := strings.TrimSpace(packageSlug)
+	if slug != "" {
+		err := tx.Unscoped().
+			Where("package_slug = ?", slug).
+			First(challenge).Error
+		switch {
+		case err == nil:
+			return nil
+		case !errors.Is(err, gorm.ErrRecordNotFound):
+			return err
+		}
 	}
-	return &manifest, nil
+
+	return tx.Unscoped().
+		Where("(package_slug IS NULL OR package_slug = '') AND title = ? AND category = ?", title, category).
+		First(challenge).Error
 }
 
-func buildChallengeSpec(packDir string, manifest *packManifest) (*challengeSpec, error) {
-	title := strings.TrimSpace(manifest.Title)
-	if title == "" {
-		return nil, fmt.Errorf("manifest %s missing title", packDir)
-	}
-	if strings.TrimSpace(manifest.Slug) == "" {
-		return nil, fmt.Errorf("manifest %s missing slug", packDir)
+func buildChallengeSpec(parsed *challengedomain.ParsedChallengePackage) (*challengeSpec, error) {
+	if parsed == nil {
+		return nil, fmt.Errorf("parsed challenge package is nil")
 	}
 
-	descriptionFile := strings.TrimSpace(manifest.Description.File)
-	if descriptionFile == "" {
-		descriptionFile = "statement.md"
-	}
-	descriptionPath, err := safeJoin(packDir, descriptionFile)
-	if err != nil {
-		return nil, fmt.Errorf("resolve statement path for %s: %w", manifest.Slug, err)
-	}
-	descBytes, err := os.ReadFile(descriptionPath)
-	if err != nil {
-		return nil, fmt.Errorf("read statement for %s: %w", manifest.Slug, err)
-	}
-	description := strings.TrimSpace(string(descBytes))
-	if description == "" {
-		description = title
-	}
-
-	difficulty := normalizeDifficulty(manifest.Difficulty)
-	points := manifest.Points
-	if points <= 0 {
-		points = defaultPointsByDifficulty(difficulty)
-	}
-
-	hints := make([]hintSpec, 0, len(manifest.Hints))
-	for i, hint := range manifest.Hints {
-		content := strings.TrimSpace(hint.Text)
-		if content == "" {
-			continue
-		}
-		title := strings.TrimSpace(hint.Title)
-		if title == "" {
-			title = fmt.Sprintf("Hint %d", i+1)
-		}
-		cost := hint.Cost
-		if cost < 0 {
-			cost = 0
-		}
+	hints := make([]hintSpec, 0, len(parsed.Hints))
+	for _, hint := range parsed.Hints {
 		hints = append(hints, hintSpec{
-			Level:      len(hints) + 1,
-			Title:      title,
-			CostPoints: cost,
-			Content:    content,
+			Level:      hint.Level,
+			Title:      hint.Title,
+			CostPoints: hint.CostPoints,
+			Content:    hint.Content,
 		})
 	}
 
-	flagValue := fmt.Sprintf("flag{%s}", sanitizeFlagToken(manifest.Slug))
-	attachmentRel := firstAttachmentRelativePath(manifest.Attachments)
 	attachmentURL := ""
-	if attachmentRel != "" {
-		attachmentPath, err := safeJoin(packDir, attachmentRel)
-		if err != nil {
-			return nil, fmt.Errorf("resolve attachment path for %s: %w", manifest.Slug, err)
-		}
-		if _, err := os.Stat(attachmentPath); err != nil {
-			return nil, fmt.Errorf("attachment not found for %s: %w", manifest.Slug, err)
-		}
-		attachmentURL = buildAttachmentURL(manifest.Slug, attachmentRel)
+	if len(parsed.Attachments) > 0 {
+		attachmentURL = buildAttachmentURL(parsed.Slug, parsed.Attachments[0].Path)
 	}
 
 	return &challengeSpec{
-		Slug:        manifest.Slug,
-		Title:       title,
-		Description: description,
-		Category:    normalizeCategory(manifest.Category),
-		Difficulty:  difficulty,
-		Points:      points,
+		Slug:        parsed.Slug,
+		Title:       parsed.Title,
+		Description: parsed.Description,
+		Category:    parsed.Category,
+		Difficulty:  parsed.Difficulty,
+		Points:      parsed.Points,
 		ImageID:     0,
-		ImageRef:    resolveRuntimeImageRef(manifest),
+		ImageRef:    parsed.RuntimeImageRef,
 		Attachment:  attachmentURL,
 		Hints:       hints,
-		FlagPrefix:  "flag",
-		FlagValue:   flagValue,
+		FlagPrefix:  parsed.FlagPrefix,
+		FlagValue:   parsed.FlagValue,
 	}, nil
-}
-
-func resolveRuntimeImageRef(manifest *packManifest) string {
-	if manifest == nil || strings.TrimSpace(manifest.Runtime.Type) != "container" {
-		return ""
-	}
-
-	if ref := strings.TrimSpace(manifest.Runtime.Image.Ref); ref != "" {
-		return ref
-	}
-
-	name := strings.TrimSpace(manifest.Runtime.Image.Name)
-	if name == "" {
-		return ""
-	}
-	tag := strings.TrimSpace(manifest.Runtime.Image.Tag)
-	if tag == "" {
-		tag = "latest"
-	}
-	return fmt.Sprintf("%s:%s", name, tag)
-}
-
-func firstAttachmentRelativePath(attachments []packAttachment) string {
-	for _, attachment := range attachments {
-		rel := strings.TrimSpace(attachment.Path)
-		if rel == "" {
-			rel = strings.TrimSpace(attachment.File)
-		}
-		if rel != "" {
-			return rel
-		}
-	}
-	return ""
 }
 
 func buildAttachmentURL(slug, rel string) string {
@@ -544,90 +446,6 @@ func splitImageRef(imageRef string) (string, string, error) {
 	return trimmed, "latest", nil
 }
 
-func normalizeCategory(raw string) string {
-	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case "web", "pwn", "reverse", "crypto", "misc", "forensics":
-		return strings.ToLower(strings.TrimSpace(raw))
-	default:
-		return "misc"
-	}
-}
-
-func normalizeDifficulty(raw string) string {
-	switch strings.ToLower(strings.TrimSpace(raw)) {
-	case model.ChallengeDifficultyBeginner:
-		return model.ChallengeDifficultyBeginner
-	case model.ChallengeDifficultyEasy:
-		return model.ChallengeDifficultyEasy
-	case model.ChallengeDifficultyMedium:
-		return model.ChallengeDifficultyMedium
-	case model.ChallengeDifficultyHard:
-		return model.ChallengeDifficultyHard
-	case model.ChallengeDifficultyInsane, "hell":
-		return model.ChallengeDifficultyInsane
-	default:
-		return model.ChallengeDifficultyEasy
-	}
-}
-
-func defaultPointsByDifficulty(difficulty string) int {
-	switch difficulty {
-	case model.ChallengeDifficultyBeginner:
-		return 50
-	case model.ChallengeDifficultyEasy:
-		return 100
-	case model.ChallengeDifficultyMedium:
-		return 200
-	case model.ChallengeDifficultyHard:
-		return 300
-	case model.ChallengeDifficultyInsane:
-		return 500
-	default:
-		return 100
-	}
-}
-
-func sanitizeFlagToken(raw string) string {
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "challenge"
-	}
-	var b strings.Builder
-	b.Grow(len(raw))
-	for _, r := range raw {
-		switch {
-		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '_':
-			b.WriteRune(r)
-		default:
-			b.WriteByte('_')
-		}
-	}
-	result := strings.Trim(b.String(), "_-")
-	if result == "" {
-		return "challenge"
-	}
-	return result
-}
-
-func safeJoin(baseDir, rel string) (string, error) {
-	if strings.TrimSpace(rel) == "" {
-		return "", fmt.Errorf("relative path is empty")
-	}
-	baseAbs, err := filepath.Abs(baseDir)
-	if err != nil {
-		return "", err
-	}
-	target := filepath.Clean(filepath.Join(baseAbs, rel))
-	if target == baseAbs {
-		return target, nil
-	}
-	prefix := baseAbs + string(os.PathSeparator)
-	if !strings.HasPrefix(target, prefix) {
-		return "", fmt.Errorf("resolved path escapes pack dir: %s", rel)
-	}
-	return target, nil
-}
-
 func getenvBool(key string, defaultValue bool) bool {
 	raw := strings.TrimSpace(os.Getenv(key))
 	if raw == "" {
@@ -638,4 +456,12 @@ func getenvBool(key string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return value
+}
+
+func stringPtr(value string) *string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }

@@ -1,11 +1,11 @@
 # Challenge Pack Specification v1 (challenge-pack-v1)
 
 > 适用范围：CTF 靶场平台题目制作、审计、归档与后续导入
-> 文档目的：定义“题目源包（Zip）”的结构与 `manifest.yml` 规范，并明确哪些字段能映射到当前平台，哪些只是保留扩展。
-> 版本：v1.1 | 日期：2026-03-12
+> 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确哪些字段能映射到当前平台，哪些只是保留扩展。
+> 版本：v1.2 | 日期：2026-03-31
 
-> 说明：截至 2026-03-12，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，但尚未提供公开的“challenge-pack Zip 上传导入”接口。
-> 因此本规范首先是“作者侧源包规范”，其次才是未来导入器的契约；文中会显式标注当前平台是否已落地支持。
+> 说明：截至 2026-03-31，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，且已新增后台 `challenge.yml` 题目包上传预览与确认导入接口，以及复用同一解析核心的 CLI 导入脚本。
+> 因此本规范既是“作者侧源包规范”，也是当前实现中的导入契约；文中会显式标注哪些扩展字段仍处于保留状态。
 
 ---
 
@@ -28,7 +28,7 @@
 
 - Challenge：平台中的题目实体。
 - Challenge Pack：题目源包，通常为一个 Zip 文件，用于题目制作、归档、审计和未来导入。
-- Manifest：题目源包根目录下的 `manifest.yml`。
+- Manifest：题目源包根目录下的 `challenge.yml`。
 - 当前平台支持：指当前仓库中的后端模型/API 能直接承接该字段。
 - 保留扩展：指字段设计合理，但当前平台没有公开导入器或没有端到端自动落库路径。
 
@@ -46,7 +46,7 @@
 
 ## 4. 当前平台能力边界
 
-截至 2026-03-12，当前仓库内与题目包最相关的后端事实如下：
+截至 2026-03-31，当前仓库内与题目包最相关的后端事实如下：
 
 - 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
 - 题目发布已支持：`draft` -> `published`
@@ -57,9 +57,15 @@
 - Writeup 已支持：挑战 Writeup 已有独立 API
 - 标签已支持：通过独立 Tag API 和 `challenge_tags` 关系维护，不在当前创建题目 API 内直接写入
 
+当前已支持：
+
+- `POST /api/v1/admin/challenge-imports`
+- `GET /api/v1/admin/challenge-imports/:id`
+- `POST /api/v1/admin/challenge-imports/:id/commit`
+- CLI `cmd/import-challenge-packs` 复用同一 `challenge.yml` 解析逻辑
+
 当前明确不应在 v1 核心规范中写成“已支持”的能力：
 
-- 公共 Zip 导入 API
 - `manual` Flag 判题模式
 - `runtime.type = none`
 - 通过题目包直接在线构建 Dockerfile
@@ -74,14 +80,14 @@
 
 为兼容常见打包方式，题目源包根目录按如下规则识别：
 
-- 若 Zip 顶层直接包含 `manifest.yml`，则 Zip 顶层即根目录。
+- 若 Zip 顶层直接包含 `challenge.yml`，则 Zip 顶层即根目录。
 - 否则，Zip 顶层必须只包含一个目录，该目录视为根目录。
 
 ### 5.2 根目录必需文件
 
 v1 核心最小要求：
 
-- `manifest.yml`
+- `challenge.yml`
 - `statement.md`
 
 ### 5.3 根目录可选目录
@@ -101,7 +107,7 @@ v1 核心最小要求：
 ```text
 web-sqli-01.zip
   web-sqli-01/
-    manifest.yml
+    challenge.yml
     statement.md
     attachments/
       data.sql
@@ -114,85 +120,97 @@ web-sqli-01.zip
 
 ---
 
-## 6. manifest.yml 规范
+## 6. challenge.yml 规范
 
 ### 6.1 通用要求
 
 - 编码：UTF-8
-- 文件名：必须为 `manifest.yml`
-- 顶层 `spec_version` 必须为 `challenge-pack-v1`
+- 文件名：必须为 `challenge.yml`
+- 顶层必须包含：
+  - `api_version: v1`
+  - `kind: challenge`
 
 ### 6.2 v1 核心字段
 
 以下字段属于“当前平台建议直接对齐”的核心字段。
 
 ```yaml
-spec_version: challenge-pack-v1
+api_version: v1
+kind: challenge
 
-title: "Web-02 SQL Injection: Login Bypass"
-category: web
-difficulty: easy
-points: 100
+meta:
+  slug: web-sqli-login-01
+  title: "Web-02 SQL Injection: Login Bypass"
+  category: web
+  difficulty: easy
+  points: 100
 
-description:
-  file: statement.md
-
-hints:
-  - text: "登录接口把用户输入直接拼进了 SQL。"
-    cost: 30
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/data.sql
+      name: data.sql
 
 flag:
-  mode: dynamic
+  type: dynamic
   prefix: flag
 
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 30
+    content: "登录接口把用户输入直接拼进了 SQL。"
+
 runtime:
+  type: container
   image:
     ref: "registry.example.edu/ctf/web-sqli-login:20260312"
 ```
 
 字段说明：
 
-- `title`：必填，对应平台 `challenge.title`
-- `category`：必填，建议枚举 `web` `pwn` `reverse` `crypto` `misc` `forensics`
-- `difficulty`：必填，当前平台支持 `beginner` `easy` `medium` `hard` `insane`
-- `points`：必填，正整数
-- `description.file`：必填，v1 固定为 `statement.md`
+- `meta.slug`：必填，建议使用小写字母、数字、`-`；当前平台会持久化到 `challenges.package_slug`，作为导入稳定 upsert 标识
+- `meta.title`：必填，对应平台 `challenge.title`
+- `meta.category`：必填，建议枚举 `web` `pwn` `reverse` `crypto` `misc` `forensics`
+- `meta.difficulty`：必填，当前平台支持 `beginner` `easy` `medium` `hard` `insane`
+- `meta.points`：必填，正整数
+- `content.statement`：必填，v1 固定为 `statement.md`
+- `content.attachments[]`：可选，对应附件材料；当前平台会保留附件并对外生成单一下载入口
 - `hints[]`：可选，对应平台 `challenge_hints`
-  - `text`：提示内容
-  - `cost`：提示代价，对应平台 `cost_points`
-- `flag.mode`：必填，仅允许 `static` / `dynamic`
+  - `level`：提示级别，未填写时导入器可按顺序补齐
+  - `content`：提示内容
+  - `cost_points`：提示代价
+- `flag.type`：必填，仅允许 `static` / `dynamic`
+- `flag.value`：静态题目必填
 - `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
+- `runtime.type`：当前首版仅支持 `container`
 - `runtime.image.ref`：容器题必填，表示最终运行镜像引用
 
 ### 6.3 v1 建议字段
 
 以下字段设计合理，但当前平台不一定自动导入，应作为“作者侧规范”保留：
 
-- `slug`
-  - 建议使用小写字母、数字、`-`
-  - 当前平台无 `slug` 字段，可作为源包唯一标识和文件夹命名
 - `tags`
   - 建议继续使用字符串数组
   - 当前平台标签是独立实体，导入器未来应做映射或创建
-- `attachments`
-  - 适合作为作者侧归档材料
-  - 当前平台题目详情只有一个 `attachment_url`，多附件不会自然一一映射
 - `writeup`
   - 当前平台有 Writeup 能力，但没有题目包自动导入链路
 
 示例：
 
 ```yaml
-slug: web-sqli-login-01
-tags:
-  - vuln:sqli
-  - stack:php
-  - kp:auth-bypass
+meta:
+  slug: web-sqli-login-01
+  tags:
+    - vuln:sqli
+    - stack:php
+    - kp:auth-bypass
 
-attachments:
-  - path: attachments/data.sql
-    name: data.sql
-    sha256: "<hex>"
+content:
+  attachments:
+    - path: attachments/data.sql
+      name: data.sql
+      sha256: "<hex>"
 
 writeup:
   file: writeup/solution.md
@@ -283,22 +301,22 @@ runtime:
 
 | 题目包字段 | 当前平台状态 | 说明 |
 |---|---|---|
-| `title` | 已支持 | 直接映射题目标题 |
-| `description.file=statement.md` | 已支持 | 可直接映射到 `description` Markdown 原文 |
-| `category` | 已支持 | 建议使用既有分类 |
-| `difficulty` | 已支持 | 仅 `beginner/easy/medium/hard/insane` |
-| `points` | 已支持 | 直接映射 |
-| `hints[].text/cost` | 已支持 | `cost -> cost_points` |
-| `flag.mode=static/dynamic` | 已支持 | `manual` 不支持 |
+| `meta.title` | 已支持 | 直接映射题目标题 |
+| `content.statement=statement.md` | 已支持 | 可直接映射到 `description` Markdown 原文 |
+| `meta.category` | 已支持 | 建议使用既有分类 |
+| `meta.difficulty` | 已支持 | 仅 `beginner/easy/medium/hard/insane` |
+| `meta.points` | 已支持 | 直接映射 |
+| `hints[].content/cost_points` | 已支持 | `level/title/cost_points/content` 全部可映射 |
+| `flag.type=static/dynamic` | 已支持 | `manual` 不支持 |
 | `flag.prefix` | 已支持 | 对应 `flag_prefix` |
-| `runtime.image.ref` | 已支持 | 需先注册为平台镜像 |
-| `attachment_url` | 已支持 | 但题目包内附件不会自动变成 URL |
+| `runtime.image.ref` | 已支持 | 导入时可自动关联或创建镜像记录 |
+| `content.attachments` | 已支持 | 平台会生成统一下载入口 |
 | `tags` | 部分支持 | 平台有 Tag 能力，但不是题目创建时内联字段 |
-| `topology` | 已支持但需独立落库 | 有独立 API，不是题目创建接口内联字段 |
+| `extensions.topology` | 已保留 | 首版只做预览与扩展提示，不自动落现有拓扑表 |
 | `writeup` | 已支持但需独立落库 | 有独立 API，不是题目创建接口内联字段 |
-| `slug` | 未落库 | 仅建议作为源包标识 |
+| `meta.slug` | 已支持 | 持久化到 `challenges.package_slug`，并作为导入稳定 upsert 标识与附件存储目录 |
 | `runtime.type=none` | 不支持 | 当前创建题目必须依赖镜像 |
-| `flag.mode=manual` | 不支持 | 当前仅 static / dynamic |
+| `flag.type=manual` | 不支持 | 当前仅 static / dynamic |
 | `runtime.build.source=dockerfile` | 未公开导入支持 | 可作为审计材料保留 |
 | `runtime.build.source=tar` | 未公开导入支持 | 不应写成当前能力 |
 
@@ -308,11 +326,11 @@ runtime:
 
 ### 8.1 源包静态校验
 
-- 必须存在 `manifest.yml`
+- 必须存在 `challenge.yml`
 - 必须存在 `statement.md`
-- `description.file` 必须等于 `statement.md`
-- `difficulty` 必须属于 `beginner/easy/medium/hard/insane`
-- `flag.mode` 必须属于 `static/dynamic`
+- `content.statement` 必须等于 `statement.md` 或为空时默认回落到 `statement.md`
+- `meta.difficulty` 必须属于 `beginner/easy/medium/hard/insane`
+- `flag.type` 必须属于 `static/dynamic`
 - 若存在 `attachments[*].path`，必须位于 `attachments/` 下
 - 若存在 `runtime.build.source=dockerfile`，则必须存在 `docker/Dockerfile`
 

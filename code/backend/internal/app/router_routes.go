@@ -250,6 +250,22 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.ops.NotificationHandler.PublishAdminNotification,
 	)
+	adminOnly.POST("/challenge-imports",
+		audit(middleware.AuditOptions{
+			Action:       model.AuditActionCreate,
+			ResourceType: "challenge_import",
+		}),
+		deps.challenge.Handler.PreviewChallengeImport,
+	)
+	adminOnly.GET("/challenge-imports/:id", deps.challenge.Handler.GetChallengeImport)
+	adminOnly.POST("/challenge-imports/:id/commit",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionCreate,
+			ResourceType:    "challenge_import_commit",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.Handler.CommitChallengeImport,
+	)
 
 	adminOnly.GET("/users", deps.identityHandler.ListUsers)
 	adminOnly.POST("/users",

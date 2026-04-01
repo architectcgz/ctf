@@ -746,6 +746,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	challengeCommandService := challengecmd.NewChallengeService(
+		db,
 		challengeRepo,
 		imageRepo,
 		challengeRepo,

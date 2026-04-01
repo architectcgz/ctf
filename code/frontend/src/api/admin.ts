@@ -11,6 +11,8 @@ import type {
   AdminContestChallengeData,
   AdminContestTeamData,
   AdminChallengeHint,
+  AdminChallengeImportCommitData,
+  AdminChallengeImportPreview,
   AdminChallengeListItem,
   AdminNotificationPublishPayload,
   AdminNotificationPublishResult,
@@ -227,6 +229,44 @@ interface RawAdminChallengeItem {
   status: 'draft' | 'published' | 'archived'
   created_at: string
   updated_at: string
+}
+
+interface RawChallengeImportPreview {
+  id: string | number
+  file_name: string
+  slug: string
+  title: string
+  description: string
+  category: AdminChallengeListItem['category']
+  difficulty: AdminChallengeListItem['difficulty']
+  points: number
+  attachments?: Array<{
+    name: string
+    path: string
+  }>
+  hints?: Array<{
+    id?: string | number
+    level: number
+    title?: string
+    cost_points?: number
+    content: string
+  }>
+  flag: {
+    type: 'static' | 'dynamic'
+    prefix?: string
+  }
+  runtime: {
+    type?: string
+    image_ref?: string
+  }
+  extensions: {
+    topology: {
+      source?: string
+      enabled: boolean
+    }
+  }
+  warnings?: string[]
+  created_at: string
 }
 
 interface RawTopologyNetworkData {
@@ -634,6 +674,32 @@ function normalizeChallenge(
   }
 }
 
+function normalizeChallengeImportPreview(item: RawChallengeImportPreview): AdminChallengeImportPreview {
+  return {
+    id: String(item.id),
+    file_name: item.file_name,
+    slug: item.slug,
+    title: item.title,
+    description: item.description,
+    category: item.category,
+    difficulty: item.difficulty,
+    points: item.points,
+    attachments: item.attachments,
+    hints: item.hints?.map((hint) => ({
+      id: hint.id == null ? undefined : String(hint.id),
+      level: hint.level,
+      title: hint.title,
+      cost_points: hint.cost_points,
+      content: hint.content,
+    })),
+    flag: item.flag,
+    runtime: item.runtime,
+    extensions: item.extensions,
+    warnings: item.warnings,
+    created_at: item.created_at,
+  }
+}
+
 function normalizeTopologyNetwork(item: RawTopologyNetworkData): TopologyNetworkData {
   return {
     key: item.key,
@@ -862,6 +928,38 @@ export async function getChallengeDetail(id: string) {
   ])
 
   return normalizeChallenge(challenge, flagConfig)
+}
+
+export async function previewChallengeImport(file: File): Promise<AdminChallengeImportPreview> {
+  const form = new FormData()
+  form.append('file', file)
+
+  const response = await request<RawChallengeImportPreview>({
+    method: 'POST',
+    url: '/admin/challenge-imports',
+    data: form,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return normalizeChallengeImportPreview(response)
+}
+
+export async function getChallengeImport(id: string): Promise<AdminChallengeImportPreview> {
+  const response = await request<RawChallengeImportPreview>({
+    method: 'GET',
+    url: `/admin/challenge-imports/${encodeURIComponent(id)}`,
+  })
+  return normalizeChallengeImportPreview(response)
+}
+
+export async function commitChallengeImport(id: string): Promise<AdminChallengeImportCommitData> {
+  const response = await request<{ challenge: RawAdminChallengeItem }>({
+    method: 'POST',
+    url: `/admin/challenge-imports/${encodeURIComponent(id)}/commit`,
+  })
+
+  return {
+    challenge: normalizeChallenge(response.challenge),
+  }
 }
 
 export interface AdminChallengePayload {

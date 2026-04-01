@@ -1,0 +1,39 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-sqli-login-01
+  title: "Web-02 SQL Injection: Login Bypass"
+  category: web
+  difficulty: easy
+  points: 100
+  tags:
+    - vuln:sqli
+    - stack:sqlite
+    - stack:python
+    - stack:flask
+    - kp:auth-bypass
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 30
+    content: "登录接口把用户输入直接拼进了 SQL。"
+  - level: 2
+    title: Hint 2
+    cost_points: 50
+    content: "SQLite 支持 `-- ` 行注释（注意后面有空格）。"
+
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/web-sqli-login-01:20260312"
+
