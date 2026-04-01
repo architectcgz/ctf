@@ -335,7 +335,8 @@ interface RawEnvironmentTemplateData {
 }
 
 interface RawChallengeFlagConfig {
-  flag_type: 'static' | 'dynamic'
+  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
+  flag_regex?: string
   flag_prefix?: string
   configured: boolean
 }
@@ -668,6 +669,7 @@ function normalizeChallenge(
       ? {
           configured: flagConfig.configured,
           flag_type: flagConfig.flag_type,
+          flag_regex: flagConfig.flag_regex,
           flag_prefix: flagConfig.flag_prefix,
         }
       : undefined,
@@ -977,8 +979,9 @@ export interface AdminChallengePayload {
 }
 
 export interface AdminChallengeFlagPayload {
-  flag_type: 'static' | 'dynamic'
+  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
   flag?: string
+  flag_regex?: string
   flag_prefix?: string
 }
 

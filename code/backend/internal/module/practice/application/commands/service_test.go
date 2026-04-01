@@ -16,6 +16,7 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
@@ -302,6 +303,228 @@ func TestPracticeServiceCloseCancelsAsyncScoreUpdate(t *testing.T) {
 	if calls.Load() != 1 {
 		t.Fatalf("expected one score update call, got %d", calls.Load())
 	}
+}
+
+func TestSubmitFlagWithRegexChallengeMatchesPattern(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	repo := &stubPracticeRepository{}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:        id,
+					Category:  model.DimensionWeb,
+					Points:    80,
+					Status:    model.ChallengeStatusPublished,
+					FlagType:  model.FlagTypeRegex,
+					FlagRegex: `^flag\{regex-[0-9]{2}\}$`,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.SubmitFlagWithContext(context.Background(), 9, 19, "flag{regex-42}")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
+		t.Fatalf("expected regex submission success, got %+v", resp)
+	}
+}
+
+func TestSubmitFlagWithManualReviewChallengeCreatesPendingSubmission(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	var createdSubmission *model.Submission
+	repo := &stubPracticeRepository{
+		createSubmissionFn: func(submission *model.Submission) error {
+			createdSubmission = submission
+			return nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.SubmitFlagWithContext(context.Background(), 8, 18, "answer with reasoning")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if resp.IsCorrect || resp.Status != dto.SubmissionStatusPendingReview {
+		t.Fatalf("expected pending-review response, got %+v", resp)
+	}
+	if createdSubmission == nil {
+		t.Fatal("expected submission to be created")
+	}
+	if createdSubmission.Flag != "answer with reasoning" {
+		t.Fatalf("expected raw answer stored for manual review, got %+v", createdSubmission)
+	}
+	if createdSubmission.ReviewStatus != model.SubmissionReviewStatusPending {
+		t.Fatalf("expected pending review status, got %+v", createdSubmission)
+	}
+}
+
+func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T) {
+	t.Parallel()
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	now := time.Now()
+	submissionID := int64(71)
+	reviewerID := int64(301)
+	studentID := int64(201)
+	var updatedSubmission *model.Submission
+	var scoreUpdateCalls atomic.Int32
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			if id != submissionID {
+				t.Fatalf("unexpected submission id: %d", id)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: model.Submission{
+					ID:           submissionID,
+					UserID:       studentID,
+					ChallengeID:  19,
+					Flag:         "answer text",
+					ReviewStatus: model.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+				},
+				StudentUsername: "student",
+				StudentName:     "Student",
+				ClassName:       "Class 1",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		updateSubmissionFn: func(submission *model.Submission) error {
+			updatedSubmission = submission
+			return nil
+		},
+		findUserByIDFn: func(userID int64) (*model.User, error) {
+			return &model.User{ID: userID, Username: "teacher", Role: model.RoleTeacher, ClassName: "Class 1"}, nil
+		},
+	}
+	service := NewService(
+		repo,
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   120,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeManualReview,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&stubScoreUpdater{
+			updateFn: func(ctx context.Context, userID int64) error {
+				if userID != studentID {
+					t.Fatalf("unexpected score update user: %d", userID)
+				}
+				scoreUpdateCalls.Add(1)
+				return nil
+			},
+		},
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+			Cache: config.CacheConfig{
+				ProgressTTL: time.Minute,
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.ReviewManualReviewSubmissionWithContext(
+		context.Background(),
+		submissionID,
+		reviewerID,
+		model.RoleTeacher,
+		&dto.ReviewManualReviewSubmissionReq{
+			ReviewStatus:  model.SubmissionReviewStatusApproved,
+			ReviewComment: "答案链路完整",
+		},
+	)
+	if err != nil {
+		t.Fatalf("ReviewManualReviewSubmissionWithContext() error = %v", err)
+	}
+	if resp.ReviewStatus != model.SubmissionReviewStatusApproved || !resp.IsCorrect || resp.Score != 120 {
+		t.Fatalf("unexpected review response: %+v", resp)
+	}
+	if updatedSubmission == nil {
+		t.Fatal("expected submission to be updated")
+	}
+	if updatedSubmission.ReviewStatus != model.SubmissionReviewStatusApproved || !updatedSubmission.IsCorrect || updatedSubmission.Score != 120 {
+		t.Fatalf("unexpected updated submission: %+v", updatedSubmission)
+	}
+	requireEventually(t, time.Second, func() bool {
+		return scoreUpdateCalls.Load() == 1
+	})
 }
 
 func TestPracticeServiceRunAsyncTaskReturnsWhenClosed(t *testing.T) {

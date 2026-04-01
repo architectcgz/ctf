@@ -652,6 +652,16 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	teacherOrAbove.GET("/students/:id/recommendations", deps.teachingReadmodel.Handler.GetStudentRecommendations)
 	teacherOrAbove.GET("/students/:id/timeline", deps.teachingReadmodel.Handler.GetStudentTimeline)
 	teacherOrAbove.GET("/students/:id/evidence", deps.teachingReadmodel.Handler.GetStudentEvidence)
+	teacherOrAbove.GET("/manual-review-submissions", deps.practice.Handler.ListTeacherManualReviewSubmissions)
+	teacherOrAbove.GET("/manual-review-submissions/:id", deps.practice.Handler.GetTeacherManualReviewSubmission)
+	teacherOrAbove.PUT("/manual-review-submissions/:id/review",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "manual_review_submission",
+			ResourceIDParam: "id",
+		}),
+		deps.practice.Handler.ReviewManualReviewSubmission,
+	)
 	teacherOrAbove.GET("/writeup-submissions", deps.challenge.WriteupHandler.ListTeacherSubmissions)
 	teacherOrAbove.GET("/writeup-submissions/:id", deps.challenge.WriteupHandler.GetTeacherSubmission)
 	teacherOrAbove.PUT("/writeup-submissions/:id/review",

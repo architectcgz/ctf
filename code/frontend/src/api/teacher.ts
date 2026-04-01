@@ -10,6 +10,8 @@ import type {
   SkillProfileData,
   TeacherClassItem,
   TeacherClassSummaryData,
+  TeacherManualReviewSubmissionDetailData,
+  TeacherManualReviewSubmissionItemData,
   TeacherSubmissionWriteupItemData,
   TeacherClassTrendData,
   TeacherInstanceItem,
@@ -54,6 +56,22 @@ interface RawTeacherSubmissionWriteupItem extends Omit<TeacherSubmissionWriteupI
   id: string | number
   user_id: string | number
   challenge_id: string | number
+}
+
+interface RawTeacherManualReviewSubmissionItem extends Omit<TeacherManualReviewSubmissionItemData, 'id' | 'user_id' | 'challenge_id'> {
+  id: string | number
+  user_id: string | number
+  challenge_id: string | number
+}
+
+interface RawTeacherManualReviewSubmissionDetail extends Omit<
+  TeacherManualReviewSubmissionDetailData,
+  'id' | 'user_id' | 'challenge_id' | 'reviewed_by'
+> {
+  id: string | number
+  user_id: string | number
+  challenge_id: string | number
+  reviewed_by?: string | number
 }
 
 export async function getClasses(): Promise<TeacherClassItem[]> {
@@ -259,6 +277,77 @@ export async function getTeacherWriteupSubmissions(params?: {
       user_id: String(item.user_id),
       challenge_id: String(item.challenge_id),
     })),
+  }
+}
+
+export async function getTeacherManualReviewSubmissions(params?: {
+  student_id?: string
+  challenge_id?: string
+  class_name?: string
+  review_status?: 'pending' | 'approved' | 'rejected'
+  page?: number
+  page_size?: number
+}): Promise<PageResult<TeacherManualReviewSubmissionItemData>> {
+  const payload = await request<PageResult<RawTeacherManualReviewSubmissionItem>>({
+    method: 'GET',
+    url: '/teacher/manual-review-submissions',
+    params: {
+      student_id: params?.student_id,
+      challenge_id: params?.challenge_id,
+      class_name: params?.class_name,
+      review_status: params?.review_status,
+      page: params?.page,
+      page_size: params?.page_size,
+    },
+  })
+
+  return {
+    ...payload,
+    list: payload.list.map((item) => ({
+      ...item,
+      id: String(item.id),
+      user_id: String(item.user_id),
+      challenge_id: String(item.challenge_id),
+    })),
+  }
+}
+
+export async function getTeacherManualReviewSubmission(
+  id: string
+): Promise<TeacherManualReviewSubmissionDetailData> {
+  const payload = await request<RawTeacherManualReviewSubmissionDetail>({
+    method: 'GET',
+    url: `/teacher/manual-review-submissions/${encodeURIComponent(id)}`,
+  })
+
+  return {
+    ...payload,
+    id: String(payload.id),
+    user_id: String(payload.user_id),
+    challenge_id: String(payload.challenge_id),
+    reviewed_by: payload.reviewed_by == null ? undefined : String(payload.reviewed_by),
+  }
+}
+
+export async function reviewTeacherManualReviewSubmission(
+  id: string,
+  payload: {
+    review_status: 'approved' | 'rejected'
+    review_comment?: string
+  }
+): Promise<TeacherManualReviewSubmissionDetailData> {
+  const response = await request<RawTeacherManualReviewSubmissionDetail>({
+    method: 'PUT',
+    url: `/teacher/manual-review-submissions/${encodeURIComponent(id)}/review`,
+    data: payload,
+  })
+
+  return {
+    ...response,
+    id: String(response.id),
+    user_id: String(response.user_id),
+    challenge_id: String(response.challenge_id),
+    reviewed_by: response.reviewed_by == null ? undefined : String(response.reviewed_by),
   }
 }
 

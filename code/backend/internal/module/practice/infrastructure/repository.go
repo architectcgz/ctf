@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -159,6 +160,162 @@ func (r *Repository) FindCorrectSubmission(userID, challengeID int64) (*model.Su
 	err := r.db.Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
 	return &submission, err
+}
+
+func (r *Repository) UpdateSubmission(submission *model.Submission) error {
+	return r.db.Save(submission).Error
+}
+
+func (r *Repository) FindUserByID(userID int64) (*model.User, error) {
+	var user model.User
+	if err := r.db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+type teacherManualReviewSubmissionRow struct {
+	ID              int64
+	UserID          int64
+	ChallengeID     int64
+	ContestID       *int64
+	Flag            string
+	IsCorrect       bool
+	ReviewStatus    string
+	ReviewedBy      *int64
+	ReviewedAt      *time.Time
+	ReviewComment   string
+	Score           int
+	SubmittedAt     time.Time
+	UpdatedAt       time.Time
+	StudentUsername string
+	StudentName     string
+	ClassName       string
+	ChallengeTitle  string
+	ReviewerName    string
+}
+
+func (r teacherManualReviewSubmissionRow) toRecord() practiceports.TeacherManualReviewSubmissionRecord {
+	return practiceports.TeacherManualReviewSubmissionRecord{
+		Submission: model.Submission{
+			ID:            r.ID,
+			UserID:        r.UserID,
+			ChallengeID:   r.ChallengeID,
+			ContestID:     r.ContestID,
+			Flag:          r.Flag,
+			IsCorrect:     r.IsCorrect,
+			ReviewStatus:  r.ReviewStatus,
+			ReviewedBy:    r.ReviewedBy,
+			ReviewedAt:    r.ReviewedAt,
+			ReviewComment: r.ReviewComment,
+			Score:         r.Score,
+			SubmittedAt:   r.SubmittedAt,
+			UpdatedAt:     r.UpdatedAt,
+		},
+		StudentUsername: r.StudentUsername,
+		StudentName:     r.StudentName,
+		ClassName:       r.ClassName,
+		ChallengeTitle:  r.ChallengeTitle,
+		ReviewerName:    r.ReviewerName,
+	}
+}
+
+func (r *Repository) GetTeacherManualReviewSubmissionByID(id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+	rows, _, err := r.listTeacherManualReviewSubmissions(&dto.TeacherManualReviewSubmissionQuery{
+		Page: 1,
+		Size: 1,
+	}, func(db *gorm.DB) *gorm.DB {
+		return db.Where("s.id = ?", id)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(rows) == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	record := rows[0]
+	return &record, nil
+}
+
+func (r *Repository) ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+	return r.listTeacherManualReviewSubmissions(query, nil)
+}
+
+func (r *Repository) listTeacherManualReviewSubmissions(
+	query *dto.TeacherManualReviewSubmissionQuery,
+	extra func(db *gorm.DB) *gorm.DB,
+) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error) {
+	base := r.db.Table("submissions AS s").
+		Select(strings.TrimSpace(`
+			s.id,
+			s.user_id,
+			s.challenge_id,
+			s.contest_id,
+			s.flag,
+			s.is_correct,
+			s.review_status,
+			s.reviewed_by,
+			s.reviewed_at,
+			s.review_comment,
+			s.score,
+			s.submitted_at,
+			s.updated_at,
+			u.username AS student_username,
+			COALESCE(u.name, '') AS student_name,
+			COALESCE(u.class_name, '') AS class_name,
+			c.title AS challenge_title,
+			COALESCE(reviewer.name, reviewer.username, '') AS reviewer_name
+		`)).
+		Joins("JOIN users u ON u.id = s.user_id").
+		Joins("JOIN challenges c ON c.id = s.challenge_id").
+		Joins("LEFT JOIN users reviewer ON reviewer.id = s.reviewed_by").
+		Where("c.flag_type = ?", model.FlagTypeManualReview)
+
+	if query != nil {
+		if query.StudentID != nil {
+			base = base.Where("s.user_id = ?", *query.StudentID)
+		}
+		if query.ChallengeID != nil {
+			base = base.Where("s.challenge_id = ?", *query.ChallengeID)
+		}
+		if query.ClassName != "" {
+			base = base.Where("u.class_name = ?", query.ClassName)
+		}
+		if query.ReviewStatus != "" {
+			base = base.Where("s.review_status = ?", query.ReviewStatus)
+		}
+	}
+	if extra != nil {
+		base = extra(base)
+	}
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	page := 1
+	size := 20
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.Size > 0 {
+			size = query.Size
+		}
+	}
+	offset := (page - 1) * size
+
+	var rows []teacherManualReviewSubmissionRow
+	if err := base.Order("s.updated_at DESC, s.id DESC").Offset(offset).Limit(size).Scan(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+
+	items := make([]practiceports.TeacherManualReviewSubmissionRecord, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, row.toRecord())
+	}
+	return items, total, nil
 }
 
 // CountRecentSubmissions 统计时间窗口内的提交次数

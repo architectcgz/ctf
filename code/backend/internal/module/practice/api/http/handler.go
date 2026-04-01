@@ -21,6 +21,9 @@ type practiceService interface {
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
 	UnlockHintWithContext(ctx context.Context, userID, challengeID int64, level int) (*dto.UnlockHintResp, error)
+	ListTeacherManualReviewSubmissions(requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
+	GetTeacherManualReviewSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
+	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }
 
 func NewHandler(service practiceService) *Handler {
@@ -116,5 +119,55 @@ func (h *Handler) UnlockHint(c *gin.Context) {
 		return
 	}
 
+	response.Success(c, resp)
+}
+
+func (h *Handler) ListTeacherManualReviewSubmissions(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherManualReviewSubmissionQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	resp, err := h.service.ListTeacherManualReviewSubmissions(currentUser.UserID, currentUser.Role, &query)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *Handler) GetTeacherManualReviewSubmission(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	submissionID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的 submission id")
+		return
+	}
+	resp, err := h.service.GetTeacherManualReviewSubmission(submissionID, currentUser.UserID, currentUser.Role)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
+func (h *Handler) ReviewManualReviewSubmission(c *gin.Context) {
+	currentUser := authctx.MustCurrentUser(c)
+	submissionID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		response.InvalidParams(c, "无效的 submission id")
+		return
+	}
+	var req dto.ReviewManualReviewSubmissionReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
+	resp, err := h.service.ReviewManualReviewSubmissionWithContext(c.Request.Context(), submissionID, currentUser.UserID, currentUser.Role, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
 	response.Success(c, resp)
 }

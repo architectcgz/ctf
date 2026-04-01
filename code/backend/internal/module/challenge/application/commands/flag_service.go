@@ -53,6 +53,7 @@ func (s *FlagService) ConfigureStaticFlag(challengeID int64, flag, flagPrefix st
 		return err
 	}
 
+	s.resetNonDynamicFlagFields(challenge)
 	challenge.FlagType = model.FlagTypeStatic
 	challenge.FlagHash = crypto.HashStaticFlag(flag, salt)
 	challenge.FlagSalt = salt
@@ -68,11 +69,52 @@ func (s *FlagService) ConfigureDynamicFlag(challengeID int64, flagPrefix string)
 		return err
 	}
 
+	s.resetNonDynamicFlagFields(challenge)
 	challenge.FlagType = model.FlagTypeDynamic
 	if flagPrefix != "" {
 		challenge.FlagPrefix = flagPrefix
 	}
 	return s.repo.Update(challenge)
+}
+
+func (s *FlagService) ConfigureRegexFlag(challengeID int64, flagRegex, flagPrefix string) error {
+	compiled, err := regexp.Compile(strings.TrimSpace(flagRegex))
+	if err != nil {
+		return errcode.New(10001, "Regex Flag 配置无效: "+err.Error(), 400)
+	}
+
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return err
+	}
+
+	s.resetNonDynamicFlagFields(challenge)
+	challenge.FlagType = model.FlagTypeRegex
+	challenge.FlagRegex = compiled.String()
+	if flagPrefix != "" {
+		challenge.FlagPrefix = flagPrefix
+	}
+	return s.repo.Update(challenge)
+}
+
+func (s *FlagService) ConfigureManualReviewFlag(challengeID int64) error {
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return err
+	}
+
+	s.resetNonDynamicFlagFields(challenge)
+	challenge.FlagType = model.FlagTypeManualReview
+	return s.repo.Update(challenge)
+}
+
+func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
+	if challenge == nil {
+		return
+	}
+	challenge.FlagHash = ""
+	challenge.FlagSalt = ""
+	challenge.FlagRegex = ""
 }
 
 func (s *FlagService) loadChallenge(challengeID int64) (*model.Challenge, error) {

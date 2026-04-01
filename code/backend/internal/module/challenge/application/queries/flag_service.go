@@ -3,6 +3,7 @@ package queries
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"gorm.io/gorm"
@@ -55,6 +56,12 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 		hash := crypto.HashStaticFlag(input, challenge.FlagSalt)
 		return crypto.ValidateFlag(hash, challenge.FlagHash), nil
 	}
+	if challenge.FlagType == model.FlagTypeRegex {
+		return regexp.MatchString(challenge.FlagRegex, input)
+	}
+	if challenge.FlagType == model.FlagTypeManualReview {
+		return false, nil
+	}
 
 	expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
 	if err != nil {
@@ -74,10 +81,15 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 		configured = true
 	} else if challenge.FlagType == model.FlagTypeDynamic {
 		configured = true
+	} else if challenge.FlagType == model.FlagTypeRegex && strings.TrimSpace(challenge.FlagRegex) != "" {
+		configured = true
+	} else if challenge.FlagType == model.FlagTypeManualReview {
+		configured = true
 	}
 
 	return &dto.FlagResp{
 		FlagType:   challenge.FlagType,
+		FlagRegex:  challenge.FlagRegex,
 		FlagPrefix: challenge.FlagPrefix,
 		Configured: configured,
 	}, nil

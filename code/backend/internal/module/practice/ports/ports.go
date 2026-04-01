@@ -3,6 +3,7 @@ package ports
 import (
 	"context"
 
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 )
 
@@ -57,7 +58,20 @@ type PracticeCommandRepository interface {
 	FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	CreateSubmission(submission *model.Submission) error
 	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)
+	UpdateSubmission(submission *model.Submission) error
+	FindUserByID(userID int64) (*model.User, error)
+	ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)
+	GetTeacherManualReviewSubmissionByID(id int64) (*TeacherManualReviewSubmissionRecord, error)
 	IsUniqueViolation(err error) bool
+}
+
+type TeacherManualReviewSubmissionRecord struct {
+	Submission      model.Submission
+	StudentUsername string
+	StudentName     string
+	ClassName       string
+	ChallengeTitle  string
+	ReviewerName    string
 }
 
 type PracticeScoreRepository interface {

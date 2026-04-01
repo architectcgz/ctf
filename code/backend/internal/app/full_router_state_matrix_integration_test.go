@@ -716,6 +716,103 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected reviewed submission response: %+v", reviewedSubmission)
 	}
 
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+		"title":       "Manual Review Challenge",
+		"description": "submit an answer for teacher review",
+		"category":    model.DimensionMisc,
+		"difficulty":  model.ChallengeDifficultyMedium,
+		"points":      120,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var manualChallenge dto.ChallengeResp
+	decodeFullRouterData(t, resp, &manualChallenge)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", manualChallenge.ID), map[string]any{
+		"flag_type": model.FlagTypeManualReview,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/publish", manualChallenge.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/submit", manualChallenge.ID), map[string]any{
+		"flag": "exploit trace and reasoning",
+	}, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var pendingManualSubmission dto.SubmissionResp
+	decodeFullRouterData(t, resp, &pendingManualSubmission)
+	if pendingManualSubmission.Status != dto.SubmissionStatusPendingReview || pendingManualSubmission.IsCorrect {
+		t.Fatalf("unexpected pending manual review response: %+v", pendingManualSubmission)
+	}
+
+	resp = performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/teacher/manual-review-submissions?student_id=%d&challenge_id=%d", env.peerStudent.ID, manualChallenge.ID),
+		nil,
+		teacherHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var manualReviewList struct {
+		List     []dto.TeacherManualReviewSubmissionItemResp `json:"list"`
+		Total    int64                                       `json:"total"`
+		Page     int                                         `json:"page"`
+		PageSize int                                         `json:"page_size"`
+	}
+	decodeFullRouterData(t, resp, &manualReviewList)
+	if manualReviewList.Total != 1 || len(manualReviewList.List) != 1 {
+		t.Fatalf("unexpected manual review list: %+v", manualReviewList)
+	}
+	if manualReviewList.List[0].ChallengeID != manualChallenge.ID || manualReviewList.List[0].StudentUsername != env.peerStudent.Username {
+		t.Fatalf("unexpected manual review list item: %+v", manualReviewList.List[0])
+	}
+
+	resp = performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/teacher/manual-review-submissions?student_id=%d", env.peerStudent.ID),
+		nil,
+		otherTeacherHeaders,
+	)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var otherTeacherManualList struct {
+		List  []dto.TeacherManualReviewSubmissionItemResp `json:"list"`
+		Total int64                                       `json:"total"`
+	}
+	decodeFullRouterData(t, resp, &otherTeacherManualList)
+	if otherTeacherManualList.Total != 0 || len(otherTeacherManualList.List) != 0 {
+		t.Fatalf("expected other teacher to see empty manual review list, got %+v", otherTeacherManualList)
+	}
+
+	manualSubmissionID := manualReviewList.List[0].ID
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/manual-review-submissions/%d", manualSubmissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var manualReviewDetail dto.TeacherManualReviewSubmissionDetailResp
+	decodeFullRouterData(t, resp, &manualReviewDetail)
+	if manualReviewDetail.Answer == "" || manualReviewDetail.ChallengeID != manualChallenge.ID {
+		t.Fatalf("unexpected manual review detail: %+v", manualReviewDetail)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/teacher/manual-review-submissions/%d/review", manualSubmissionID), map[string]any{
+		"review_status":  model.SubmissionReviewStatusApproved,
+		"review_comment": "证据完整，通过。",
+	}, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var reviewedManualSubmission dto.TeacherManualReviewSubmissionDetailResp
+	decodeFullRouterData(t, resp, &reviewedManualSubmission)
+	if reviewedManualSubmission.ReviewStatus != model.SubmissionReviewStatusApproved || !reviewedManualSubmission.IsCorrect || reviewedManualSubmission.Score != 120 {
+		t.Fatalf("unexpected reviewed manual submission: %+v", reviewedManualSubmission)
+	}
+
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/environment-templates", map[string]any{
 		"name":           "Lifecycle Template",
 		"description":    "template for lifecycle test",

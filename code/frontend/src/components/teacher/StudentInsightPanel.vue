@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ArrowRight } from 'lucide-vue-next'
 
 import AppCard from '@/components/common/AppCard.vue'
@@ -12,6 +12,8 @@ import type {
   RecommendationItem,
   SkillProfileData,
   TeacherEvidenceData,
+  TeacherManualReviewSubmissionDetailData,
+  TeacherManualReviewSubmissionItemData,
   TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
@@ -27,12 +29,18 @@ const props = defineProps<{
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
+  activeManualReview: TeacherManualReviewSubmissionDetailData | null
+  manualReviewLoading: boolean
+  manualReviewSaving: boolean
   loading: boolean
   emptyText?: string
 }>()
 
 const emit = defineEmits<{
   openChallenge: [challengeId: string]
+  openManualReview: [submissionId: string]
+  reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
@@ -43,9 +51,25 @@ const reviewedWriteupCount = computed(() =>
 const excellentWriteupCount = computed(() =>
   props.writeupSubmissions.filter((item) => item.review_status === 'excellent').length
 )
+const approvedManualReviewCount = computed(() =>
+  props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
+)
+const manualReviewComment = ref('')
+
+watch(
+  () => props.activeManualReview,
+  (value) => {
+    manualReviewComment.value = value?.review_comment ?? ''
+  },
+  { immediate: true },
+)
 
 function openChallenge(challengeId: string): void {
   emit('openChallenge', challengeId)
+}
+
+function openManualReview(submissionId: string): void {
+  emit('openManualReview', submissionId)
 }
 
 function reviewStatusLabel(status: TeacherSubmissionWriteupItemData['review_status']): string {
@@ -76,6 +100,37 @@ function reviewStatusClass(status: TeacherSubmissionWriteupItemData['review_stat
 
 function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
   return status === 'submitted' ? '已提交' : '草稿'
+}
+
+function manualReviewStatusLabel(status: TeacherManualReviewSubmissionItemData['review_status']): string {
+  switch (status) {
+    case 'approved':
+      return '已通过'
+    case 'rejected':
+      return '已驳回'
+    default:
+      return '待审核'
+  }
+}
+
+function manualReviewStatusClass(status: TeacherManualReviewSubmissionItemData['review_status']): string {
+  switch (status) {
+    case 'approved':
+      return 'writeup-chip writeup-chip--success'
+    case 'rejected':
+      return 'writeup-chip writeup-chip--warning'
+    default:
+      return 'writeup-chip writeup-chip--muted'
+  }
+}
+
+function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
+  if (!props.activeManualReview) return
+  emit('reviewManualReview', {
+    submissionId: props.activeManualReview.id,
+    reviewStatus,
+    reviewComment: manualReviewComment.value.trim() || undefined,
+  })
 }
 </script>
 
@@ -345,6 +400,147 @@ function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submiss
                     <ArrowRight class="h-4 w-4" />
                   </button>
                 </div>
+              </AppCard>
+            </div>
+          </template>
+        </SectionCard>
+
+        <SectionCard title="人工审核题" subtitle="查看该学员待教师评阅的非标准答案题目。">
+          <AppEmpty
+            v-if="manualReviewSubmissions.length === 0"
+            title="暂无人工审核提交"
+            description="当前学员还没有需要教师处理的人工审核题。"
+            icon="ClipboardCheck"
+          />
+
+          <template v-else>
+            <div class="grid gap-3 md:grid-cols-3">
+              <article class="insight-kpi-card insight-kpi-card--primary">
+                <div class="insight-kpi-label">待处理</div>
+                <div class="insight-kpi-value">{{ manualReviewSubmissions.length }}</div>
+                <div class="insight-kpi-hint">当前分析页展示的人工审核提交数</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--warning">
+                <div class="insight-kpi-label">待审核</div>
+                <div class="insight-kpi-value">{{ manualReviewSubmissions.filter((item) => item.review_status === 'pending').length }}</div>
+                <div class="insight-kpi-hint">尚未给出审核结果的提交</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--success">
+                <div class="insight-kpi-label">已通过</div>
+                <div class="insight-kpi-value">{{ approvedManualReviewCount }}</div>
+                <div class="insight-kpi-hint">已经转为得分的人工审核提交</div>
+              </article>
+            </div>
+
+            <div class="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+              <div class="grid gap-3">
+                <AppCard
+                  v-for="item in manualReviewSubmissions"
+                  :key="item.id"
+                  variant="panel"
+                  accent="neutral"
+                >
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div class="text-sm font-semibold text-[var(--color-text-primary)]">
+                        {{ item.challenge_title }}
+                      </div>
+                      <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        {{ item.answer_preview || '暂无答案摘要' }}
+                      </div>
+                    </div>
+                    <span :class="manualReviewStatusClass(item.review_status)">
+                      {{ manualReviewStatusLabel(item.review_status) }}
+                    </span>
+                  </div>
+
+                  <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
+                    <span>提交于 {{ new Date(item.submitted_at).toLocaleString('zh-CN') }}</span>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
+                      @click="openManualReview(item.id)"
+                    >
+                      {{ activeManualReview?.id === item.id ? '刷新详情' : '查看审核' }}
+                      <ArrowRight class="h-4 w-4" />
+                    </button>
+                  </div>
+                </AppCard>
+              </div>
+
+              <AppCard variant="panel" accent="neutral">
+                <div v-if="manualReviewLoading" class="space-y-3">
+                  <div class="h-5 w-32 animate-pulse rounded bg-[var(--color-bg-base)]" />
+                  <div class="h-24 animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
+                  <div class="h-24 animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
+                </div>
+
+                <AppEmpty
+                  v-else-if="!activeManualReview"
+                  title="选择一条人工审核提交"
+                  description="点击左侧卡片查看完整答案并进行审核。"
+                  icon="ClipboardList"
+                />
+
+                <template v-else>
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div class="journal-eyebrow">Manual Review</div>
+                      <h4 class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
+                        {{ activeManualReview.challenge_title }}
+                      </h4>
+                      <div class="mt-2 text-sm text-[var(--color-text-secondary)]">
+                        {{ activeManualReview.student_name || activeManualReview.student_username }}
+                      </div>
+                    </div>
+                    <span :class="manualReviewStatusClass(activeManualReview.review_status)">
+                      {{ manualReviewStatusLabel(activeManualReview.review_status) }}
+                    </span>
+                  </div>
+
+                  <div class="mt-5 rounded-2xl bg-[var(--color-bg-base)] px-4 py-4">
+                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+                      提交答案
+                    </div>
+                    <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
+                      {{ activeManualReview.answer }}
+                    </p>
+                  </div>
+
+                  <label class="mt-5 block">
+                    <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
+                    <textarea
+                      v-model="manualReviewComment"
+                      rows="5"
+                      class="challenge-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
+                      placeholder="记录你的判定依据、补充建议或要求学员修改的点。"
+                    />
+                  </label>
+
+                  <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-[var(--color-text-secondary)]">
+                      最近更新：{{ new Date(activeManualReview.updated_at).toLocaleString('zh-CN') }}
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        class="challenge-btn-outline"
+                        :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                        @click="submitManualReview('rejected')"
+                      >
+                        {{ manualReviewSaving ? '提交中...' : '驳回并说明' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                        @click="submitManualReview('approved')"
+                      >
+                        {{ manualReviewSaving ? '提交中...' : '审核通过' }}
+                      </button>
+                    </div>
+                  </div>
+                </template>
               </AppCard>
             </div>
           </template>

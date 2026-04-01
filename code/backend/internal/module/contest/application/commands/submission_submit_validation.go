@@ -43,6 +43,17 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
+	challengeItem, err := s.repo.FindChallengeByID(ctx, challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if challengeItem.FlagType == model.FlagTypeManualReview {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("人工审核题暂不支持竞赛提交"))
+	}
+
 	rateLimitKey := contestSubmissionRateLimitKey(userID, contestID, challengeID)
 	exists, err := s.redis.Exists(ctx, rateLimitKey).Result()
 	if err == nil && exists > 0 {

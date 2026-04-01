@@ -233,7 +233,7 @@ export interface ChallengeDetailData {
 
 ```ts
 export type InstanceStatus = 'pending' | 'creating' | 'running' | 'expired' | 'destroying' | 'destroyed' | 'failed' | 'crashed'
-export type FlagType = 'static' | 'dynamic' | 'regex'
+export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
 
 export interface InstanceData {
   id: ID
@@ -306,28 +306,24 @@ export type InstanceListData = InstanceListItem[]
 
 > 说明：列表会返回“当前用户可见”的运行中实例；除个人练习实例外，也会包含当前用户在 AWD 竞赛中所属队伍的共享实例。
 
-### 3.7 POST `/api/v1/challenges/:id/submissions`
+### 3.7 POST `/api/v1/challenges/:id/submit`
 
 `data`：
 
 ```ts
-export interface SubmitFlagSuccessData {
-  correct: true
-  points_earned: number
-  first_blood: boolean
-  solved_at: ISODateTime
-  challenge_progress: { total_challenges: number; solved_challenges: number }
+export interface SubmitFlagData {
+  is_correct: boolean
+  status: 'correct' | 'incorrect' | 'pending_review'
+  message: string
+  points?: number
+  submitted_at: ISODateTime
 }
-
-export interface SubmitFlagFailureData {
-  correct: false
-  remaining_attempts?: number
-}
-
-export type SubmitFlagData = SubmitFlagSuccessData | SubmitFlagFailureData
 ```
 
-> 约束：当 `correct=false` 时，HTTP 可为 400（业务错误），但仍允许 `data.correct=false` 返回“错误上下文”。前端提示文案优先走 `errorMap`。
+> 说明：
+> - `status='pending_review'` 仅用于 `manual_review` 判题模式。
+> - 人工审核题在教师审核通过前保持 `is_correct=false`。
+> - 学员题目页收到 `pending_review` 后应展示“等待教师审核”的中性/警告态反馈，且不能把题目标记为已通过。
 
 ### 3.8 POST `/api/v1/challenges/:id/hints/:level/unlock`
 
@@ -844,6 +840,47 @@ export interface AdminChallengeUpsertData {
 
 `data`：`null`
 
+### 8.8.1 GET `/api/v1/admin/challenges/:id/flag` / PUT `/api/v1/admin/challenges/:id/flag`
+
+GET `data`：
+
+```ts
+export interface AdminChallengeFlagConfigData {
+  configured: boolean
+  flag_type?: FlagType
+  flag_regex?: string
+  flag_prefix?: string
+}
+```
+
+PUT 请求体：
+
+```ts
+export interface ConfigureChallengeFlagReq {
+  flag_type: FlagType
+  flag?: string
+  flag_regex?: string
+  flag_prefix?: string
+}
+```
+
+PUT `data`：
+
+```ts
+export interface ConfigureChallengeFlagData {
+  message: string
+}
+```
+
+> 说明：
+> - `GET` 不回传静态 Flag 明文，后台详情页仅基于 `flag_type / flag_regex / flag_prefix / configured` 展示当前摘要。
+> - `PUT` 时：
+>   - `static` 必填 `flag`
+>   - `dynamic` 必填 `flag_prefix`
+>   - `regex` 必填 `flag_regex`，可选 `flag_prefix`
+>   - `manual_review` 无额外字段
+> - 当前前端在管理员题目详情页以内联配置卡直接消费该接口。
+
 ### 8.9 GET `/api/v1/admin/images`（分页）
 
 `data`（缺少示例，需确认）：
@@ -994,7 +1031,80 @@ export interface ReviewSubmissionWriteupReq {
 
 `data`：`SubmissionWriteupData`
 
-### 8.18 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
+### 8.18 GET `/api/v1/teacher/manual-review-submissions`
+
+`query`：
+
+```ts
+export interface TeacherManualReviewSubmissionQuery {
+  student_id?: ID
+  challenge_id?: ID
+  class_name?: string
+  review_status?: 'pending' | 'approved' | 'rejected'
+  page?: number
+  page_size?: number
+}
+```
+
+`data`：
+
+```ts
+export interface TeacherManualReviewSubmissionItemData {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  answer_preview: string
+  review_status: 'pending' | 'approved' | 'rejected'
+  submitted_at: ISODateTime
+  reviewed_at?: ISODateTime
+  updated_at: ISODateTime
+}
+```
+
+### 8.19 GET `/api/v1/teacher/manual-review-submissions/:id`
+
+`data`：
+
+```ts
+export interface TeacherManualReviewSubmissionDetailData {
+  id: ID
+  user_id: ID
+  student_username: string
+  student_name?: string
+  class_name?: string
+  challenge_id: ID
+  challenge_title: string
+  answer: string
+  is_correct: boolean
+  score: number
+  review_status: 'pending' | 'approved' | 'rejected'
+  reviewed_by?: ID
+  reviewed_at?: ISODateTime
+  review_comment?: string
+  submitted_at: ISODateTime
+  updated_at: ISODateTime
+  reviewer_name?: string
+}
+```
+
+### 8.20 PUT `/api/v1/teacher/manual-review-submissions/:id/review`
+
+请求体：
+
+```ts
+export interface ReviewManualReviewSubmissionReq {
+  review_status: 'approved' | 'rejected'
+  review_comment?: string
+}
+```
+
+`data`：`TeacherManualReviewSubmissionDetailData`
+
+### 8.21 GET `/api/v1/admin/challenges/:id/topology` / PUT `/api/v1/admin/challenges/:id/topology` / DELETE `/api/v1/admin/challenges/:id/topology`
 
 `data`：
 

@@ -7,6 +7,8 @@ import type {
   SkillProfileData,
   TeacherEvidenceData,
   TeacherClassItem,
+  TeacherManualReviewSubmissionDetailData,
+  TeacherManualReviewSubmissionItemData,
   TeacherSubmissionWriteupItemData,
   TeacherStudentItem,
   TimelineEvent,
@@ -32,6 +34,10 @@ const props = defineProps<{
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
+  activeManualReview: TeacherManualReviewSubmissionDetailData | null
+  manualReviewLoading: boolean
+  manualReviewSaving: boolean
   solvedRate: number
   weakDimensions: string[]
 }>()
@@ -44,6 +50,8 @@ const emit = defineEmits<{
   selectClass: [className: string]
   selectStudent: [studentId: string]
   openChallenge: [challengeId: string]
+  openManualReview: [submissionId: string]
+  reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
 }>()
 </script>
 
@@ -249,9 +257,15 @@ const emit = defineEmits<{
         :timeline="timeline"
         :evidence="evidence"
         :writeup-submissions="writeupSubmissions"
+        :manual-review-submissions="manualReviewSubmissions"
+        :active-manual-review="activeManualReview"
+        :manual-review-loading="manualReviewLoading"
+        :manual-review-saving="manualReviewSaving"
         :loading="loadingDetails"
         empty-text="请先从左侧选择一名学生。"
         @open-challenge="emit('openChallenge', $event)"
+        @open-manual-review="emit('openManualReview', $event)"
+        @review-manual-review="emit('reviewManualReview', $event)"
       />
     </section>
   </div>

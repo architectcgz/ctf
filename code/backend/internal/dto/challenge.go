@@ -110,13 +110,15 @@ type UnlockHintResp struct {
 }
 
 type ConfigureFlagReq struct {
-	FlagType   string `json:"flag_type" binding:"required,oneof=static dynamic"`
+	FlagType   string `json:"flag_type" binding:"required,oneof=static dynamic regex manual_review"`
 	Flag       string `json:"flag" binding:"required_if=FlagType static"`
+	FlagRegex  string `json:"flag_regex" binding:"required_if=FlagType regex"`
 	FlagPrefix string `json:"flag_prefix" binding:"omitempty,max=32"`
 }
 
 type FlagResp struct {
 	FlagType   string `json:"flag_type"`
+	FlagRegex  string `json:"flag_regex,omitempty"`
 	FlagPrefix string `json:"flag_prefix,omitempty"`
 	Configured bool   `json:"configured"`
 }

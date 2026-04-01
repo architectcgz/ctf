@@ -2,26 +2,44 @@
   <section
     class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border p-6 md:p-8"
   >
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"></div>
+    <div
+      v-if="loading"
+      class="flex items-center justify-center py-12"
+    >
+      <div
+        class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+      />
     </div>
 
-    <div v-else-if="challenge" class="space-y-6">
+    <div
+      v-else-if="challenge"
+      class="space-y-6"
+    >
       <div class="challenge-panel p-6 md:p-8">
         <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div class="space-y-3">
-            <div class="journal-eyebrow">Challenge Detail</div>
-            <h1 class="text-3xl font-bold text-[var(--journal-ink)]">{{ challenge.title }}</h1>
+            <div class="journal-eyebrow">
+              Challenge Detail
+            </div>
+            <h1 class="text-3xl font-bold text-[var(--journal-ink)]">
+              {{ challenge.title }}
+            </h1>
             <div class="flex flex-wrap gap-2">
               <span
                 class="rounded-full px-3 py-1 text-sm font-medium"
-                :style="{ backgroundColor: getCategoryColor(challenge.category) + '22', color: getCategoryColor(challenge.category) }"
+                :style="{
+                  backgroundColor: getCategoryColor(challenge.category) + '22',
+                  color: getCategoryColor(challenge.category),
+                }"
               >
                 {{ getCategoryLabel(challenge.category) }}
               </span>
               <span
                 class="rounded-full px-3 py-1 text-sm font-medium"
-                :style="{ backgroundColor: getDifficultyColor(challenge.difficulty) + '22', color: getDifficultyColor(challenge.difficulty) }"
+                :style="{
+                  backgroundColor: getDifficultyColor(challenge.difficulty) + '22',
+                  color: getDifficultyColor(challenge.difficulty),
+                }"
               >
                 {{ getDifficultyLabel(challenge.difficulty) }}
               </span>
@@ -35,8 +53,13 @@
             </div>
           </div>
           <div class="challenge-score-card px-4 py-3 text-left lg:min-w-[148px] lg:text-right">
-            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--journal-muted)]">Score</div>
-            <div class="mt-1 font-mono text-2xl font-bold text-[var(--journal-ink)]">{{ challenge.points }}<span class="ml-1 text-lg text-[var(--journal-muted)]">pts</span></div>
+            <div class="text-[11px] uppercase tracking-[0.22em] text-[var(--journal-muted)]">
+              Score
+            </div>
+            <div class="mt-1 font-mono text-2xl font-bold text-[var(--journal-ink)]">
+              {{ challenge.points
+              }}<span class="ml-1 text-lg text-[var(--journal-muted)]">pts</span>
+            </div>
             <span
               v-if="challenge.is_solved"
               class="mt-3 inline-flex rounded-full bg-[var(--color-success)]/18 px-3 py-1 text-sm font-medium text-[var(--color-success)]"
@@ -51,7 +74,9 @@
         <main class="space-y-6">
           <div class="challenge-panel p-6">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <h2 class="text-lg font-semibold text-[var(--journal-ink)]">挑战描述</h2>
+              <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                挑战描述
+              </h2>
               <button
                 :disabled="writeupLoading"
                 class="challenge-btn-outline"
@@ -60,7 +85,12 @@
                 {{ writeupLoading ? '加载题解中...' : writeupVisible ? '收起题解' : '查看题解' }}
               </button>
             </div>
-            <div v-html="sanitizedDescription" class="prose challenge-prose max-w-none"></div>
+            <!-- sanitized before rendering -->
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div
+              class="prose challenge-prose max-w-none"
+              v-html="sanitizedDescription"
+            />
             <button
               v-if="challenge.attachment_url"
               class="challenge-btn-outline mt-4"
@@ -73,11 +103,16 @@
           <div class="challenge-panel writeup-workbench p-6">
             <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div class="max-w-2xl space-y-3">
-                <div class="journal-eyebrow">Writeup Studio</div>
+                <div class="journal-eyebrow">
+                  Writeup Studio
+                </div>
                 <div>
-                  <h2 class="text-lg font-semibold text-[var(--journal-ink)]">解题过程复盘</h2>
+                  <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                    解题过程复盘
+                  </h2>
                   <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
-                    把思路、关键利用步骤和踩坑点整理成一份自己的 writeup。草稿可反复保存，正式提交后教师会在分析页看到你的状态与评语。
+                    把思路、关键利用步骤和踩坑点整理成一份自己的
+                    writeup。草稿可反复保存，正式提交后教师会在分析页看到你的状态与评语。
                   </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -101,7 +136,9 @@
               </div>
 
               <div class="writeup-side-note">
-                <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-accent)]">
+                <div
+                  class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-accent)]"
+                >
                   Review Focus
                 </div>
                 <div class="mt-3 text-sm leading-6 text-[var(--journal-ink)]">
@@ -119,17 +156,25 @@
                   maxlength="256"
                   placeholder="例如：从回显异常到拿到 flag 的完整链路"
                   class="challenge-input w-full rounded-2xl border px-4 py-3 text-sm transition-colors focus:outline-none"
-                />
+                >
               </label>
 
               <div class="writeup-meta-grid">
                 <div class="writeup-meta-card">
-                  <div class="writeup-meta-label">当前状态</div>
-                  <div class="writeup-meta-value">{{ submissionStatusLabel(myWriteup?.submission_status) }}</div>
+                  <div class="writeup-meta-label">
+                    当前状态
+                  </div>
+                  <div class="writeup-meta-value">
+                    {{ submissionStatusLabel(myWriteup?.submission_status) }}
+                  </div>
                 </div>
                 <div class="writeup-meta-card">
-                  <div class="writeup-meta-label">评阅结果</div>
-                  <div class="writeup-meta-value">{{ reviewStatusLabel(myWriteup?.review_status) }}</div>
+                  <div class="writeup-meta-label">
+                    评阅结果
+                  </div>
+                  <div class="writeup-meta-value">
+                    {{ reviewStatusLabel(myWriteup?.review_status) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -150,7 +195,9 @@
             >
               <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-accent)]">
+                  <div
+                    class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-accent)]"
+                  >
                     Teacher Feedback
                   </div>
                   <div class="mt-2 text-sm text-[var(--journal-muted)]">
@@ -201,8 +248,12 @@
           <div class="challenge-panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">Flag 提交</h2>
-                <div class="mt-1 text-sm text-[var(--journal-muted)]">保持在当前题目页即可提交答案。</div>
+                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                  Flag 提交
+                </h2>
+                <div class="mt-1 text-sm text-[var(--journal-muted)]">
+                  保持在当前题目页即可提交答案。
+                </div>
               </div>
               <span
                 v-if="challenge.is_solved"
@@ -216,12 +267,12 @@
                 <input
                   v-model="flagInput"
                   type="text"
-                  placeholder="flag{...}"
+                  :placeholder="submitPlaceholder"
                   :disabled="challenge.is_solved"
                   class="challenge-input flex-1 rounded-xl border px-4 py-3 font-mono transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  :class="submitResult?.success ? 'border-[var(--color-success)]' : 'border-[#0891b2]'"
+                  :class="submitInputClass"
                   @keyup.enter="submitFlagHandler"
-                />
+                >
                 <button
                   :disabled="challenge.is_solved || submitting"
                   class="challenge-btn-primary rounded-xl px-6 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
@@ -230,7 +281,11 @@
                   {{ submitting ? '提交中...' : '提交' }}
                 </button>
               </div>
-              <div v-if="submitResult" :class="submitResult.success ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'" class="text-sm">
+              <div
+                v-if="submitResult"
+                :class="submitResult.className"
+                class="text-sm"
+              >
                 {{ submitResult.message }}
               </div>
             </div>
@@ -240,7 +295,9 @@
             v-if="challenge.hints.length > 0"
             class="challenge-panel p-6"
           >
-            <h2 class="mb-4 text-lg font-semibold text-[var(--journal-ink)]">提示系统</h2>
+            <h2 class="mb-4 text-lg font-semibold text-[var(--journal-ink)]">
+              提示系统
+            </h2>
             <div class="hint-list">
               <div
                 v-for="hint in challenge.hints"
@@ -252,7 +309,10 @@
                     <div class="text-sm font-medium text-[var(--journal-ink)]">
                       Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
                     </div>
-                    <div v-if="hint.cost_points" class="mt-1 text-xs text-[var(--journal-muted)]">
+                    <div
+                      v-if="hint.cost_points"
+                      class="mt-1 text-xs text-[var(--journal-muted)]"
+                    >
                       解锁消耗：{{ hint.cost_points }} 分
                     </div>
                   </div>
@@ -271,10 +331,16 @@
                     已解锁
                   </span>
                 </div>
-                <div v-if="hint.is_unlocked" class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
+                <div
+                  v-if="hint.is_unlocked"
+                  class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"
+                >
                   {{ hint.content }}
                 </div>
-                <div v-else class="mt-3 text-sm text-[var(--journal-muted)]">
+                <div
+                  v-else
+                  class="mt-3 text-sm text-[var(--journal-muted)]"
+                >
                   解锁后显示提示内容
                 </div>
               </div>
@@ -287,8 +353,12 @@
           >
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">题解</h2>
-                <div class="mt-2 text-sm text-[var(--journal-muted)]">{{ writeup.title }}</div>
+                <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                  题解
+                </h2>
+                <div class="mt-2 text-sm text-[var(--journal-muted)]">
+                  {{ writeup.title }}
+                </div>
               </div>
               <div
                 class="rounded bg-[var(--journal-surface-subtle)] px-3 py-1 text-xs uppercase tracking-[0.18em] text-[var(--journal-muted)]"
@@ -302,10 +372,12 @@
             >
               你尚未完成该题。以下内容可能直接暴露解题思路，请谨慎阅读。
             </div>
+            <!-- sanitized before rendering -->
+            <!-- eslint-disable-next-line vue/no-v-html -->
             <div
-              v-html="sanitizedWriteup"
               class="prose challenge-prose mt-4 max-w-none"
-            ></div>
+              v-html="sanitizedWriteup"
+            />
           </div>
         </main>
 
@@ -381,7 +453,11 @@ const submissionSaving = ref<SubmissionWriteupStatus | null>(null)
 const writeupTitle = ref('')
 const writeupContent = ref('')
 const flagInput = ref('')
-const submitResult = ref<{ success: boolean; message: string } | null>(null)
+const submitResult = ref<{
+  variant: 'success' | 'error' | 'pending'
+  className: string
+  message: string
+} | null>(null)
 const unlockingLevel = ref<number | null>(null)
 const {
   instance,
@@ -410,6 +486,31 @@ const sanitizedWriteup = computed(() => {
 })
 
 const needTarget = computed(() => challenge.value?.need_target ?? true)
+const submitPlaceholder = computed(() => {
+  if (challenge.value?.is_solved) return '该题已通过'
+  switch (submitResult.value?.variant) {
+    case 'success':
+      return '答案已通过'
+    case 'pending':
+      return '已提交，等待教师审核'
+    case 'error':
+      return '答案不正确，请继续尝试'
+    default:
+      return 'flag{...}'
+  }
+})
+const submitInputClass = computed(() => {
+  switch (submitResult.value?.variant) {
+    case 'success':
+      return 'border-[var(--color-success)] bg-[var(--color-success)]/5'
+    case 'pending':
+      return 'border-[var(--color-warning)] bg-[var(--color-warning)]/8'
+    case 'error':
+      return 'border-[var(--color-danger)] bg-[var(--color-danger)]/5'
+    default:
+      return 'border-[#0891b2]'
+  }
+})
 
 function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
   writeupTitle.value = item?.title ?? ''
@@ -475,15 +576,37 @@ async function submitFlagHandler() {
   submitResult.value = null
   try {
     const result = await submitFlag(challenge.value.id, flagInput.value.trim())
-    if (result.is_correct) {
-      submitResult.value = { success: true, message: result.message }
-      toast.success('Flag 正确！')
-      challenge.value.is_solved = true
-    } else {
-      submitResult.value = { success: false, message: result.message }
+    switch (result.status) {
+      case 'correct':
+        submitResult.value = {
+          variant: 'success',
+          className: 'text-[var(--color-success)]',
+          message: result.message,
+        }
+        toast.success('Flag 正确！')
+        challenge.value.is_solved = true
+        break
+      case 'pending_review':
+        submitResult.value = {
+          variant: 'pending',
+          className: 'text-[var(--color-warning)]',
+          message: result.message,
+        }
+        toast.info('答案已提交，等待教师审核')
+        break
+      default:
+        submitResult.value = {
+          variant: 'error',
+          className: 'text-[var(--color-danger)]',
+          message: result.message,
+        }
     }
   } catch (error) {
-    submitResult.value = { success: false, message: '提交失败，请重试' }
+    submitResult.value = {
+      variant: 'error',
+      className: 'text-[var(--color-danger)]',
+      message: '提交失败，请重试',
+    }
   } finally {
     submitting.value = false
   }

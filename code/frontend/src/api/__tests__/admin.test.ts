@@ -19,6 +19,7 @@ import {
   createEnvironmentTemplate,
   createChallenge,
   createContest,
+  configureChallengeFlag,
   deleteChallengeWriteup,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
@@ -659,8 +660,9 @@ describe('admin contest api contract', () => {
         updated_at: '2026-03-10T10:05:00.000Z',
       })
       .mockResolvedValueOnce({
-        flag_type: 'dynamic',
-        flag_prefix: 'ctf',
+        flag_type: 'regex',
+        flag_regex: '^flag\\{demo-[0-9]+\\}$',
+        flag_prefix: 'flag',
         configured: true,
       })
 
@@ -675,8 +677,9 @@ describe('admin contest api contract', () => {
       url: '/admin/challenges/12/flag',
     })
     expect(result.flag_config).toEqual({
-      flag_type: 'dynamic',
-      flag_prefix: 'ctf',
+      flag_type: 'regex',
+      flag_regex: '^flag\\{demo-[0-9]+\\}$',
+      flag_prefix: 'flag',
       configured: true,
     })
     expect(result.attachment_url).toBe('https://example.com/files/rce.zip')
@@ -689,6 +692,22 @@ describe('admin contest api contract', () => {
         content: '先观察回显位置',
       },
     ])
+  })
+
+  it('应该发送 manual review Flag 配置载荷', async () => {
+    requestMock.mockResolvedValue({ message: 'ok' })
+
+    await configureChallengeFlag('12', {
+      flag_type: 'manual_review',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/admin/challenges/12/flag',
+      data: {
+        flag_type: 'manual_review',
+      },
+    })
   })
 
   it('应该按后端当前挑战创建契约发送请求并归一化返回值', async () => {

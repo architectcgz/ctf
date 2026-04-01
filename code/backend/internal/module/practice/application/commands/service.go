@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -475,26 +476,40 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
-	isCorrect, err := s.validateSubmittedFlag(userID, challengeItem, flag)
-	if err != nil {
-		return nil, err
+	submission := &model.Submission{
+		UserID:       userID,
+		ChallengeID:  challengeID,
+		Flag:         "",
+		IsCorrect:    false,
+		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		SubmittedAt:  time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+	status := dto.SubmissionStatusIncorrect
+
+	if challengeItem.FlagType == model.FlagTypeManualReview {
+		submission.Flag = flag
+		submission.ReviewStatus = model.SubmissionReviewStatusPending
+		status = dto.SubmissionStatusPendingReview
+	} else {
+		isCorrect, err := s.validateSubmittedFlag(userID, challengeItem, flag)
+		if err != nil {
+			return nil, err
+		}
+		submission.IsCorrect = isCorrect
+		if isCorrect {
+			status = dto.SubmissionStatusCorrect
+		}
 	}
 
-	submission := &model.Submission{
-		UserID:      userID,
-		ChallengeID: challengeID,
-		Flag:        "",
-		IsCorrect:   isCorrect,
-		SubmittedAt: time.Now(),
-	}
 	if err := s.repo.CreateSubmission(submission); err != nil {
-		if isCorrect && s.repo.IsUniqueViolation(err) {
+		if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
 			return nil, errcode.ErrAlreadySolved
 		}
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
-	if isCorrect {
+	if submission.IsCorrect {
 		cacheKey := constants.UserProgressKey(userID)
 		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
@@ -512,15 +527,18 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	resp := &dto.SubmissionResp{
-		IsCorrect:   isCorrect,
+		IsCorrect:   submission.IsCorrect,
+		Status:      status,
 		SubmittedAt: submission.SubmittedAt,
 	}
-	if isCorrect {
+	if submission.IsCorrect {
 		resp.Message = "恭喜你，Flag 正确！"
 		resp.Points = challengeItem.Points
 		if s.scoreService != nil {
 			s.triggerScoreUpdate(userID)
 		}
+	} else if submission.ReviewStatus == model.SubmissionReviewStatusPending {
+		resp.Message = "答案已提交，等待教师审核"
 	} else {
 		resp.Message = "Flag 错误，请重试"
 	}
@@ -586,6 +604,232 @@ func (s *Service) UnlockHintWithContext(ctx context.Context, userID, challengeID
 			Content:    hint.Content,
 		},
 	}, nil
+}
+
+func (s *Service) ReviewManualReviewSubmissionWithContext(
+	ctx context.Context,
+	submissionID, reviewerID int64,
+	reviewerRole string,
+	req *dto.ReviewManualReviewSubmissionReq,
+) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	record, err := s.repo.GetTeacherManualReviewSubmissionByID(submissionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	if err := ensureTeacherCanAccessManualReviewSubmission(s.repo, reviewerID, reviewerRole, record); err != nil {
+		return nil, err
+	}
+	if record.Submission.ReviewStatus != model.SubmissionReviewStatusPending {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("仅待审核提交可执行评阅"))
+	}
+
+	challengeItem, err := s.challengeRepo.FindByID(record.Submission.ChallengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if challengeItem.FlagType != model.FlagTypeManualReview {
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("当前提交不属于人工审核题"))
+	}
+
+	now := time.Now()
+	item := record.Submission
+	item.ReviewStatus = req.ReviewStatus
+	item.ReviewComment = strings.TrimSpace(req.ReviewComment)
+	item.ReviewedBy = &reviewerID
+	item.ReviewedAt = &now
+	item.UpdatedAt = now
+	if req.ReviewStatus == model.SubmissionReviewStatusApproved {
+		item.IsCorrect = true
+		item.Score = challengeItem.Points
+	} else {
+		item.IsCorrect = false
+		item.Score = 0
+	}
+
+	if err := s.repo.UpdateSubmission(&item); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if item.IsCorrect {
+		if s.redis != nil {
+			if err := s.redis.Del(ctx, constants.UserProgressKey(item.UserID)).Err(); err != nil {
+				s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", item.UserID), zap.Error(err))
+			}
+		}
+		s.publishWeakEvent(ctx, platformevents.Event{
+			Name: practicecontracts.EventFlagAccepted,
+			Payload: practicecontracts.FlagAcceptedEvent{
+				UserID:      item.UserID,
+				ChallengeID: item.ChallengeID,
+				Dimension:   challengeItem.Category,
+				Points:      item.Score,
+				OccurredAt:  now,
+			},
+		})
+		if s.scoreService != nil {
+			s.triggerScoreUpdate(item.UserID)
+		}
+	}
+
+	return manualReviewDetailRespFromRecord(*record, item), nil
+}
+
+func (s *Service) ListTeacherManualReviewSubmissions(
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherManualReviewSubmissionQuery,
+) (*dto.PageResult, error) {
+	if query == nil {
+		query = &dto.TeacherManualReviewSubmissionQuery{}
+	}
+	normalized, err := normalizeTeacherManualReviewQuery(s.repo, requesterID, requesterRole, query)
+	if err != nil {
+		return nil, err
+	}
+
+	items, total, err := s.repo.ListTeacherManualReviewSubmissions(normalized)
+	if err != nil {
+		return nil, err
+	}
+
+	respItems := make([]*dto.TeacherManualReviewSubmissionItemResp, 0, len(items))
+	for _, item := range items {
+		respItems = append(respItems, manualReviewListItemRespFromRecord(item))
+	}
+
+	return &dto.PageResult{
+		List:  respItems,
+		Total: total,
+		Page:  normalized.Page,
+		Size:  normalized.Size,
+	}, nil
+}
+
+func (s *Service) GetTeacherManualReviewSubmission(
+	submissionID, requesterID int64,
+	requesterRole string,
+) (*dto.TeacherManualReviewSubmissionDetailResp, error) {
+	record, err := s.repo.GetTeacherManualReviewSubmissionByID(submissionID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrNotFound
+		}
+		return nil, err
+	}
+	if err := ensureTeacherCanAccessManualReviewSubmission(s.repo, requesterID, requesterRole, record); err != nil {
+		return nil, err
+	}
+	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
+}
+
+func ensureTeacherCanAccessManualReviewSubmission(
+	repo practiceports.PracticeCommandRepository,
+	requesterID int64,
+	requesterRole string,
+	record *practiceports.TeacherManualReviewSubmissionRecord,
+) error {
+	if requesterRole == model.RoleAdmin {
+		return nil
+	}
+	requester, err := repo.FindUserByID(requesterID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrUnauthorized
+		}
+		return err
+	}
+	if requester.ClassName == "" || requester.ClassName != record.ClassName {
+		return errcode.ErrForbidden
+	}
+	return nil
+}
+
+func normalizeTeacherManualReviewQuery(
+	repo practiceports.PracticeCommandRepository,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherManualReviewSubmissionQuery,
+) (*dto.TeacherManualReviewSubmissionQuery, error) {
+	normalized := *query
+	if normalized.Page <= 0 {
+		normalized.Page = 1
+	}
+	if normalized.Size <= 0 {
+		normalized.Size = 20
+	}
+	if requesterRole == model.RoleAdmin {
+		return &normalized, nil
+	}
+
+	requester, err := repo.FindUserByID(requesterID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrUnauthorized
+		}
+		return nil, err
+	}
+	if requester.ClassName == "" {
+		return nil, errcode.ErrForbidden
+	}
+	if normalized.ClassName != "" && normalized.ClassName != requester.ClassName {
+		return nil, errcode.ErrForbidden
+	}
+	normalized.ClassName = requester.ClassName
+	return &normalized, nil
+}
+
+func manualReviewDetailRespFromRecord(
+	record practiceports.TeacherManualReviewSubmissionRecord,
+	submission model.Submission,
+) *dto.TeacherManualReviewSubmissionDetailResp {
+	return &dto.TeacherManualReviewSubmissionDetailResp{
+		ID:              submission.ID,
+		UserID:          submission.UserID,
+		StudentUsername: record.StudentUsername,
+		StudentName:     record.StudentName,
+		ClassName:       record.ClassName,
+		ChallengeID:     submission.ChallengeID,
+		ChallengeTitle:  record.ChallengeTitle,
+		Answer:          submission.Flag,
+		IsCorrect:       submission.IsCorrect,
+		Score:           submission.Score,
+		ReviewStatus:    submission.ReviewStatus,
+		ReviewedBy:      submission.ReviewedBy,
+		ReviewedAt:      submission.ReviewedAt,
+		ReviewComment:   submission.ReviewComment,
+		SubmittedAt:     submission.SubmittedAt,
+		UpdatedAt:       submission.UpdatedAt,
+		ReviewerName:    record.ReviewerName,
+	}
+}
+
+func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReviewSubmissionRecord) *dto.TeacherManualReviewSubmissionItemResp {
+	answerPreview := strings.TrimSpace(record.Submission.Flag)
+	if len([]rune(answerPreview)) > 80 {
+		answerPreview = string([]rune(answerPreview)[:80]) + "..."
+	}
+	return &dto.TeacherManualReviewSubmissionItemResp{
+		ID:              record.Submission.ID,
+		UserID:          record.Submission.UserID,
+		StudentUsername: record.StudentUsername,
+		StudentName:     record.StudentName,
+		ClassName:       record.ClassName,
+		ChallengeID:     record.Submission.ChallengeID,
+		ChallengeTitle:  record.ChallengeTitle,
+		AnswerPreview:   answerPreview,
+		ReviewStatus:    record.Submission.ReviewStatus,
+		SubmittedAt:     record.Submission.SubmittedAt,
+		ReviewedAt:      record.Submission.ReviewedAt,
+		UpdatedAt:       record.Submission.UpdatedAt,
+	}
 }
 
 func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, contestID, challengeID int64) (practiceports.InstanceScope, error) {
@@ -673,9 +917,14 @@ func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Ch
 }
 
 func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Challenge, flag string) (bool, error) {
-	if challengeItem.FlagType == model.FlagTypeStatic {
+	switch challengeItem.FlagType {
+	case model.FlagTypeStatic:
 		inputHash := crypto.HashStaticFlag(flag, challengeItem.FlagSalt)
 		return crypto.ValidateFlag(inputHash, challengeItem.FlagHash), nil
+	case model.FlagTypeRegex:
+		return regexp.MatchString(challengeItem.FlagRegex, flag)
+	case model.FlagTypeManualReview:
+		return false, nil
 	}
 
 	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)

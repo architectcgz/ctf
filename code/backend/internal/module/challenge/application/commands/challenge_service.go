@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -492,6 +493,13 @@ func (s *ChallengeService) validateFlagConfig(challenge *model.Challenge) (bool,
 			return false, "动态 Flag 依赖的全局密钥未配置"
 		}
 		return true, "动态 Flag 配置有效"
+	case model.FlagTypeRegex:
+		if _, err := regexp.Compile(strings.TrimSpace(challenge.FlagRegex)); err != nil {
+			return false, fmt.Sprintf("Regex Flag 配置无效: %v", err)
+		}
+		return true, "Regex Flag 配置有效"
+	case model.FlagTypeManualReview:
+		return true, "人工审核题已跳过 Flag 自动校验"
 	default:
 		return false, "Flag 类型无效"
 	}
@@ -510,6 +518,8 @@ func (s *ChallengeService) buildRuntimeFlag(challenge *model.Challenge) (string,
 			return "", fmt.Errorf("flag global secret is empty")
 		}
 		return crypto.GenerateDynamicFlag(0, challenge.ID, s.selfCheckCfg.FlagGlobalSecret, nonce, challenge.FlagPrefix), nil
+	case model.FlagTypeRegex, model.FlagTypeManualReview:
+		return "", nil
 	default:
 		return "", fmt.Errorf("unsupported flag type %s", challenge.FlagType)
 	}
