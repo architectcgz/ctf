@@ -23,6 +23,7 @@ const (
 
 type Challenge struct {
 	ID            int64          `gorm:"column:id;primaryKey"`
+	PackageSlug   *string        `gorm:"column:package_slug;size:128;uniqueIndex:uq_challenges_package_slug"`
 	Title         string         `gorm:"column:title"`
 	Description   string         `gorm:"column:description"`
 	Category      string         `gorm:"column:category"`

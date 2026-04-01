@@ -13,7 +13,7 @@ import (
 )
 
 func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
-	return NewChallengeService(repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
+	return NewChallengeService(nil, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
 }
 
 func TestServiceCreateChallengeSuccess(t *testing.T) {

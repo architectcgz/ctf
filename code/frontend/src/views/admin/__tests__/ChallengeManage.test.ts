@@ -54,6 +54,9 @@ vi.mock('@/api/admin', () => ({
     ],
     created_at: '2024-01-01T00:00:00Z',
   }),
+  previewChallengeImport: vi.fn(),
+  getChallengeImport: vi.fn(),
+  commitChallengeImport: vi.fn(),
   createChallenge: vi.fn(),
   updateChallenge: vi.fn(),
   configureChallengeFlag: vi.fn(),
@@ -93,5 +96,7 @@ describe('ChallengeManage', () => {
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('挑战管理')
+    expect(wrapper.text()).toContain('导入题目包')
+    expect(wrapper.text()).not.toContain('创建挑战')
   })
 })

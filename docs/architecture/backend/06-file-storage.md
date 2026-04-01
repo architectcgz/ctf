@@ -68,8 +68,8 @@
 
 ```text
 ${STORAGE_ROOT}/
-  challenge_packs/        # 原始上传 Zip（审计/复现）
-  attachments/            # 题目附件（提取后、经校验）
+  challenge-import-previews/  # 后台导入预览工作目录（zip/source/preview.json）
+  challenge-attachments/      # 已持久化的题目附件
   build_logs/             # 构建日志（如启用在线构建）
   exports/                # 导出文件（可设置短期保留）
   tmp/                    # 导入/解包/构建的临时目录（定时清理）
@@ -82,7 +82,7 @@ ${STORAGE_ROOT}/
 - 计算 `sha256` 作为对象 key。
 - 采用分层目录减少单目录文件数：
   - `attachments/ab/cd/<sha256>`
-  - `challenge_packs/ab/cd/<sha256>.zip`
+  - `challenge-import-previews/<preview-id>/package.zip`
 
 平台对外暴露“下载 URL”时不要泄露真实路径，只暴露对象 ID（数据库主键）或对象 key。
 
@@ -94,17 +94,17 @@ ${STORAGE_ROOT}/
 
 推荐流程（安全优先）：
 
-1. 上传原始 Zip 到 `challenge_packs/`（先落盘，记录 sha256/size/content-type）。
-2. 在 `tmp/` 解包并定位“题目包根目录”（见题目包规范）。
+1. 上传原始 Zip 到导入预览目录（当前实现为 `challenge-import-previews/<preview-id>/package.zip`）。
+2. 在同一预览工作目录内解包并定位“题目包根目录”（当前支持 Zip 根目录直接包含 `challenge.yml`，或仅包含一个题目子目录）。
 3. 静态校验：
-   - 结构校验：`manifest.yml`、`statement.md`、`docker/Dockerfile` 等必需项存在。
+   - 结构校验：`challenge.yml`、题面 Markdown，以及题目包中引用的附件/运行时信息等必需项存在。
    - 安全校验：拒绝 zip-slip 路径、symlink、zip bomb；限制文件数与大小。
-   - `manifest.yml` 字段校验（category/difficulty/tags/expose 端口等）。
+   - `challenge.yml` 字段校验（meta/category/difficulty/flag/runtime/extensions 等）。
 4. 附件提取：
-   - 仅允许从 `attachments/` 目录提取。
-   - 校验 `sha256` 一致后，再写入 `attachments/` 存储目录（按内容寻址 key）。
-5. 生成题目记录/附件记录（DB），并把“原始包”与“提取后的附件对象”关联到题目。
-6. 清理临时目录。
+   - 仅允许提取 `challenge.yml` 中显式声明的附件文件。
+   - 当前实现会把导入后的附件持久化到 `challenge-attachments/imports/<slug>/`，并生成 `/api/v1/challenges/attachments/imports/...` 下载路径。
+5. 生成题目记录，并同步 Hint、Flag、运行时镜像引用与附件下载地址。
+6. commit 完成后清理该次导入预览目录。
 
 > 在线构建（dockerfile build）如果启用，必须异步化，并在隔离 builder 上执行，禁止 builder 访问平台内网与敏感配置。
 
@@ -112,8 +112,8 @@ ${STORAGE_ROOT}/
 
 下载必须走鉴权与审计：
 
-- 学员：仅允许下载“当前可见且有权限”的题目附件；禁止下载原始题目包、Dockerfile、构建日志等。
-- 教师/管理员：可下载原始题目包（用于复现/复审），并可下载构建日志与导出文件。
+- 学员：仅允许下载“当前可见且有权限”的题目附件；禁止下载导入预览原始 Zip、Dockerfile、构建日志等。
+- 教师/管理员：当前可通过后台导入流程复现与审计题目包；若后续开放原始包回下载，也应单独做鉴权与审计。
 
 实现建议：
 
@@ -158,8 +158,8 @@ ${STORAGE_ROOT}/
 
 ## 8. 备份与清理策略（建议）
 
-- `challenge_packs/`：建议长期保留（审计与复现价值高）。
-- `attachments/`：长期保留，与题目生命周期一致。
+- `challenge-import-previews/`：仅作短期预览缓存，commit 后或超时后应清理。
+- `challenge-attachments/`：长期保留，与题目生命周期一致。
 - `build_logs/`：可设置保留期（例如 30 天）并可按镜像状态清理。
 - `exports/`：建议短期保留（例如 7~30 天），并提供手动删除。
 - `tmp/`：必须定期清理（例如每小时/每天），并在服务启动时清一次“过期残留”。
