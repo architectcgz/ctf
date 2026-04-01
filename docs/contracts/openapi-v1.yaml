@@ -298,7 +298,7 @@ components:
       enum: [pending, creating, running, expired, destroying, destroyed, failed, crashed]
     FlagType:
       type: string
-      enum: [static, dynamic, regex]
+      enum: [static, dynamic, regex, manual_review]
 
     SshInfo:
       type: object
@@ -389,32 +389,17 @@ components:
       properties:
         flag: { type: string }
 
-    SubmitFlagSuccessData:
-      type: object
-      required: [correct, points_earned, first_blood, solved_at, challenge_progress]
-      properties:
-        correct: { type: boolean, enum: [true] }
-        points_earned: { type: integer, minimum: 0 }
-        first_blood: { type: boolean }
-        solved_at: { $ref: "#/components/schemas/ISODateTime" }
-        challenge_progress:
-          type: object
-          required: [total_challenges, solved_challenges]
-          properties:
-            total_challenges: { type: integer, minimum: 0 }
-            solved_challenges: { type: integer, minimum: 0 }
-
-    SubmitFlagFailureData:
-      type: object
-      required: [correct]
-      properties:
-        correct: { type: boolean, enum: [false] }
-        remaining_attempts: { type: integer, nullable: true, minimum: 0 }
-
     SubmitFlagData:
-      oneOf:
-        - $ref: "#/components/schemas/SubmitFlagSuccessData"
-        - $ref: "#/components/schemas/SubmitFlagFailureData"
+      type: object
+      required: [is_correct, status, message, submitted_at]
+      properties:
+        is_correct: { type: boolean }
+        status:
+          type: string
+          enum: [correct, incorrect, pending_review]
+        message: { type: string }
+        points: { type: integer, nullable: true, minimum: 0 }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime" }
 
     ApiEnvelopeSubmitFlagData:
       allOf:
@@ -423,6 +408,46 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/SubmitFlagData" }
+
+    AdminChallengeFlagConfigData:
+      type: object
+      required: [configured]
+      properties:
+        configured: { type: boolean }
+        flag_type: { $ref: "#/components/schemas/FlagType", nullable: true }
+        flag_regex: { type: string, nullable: true }
+        flag_prefix: { type: string, nullable: true }
+
+    ApiEnvelopeAdminChallengeFlagConfigData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeFlagConfigData" }
+
+    ConfigureChallengeFlagRequest:
+      type: object
+      required: [flag_type]
+      properties:
+        flag_type: { $ref: "#/components/schemas/FlagType" }
+        flag: { type: string, nullable: true }
+        flag_regex: { type: string, nullable: true }
+        flag_prefix: { type: string, nullable: true }
+
+    ConfigureChallengeFlagData:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+
+    ApiEnvelopeConfigureChallengeFlagData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ConfigureChallengeFlagData" }
 
     UnlockHintData:
       type: object
@@ -799,6 +824,256 @@ components:
             data:
               type: array
               items: { $ref: "#/components/schemas/EnvironmentTemplateData" }
+
+    ChallengeWriteupVisibility:
+      type: string
+      enum: [private, public, scheduled]
+
+    ChallengeWriteupData:
+      type: object
+      required:
+        [id, challenge_id, title, content, visibility, is_released, requires_spoiler_warning, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        content: { type: string }
+        visibility: { $ref: "#/components/schemas/ChallengeWriteupVisibility" }
+        release_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        is_released: { type: boolean }
+        requires_spoiler_warning: { type: boolean }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeChallengeWriteupData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/ChallengeWriteupData" }
+
+    AdminChallengeWriteupData:
+      type: object
+      required: [id, challenge_id, title, content, visibility, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        content: { type: string }
+        visibility: { $ref: "#/components/schemas/ChallengeWriteupVisibility" }
+        release_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        created_by: { $ref: "#/components/schemas/ID", nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeAdminChallengeWriteupData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/AdminChallengeWriteupData" }
+
+    UpsertChallengeWriteupRequest:
+      type: object
+      required: [title, content, visibility]
+      properties:
+        title: { type: string }
+        content: { type: string }
+        visibility: { $ref: "#/components/schemas/ChallengeWriteupVisibility" }
+        release_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    SubmissionWriteupStatus:
+      type: string
+      enum: [draft, submitted]
+
+    SubmissionWriteupReviewStatus:
+      type: string
+      enum: [pending, reviewed, excellent, needs_revision]
+
+    UpsertSubmissionWriteupRequest:
+      type: object
+      required: [title, content, submission_status]
+      properties:
+        title: { type: string }
+        content: { type: string }
+        submission_status: { $ref: "#/components/schemas/SubmissionWriteupStatus" }
+
+    SubmissionWriteupData:
+      type: object
+      required:
+        [id, user_id, challenge_id, title, content, submission_status, review_status, created_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        user_id: { $ref: "#/components/schemas/ID" }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        contest_id: { $ref: "#/components/schemas/ID", nullable: true }
+        title: { type: string }
+        content: { type: string }
+        submission_status: { $ref: "#/components/schemas/SubmissionWriteupStatus" }
+        review_status: { $ref: "#/components/schemas/SubmissionWriteupReviewStatus" }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        reviewed_by: { $ref: "#/components/schemas/ID", nullable: true }
+        reviewed_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        review_comment: { type: string, nullable: true }
+        created_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    ApiEnvelopeSubmissionWriteupData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/SubmissionWriteupData" }
+
+    TeacherSubmissionWriteupItem:
+      type: object
+      required:
+        [id, user_id, student_username, challenge_id, challenge_title, title, content_preview, submission_status, review_status, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        user_id: { $ref: "#/components/schemas/ID" }
+        student_username: { type: string }
+        student_name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        challenge_title: { type: string }
+        title: { type: string }
+        content_preview: { type: string }
+        submission_status: { $ref: "#/components/schemas/SubmissionWriteupStatus" }
+        review_status: { $ref: "#/components/schemas/SubmissionWriteupReviewStatus" }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        reviewed_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    TeacherSubmissionWriteupListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherSubmissionWriteupItem" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeTeacherSubmissionWriteupListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherSubmissionWriteupListData" }
+
+    TeacherSubmissionWriteupDetailData:
+      allOf:
+        - $ref: "#/components/schemas/SubmissionWriteupData"
+        - type: object
+          required: [student_username, challenge_title]
+          properties:
+            student_username: { type: string }
+            student_name: { type: string, nullable: true }
+            class_name: { type: string, nullable: true }
+            challenge_title: { type: string }
+            reviewer_name: { type: string, nullable: true }
+
+    ApiEnvelopeTeacherSubmissionWriteupDetailData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherSubmissionWriteupDetailData" }
+
+    ReviewSubmissionWriteupRequest:
+      type: object
+      required: [review_status]
+      properties:
+        review_status: { $ref: "#/components/schemas/SubmissionWriteupReviewStatus" }
+        review_comment: { type: string, nullable: true }
+
+    TeacherManualReviewStatus:
+      type: string
+      enum: [pending, approved, rejected]
+
+    TeacherManualReviewSubmissionItemData:
+      type: object
+      required:
+        [id, user_id, student_username, challenge_id, challenge_title, answer_preview, review_status, submitted_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        user_id: { $ref: "#/components/schemas/ID" }
+        student_username: { type: string }
+        student_name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        challenge_title: { type: string }
+        answer_preview: { type: string }
+        review_status: { $ref: "#/components/schemas/TeacherManualReviewStatus" }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime" }
+        reviewed_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+
+    TeacherManualReviewSubmissionListData:
+      type: object
+      required: [list, total, page, page_size]
+      properties:
+        list:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherManualReviewSubmissionItemData" }
+        total: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        page_size: { type: integer, minimum: 1 }
+
+    ApiEnvelopeTeacherManualReviewSubmissionListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherManualReviewSubmissionListData" }
+
+    TeacherManualReviewSubmissionDetailData:
+      type: object
+      required:
+        [id, user_id, student_username, challenge_id, challenge_title, answer, is_correct, score, review_status, submitted_at, updated_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        user_id: { $ref: "#/components/schemas/ID" }
+        student_username: { type: string }
+        student_name: { type: string, nullable: true }
+        class_name: { type: string, nullable: true }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        challenge_title: { type: string }
+        answer: { type: string }
+        is_correct: { type: boolean }
+        score: { type: integer, minimum: 0 }
+        review_status: { $ref: "#/components/schemas/TeacherManualReviewStatus" }
+        reviewed_by: { $ref: "#/components/schemas/ID", nullable: true }
+        reviewed_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+        review_comment: { type: string, nullable: true }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime" }
+        updated_at: { $ref: "#/components/schemas/ISODateTime" }
+        reviewer_name: { type: string, nullable: true }
+
+    ApiEnvelopeTeacherManualReviewSubmissionDetailData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherManualReviewSubmissionDetailData" }
+
+    ReviewManualReviewSubmissionRequest:
+      type: object
+      required: [review_status]
+      properties:
+        review_status: 
+          type: string
+          enum: [approved, rejected]
+        review_comment: { type: string, nullable: true }
 
     ContestAnnouncement:
       type: object
@@ -1215,6 +1490,47 @@ components:
             data:
               type: array
               items: { $ref: "#/components/schemas/TeacherStudentItem" }
+
+    TeacherEvidenceSummaryData:
+      type: object
+      required: [total_events, proxy_request_count, submit_count, success_count, challenge_id]
+      properties:
+        total_events: { type: integer, minimum: 0 }
+        proxy_request_count: { type: integer, minimum: 0 }
+        submit_count: { type: integer, minimum: 0 }
+        success_count: { type: integer, minimum: 0 }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+
+    TeacherEvidenceEventData:
+      type: object
+      required: [type, challenge_id, title, detail, timestamp]
+      properties:
+        type: { type: string }
+        challenge_id: { $ref: "#/components/schemas/ID" }
+        title: { type: string }
+        detail: { type: string }
+        timestamp: { $ref: "#/components/schemas/ISODateTime" }
+        meta:
+          type: object
+          nullable: true
+          additionalProperties: true
+
+    TeacherEvidenceData:
+      type: object
+      required: [summary, events]
+      properties:
+        summary: { $ref: "#/components/schemas/TeacherEvidenceSummaryData" }
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/TeacherEvidenceEventData" }
+
+    ApiEnvelopeTeacherEvidenceData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/TeacherEvidenceData" }
 
     SkillDimensionScore:
       type: object
@@ -2155,7 +2471,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeInstanceListData" }
 
-  /challenges/{id}/submissions:
+  /challenges/{id}/submit:
     post:
       tags: [Challenges]
       summary: 提交 Flag
@@ -2178,10 +2494,53 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
         "400":
-          description: Bad Request（允许返回 data.correct=false 作为错误上下文）
+          description: Bad Request
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+
+  /challenges/{id}/writeup-submissions:
+    post:
+      tags: [Challenges]
+      summary: 提交或保存我的题解
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpsertSubmissionWriteupRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmissionWriteupData" }
+
+  /challenges/{id}/writeup-submissions/me:
+    get:
+      tags: [Challenges]
+      summary: 获取我的题解提交
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmissionWriteupData" }
+        "404":
+          description: Not Found
 
   /challenges/{id}/hints/{level}/unlock:
     post:
@@ -2573,6 +2932,28 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeMyProgressData" }
 
+  /teacher/students/{id}/evidence:
+    get:
+      tags: [Teacher]
+      summary: 教师查看指定学员证据流
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: challenge_id
+          required: false
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherEvidenceData" }
+
   /users/me/skill-profile:
     get:
       tags: [Assessment]
@@ -2694,6 +3075,155 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeReportExportData" }
+
+  /teacher/writeup-submissions:
+    get:
+      tags: [Teacher]
+      summary: 教师查看题解提交列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: student_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: challenge_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: class_name
+          schema: { type: string }
+        - in: query
+          name: submission_status
+          schema: { $ref: "#/components/schemas/SubmissionWriteupStatus" }
+        - in: query
+          name: review_status
+          schema: { $ref: "#/components/schemas/SubmissionWriteupReviewStatus" }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupListData" }
+
+  /teacher/writeup-submissions/{id}:
+    get:
+      tags: [Teacher]
+      summary: 教师查看题解提交详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherSubmissionWriteupDetailData" }
+
+  /teacher/writeup-submissions/{id}/review:
+    put:
+      tags: [Teacher]
+      summary: 教师评阅题解提交
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewSubmissionWriteupRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmissionWriteupData" }
+
+  /teacher/manual-review-submissions:
+    get:
+      tags: [Teacher]
+      summary: 教师查看人工审核提交列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: student_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: challenge_id
+          schema: { $ref: "#/components/schemas/ID" }
+        - in: query
+          name: class_name
+          schema: { type: string }
+        - in: query
+          name: review_status
+          schema: { $ref: "#/components/schemas/TeacherManualReviewStatus" }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: page_size
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionListData" }
+
+  /teacher/manual-review-submissions/{id}:
+    get:
+      tags: [Teacher]
+      summary: 教师查看人工审核提交详情
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionDetailData" }
+
+  /teacher/manual-review-submissions/{id}/review:
+    put:
+      tags: [Teacher]
+      summary: 教师评阅人工审核提交
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewManualReviewSubmissionRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeTeacherManualReviewSubmissionDetailData" }
 
   /admin/dashboard:
     get:
@@ -2945,6 +3475,45 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ApiEnvelopeNull" }
+
+  /authoring/challenges/{id}/flag:
+    get:
+      tags: [Authoring]
+      summary: 获取题目 Flag 配置摘要
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeAdminChallengeFlagConfigData" }
+    put:
+      tags: [Authoring]
+      summary: 配置题目 Flag
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfigureChallengeFlagRequest" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeConfigureChallengeFlagData" }
 
   /authoring/challenges/{id}/self-check:
     post:
@@ -3454,14 +4023,16 @@ paths:
     get:
       tags:
       - Challenges
-      summary: 'TODO: GET /challenges/{id}/writeup'
+      summary: 获取题目公开题解
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiEnvelopeNull'
+                $ref: '#/components/schemas/ApiEnvelopeChallengeWriteupData'
+        '404':
+          description: Not Found
       security:
       - bearerAuth: []
       parameters:
@@ -3474,14 +4045,16 @@ paths:
     get:
       tags:
       - Authoring
-      summary: 'TODO: GET /authoring/challenges/{id}/writeup'
+      summary: 获取题目题解
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiEnvelopeNull'
+                $ref: '#/components/schemas/ApiEnvelopeAdminChallengeWriteupData'
+        '404':
+          description: Not Found
       security:
       - bearerAuth: []
       parameters:
@@ -3493,14 +4066,14 @@ paths:
     put:
       tags:
       - Authoring
-      summary: 'TODO: PUT /authoring/challenges/{id}/writeup'
+      summary: 保存题目题解
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiEnvelopeNull'
+                $ref: '#/components/schemas/ApiEnvelopeAdminChallengeWriteupData'
       security:
       - bearerAuth: []
       parameters:
@@ -3510,16 +4083,15 @@ paths:
         schema:
           $ref: '#/components/schemas/ID'
       requestBody:
-        required: false
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              description: 'TODO: fill request schema'
+              $ref: '#/components/schemas/UpsertChallengeWriteupRequest'
     delete:
       tags:
       - Authoring
-      summary: 'TODO: DELETE /authoring/challenges/{id}/writeup'
+      summary: 删除题目题解
       responses:
         '200':
           description: OK
