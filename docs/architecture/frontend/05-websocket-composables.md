@@ -31,8 +31,8 @@
 // composables/useWebSocket.ts
 export function useWebSocket(endpoint, handlers) {
   // 参数:
-  //   endpoint: 'scoreboard/5' | 'notifications' | 'contest/5/announcements'
-  //   handlers: { 'scoreboard.update': (payload) => {}, ... }
+  //   endpoint: 'notifications' | 'contests/5/announcements' | 'contests/5/scoreboard'
+  //   handlers: { 'scoreboard.updated': () => {}, ... }
   //
   // 返回:
   //   { status, connect, disconnect, send }
@@ -51,9 +51,16 @@ export function useWebSocket(endpoint, handlers) {
 
 | 端点 | 使用页面 | 消息类型 | 写入目标 |
 |------|----------|----------|----------|
-| `/ws/scoreboard/:id` | ContestDetail (排行榜 Tab) | `scoreboard.update`, `scoreboard.frozen` | contestStore |
 | `/ws/notifications` | AppLayout (全局) | `notification.new` | notificationStore |
-| `/ws/contest/:id/announcements` | ContestDetail (公告 Tab) | `announcement.new` | contestStore |
+| `/ws/contests/:id/announcements` | ContestDetail (公告 Tab) | `contest.announcement.created`, `contest.announcement.deleted` | contestStore |
+| `/ws/contests/:id/scoreboard` | ScoreboardView / ContestDetail (排行榜 Tab) | `scoreboard.updated` | 收到事件后重新调用 HTTP 榜单接口 |
+
+### 1.4 当前实现约束
+
+- 通知、比赛公告、比赛榜单使用**独立 WS 端点**，不混用单一 socket + 订阅协议。
+- `ScoreboardView` 只会为 `running` / `frozen` 状态的比赛挂载实时 bridge。
+- 榜单通道只推送轻量事件 `scoreboard.updated`，避免在 WS 中重复下发整榜数据。
+- 前端收到 `scoreboard.updated` 后，按比赛粒度调用现有 `GET /api/v1/contests/:id/scoreboard` 刷新对应卡片。
 
 ---
 

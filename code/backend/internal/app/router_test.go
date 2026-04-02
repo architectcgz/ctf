@@ -94,6 +94,8 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/notifications", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "PUT", "/api/v1/notifications/:id/read", "internal/module/ops")
 	assertRouteHandlerContains(t, router, "GET", "/ws/notifications", "internal/module/ops")
+	assertRouteHandlerContains(t, router, "GET", "/ws/contests/:id/announcements", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/ws/contests/:id/scoreboard", "internal/module/contest/api/http")
 }
 
 func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {

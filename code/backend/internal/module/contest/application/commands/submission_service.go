@@ -22,6 +22,7 @@ type SubmissionService struct {
 	flagValidator     challengecontracts.FlagValidator
 	teamRepo          contestports.ContestTeamFinder
 	scoreboardService scoreboardUpdater
+	broadcaster       contestports.RealtimeBroadcaster
 	cfg               *config.Config
 }
 
@@ -35,4 +36,8 @@ func NewSubmissionService(contestRepo contestports.ContestLookupRepository, repo
 		scoreboardService: scoreboardService,
 		cfg:               cfg,
 	}
+}
+
+func (s *SubmissionService) SetRealtimeBroadcaster(broadcaster contestports.RealtimeBroadcaster) {
+	s.broadcaster = broadcaster
 }

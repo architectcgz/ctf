@@ -19,7 +19,9 @@ function toTimestamp(value: string): number {
 }
 
 function sortContestsByLatest(contests: ContestListItem[]): ContestListItem[] {
-  return [...contests].sort((left, right) => toTimestamp(right.starts_at) - toTimestamp(left.starts_at))
+  return [...contests].sort(
+    (left, right) => toTimestamp(right.starts_at) - toTimestamp(left.starts_at)
+  )
 }
 
 export function useScoreboardView() {
@@ -28,8 +30,60 @@ export function useScoreboardView() {
   const sections = ref<ScoreboardSection[]>([])
   const loading = ref(false)
   const selectionHint = ref('按竞赛开始时间倒序展示排行榜，最新的竞赛排在最前面。')
+  const refreshingContestIDs = new Set<string>()
 
   const hasSections = computed(() => sections.value.length > 0)
+
+  async function loadScoreboardSection(contest: ContestListItem): Promise<ScoreboardSection> {
+    try {
+      const payload = await getScoreboard(contest.id, { page: 1, page_size: 100 })
+      return {
+        contest,
+        frozen: payload.frozen,
+        rows: payload.scoreboard.list,
+        error: false,
+      }
+    } catch (error) {
+      return {
+        contest,
+        frozen: false,
+        rows: [],
+        error: true,
+      }
+    }
+  }
+
+  function replaceSection(nextSection: ScoreboardSection): void {
+    sections.value = sections.value.map((section) =>
+      section.contest.id === nextSection.contest.id ? nextSection : section
+    )
+  }
+
+  async function refreshContestScoreboard(contestId: string): Promise<void> {
+    const currentSection = sections.value.find((section) => section.contest.id === contestId)
+    if (!currentSection || refreshingContestIDs.has(contestId)) {
+      return
+    }
+
+    refreshingContestIDs.add(contestId)
+
+    try {
+      const payload = await getScoreboard(contestId, { page: 1, page_size: 100 })
+      replaceSection({
+        contest: currentSection.contest,
+        frozen: payload.frozen,
+        rows: payload.scoreboard.list,
+        error: false,
+      })
+    } catch (error) {
+      replaceSection({
+        ...currentSection,
+        error: true,
+      })
+    } finally {
+      refreshingContestIDs.delete(contestId)
+    }
+  }
 
   async function refresh(): Promise<void> {
     loading.value = true
@@ -49,24 +103,7 @@ export function useScoreboardView() {
       selectionHint.value = '按竞赛开始时间倒序展示排行榜，最新的竞赛排在最前面。'
 
       const scoreboardSections = await Promise.all(
-        contests.map(async (contest) => {
-          try {
-            const payload = await getScoreboard(contest.id, { page: 1, page_size: 100 })
-            return {
-              contest,
-              frozen: payload.frozen,
-              rows: payload.scoreboard.list,
-              error: false,
-            } satisfies ScoreboardSection
-          } catch (error) {
-            return {
-              contest,
-              frozen: false,
-              rows: [],
-              error: true,
-            } satisfies ScoreboardSection
-          }
-        })
+        contests.map((contest) => loadScoreboardSection(contest))
       )
 
       sections.value = scoreboardSections
@@ -89,6 +126,7 @@ export function useScoreboardView() {
     hasSections,
     loading,
     refresh,
+    refreshContestScoreboard,
     sections,
     selectionHint,
   }

@@ -6,6 +6,7 @@ type ParticipationService struct {
 	contestRepo contestports.ContestLookupRepository
 	repo        contestports.ContestParticipationRepository
 	teamRepo    contestports.ContestTeamFinder
+	broadcaster contestports.RealtimeBroadcaster
 }
 
 func NewParticipationService(contestRepo contestports.ContestLookupRepository, repo contestports.ContestParticipationRepository, teamRepo contestports.ContestTeamFinder) *ParticipationService {
@@ -14,4 +15,8 @@ func NewParticipationService(contestRepo contestports.ContestLookupRepository, r
 		repo:        repo,
 		teamRepo:    teamRepo,
 	}
+}
+
+func (s *ParticipationService) SetRealtimeBroadcaster(broadcaster contestports.RealtimeBroadcaster) {
+	s.broadcaster = broadcaster
 }

@@ -11,6 +11,7 @@ import (
 	healthHandler "ctf-platform/internal/handler/health"
 	"ctf-platform/internal/middleware"
 	"ctf-platform/internal/model"
+	contesthttp "ctf-platform/internal/module/contest/api/http"
 	healthService "ctf-platform/internal/service/health"
 	"ctf-platform/internal/validation"
 	ratelimitpkg "ctf-platform/pkg/ratelimit"
@@ -146,6 +147,12 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	assessmentModule := buildAssessmentModule(root, challengeModule)
 	teachingReadmodelModule := buildTeachingReadmodelModule(root, assessmentModule)
 	contestModule := buildContestModule(root, challengeModule, runtimeModule)
+	contestModule.BindRealtimeBroadcaster(opsModule.WebSocketManager)
+	contestRealtimeHandler := contesthttp.NewRealtimeHandler(
+		identityModule.TokenService,
+		opsModule.WebSocketManager,
+		log.Named("contest_realtime_handler"),
+	)
 	practiceModule := buildPracticeModule(root, challengeModule, runtimeModule, assessmentModule)
 	practiceReadmodelModule := buildPracticeReadmodelModule(root)
 	runtimeModule.BuildHandler(root, opsModule)
@@ -179,6 +186,8 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		runtime:           runtimeModule,
 		teachingReadmodel: teachingReadmodelModule,
 	})
+	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
+	engine.GET("/ws/contests/:id/scoreboard", contestRealtimeHandler.ServeScoreboardWS)
 
 	return &routerRuntime{
 		engine:     engine,
