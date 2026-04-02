@@ -627,7 +627,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	otherTeacherHeaders := bearerHeaders(loginForToken(t, env.router, env.otherTeacher.Username, "Password123"))
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Lifecycle Challenge",
 		"description": "challenge lifecycle matrix",
 		"category":    model.DimensionWeb,
@@ -657,7 +657,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected created challenge: %+v", createdChallenge)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Invalid Hint Challenge",
 		"description": "invalid hints",
 		"category":    model.DimensionWeb,
@@ -672,7 +672,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
 	emptyAttachment := ""
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d", createdChallenge.ID), map[string]any{
 		"title":          "Lifecycle Challenge Updated",
 		"points":         150,
 		"attachment_url": emptyAttachment,
@@ -687,7 +687,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var updatedChallenge dto.ChallengeResp
@@ -696,21 +696,21 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected updated challenge: %+v", updatedChallenge)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
 		"flag_type":   model.FlagTypeStatic,
 		"flag":        "invalid-flag",
 		"flag_prefix": "flag",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
 		"flag_type":   model.FlagTypeStatic,
 		"flag":        "flag{lifecycle-static}",
 		"flag_prefix": "flag",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var staticFlag dto.FlagResp
@@ -719,13 +719,13 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected static flag config: %+v", staticFlag)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), map[string]any{
 		"flag_type":   model.FlagTypeDynamic,
 		"flag_prefix": "ctf",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var dynamicFlag dto.FlagResp
@@ -734,7 +734,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected dynamic flag config: %+v", dynamicFlag)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Scheduled Writeup",
 		"content":    "scheduled content",
 		"visibility": model.WriteupVisibilityScheduled,
@@ -742,7 +742,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
 	releaseAt := time.Now().Add(time.Hour).Format(time.RFC3339)
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Scheduled Writeup",
 		"content":    "scheduled content",
 		"visibility": model.WriteupVisibilityScheduled,
@@ -750,7 +750,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var adminWriteup dto.AdminChallengeWriteupResp
@@ -759,8 +759,11 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected admin writeup: %+v", adminWriteup)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/publish", createdChallenge.ID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", createdChallenge.ID).
+		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		t.Fatalf("set created challenge published: %v", err)
+	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -774,7 +777,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup", createdChallenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Public Writeup",
 		"content":    "public content",
 		"visibility": model.WriteupVisibilityPublic,
@@ -900,7 +903,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected reviewed submission response: %+v", reviewedSubmission)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "Manual Review Challenge",
 		"description": "submit an answer for teacher review",
 		"category":    model.DimensionMisc,
@@ -912,13 +915,16 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	var manualChallenge dto.ChallengeResp
 	decodeFullRouterData(t, resp, &manualChallenge)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/flag", manualChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", manualChallenge.ID), map[string]any{
 		"flag_type": model.FlagTypeManualReview,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/publish", manualChallenge.ID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", manualChallenge.ID).
+		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		t.Fatalf("set manual challenge published: %v", err)
+	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/submit", manualChallenge.ID), map[string]any{
 		"flag": "exploit trace and reasoning",
@@ -997,7 +1003,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected reviewed manual submission: %+v", reviewedManualSubmission)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/environment-templates", map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/environment-templates", map[string]any{
 		"name":           "Lifecycle Template",
 		"description":    "template for lifecycle test",
 		"entry_node_key": "web",
@@ -1023,7 +1029,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected template: %+v", template)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/environment-templates?keyword=Lifecycle", nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/environment-templates?keyword=Lifecycle", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var templates []dto.EnvironmentTemplateResp
@@ -1032,7 +1038,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("expected template list to include created template")
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/topology", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", createdChallenge.ID), map[string]any{
 		"template_id": template.ID,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
@@ -1043,10 +1049,10 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected topology template binding: %+v", topology)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/environment-templates/%d", template.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/environment-templates/%d", template.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var loadedTemplate dto.EnvironmentTemplateResp
@@ -1055,7 +1061,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("expected template usage count increment, got %+v", loadedTemplate)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/challenges/%d/topology", createdChallenge.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", createdChallenge.ID), map[string]any{
 		"entry_node_key": "ghost",
 		"nodes": []map[string]any{
 			{
@@ -1068,7 +1074,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/environment-templates/%d", template.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/environment-templates/%d", template.ID), map[string]any{
 		"name":           "Lifecycle Template Updated",
 		"description":    "updated template",
 		"entry_node_key": "web",
@@ -1083,35 +1089,35 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
 	instanceChallenge := createDraftChallengeRecord(t, env, "DeleteBlocked Challenge")
 	createRunningInstanceForChallenge(t, env, instanceChallenge.ID, env.student.ID)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/challenges/%d", instanceChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d", instanceChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
 	stopInstancesForChallenge(t, env, instanceChallenge.ID)
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/challenges/%d", instanceChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d", instanceChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/challenges/%d", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d", createdChallenge.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", createdChallenge.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/environment-templates/%d", template.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/environment-templates/%d", template.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 }
 
@@ -1484,7 +1490,7 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.student.Username, env.studentPwd))
 	peerHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/images", map[string]any{
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/images", map[string]any{
 		"name":        "matrix/webapp",
 		"tag":         "v2",
 		"description": "integration image",
@@ -1497,23 +1503,23 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected created image: %+v", freeImage)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/images", map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/images", map[string]any{
 		"name":        "matrix/webapp",
 		"tag":         "v2",
 		"description": "duplicate image",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/images?name=matrix/status=available", nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/images?name=matrix/status=available", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/admin/images/%d", freeImage.ID), map[string]any{
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), map[string]any{
 		"description": "updated image",
 		"status":      model.ImageStatusFailed,
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/images/%d", freeImage.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var loadedImage dto.ImageResp
@@ -1522,10 +1528,10 @@ func TestFullRouter_AdminOpsAndNotificationStateMatrix(t *testing.T) {
 		t.Fatalf("unexpected loaded image: %+v", loadedImage)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/images/%d", env.image.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/images/%d", env.image.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusConflict)
 
-	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/admin/images/%d", freeImage.ID), nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/images/%d", freeImage.ID), nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/users?role=student&class_name=ClassA", nil, adminHeaders)
@@ -1756,7 +1762,7 @@ func TestFullRouter_AdminImagesCapsOversizedPageSize(t *testing.T) {
 
 	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
 
-	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/images?page=1&page_size=200", nil, adminHeaders)
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/images?page=1&page_size=200", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
 	var payload struct {

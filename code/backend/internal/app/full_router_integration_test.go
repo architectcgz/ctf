@@ -72,6 +72,7 @@ var fullRouterTestSchemaModels = []any{
 	&model.UserRole{},
 	&model.Image{},
 	&model.Challenge{},
+	&model.ChallengePublishCheckJob{},
 	&model.Tag{},
 	&model.ChallengeTag{},
 	&model.ChallengeHint{},
@@ -232,17 +233,17 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 		}
 	}
 
-	adminCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", createPayload("admin-owned"), adminHeaders)
+	adminCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", createPayload("admin-owned"), adminHeaders)
 	assertFullRouterStatus(t, adminCreateResp, http.StatusOK)
 	var adminChallenge dto.ChallengeResp
 	decodeFullRouterData(t, adminCreateResp, &adminChallenge)
 
-	teacherCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", createPayload("teacher-owned"), teacherHeaders)
+	teacherCreateResp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", createPayload("teacher-owned"), teacherHeaders)
 	assertFullRouterStatus(t, teacherCreateResp, http.StatusOK)
 	var teacherChallenge dto.ChallengeResp
 	decodeFullRouterData(t, teacherCreateResp, &teacherChallenge)
 
-	listResp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/admin/challenges?page=1&page_size=50", nil, teacherHeaders)
+	listResp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/authoring/challenges?page=1&page_size=50", nil, teacherHeaders)
 	assertFullRouterStatus(t, listResp, http.StatusOK)
 	var listResult struct {
 		List []dto.ChallengeResp `json:"list"`
@@ -272,19 +273,19 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 		path    string
 		payload any
 	}{
-		{name: "get detail", method: http.MethodGet, path: fmt.Sprintf("/api/v1/admin/challenges/%d", adminChallenge.ID)},
-		{name: "update challenge", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d", adminChallenge.ID), payload: map[string]any{"title": "forbidden-update"}},
-		{name: "configure flag", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/flag", adminChallenge.ID), payload: map[string]any{
+		{name: "get detail", method: http.MethodGet, path: fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID)},
+		{name: "update challenge", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d", adminChallenge.ID), payload: map[string]any{"title": "forbidden-update"}},
+		{name: "configure flag", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/flag", adminChallenge.ID), payload: map[string]any{
 			"flag_type":   model.FlagTypeStatic,
 			"flag":        "flag{ownership-check}",
 			"flag_prefix": "flag",
 		}},
-		{name: "upsert writeup", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/writeup", adminChallenge.ID), payload: map[string]any{
+		{name: "upsert writeup", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", adminChallenge.ID), payload: map[string]any{
 			"title":      "forbidden writeup",
 			"content":    "forbidden content",
 			"visibility": model.WriteupVisibilityPublic,
 		}},
-		{name: "save topology", method: http.MethodPut, path: fmt.Sprintf("/api/v1/admin/challenges/%d/topology", adminChallenge.ID), payload: map[string]any{
+		{name: "save topology", method: http.MethodPut, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/topology", adminChallenge.ID), payload: map[string]any{
 			"entry_node_key": "web",
 			"nodes": []map[string]any{
 				{
@@ -297,7 +298,7 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 				},
 			},
 		}},
-		{name: "self check", method: http.MethodPost, path: fmt.Sprintf("/api/v1/admin/challenges/%d/self-check", adminChallenge.ID)},
+		{name: "self check", method: http.MethodPost, path: fmt.Sprintf("/api/v1/authoring/challenges/%d/self-check", adminChallenge.ID)},
 	} {
 		resp := performFullRouterRequest(t, env.router, tc.method, tc.path, tc.payload, teacherHeaders)
 		if resp.Code != http.StatusForbidden {
@@ -305,7 +306,7 @@ func TestFullRouter_TeacherCanOnlyManageOwnChallenges(t *testing.T) {
 		}
 	}
 
-	ownDetailResp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/admin/challenges/%d", teacherChallenge.ID), nil, teacherHeaders)
+	ownDetailResp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d", teacherChallenge.ID), nil, teacherHeaders)
 	assertFullRouterStatus(t, ownDetailResp, http.StatusOK)
 }
 
@@ -313,7 +314,7 @@ func TestFullRouter_CreateChallengeStoresCreator(t *testing.T) {
 	env := newFullRouterTestEnv(t)
 
 	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/admin/challenges", map[string]any{
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
 		"title":       "creator-marker",
 		"description": "creator marker challenge",
 		"category":    model.DimensionWeb,
@@ -351,7 +352,7 @@ func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
 		t,
 		env.router,
 		http.MethodPost,
-		fmt.Sprintf("/api/v1/admin/challenges/%d/self-check", env.challenge.ID),
+		fmt.Sprintf("/api/v1/authoring/challenges/%d/self-check", env.challenge.ID),
 		nil,
 		teacherHeaders,
 	)
@@ -373,6 +374,58 @@ func TestFullRouter_ChallengeSelfCheckRunsPrecheckAndRuntime(t *testing.T) {
 	}
 	if len(result.Runtime.Steps) == 0 {
 		t.Fatalf("expected runtime steps, got empty")
+	}
+}
+
+func TestFullRouter_AdminChallengePublishRequestLifecycle(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", env.challenge.ID).
+		Update("status", model.ChallengeStatusDraft).Error; err != nil {
+		t.Fatalf("set challenge draft: %v", err)
+	}
+	env.challenge.Status = model.ChallengeStatusDraft
+
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	createResp := performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodPost,
+		fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests", env.challenge.ID),
+		nil,
+		teacherHeaders,
+	)
+	assertFullRouterStatus(t, createResp, http.StatusAccepted)
+
+	var created map[string]any
+	decodeFullRouterData(t, createResp, &created)
+	if created["challenge_id"] != float64(env.challenge.ID) {
+		t.Fatalf("unexpected created publish request payload: %+v", created)
+	}
+	if created["status"] != "queued" {
+		t.Fatalf("expected queued publish request, got %+v", created)
+	}
+	if created["active"] != true {
+		t.Fatalf("expected active publish request, got %+v", created)
+	}
+
+	latestResp := performFullRouterRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		fmt.Sprintf("/api/v1/authoring/challenges/%d/publish-requests/latest", env.challenge.ID),
+		nil,
+		teacherHeaders,
+	)
+	assertFullRouterStatus(t, latestResp, http.StatusOK)
+
+	var latest map[string]any
+	decodeFullRouterData(t, latestResp, &latest)
+	if latest["id"] != created["id"] {
+		t.Fatalf("expected latest publish request id %v, got %+v", created["id"], latest)
+	}
+	if latest["status"] != "queued" {
+		t.Fatalf("expected latest queued publish request, got %+v", latest)
 	}
 }
 
@@ -432,12 +485,12 @@ func TestRouterBuildUsesCompositionModules(t *testing.T) {
 		calls = append(calls, "auth")
 		return originalBuildAuthModule(root, ops, identity)
 	}
-	buildChallengeModule = func(root *composition.Root, runtime *composition.RuntimeModule) (*composition.ChallengeModule, error) {
-		if root == nil || runtime == nil {
-			t.Fatal("expected root and runtime for challenge module builder")
+	buildChallengeModule = func(root *composition.Root, runtime *composition.RuntimeModule, ops *composition.OpsModule) (*composition.ChallengeModule, error) {
+		if root == nil || runtime == nil || ops == nil {
+			t.Fatal("expected root, runtime and ops for challenge module builder")
 		}
 		calls = append(calls, "challenge")
-		return originalBuildChallengeModule(root, runtime)
+		return originalBuildChallengeModule(root, runtime, ops)
 	}
 	buildAssessmentModule = func(root *composition.Root, challenge *composition.ChallengeModule) *composition.AssessmentModule {
 		if root == nil || challenge == nil {
@@ -547,9 +600,9 @@ func classifyRouteAccess(method, path string) routeAccessLevel {
 }
 
 func isTeacherAuthoringAdminRoute(path string) bool {
-	return strings.HasPrefix(path, "/api/v1/admin/challenges") ||
-		strings.HasPrefix(path, "/api/v1/admin/images") ||
-		strings.HasPrefix(path, "/api/v1/admin/environment-templates")
+	return strings.HasPrefix(path, "/api/v1/authoring/challenges") ||
+		strings.HasPrefix(path, "/api/v1/authoring/images") ||
+		strings.HasPrefix(path, "/api/v1/authoring/environment-templates")
 }
 
 func isPublicRoute(method, path string) bool {
@@ -605,11 +658,11 @@ func materializeRoutePath(path string, env *fullRouterTestEnv) string {
 	target := path
 
 	switch {
-	case strings.Contains(path, "/api/v1/admin/images/:id"):
+	case strings.Contains(path, "/api/v1/authoring/images/:id"):
 		target = strings.ReplaceAll(target, ":id", strconv.FormatInt(env.image.ID, 10))
-	case strings.Contains(path, "/api/v1/admin/challenges/:id"):
+	case strings.Contains(path, "/api/v1/authoring/challenges/:id"):
 		target = strings.ReplaceAll(target, ":id", strconv.FormatInt(env.challenge.ID, 10))
-	case strings.Contains(path, "/api/v1/admin/environment-templates/:id"):
+	case strings.Contains(path, "/api/v1/authoring/environment-templates/:id"):
 		target = strings.ReplaceAll(target, ":id", strconv.FormatInt(env.template.ID, 10))
 	case strings.Contains(path, "/api/v1/admin/users/:id"):
 		target = strings.ReplaceAll(target, ":id", strconv.FormatInt(env.student.ID, 10))

@@ -1,16 +1,41 @@
 package commands
 
 import (
+	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
+	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 	"testing"
 
 	"go.uber.org/zap"
 )
+
+type stubChallengeNotificationSender struct {
+	calls []stubChallengeNotificationCall
+}
+
+type stubChallengeNotificationCall struct {
+	userID         int64
+	challengeID    int64
+	challengeTitle string
+	passed         bool
+	failureSummary string
+}
+
+func (s *stubChallengeNotificationSender) SendChallengePublishCheckResult(_ context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error {
+	s.calls = append(s.calls, stubChallengeNotificationCall{
+		userID:         userID,
+		challengeID:    challengeID,
+		challengeTitle: challengeTitle,
+		passed:         passed,
+		failureSummary: failureSummary,
+	})
+	return nil
+}
 
 func newTestService(repo challengeports.ChallengeCommandRepository, imageRepo challengeports.ImageRepository) *ChallengeService {
 	return NewChallengeService(nil, repo, imageRepo, nil, nil, SelfCheckConfig{}, zap.NewNop())
@@ -122,5 +147,159 @@ func TestServicePublishChallengeNoImage(t *testing.T) {
 	}
 	if published.Status != model.ChallengeStatusPublished {
 		t.Fatalf("expected published status, got %s", published.Status)
+	}
+}
+
+func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+	image := &model.Image{Name: "ctf/web-demo", Tag: "latest", Status: model.ImageStatusAvailable}
+	if err := db.Create(image).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	salt, err := flagcrypto.GenerateSalt()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &model.Challenge{
+		Title:      "publish-me",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    image.ID,
+		Status:     model.ChallengeStatusDraft,
+		CreatedBy:  &teacher.ID,
+		FlagType:   model.FlagTypeStatic,
+		FlagSalt:   salt,
+		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{
+		containerResultAccessURL: "http://127.0.0.1:30001",
+		containerResultDetails: model.InstanceRuntimeDetails{
+			Containers: []model.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
+			Networks:   []model.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
+		},
+	}
+	notifier := &stubChallengeNotificationSender{}
+	service := NewChallengeService(db, repo, imageRepo, repo, probe, SelfCheckConfig{
+		PublishCheckBatchSize: 1,
+	}, zap.NewNop(), notifier)
+
+	job, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID)
+	if err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+	if job.Status != "queued" || !job.Active {
+		t.Fatalf("unexpected requested job status: %s", job.Status)
+	}
+
+	service.dispatchPublishCheckJobs(context.Background())
+
+	published, err := repo.FindByID(challenge.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if published.Status != model.ChallengeStatusPublished {
+		t.Fatalf("expected published challenge status, got %s", published.Status)
+	}
+
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+	}
+	if latest.Status != "succeeded" || latest.Active {
+		t.Fatalf("expected passed publish check job, got %+v", latest)
+	}
+	if latest.Result == nil || !latest.Result.Precheck.Passed || !latest.Result.Runtime.Passed {
+		t.Fatalf("expected successful self-check result, got %+v", latest.Result)
+	}
+	if latest.PublishedAt == nil {
+		t.Fatalf("expected published_at to be set, got %+v", latest)
+	}
+
+	if len(notifier.calls) != 1 {
+		t.Fatalf("expected 1 notification, got %+v", notifier.calls)
+	}
+	if !notifier.calls[0].passed || notifier.calls[0].challengeID != challenge.ID || notifier.calls[0].userID != teacher.ID {
+		t.Fatalf("unexpected notification payload: %+v", notifier.calls[0])
+	}
+}
+
+func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+	salt, err := flagcrypto.GenerateSalt()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &model.Challenge{
+		Title:      "no-image",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusDraft,
+		CreatedBy:  &teacher.ID,
+		FlagType:   model.FlagTypeStatic,
+		FlagSalt:   salt,
+		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	notifier := &stubChallengeNotificationSender{}
+	service := NewChallengeService(db, repo, imageRepo, repo, &fakeChallengeRuntimeProbe{}, SelfCheckConfig{
+		PublishCheckBatchSize: 1,
+	}, zap.NewNop(), notifier)
+
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+
+	service.dispatchPublishCheckJobs(context.Background())
+
+	stored, err := repo.FindByID(challenge.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if stored.Status != model.ChallengeStatusDraft {
+		t.Fatalf("expected challenge to stay draft, got %s", stored.Status)
+	}
+
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+	}
+	if latest.Status != model.ChallengePublishCheckStatusFailed || latest.Active {
+		t.Fatalf("expected failed publish check job, got %+v", latest)
+	}
+	if latest.FailureSummary == "" {
+		t.Fatalf("expected failure summary, got %+v", latest)
+	}
+
+	if len(notifier.calls) != 1 {
+		t.Fatalf("expected 1 notification, got %+v", notifier.calls)
+	}
+	if notifier.calls[0].passed {
+		t.Fatalf("expected failure notification, got %+v", notifier.calls[0])
+	}
+	if notifier.calls[0].failureSummary == "" {
+		t.Fatalf("expected failure summary in notification, got %+v", notifier.calls[0])
 	}
 }

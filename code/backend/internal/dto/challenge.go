@@ -151,3 +151,19 @@ type ChallengeSelfCheckResp struct {
 	Precheck    ChallengeSelfCheckPhaseResp   `json:"precheck"`
 	Runtime     ChallengeSelfCheckRuntimeResp `json:"runtime"`
 }
+
+type ChallengePublishCheckJobResp struct {
+	ID             int64                   `json:"id"`
+	ChallengeID    int64                   `json:"challenge_id"`
+	RequestedBy    int64                   `json:"requested_by"`
+	Status         string                  `json:"status"`
+	Active         bool                    `json:"active"`
+	RequestSource  string                  `json:"request_source"`
+	FailureSummary string                  `json:"failure_summary,omitempty"`
+	StartedAt      *time.Time              `json:"started_at,omitempty"`
+	FinishedAt     *time.Time              `json:"finished_at,omitempty"`
+	PublishedAt    *time.Time              `json:"published_at,omitempty"`
+	CreatedAt      time.Time               `json:"created_at"`
+	UpdatedAt      time.Time               `json:"updated_at"`
+	Result         *ChallengeSelfCheckResp `json:"result,omitempty"`
+}
