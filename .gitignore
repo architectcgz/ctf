@@ -2,6 +2,7 @@
 .idea/
 .vscode/
 .worktrees/
+/CODEX.md
 
 bin/
 dist/
