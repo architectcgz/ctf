@@ -8,7 +8,9 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
+	ctfws "ctf-platform/pkg/websocket"
 )
 
 func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID, actorUserID int64, req *dto.CreateContestAnnouncementReq) (*dto.ContestAnnouncementResp, error) {
@@ -31,12 +33,25 @@ func (s *ParticipationService) CreateAnnouncement(ctx context.Context, contestID
 	if err := s.repo.CreateAnnouncement(ctx, item); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
-	return &dto.ContestAnnouncementResp{
+	result := &dto.ContestAnnouncementResp{
 		ID:        item.ID,
 		Title:     item.Title,
 		Content:   item.Content,
 		CreatedAt: item.CreatedAt,
-	}, nil
+	}
+	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
+		Type: "contest.announcement.created",
+		Payload: map[string]any{
+			"contest_id": contestID,
+			"announcement": map[string]any{
+				"id":         result.ID,
+				"title":      result.Title,
+				"content":    result.Content,
+				"created_at": result.CreatedAt,
+			},
+		},
+	})
+	return result, nil
 }
 
 func (s *ParticipationService) DeleteAnnouncement(ctx context.Context, contestID, announcementID int64) error {
@@ -47,5 +62,12 @@ func (s *ParticipationService) DeleteAnnouncement(ctx context.Context, contestID
 	if !deleted {
 		return errcode.ErrContestAnnouncementNotFound
 	}
+	broadcastContestRealtimeEvent(s.broadcaster, contestports.AnnouncementChannel(contestID), ctfws.Envelope{
+		Type: "contest.announcement.deleted",
+		Payload: map[string]any{
+			"contest_id":      contestID,
+			"announcement_id": announcementID,
+		},
+	})
 	return nil
 }

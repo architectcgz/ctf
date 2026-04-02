@@ -516,7 +516,7 @@ const (
 func filteredRouterRoutes(routes gin.RoutesInfo) gin.RoutesInfo {
 	filtered := make(gin.RoutesInfo, 0, len(routes))
 	for _, route := range routes {
-		if route.Path == "/ws/notifications" {
+		if strings.HasPrefix(route.Path, "/ws/") {
 			continue
 		}
 		if route.Path == "/favicon.ico" {
@@ -559,6 +559,7 @@ func isPublicRoute(method, path string) bool {
 		"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh",
 		"/api/v1/auth/cas/status", "/api/v1/auth/cas/login", "/api/v1/auth/cas/callback",
 		"/ws/notifications",
+		"/ws/contests/:id/announcements", "/ws/contests/:id/scoreboard",
 		"/api/v1/contests", "/api/v1/contests/:id", "/api/v1/contests/:id/scoreboard", "/api/v1/contests/:id/announcements",
 		"/api/v1/instances/:id/proxy", "/api/v1/instances/:id/proxy/*proxyPath":
 		return true

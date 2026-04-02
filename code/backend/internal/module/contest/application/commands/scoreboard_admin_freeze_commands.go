@@ -8,8 +8,10 @@ import (
 
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/contest/domain"
+	contestports "ctf-platform/internal/module/contest/ports"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	"ctf-platform/pkg/errcode"
+	ctfws "ctf-platform/pkg/websocket"
 )
 
 func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID int64, minutesBeforeEnd int) error {
@@ -35,7 +37,17 @@ func (s *ScoreboardAdminService) FreezeScoreboard(ctx context.Context, contestID
 		}
 	}
 
-	return s.repo.Update(ctx, contest)
+	if err := s.repo.Update(ctx, contest); err != nil {
+		return err
+	}
+
+	broadcastContestRealtimeEvent(s.broadcaster, contestports.ScoreboardChannel(contestID), ctfws.Envelope{
+		Type: "scoreboard.updated",
+		Payload: map[string]any{
+			"contest_id": contestID,
+		},
+	})
+	return nil
 }
 
 func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contestID int64) error {
@@ -59,7 +71,17 @@ func (s *ScoreboardAdminService) UnfreezeScoreboard(ctx context.Context, contest
 		return errcode.ErrInternal.WithCause(err)
 	}
 
-	return s.repo.Update(ctx, contest)
+	if err := s.repo.Update(ctx, contest); err != nil {
+		return err
+	}
+
+	broadcastContestRealtimeEvent(s.broadcaster, contestports.ScoreboardChannel(contestID), ctfws.Envelope{
+		Type: "scoreboard.updated",
+		Payload: map[string]any{
+			"contest_id": contestID,
+		},
+	})
+	return nil
 }
 
 func (s *ScoreboardAdminService) createSnapshotFromLive(ctx context.Context, contestID int64) error {

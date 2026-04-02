@@ -140,6 +140,19 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     team.value = await getMyTeam(contest.value.id)
   }
 
+  async function refreshAnnouncements() {
+    if (!contest.value) {
+      return
+    }
+
+    try {
+      announcements.value = await getAnnouncements(contest.value.id)
+      announcementsError.value = ''
+    } catch (error) {
+      announcementsError.value = '公告加载失败，请稍后刷新重试'
+    }
+  }
+
   async function loadPage() {
     const contestId = toValue(options.contestId)
     if (!contestId) {
@@ -366,5 +379,6 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     closeJoinTeam,
     joinTeamAction,
     kickMember,
+    refreshAnnouncements,
   }
 }

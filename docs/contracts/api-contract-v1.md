@@ -1553,9 +1553,9 @@ export interface AdminContestUpsertData {
 
 ### 9.1 连接端点（来自 04-api-design.md）
 
-- `/ws/scoreboard/:contest_id?ticket=...`
 - `/ws/notifications?ticket=...`
-- `/ws/contest/:id/announcements?ticket=...`
+- `/ws/contests/:id/announcements?ticket=...`
+- `/ws/contests/:id/scoreboard?ticket=...`
 
 ### 9.2 统一消息格式
 
@@ -1572,12 +1572,28 @@ export interface WsMessage<T> {
 ```ts
 export type Ping = WsMessage<Record<string, never>> & { type: 'ping' }
 export type Pong = WsMessage<Record<string, never>> & { type: 'pong' }
+export type SystemConnected = WsMessage<{
+  user_id: ID
+  heartbeat_interval_seconds: number
+  retry: {
+    strategy: 'exponential_backoff'
+    initial_delay_ms: number
+    max_delay_ms: number
+  }
+}> & { type: 'system.connected' }
 
-export type ScoreboardUpdate = WsMessage<ScoreboardRow> & { type: 'scoreboard.update' }
-export type ScoreboardFrozen = WsMessage<{ contest_id: ID; frozen: boolean; frozen_at?: ISODateTime }> & { type: 'scoreboard.frozen' }
+export type ScoreboardUpdated = WsMessage<{ contest_id: ID }> & { type: 'scoreboard.updated' }
 
-export type NotificationNew = WsMessage<NotificationItem> & { type: 'notification.new' }
-export type AnnouncementNew = WsMessage<ContestAnnouncement> & { type: 'announcement.new' }
+export type NotificationCreated = WsMessage<NotificationItem> & { type: 'notification.created' }
+export type NotificationRead = WsMessage<NotificationItem> & { type: 'notification.read' }
+export type AnnouncementCreated = WsMessage<{
+  contest_id: ID
+  announcement: ContestAnnouncement
+}> & { type: 'contest.announcement.created' }
+export type AnnouncementDeleted = WsMessage<{
+  contest_id: ID
+  announcement_id: ID
+}> & { type: 'contest.announcement.deleted' }
 
 export type InstanceStatusMsg = WsMessage<{ instance_id: ID; status: InstanceStatus; access_url?: string; expires_at?: ISODateTime }> & {
   type: 'instance.status'

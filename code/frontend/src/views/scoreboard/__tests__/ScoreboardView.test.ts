@@ -9,15 +9,50 @@ const { getContestsMock, getScoreboardMock } = vi.hoisted(() => ({
   getScoreboardMock: vi.fn(),
 }))
 
+const webSocketMocks = vi.hoisted(() => {
+  const connect = vi.fn().mockResolvedValue(undefined)
+  const disconnect = vi.fn()
+  const send = vi.fn()
+  const handlersByEndpoint = new Map<string, Record<string, (payload: unknown) => void>>()
+
+  return {
+    connect,
+    disconnect,
+    send,
+    getHandlers: (endpoint: string) => handlersByEndpoint.get(endpoint),
+    reset: () => handlersByEndpoint.clear(),
+    useWebSocket: vi.fn(
+      (endpoint: string, handlers: Record<string, (payload: unknown) => void>) => {
+        handlersByEndpoint.set(endpoint, handlers)
+        return {
+          status: { value: 'idle' as const },
+          connect,
+          disconnect,
+          send,
+        }
+      }
+    ),
+  }
+})
+
 vi.mock('@/api/contest', () => ({
   getContests: getContestsMock,
   getScoreboard: getScoreboardMock,
+}))
+
+vi.mock('@/composables/useWebSocket', () => ({
+  useWebSocket: webSocketMocks.useWebSocket,
 }))
 
 describe('ScoreboardView', () => {
   beforeEach(() => {
     getContestsMock.mockReset()
     getScoreboardMock.mockReset()
+    webSocketMocks.connect.mockClear()
+    webSocketMocks.disconnect.mockClear()
+    webSocketMocks.send.mockClear()
+    webSocketMocks.useWebSocket.mockClear()
+    webSocketMocks.reset()
   })
 
   it('按最新竞赛在前的顺序展示排行榜列表', async () => {
@@ -218,5 +253,120 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).toContain('Current Champions')
     expect(wrapper.text()).toContain('History Masters')
     expect(wrapper.text()).toContain('按竞赛开始时间倒序展示排行榜')
+  })
+
+  it('收到进行中竞赛的 scoreboard.updated 后只刷新对应竞赛', async () => {
+    getContestsMock.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-history',
+          title: '往期竞赛',
+          mode: 'jeopardy',
+          status: 'ended',
+          starts_at: '2026-03-01T00:00:00Z',
+          ends_at: '2026-03-01T12:00:00Z',
+        },
+        {
+          id: 'contest-running',
+          title: '当前竞赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 100,
+    })
+
+    getScoreboardMock.mockImplementation(async (contestId: string) => {
+      if (contestId === 'contest-history') {
+        return {
+          contest: {
+            id: 'contest-history',
+            title: '往期竞赛',
+            status: 'ended',
+            started_at: '2026-03-01T00:00:00Z',
+            ends_at: '2026-03-01T12:00:00Z',
+          },
+          scoreboard: {
+            list: [
+              {
+                rank: 1,
+                team_id: 'team-history',
+                team_name: 'History Masters',
+                score: 1980,
+                solved_count: 6,
+                last_submission_at: '2026-03-01T10:15:00Z',
+              },
+            ],
+            total: 1,
+            page: 1,
+            page_size: 20,
+          },
+          frozen: false,
+        }
+      }
+
+      const refreshCount = getScoreboardMock.mock.calls.filter(
+        ([id]) => id === 'contest-running'
+      ).length
+      return {
+        contest: {
+          id: 'contest-running',
+          title: '当前竞赛',
+          status: 'running',
+          started_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+        scoreboard: {
+          list: [
+            {
+              rank: 1,
+              team_id: 'team-running',
+              team_name: refreshCount >= 2 ? 'Updated Champions' : 'Current Champions',
+              score: refreshCount >= 2 ? 2550 : 2450,
+              solved_count: 8,
+              last_submission_at: '2026-03-12T10:15:00Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 20,
+        },
+        frozen: false,
+      }
+    })
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
+    })
+    await router.push('/scoreboard')
+    await router.isReady()
+
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(getScoreboardMock).toHaveBeenCalledTimes(2)
+    expect(webSocketMocks.getHandlers('contests/contest-history/scoreboard')).toBeUndefined()
+
+    webSocketMocks.getHandlers('contests/contest-running/scoreboard')?.['scoreboard.updated']?.({
+      contest_id: 'contest-running',
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(getScoreboardMock).toHaveBeenCalledTimes(3)
+    expect(getScoreboardMock.mock.calls.at(-1)?.[0]).toBe('contest-running')
+    expect(wrapper.text()).toContain('Updated Champions')
   })
 })

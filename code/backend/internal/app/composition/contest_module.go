@@ -17,6 +17,7 @@ type ContestModule struct {
 	ParticipationHandler *contesthttp.ParticipationHandler
 	SubmissionHandler    *contesthttp.SubmissionHandler
 	TeamHandler          *contesthttp.TeamHandler
+	bindRealtime         func(contestports.RealtimeBroadcaster)
 }
 
 type contestModuleDeps struct {
@@ -44,9 +45,9 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 	handler, scoreboardCommands, statusUpdater := buildContestCoreHandler(deps)
 	awdHandler, awdUpdater := buildContestAWDHandler(deps)
 	challengeHandler := buildContestChallengeHandler(deps)
-	participationHandler := buildContestParticipationHandler(deps)
+	participationHandler, participationCommands := buildContestParticipationHandler(deps)
 	teamHandler := buildContestTeamHandler(deps)
-	submissionHandler := buildContestSubmissionHandler(deps, scoreboardCommands)
+	submissionHandler, submissionService := buildContestSubmissionHandler(deps, scoreboardCommands)
 
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("contest_status_updater", statusUpdater.Start))
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("awd_round_updater", awdUpdater.Start))
@@ -58,7 +59,19 @@ func BuildContestModule(root *Root, challenge *ChallengeModule, runtime *Runtime
 		ParticipationHandler: participationHandler,
 		SubmissionHandler:    submissionHandler,
 		TeamHandler:          teamHandler,
+		bindRealtime: func(broadcaster contestports.RealtimeBroadcaster) {
+			scoreboardCommands.SetRealtimeBroadcaster(broadcaster)
+			participationCommands.SetRealtimeBroadcaster(broadcaster)
+			submissionService.SetRealtimeBroadcaster(broadcaster)
+		},
 	}
+}
+
+func (m *ContestModule) BindRealtimeBroadcaster(broadcaster contestports.RealtimeBroadcaster) {
+	if m == nil || m.bindRealtime == nil {
+		return
+	}
+	m.bindRealtime(broadcaster)
 }
 
 func newContestModuleDeps(root *Root, challenge *ChallengeModule, runtime *RuntimeModule) *contestModuleDeps {
@@ -146,10 +159,10 @@ func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.Challeng
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }
 
-func buildContestParticipationHandler(deps *contestModuleDeps) *contesthttp.ParticipationHandler {
+func buildContestParticipationHandler(deps *contestModuleDeps) (*contesthttp.ParticipationHandler, *contestcmd.ParticipationService) {
 	participationCommands := contestcmd.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
 	participationQueries := contestqry.NewParticipationService(deps.contestLookup, deps.participationRepo, deps.teamFinder)
-	return contesthttp.NewParticipationHandler(participationCommands, participationQueries)
+	return contesthttp.NewParticipationHandler(participationCommands, participationQueries), participationCommands
 }
 
 func buildContestTeamHandler(deps *contestModuleDeps) *contesthttp.TeamHandler {
@@ -158,7 +171,7 @@ func buildContestTeamHandler(deps *contestModuleDeps) *contesthttp.TeamHandler {
 	return contesthttp.NewTeamHandler(teamCommands, teamQueries)
 }
 
-func buildContestSubmissionHandler(deps *contestModuleDeps, scoreboardCommands *contestcmd.ScoreboardAdminService) *contesthttp.SubmissionHandler {
+func buildContestSubmissionHandler(deps *contestModuleDeps, scoreboardCommands *contestcmd.ScoreboardAdminService) (*contesthttp.SubmissionHandler, *contestcmd.SubmissionService) {
 	cache := deps.root.Cache()
 	cfg := deps.root.Config()
 
@@ -171,5 +184,5 @@ func buildContestSubmissionHandler(deps *contestModuleDeps, scoreboardCommands *
 		scoreboardCommands,
 		cfg,
 	)
-	return contesthttp.NewSubmissionHandler(submissionService)
+	return contesthttp.NewSubmissionHandler(submissionService), submissionService
 }

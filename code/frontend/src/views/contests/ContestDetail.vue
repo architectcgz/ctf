@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  BellRing,
-  CalendarRange,
-  Clock3,
-  Flag,
-  Swords,
-  Trophy,
-  UsersRound,
-} from 'lucide-vue-next'
+import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
 import { useAuthStore } from '@/stores/auth'
 import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
@@ -49,13 +42,16 @@ const {
   closeJoinTeam,
   joinTeamAction,
   kickMember,
+  refreshAnnouncements,
 } = useContestDetailPage({
   contestId,
   currentUserId,
 })
 
 const solvedCount = computed(() => challenges.value.filter((item) => item.is_solved).length)
-const totalPoints = computed(() => challenges.value.reduce((sum, item) => sum + (item.points || 0), 0))
+const totalPoints = computed(() =>
+  challenges.value.reduce((sum, item) => sum + (item.points || 0), 0)
+)
 const memberCount = computed(() => team.value?.members.length ?? 0)
 
 const selectedChallengeMeta = computed(() => {
@@ -72,33 +68,25 @@ const contestAccentStyle = computed<Record<string, string> | undefined>(() => {
 
 function challengeClass(challengeId: string, solved: boolean): string[] {
   const active = selectedChallenge.value?.id === challengeId
-  return ['contest-challenge', active ? 'contest-challenge--active' : '', solved ? 'contest-challenge--solved' : '']
+  return [
+    'contest-challenge',
+    active ? 'contest-challenge--active' : '',
+    solved ? 'contest-challenge--solved' : '',
+  ]
 }
 </script>
 
 <template>
-  <div
-    class="contest-detail-view space-y-6"
-    :style="contestAccentStyle"
-  >
-    <div
-      v-if="loading"
-      class="contest-loading"
-    >
+  <div class="contest-detail-view space-y-6" :style="contestAccentStyle">
+    <div v-if="loading" class="contest-loading">
       <div class="contest-loading__spinner" />
-      <div class="contest-loading__text">
-        正在同步竞赛详情...
-      </div>
+      <div class="contest-loading__text">正在同步竞赛详情...</div>
     </div>
 
-    <div
-      v-else-if="contest"
-      class="contest-shell-card rounded-[30px] border px-6 py-6 md:px-8"
-    >
+    <div v-else-if="contest" class="contest-shell-card rounded-[30px] border px-6 py-6 md:px-8">
+      <ContestAnnouncementRealtimeBridge :contest-id="contest.id" @updated="refreshAnnouncements" />
       <section class="contest-hero">
-        <div class="contest-hero__kicker">
-          Contest Mission Control
-        </div>
+        <div class="contest-hero__kicker">Contest Mission Control</div>
         <h1 class="contest-hero__title">
           {{ contest.title }}
         </h1>
@@ -107,9 +95,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         </p>
 
         <div class="contest-hero__chips">
-          <span
-            class="contest-chip contest-chip--status"
-          >
+          <span class="contest-chip contest-chip--status">
             {{ getStatusLabel(contest.status) }}
           </span>
           <span class="contest-chip contest-chip--neutral">
@@ -122,10 +108,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             <CalendarRange class="h-4 w-4" />
             <span>{{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}</span>
           </div>
-          <div
-            v-if="countdown"
-            class="contest-hero__meta-item contest-hero__meta-item--strong"
-          >
+          <div v-if="countdown" class="contest-hero__meta-item contest-hero__meta-item--strong">
             <Clock3 class="h-4 w-4" />
             <span>{{ countdown }}</span>
           </div>
@@ -134,48 +117,32 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
       <section class="contest-kpis">
         <article class="contest-kpi">
-          <div class="contest-kpi__label">
-            队伍成员
-          </div>
+          <div class="contest-kpi__label">队伍成员</div>
           <div class="contest-kpi__value">
             {{ memberCount }}
           </div>
-          <div class="contest-kpi__hint">
-            当前已加入队伍的人数
-          </div>
+          <div class="contest-kpi__hint">当前已加入队伍的人数</div>
         </article>
         <article class="contest-kpi">
-          <div class="contest-kpi__label">
-            题目数量
-          </div>
+          <div class="contest-kpi__label">题目数量</div>
           <div class="contest-kpi__value">
             {{ challenges.length }}
           </div>
-          <div class="contest-kpi__hint">
-            本场竞赛可解题目总数
-          </div>
+          <div class="contest-kpi__hint">本场竞赛可解题目总数</div>
         </article>
         <article class="contest-kpi">
-          <div class="contest-kpi__label">
-            已解题目
-          </div>
+          <div class="contest-kpi__label">已解题目</div>
           <div class="contest-kpi__value">
             {{ solvedCount }}
           </div>
-          <div class="contest-kpi__hint">
-            当前账号已完成题目数量
-          </div>
+          <div class="contest-kpi__hint">当前账号已完成题目数量</div>
         </article>
         <article class="contest-kpi">
-          <div class="contest-kpi__label">
-            题目总分
-          </div>
+          <div class="contest-kpi__label">题目总分</div>
           <div class="contest-kpi__value">
             {{ totalPoints }}
           </div>
-          <div class="contest-kpi__hint">
-            全部题目可获得积分
-          </div>
+          <div class="contest-kpi__hint">全部题目可获得积分</div>
         </article>
       </section>
 
@@ -183,59 +150,35 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         <header class="contest-panel__header">
           <div class="contest-panel__title-wrap">
             <UsersRound class="h-4 w-4" />
-            <h2 class="contest-panel__title">
-              队伍
-            </h2>
+            <h2 class="contest-panel__title">队伍</h2>
           </div>
           <span class="contest-panel__meta">{{ memberCount }} 人</span>
         </header>
 
-        <div
-          v-if="!team"
-          class="team-actions"
-        >
-          <button
-            type="button"
-            class="contest-btn contest-btn--primary"
-            @click="openCreateTeam"
-          >
+        <div v-if="!team" class="team-actions">
+          <button type="button" class="contest-btn contest-btn--primary" @click="openCreateTeam">
             创建队伍
           </button>
-          <button
-            type="button"
-            class="contest-btn contest-btn--ghost"
-            @click="openJoinTeam"
-          >
+          <button type="button" class="contest-btn contest-btn--ghost" @click="openJoinTeam">
             加入队伍
           </button>
         </div>
 
-        <div
-          v-else
-          class="space-y-3"
-        >
+        <div v-else class="space-y-3">
           <div class="team-summary">
             <h3 class="team-summary__name">
               {{ team.name }}
             </h3>
-            <span
-              v-if="team.invite_code"
-              class="team-summary__invite"
-            >邀请码: {{ team.invite_code }}</span>
+            <span v-if="team.invite_code" class="team-summary__invite"
+              >邀请码: {{ team.invite_code }}</span
+            >
           </div>
 
           <div class="team-member-list">
-            <div
-              v-for="member in team.members"
-              :key="member.user_id"
-              class="team-member"
-            >
+            <div v-for="member in team.members" :key="member.user_id" class="team-member">
               <span class="team-member__name">{{ member.username }}</span>
               <div class="team-member__actions">
-                <span
-                  v-if="member.user_id === team.captain_user_id"
-                  class="team-member__captain"
-                >
+                <span v-if="member.user_id === team.captain_user_id" class="team-member__captain">
                   队长
                 </span>
                 <button
@@ -256,17 +199,12 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         <header class="contest-panel__header">
           <div class="contest-panel__title-wrap">
             <BellRing class="h-4 w-4" />
-            <h2 class="contest-panel__title">
-              公告
-            </h2>
+            <h2 class="contest-panel__title">公告</h2>
           </div>
           <span class="contest-panel__meta">{{ announcements.length }} 条</span>
         </header>
 
-        <div
-          v-if="announcementsError"
-          class="contest-alert contest-alert--warning"
-        >
+        <div v-if="announcementsError" class="contest-alert contest-alert--warning">
           {{ announcementsError }}
         </div>
 
@@ -277,10 +215,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           description="当前竞赛暂无新的公告通知。"
         />
 
-        <div
-          v-else
-          class="announcement-list"
-        >
+        <div v-else class="announcement-list">
           <article
             v-for="announcement in announcements"
             :key="announcement.id"
@@ -290,17 +225,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               <h3 class="announcement-item__title">
                 {{ announcement.title }}
               </h3>
-              <time
-                class="announcement-item__time"
-                :datetime="announcement.created_at"
-              >
+              <time class="announcement-item__time" :datetime="announcement.created_at">
                 {{ formatTime(announcement.created_at) }}
               </time>
             </div>
-            <p
-              v-if="announcement.content"
-              class="announcement-item__content"
-            >
+            <p v-if="announcement.content" class="announcement-item__content">
               {{ announcement.content }}
             </p>
           </article>
@@ -311,9 +240,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         <header class="contest-panel__header">
           <div class="contest-panel__title-wrap">
             <Swords class="h-4 w-4" />
-            <h2 class="contest-panel__title">
-              题目
-            </h2>
+            <h2 class="contest-panel__title">题目</h2>
           </div>
           <span class="contest-panel__meta">{{ solvedCount }} / {{ challenges.length }} 已解</span>
         </header>
@@ -325,10 +252,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           description="当前竞赛尚未发布题目。"
         />
 
-        <div
-          v-else
-          class="contest-challenge-grid"
-        >
+        <div v-else class="contest-challenge-grid">
           <button
             v-for="challenge in challenges"
             :key="challenge.id"
@@ -340,12 +264,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
               <h3 class="contest-challenge__title">
                 {{ challenge.title }}
               </h3>
-              <span
-                v-if="challenge.is_solved"
-                class="contest-challenge__solved"
-              >
-                ✓
-              </span>
+              <span v-if="challenge.is_solved" class="contest-challenge__solved"> ✓ </span>
             </div>
             <div class="contest-challenge__meta">
               <span>{{ challenge.category }}</span>
@@ -355,16 +274,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
         </div>
       </section>
 
-      <section
-        v-if="selectedChallenge"
-        class="contest-panel contest-panel--flag"
-      >
+      <section v-if="selectedChallenge" class="contest-panel contest-panel--flag">
         <header class="contest-panel__header">
           <div class="contest-panel__title-wrap">
             <Flag class="h-4 w-4" />
-            <h2 class="contest-panel__title">
-              提交 Flag - {{ selectedChallenge.title }}
-            </h2>
+            <h2 class="contest-panel__title">提交 Flag - {{ selectedChallenge.title }}</h2>
           </div>
           <span class="contest-panel__meta">{{ selectedChallengeMeta }}</span>
         </header>
@@ -375,7 +289,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             placeholder="flag{...}"
             class="flag-submit__input"
             @keyup.enter="submitFlagAction"
-          >
+          />
           <button
             type="button"
             :disabled="submitting"
@@ -391,25 +305,21 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           class="contest-alert"
           :class="submitResult.is_correct ? 'contest-alert--success' : 'contest-alert--danger'"
         >
-          {{ submitResult.is_correct ? `正确！+${submitResult.points ?? 0} 分` : submitResult.message }}
+          {{
+            submitResult.is_correct ? `正确！+${submitResult.points ?? 0} 分` : submitResult.message
+          }}
         </div>
       </section>
     </div>
 
-    <div
-      v-else
-      class="contest-not-found"
-    >
+    <div v-else class="contest-not-found">
       <AppEmpty
         icon="AlertTriangle"
         title="竞赛不存在或暂不可用"
         description="请返回竞赛中心重新选择竞赛，或稍后再试。"
       >
         <template #action>
-          <RouterLink
-            class="contest-btn contest-btn--primary"
-            to="/contests"
-          >
+          <RouterLink class="contest-btn contest-btn--primary" to="/contests">
             <Trophy class="h-4 w-4" />
             返回竞赛中心
           </RouterLink>
@@ -417,27 +327,17 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       </AppEmpty>
     </div>
 
-    <div
-      v-if="showCreateTeam"
-      class="contest-modal-overlay"
-      @click.self="closeCreateTeam"
-    >
+    <div v-if="showCreateTeam" class="contest-modal-overlay" @click.self="closeCreateTeam">
       <div class="contest-modal">
-        <h3 class="contest-modal__title">
-          创建队伍
-        </h3>
+        <h3 class="contest-modal__title">创建队伍</h3>
         <input
           v-model="teamName"
           placeholder="队伍名称"
           class="contest-modal__input"
           @keyup.enter="createTeamAction"
-        >
+        />
         <div class="contest-modal__actions">
-          <button
-            type="button"
-            class="contest-btn contest-btn--ghost"
-            @click="closeCreateTeam"
-          >
+          <button type="button" class="contest-btn contest-btn--ghost" @click="closeCreateTeam">
             取消
           </button>
           <button
@@ -452,27 +352,17 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       </div>
     </div>
 
-    <div
-      v-if="showJoinTeam"
-      class="contest-modal-overlay"
-      @click.self="closeJoinTeam"
-    >
+    <div v-if="showJoinTeam" class="contest-modal-overlay" @click.self="closeJoinTeam">
       <div class="contest-modal">
-        <h3 class="contest-modal__title">
-          加入队伍
-        </h3>
+        <h3 class="contest-modal__title">加入队伍</h3>
         <input
           v-model="teamIdInput"
           placeholder="队伍 ID"
           class="contest-modal__input"
           @keyup.enter="joinTeamAction"
-        >
+        />
         <div class="contest-modal__actions">
-          <button
-            type="button"
-            class="contest-btn contest-btn--ghost"
-            @click="closeJoinTeam"
-          >
+          <button type="button" class="contest-btn contest-btn--ghost" @click="closeJoinTeam">
             取消
           </button>
           <button
@@ -503,7 +393,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-shell-card {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--contest-accent) 8%, transparent), transparent 20rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--contest-accent) 8%, transparent),
+      transparent 20rem
+    ),
     linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
@@ -742,7 +636,9 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .team-summary__invite {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.76rem;
   color: var(--color-text-secondary);
 }
@@ -843,7 +739,9 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   background: transparent;
   padding: 0.62rem 0.4rem 0.62rem 0.72rem;
   text-align: left;
-  transition: border-color 180ms ease, transform 180ms ease;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease;
 }
 
 .contest-challenge:hover,

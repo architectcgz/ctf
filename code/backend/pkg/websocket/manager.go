@@ -34,6 +34,7 @@ type connectedPayload struct {
 type Manager struct {
 	mu                sync.RWMutex
 	clients           map[int64]map[string]*client
+	channels          map[string]map[string]*client
 	heartbeatInterval time.Duration
 	readTimeout       time.Duration
 	retryInitialDelay time.Duration
@@ -42,13 +43,14 @@ type Manager struct {
 }
 
 type client struct {
-	id      string
-	user    authctx.CurrentUser
-	conn    *xws.Conn
-	send    chan Envelope
-	stop    chan struct{}
-	closeMu sync.Once
-	logger  *zap.Logger
+	id       string
+	user     authctx.CurrentUser
+	conn     *xws.Conn
+	send     chan Envelope
+	stop     chan struct{}
+	channels map[string]struct{}
+	closeMu  sync.Once
+	logger   *zap.Logger
 }
 
 func NewManager(cfg config.WebSocketConfig, logger *zap.Logger) *Manager {
@@ -58,6 +60,7 @@ func NewManager(cfg config.WebSocketConfig, logger *zap.Logger) *Manager {
 
 	return &Manager{
 		clients:           make(map[int64]map[string]*client),
+		channels:          make(map[string]map[string]*client),
 		heartbeatInterval: cfg.HeartbeatInterval,
 		readTimeout:       cfg.ReadTimeout,
 		retryInitialDelay: cfg.RetryInitialDelay,
@@ -67,14 +70,27 @@ func NewManager(cfg config.WebSocketConfig, logger *zap.Logger) *Manager {
 }
 
 func (m *Manager) Serve(user authctx.CurrentUser, conn *xws.Conn) {
+	m.ServeChannels(user, conn)
+}
+
+func (m *Manager) ServeChannels(user authctx.CurrentUser, conn *xws.Conn, channels ...string) {
 	clientID := uuid.NewString()
+	channelSet := make(map[string]struct{}, len(channels))
+	for _, channel := range channels {
+		if channel == "" {
+			continue
+		}
+		channelSet[channel] = struct{}{}
+	}
+
 	connClient := &client{
-		id:     clientID,
-		user:   user,
-		conn:   conn,
-		send:   make(chan Envelope, 16),
-		stop:   make(chan struct{}),
-		logger: m.logger.With(zap.Int64("user_id", user.UserID), zap.String("client_id", clientID)),
+		id:       clientID,
+		user:     user,
+		conn:     conn,
+		send:     make(chan Envelope, 16),
+		stop:     make(chan struct{}),
+		channels: channelSet,
+		logger:   m.logger.With(zap.Int64("user_id", user.UserID), zap.String("client_id", clientID)),
 	}
 
 	m.register(connClient)
@@ -142,6 +158,24 @@ func (m *Manager) SendToUser(userID int64, message Envelope) int {
 	return sent
 }
 
+func (m *Manager) SendToChannel(channel string, message Envelope) int {
+	m.mu.RLock()
+	group := m.channels[channel]
+	clients := make([]*client, 0, len(group))
+	for _, item := range group {
+		clients = append(clients, item)
+	}
+	m.mu.RUnlock()
+
+	sent := 0
+	for _, item := range clients {
+		if item.enqueue(message) {
+			sent++
+		}
+	}
+	return sent
+}
+
 func (m *Manager) register(connClient *client) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -150,6 +184,12 @@ func (m *Manager) register(connClient *client) {
 		m.clients[connClient.user.UserID] = make(map[string]*client)
 	}
 	m.clients[connClient.user.UserID][connClient.id] = connClient
+	for channel := range connClient.channels {
+		if _, ok := m.channels[channel]; !ok {
+			m.channels[channel] = make(map[string]*client)
+		}
+		m.channels[channel][connClient.id] = connClient
+	}
 }
 
 func (m *Manager) unregister(connClient *client) {
@@ -165,6 +205,16 @@ func (m *Manager) unregister(connClient *client) {
 	delete(group, connClient.id)
 	if len(group) == 0 {
 		delete(m.clients, connClient.user.UserID)
+	}
+	for channel := range connClient.channels {
+		channelGroup, ok := m.channels[channel]
+		if !ok {
+			continue
+		}
+		delete(channelGroup, connClient.id)
+		if len(channelGroup) == 0 {
+			delete(m.channels, channel)
+		}
 	}
 }
 

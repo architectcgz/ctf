@@ -827,15 +827,15 @@ Authorization: Bearer <access_token>
 
 | 端点 | 用途 | 认证 |
 |------|------|------|
-| `/ws/scoreboard/:contest_id` | 竞赛排行榜实时推送 | 需要 Token |
 | `/ws/notifications` | 用户通知实时推送 | 需要 Token |
-| `/ws/contest/:id/announcements` | 竞赛公告实时推送 | 需要 Token |
+| `/ws/contests/:id/announcements` | 竞赛公告实时推送 | 需要一次性 ticket |
+| `/ws/contests/:id/scoreboard` | 竞赛排行榜实时推送 | 需要一次性 ticket |
 
 连接时通过**短期一次性 ticket** 认证（避免 Token 泄露到 URL 日志/代理/Referer）：
 
 ```
 1. 客户端先调用 POST /api/v1/auth/ws-ticket 获取一次性 ticket（有效期 30s，使用后立即失效）
-2. 使用 ticket 建立 WebSocket 连接：ws://host/ws/scoreboard/5?ticket=<one_time_ticket>
+2. 使用 ticket 建立 WebSocket 连接：ws://host/ws/contests/5/scoreboard?ticket=<one_time_ticket>
 3. 服务端验证 ticket 有效性后建立连接，立即删除 ticket
 ```
 
@@ -857,6 +857,15 @@ Authorization: Bearer <access_token>
 ```
 
 **消息类型定义：**
+
+| `type` | 端点 | payload | 说明 |
+|--------|------|---------|------|
+| `system.connected` | 全部 | `{ user_id, heartbeat_interval_seconds, retry }` | 连接建立成功后的系统握手消息 |
+| `contest.announcement.created` | `/ws/contests/:id/announcements` | `{ contest_id, announcement }` | 新公告创建后广播，前端可直接插入或重新拉取 |
+| `contest.announcement.deleted` | `/ws/contests/:id/announcements` | `{ contest_id, announcement_id }` | 公告删除后广播 |
+| `scoreboard.updated` | `/ws/contests/:id/scoreboard` | `{ contest_id }` | 榜单发生变化，前端收到后调用现有 HTTP 排行榜接口刷新 |
+| `notification.created` | `/ws/notifications` | `NotificationItem` | 用户私有通知新增 |
+| `notification.read` | `/ws/notifications` | `NotificationItem` | 用户私有通知已读状态变更 |
 
 | type | 方向 | 说明 |
 |------|------|------|
