@@ -91,6 +91,10 @@ describe('LoginView', () => {
 
     await flushPromises()
 
+    expect(wrapper.text()).toContain('教学平台入口')
+    expect(wrapper.text()).toContain('训练空间')
+    expect(wrapper.text()).toContain('教学协同')
+    expect(wrapper.text()).toContain('系统值守')
     expect(casMocks.fetchCASStatus).toHaveBeenCalledTimes(1)
     expect(wrapper.text()).toContain('CAS 统一认证')
     expect(wrapper.text()).toContain('使用 CAS 统一认证登录')
