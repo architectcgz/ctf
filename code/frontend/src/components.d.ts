@@ -22,6 +22,7 @@ declare module 'vue' {
     AppLoading: typeof import('./components/common/AppLoading.vue')['default']
     AppSkeleton: typeof import('./components/common/AppSkeleton.vue')['default']
     AppToast: typeof import('./components/common/AppToast.vue')['default']
+    AuthEntryShell: typeof import('./components/auth/AuthEntryShell.vue')['default']
     AWDAttackLogDialog: typeof import('./components/admin/contest/AWDAttackLogDialog.vue')['default']
     AWDOperationsPanel: typeof import('./components/admin/contest/AWDOperationsPanel.vue')['default']
     AWDRoundCreateDialog: typeof import('./components/admin/contest/AWDRoundCreateDialog.vue')['default']

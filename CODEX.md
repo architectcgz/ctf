@@ -2,7 +2,7 @@
 
 ## 毕设课题约束（强制）
 
-项目范围必须与 [docs/毕业设计课题.md](/home/azhi/workspace/projects/ctf/.worktrees/feat-challenge-package-import/docs/毕业设计课题.md) 保持一致。后续涉及功能设计、架构取舍、页面改造、导入规范和答辩口径时，默认以该课题描述为项目上位约束，不得偏离。
+项目范围必须与 [docs/毕业设计课题.md](/home/azhi/workspace/projects/ctf/docs/毕业设计课题.md) 保持一致。后续涉及功能设计、架构取舍、页面改造、导入规范和答辩口径时，默认以该课题描述为项目上位约束，不得偏离。
 
 课题原始要求摘要：
 
