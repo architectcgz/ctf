@@ -1,97 +1,135 @@
 # Challenge Pack Specification v1 (`challenge-pack-v1`)
 
-> 适用范围：CTF 题目制作、归档、审核、后台导入与 CLI 导入  
-> 文档目的：定义当前仓库实际采用的题目包目录结构、`challenge.yml` 规范、导入行为与校验边界  
+> 适用范围：CTF 靶场平台题目制作、审计、归档、导入与发布前校验
+> 文档目的：定义“题目源包（Zip）”的结构与 `challenge.yml` 规范，并明确当前平台如何导入、校验与发布题目。
 > 版本：v1.3 | 日期：2026-04-01
 
----
-
-## 1. 当前基线
-
-`challenge-pack-v1` 是当前仓库内已经落地的题目包契约。
-
-当前实现已支持：
-
-- 后台上传 Zip 题目包并生成导入预览
-- 后台确认导入并创建或更新 Challenge 草稿
-- CLI `cmd/import-challenge-packs` 复用同一套 `challenge.yml` 解析逻辑
-- 解析题目元数据、题面、附件、提示、Flag、运行时镜像信息
-- 透传 `extensions.topology` 到导入预览结果
-
-当前相关接口：
-
-- `POST /api/v1/admin/challenge-imports`
-- `GET /api/v1/admin/challenge-imports/:id`
-- `POST /api/v1/admin/challenge-imports/:id/commit`
+> 说明：截至 2026-04-01，仓库内已有题目、镜像、Hint、拓扑、Writeup 等后端能力，且已新增后台 `challenge.yml` 题目包上传预览、确认导入、同步自检与发布自检队列接口，以及复用同一解析核心的 CLI 导入脚本。
+> 因此本规范既是“作者侧源包规范”，也是当前实现中的导入契约；文中会显式标注哪些扩展字段仍处于保留状态。
 
 ---
 
-## 2. 设计目标
+## 1. 结论摘要
 
-- 题目包必须能独立描述题目元数据、题面、附件和运行时引用
-- 同一题目包既可用于归档，也可直接进入当前导入链路
-- 核心字段必须与现有平台数据模型明确对齐
-- 扩展字段可以保留，但不能伪装成当前已经自动落库的能力
-- 规范以当前仓库实现为准，不额外承诺未实现行为
+现有 v1.0 规范不够合理，主要问题有三类：
+
+- 把“当前平台已支持的字段”和“未来可能支持的导入能力”混写成同一层要求，容易让出题人误以为平台今天已经支持 Zip 导入、在线构建、tar 导入、manual flag 等能力。
+- 把 `docker/Dockerfile` 写成所有题目包的必填项，和当前平台“题目通过已注册镜像运行”的现实不一致，也不适用于纯镜像交付或题目源码暂不开放的场景。
+- 字段枚举与当前后端不完全一致，例如难度实际支持 `insane`，而不是 `hell`；Flag 实际只支持 `static` / `dynamic`，不支持 `manual`。
+
+这版 v1.1 做了两件事：
+
+- 收敛为“当前平台可执行”的最小核心字段。
+- 保留拓扑、Writeup、源码构建材料等扩展能力，但不再把它们写成 v1 必填或当前平台必然生效。
 
 ---
 
-## 3. 题目包结构
+## 2. 术语
 
-### 3.1 Zip 根目录识别
+- Challenge：平台中的题目实体。
+- Challenge Pack：题目源包，通常为一个 Zip 文件，用于题目制作、归档、审计和未来导入。
+- Manifest：题目源包根目录下的 `challenge.yml`。
+- 当前平台支持：指当前仓库中的后端模型/API 能直接承接该字段。
+- 保留扩展：指字段设计合理，但当前平台没有公开导入器或没有端到端自动落库路径。
 
-导入器按以下规则识别题目包根目录：
+---
 
-- 如果 Zip 顶层直接包含 `challenge.yml`，则 Zip 顶层就是题目包根目录
-- 否则，Zip 顶层必须只包含一个目录，并且该目录下存在 `challenge.yml`
+## 3. 设计原则
 
-不满足上述规则时，导入会失败。
+- 可复现：题目环境、题面、提示、附件来源应可追溯。
+- 不泄露：题目包不得包含平台全局 secret、数据库口令、生产令牌等敏感信息。
+- 可映射：v1 核心字段必须能明确映射到当前平台数据模型。
+- 可降级：扩展字段即使暂不自动导入，也不应阻塞题目源包归档和审计。
+- 最小惊讶：规范不得承诺平台当前并不存在的行为。
 
-### 3.2 根目录必需文件
+---
 
-最小可导入题目包应包含：
+## 4. 当前平台能力边界
+
+截至 2026-04-01，当前仓库内与题目包最相关的后端事实如下：
+
+- 题目基础字段已支持：`title`、`description`、`category`、`difficulty`、`points`、`image_id`、`attachment_url`、`hints`
+- 题目发布已支持：`draft` -> `published`
+- 题目发布前自检已支持：
+  - 同步自检：`POST /api/v1/authoring/challenges/:id/self-check`
+  - 异步发布自检入队：`POST /api/v1/authoring/challenges/:id/publish-requests`
+  - 查询最近一次发布自检：`GET /api/v1/authoring/challenges/:id/publish-requests/latest`
+- Flag 已支持：`static` / `dynamic`
+- 动态 Flag 注入已支持：实例启动时通过环境变量 `FLAG` 注入容器；拓扑节点可按 `inject_flag` 控制是否注入
+- 镜像已支持：平台当前通过“已注册镜像”运行题目，不支持公开的在线 Dockerfile 构建导入
+- 拓扑已支持：挑战拓扑、环境模板、多节点网络与 ACL 已有独立 API
+- Writeup 已支持：挑战 Writeup 已有独立 API
+- 标签已支持：通过独立 Tag API 和 `challenge_tags` 关系维护，不在当前创建题目 API 内直接写入
+
+当前已支持：
+
+- `POST /api/v1/authoring/challenge-imports`
+- `GET /api/v1/authoring/challenge-imports/:id`
+- `POST /api/v1/authoring/challenge-imports/:id/commit`
+- `POST /api/v1/authoring/challenges/:id/self-check`
+- `POST /api/v1/authoring/challenges/:id/publish-requests`
+- `GET /api/v1/authoring/challenges/:id/publish-requests/latest`
+- CLI `cmd/import-challenge-packs` 复用同一 `challenge.yml` 解析逻辑
+
+当前明确不应在 v1 核心规范中写成“已支持”的能力：
+
+- `manual` Flag 判题模式
+- `runtime.type = none`
+- 通过题目包直接在线构建 Dockerfile
+- 通过题目包直接导入镜像 tar
+- 多附件自动映射到题目详情页
+
+---
+
+## 5. 题目源包结构
+
+### 5.1 根目录识别
+
+为兼容常见打包方式，题目源包根目录按如下规则识别：
+
+- 若 Zip 顶层直接包含 `challenge.yml`，则 Zip 顶层即根目录。
+- 否则，Zip 顶层必须只包含一个目录，该目录视为根目录。
+
+### 5.2 根目录必需文件
+
+v1 核心最小要求：
 
 - `challenge.yml`
-- 题面文件
+- `statement.md`
 
-默认推荐题面文件为 `statement.md`。如果 `content.statement` 为空，解析器会回落到 `statement.md`。
-
-### 3.3 根目录推荐目录
-
-以下目录不是导入器强制要求，但符合当前仓库示例与制作习惯：
+### 5.3 根目录可选目录
 
 - `attachments/`
 - `docker/`
 - `writeup/`
 
-约定用途：
+其中：
 
-- `attachments/`：题目附件
-- `docker/`：容器源码、Dockerfile、构建上下文与审计材料
-- `writeup/`：题解原稿或内部材料，当前不会随题目包自动导入
+- `attachments/` 用于附件原始材料
+- `docker/` 用于容器源码、Dockerfile、构建上下文和审计材料
+- `writeup/` 用于题解原稿，不代表一定会自动导入平台
 
-### 3.4 推荐结构示例
+### 5.4 结构示例
 
 ```text
-web-sqli-login-01.zip
-  web-sqli-login-01/
+web-sqli-01.zip
+  web-sqli-01/
     challenge.yml
     statement.md
     attachments/
       data.sql
-      readme.txt
     docker/
       Dockerfile
-      app.py
+      src/...
     writeup/
       solution.md
 ```
 
 ---
 
-## 4. `challenge.yml` 总体要求
+## 6. challenge.yml 规范
 
-### 4.1 文件要求
+### 6.1 通用要求
 
 - 编码：UTF-8
 - 文件名：必须为 `challenge.yml`
@@ -99,24 +137,9 @@ web-sqli-login-01.zip
   - `api_version: v1`
   - `kind: challenge`
 
-### 4.2 顶层结构
+### 6.2 v1 核心字段
 
-当前实现识别以下顶层字段：
-
-```yaml
-api_version: v1
-kind: challenge
-meta: ...
-content: ...
-flag: ...
-hints: ...
-runtime: ...
-extensions: ...
-```
-
----
-
-## 5. 核心示例
+以下字段属于“当前平台建议直接对齐”的核心字段。
 
 ```yaml
 api_version: v1
@@ -128,18 +151,12 @@ meta:
   category: web
   difficulty: easy
   points: 100
-  tags:
-    - vuln:sqli
-    - stack:sqlite
-    - kp:auth-bypass
 
 content:
   statement: statement.md
   attachments:
     - path: attachments/data.sql
       name: data.sql
-    - path: attachments/readme.txt
-      name: readme.txt
 
 flag:
   type: dynamic
@@ -154,335 +171,293 @@ hints:
 runtime:
   type: container
   image:
-    ref: registry.example.edu/ctf/web-sqli-login-01:20260312
-
-extensions:
-  topology:
-    source: docker/topology.yml
-    enabled: false
+    ref: "registry.example.edu/ctf/web-sqli-login:20260312"
 ```
 
----
+字段说明：
 
-## 6. 字段规范
+- `meta.slug`：必填，建议使用小写字母、数字、`-`；当前平台会持久化到 `challenges.package_slug`，作为导入稳定 upsert 标识
+- `meta.title`：必填，对应平台 `challenge.title`
+- `meta.category`：必填，建议枚举 `web` `pwn` `reverse` `crypto` `misc` `forensics`
+- `meta.difficulty`：必填，当前平台支持 `beginner` `easy` `medium` `hard` `insane`
+- `meta.points`：必填，正整数
+- `content.statement`：必填，v1 固定为 `statement.md`
+- `content.attachments[]`：可选，对应附件材料；当前平台会保留附件并对外生成单一下载入口
+- `hints[]`：可选，对应平台 `challenge_hints`
+  - `level`：提示级别，未填写时导入器可按顺序补齐
+  - `content`：提示内容
+  - `cost_points`：提示代价
+- `flag.type`：必填，仅允许 `static` / `dynamic`
+- `flag.value`：静态题目必填
+- `flag.prefix`：可选，对应平台 `flag_prefix`，默认建议 `flag`
+- `runtime.type`：当前首版仅支持 `container`
+- `runtime.image.ref`：容器题必填，表示最终运行镜像引用
 
-### 6.1 `meta`
+### 6.3 v1 建议字段
+
+以下字段设计合理，但当前平台不一定自动导入，应作为“作者侧规范”保留：
+
+- `tags`
+  - 建议继续使用字符串数组
+  - 当前平台标签是独立实体，导入器未来应做映射或创建
+- `writeup`
+  - 当前平台有 Writeup 能力，但没有题目包自动导入链路
+
+示例：
 
 ```yaml
 meta:
   slug: web-sqli-login-01
-  title: "Web-02 SQL Injection: Login Bypass"
-  category: web
-  difficulty: easy
-  points: 100
   tags:
     - vuln:sqli
-```
+    - stack:php
+    - kp:auth-bypass
 
-字段说明：
-
-- `meta.slug`
-  - 必填
-  - 建议只使用小写字母、数字和 `-`
-  - 导入后持久化到 `challenges.package_slug`
-  - 是当前导入链路的稳定 upsert 标识
-- `meta.title`
-  - 必填
-  - 映射到 `challenges.title`
-- `meta.category`
-  - 建议使用 `web` `pwn` `reverse` `crypto` `misc` `forensics`
-  - 当前解析器会将未知值归一化为 `misc`
-- `meta.difficulty`
-  - 建议使用 `beginner` `easy` `medium` `hard` `insane`
-  - 当前解析器会做如下归一化：
-    - `hell` -> `insane`
-    - 未识别值 -> `easy`
-- `meta.points`
-  - 必填
-  - 必须大于 `0`
-- `meta.tags`
-  - 可选
-  - 当前解析器会读取该字段
-  - 当前导入流程不会自动写入挑战标签关系
-
-### 6.2 `content`
-
-```yaml
 content:
-  statement: statement.md
   attachments:
     - path: attachments/data.sql
       name: data.sql
+      sha256: "<hex>"
+
+writeup:
+  file: writeup/solution.md
+  visibility: private
 ```
 
-字段说明：
+### 6.4 v1 拓扑扩展
 
-- `content.statement`
-  - 可选
-  - 为空时默认读取 `statement.md`
-  - 允许指向题目包根目录内任意相对路径文件
-  - 对应题目描述 Markdown 原文
-  - 读取后不能为空
-- `content.attachments`
-  - 可选
-  - 每项支持：
-    - `path`：必填，相对于题目包根目录
-    - `name`：可选，下载时显示名称；为空则取文件名
-  - 当前实现要求目标必须是包内真实文件，且不能越出题目包根目录
+当前平台已经支持挑战拓扑和环境模板，因此题目源包可以定义拓扑；但它属于扩展能力，不应阻塞普通单容器题目。
 
-附件导入行为：
-
-- 无附件：不生成 `attachment_url`
-- 单附件：按原文件保存，并生成单文件下载地址
-- 多附件：自动打包为一个 zip，再生成统一下载地址
-
-### 6.3 `flag`
+建议结构：
 
 ```yaml
-flag:
-  type: static
-  value: flag{example}
-  prefix: flag
+topology:
+  entry_node_key: web
+  networks:
+    - key: public
+      name: Public
+    - key: internal
+      name: Internal
+      internal: true
+  nodes:
+    - key: web
+      name: Web
+      service_port: 8080
+      inject_flag: true
+      network_keys: [public, internal]
+    - key: db
+      name: Database
+      network_keys: [internal]
+      inject_flag: false
+  policies:
+    - source_node_key: web
+      target_node_key: db
+      action: allow
+      protocol: tcp
+      ports: [3306]
 ```
 
-当前实现支持的 `flag.type`：
+约束建议：
 
-- `static`
-- `dynamic`
-- `regex`
-- `manual_review`
+- `entry_node_key` 必填
+- 至少一个 `node`
+- `nodes[].inject_flag` 建议显式声明
+- 若题目是单节点单容器题，可完全省略 `topology`
 
-字段说明：
+当前平台中与拓扑直接对齐的字段包括：
 
-- `flag.type`
-  - 必填
-  - 仅支持上述四种取值
-- `flag.value`
-  - `static` 必填
-  - `regex` 必填
-  - `dynamic` 和 `manual_review` 可省略
-- `flag.prefix`
-  - 可选
-  - 默认值为 `flag`
+- `entry_node_key`
+- `networks[]`
+- `nodes[].service_port`
+- `nodes[].inject_flag`
+- `nodes[].tier`
+- `nodes[].network_keys`
+- `nodes[].env`
+- `nodes[].resources`
+- `policies[]`
 
-导入行为：
+### 6.5 Docker 源码材料
 
-- `static`：存储哈希值，不回存明文
-- `dynamic`：配置为动态 Flag 模式
-- `regex`：会先编译校验正则，再写入 `flag_regex`
-- `manual_review`：配置为人工复核模式
+v1.0 把 `docker/Dockerfile` 规定为所有题目包必填，这不合理。v1.1 调整为：
 
-### 6.4 `hints`
+- 如果题目包以“源码交付、审计复现”为目标，强烈建议包含 `docker/`
+- 如果题目包只用于归档已经构建好的镜像题，可不包含 `docker/`
+- 只有当 `runtime.build.source = dockerfile` 时，`docker/Dockerfile` 才是必填
 
-```yaml
-hints:
-  - level: 1
-    title: Hint 1
-    cost_points: 10
-    content: "先确认入口参数。"
-```
-
-字段说明：
-
-- `hints` 可选
-- 每个提示的 `content` 必填且不能为空
-- `level` 可选
-  - 小于等于 `0` 或缺失时，按顺序自动补为 `1..n`
-  - 不允许重复
-- `title` 可选
-  - 为空时自动补为 `Hint <level>`
-- `cost_points` 可选
-  - 小于 `0` 时会归一化为 `0`
-
-导入时会覆盖当前题目的全部 Hint 记录。
-
-### 6.5 `runtime`
+建议写法：
 
 ```yaml
 runtime:
-  type: container
   image:
-    ref: ctf/web-sqli-login-01:latest
+    ref: "registry.example.edu/ctf/web-sqli-login:20260312"
+  build:
+    source: dockerfile
+    context_dir: docker
+    dockerfile: Dockerfile
 ```
-
-字段说明：
-
-- `runtime.type`
-  - 当前推荐使用 `container`
-  - 只有 `runtime.type=container` 时，解析器才会生成运行时镜像引用
-- `runtime.image.ref`
-  - 优先使用
-  - 例如：`registry.example.edu/ctf/web:20260401`
-- `runtime.image.name` + `runtime.image.tag`
-  - 可替代 `ref`
-  - 如果只给 `name`，则 `tag` 默认补为 `latest`
-
-镜像解析行为：
-
-- 导入提交时，会按 `name + tag` 查询或创建平台 `images` 记录
-- 如果镜像记录已存在，会复用并恢复为可用状态
-- 如果未提供有效镜像引用，当前导入流程仍可继续，但题目不会自动关联镜像
-
-### 6.6 `extensions`
-
-```yaml
-extensions:
-  topology:
-    source: docker/topology.yml
-    enabled: false
-```
-
-当前实现识别：
-
-- `extensions.topology.source`
-- `extensions.topology.enabled`
-
-当前行为：
-
-- 这两个字段会进入导入预览结果
-- 当前导入提交不会自动写入挑战拓扑数据表
-- 适合作为作者侧扩展声明和后续人工编排提示
-
----
-
-## 7. 字段映射
-
-| 题目包字段 | 当前导入行为 |
-|---|---|
-| `meta.slug` | 持久化到 `challenges.package_slug`，并作为 upsert 主标识 |
-| `meta.title` | 映射到 `challenges.title` |
-| `meta.category` | 映射到 `challenges.category`，未知值归一化为 `misc` |
-| `meta.difficulty` | 映射到 `challenges.difficulty`，未知值归一化为 `easy` |
-| `meta.points` | 映射到 `challenges.points` |
-| `content.statement` | 文件内容写入 `challenges.description` |
-| `content.attachments` | 生成平台附件下载地址并写入 `attachment_url` |
-| `hints[]` | 覆盖写入 `challenge_hints` |
-| `flag.type/value/prefix` | 配置题目 Flag 模式与摘要字段 |
-| `runtime.image.*` | 解析镜像引用并关联或创建 `images` 记录 |
-| `meta.tags` | 当前读取但不自动落库标签关系 |
-| `extensions.topology.*` | 当前仅进入导入预览，不自动导入拓扑 |
-
----
-
-## 8. 导入行为
-
-### 8.1 预览阶段
-
-上传 Zip 后，系统会：
-
-1. 校验压缩包结构与安全限制
-2. 解压并识别题目包根目录
-3. 解析 `challenge.yml`
-4. 读取题面文件
-5. 校验附件、提示、Flag、镜像引用格式
-6. 返回导入预览结果
-
-当前预览结果包含：
-
-- 题目基础信息
-- 题面内容
-- 附件列表
-- Hint 列表
-- Flag 摘要
-- Runtime 摘要
-- `extensions.topology`
-- `warnings`
 
 说明：
 
-- 当前解析器保留 `warnings` 字段，但当前实现通常返回空列表
-
-### 8.2 提交阶段
-
-确认导入后，系统会：
-
-1. 重新解析题目包目录
-2. 保存附件或附件打包产物
-3. 解析并关联镜像记录
-4. 创建或更新 Challenge
-5. 同步 Hint
-6. 配置 Flag
-7. 将题目保存为 `draft`
-
-### 8.3 Upsert 规则
-
-导入提交按以下顺序查找已有题目：
-
-1. 优先按 `package_slug = meta.slug`
-2. 如果不存在，再回退到：
-   - `package_slug` 为空
-   - `title` 相同
-   - `category` 相同
-
-这个回退规则用于复用尚未绑定 `package_slug` 的已有题目记录。
+- `runtime.image.ref` 是运行事实
+- `runtime.build.*` 是复现材料
+- 当前平台运行时只需要 `runtime.image.ref`，不会直接消费 `runtime.build.*`
 
 ---
 
-## 9. 校验与安全约束
+## 7. 字段映射矩阵
 
-### 9.1 Manifest 校验
-
-- `api_version` 必须为 `v1`
-- `kind` 必须为 `challenge`
-- `meta.slug` 必填
-- `meta.title` 必填
-- `meta.points` 必须大于 `0`
-- 题面文件必须存在且内容非空
-- `flag.type` 必须属于 `static` `dynamic` `regex` `manual_review`
-- `static` 和 `regex` 必须提供 `flag.value`
-- 每个附件都必须存在且是文件
-- Hint 级别不能重复
-
-### 9.2 路径校验
-
-所有包内文件路径都必须满足：
-
-- 不能为空
-- 必须是题目包根目录内的相对路径
-- 不允许通过 `..` 逃逸出题目包根目录
-
-### 9.3 Zip 安全限制
-
-当前导入器执行以下限制：
-
-- 禁止符号链接
-- 单个压缩包最多 `128` 个文件
-- 单文件解压后最大 `16 MiB`
-- 总解压体积最大 `64 MiB`
-- Zip 条目路径必须安全，不能产生 Zip Slip
+| 题目包字段 | 当前平台状态 | 说明 |
+|---|---|---|
+| `meta.title` | 已支持 | 直接映射题目标题 |
+| `content.statement=statement.md` | 已支持 | 可直接映射到 `description` Markdown 原文 |
+| `meta.category` | 已支持 | 建议使用既有分类 |
+| `meta.difficulty` | 已支持 | 仅 `beginner/easy/medium/hard/insane` |
+| `meta.points` | 已支持 | 直接映射 |
+| `hints[].content/cost_points` | 已支持 | `level/title/cost_points/content` 全部可映射 |
+| `flag.type=static/dynamic` | 已支持 | `manual` 不支持 |
+| `flag.prefix` | 已支持 | 对应 `flag_prefix` |
+| `runtime.image.ref` | 已支持 | 导入时可自动关联或创建镜像记录 |
+| `content.attachments` | 已支持 | 平台会生成统一下载入口 |
+| `tags` | 部分支持 | 平台有 Tag 能力，但不是题目创建时内联字段 |
+| `extensions.topology` | 已保留 | 首版只做预览与扩展提示，不自动落现有拓扑表 |
+| `writeup` | 已支持但需独立落库 | 有独立 API，不是题目创建接口内联字段 |
+| `meta.slug` | 已支持 | 持久化到 `challenges.package_slug`，并作为导入稳定 upsert 标识与附件存储目录 |
+| `runtime.type=none` | 不支持 | 当前创建题目必须依赖镜像 |
+| `flag.type=manual` | 不支持 | 当前仅 static / dynamic |
+| `runtime.build.source=dockerfile` | 未公开导入支持 | 可作为审计材料保留 |
+| `runtime.build.source=tar` | 未公开导入支持 | 不应写成当前能力 |
 
 ---
 
-## 10. 推荐制作约束
+## 8. 校验规则
 
-以下内容不是导入器硬性限制，但符合当前平台和示例的最佳实践：
+### 8.1 源包静态校验
 
-- 题面固定使用 `statement.md`
-- 附件集中放在 `attachments/`
-- 运行时统一使用 `runtime.type: container`
-- 镜像引用使用不可变标签，而不是长期依赖 `latest`
-- `docker/` 仅作为源码复现和审计材料，不作为在线构建输入
-- 不在题目包中放入平台级密钥、数据库口令或生产环境凭据
-- `extensions.topology` 只声明来源和启用意图，实际拓扑编排仍走独立能力
+- 必须存在 `challenge.yml`
+- 必须存在 `statement.md`
+- `content.statement` 必须等于 `statement.md` 或为空时默认回落到 `statement.md`
+- `meta.difficulty` 必须属于 `beginner/easy/medium/hard/insane`
+- `flag.type` 必须属于 `static/dynamic`
+- 若存在 `attachments[*].path`，必须位于 `attachments/` 下
+- 若存在 `runtime.build.source=dockerfile`，则必须存在 `docker/Dockerfile`
+
+### 8.2 安全校验
+
+- 拒绝 Zip Slip：禁止绝对路径与 `..`
+- 拒绝 symlink
+- 限制最大解包文件数、总大小、单文件大小
+- 不允许在 manifest、题面、附件、Dockerfile 中内嵌平台 secret
+
+### 8.3 平台导入前置条件
+
+即使未来实现导入器，也必须先满足：
+
+- `runtime.image.ref` 已可被平台所在 Docker/registry 环境访问
+- 若要自动创建题目，导入器必须把 `runtime.image.ref` 先映射为平台 `images` 记录
+- 若要自动导入拓扑，导入器必须单独调用挑战拓扑落库流程
+- 若要自动导入 Writeup，导入器必须单独调用 Writeup 落库流程
+
+### 8.4 平台发布校验边界
+
+平台当前把“题目是否可发布”拆成两层：
+
+- 作者侧本地验证
+  - 强烈建议先做，但不是上传题目包的强制前置条件
+  - 目的：缩短反馈回路，尽早发现 Dockerfile、依赖、端口、初始化脚本或 Flag 配置问题
+- 平台侧发布自检
+  - 点击后台“发布”后，题目不会立刻公开，而是进入发布自检队列
+  - worker 会执行预检和真实运行时拉起
+  - 通过后自动发布
+  - 失败则保持 `draft`，并通知题目发布者
+
+平台自检负责确认“题目在平台环境里能被正确拉起和判定”，包括：
+
+- Flag 配置是否完整
+- 镜像引用是否可用
+- 拓扑或单容器运行请求是否能成功创建
+- 运行时资源是否能成功清理
+
+平台自检不负责证明以下内容：
+
+- 题目设计是否有教学价值
+- 题面是否足够清晰
+- 题目难度是否合适
+- 预期解法是否唯一或最优
+- 学生是否一定能按作者预期路径解出题目
 
 ---
 
-## 11. 示例位置
+## 9. 推荐制作流程
 
-仓库内示例目录：
+### 9.1 当前最稳妥流程
+
+1. 本地制作题目源码、题面、Hint、附件与可选拓扑定义
+2. 本地构建并验证镜像
+3. 本地完成最小可用验证
+4. 推送镜像或确保镜像在平台运行节点可见
+5. 生成 challenge pack 作为归档与审计材料
+6. 在平台中分别创建：
+   - 镜像
+   - 题目
+   - Flag
+   - 可选拓扑
+   - 可选 Writeup
+7. 点击发布，进入平台发布自检队列
+8. 等待平台通知结果
+   - 通过：题目自动发布
+   - 失败：根据失败摘要回修后重新提交发布检查
+
+### 9.2 本地最小验证清单
+
+推荐至少覆盖以下检查：
+
+- 题目包结构检查
+  - `challenge.yml`
+  - `statement.md`
+  - 附件路径和引用路径存在
+- 镜像可用性检查
+  - `docker build` 成功
+  - 关键启动命令成功
+  - 暴露端口与题面描述一致
+- 运行时检查
+  - 服务可访问
+  - 初始化脚本能跑完
+  - 题目不会启动即崩溃
+- 判题检查
+  - 静态 Flag 可提交
+  - 动态 Flag 注入后能被题目读取
+- 清理检查
+  - 容器退出或删除后不会残留必须人工清理的关键资源
+
+### 9.3 不推荐做法
+
+- 在题目包中存放静态 Flag 明文
+- 把 `latest` 当作正式镜像版本
+- 用题目包假装描述 `manual` 判题，但平台端根本没有对应实现
+- 用单一 v1 文档同时要求“必须有 Dockerfile”和“只交付 registry 镜像”
+- 只在本地验证，从不走平台发布自检
+- 完全跳过本地验证，把平台自检当成唯一调试手段
+
+---
+
+## 10. 示例说明
+
+仓库中的示例目录：
 
 - `ctf/docs/contracts/examples/challenge-pack-v1/web-hello-01/`
 - `ctf/docs/contracts/examples/challenge-pack-v1/web-sqli-login-01/`
 
-这些示例用于说明当前推荐的作者侧题目包组织方式。
+这些示例用于说明“作者侧源包长什么样”，不代表当前平台已经支持直接上传 Zip 并一键导入全部内容。
 
 ---
 
-## 12. 结论
+## 11. 后续建议
 
-当前 `challenge-pack-v1` 可以视为“作者侧源包结构 + 平台导入契约”的统一规范：
+如果后续要把题目包真正做成平台能力，建议按顺序落地：
 
-- 目录结构以 `challenge.yml + 题面文件 + 可选附件/源码材料` 为中心
-- 平台已经支持预览和确认导入
-- 当前真正自动落地的范围包括题目元数据、题面、附件、Hint、Flag 和镜像引用
-- `tags` 与 `extensions.topology` 仍属于保留扩展，当前不会自动完整落库
+1. 先实现只读校验器：上传 Zip，返回 manifest/文件级错误
+2. 再实现“镜像引用 + 题目元数据 + Hint”的最小导入
+3. 然后补 Tag、附件上传、Writeup 导入
+4. 最后补拓扑导入、模板引用、源码构建队列
+
+这样比直接承诺“大而全的 v1 导入器”更稳。

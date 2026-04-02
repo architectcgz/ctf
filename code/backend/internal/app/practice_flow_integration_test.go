@@ -198,7 +198,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t,
 		env.router,
 		http.MethodPost,
-		"/api/v1/admin/challenges",
+		"/api/v1/authoring/challenges",
 		map[string]any{
 			"title":          "Web SQLi 101",
 			"description":    "basic sql injection challenge",
@@ -228,7 +228,7 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t,
 		env.router,
 		http.MethodPut,
-		"/api/v1/admin/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/flag",
+		"/api/v1/authoring/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/flag",
 		map[string]any{
 			"flag_type": "static",
 			"flag":      "flag{sqli_success}",
@@ -240,17 +240,10 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("unexpected configure flag status: %d body=%s", configureFlagResp.Code, configureFlagResp.Body.String())
 	}
 
-	publishResp := performFlowJSONRequest(
-		t,
-		env.router,
-		http.MethodPut,
-		"/api/v1/admin/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/publish",
-		nil,
-		bearerHeaders(adminToken),
-		nil,
-	)
-	if publishResp.Code != http.StatusOK {
-		t.Fatalf("unexpected publish challenge status: %d body=%s", publishResp.Code, publishResp.Body.String())
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", challenge.ID).
+		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		t.Fatalf("set challenge published: %v", err)
 	}
 
 	listBeforeResp := performFlowJSONRequest(
@@ -635,7 +628,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		t,
 		env.router,
 		http.MethodPost,
-		"/api/v1/admin/challenges",
+		"/api/v1/authoring/challenges",
 		map[string]any{
 			"title":       "Draft Crypto",
 			"description": "not published yet",
@@ -657,7 +650,7 @@ func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 		t,
 		env.router,
 		http.MethodPut,
-		"/api/v1/admin/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/flag",
+		"/api/v1/authoring/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/flag",
 		map[string]any{
 			"flag_type": "static",
 			"flag":      "flag{draft_secret}",
@@ -750,6 +743,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.TeamMember{},
 		&model.Image{},
 		&model.Challenge{},
+		&model.ChallengePublishCheckJob{},
 		&model.ChallengeHint{},
 		&model.ChallengeHintUnlock{},
 		&model.ChallengeWriteup{},
@@ -868,11 +862,13 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(tokenService))
 
+	authoringOnly := protected.Group("/authoring")
+	authoringOnly.Use(middleware.RequireRole(model.RoleTeacher))
+	authoringOnly.POST("/challenges", challengeHandler.CreateChallenge)
+	authoringOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
+
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.RequireRole(model.RoleAdmin))
-	adminOnly.POST("/challenges", challengeHandler.CreateChallenge)
-	adminOnly.PUT("/challenges/:id/flag", flagHandler.ConfigureFlag)
-	adminOnly.PUT("/challenges/:id/publish", challengeHandler.PublishChallenge)
 	adminOnly.GET("/audit-logs", auditHandler.ListAuditLogs)
 
 	protected.GET("/challenges", challengeHandler.ListPublishedChallenges)

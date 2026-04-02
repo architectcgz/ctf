@@ -1,10 +1,12 @@
 package infrastructure
 
 import (
+	"context"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/internal/module/challenge/testsupport"
 	"testing"
+	"time"
 )
 
 func TestRepositoryCreate(t *testing.T) {
@@ -70,5 +72,84 @@ func TestRepositoryHasRunningInstances(t *testing.T) {
 	}
 	if !has {
 		t.Fatal("should have running instances")
+	}
+}
+
+func TestRepositoryPublishCheckJobLifecycle(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	repo := NewRepository(db)
+	user := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	challenge := &model.Challenge{Title: "Test", Status: model.ChallengeStatusDraft, CreatedBy: &user.ID}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	ctx := context.Background()
+	job := &model.ChallengePublishCheckJob{
+		ChallengeID:   challenge.ID,
+		RequestedBy:   user.ID,
+		Status:        model.ChallengePublishCheckStatusPending,
+		RequestSource: "admin_publish",
+	}
+	if err := repo.CreatePublishCheckJob(ctx, job); err != nil {
+		t.Fatalf("CreatePublishCheckJob() error = %v", err)
+	}
+
+	active, err := repo.FindActivePublishCheckJobByChallengeID(ctx, challenge.ID)
+	if err != nil {
+		t.Fatalf("FindActivePublishCheckJobByChallengeID() error = %v", err)
+	}
+	if active.ID != job.ID {
+		t.Fatalf("unexpected active job id: %d", active.ID)
+	}
+
+	byID, err := repo.FindPublishCheckJobByID(ctx, job.ID)
+	if err != nil {
+		t.Fatalf("FindPublishCheckJobByID() error = %v", err)
+	}
+	if byID.ID != job.ID {
+		t.Fatalf("unexpected job by id: %+v", byID)
+	}
+
+	jobs, err := repo.ListPendingPublishCheckJobs(ctx, 10)
+	if err != nil {
+		t.Fatalf("ListPendingPublishCheckJobs() error = %v", err)
+	}
+	if len(jobs) != 1 || jobs[0].ID != job.ID {
+		t.Fatalf("unexpected pending jobs: %+v", jobs)
+	}
+
+	startedAt := time.Now()
+	started, err := repo.TryStartPublishCheckJob(ctx, job.ID, startedAt)
+	if err != nil {
+		t.Fatalf("TryStartPublishCheckJob() error = %v", err)
+	}
+	if !started {
+		t.Fatal("expected job to start")
+	}
+
+	latest, err := repo.FindLatestPublishCheckJobByChallengeID(ctx, challenge.ID)
+	if err != nil {
+		t.Fatalf("FindLatestPublishCheckJobByChallengeID() error = %v", err)
+	}
+	if latest.Status != model.ChallengePublishCheckStatusRunning {
+		t.Fatalf("unexpected latest status: %s", latest.Status)
+	}
+
+	latest.Status = model.ChallengePublishCheckStatusFailed
+	latest.FailureSummary = "runtime failed"
+	if err := repo.UpdatePublishCheckJob(ctx, latest); err != nil {
+		t.Fatalf("UpdatePublishCheckJob() error = %v", err)
+	}
+
+	updated, err := repo.FindLatestPublishCheckJobByChallengeID(ctx, challenge.ID)
+	if err != nil {
+		t.Fatalf("FindLatestPublishCheckJobByChallengeID() after update error = %v", err)
+	}
+	if updated.FailureSummary != "runtime failed" {
+		t.Fatalf("unexpected failure summary: %s", updated.FailureSummary)
 	}
 }

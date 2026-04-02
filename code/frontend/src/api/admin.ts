@@ -22,6 +22,7 @@ import type {
   AdminChallengeImportCommitData,
   AdminChallengeImportPreview,
   AdminChallengeListItem,
+  AdminChallengePublishRequestData,
   AdminNotificationPublishPayload,
   AdminNotificationPublishResult,
   AdminChallengeWriteupData,
@@ -318,6 +319,47 @@ interface RawAdminChallengeItem {
     content: string
   }>
   status: 'draft' | 'published' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+interface RawAdminChallengePublishRequestData {
+  id: string | number
+  challenge_id: string | number
+  status: AdminChallengePublishRequestData['status'] | 'pending' | 'passed'
+  requested_by?: string | number | null
+  request_source?: string | null
+  active?: boolean
+  failure_summary?: string | null
+  started_at?: string | null
+  finished_at?: string | null
+  published_at?: string | null
+  result?: {
+    challenge_id: string | number
+    precheck: {
+      passed: boolean
+      started_at: string
+      ended_at: string
+      steps: Array<{
+        name: string
+        passed: boolean
+        message: string
+      }>
+    }
+    runtime: {
+      passed: boolean
+      started_at: string
+      ended_at: string
+      access_url?: string
+      container_count: number
+      network_count: number
+      steps: Array<{
+        name: string
+        passed: boolean
+        message: string
+      }>
+    }
+  } | null
   created_at: string
   updated_at: string
 }
@@ -873,6 +915,61 @@ function normalizeChallenge(
   }
 }
 
+function normalizeChallengePublishRequest(
+  item: RawAdminChallengePublishRequestData
+): AdminChallengePublishRequestData {
+  const status =
+    item.status === 'pending'
+      ? 'queued'
+      : item.status === 'passed'
+        ? 'succeeded'
+        : item.status
+
+  return {
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+    status,
+    active: item.active ?? (status === 'queued' || status === 'running'),
+    requested_by: item.requested_by == null ? undefined : String(item.requested_by),
+    request_source: item.request_source ?? undefined,
+    failure_summary: item.failure_summary ?? undefined,
+    started_at: item.started_at ?? undefined,
+    finished_at: item.finished_at ?? undefined,
+    published_at: item.published_at ?? undefined,
+    result:
+      item.result == null
+        ? undefined
+        : {
+            challenge_id: String(item.result.challenge_id),
+            precheck: {
+              passed: item.result.precheck.passed,
+              started_at: item.result.precheck.started_at,
+              ended_at: item.result.precheck.ended_at,
+              steps: item.result.precheck.steps.map((step) => ({
+                name: step.name,
+                passed: step.passed,
+                message: step.message,
+              })),
+            },
+            runtime: {
+              passed: item.result.runtime.passed,
+              started_at: item.result.runtime.started_at,
+              ended_at: item.result.runtime.ended_at,
+              access_url: item.result.runtime.access_url,
+              container_count: item.result.runtime.container_count,
+              network_count: item.result.runtime.network_count,
+              steps: item.result.runtime.steps.map((step) => ({
+                name: step.name,
+                passed: step.passed,
+                message: step.message,
+              })),
+            },
+          },
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  }
+}
+
 function normalizeChallengeImportPreview(item: RawChallengeImportPreview): AdminChallengeImportPreview {
   return {
     id: String(item.id),
@@ -1105,7 +1202,7 @@ export async function importUsers(file: File) {
 export async function getChallenges(params?: Record<string, unknown>) {
   const response = await request<PageResult<RawAdminChallengeItem>>({
     method: 'GET',
-    url: '/admin/challenges',
+    url: '/authoring/challenges',
     params,
   })
   return {
@@ -1118,11 +1215,11 @@ export async function getChallengeDetail(id: string) {
   const [challenge, flagConfig] = await Promise.all([
     request<RawAdminChallengeItem>({
       method: 'GET',
-      url: `/admin/challenges/${encodeURIComponent(id)}`,
+      url: `/authoring/challenges/${encodeURIComponent(id)}`,
     }),
     request<RawChallengeFlagConfig>({
       method: 'GET',
-      url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+      url: `/authoring/challenges/${encodeURIComponent(id)}/flag`,
     }).catch(() => undefined),
   ])
 
@@ -1135,7 +1232,7 @@ export async function previewChallengeImport(file: File): Promise<AdminChallenge
 
   const response = await request<RawChallengeImportPreview>({
     method: 'POST',
-    url: '/admin/challenge-imports',
+    url: '/authoring/challenge-imports',
     data: form,
     headers: { 'Content-Type': 'multipart/form-data' },
   })
@@ -1145,7 +1242,7 @@ export async function previewChallengeImport(file: File): Promise<AdminChallenge
 export async function getChallengeImport(id: string): Promise<AdminChallengeImportPreview> {
   const response = await request<RawChallengeImportPreview>({
     method: 'GET',
-    url: `/admin/challenge-imports/${encodeURIComponent(id)}`,
+    url: `/authoring/challenge-imports/${encodeURIComponent(id)}`,
   })
   return normalizeChallengeImportPreview(response)
 }
@@ -1153,7 +1250,7 @@ export async function getChallengeImport(id: string): Promise<AdminChallengeImpo
 export async function commitChallengeImport(id: string): Promise<AdminChallengeImportCommitData> {
   const response = await request<{ challenge: RawAdminChallengeItem }>({
     method: 'POST',
-    url: `/admin/challenge-imports/${encodeURIComponent(id)}/commit`,
+    url: `/authoring/challenge-imports/${encodeURIComponent(id)}/commit`,
   })
 
   return {
@@ -1242,7 +1339,7 @@ export interface AdminEnvironmentTemplatePayload {
 export async function createChallenge(data: AdminChallengePayload) {
   const response = await request<RawAdminChallengeItem>({
     method: 'POST',
-    url: '/admin/challenges',
+    url: '/authoring/challenges',
     data,
   })
   return {
@@ -1253,7 +1350,7 @@ export async function createChallenge(data: AdminChallengePayload) {
 export async function updateChallenge(id: string, data: Partial<AdminChallengePayload>) {
   await request<void>({
     method: 'PUT',
-    url: `/admin/challenges/${encodeURIComponent(id)}`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}`,
     data,
   })
 }
@@ -1261,7 +1358,7 @@ export async function updateChallenge(id: string, data: Partial<AdminChallengePa
 export async function configureChallengeFlag(id: string, data: AdminChallengeFlagPayload) {
   return request<{ message: string }>({
     method: 'PUT',
-    url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/flag`,
     data,
   })
 }
@@ -1269,19 +1366,46 @@ export async function configureChallengeFlag(id: string, data: AdminChallengeFla
 export async function getChallengeFlagConfig(id: string) {
   return request<RawChallengeFlagConfig>({
     method: 'GET',
-    url: `/admin/challenges/${encodeURIComponent(id)}/flag`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/flag`,
   })
 }
 
-export async function publishChallenge(id: string) {
-  return request<void>({
-    method: 'PUT',
-    url: `/admin/challenges/${encodeURIComponent(id)}/publish`,
+export async function createChallengePublishRequest(
+  id: string
+): Promise<AdminChallengePublishRequestData> {
+  const response = await request<RawAdminChallengePublishRequestData>({
+    method: 'POST',
+    url: `/authoring/challenges/${encodeURIComponent(id)}/publish-requests`,
   })
+
+  return normalizeChallengePublishRequest(response)
+}
+
+export async function getLatestChallengePublishRequest(
+  id: string
+): Promise<AdminChallengePublishRequestData | null> {
+  try {
+    const response = await request<RawAdminChallengePublishRequestData>({
+      method: 'GET',
+      url: `/authoring/challenges/${encodeURIComponent(id)}/publish-requests/latest`,
+      suppressErrorToast: true,
+    })
+
+    return normalizeChallengePublishRequest(response)
+  } catch (error) {
+    if (
+      (error instanceof ApiError && error.status === 404) ||
+      ((error as { name?: string; status?: number } | undefined)?.name === 'ApiError' &&
+        (error as { status?: number }).status === 404)
+    ) {
+      return null
+    }
+    throw error
+  }
 }
 
 export async function deleteChallenge(id: string) {
-  return request<void>({ method: 'DELETE', url: `/admin/challenges/${encodeURIComponent(id)}` })
+  return request<void>({ method: 'DELETE', url: `/authoring/challenges/${encodeURIComponent(id)}` })
 }
 
 export interface AdminChallengeWriteupPayload {
@@ -1295,7 +1419,7 @@ export async function getChallengeWriteup(id: string): Promise<AdminChallengeWri
   try {
     const response = await request<RawAdminChallengeWriteupData>({
       method: 'GET',
-      url: `/admin/challenges/${encodeURIComponent(id)}/writeup`,
+      url: `/authoring/challenges/${encodeURIComponent(id)}/writeup`,
       suppressErrorToast: true,
     })
     return normalizeAdminChallengeWriteup(response)
@@ -1314,7 +1438,7 @@ export async function getChallengeWriteup(id: string): Promise<AdminChallengeWri
 export async function saveChallengeWriteup(id: string, data: AdminChallengeWriteupPayload) {
   const response = await request<RawAdminChallengeWriteupData>({
     method: 'PUT',
-    url: `/admin/challenges/${encodeURIComponent(id)}/writeup`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/writeup`,
     data,
   })
   return normalizeAdminChallengeWriteup(response)
@@ -1323,7 +1447,7 @@ export async function saveChallengeWriteup(id: string, data: AdminChallengeWrite
 export async function deleteChallengeWriteup(id: string) {
   return request<void>({
     method: 'DELETE',
-    url: `/admin/challenges/${encodeURIComponent(id)}/writeup`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/writeup`,
   })
 }
 
@@ -1331,7 +1455,7 @@ export async function getChallengeTopology(id: string): Promise<ChallengeTopolog
   try {
     const response = await request<RawChallengeTopologyData>({
       method: 'GET',
-      url: `/admin/challenges/${encodeURIComponent(id)}/topology`,
+      url: `/authoring/challenges/${encodeURIComponent(id)}/topology`,
       suppressErrorToast: true,
     })
     return normalizeChallengeTopology(response)
@@ -1350,7 +1474,7 @@ export async function getChallengeTopology(id: string): Promise<ChallengeTopolog
 export async function saveChallengeTopology(id: string, data: AdminChallengeTopologyPayload) {
   const response = await request<RawChallengeTopologyData>({
     method: 'PUT',
-    url: `/admin/challenges/${encodeURIComponent(id)}/topology`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/topology`,
     data,
   })
   return normalizeChallengeTopology(response)
@@ -1359,7 +1483,7 @@ export async function saveChallengeTopology(id: string, data: AdminChallengeTopo
 export async function deleteChallengeTopology(id: string) {
   return request<void>({
     method: 'DELETE',
-    url: `/admin/challenges/${encodeURIComponent(id)}/topology`,
+    url: `/authoring/challenges/${encodeURIComponent(id)}/topology`,
   })
 }
 
@@ -1368,7 +1492,7 @@ export async function getEnvironmentTemplates(
 ): Promise<EnvironmentTemplateData[]> {
   const response = await request<RawEnvironmentTemplateData[]>({
     method: 'GET',
-    url: '/admin/environment-templates',
+    url: '/authoring/environment-templates',
     params: { keyword },
   })
   return response.map(normalizeEnvironmentTemplate)
@@ -1377,7 +1501,7 @@ export async function getEnvironmentTemplates(
 export async function getEnvironmentTemplate(id: string): Promise<EnvironmentTemplateData> {
   const response = await request<RawEnvironmentTemplateData>({
     method: 'GET',
-    url: `/admin/environment-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/environment-templates/${encodeURIComponent(id)}`,
   })
   return normalizeEnvironmentTemplate(response)
 }
@@ -1385,7 +1509,7 @@ export async function getEnvironmentTemplate(id: string): Promise<EnvironmentTem
 export async function createEnvironmentTemplate(data: AdminEnvironmentTemplatePayload) {
   const response = await request<RawEnvironmentTemplateData>({
     method: 'POST',
-    url: '/admin/environment-templates',
+    url: '/authoring/environment-templates',
     data,
   })
   return normalizeEnvironmentTemplate(response)
@@ -1394,7 +1518,7 @@ export async function createEnvironmentTemplate(data: AdminEnvironmentTemplatePa
 export async function updateEnvironmentTemplate(id: string, data: AdminEnvironmentTemplatePayload) {
   const response = await request<RawEnvironmentTemplateData>({
     method: 'PUT',
-    url: `/admin/environment-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/environment-templates/${encodeURIComponent(id)}`,
     data,
   })
   return normalizeEnvironmentTemplate(response)
@@ -1403,14 +1527,14 @@ export async function updateEnvironmentTemplate(id: string, data: AdminEnvironme
 export async function deleteEnvironmentTemplate(id: string) {
   return request<void>({
     method: 'DELETE',
-    url: `/admin/environment-templates/${encodeURIComponent(id)}`,
+    url: `/authoring/environment-templates/${encodeURIComponent(id)}`,
   })
 }
 
 export async function getImages(params?: Record<string, unknown>) {
   const response = await request<PageResult<RawImageItem>>({
     method: 'GET',
-    url: '/admin/images',
+    url: '/authoring/images',
     params,
   })
   return {
@@ -1426,14 +1550,14 @@ export interface AdminImagePayload {
 }
 
 export async function createImage(data: AdminImagePayload) {
-  const response = await request<RawImageItem>({ method: 'POST', url: '/admin/images', data })
+  const response = await request<RawImageItem>({ method: 'POST', url: '/authoring/images', data })
   return {
     image: normalizeImage(response),
   }
 }
 
 export async function deleteImage(id: string) {
-  return request<void>({ method: 'DELETE', url: `/admin/images/${encodeURIComponent(id)}` })
+  return request<void>({ method: 'DELETE', url: `/authoring/images/${encodeURIComponent(id)}` })
 }
 
 export async function getAuditLogs(params?: Record<string, unknown>) {

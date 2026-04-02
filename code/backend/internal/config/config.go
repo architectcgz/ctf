@@ -172,7 +172,14 @@ type ScoreConfig struct {
 }
 
 type ChallengeConfig struct {
-	SolvedCountCacheTTL time.Duration `mapstructure:"solved_count_cache_ttl"`
+	SolvedCountCacheTTL time.Duration               `mapstructure:"solved_count_cache_ttl"`
+	PublishCheck        ChallengePublishCheckConfig `mapstructure:"publish_check"`
+}
+
+type ChallengePublishCheckConfig struct {
+	Enabled      bool          `mapstructure:"enabled"`
+	PollInterval time.Duration `mapstructure:"poll_interval"`
+	BatchSize    int           `mapstructure:"batch_size"`
 }
 
 type AssessmentConfig struct {
@@ -519,6 +526,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pagination.default_page_size", 20)
 	v.SetDefault("pagination.max_page_size", 100)
 	v.SetDefault("challenge.solved_count_cache_ttl", 5*time.Minute)
+	v.SetDefault("challenge.publish_check.enabled", true)
+	v.SetDefault("challenge.publish_check.poll_interval", 2*time.Second)
+	v.SetDefault("challenge.publish_check.batch_size", 1)
 	v.SetDefault("score.cache_ttl", 5*time.Minute)
 	v.SetDefault("score.lock_timeout", 5*time.Second)
 	v.SetDefault("score.max_ranking_limit", 100)

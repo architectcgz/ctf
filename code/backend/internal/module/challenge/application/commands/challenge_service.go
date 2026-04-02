@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -20,18 +21,25 @@ import (
 )
 
 type SelfCheckConfig struct {
-	RuntimeCreateTimeout time.Duration
-	FlagGlobalSecret     string
+	RuntimeCreateTimeout     time.Duration
+	FlagGlobalSecret         string
+	PublishCheckPollInterval time.Duration
+	PublishCheckBatchSize    int
+}
+
+type ChallengeNotificationSender interface {
+	SendChallengePublishCheckResult(ctx context.Context, userID int64, challengeID int64, challengeTitle string, passed bool, failureSummary string) error
 }
 
 type ChallengeService struct {
-	db           *gorm.DB
-	repo         challengeports.ChallengeCommandRepository
-	imageRepo    challengeports.ImageRepository
-	topologyRepo challengeports.ChallengeTopologyRepository
-	runtimeProbe challengeports.ChallengeRuntimeProbe
-	selfCheckCfg SelfCheckConfig
-	logger       *zap.Logger
+	db            *gorm.DB
+	repo          challengeports.ChallengeCommandRepository
+	imageRepo     challengeports.ImageRepository
+	topologyRepo  challengeports.ChallengeTopologyRepository
+	runtimeProbe  challengeports.ChallengeRuntimeProbe
+	notifications ChallengeNotificationSender
+	selfCheckCfg  SelfCheckConfig
+	logger        *zap.Logger
 }
 
 func NewChallengeService(
@@ -42,6 +50,7 @@ func NewChallengeService(
 	runtimeProbe challengeports.ChallengeRuntimeProbe,
 	cfg SelfCheckConfig,
 	logger *zap.Logger,
+	notifications ...ChallengeNotificationSender,
 ) *ChallengeService {
 	if logger == nil {
 		logger = zap.NewNop()
@@ -49,15 +58,29 @@ func NewChallengeService(
 	if cfg.RuntimeCreateTimeout <= 0 {
 		cfg.RuntimeCreateTimeout = 60 * time.Second
 	}
-	return &ChallengeService{
-		db:           db,
-		repo:         repo,
-		imageRepo:    imageRepo,
-		topologyRepo: topologyRepo,
-		runtimeProbe: runtimeProbe,
-		selfCheckCfg: cfg,
-		logger:       logger,
+	if cfg.PublishCheckPollInterval <= 0 {
+		cfg.PublishCheckPollInterval = 2 * time.Second
 	}
+	if cfg.PublishCheckBatchSize <= 0 {
+		cfg.PublishCheckBatchSize = 1
+	}
+	return &ChallengeService{
+		db:            db,
+		repo:          repo,
+		imageRepo:     imageRepo,
+		topologyRepo:  topologyRepo,
+		runtimeProbe:  runtimeProbe,
+		notifications: firstChallengeNotificationSender(notifications),
+		selfCheckCfg:  cfg,
+		logger:        logger,
+	}
+}
+
+func firstChallengeNotificationSender(senders []ChallengeNotificationSender) ChallengeNotificationSender {
+	if len(senders) == 0 {
+		return nil
+	}
+	return senders[0]
 }
 
 func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateChallengeReq) (*dto.ChallengeResp, error) {
@@ -169,6 +192,241 @@ func (s *ChallengeService) PublishChallenge(id int64) error {
 
 	challenge.Status = model.ChallengeStatusPublished
 	return s.repo.Update(challenge)
+}
+
+func (s *ChallengeService) RequestPublishCheck(ctx context.Context, actorUserID, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+	challenge, err := s.repo.FindByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, err
+	}
+	if challenge.Status == model.ChallengeStatusPublished {
+		return nil, errcode.ErrConflict.WithCause(errors.New("题目已发布，无需重复提交发布检查"))
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	active, err := s.repo.FindActivePublishCheckJobByChallengeID(ctx, id)
+	switch {
+	case err == nil:
+		return s.buildPublishCheckJobResp(active), nil
+	case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
+		return nil, err
+	}
+
+	job := &model.ChallengePublishCheckJob{
+		ChallengeID:   challenge.ID,
+		RequestedBy:   actorUserID,
+		Status:        model.ChallengePublishCheckStatusPending,
+		RequestSource: "admin_publish",
+	}
+	if err := s.repo.CreatePublishCheckJob(ctx, job); err != nil {
+		active, activeErr := s.repo.FindActivePublishCheckJobByChallengeID(ctx, id)
+		if activeErr == nil {
+			return s.buildPublishCheckJobResp(active), nil
+		}
+		return nil, err
+	}
+	return s.buildPublishCheckJobResp(job), nil
+}
+
+func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	job, err := s.repo.FindLatestPublishCheckJobByChallengeID(ctx, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errcode.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return s.buildPublishCheckJobResp(job), nil
+}
+
+func (s *ChallengeService) RunPublishCheckLoop(ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ticker := time.NewTicker(s.selfCheckCfg.PublishCheckPollInterval)
+	defer ticker.Stop()
+
+	for {
+		s.dispatchPublishCheckJobs(ctx)
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
+}
+
+func (s *ChallengeService) dispatchPublishCheckJobs(ctx context.Context) {
+	jobs, err := s.repo.ListPendingPublishCheckJobs(ctx, s.selfCheckCfg.PublishCheckBatchSize)
+	if err != nil {
+		s.logger.Warn("list pending publish check jobs failed", zap.Error(err))
+		return
+	}
+	for _, job := range jobs {
+		if job == nil {
+			continue
+		}
+		startedAt := time.Now()
+		started, err := s.repo.TryStartPublishCheckJob(ctx, job.ID, startedAt)
+		if err != nil {
+			s.logger.Warn("start publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
+			continue
+		}
+		if !started {
+			continue
+		}
+		s.processPublishCheckJob(ctx, job.ID)
+	}
+}
+
+func (s *ChallengeService) processPublishCheckJob(ctx context.Context, jobID int64) {
+	job, err := s.loadPublishCheckJob(ctx, jobID)
+	if err != nil {
+		s.logger.Warn("load publish check job failed", zap.Int64("job_id", jobID), zap.Error(err))
+		return
+	}
+	challenge, err := s.repo.FindByID(job.ChallengeID)
+	if err != nil {
+		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("读取题目失败: %v", err), &model.Challenge{
+			ID:    job.ChallengeID,
+			Title: fmt.Sprintf("题目 #%d", job.ChallengeID),
+		})
+		return
+	}
+
+	resp, err := s.SelfCheckChallenge(ctx, challenge.ID)
+	if err != nil {
+		s.finishPublishCheckJob(ctx, job, nil, false, fmt.Sprintf("执行自检失败: %v", err), challenge)
+		return
+	}
+
+	passed := resp.Precheck.Passed && resp.Runtime.Passed
+	failureSummary := ""
+	if !passed {
+		failureSummary = buildPublishCheckFailureSummary(resp)
+	}
+
+	var publishedAt *time.Time
+	if passed {
+		if err := s.PublishChallenge(challenge.ID); err != nil {
+			passed = false
+			failureSummary = fmt.Sprintf("自动发布失败: %v", err)
+		} else {
+			now := time.Now()
+			publishedAt = &now
+		}
+	}
+	s.finishPublishCheckJob(ctx, job, resp, passed, failureSummary, challenge)
+	if passed && publishedAt != nil {
+		job.PublishedAt = publishedAt
+		_ = s.repo.UpdatePublishCheckJob(ctx, job)
+	}
+}
+
+func (s *ChallengeService) loadPublishCheckJob(ctx context.Context, id int64) (*model.ChallengePublishCheckJob, error) {
+	return s.repo.FindPublishCheckJobByID(ctx, id)
+}
+
+func (s *ChallengeService) finishPublishCheckJob(ctx context.Context, job *model.ChallengePublishCheckJob, result *dto.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *model.Challenge) {
+	if job == nil {
+		return
+	}
+	now := time.Now()
+	job.FinishedAt = &now
+	job.UpdatedAt = now
+	job.FailureSummary = strings.TrimSpace(failureSummary)
+	if passed {
+		job.Status = model.ChallengePublishCheckStatusPassed
+		job.PublishedAt = &now
+	} else {
+		job.Status = model.ChallengePublishCheckStatusFailed
+	}
+	if result != nil {
+		if content, err := json.Marshal(result); err == nil {
+			job.ResultJSON = string(content)
+		}
+	}
+	if err := s.repo.UpdatePublishCheckJob(ctx, job); err != nil {
+		s.logger.Warn("update publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
+	}
+	if s.notifications != nil && challenge != nil {
+		if err := s.notifications.SendChallengePublishCheckResult(ctx, job.RequestedBy, challenge.ID, challenge.Title, passed, job.FailureSummary); err != nil {
+			s.logger.Warn("send publish check notification failed", zap.Int64("job_id", job.ID), zap.Error(err))
+		}
+	}
+}
+
+func buildPublishCheckFailureSummary(resp *dto.ChallengeSelfCheckResp) string {
+	if resp == nil {
+		return "平台自检失败"
+	}
+	for _, step := range resp.Precheck.Steps {
+		if !step.Passed && strings.TrimSpace(step.Message) != "" {
+			return step.Message
+		}
+	}
+	for _, step := range resp.Runtime.Steps {
+		if !step.Passed && strings.TrimSpace(step.Message) != "" {
+			return step.Message
+		}
+	}
+	if !resp.Precheck.Passed {
+		return "预检未通过"
+	}
+	if !resp.Runtime.Passed {
+		return "运行时自检未通过"
+	}
+	return ""
+}
+
+func (s *ChallengeService) buildPublishCheckJobResp(job *model.ChallengePublishCheckJob) *dto.ChallengePublishCheckJobResp {
+	if job == nil {
+		return nil
+	}
+	resp := &dto.ChallengePublishCheckJobResp{
+		ID:             job.ID,
+		ChallengeID:    job.ChallengeID,
+		RequestedBy:    job.RequestedBy,
+		Status:         mapPublishCheckStatus(job.Status),
+		Active:         isActivePublishCheckStatus(job.Status),
+		RequestSource:  job.RequestSource,
+		FailureSummary: job.FailureSummary,
+		StartedAt:      job.StartedAt,
+		FinishedAt:     job.FinishedAt,
+		PublishedAt:    job.PublishedAt,
+		CreatedAt:      job.CreatedAt,
+		UpdatedAt:      job.UpdatedAt,
+	}
+	if strings.TrimSpace(job.ResultJSON) != "" {
+		var result dto.ChallengeSelfCheckResp
+		if err := json.Unmarshal([]byte(job.ResultJSON), &result); err == nil {
+			resp.Result = &result
+		}
+	}
+	return resp
+}
+
+func mapPublishCheckStatus(status string) string {
+	switch status {
+	case model.ChallengePublishCheckStatusPending:
+		return "queued"
+	case model.ChallengePublishCheckStatusPassed:
+		return "succeeded"
+	default:
+		return status
+	}
+}
+
+func isActivePublishCheckStatus(status string) bool {
+	return status == model.ChallengePublishCheckStatusPending || status == model.ChallengePublishCheckStatusRunning
 }
 
 type challengeSelfCheckRuntimeInput struct {

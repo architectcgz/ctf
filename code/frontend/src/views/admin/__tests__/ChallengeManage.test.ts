@@ -64,7 +64,16 @@ vi.mock('@/api/admin', () => ({
     flag_type: 'static',
     configured: false,
   }),
-  publishChallenge: vi.fn(),
+  createChallengePublishRequest: vi.fn(),
+  getLatestChallengePublishRequest: vi.fn().mockResolvedValue({
+    id: 'req-1',
+    challenge_id: '1',
+    status: 'failed',
+    active: false,
+    failure_summary: 'Flag 未配置',
+    created_at: '2026-04-01T08:00:00Z',
+    updated_at: '2026-04-01T08:01:00Z',
+  }),
   deleteChallenge: vi.fn(),
 }))
 
@@ -97,6 +106,10 @@ describe('ChallengeManage', () => {
     expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('挑战管理')
     expect(wrapper.text()).toContain('导入题目包')
+    expect(wrapper.text()).toContain('检查失败')
+    expect(wrapper.text()).toContain('Flag 未配置')
     expect(wrapper.text()).not.toContain('创建挑战')
+    expect(wrapper.findAll('button').some((button) => button.text() === '提交发布检查')).toBe(true)
+    expect(wrapper.findAll('button').some((button) => button.text() === '发布')).toBe(false)
   })
 })
