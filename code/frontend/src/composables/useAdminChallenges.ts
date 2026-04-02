@@ -54,13 +54,23 @@ export function useAdminChallenges() {
     }, POLL_INTERVAL_MS)
   }
 
-  async function loadLatestPublishRequests() {
+  function didAnyActiveRequestFinish(
+    previousRequests: Record<string, AdminChallengePublishRequestData | null>,
+    nextRequests: Record<string, AdminChallengePublishRequestData | null>
+  ): boolean {
+    return Object.entries(nextRequests).some(
+      ([id, request]) => previousRequests[id]?.active && !request?.active
+    )
+  }
+
+  async function loadLatestPublishRequests(): Promise<boolean> {
     if (pagination.list.value.length === 0) {
       latestPublishRequests.value = {}
       stopPolling()
-      return
+      return false
     }
 
+    const previousRequests = latestPublishRequests.value
     const latestEntries = await Promise.all(
       pagination.list.value.map(async (item) => [
         item.id,
@@ -68,13 +78,20 @@ export function useAdminChallenges() {
       ] as const)
     )
 
-    latestPublishRequests.value = Object.fromEntries(latestEntries)
+    const nextRequests = Object.fromEntries(latestEntries)
+    const finishedActiveRequest = didAnyActiveRequestFinish(previousRequests, nextRequests)
+
+    latestPublishRequests.value = nextRequests
     syncPolling()
+    return finishedActiveRequest
   }
 
   async function refreshLatestPublishRequests() {
     try {
-      await loadLatestPublishRequests()
+      const finishedActiveRequest = await loadLatestPublishRequests()
+      if (finishedActiveRequest) {
+        await pagination.refresh()
+      }
     } catch {
       stopPolling()
     }
