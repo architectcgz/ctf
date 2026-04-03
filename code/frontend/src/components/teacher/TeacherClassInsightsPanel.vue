@@ -135,19 +135,19 @@ const weakDimensionStats = computed(() => {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
   --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
-  --panel-surface: var(--journal-surface, rgba(248, 250, 252, 0.9));
-  --panel-surface-subtle: var(--journal-surface-subtle, rgba(241, 245, 249, 0.7));
+  --panel-surface: var(--journal-surface, var(--color-bg-surface));
+  --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
   --panel-accent-strong: var(--journal-accent-strong, #4338ca);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
   padding: 1.25rem 1.25rem 1.35rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-subsection + .teacher-subsection {
-  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  border-top: 1px dashed color-mix(in srgb, var(--panel-border) 88%, transparent);
   padding-top: 1.25rem;
 }
 
@@ -159,8 +159,8 @@ const weakDimensionStats = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--panel-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -193,7 +193,7 @@ const weakDimensionStats = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.9rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+  border-bottom: 1px dashed color-mix(in srgb, var(--panel-border) 84%, transparent);
   padding: 0.2rem 0 0.95rem;
 }
 
@@ -254,7 +254,7 @@ const weakDimensionStats = computed(() => {
 }
 
 .dimension-item {
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+  border-bottom: 1px dashed color-mix(in srgb, var(--panel-border) 84%, transparent);
   padding: 0.2rem 0 0.85rem;
 }
 
@@ -286,13 +286,13 @@ const weakDimensionStats = computed(() => {
   height: 0.35rem;
   overflow: hidden;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-border) 84%, #ffffff);
+  background: color-mix(in srgb, var(--panel-border) 84%, var(--panel-surface));
 }
 
 .dimension-item__bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--panel-accent) 85%, white);
+  background: color-mix(in srgb, var(--panel-accent) 85%, var(--panel-surface));
 }
 
 @media (min-width: 1280px) {

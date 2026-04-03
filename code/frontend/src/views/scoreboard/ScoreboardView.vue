@@ -232,24 +232,24 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-color: var(--journal-border);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -257,7 +257,7 @@ function supportsRealtime(status: ContestStatus): boolean {
   border-color: var(--journal-border);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .journal-log {
@@ -306,13 +306,13 @@ function supportsRealtime(status: ContestStatus): boolean {
 }
 
 .scoreboard-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .scoreboard-sections {
   border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.62);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   overflow: hidden;
 }
 
@@ -333,8 +333,8 @@ function supportsRealtime(status: ContestStatus): boolean {
 }
 
 .scoreboard-card {
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.56);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 252, 0.76));
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
 }
 
 .scoreboard-card:last-child {
@@ -343,13 +343,13 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .scoreboard-card-divider {
   margin: 1rem 0 1.1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.56);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .scoreboard-table-shell {
   border-radius: 1rem;
   border: 1px solid rgba(226, 232, 240, 0.72);
-  background: rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 :deep(.scoreboard-empty-state) {
@@ -437,7 +437,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 }
 
 .sb-row--top2 td {
-  background: rgba(148, 163, 184, 0.06);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
 }
 
 .sb-row--top3 td {
@@ -485,7 +485,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .sb-rank-pill--top2 {
   border-color: rgba(148, 163, 184, 0.5);
-  background: rgba(148, 163, 184, 0.12);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
   color: #475569;
 }
 
@@ -496,11 +496,11 @@ function supportsRealtime(status: ContestStatus): boolean {
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {

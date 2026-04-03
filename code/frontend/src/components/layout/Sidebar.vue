@@ -596,7 +596,7 @@ async function navigate(item: NavItem): Promise<void> {
 
 :global([data-theme="light"]) .sidebar-shell {
   background:
-    linear-gradient(180deg, #ffffff, #f8fafc),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base))),
     radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 14rem);
 }
 

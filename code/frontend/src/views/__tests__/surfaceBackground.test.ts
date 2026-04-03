@@ -8,11 +8,11 @@ import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
 import userProfileSource from '../profile/UserProfile.vue?raw'
 
-const lightHeroBackgroundPattern =
-  /background:\s*radial-gradient\(circle at top right, rgba\(37, 99, 235, 0\.08\), transparent 18rem\),\s*linear-gradient\(180deg, #ffffff, #f8fafc\);/s
+const tokenizedHeroBackgroundPattern =
+  /background:\s*radial-gradient\(circle at top right, [\s\S]*linear-gradient\(180deg,\s*color-mix\(in srgb, var\(--journal-surface(?:, var\(--color-bg-surface\))?\) 96%, var\(--color-bg-base\)\),\s*color-mix\(in srgb, var\(--journal-surface-subtle(?:, var\(--color-bg-elevated\))?\) 94%, var\(--color-bg-base\)\)\);/s
 
 describe('member-facing page surfaces', () => {
-  it('should use the same white hero background as admin dashboard', () => {
+  it('should use tokenized hero backgrounds that follow the active theme palette', () => {
     const sources = [
       userProfileSource,
       securitySettingsSource,
@@ -25,7 +25,7 @@ describe('member-facing page surfaces', () => {
     ]
 
     for (const source of sources) {
-      expect(source).toMatch(lightHeroBackgroundPattern)
+      expect(source).toMatch(tokenizedHeroBackgroundPattern)
     }
   })
 })

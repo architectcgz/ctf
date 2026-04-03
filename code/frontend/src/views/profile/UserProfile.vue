@@ -327,13 +327,13 @@ onUnmounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -341,7 +341,7 @@ onUnmounted(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
@@ -364,13 +364,13 @@ onUnmounted(() => {
 .journal-eyebrow-soft {
   color: var(--journal-muted);
   border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
 }
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   padding: 0.875rem 1rem;
 }
 
@@ -411,8 +411,8 @@ onUnmounted(() => {
   display: block;
   cursor: pointer;
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(248, 250, 252, 0.88));
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   padding: 0.75rem 1rem;
   transition:
     border-color 0.2s,
@@ -495,7 +495,7 @@ onUnmounted(() => {
 }
 
 .profile-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .profile-section {
@@ -513,8 +513,8 @@ onUnmounted(() => {
 .profile-field-list,
 .profile-report-meta {
   border-radius: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .profile-field-item,
@@ -524,13 +524,13 @@ onUnmounted(() => {
 
 .profile-field-item + .profile-field-item,
 .profile-report-meta__item + .profile-report-meta__item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .profile-status {
   border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1rem 1.1rem;
 }
 
@@ -588,16 +588,16 @@ onUnmounted(() => {
     left: -0.75rem;
     top: 0;
     bottom: 0;
-    border-left: 1px dashed rgba(148, 163, 184, 0.6);
+    border-left: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
