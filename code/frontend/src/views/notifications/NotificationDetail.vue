@@ -240,13 +240,14 @@ watch(
 
 <style scoped>
 .notification-detail-shell {
-  width: min(72rem, 100%);
-  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .notification-detail-loading,
 .notification-detail-empty {
-  margin-top: 1rem;
+  margin-top: 0;
   border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
   border-radius: 24px;
   background:
@@ -274,14 +275,9 @@ watch(
 }
 
 .notification-detail-page {
-  margin-top: 1rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 18rem),
-    linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-base));
+  min-height: 100%;
   padding: 1.5rem;
-  box-shadow: 0 20px 40px var(--color-shadow-soft);
+  background: transparent;
 }
 
 .notification-detail-header {
@@ -362,13 +358,20 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+  align-self: start;
+  min-width: 0;
+  border-inline-start: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  padding-inline-start: 1rem;
 }
 
 .notification-detail-side-card {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-border-subtle) 90%, transparent);
+}
+
+.notification-detail-side-card:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .notification-detail-side-label {
@@ -410,10 +413,7 @@ watch(
 
 .notification-detail-content-body {
   margin-top: 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 68%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  padding: 1rem 1.05rem;
+  padding: 0;
   white-space: pre-wrap;
   font-size: 0.95rem;
   line-height: 1.85;
@@ -425,6 +425,8 @@ watch(
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 86%, transparent);
+  padding-top: 1.4rem;
 }
 
 .notification-detail-action {
@@ -465,6 +467,13 @@ watch(
 
   .notification-detail-header {
     grid-template-columns: 1fr;
+  }
+
+  .notification-detail-side {
+    border-inline-start: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+    padding-inline-start: 0;
+    padding-top: 1rem;
   }
 }
 </style>
