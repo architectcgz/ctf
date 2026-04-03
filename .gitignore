@@ -27,3 +27,9 @@ code/frontend/docs/
 
 .env
 .env.local
+
+# Local development artifacts
+/.playwright-cli/
+/docker/
+/output/
+/code/backend/Makefile
