@@ -82,15 +82,15 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
   --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
-  --panel-surface: var(--journal-surface, rgba(248, 250, 252, 0.9));
-  --panel-surface-subtle: var(--journal-surface-subtle, rgba(241, 245, 249, 0.7));
+  --panel-surface: var(--journal-surface, var(--color-bg-surface));
+  --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
   --panel-accent-strong: var(--journal-accent-strong, #4338ca);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
   padding: 1.25rem 1.25rem 1.35rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-panel__header {
@@ -101,8 +101,8 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--panel-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--panel-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -136,7 +136,11 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
   border: 1px solid color-mix(in srgb, var(--review-accent) 18%, var(--panel-border));
   border-top-width: 3px;
   border-top-color: color-mix(in srgb, var(--review-accent) 58%, transparent);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panel-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
+  );
   padding: 1rem 1rem 1.05rem;
 }
 

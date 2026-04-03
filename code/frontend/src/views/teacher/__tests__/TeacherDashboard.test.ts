@@ -3,6 +3,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherDashboard from '../TeacherDashboard.vue'
+import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import teacherClassReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
+import teacherInterventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -174,5 +177,13 @@ describe('TeacherDashboard', () => {
     expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
     expect(teacherApiMocks.getStudentProgress).not.toHaveBeenCalled()
     expect(teacherApiMocks.getStudentSkillProfile).not.toHaveBeenCalled()
+  })
+
+  it('教师概览夜间模式样式应基于主题变量而不是亮色硬编码', () => {
+    expect(teacherDashboardPageSource).toContain('--journal-ink: var(--color-text-primary);')
+    expect(teacherDashboardPageSource).toContain('color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base))')
+    expect(teacherDashboardPageSource).not.toContain('linear-gradient(180deg, #ffffff, #f8fafc);')
+    expect(teacherClassReviewPanelSource).not.toContain('rgba(255, 255, 255, 0.98)')
+    expect(teacherInterventionPanelSource).not.toContain('rgba(255, 255, 255, 0.98)')
   })
 })

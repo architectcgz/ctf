@@ -271,11 +271,11 @@ const overviewDescription = computed(() => {
 
 <style scoped>
 .teacher-dashboard {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
@@ -285,8 +285,8 @@ const overviewDescription = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -298,11 +298,15 @@ const overviewDescription = computed(() => {
 .teacher-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -310,7 +314,7 @@ const overviewDescription = computed(() => {
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .journal-metric {
@@ -318,7 +322,7 @@ const overviewDescription = computed(() => {
   background: var(--journal-surface);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-eyebrow-row {
@@ -332,8 +336,8 @@ const overviewDescription = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.3rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 600;
@@ -361,7 +365,7 @@ const overviewDescription = computed(() => {
 
 .teacher-btn:hover {
   border-color: var(--journal-accent);
-  background: rgba(99, 102, 241, 0.06);
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
 }
 
 .teacher-btn--primary {
@@ -409,7 +413,7 @@ const overviewDescription = computed(() => {
 .teacher-badge-card {
   border-radius: 18px;
   border: 1px solid var(--journal-border);
-  background: var(--journal-surface-subtle);
+  background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
 }
 
@@ -429,7 +433,7 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-tip-block {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
   padding-top: 1rem;
 }
 
@@ -574,13 +578,13 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 92%, transparent);
   padding-top: 1.25rem;
 }
 
 .teacher-board > * + * {
   margin-top: 1.25rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
   padding-top: 1.25rem;
 }
 

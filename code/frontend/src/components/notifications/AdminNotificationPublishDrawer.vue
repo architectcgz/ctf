@@ -342,7 +342,7 @@ async function handleUserSearch(): Promise<void> {
   padding: 0.45rem 0.75rem;
   font-size: 0.82rem;
   color: var(--color-text, #0f172a);
-  background: var(--color-bg-soft, #f8fafc);
+  background: var(--color-bg-soft, var(--color-bg-elevated, var(--color-bg-surface)));
   cursor: pointer;
 }
 
