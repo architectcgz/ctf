@@ -14,4 +14,17 @@ describe('AppLayout workspace shell', () => {
     expect(routerSource).toContain("contentLayout: 'bleed'")
     expect((routerSource.match(/contentLayout: 'bleed'/g) ?? []).length).toBeGreaterThanOrEqual(30)
   })
+
+  it('stretches full-bleed route roots so wide screens do not expose main shell gaps', () => {
+    expect(appLayoutSource).toContain('.workspace-page--bleed :deep(.workspace-route-root--bleed)')
+    expect(appLayoutSource).toContain('flex: 1 1 auto;')
+  })
+
+  it('removes vertical main padding for full-bleed routes instead of canceling it with negative top margins', () => {
+    expect(appLayoutSource).toContain('mainShellClass')
+    expect(appLayoutSource).toContain('workspace-main--bleed')
+    expect(appLayoutSource).toContain('padding-block: 0;')
+    expect(appLayoutSource).toContain('padding-inline: 0;')
+    expect(appLayoutSource).toContain('max-width: none;')
+  })
 })
