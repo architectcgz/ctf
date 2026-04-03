@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationDetail from '../NotificationDetail.vue'
+import notificationDetailSource from '../NotificationDetail.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 
 const notificationApiMocks = vi.hoisted(() => ({
@@ -112,5 +113,16 @@ describe('NotificationDetail', () => {
 
     expect(wrapper.text()).toContain('通知不存在')
     expect(wrapper.text()).toContain('返回通知列表')
+  })
+
+  it('uses a full-width detail surface instead of a centered outer card shell', () => {
+    expect(notificationDetailSource).toMatch(/\.notification-detail-shell\s*\{[\s\S]*width:\s*100%;/s)
+    expect(notificationDetailSource).not.toContain('width: min(72rem, 100%)')
+    expect(notificationDetailSource).toMatch(
+      /\.notification-detail-page\s*\{[\s\S]*background:\s*transparent;[\s\S]*\}/s
+    )
+    expect(notificationDetailSource).not.toMatch(
+      /\.notification-detail-page\s*\{[\s\S]*box-shadow:\s*0 20px 40px var\(--color-shadow-soft\);[\s\S]*\}/s
+    )
   })
 })
