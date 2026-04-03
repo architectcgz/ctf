@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-    go build -trimpath -ldflags="-s -w" -o /out/ctf-api ./cmd/server
+    go build -trimpath -ldflags="-s -w" -o /out/ctf-api ./cmd/api
 
 FROM alpine:3.22
 
