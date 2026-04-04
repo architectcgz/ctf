@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import type { ReviewArchiveManualReviewItemData, ReviewArchiveWriteupItemData } from '@/api/contracts'
 
+function submissionStatusLabel(status: ReviewArchiveWriteupItemData['submission_status']): string {
+  return status === 'published' || status === 'submitted' ? '已发布' : '草稿'
+}
+
+function visibilityStatusLabel(status: ReviewArchiveWriteupItemData['visibility_status']): string {
+  return status === 'hidden' ? '已隐藏' : '已公开'
+}
+
 defineProps<{
   writeups: ReviewArchiveWriteupItemData[]
   manualReviews: ReviewArchiveManualReviewItemData[]
@@ -13,7 +21,7 @@ defineProps<{
       <header class="archive-panel__header">
         <div>
           <div class="archive-panel__eyebrow">Writeups</div>
-          <h3 class="archive-panel__title">Writeup 与评阅</h3>
+          <h3 class="archive-panel__title">社区题解沉淀</h3>
         </div>
       </header>
       <div v-if="writeups.length === 0" class="archive-panel__empty">暂无 Writeup 记录。</div>
@@ -25,13 +33,12 @@ defineProps<{
         >
           <div class="reflection-item__head">
             <strong>{{ item.title }}</strong>
-            <span>{{ item.review_status }}</span>
+            <span>{{ item.is_recommended ? '推荐题解' : visibilityStatusLabel(item.visibility_status) }}</span>
           </div>
           <p class="reflection-item__subhead">{{ item.challenge_title }}</p>
-          <p v-if="item.review_comment" class="reflection-item__body">{{ item.review_comment }}</p>
           <div class="reflection-item__meta">
-            <span>{{ item.submission_status }}</span>
-            <span>{{ item.reviewer_name || '待评阅' }}</span>
+            <span>{{ submissionStatusLabel(item.submission_status) }}</span>
+            <span>{{ visibilityStatusLabel(item.visibility_status) }}</span>
             <span>{{ item.updated_at }}</span>
           </div>
         </article>

@@ -570,15 +570,12 @@ func (r *ReportRepository) ListStudentWriteups(ctx context.Context, userID int64
 			c.title AS challenge_title,
 			sw.title,
 			sw.submission_status,
-			sw.review_status,
-			sw.submitted_at,
-			sw.reviewed_at,
-			sw.review_comment,
-			sw.updated_at,
-			COALESCE(reviewer.name, reviewer.username, '') AS reviewer_name
+			sw.visibility_status,
+			sw.is_recommended,
+			sw.published_at,
+			sw.updated_at
 		FROM submission_writeups sw
 		JOIN challenges c ON c.id = sw.challenge_id
-		LEFT JOIN users reviewer ON reviewer.id = sw.reviewed_by
 		WHERE sw.user_id = ?
 		ORDER BY sw.updated_at DESC, sw.id DESC
 	`, userID).Scan(&rows).Error

@@ -21,6 +21,10 @@ const teacherApiMocks = vi.hoisted(() => ({
   getStudentTimeline: vi.fn(),
   getStudentEvidence: vi.fn(),
   getTeacherWriteupSubmissions: vi.fn(),
+  recommendTeacherCommunityWriteup: vi.fn(),
+  unrecommendTeacherCommunityWriteup: vi.fn(),
+  hideTeacherCommunityWriteup: vi.fn(),
+  restoreTeacherCommunityWriteup: vi.fn(),
   getTeacherManualReviewSubmissions: vi.fn(),
   getTeacherManualReviewSubmission: vi.fn(),
   reviewTeacherManualReviewSubmission: vi.fn(),
@@ -160,8 +164,10 @@ describe('TeacherStudentAnalysis', () => {
           challenge_title: 'web-1',
           title: '从回显到 flag',
           content_preview: '先看登录回显，再确定注入点。',
-          submission_status: 'submitted',
-          review_status: 'excellent',
+          submission_status: 'published',
+          visibility_status: 'visible',
+          is_recommended: true,
+          published_at: '2026-03-11T10:50:00Z',
           updated_at: '2026-03-11T11:00:00Z',
         },
       ],
@@ -214,6 +220,58 @@ describe('TeacherStudentAnalysis', () => {
       submitted_at: '2026-03-11T12:00:00Z',
       updated_at: '2026-03-11T12:20:00Z',
     })
+    teacherApiMocks.recommendTeacherCommunityWriteup.mockResolvedValue({
+      id: 'writeup-1',
+      user_id: 'stu-1',
+      challenge_id: '11',
+      title: '从回显到 flag',
+      content: '完整题解',
+      submission_status: 'published',
+      visibility_status: 'visible',
+      is_recommended: true,
+      published_at: '2026-03-11T10:50:00Z',
+      created_at: '2026-03-11T10:40:00Z',
+      updated_at: '2026-03-11T11:00:00Z',
+    })
+    teacherApiMocks.unrecommendTeacherCommunityWriteup.mockResolvedValue({
+      id: 'writeup-1',
+      user_id: 'stu-1',
+      challenge_id: '11',
+      title: '从回显到 flag',
+      content: '完整题解',
+      submission_status: 'published',
+      visibility_status: 'visible',
+      is_recommended: false,
+      published_at: '2026-03-11T10:50:00Z',
+      created_at: '2026-03-11T10:40:00Z',
+      updated_at: '2026-03-11T11:00:00Z',
+    })
+    teacherApiMocks.hideTeacherCommunityWriteup.mockResolvedValue({
+      id: 'writeup-1',
+      user_id: 'stu-1',
+      challenge_id: '11',
+      title: '从回显到 flag',
+      content: '完整题解',
+      submission_status: 'published',
+      visibility_status: 'hidden',
+      is_recommended: false,
+      published_at: '2026-03-11T10:50:00Z',
+      created_at: '2026-03-11T10:40:00Z',
+      updated_at: '2026-03-11T11:00:00Z',
+    })
+    teacherApiMocks.restoreTeacherCommunityWriteup.mockResolvedValue({
+      id: 'writeup-1',
+      user_id: 'stu-1',
+      challenge_id: '11',
+      title: '从回显到 flag',
+      content: '完整题解',
+      submission_status: 'published',
+      visibility_status: 'visible',
+      is_recommended: false,
+      published_at: '2026-03-11T10:50:00Z',
+      created_at: '2026-03-11T10:40:00Z',
+      updated_at: '2026-03-11T11:00:00Z',
+    })
     teacherApiMocks.exportStudentReviewArchive.mockResolvedValue({
       report_id: 'report-1',
       status: 'processing',
@@ -241,15 +299,17 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.text()).toContain('延长实例有效期')
     expect(wrapper.text()).toContain('第 2 次提交命中 Flag')
     expect(wrapper.text()).toContain('攻防证据链')
-    expect(wrapper.text()).toContain('Writeup 状态')
     expect(wrapper.text()).toContain('人工审核题')
     expect(wrapper.text()).toContain('misc-essay')
     expect(wrapper.text()).toContain('从回显到 flag')
-    expect(wrapper.text()).toContain('优秀')
     expect(wrapper.text()).toContain('总事件数')
     expect(wrapper.text()).toContain('5')
     expect(wrapper.text()).toContain('利用请求')
     expect(wrapper.text()).toContain('POST /login')
+    expect(wrapper.text()).toContain('社区题解状态')
+    expect(wrapper.text()).toContain('推荐题解')
+    expect(wrapper.text()).toContain('已公开')
+    expect(wrapper.text()).toContain('取消推荐')
 
     expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
     expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
@@ -260,6 +320,27 @@ describe('TeacherStudentAnalysis', () => {
       student_id: 'stu-1',
       page_size: 6,
     })
+  })
+
+  it('应该支持隐藏社区题解', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const hideButton = wrapper.findAll('button').find((button) => button.text().includes('隐藏题解'))
+    expect(hideButton).toBeDefined()
+
+    await hideButton?.trigger('click')
+    await flushPromises()
+
+    expect(teacherApiMocks.hideTeacherCommunityWriteup).toHaveBeenCalledWith('writeup-1')
+    expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledTimes(2)
   })
 
   it('应该支持包含百分号的班级名路由参数', async () => {

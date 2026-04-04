@@ -11,7 +11,7 @@ import (
 	"ctf-platform/internal/module/challenge/testsupport"
 )
 
-func TestWriteupServiceUpsertSubmissionAndReview(t *testing.T) {
+func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()
 	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
@@ -72,49 +72,204 @@ func TestWriteupServiceUpsertSubmissionAndReview(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UpsertSubmission draft error = %v", err)
 	}
-	if draft.SubmissionStatus != model.SubmissionWriteupStatusDraft || draft.SubmittedAt != nil {
+	if draft.SubmissionStatus != model.SubmissionWriteupStatusDraft || draft.PublishedAt != nil {
 		t.Fatalf("unexpected draft submission: %+v", draft)
 	}
+	if draft.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+		t.Fatalf("unexpected draft visibility status: %+v", draft)
+	}
 
-	submitted, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+	if _, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+		Title:            "未解题直接发布",
+		Content:          "这一步应该被拦住",
+		SubmissionStatus: model.SubmissionWriteupStatusPublished,
+	}); err == nil {
+		t.Fatalf("expected publish before solve to be forbidden")
+	}
+
+	solvedSubmission := &model.Submission{
+		UserID:       student.ID,
+		ChallengeID:  challengeItem.ID,
+		IsCorrect:    true,
+		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		Score:        challengeItem.Points,
+		SubmittedAt:  now,
+		UpdatedAt:    now,
+	}
+	if err := db.Create(solvedSubmission).Error; err != nil {
+		t.Fatalf("create solved submission: %v", err)
+	}
+
+	published, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "正式版解题记录",
 		Content:          "1. 枚举接口\n2. 找到注入点\n3. 读取 flag",
-		SubmissionStatus: model.SubmissionWriteupStatusSubmitted,
+		SubmissionStatus: model.SubmissionWriteupStatusPublished,
 	})
 	if err != nil {
-		t.Fatalf("UpsertSubmission submitted error = %v", err)
+		t.Fatalf("UpsertSubmission published error = %v", err)
 	}
-	if submitted.SubmissionStatus != model.SubmissionWriteupStatusSubmitted || submitted.SubmittedAt == nil {
-		t.Fatalf("unexpected submitted writeup: %+v", submitted)
+	if published.SubmissionStatus != model.SubmissionWriteupStatusPublished || published.PublishedAt == nil {
+		t.Fatalf("unexpected published writeup: %+v", published)
 	}
-	if submitted.ReviewStatus != model.SubmissionWriteupReviewPending {
-		t.Fatalf("unexpected review status after submit: %+v", submitted)
-	}
-
-	reviewed, err := service.ReviewSubmission(submitted.ID, teacher.ID, model.RoleTeacher, &dto.ReviewSubmissionWriteupReq{
-		ReviewStatus:  model.SubmissionWriteupReviewExcellent,
-		ReviewComment: "链路完整，可以作为班级优秀样例。",
-	})
-	if err != nil {
-		t.Fatalf("ReviewSubmission() error = %v", err)
-	}
-	if reviewed.ReviewStatus != model.SubmissionWriteupReviewExcellent || reviewed.ReviewedAt == nil {
-		t.Fatalf("unexpected reviewed submission: %+v", reviewed)
+	if published.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+		t.Fatalf("unexpected published visibility status: %+v", published)
 	}
 
 	mine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
 	if err != nil {
 		t.Fatalf("GetMySubmission() error = %v", err)
 	}
-	if mine.ReviewComment != "链路完整，可以作为班级优秀样例。" {
-		t.Fatalf("unexpected my submission review comment: %+v", mine)
+	if mine.PublishedAt == nil || mine.SubmissionStatus != model.SubmissionWriteupStatusPublished {
+		t.Fatalf("unexpected my published submission payload: %+v", mine)
 	}
 
-	detail, err := queryService.GetTeacherSubmission(submitted.ID, teacher.ID, model.RoleTeacher)
+	detail, err := queryService.GetTeacherSubmission(published.ID, teacher.ID, model.RoleTeacher)
 	if err != nil {
 		t.Fatalf("GetTeacherSubmission() error = %v", err)
 	}
 	if detail.StudentUsername != student.Username || detail.ChallengeTitle != challengeItem.Title {
 		t.Fatalf("unexpected teacher detail: %+v", detail)
+	}
+	if detail.PublishedAt == nil || detail.IsRecommended {
+		t.Fatalf("unexpected teacher community detail: %+v", detail)
+	}
+}
+
+func TestWriteupServiceCommunityModerationAndOfficialRecommendation(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	admin := &model.User{Username: "admin_a", Role: model.RoleAdmin, Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	if err := admin.SetPassword("Password123"); err != nil {
+		t.Fatalf("set admin password: %v", err)
+	}
+	if err := db.Create(admin).Error; err != nil {
+		t.Fatalf("create admin: %v", err)
+	}
+
+	teacher := &model.User{Username: "teacher_a", Role: model.RoleTeacher, ClassName: "ClassA", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	if err := teacher.SetPassword("Password123"); err != nil {
+		t.Fatalf("set teacher password: %v", err)
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+
+	otherTeacher := &model.User{Username: "teacher_b", Role: model.RoleTeacher, ClassName: "ClassB", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	if err := otherTeacher.SetPassword("Password123"); err != nil {
+		t.Fatalf("set other teacher password: %v", err)
+	}
+	if err := db.Create(otherTeacher).Error; err != nil {
+		t.Fatalf("create other teacher: %v", err)
+	}
+
+	student := &model.User{Username: "student_a", Role: model.RoleStudent, ClassName: "ClassA", Status: model.UserStatusActive, CreatedAt: now, UpdatedAt: now}
+	if err := student.SetPassword("Password123"); err != nil {
+		t.Fatalf("set student password: %v", err)
+	}
+	if err := db.Create(student).Error; err != nil {
+		t.Fatalf("create student: %v", err)
+	}
+
+	challengeItem := &model.Challenge{
+		Title:       "web-302",
+		Description: "desc",
+		Category:    model.DimensionWeb,
+		Difficulty:  model.ChallengeDifficultyEasy,
+		Points:      100,
+		ImageID:     1,
+		Status:      model.ChallengeStatusPublished,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := db.Create(challengeItem).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	service := NewWriteupService(repo)
+
+	if _, err := service.Upsert(challengeItem.ID, admin.ID, &dto.UpsertChallengeWriteupReq{
+		Title:      "Official",
+		Content:    "official content",
+		Visibility: model.WriteupVisibilityPublic,
+	}); err != nil {
+		t.Fatalf("Upsert official writeup() error = %v", err)
+	}
+
+	if err := db.Create(&model.Submission{
+		UserID:       student.ID,
+		ChallengeID:  challengeItem.ID,
+		IsCorrect:    true,
+		ReviewStatus: model.SubmissionReviewStatusNotRequired,
+		Score:        challengeItem.Points,
+		SubmittedAt:  now,
+		UpdatedAt:    now,
+	}).Error; err != nil {
+		t.Fatalf("create solved submission: %v", err)
+	}
+
+	published, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
+		Title:            "社区题解",
+		Content:          "community content",
+		SubmissionStatus: model.SubmissionWriteupStatusPublished,
+	})
+	if err != nil {
+		t.Fatalf("UpsertSubmission published error = %v", err)
+	}
+
+	official, err := service.RecommendOfficial(challengeItem.ID, admin.ID)
+	if err != nil {
+		t.Fatalf("RecommendOfficial() error = %v", err)
+	}
+	if !official.IsRecommended {
+		t.Fatalf("expected official writeup to be recommended, got %+v", official)
+	}
+
+	community, err := service.RecommendCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("RecommendCommunity() error = %v", err)
+	}
+	if !community.IsRecommended {
+		t.Fatalf("expected community writeup to be recommended, got %+v", community)
+	}
+
+	if _, err := service.HideCommunity(published.ID, otherTeacher.ID, model.RoleTeacher); err == nil {
+		t.Fatalf("expected teacher from another class to be forbidden")
+	}
+
+	hidden, err := service.HideCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("HideCommunity() error = %v", err)
+	}
+	if hidden.VisibilityStatus != model.SubmissionWriteupVisibilityHidden {
+		t.Fatalf("expected hidden community writeup, got %+v", hidden)
+	}
+
+	restored, err := service.RestoreCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("RestoreCommunity() error = %v", err)
+	}
+	if restored.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+		t.Fatalf("expected restored community writeup, got %+v", restored)
+	}
+
+	unrecommendedCommunity, err := service.UnrecommendCommunity(published.ID, teacher.ID, model.RoleTeacher)
+	if err != nil {
+		t.Fatalf("UnrecommendCommunity() error = %v", err)
+	}
+	if unrecommendedCommunity.IsRecommended {
+		t.Fatalf("expected community writeup recommendation to be cleared, got %+v", unrecommendedCommunity)
+	}
+
+	unrecommendedOfficial, err := service.UnrecommendOfficial(challengeItem.ID, admin.ID)
+	if err != nil {
+		t.Fatalf("UnrecommendOfficial() error = %v", err)
+	}
+	if unrecommendedOfficial.IsRecommended {
+		t.Fatalf("expected official writeup recommendation to be cleared, got %+v", unrecommendedOfficial)
 	}
 }

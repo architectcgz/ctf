@@ -7,6 +7,8 @@ import {
   exportStudentReviewArchive,
   getClasses,
   getClassStudents,
+  hideTeacherCommunityWriteup,
+  recommendTeacherCommunityWriteup,
   getTeacherManualReviewSubmission,
   getTeacherManualReviewSubmissions,
   getStudentEvidence,
@@ -15,7 +17,9 @@ import {
   getStudentSkillProfile,
   getStudentTimeline,
   getTeacherWriteupSubmissions,
+  restoreTeacherCommunityWriteup,
   reviewTeacherManualReviewSubmission,
+  unrecommendTeacherCommunityWriteup,
 } from '@/api/teacher'
 import type {
   MyProgressData,
@@ -145,6 +149,15 @@ async function loadStudentDetails(studentId = studentIdFromRoute()): Promise<voi
   }
 }
 
+async function refreshWriteupSubmissions(studentId = studentIdFromRoute()): Promise<void> {
+  if (!studentId) {
+    writeupSubmissions.value = []
+    return
+  }
+  const nextWriteups = await getTeacherWriteupSubmissions({ student_id: studentId, page_size: 6 })
+  writeupSubmissions.value = nextWriteups.list
+}
+
 async function openManualReview(submissionId: string): Promise<void> {
   manualReviewLoading.value = true
   try {
@@ -176,6 +189,31 @@ async function reviewManualReview(payload: {
   } finally {
     manualReviewSaving.value = false
   }
+}
+
+async function moderateWriteup(payload: {
+  submissionId: string
+  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
+}): Promise<void> {
+  switch (payload.action) {
+    case 'recommend':
+      await recommendTeacherCommunityWriteup(payload.submissionId)
+      toast.success('已设为推荐题解')
+      break
+    case 'unrecommend':
+      await unrecommendTeacherCommunityWriteup(payload.submissionId)
+      toast.success('已取消推荐题解')
+      break
+    case 'hide':
+      await hideTeacherCommunityWriteup(payload.submissionId)
+      toast.success('已隐藏社区题解')
+      break
+    case 'restore':
+      await restoreTeacherCommunityWriteup(payload.submissionId)
+      toast.success('已恢复社区题解')
+      break
+  }
+  await refreshWriteupSubmissions()
 }
 
 async function initialize(): Promise<void> {
@@ -328,6 +366,7 @@ onMounted(() => {
     @select-student="selectStudent"
     @open-challenge="openChallenge"
     @open-manual-review="openManualReview"
+    @moderate-writeup="moderateWriteup"
     @review-manual-review="reviewManualReview"
   />
 </template>

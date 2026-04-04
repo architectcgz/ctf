@@ -810,7 +810,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var draftSubmission dto.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &draftSubmission)
-	if draftSubmission.SubmissionStatus != model.SubmissionWriteupStatusDraft || draftSubmission.SubmittedAt != nil {
+	if draftSubmission.SubmissionStatus != model.SubmissionWriteupStatusDraft || draftSubmission.PublishedAt != nil {
 		t.Fatalf("unexpected draft submission response: %+v", draftSubmission)
 	}
 
@@ -832,7 +832,7 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var submittedWriteup dto.SubmissionWriteupResp
 	decodeFullRouterData(t, resp, &submittedWriteup)
-	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusSubmitted || submittedWriteup.SubmittedAt == nil {
+	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusPublished || submittedWriteup.PublishedAt == nil {
 		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
 	}
 
@@ -886,18 +886,6 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	decodeFullRouterData(t, resp, &teacherSubmissionDetail)
 	if teacherSubmissionDetail.StudentUsername != env.peerStudent.Username || teacherSubmissionDetail.Content == "" {
 		t.Fatalf("unexpected teacher submission detail: %+v", teacherSubmissionDetail)
-	}
-
-	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/teacher/writeup-submissions/%d/review", submittedWriteup.ID), map[string]any{
-		"review_status":  model.SubmissionWriteupReviewExcellent,
-		"review_comment": "利用链完整，建议加入优秀作业样例。",
-	}, teacherHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var reviewedSubmission dto.SubmissionWriteupResp
-	decodeFullRouterData(t, resp, &reviewedSubmission)
-	if reviewedSubmission.ReviewStatus != model.SubmissionWriteupReviewExcellent || reviewedSubmission.ReviewedAt == nil {
-		t.Fatalf("unexpected reviewed submission response: %+v", reviewedSubmission)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
@@ -1311,6 +1299,170 @@ func TestFullRouter_AWDTrafficAdminStateMatrix(t *testing.T) {
 	}
 	if page.List[0].Method != http.MethodGet || page.List[0].Path != "/ping" {
 		t.Fatalf("unexpected traffic event item: %+v", page.List[0])
+	}
+}
+
+func TestFullRouter_ChallengeWriteupsUseCommunitySemantics(t *testing.T) {
+	env := newFullRouterTestEnv(t)
+
+	adminHeaders := bearerHeaders(loginForToken(t, env.router, env.admin.Username, env.adminPwd))
+	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
+	studentHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
+
+	resp := performFullRouterRequest(t, env.router, http.MethodPost, "/api/v1/authoring/challenges", map[string]any{
+		"title":       "Community Writeup Challenge",
+		"description": "community writeup semantics",
+		"category":    model.DimensionWeb,
+		"difficulty":  model.ChallengeDifficultyEasy,
+		"points":      80,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var createdChallenge dto.ChallengeResp
+	decodeFullRouterData(t, resp, &createdChallenge)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
+		"title":      "Official Solution",
+		"content":    "official content",
+		"visibility": model.WriteupVisibilityPublic,
+	}, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	if err := env.db.Model(&model.Challenge{}).
+		Where("id = ?", createdChallenge.ID).
+		Update("status", model.ChallengeStatusPublished).Error; err != nil {
+		t.Fatalf("set challenge published: %v", err)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var officialPayload map[string]any
+	decodeFullRouterData(t, resp, &officialPayload)
+	if _, ok := officialPayload["is_recommended"]; !ok {
+		t.Fatalf("expected official writeup payload to expose is_recommended, got %+v", officialPayload)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
+		"title":             "我的草稿",
+		"content":           "先记入口，再写利用链。",
+		"submission_status": model.SubmissionWriteupStatusDraft,
+	}, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var draftPayload map[string]any
+	decodeFullRouterData(t, resp, &draftPayload)
+	if _, ok := draftPayload["review_status"]; ok {
+		t.Fatalf("expected community writeup payload to drop review_status, got %+v", draftPayload)
+	}
+
+	createPracticeSubmission(t, env, env.peerStudent.ID, createdChallenge.ID, 80)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
+		"title":             "我的题解",
+		"content":           "1. 找入口 2. 构造 payload 3. 读取 flag",
+		"submission_status": "published",
+	}, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var publishedPayload map[string]any
+	decodeFullRouterData(t, resp, &publishedPayload)
+	if publishedPayload["submission_status"] != "published" {
+		t.Fatalf("expected published submission status, got %+v", publishedPayload)
+	}
+	if _, ok := publishedPayload["published_at"]; !ok {
+		t.Fatalf("expected published writeup payload to expose published_at, got %+v", publishedPayload)
+	}
+	submissionID := int64(publishedPayload["id"].(float64))
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup/recommend", createdChallenge.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var recommendedOfficial dto.AdminChallengeWriteupResp
+	decodeFullRouterData(t, resp, &recommendedOfficial)
+	if !recommendedOfficial.IsRecommended {
+		t.Fatalf("expected official writeup to become recommended, got %+v", recommendedOfficial)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/recommend", submissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var recommendedCommunity dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &recommendedCommunity)
+	if !recommendedCommunity.IsRecommended {
+		t.Fatalf("expected community writeup to become recommended, got %+v", recommendedCommunity)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/hide", submissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var hiddenCommunity dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &hiddenCommunity)
+	if hiddenCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityHidden {
+		t.Fatalf("expected hidden community writeup, got %+v", hiddenCommunity)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/solutions/community", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var hiddenCommunityList struct {
+		List []map[string]any `json:"list"`
+	}
+	decodeFullRouterData(t, resp, &hiddenCommunityList)
+	if len(hiddenCommunityList.List) != 0 {
+		t.Fatalf("expected hidden community writeup to disappear from community list, got %+v", hiddenCommunityList)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/restore", submissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var restoredCommunity dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &restoredCommunity)
+	if restoredCommunity.VisibilityStatus != model.SubmissionWriteupVisibilityVisible {
+		t.Fatalf("expected restored community writeup, got %+v", restoredCommunity)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/recommend", submissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/solutions/recommended", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var recommendedList struct {
+		List []map[string]any `json:"list"`
+	}
+	decodeFullRouterData(t, resp, &recommendedList)
+	if len(recommendedList.List) != 2 {
+		t.Fatalf("expected recommended solutions list, got %+v", recommendedList)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/solutions/community", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var communityList struct {
+		List []map[string]any `json:"list"`
+	}
+	decodeFullRouterData(t, resp, &communityList)
+	if len(communityList.List) != 1 {
+		t.Fatalf("expected exactly one community solution, got %+v", communityList)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/teacher/community-writeups/%d/recommend", submissionID), nil, teacherHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var unrecommendedCommunity dto.SubmissionWriteupResp
+	decodeFullRouterData(t, resp, &unrecommendedCommunity)
+	if unrecommendedCommunity.IsRecommended {
+		t.Fatalf("expected community writeup recommendation to be cleared, got %+v", unrecommendedCommunity)
+	}
+
+	resp = performFullRouterRequest(t, env.router, http.MethodDelete, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup/recommend", createdChallenge.ID), nil, adminHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+
+	var unrecommendedOfficial dto.AdminChallengeWriteupResp
+	decodeFullRouterData(t, resp, &unrecommendedOfficial)
+	if unrecommendedOfficial.IsRecommended {
+		t.Fatalf("expected official writeup recommendation to be cleared, got %+v", unrecommendedOfficial)
 	}
 }
 
