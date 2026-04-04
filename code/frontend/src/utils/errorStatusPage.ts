@@ -9,7 +9,7 @@ const ERROR_STATUS_ROUTE_MAP: Record<number, string> = {
   504: '/504',
 }
 
-const AUTH_FLOW_PREFIXES = ['/auth/login', '/auth/register', '/auth/cas/login', '/auth/cas/callback']
+const AUTH_FLOW_PREFIXES = ['/auth/login', '/auth/register']
 
 export function resolveErrorStatusPage(status: number | undefined): string | null {
   if (!status) return null

@@ -14,21 +14,6 @@ export interface AuthTokens {
   expires_in: number
 }
 
-export interface CASStatusResponse {
-  provider: 'cas'
-  enabled: boolean
-  configured: boolean
-  auto_provision: boolean
-  login_path: string
-  callback_path: string
-}
-
-export interface CASLoginResponse {
-  provider: 'cas'
-  redirect_url: string
-  callback_url: string
-}
-
 export interface LoginResponse extends AuthTokens {
   user: AuthUser
 }
@@ -50,30 +35,6 @@ export async function register(data: RegisterRequest): Promise<LoginResponse> {
 
 export async function refreshToken(): Promise<AuthTokens> {
   return request<AuthTokens>({ method: 'POST', url: '/auth/refresh', data: {} })
-}
-
-export async function getCASStatus(): Promise<CASStatusResponse> {
-  return request<CASStatusResponse>({
-    method: 'GET',
-    url: '/auth/cas/status',
-    suppressErrorToast: true,
-  })
-}
-
-export async function getCASLogin(): Promise<CASLoginResponse> {
-  return request<CASLoginResponse>({ method: 'GET', url: '/auth/cas/login' })
-}
-
-export async function completeCASLogin(
-  ticket: string,
-  options?: { suppressErrorToast?: boolean }
-): Promise<LoginResponse> {
-  return request<LoginResponse>({
-    method: 'GET',
-    url: '/auth/cas/callback',
-    params: { ticket },
-    suppressErrorToast: options?.suppressErrorToast,
-  })
 }
 
 export async function logout(): Promise<void> {

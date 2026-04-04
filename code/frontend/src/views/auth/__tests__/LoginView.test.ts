@@ -8,36 +8,9 @@ const authMocks = vi.hoisted(() => ({
   login: vi.fn(),
 }))
 
-const casMocks = vi.hoisted(() => ({
-  casStatusValue: {
-    provider: 'cas' as const,
-    enabled: true,
-    configured: true,
-    auto_provision: false,
-    login_path: '/api/v1/auth/cas/login',
-    callback_path: '/api/v1/auth/cas/callback',
-  },
-  casRedirectingValue: false,
-  fetchCASStatus: vi.fn().mockResolvedValue(undefined),
-  beginCASLogin: vi.fn().mockResolvedValue(undefined),
-}))
-
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => authMocks,
 }))
-vi.mock('@/composables/useCASAuth', async () => {
-  const { computed, ref } = await import('vue')
-  return {
-    useCASAuth: () => ({
-      casStatus: ref(casMocks.casStatusValue),
-      casLoading: ref(false),
-      casReady: computed(() => Boolean(casMocks.casStatusValue.enabled && casMocks.casStatusValue.configured)),
-      casRedirecting: ref(casMocks.casRedirectingValue),
-      fetchCASStatus: casMocks.fetchCASStatus,
-      beginCASLogin: casMocks.beginCASLogin,
-    }),
-  }
-})
 vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
   useRoute: () => ({
@@ -50,8 +23,6 @@ vi.mock('vue-router', () => ({
 describe('LoginView', () => {
   beforeEach(() => {
     authMocks.login.mockReset()
-    casMocks.fetchCASStatus.mockClear()
-    casMocks.beginCASLogin.mockClear()
   })
 
   function mountLoginView() {
@@ -86,7 +57,7 @@ describe('LoginView', () => {
     })
   }
 
-  it('应该渲染 CAS 登录入口并支持触发跳转', async () => {
+  it('不应渲染 CAS 登录入口', async () => {
     const wrapper = mountLoginView()
 
     await flushPromises()
@@ -95,17 +66,8 @@ describe('LoginView', () => {
     expect(wrapper.text()).toContain('训练空间')
     expect(wrapper.text()).toContain('教学协同')
     expect(wrapper.text()).toContain('系统值守')
-    expect(casMocks.fetchCASStatus).toHaveBeenCalledTimes(1)
-    expect(wrapper.text()).toContain('CAS 统一认证')
-    expect(wrapper.text()).toContain('使用 CAS 统一认证登录')
-
-    const casButton = wrapper
-      .findAll('button')
-      .find((button) => button.text().includes('使用 CAS 统一认证登录'))
-    expect(casButton).toBeTruthy()
-
-    await casButton!.trigger('click')
-    expect(casMocks.beginCASLogin).toHaveBeenCalledWith('/dashboard')
+    expect(wrapper.text()).not.toContain('CAS 统一认证')
+    expect(wrapper.text()).not.toContain('使用 CAS 统一认证登录')
   })
 
   it('用户名输入框按回车时应触发登录', async () => {

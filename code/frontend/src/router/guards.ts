@@ -13,7 +13,7 @@ import { redirectToErrorStatusPage } from '@/utils/errorStatusPage'
 NProgress.configure({ showSpinner: false })
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {
-  return to.path === '/login' || to.path === '/register' || to.path === '/login/cas/callback'
+  return to.path === '/login' || to.path === '/register'
 }
 
 function isAuthLandingRoute(to: RouteLocationNormalized): boolean {
