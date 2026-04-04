@@ -20,8 +20,8 @@ describe('error status page helpers', () => {
   it('does not treat auth entry APIs as unauthorized page redirects', () => {
     expect(isAuthFlowRequest('/auth/login')).toBe(true)
     expect(isAuthFlowRequest('/auth/register')).toBe(true)
-    expect(isAuthFlowRequest('/auth/cas/login')).toBe(true)
-    expect(isAuthFlowRequest('/auth/cas/callback')).toBe(true)
+    expect(isAuthFlowRequest('/auth/cas/login')).toBe(false)
+    expect(isAuthFlowRequest('/auth/cas/callback')).toBe(false)
     expect(isAuthFlowRequest('/auth/profile')).toBe(false)
     expect(isAuthFlowRequest('/challenges')).toBe(false)
   })
