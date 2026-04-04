@@ -72,6 +72,9 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		ReleaseAt:              item.ReleaseAt,
 		IsReleased:             true,
 		RequiresSpoilerWarning: !isSolved,
+		IsRecommended:          item.IsRecommended,
+		RecommendedAt:          item.RecommendedAt,
+		RecommendedBy:          item.RecommendedBy,
 		CreatedAt:              item.CreatedAt,
 		UpdatedAt:              item.UpdatedAt,
 	}, nil
@@ -96,6 +99,64 @@ func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.Submis
 		return nil, err
 	}
 	return domain.SubmissionWriteupRespFromModel(item), nil
+}
+
+func (s *WriteupService) ListRecommendedSolutions(userID, challengeID int64) (*dto.PageResult, error) {
+	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+		return nil, err
+	}
+
+	items, err := s.repo.ListRecommendedSolutionsByChallengeID(challengeID, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	respItems := make([]*dto.RecommendedChallengeSolutionResp, 0, len(items))
+	for _, item := range items {
+		respItems = append(respItems, domain.RecommendedSolutionRespFromRecord(item))
+	}
+	return &dto.PageResult{
+		List:  respItems,
+		Total: int64(len(respItems)),
+		Page:  1,
+		Size:  len(respItems),
+	}, nil
+}
+
+func (s *WriteupService) ListCommunitySolutions(userID, challengeID int64, query *dto.CommunityChallengeSolutionQuery) (*dto.PageResult, error) {
+	if err := s.ensureSolvedChallengeVisible(userID, challengeID); err != nil {
+		return nil, err
+	}
+
+	normalized := &dto.CommunityChallengeSolutionQuery{Page: 1, Size: 20}
+	if query != nil {
+		normalized = &dto.CommunityChallengeSolutionQuery{
+			Q:    query.Q,
+			Sort: query.Sort,
+			Page: query.Page,
+			Size: query.Size,
+		}
+		if normalized.Page <= 0 {
+			normalized.Page = 1
+		}
+		if normalized.Size <= 0 {
+			normalized.Size = 20
+		}
+	}
+
+	items, total, err := s.repo.ListCommunitySolutionsByChallengeID(challengeID, normalized)
+	if err != nil {
+		return nil, err
+	}
+	respItems := make([]*dto.CommunityChallengeSolutionResp, 0, len(items))
+	for _, item := range items {
+		respItems = append(respItems, domain.CommunitySolutionRespFromRecord(item))
+	}
+	return &dto.PageResult{
+		List:  respItems,
+		Total: total,
+		Page:  normalized.Page,
+		Size:  normalized.Size,
+	}, nil
 }
 
 func (s *WriteupService) ListTeacherSubmissions(requesterID int64, requesterRole string, query *dto.TeacherSubmissionWriteupQuery) (*dto.PageResult, error) {
@@ -190,6 +251,27 @@ func ensureTeacherCanAccessQueryRecord(
 		return err
 	}
 	if requester.ClassName == "" || requester.ClassName != record.ClassName {
+		return errcode.ErrForbidden
+	}
+	return nil
+}
+
+func (s *WriteupService) ensureSolvedChallengeVisible(userID, challengeID int64) error {
+	challengeItem, err := s.repo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errcode.ErrChallengeNotFound
+		}
+		return err
+	}
+	if challengeItem.Status != model.ChallengeStatusPublished {
+		return errcode.ErrChallengeNotPublish
+	}
+	isSolved, err := s.repo.GetSolvedStatus(userID, challengeID)
+	if err != nil {
+		return err
+	}
+	if !isSolved {
 		return errcode.ErrForbidden
 	}
 	return nil

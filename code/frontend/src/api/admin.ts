@@ -482,6 +482,9 @@ interface RawAdminChallengeWriteupData {
   visibility: WriteupVisibility
   release_at?: string | null
   created_by?: string | number | null
+  is_recommended?: boolean
+  recommended_at?: string | null
+  recommended_by?: string | number | null
   created_at: string
   updated_at: string
 }
@@ -605,6 +608,9 @@ function normalizeAdminChallengeWriteup(
     visibility: item.visibility,
     release_at: item.release_at || undefined,
     created_by: item.created_by == null ? undefined : String(item.created_by),
+    is_recommended: item.is_recommended ?? false,
+    recommended_at: item.recommended_at || undefined,
+    recommended_by: item.recommended_by == null ? undefined : String(item.recommended_by),
     created_at: item.created_at,
     updated_at: item.updated_at,
   }
@@ -1449,6 +1455,22 @@ export async function deleteChallengeWriteup(id: string) {
     method: 'DELETE',
     url: `/authoring/challenges/${encodeURIComponent(id)}/writeup`,
   })
+}
+
+export async function recommendChallengeWriteup(id: string): Promise<AdminChallengeWriteupData> {
+  const response = await request<RawAdminChallengeWriteupData>({
+    method: 'POST',
+    url: `/authoring/challenges/${encodeURIComponent(id)}/writeup/recommend`,
+  })
+  return normalizeAdminChallengeWriteup(response)
+}
+
+export async function unrecommendChallengeWriteup(id: string): Promise<AdminChallengeWriteupData> {
+  const response = await request<RawAdminChallengeWriteupData>({
+    method: 'DELETE',
+    url: `/authoring/challenges/${encodeURIComponent(id)}/writeup/recommend`,
+  })
+  return normalizeAdminChallengeWriteup(response)
 }
 
 export async function getChallengeTopology(id: string): Promise<ChallengeTopologyData | null> {

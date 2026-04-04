@@ -81,12 +81,15 @@ export interface ChallengeWriteupData {
   release_at?: ISODateTime
   is_released: boolean
   requires_spoiler_warning: boolean
+  is_recommended?: boolean
+  recommended_at?: ISODateTime
+  recommended_by?: ID
   created_at: ISODateTime
   updated_at: ISODateTime
 }
 
-export type SubmissionWriteupStatus = 'draft' | 'submitted'
-export type SubmissionWriteupReviewStatus = 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+export type SubmissionWriteupStatus = 'draft' | 'published' | 'submitted'
+export type SubmissionWriteupVisibilityStatus = 'visible' | 'hidden'
 
 export interface SubmissionWriteupData {
   id: ID
@@ -96,12 +99,40 @@ export interface SubmissionWriteupData {
   title: string
   content: string
   submission_status: SubmissionWriteupStatus
-  review_status: SubmissionWriteupReviewStatus
-  submitted_at?: ISODateTime
-  reviewed_by?: ID
-  reviewed_at?: ISODateTime
-  review_comment?: string
+  visibility_status?: SubmissionWriteupVisibilityStatus
+  is_recommended?: boolean
+  recommended_at?: ISODateTime
+  recommended_by?: ID
+  published_at?: ISODateTime
   created_at: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface RecommendedChallengeSolutionData {
+  id: ID
+  source_type: 'official' | 'community'
+  source_id: ID
+  challenge_id: ID
+  title: string
+  content: string
+  author_name: string
+  is_recommended: boolean
+  recommended_at?: ISODateTime
+  updated_at: ISODateTime
+}
+
+export interface CommunityChallengeSolutionData {
+  id: ID
+  challenge_id: ID
+  user_id: ID
+  title: string
+  content: string
+  content_preview: string
+  author_name: string
+  submission_status: SubmissionWriteupStatus
+  visibility_status: SubmissionWriteupVisibilityStatus
+  is_recommended: boolean
+  published_at?: ISODateTime
   updated_at: ISODateTime
 }
 
@@ -116,9 +147,9 @@ export interface TeacherSubmissionWriteupItemData {
   title: string
   content_preview: string
   submission_status: SubmissionWriteupStatus
-  review_status: SubmissionWriteupReviewStatus
-  submitted_at?: ISODateTime
-  reviewed_at?: ISODateTime
+  visibility_status: SubmissionWriteupVisibilityStatus
+  is_recommended: boolean
+  published_at?: ISODateTime
   updated_at: ISODateTime
 }
 
@@ -127,7 +158,6 @@ export interface TeacherSubmissionWriteupDetailData extends SubmissionWriteupDat
   student_name?: string
   class_name?: string
   challenge_title: string
-  reviewer_name?: string
 }
 
 export type InstanceStatus =
@@ -708,12 +738,10 @@ export interface ReviewArchiveWriteupItemData {
   challenge_title: string
   title: string
   submission_status: string
-  review_status: string
-  submitted_at?: ISODateTime
-  reviewed_at?: ISODateTime
-  review_comment?: string
+  visibility_status: string
+  is_recommended: boolean
+  published_at?: ISODateTime
   updated_at: ISODateTime
-  reviewer_name?: string
 }
 
 export interface ReviewArchiveManualReviewItemData {
@@ -889,6 +917,9 @@ export interface AdminChallengeWriteupData {
   visibility: WriteupVisibility
   release_at?: ISODateTime
   created_by?: ID
+  is_recommended: boolean
+  recommended_at?: ISODateTime
+  recommended_by?: ID
   created_at: ISODateTime
   updated_at: ISODateTime
 }

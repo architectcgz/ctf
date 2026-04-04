@@ -7,6 +7,8 @@ import ChallengeDetail from '../ChallengeDetail.vue'
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
   getChallengeWriteup: vi.fn(),
+  getRecommendedChallengeSolutions: vi.fn(),
+  getCommunityChallengeSolutions: vi.fn(),
   getMyChallengeWriteupSubmission: vi.fn(),
   upsertChallengeWriteupSubmission: vi.fn(),
   submitFlag: vi.fn(),
@@ -66,6 +68,41 @@ describe('ChallengeDetail', () => {
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T01:00:00.000Z',
     })
+    challengeApiMocks.getRecommendedChallengeSolutions.mockResolvedValue([
+      {
+        id: 'recommended-1',
+        source_type: 'official',
+        source_id: 'writeup-1',
+        challenge_id: '1',
+        title: '精选官方题解',
+        content: '<p>Exploit path</p>',
+        author_name: '官方题解',
+        is_recommended: true,
+        recommended_at: '2026-03-10T02:00:00.000Z',
+        updated_at: '2026-03-10T02:00:00.000Z',
+      },
+    ])
+    challengeApiMocks.getCommunityChallengeSolutions.mockResolvedValue({
+      list: [
+        {
+          id: 'community-1',
+          challenge_id: '1',
+          user_id: 'stu-2',
+          title: '我的 SQLi 复盘',
+          content: '先找注入点，再构造 payload。',
+          content_preview: '先找注入点，再构造 payload。',
+          author_name: 'student_b',
+          submission_status: 'published',
+          visibility_status: 'visible',
+          is_recommended: false,
+          published_at: '2026-03-12T01:00:00.000Z',
+          updated_at: '2026-03-12T01:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
     challengeApiMocks.getMyChallengeWriteupSubmission.mockResolvedValue(null)
     challengeApiMocks.upsertChallengeWriteupSubmission.mockResolvedValue({
       id: 'submission-1',
@@ -74,7 +111,8 @@ describe('ChallengeDetail', () => {
       title: '我的复盘',
       content: '先找回显，再定位注入。',
       submission_status: 'draft',
-      review_status: 'pending',
+      visibility_status: 'visible',
+      is_recommended: false,
       created_at: '2026-03-12T00:00:00.000Z',
       updated_at: '2026-03-12T00:30:00.000Z',
     })
@@ -124,7 +162,7 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('提示系统')
   })
 
-  it('应该支持查看题解并显示 spoiler 警告', async () => {
+  it('未解题时应显示题解锁定态', async () => {
     await router.push('/challenges/1')
     await router.isReady()
 
@@ -137,18 +175,111 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    const writeupButton = wrapper.findAll('button').find((node) => node.text().includes('查看题解'))
-    expect(writeupButton).toBeTruthy()
-
-    await writeupButton!.trigger('click')
-    await wrapper.vm.$nextTick()
-    await new Promise((resolve) => setTimeout(resolve, 0))
-
-    expect(wrapper.text()).toContain('官方题解')
-    expect(wrapper.text()).toContain('请谨慎阅读')
+    expect(wrapper.text()).toContain('解出题目后可查看推荐题解与社区题解')
+    expect(wrapper.text()).toContain('题解')
+    expect(wrapper.text()).not.toContain('精选官方题解')
+    expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
+    expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
   })
 
-  it('应该支持保存个人 writeup 草稿', async () => {
+  it('已解题时应显示推荐题解、社区题解和我的题解', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(challengeApiMocks.getRecommendedChallengeSolutions).toHaveBeenCalledWith('1')
+    expect(challengeApiMocks.getCommunityChallengeSolutions).toHaveBeenCalledWith('1')
+    expect(wrapper.text()).toContain('推荐题解')
+    expect(wrapper.text()).toContain('社区题解')
+    expect(wrapper.text()).toContain('我的题解')
+    expect(wrapper.text()).toContain('精选官方题解')
+
+    const communityTab = wrapper.findAll('button').find((node) => node.text().trim() === '社区题解')
+    expect(communityTab).toBeTruthy()
+
+    await communityTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('我的 SQLi 复盘')
+  })
+
+  it('应支持折叠题解区', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('精选官方题解')
+
+    const toggleButton = wrapper.findAll('button').find((node) => node.text().includes('收起题解区'))
+    expect(toggleButton).toBeTruthy()
+
+    await toggleButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('展开题解区')
+    expect(wrapper.text()).not.toContain('精选官方题解')
+    expect(wrapper.text()).not.toContain('我的 SQLi 复盘')
+  })
+
+  it('应该支持保存个人题解草稿', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
     await router.push('/challenges/1')
     await router.isReady()
 

@@ -5,7 +5,9 @@ import {
   deleteChallengeWriteup,
   getChallengeDetail,
   getChallengeWriteup,
+  recommendChallengeWriteup,
   saveChallengeWriteup,
+  unrecommendChallengeWriteup,
 } from '@/api/admin'
 import type {
   AdminChallengeListItem,
@@ -37,6 +39,7 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
   const loading = ref(true)
   const saving = ref(false)
   const deleting = ref(false)
+  const togglingRecommendation = ref(false)
   const challenge = ref<AdminChallengeListItem | null>(null)
   const writeup = ref<AdminChallengeWriteupData | null>(null)
   const form = reactive({
@@ -152,6 +155,24 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     resetForm(writeup.value)
   }
 
+  async function handleToggleRecommendation() {
+    if (!writeup.value) {
+      return
+    }
+
+    togglingRecommendation.value = true
+    try {
+      writeup.value = writeup.value.is_recommended
+        ? await unrecommendChallengeWriteup(challengeId)
+        : await recommendChallengeWriteup(challengeId)
+      toast.success(writeup.value.is_recommended ? '已设为推荐题解' : '已取消推荐题解')
+    } catch {
+      toast.error(writeup.value.is_recommended ? '取消推荐失败' : '设为推荐失败')
+    } finally {
+      togglingRecommendation.value = false
+    }
+  }
+
   onMounted(() => {
     void loadPage()
   })
@@ -160,6 +181,7 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     loading,
     saving,
     deleting,
+    togglingRecommendation,
     challenge,
     writeup,
     form,
@@ -168,6 +190,7 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     loadPage,
     handleSave,
     handleDelete,
+    handleToggleRecommendation,
     restoreExistingWriteup,
   }
 }
