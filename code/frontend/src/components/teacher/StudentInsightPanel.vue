@@ -621,19 +621,21 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 
 <style scoped>
 .student-insight-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
   --color-primary-soft: rgba(79, 70, 229, 0.08);
   --color-text-primary: var(--journal-ink);
   --color-text-secondary: var(--journal-muted);
-  --color-border-default: var(--journal-border);
+  --color-border-default: var(--teacher-card-border);
   --color-bg-surface: var(--journal-surface);
-  --color-bg-base: #f8fafc;
+  --color-bg-base: var(--theme-bg-base);
 }
 
 .writeup-chip {
@@ -661,22 +663,22 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .writeup-chip--muted {
-  background: rgba(148, 163, 184, 0.16);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
   color: #475569;
 }
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px solid var(--teacher-card-border);
   background: var(--journal-surface-subtle);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
+  border-bottom: 1px dashed var(--teacher-divider);
   padding-bottom: 0.75rem;
 }
 
@@ -689,11 +691,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .insight-kpi-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background: var(--journal-surface-subtle);
   padding: 0.9rem 0.95rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .insight-kpi-card--primary {

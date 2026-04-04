@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col items-center justify-center border-y border-border-subtle px-6 py-10 text-center">
+  <div class="app-empty flex flex-col items-center justify-center px-6 py-10 text-center">
     <component :is="iconComp" class="h-12 w-12 text-text-muted" />
     <div class="mt-3 text-sm font-semibold">{{ title }}</div>
     <div v-if="description" class="mt-1 text-sm text-text-secondary">{{ description }}</div>
@@ -41,3 +41,11 @@ const props = withDefaults(
 
 const iconComp = computed<IconComp>(() => iconRegistry[props.icon] || Inbox)
 </script>
+
+<style scoped>
+.app-empty {
+  border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-subtle) 74%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 38%, transparent);
+}
+</style>

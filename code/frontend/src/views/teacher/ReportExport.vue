@@ -538,8 +538,13 @@ async function handleDownload(): Promise<void> {
 </template>
 
 <style scoped>
+.report-shell {
+  --report-card-border: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
+  --report-divider: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 56%, transparent);
+}
+
 :deep(.page-header) {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--report-card-border);
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
@@ -571,7 +576,7 @@ async function handleDownload(): Promise<void> {
 }
 
 .report-hero {
-  border-color: var(--journal-border);
+  border-color: var(--report-card-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
@@ -581,7 +586,7 @@ async function handleDownload(): Promise<void> {
 }
 
 .report-brief {
-  border-color: var(--journal-border);
+  border-color: var(--report-card-border);
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
@@ -596,7 +601,7 @@ async function handleDownload(): Promise<void> {
 
 .report-note {
   border-radius: 16px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--report-card-border);
   background: var(--journal-surface);
   padding: 0.85rem 0.95rem;
 }
@@ -626,7 +631,7 @@ async function handleDownload(): Promise<void> {
 .report-hero-divider {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed var(--report-divider);
 }
 
 .report-section-head {
@@ -641,7 +646,7 @@ async function handleDownload(): Promise<void> {
 }
 
 :deep(.report-preview-dialog .el-dialog) {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--report-card-border);
   border-radius: 24px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 20rem),
@@ -684,7 +689,7 @@ async function handleDownload(): Promise<void> {
 }
 
 .report-kpi-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--report-card-border);
   border-radius: 16px;
   background: var(--journal-surface);
   padding: 0.95rem 1rem;

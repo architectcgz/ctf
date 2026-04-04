@@ -81,7 +81,7 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 .teacher-panel {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
-  --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
+  --panel-border: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
   --panel-surface: var(--journal-surface, var(--color-bg-surface));
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);

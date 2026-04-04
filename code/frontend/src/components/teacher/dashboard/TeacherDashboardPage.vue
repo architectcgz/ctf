@@ -274,6 +274,9 @@ const overviewDescription = computed(() => {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --journal-accent: #4f46e5;
@@ -296,7 +299,7 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-hero {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
     linear-gradient(
@@ -310,7 +313,7 @@ const overviewDescription = computed(() => {
 }
 
 .journal-brief {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
@@ -318,7 +321,7 @@ const overviewDescription = computed(() => {
 }
 
 .journal-metric {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface);
   border-radius: 16px !important;
   overflow: hidden;
@@ -351,7 +354,7 @@ const overviewDescription = computed(() => {
   gap: 0.45rem;
   min-height: 2.5rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-control-border);
   background: var(--journal-surface);
   padding: 0.55rem 1.1rem;
   font-size: 0.875rem;
@@ -364,7 +367,7 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-btn:hover {
-  border-color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
 }
 
@@ -412,7 +415,7 @@ const overviewDescription = computed(() => {
 
 .teacher-badge-card {
   border-radius: 18px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
 }
@@ -433,7 +436,7 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-tip-block {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1rem;
 }
 
@@ -506,7 +509,7 @@ const overviewDescription = computed(() => {
 
 .teacher-error-card {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--journal-border));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--teacher-card-border));
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
   padding: 1rem 1rem 1.1rem;
 }
@@ -578,13 +581,13 @@ const overviewDescription = computed(() => {
 }
 
 .teacher-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 92%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
 .teacher-board > * + * {
   margin-top: 1.25rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 

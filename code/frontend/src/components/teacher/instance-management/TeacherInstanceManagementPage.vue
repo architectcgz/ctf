@@ -379,7 +379,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 <style scoped>
 :deep(.teacher-filter-field) {
   color: var(--journal-ink);
-  border-color: var(--journal-border) !important;
+  border-color: var(--teacher-control-border) !important;
   background: var(--journal-surface) !important;
 }
 
@@ -403,7 +403,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   --el-table-tr-bg-color: transparent;
   --el-table-expanded-cell-bg-color: transparent;
   --el-table-header-bg-color: var(--journal-surface);
-  --el-table-border-color: var(--journal-border);
+  --el-table-border-color: var(--teacher-card-border);
   --el-table-row-hover-bg-color: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
   --el-table-text-color: var(--journal-ink);
   --el-table-header-text-color: var(--journal-muted);
@@ -419,7 +419,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 :deep(.teacher-instance-table td.el-table__cell),
 :deep(.teacher-instance-table th.el-table__cell) {
-  border-bottom-color: var(--journal-border);
+  border-bottom-color: var(--teacher-divider);
 }
 
 :deep(.teacher-instance-table.el-table),
@@ -438,6 +438,9 @@ function remainingExtends(item: TeacherInstanceItem): number {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --journal-accent: #4f46e5;
@@ -466,7 +469,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-hero {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
     linear-gradient(
@@ -480,7 +483,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-brief {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
@@ -500,7 +503,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   gap: 0.45rem;
   min-height: 2.5rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-control-border);
   background: var(--journal-surface);
   padding: 0.55rem 1.1rem;
   font-size: 0.875rem;
@@ -514,7 +517,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-btn:hover {
-  border-color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
 }
 
@@ -556,7 +559,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-badge-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 18px;
   background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
@@ -578,7 +581,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-tip-block {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1rem;
 }
 
@@ -625,7 +628,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-metric-card {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface);
   border-radius: 16px !important;
   overflow: hidden;
@@ -655,14 +658,14 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 92%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
   margin-top: 1.25rem;
 }
 
 .teacher-board > * + * {
   margin-top: 1.25rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
@@ -672,7 +675,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 .teacher-error-card {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--journal-border));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--teacher-card-border));
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
   padding: 1rem 1rem 1.1rem;
   color: var(--journal-muted);

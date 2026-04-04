@@ -26,4 +26,12 @@ describe('cheat detection surface alignment', () => {
       /\.journal-divider\s*\{[^}]*88%, transparent\);/s,
     )
   })
+
+  it('overrides the empty state top and bottom borders instead of inheriting AppEmpty bright border-y lines', () => {
+    expect(cheatDetectionSource).toMatch(/<AppEmpty[\s\S]*class="cheat-empty-state"[\s\S]*title="当前没有超过阈值的高频提交账号"/s)
+    expect(cheatDetectionSource).toMatch(/<AppEmpty[\s\S]*class="cheat-empty-state"[\s\S]*title="当前没有共享 IP 线索"/s)
+    expect(cheatDetectionSource).toMatch(
+      /\.cheat-empty-state\s*\{[\s\S]*border-top-color:\s*var\(--cheat-divider\);[\s\S]*border-bottom-color:\s*var\(--cheat-divider\);/s,
+    )
+  })
 })

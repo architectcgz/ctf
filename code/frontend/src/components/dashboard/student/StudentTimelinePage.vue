@@ -148,7 +148,7 @@ const groupedTimeline = computed(() => {
 
           <div
             v-if="groupedTimeline.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/52 px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
             当前还没有训练动态。
           </div>
@@ -202,11 +202,14 @@ const groupedTimeline = computed(() => {
 .journal-shell {
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --journal-ink: #0f172a;
-  --journal-muted: #475569;
-  --journal-border: rgba(226, 232, 240, 0.72);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: #f8fafc;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -214,7 +217,7 @@ const groupedTimeline = computed(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
@@ -227,8 +230,8 @@ const groupedTimeline = computed(() => {
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   padding: 0.875rem 1rem;
 }
 
@@ -257,7 +260,7 @@ const groupedTimeline = computed(() => {
 .journal-eyebrow-soft {
   color: var(--journal-muted);
   border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
 }
 
 .journal-note-value {
@@ -268,20 +271,20 @@ const groupedTimeline = computed(() => {
 }
 
 .timeline-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .timeline-section + .timeline-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .timeline-signal-list,
 .timeline-group-list {
   border-radius: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .timeline-signal-item {
@@ -289,7 +292,7 @@ const groupedTimeline = computed(() => {
 }
 
 .timeline-signal-item + .timeline-signal-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .timeline-group {
@@ -297,7 +300,7 @@ const groupedTimeline = computed(() => {
 }
 
 .timeline-group + .timeline-group {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .timeline-group-date {
@@ -305,7 +308,7 @@ const groupedTimeline = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
   padding: 0.28rem 0.72rem;
   font-size: 0.68rem;
   font-weight: 700;
@@ -329,7 +332,7 @@ const groupedTimeline = computed(() => {
   left: 0.2rem;
   top: 0;
   bottom: 0;
-  border-left: 1px dashed rgba(148, 163, 184, 0.5);
+  border-left: 1px dashed var(--journal-divider);
 }
 
 .timeline-event-item:first-child {
@@ -349,7 +352,7 @@ const groupedTimeline = computed(() => {
 }
 
 .timeline-event-item + .timeline-event-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.42);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .stat-icon {
@@ -359,8 +362,8 @@ const groupedTimeline = computed(() => {
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  border: 1px solid rgba(226, 232, 240, 0.72);
-  background: #f8fafc;
+  border: 1px solid var(--journal-soft-border);
+  background: var(--journal-surface-subtle);
 }
 
 .stat-icon--success {
@@ -425,16 +428,16 @@ const groupedTimeline = computed(() => {
 
   .timeline-signal-item + .timeline-signal-item {
     border-top: 0;
-    border-left: 1px dashed rgba(148, 163, 184, 0.58);
+    border-left: 1px dashed var(--journal-divider);
   }
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {

@@ -17,4 +17,16 @@ describe('admin dashboard surface alignment', () => {
       /\.admin-btn-primary\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--journal-accent\) 46%, var\(--journal-border\)\);/s,
     )
   })
+
+  it('softens the alert action rows instead of leaving a bright neutral outline on dark surfaces', () => {
+    expect(adminDashboardSource).toMatch(
+      /--admin-action-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 72%, transparent\);/,
+    )
+    expect(adminDashboardSource).toMatch(
+      /\.admin-action-row\s*\{[\s\S]*border:\s*1px solid var\(--admin-action-border\);/s,
+    )
+    expect(adminDashboardSource).toMatch(
+      /\.admin-action-row:focus-visible\s*\{[\s\S]*outline:\s*none;[\s\S]*0 0 0 3px color-mix\(in srgb,\s*var\(--journal-accent\) 12%, transparent\)/s,
+    )
+  })
 })

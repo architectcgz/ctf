@@ -256,6 +256,7 @@ function handleImportChange(event: Event): void {
 
         <AppEmpty
           v-else-if="list.length === 0"
+          class="user-empty-state"
           title="暂无用户"
           description="当前筛选条件下没有匹配用户。"
           icon="UsersRound"
@@ -415,28 +416,31 @@ function handleImportChange(event: Event): void {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: rgba(226, 232, 240, 0.84);
-  --journal-surface: rgba(248, 250, 252, 0.92);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -478,7 +482,7 @@ function handleImportChange(event: Event): void {
 
 .journal-divider,
 .journal-divider {
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .admin-section-head {
@@ -492,9 +496,9 @@ function handleImportChange(event: Event): void {
 .admin-section-head-intro {
   position: relative;
   padding: 1rem 1.1rem 1rem 1.35rem;
-  border: 1px dashed rgba(148, 163, 184, 0.42);
+  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 18px;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0) 72%);
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent 72%);
 }
 
 .admin-section-head-intro::before {
@@ -518,11 +522,23 @@ function handleImportChange(event: Event): void {
   justify-content: center;
   gap: 0.5rem;
   min-height: 2.75rem;
+  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-btn:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-control-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
 }
 
 .admin-btn-compact {
@@ -547,14 +563,16 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--admin-control-border);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
 .admin-btn-ghost:hover {
-  border-color: rgba(37, 99, 235, 0.28);
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--admin-control-border));
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
   color: var(--journal-accent);
+  transform: translateY(-1px);
 }
 
 .admin-btn-danger {
@@ -567,30 +585,33 @@ function handleImportChange(event: Event): void {
   width: 100%;
   min-height: 2.75rem;
   border-radius: 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
   padding: 0.7rem 1rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
-  transition: border-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .admin-input:focus {
-  border-color: rgba(37, 99, 235, 0.42);
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-control-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
 }
 
 .admin-receipt {
   border-radius: 16px;
   border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.82);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 16px;
   padding: 1rem;
   font-size: 0.875rem;
@@ -599,7 +620,7 @@ function handleImportChange(event: Event): void {
 
 .user-table-shell {
   overflow: hidden;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--user-table-border);
   border-radius: 18px;
   background: var(--journal-surface);
 }
@@ -617,13 +638,13 @@ function handleImportChange(event: Event): void {
 }
 
 .user-table-row {
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px solid var(--user-row-divider);
   transition: background 180ms ease;
 }
 
 .user-table-row:hover,
 .user-table-row:focus-within {
-  background: rgba(248, 250, 252, 0.88);
+  background: var(--journal-surface);
 }
 
 .admin-status-chip,
@@ -646,7 +667,7 @@ function handleImportChange(event: Event): void {
 
 .admin-inline-chip {
   border: 1px solid var(--journal-border);
-  background: rgba(248, 250, 252, 0.92);
+  background: var(--journal-surface);
   color: var(--journal-muted);
 }
 
@@ -662,19 +683,25 @@ function handleImportChange(event: Event): void {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   padding: 1rem 1.1rem 1.05rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
 
+.user-empty-state {
+  border-top-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 56%, transparent);
+}
+
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #e2e8f0;
-  --journal-muted: #94a3b8;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: rgba(71, 85, 105, 0.78);
-  --journal-surface: rgba(15, 23, 42, 0.7);
-  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {

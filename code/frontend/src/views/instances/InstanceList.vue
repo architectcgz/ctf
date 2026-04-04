@@ -65,13 +65,13 @@ const {
     <div class="instance-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
       <div v-if="loading" class="flex justify-center py-12">
         <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-control-border)] border-t-[var(--journal-accent)]"
         />
       </div>
 
       <div
         v-else-if="instances.length === 0"
-        class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
+        class="rounded-[22px] border border-dashed border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/52 px-4 py-12 text-center"
       >
         <div class="text-sm text-[var(--journal-muted)]">暂无运行中或等待创建的实例</div>
         <router-link
@@ -158,7 +158,7 @@ const {
           </div>
           <div
             v-else-if="instance.status === 'pending' || instance.status === 'creating'"
-            class="mt-5 rounded-[14px] border border-[var(--journal-border)]/80 bg-[var(--journal-surface-subtle)] px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
+            class="mt-5 rounded-[14px] border border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/84 px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
           >
             {{ getInstanceWaitingHint(instance) }}
           </div>
@@ -203,12 +203,16 @@ const {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -216,7 +220,7 @@ const {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
@@ -243,8 +247,8 @@ const {
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.92));
+  border: 1px solid var(--journal-shell-border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   padding: 0.875rem 1rem;
 }
 
@@ -264,13 +268,13 @@ const {
 }
 
 .instance-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .instance-list {
   border-radius: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .instance-item {
@@ -278,7 +282,7 @@ const {
 }
 
 .instance-item + .instance-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .instance-status {
@@ -289,8 +293,8 @@ const {
 
 .instance-meta {
   border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .instance-meta__row {
@@ -301,7 +305,7 @@ const {
 }
 
 .instance-meta__row + .instance-meta__row {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .instance-meta__label {
@@ -328,7 +332,7 @@ const {
   align-items: center;
   gap: 0.375rem;
   border-radius: 10px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-control-border);
   background: var(--journal-surface);
   padding: 0.5rem 1rem;
   font-size: 0.84rem;
@@ -355,16 +359,16 @@ const {
 }
 
 .warning-dialog {
-  border-color: var(--journal-border);
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border-color: var(--journal-shell-border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {

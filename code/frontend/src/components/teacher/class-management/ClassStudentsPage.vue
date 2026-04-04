@@ -289,7 +289,7 @@ const activeRateText = computed(() => {
   --el-table-tr-bg-color: transparent;
   --el-table-expanded-cell-bg-color: transparent;
   --el-table-header-bg-color: var(--journal-surface);
-  --el-table-border-color: var(--journal-border);
+  --el-table-border-color: var(--teacher-card-border);
   --el-table-row-hover-bg-color: rgba(99, 102, 241, 0.06);
   --el-table-text-color: var(--journal-ink);
   --el-table-header-text-color: var(--journal-muted);
@@ -305,7 +305,7 @@ const activeRateText = computed(() => {
 
 :deep(.teacher-student-table td.el-table__cell),
 :deep(.teacher-student-table th.el-table__cell) {
-  border-bottom-color: var(--journal-border);
+  border-bottom-color: var(--teacher-divider);
 }
 
 :deep(.teacher-student-table .el-table__inner-wrapper::before) {
@@ -313,21 +313,24 @@ const activeRateText = computed(() => {
 }
 
 .teacher-management-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-text-primary: var(--journal-ink);
   --color-text-secondary: var(--journal-muted);
-  --color-text-muted: #94a3b8;
-  --color-border-default: var(--journal-border);
-  --color-border-subtle: rgba(226, 232, 240, 0.74);
+  --color-text-muted: var(--theme-text-muted);
+  --color-border-default: var(--teacher-card-border);
+  --color-border-subtle: var(--theme-border-subtle);
   --color-bg-surface: var(--journal-surface);
-  --color-bg-base: #f8fafc;
+  --color-bg-base: var(--theme-bg-base);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -346,21 +349,21 @@ const activeRateText = computed(() => {
 }
 
 .teacher-hero {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .teacher-brief {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-eyebrow-row {
@@ -389,7 +392,7 @@ const activeRateText = computed(() => {
   gap: 0.45rem;
   min-height: 2.5rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-control-border);
   background: var(--journal-surface);
   padding: 0.55rem 1.1rem;
   font-size: 0.875rem;
@@ -402,7 +405,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-btn:hover {
-  border-color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: rgba(99, 102, 241, 0.06);
 }
 
@@ -425,7 +428,7 @@ const activeRateText = computed(() => {
 
 .teacher-badge-card {
   border-radius: 18px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
 }
@@ -446,7 +449,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-tip-block {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1rem;
 }
 
@@ -496,11 +499,11 @@ const activeRateText = computed(() => {
 }
 
 .teacher-kpi-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background: var(--journal-surface-subtle);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-kpi-card--primary {
@@ -539,19 +542,19 @@ const activeRateText = computed(() => {
 
 .teacher-board {
   margin-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
 .teacher-board > * + * {
   margin-top: 1.25rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.62);
+  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
 .teacher-error-card {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--journal-border));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--teacher-card-border));
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
   padding: 1rem 1rem 1.1rem;
   font-size: 0.875rem;
@@ -563,7 +566,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-student-list-section {
-  --panel-border: var(--journal-border);
+  --panel-border: var(--teacher-card-border);
   --panel-surface: var(--journal-surface);
   --panel-surface-subtle: var(--journal-surface-subtle);
 }
@@ -607,7 +610,7 @@ const activeRateText = computed(() => {
 .teacher-search-input {
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-control-border);
   background: var(--journal-surface);
   padding: 0.72rem 0.95rem;
   font-size: 0.875rem;
@@ -625,7 +628,7 @@ const activeRateText = computed(() => {
 
 .teacher-table-shell {
   border-radius: 16px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
   padding: 0.35rem 0.35rem 0.15rem;
 }

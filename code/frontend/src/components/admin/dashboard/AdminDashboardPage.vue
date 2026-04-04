@@ -267,6 +267,7 @@ function usageTone(value: number | undefined): string {
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --admin-action-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
 }
 
 .journal-hero {
@@ -457,17 +458,39 @@ function usageTone(value: number | undefined): string {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 1px solid rgba(226, 232, 240, 0.86);
+  border: 1px solid var(--admin-action-border);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
+  );
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
   padding: 0.95rem 1rem;
   text-align: left;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 .admin-action-row:hover {
-  border-color: rgba(37, 99, 235, 0.24);
-  background: var(--journal-surface);
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--admin-action-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-accent) 3%, var(--journal-surface-subtle))
+  );
+  transform: translateY(-1px);
+}
+
+.admin-action-row:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-action-border));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent),
+    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
 }
 
 :global([data-theme='dark']) .journal-shell {

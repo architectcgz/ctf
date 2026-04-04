@@ -216,13 +216,14 @@ onMounted(() => {
 
       <AppEmpty
         v-else-if="list.length === 0"
+        class="audit-empty-state"
         icon="Inbox"
         title="当前筛选条件下没有日志记录"
         description="可以放宽动作、资源类型或执行人条件，再重新检索。"
       />
 
-      <div v-else class="overflow-hidden rounded-[18px] border border-[var(--journal-border)]">
-        <table class="min-w-full divide-y divide-[var(--color-border-default)] text-sm">
+      <div v-else class="overflow-hidden rounded-[18px] border border-[var(--audit-table-border)]">
+        <table class="min-w-full divide-y divide-[var(--audit-row-divider)] text-sm">
           <thead class="bg-[var(--journal-surface-subtle)]">
             <tr>
               <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">时间</th>
@@ -232,7 +233,7 @@ onMounted(() => {
               <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">明细</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-[var(--journal-border)] bg-[var(--journal-surface)]">
+          <tbody class="divide-y divide-[var(--audit-row-divider)] bg-[var(--journal-surface)]">
             <tr v-for="item in list" :key="item.id">
               <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ formatDate(item.created_at) }}</td>
               <td class="px-4 py-3">
@@ -279,12 +280,15 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: rgba(226, 232, 240, 0.84);
-  --journal-surface: rgba(248, 250, 252, 0.92);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
+  --audit-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
 }
 
 .journal-hero,
@@ -292,9 +296,9 @@ onMounted(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -335,7 +339,7 @@ onMounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .admin-section-head {
@@ -350,12 +354,20 @@ onMounted(() => {
   width: 100%;
   min-height: 2.75rem;
   border-radius: 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--audit-control-border);
   background: var(--journal-surface);
   padding: 0.7rem 1rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-input:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--audit-control-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
 }
 
 .admin-btn {
@@ -363,10 +375,23 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
+  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-btn:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--audit-control-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
 }
 
 .admin-btn-compact {
@@ -380,9 +405,21 @@ onMounted(() => {
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--audit-control-border);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   color: var(--journal-ink);
+}
+
+.admin-btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--audit-control-border));
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  transform: translateY(-1px);
+}
+
+.audit-empty-state {
+  border-top-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 56%, transparent);
 }
 
 .admin-pagination {
@@ -391,19 +428,19 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   padding-top: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #e2e8f0;
-  --journal-muted: #94a3b8;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: rgba(71, 85, 105, 0.78);
-  --journal-surface: rgba(15, 23, 42, 0.7);
-  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero,

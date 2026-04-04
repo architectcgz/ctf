@@ -181,7 +181,7 @@ async function handlePublishSuccess(): Promise<void> {
     <div class="notification-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
       <div v-if="loading" class="flex justify-center py-12">
         <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-control-border)] border-t-[var(--journal-accent)]"
         />
       </div>
 
@@ -295,6 +295,10 @@ async function handlePublishSuccess(): Promise<void> {
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
@@ -333,7 +337,7 @@ async function handlePublishSuccess(): Promise<void> {
 
 .journal-note {
   border-radius: 18px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-shell-border);
   background: var(--journal-surface);
   padding: 0.95rem 1rem;
 }
@@ -361,11 +365,11 @@ async function handlePublishSuccess(): Promise<void> {
 }
 
 .notification-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .notification-list {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-shell-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   overflow: hidden;
@@ -373,7 +377,7 @@ async function handlePublishSuccess(): Promise<void> {
 
 .journal-notification-item {
   border: 0;
-  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-bottom: 1px dashed var(--journal-divider);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   padding: 1rem;
   transition:
@@ -406,7 +410,7 @@ async function handlePublishSuccess(): Promise<void> {
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed var(--journal-divider);
 }
 
 .journal-btn {
@@ -414,7 +418,7 @@ async function handlePublishSuccess(): Promise<void> {
   align-items: center;
   gap: 0.375rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-control-border);
   background: var(--journal-surface);
   padding: 0.55rem 1rem;
   font-size: 0.875rem;
@@ -450,8 +454,8 @@ async function handlePublishSuccess(): Promise<void> {
 :deep(.notification-empty-state) {
   border-top-style: dashed;
   border-bottom-style: dashed;
-  border-top-color: rgba(148, 163, 184, 0.58);
-  border-bottom-color: rgba(148, 163, 184, 0.58);
+  border-top-color: var(--journal-soft-border);
+  border-bottom-color: var(--journal-soft-border);
 }
 
 :global([data-theme='dark']) .journal-shell {
