@@ -49,8 +49,8 @@ describe('LoginView', () => {
           ElFormItem: { template: '<label><slot /></label>' },
           ElInput: ElInputStub,
           ElButton: {
-            props: ['loading', 'size', 'type', 'disabled'],
-            template: '<button @click="$emit(\'click\')"><slot /></button>',
+            props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
+            template: '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
           },
         },
       },
@@ -90,6 +90,14 @@ describe('LoginView', () => {
       { username: 'alice', password: 'saved-password' },
       '/dashboard'
     )
+  })
+
+  it('登录按钮应使用原生 submit 类型以支持表单回车提交', async () => {
+    const wrapper = mountLoginView()
+
+    await flushPromises()
+
+    expect(wrapper.get('button').attributes('type')).toBe('submit')
   })
 
   it('密码由浏览器自动填充时，用户名输入框按回车也应触发登录', async () => {
