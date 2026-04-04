@@ -159,7 +159,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
           <div
             v-if="rankedCategories.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/52 px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
             当前还没有分类统计数据，先完成几道题再回来查看。
           </div>
@@ -203,24 +203,23 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-elevated) 58%, var(--journal-surface-subtle));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -230,8 +229,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
   padding: 0.875rem 1rem;
 }
 
@@ -260,7 +259,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 .journal-eyebrow-soft {
   color: var(--journal-muted);
   border-color: rgba(148, 163, 184, 0.28);
-  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .journal-note-value {
@@ -271,31 +270,31 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-board {
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .category-section + .category-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .category-highlight,
 .category-list {
   border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 1rem 1.1rem;
 }
 
 .category-item + .category-item {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .category-track {
-  background: var(--journal-track);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
 }
 
 .direction-icon {
@@ -340,34 +339,38 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .journal-btn-outline {
-  border: 1px solid var(--journal-control-border);
+  border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   color: var(--journal-muted);
 }
 
 .journal-btn-outline:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  border-color: #6366f1;
   color: var(--journal-accent-strong);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.18), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .journal-note,
 :global([data-theme='dark']) .category-highlight,
 :global([data-theme='dark']) .category-list,
 :global([data-theme='dark']) .journal-btn-outline {
-  background: rgba(15, 23, 42, 0.42);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 </style>

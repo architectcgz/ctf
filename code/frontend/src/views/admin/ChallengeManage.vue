@@ -254,13 +254,13 @@ async function handleCommitPreview() {
             <div class="journal-divider mt-4" />
 
             <div class="mt-4 flex flex-wrap gap-2">
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push({ name: 'AdminChallengeDetail', params: { id: row.id } })">
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}`)">
                 查看
               </button>
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push({ name: 'AdminChallengeTopologyStudio', params: { id: row.id } })">
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/topology`)">
                 编排
               </button>
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push({ name: 'AdminChallengeWriteup', params: { id: row.id } })">
+              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/writeup`)">
                 题解
               </button>
               <button
@@ -307,22 +307,32 @@ async function handleCommitPreview() {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
   border: 1px solid var(--journal-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+  );
+  border-radius: 16px;
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -337,6 +347,7 @@ async function handleCommitPreview() {
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.85rem 0.95rem;
+  border-radius: 14px;
 }
 
 .journal-note-label {
@@ -363,7 +374,7 @@ async function handleCommitPreview() {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .list-heading {
@@ -390,8 +401,15 @@ async function handleCommitPreview() {
 }
 
 .challenge-row {
-  border-top: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  padding: 1rem 0;
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+  );
+  padding: 1rem;
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .admin-btn {
@@ -414,20 +432,20 @@ async function handleCommitPreview() {
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: var(--journal-surface);
   color: var(--journal-ink);
 }
 
 .admin-btn-success {
-  border: 1px solid rgba(16, 185, 129, 0.18);
-  background: rgba(236, 253, 245, 0.92);
-  color: #059669;
+  border: 1px solid color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-success) 88%, var(--journal-ink));
 }
 
 .admin-btn-danger {
-  border: 1px solid rgba(239, 68, 68, 0.18);
-  background: rgba(254, 242, 242, 0.92);
-  color: #dc2626;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-status-chip,
@@ -442,13 +460,15 @@ async function handleCommitPreview() {
 }
 
 .admin-inline-chip-neutral {
-  background: var(--journal-surface-subtle);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
   color: var(--journal-muted);
 }
 
 .admin-empty {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  padding: 1rem 0;
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
+  padding: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -460,9 +480,24 @@ async function handleCommitPreview() {
   justify-content: space-between;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 0.82rem;
   color: var(--journal-muted);
+}
+
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-accent: #60a5fa;
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+}
+
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
 }
 
 @media (max-width: 960px) {

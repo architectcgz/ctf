@@ -21,7 +21,7 @@ const statItems = [
 </script>
 
 <template>
-  <section class="archive-hero">
+  <section class="archive-hero teacher-surface-hero">
     <div class="archive-hero__backdrop" />
     <div class="archive-hero__content">
       <div class="archive-hero__meta">
@@ -59,7 +59,7 @@ const statItems = [
           <article
             v-for="item in statItems"
             :key="item.key"
-            class="archive-hero__stat"
+          class="archive-hero__stat teacher-surface-metric"
           >
             <div class="archive-hero__stat-label">{{ item.label }}</div>
             <div class="archive-hero__stat-value">{{ archive?.summary[item.field] ?? 0 }}</div>
@@ -74,11 +74,14 @@ const statItems = [
 .archive-hero {
   position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, #1e40af 18%, var(--color-border-default));
   border-radius: 28px;
   background:
     radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 34%),
-    linear-gradient(135deg, rgba(30, 64, 175, 0.08), rgba(248, 250, 252, 0.98));
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, #1e40af 14%, var(--journal-surface)),
+      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
+    );
 }
 
 .archive-hero__backdrop {
@@ -109,7 +112,7 @@ const statItems = [
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #1d4ed8;
+  color: var(--journal-accent-strong);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -117,7 +120,7 @@ const statItems = [
   margin-top: 0.85rem;
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.05;
-  color: #172554;
+  color: var(--journal-ink);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -144,9 +147,8 @@ const statItems = [
 
 .archive-hero__profile,
 .archive-hero__stat {
-  border: 1px solid color-mix(in srgb, #1e40af 14%, var(--color-border-default));
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.76);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   backdrop-filter: blur(10px);
 }
 
@@ -159,7 +161,7 @@ const statItems = [
   font-size: 0.75rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #475569;
+  color: var(--journal-muted);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -167,7 +169,7 @@ const statItems = [
   margin-top: 0.8rem;
   font-size: 1.9rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--journal-ink);
 }
 
 .archive-hero__student-subline {
@@ -175,7 +177,7 @@ const statItems = [
   flex-wrap: wrap;
   gap: 0.85rem;
   margin-top: 0.4rem;
-  color: #334155;
+  color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
 .archive-hero__stamp {
@@ -185,14 +187,14 @@ const statItems = [
   margin-top: 1.1rem;
   padding: 0.8rem 0.9rem;
   border-radius: 18px;
-  background: rgba(15, 23, 42, 0.04);
-  color: #334155;
+  background: color-mix(in srgb, var(--journal-border) 22%, transparent);
+  color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.82rem;
 }
 
 .archive-hero__stamp strong {
-  color: #0f172a;
+  color: var(--journal-ink);
   font-size: 0.95rem;
 }
 
@@ -210,7 +212,7 @@ const statItems = [
   margin-top: 0.7rem;
   font-size: 1.8rem;
   font-weight: 700;
-  color: #172554;
+  color: var(--journal-ink);
 }
 
 @media (max-width: 1023px) {

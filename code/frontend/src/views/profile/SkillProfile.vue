@@ -225,13 +225,13 @@ const difficultyColorMap: Record<string, string> = {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -239,7 +239,7 @@ const difficultyColorMap: Record<string, string> = {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
 }
@@ -261,7 +261,7 @@ const difficultyColorMap: Record<string, string> = {
 .journal-eyebrow-soft {
   color: var(--journal-muted);
   border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
 }
 
 .journal-note-label {
@@ -306,15 +306,15 @@ const difficultyColorMap: Record<string, string> = {
 
 .skill-teacher-panel {
   border-radius: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1rem 1.1rem;
 }
 
 .skill-student-select {
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.24);
-  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 0.7rem 0.95rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
@@ -327,13 +327,13 @@ const difficultyColorMap: Record<string, string> = {
 }
 
 .skill-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .skill-section + .skill-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .skill-analysis-stack {
@@ -347,14 +347,14 @@ const difficultyColorMap: Record<string, string> = {
 .skill-weak-wrap {
   margin-top: 1.75rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .skill-recommend-list,
 .skill-weak-list {
   border-radius: 22px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .skill-weak-item,
@@ -364,7 +364,7 @@ const difficultyColorMap: Record<string, string> = {
 
 .skill-weak-item + .skill-weak-item,
 .skill-recommend-item + .skill-recommend-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .skill-dimension-list {
@@ -391,18 +391,22 @@ const difficultyColorMap: Record<string, string> = {
   inset: 0;
   clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.95)),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 96%, var(--color-bg-base))
+    ),
     linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .skill-dimension-chart__frame::after {
   inset: 18px;
   clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
-  border: 1px solid rgba(255, 255, 255, 0.78);
+  border: 1px solid color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
   background:
     radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 60%),
-    rgba(255, 255, 255, 0.52);
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 76%, var(--color-bg-base));
 }
 
 .skill-dimension-chart__inner {
@@ -434,17 +438,17 @@ const difficultyColorMap: Record<string, string> = {
   }
 
   .skill-dimension-legend__item:nth-child(n + 3) {
-    border-top: 1px dashed rgba(148, 163, 184, 0.58);
+    border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 
   .skill-dimension-legend__item:nth-child(2n) {
-    border-left: 1px dashed rgba(148, 163, 184, 0.58);
+    border-left: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 }
 
 @media (max-width: 639px) {
   .skill-dimension-legend__item + .skill-dimension-legend__item {
-    border-top: 1px dashed rgba(148, 163, 184, 0.58);
+    border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 }
 
@@ -466,33 +470,37 @@ const difficultyColorMap: Record<string, string> = {
   }
 
   .skill-weak-item:nth-child(n + 3) {
-    border-top: 1px dashed rgba(148, 163, 184, 0.58);
+    border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 
   .skill-weak-item:nth-child(2n) {
-    border-left: 1px dashed rgba(148, 163, 184, 0.58);
+    border-left: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   }
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 20rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .skill-teacher-panel,
 :global([data-theme='dark']) .skill-recommend-list,
 :global([data-theme='dark']) .skill-weak-list,
 :global([data-theme='dark']) .skill-student-select {
-  background: rgba(15, 23, 42, 0.42);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
 .skill-recommend-item {
@@ -512,12 +520,16 @@ const difficultyColorMap: Record<string, string> = {
 
 :global([data-theme='dark']) .skill-dimension-chart__frame::before {
   background:
-    linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.92)),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    ),
     linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 18%, transparent), transparent);
 }
 
 :global([data-theme='dark']) .skill-dimension-chart__frame::after {
-  background: rgba(15, 23, 42, 0.32);
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
   border-color: rgba(148, 163, 184, 0.2);
 }
 

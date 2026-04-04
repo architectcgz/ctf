@@ -111,7 +111,6 @@ onMounted(() => {
 
           <AppEmpty
             v-if="!riskData?.suspects.length"
-            class="cheat-empty-state"
             icon="UsersRound"
             title="当前没有超过阈值的高频提交账号"
             description="说明最近窗口内还没有明显的提交爆发样本。"
@@ -155,7 +154,6 @@ onMounted(() => {
 
           <AppEmpty
             v-if="!riskData?.shared_ips.length"
-            class="cheat-empty-state"
             icon="UsersRound"
             title="当前没有共享 IP 线索"
             description="最近 24 小时内还没有发现明显的多账号复用 IP。"
@@ -231,25 +229,22 @@ onMounted(() => {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
-  --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --cheat-card-surface: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 93%, var(--color-bg-base))
-  );
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
 .journal-hero,
 .journal-panel {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
@@ -292,7 +287,7 @@ onMounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed var(--cheat-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .admin-section-head {
@@ -305,25 +300,18 @@ onMounted(() => {
 
 .risk-row,
 .quick-action-row {
-  border: 1px solid var(--cheat-card-border);
+  border: 1px solid var(--journal-border);
   border-radius: 18px;
-  background: var(--cheat-card-surface);
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 1rem;
 }
 
 .admin-empty {
-  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
   padding: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
-}
-
-.cheat-empty-state {
-  border-top-color: var(--cheat-divider);
-  border-bottom-color: var(--cheat-divider);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 58%, transparent);
 }
 
 .quick-action-row {
@@ -332,36 +320,25 @@ onMounted(() => {
   justify-content: space-between;
   gap: 0.75rem;
   text-align: left;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
-}
-
-.quick-action-row:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--cheat-card-border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-accent) 3%, var(--journal-surface-subtle))
-  );
-  transform: translateY(-1px);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero,
 :global([data-theme='dark']) .journal-panel {
   background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 </style>

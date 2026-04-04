@@ -65,13 +65,13 @@ const {
     <div class="instance-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
       <div v-if="loading" class="flex justify-center py-12">
         <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-control-border)] border-t-[var(--journal-accent)]"
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         />
       </div>
 
       <div
         v-else-if="instances.length === 0"
-        class="rounded-[22px] border border-dashed border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/52 px-4 py-12 text-center"
+        class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
       >
         <div class="text-sm text-[var(--journal-muted)]">暂无运行中或等待创建的实例</div>
         <router-link
@@ -158,7 +158,7 @@ const {
           </div>
           <div
             v-else-if="instance.status === 'pending' || instance.status === 'creating'"
-            class="mt-5 rounded-[14px] border border-[var(--journal-soft-border)] bg-[var(--journal-surface-subtle)]/84 px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
+            class="mt-5 rounded-[14px] border border-[var(--journal-border)]/80 bg-[var(--journal-surface-subtle)] px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
           >
             {{ getInstanceWaitingHint(instance) }}
           </div>
@@ -203,27 +203,27 @@ const {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
+  --journal-ink: #0f172a;
+  --journal-muted: #64748b;
   --journal-accent: #4f46e5;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: rgba(226, 232, 240, 0.8);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 20rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -247,8 +247,8 @@ const {
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid var(--journal-shell-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
   padding: 0.875rem 1rem;
 }
 
@@ -268,13 +268,13 @@ const {
 }
 
 .instance-board {
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .instance-list {
   border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
 .instance-item {
@@ -282,7 +282,7 @@ const {
 }
 
 .instance-item + .instance-item {
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .instance-status {
@@ -293,8 +293,8 @@ const {
 
 .instance-meta {
   border-radius: 18px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
 .instance-meta__row {
@@ -305,7 +305,7 @@ const {
 }
 
 .instance-meta__row + .instance-meta__row {
-  border-top: 1px dashed var(--journal-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
 }
 
 .instance-meta__label {
@@ -332,7 +332,7 @@ const {
   align-items: center;
   gap: 0.375rem;
   border-radius: 10px;
-  border: 1px solid var(--journal-control-border);
+  border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.5rem 1rem;
   font-size: 0.84rem;
@@ -359,22 +359,26 @@ const {
 }
 
 .warning-dialog {
-  border-color: var(--journal-shell-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
+  border-color: var(--journal-border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 20rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .journal-note,
@@ -382,6 +386,6 @@ const {
 :global([data-theme='dark']) .instance-meta,
 :global([data-theme='dark']) .warning-dialog,
 :global([data-theme='dark']) .journal-btn {
-  background: rgba(15, 23, 42, 0.42);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 </style>

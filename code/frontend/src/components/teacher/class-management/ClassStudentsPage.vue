@@ -49,13 +49,13 @@ const activeRateText = computed(() => {
 </script>
 
 <template>
-  <div class="teacher-management-shell space-y-6">
-    <section class="teacher-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <div class="teacher-management-shell teacher-surface space-y-6">
+    <section class="teacher-hero teacher-surface-hero px-6 py-6 md:px-8">
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="teacher-eyebrow-row">
-            <div class="journal-eyebrow">Class Students</div>
-            <span class="teacher-class-chip">{{ selectedClassName || '未选择班级' }}</span>
+            <div class="teacher-surface-eyebrow">Class Students</div>
+            <span class="teacher-class-chip teacher-surface-chip">{{ selectedClassName || '未选择班级' }}</span>
           </div>
 
           <h2
@@ -84,24 +84,24 @@ const activeRateText = computed(() => {
           </div>
         </div>
 
-        <article class="teacher-brief rounded-[24px] border px-5 py-5">
+        <article class="teacher-brief teacher-surface-brief px-5 py-5">
           <div class="text-sm font-medium text-[var(--journal-ink)]">当前班级概况</div>
           <div class="teacher-badge-grid mt-5">
-            <div class="teacher-badge-card">
+            <div class="teacher-badge-card teacher-surface-metric">
               <div class="teacher-badge-label">可访问班级</div>
               <div class="teacher-badge-value">{{ classes.length }}</div>
             </div>
-            <div class="teacher-badge-card">
+            <div class="teacher-badge-card teacher-surface-metric">
               <div class="teacher-badge-label">班级人数</div>
               <div class="teacher-badge-value">
                 {{ props.summary?.student_count ?? students.length }}
               </div>
             </div>
-            <div class="teacher-badge-card">
+            <div class="teacher-badge-card teacher-surface-metric">
               <div class="teacher-badge-label">平均解题</div>
               <div class="teacher-badge-value">{{ averageSolvedText }}</div>
             </div>
-            <div class="teacher-badge-card">
+            <div class="teacher-badge-card teacher-surface-metric">
               <div class="teacher-badge-label">近 7 天活跃率</div>
               <div class="teacher-badge-value">{{ activeRateText }}</div>
             </div>
@@ -128,19 +128,19 @@ const activeRateText = computed(() => {
       </div>
 
       <div class="teacher-metric-grid mt-6">
-        <article class="teacher-kpi-card teacher-kpi-card--primary">
+        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--primary">
           <div class="teacher-kpi-label">近 7 天训练事件</div>
           <div class="teacher-kpi-value">{{ props.summary?.recent_event_count ?? '--' }}</div>
           <div class="teacher-kpi-hint">提交、实例启动与销毁等动作总数</div>
         </article>
-        <article class="teacher-kpi-card teacher-kpi-card--success">
+        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--success">
           <div class="teacher-kpi-label">学生记录</div>
           <div class="teacher-kpi-value">{{ students.length }}</div>
           <div class="teacher-kpi-hint">当前列表内可直接进入分析的学生数量</div>
         </article>
       </div>
 
-      <div class="teacher-board">
+      <div class="teacher-board teacher-surface-board">
         <div v-if="error" class="teacher-error-card" role="alert" aria-live="polite">
           {{ error }}
           <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">
@@ -168,10 +168,10 @@ const activeRateText = computed(() => {
           <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
         </section>
 
-        <section class="teacher-student-list-section">
+        <section class="teacher-student-list-section teacher-surface-section">
           <div class="teacher-section-head">
             <div>
-              <div class="journal-eyebrow">Students</div>
+              <div class="teacher-surface-eyebrow">Students</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">学生名单</h3>
               <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
                 选择学生后进入学员分析。
@@ -213,7 +213,7 @@ const activeRateText = computed(() => {
             description="该班级下还没有可用学生记录。"
           />
 
-          <div v-else class="teacher-table-shell">
+          <div v-else class="teacher-table-shell teacher-surface-table">
             <ElTable
               :data="students"
               row-key="id"
@@ -289,7 +289,7 @@ const activeRateText = computed(() => {
   --el-table-tr-bg-color: transparent;
   --el-table-expanded-cell-bg-color: transparent;
   --el-table-header-bg-color: var(--journal-surface);
-  --el-table-border-color: var(--teacher-card-border);
+  --el-table-border-color: var(--journal-border);
   --el-table-row-hover-bg-color: rgba(99, 102, 241, 0.06);
   --el-table-text-color: var(--journal-ink);
   --el-table-header-text-color: var(--journal-muted);
@@ -305,7 +305,7 @@ const activeRateText = computed(() => {
 
 :deep(.teacher-student-table td.el-table__cell),
 :deep(.teacher-student-table th.el-table__cell) {
-  border-bottom-color: var(--teacher-divider);
+  border-bottom-color: var(--journal-border);
 }
 
 :deep(.teacher-student-table .el-table__inner-wrapper::before) {
@@ -315,35 +315,15 @@ const activeRateText = computed(() => {
 .teacher-management-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
-  --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
-  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.2rem 0.72rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
 .teacher-hero {
-  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
     linear-gradient(
@@ -351,17 +331,11 @@ const activeRateText = computed(() => {
       color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
       color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
     );
-  border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .teacher-brief {
-  border-color: var(--teacher-card-border);
-  background: var(--journal-surface-subtle);
-  border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-eyebrow-row {
@@ -371,18 +345,6 @@ const activeRateText = computed(() => {
   gap: 0.65rem;
 }
 
-.teacher-class-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.3rem 0.75rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
 .teacher-btn {
   display: inline-flex;
   align-items: center;
@@ -390,7 +352,7 @@ const activeRateText = computed(() => {
   gap: 0.45rem;
   min-height: 2.5rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--teacher-control-border);
+  border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.55rem 1.1rem;
   font-size: 0.875rem;
@@ -403,19 +365,18 @@ const activeRateText = computed(() => {
 }
 
 .teacher-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+  border-color: var(--journal-accent);
+  background: color-mix(in srgb, var(--journal-accent) 7%, var(--journal-surface));
 }
 
 .teacher-btn--primary {
   border-color: transparent;
   background: var(--journal-accent);
   color: #fff;
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
 }
 
 .teacher-btn--primary:hover {
-  background: var(--journal-accent-strong);
+  background: #4338ca;
   border-color: transparent;
 }
 
@@ -426,9 +387,6 @@ const activeRateText = computed(() => {
 }
 
 .teacher-badge-card {
-  border-radius: 18px;
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
 }
 
@@ -448,7 +406,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-tip-block {
-  border-top: 1px dashed var(--teacher-divider);
+  border-top: 1px dashed rgba(148, 163, 184, 0.58);
   padding-top: 1rem;
 }
 
@@ -498,11 +456,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-kpi-card {
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: var(--journal-surface-subtle);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-kpi-card--primary {
@@ -541,19 +495,17 @@ const activeRateText = computed(() => {
 
 .teacher-board {
   margin-top: 1.5rem;
-  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
 .teacher-board > * + * {
   margin-top: 1.25rem;
-  border-top: 1px dashed var(--teacher-divider);
   padding-top: 1.25rem;
 }
 
 .teacher-error-card {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--teacher-card-border));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 22%, var(--journal-border));
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
   padding: 1rem 1rem 1.1rem;
   font-size: 0.875rem;
@@ -565,7 +517,7 @@ const activeRateText = computed(() => {
 }
 
 .teacher-student-list-section {
-  --panel-border: var(--teacher-card-border);
+  --panel-border: var(--journal-border);
   --panel-surface: var(--journal-surface);
   --panel-surface-subtle: var(--journal-surface-subtle);
 }
@@ -609,7 +561,7 @@ const activeRateText = computed(() => {
 .teacher-search-input {
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid var(--teacher-control-border);
+  border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.72rem 0.95rem;
   font-size: 0.875rem;
@@ -622,14 +574,11 @@ const activeRateText = computed(() => {
 
 .teacher-search-input:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
 .teacher-table-shell {
-  border-radius: 16px;
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface);
-  padding: 0.35rem 0.35rem 0.15rem;
+  padding: 0;
 }
 
 @media (max-width: 767px) {

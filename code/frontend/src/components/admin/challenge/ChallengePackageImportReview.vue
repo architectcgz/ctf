@@ -158,7 +158,7 @@ const metadata = computed(() => [
 }
 
 .import-review__primary {
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   background: var(--journal-accent);
   color: #fff;
 }
@@ -170,7 +170,7 @@ const metadata = computed(() => [
 
 .import-review__ghost {
   border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.78);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
@@ -185,7 +185,7 @@ const metadata = computed(() => [
   display: grid;
   gap: 0.85rem;
   padding: 1rem 0;
-  border-top: 1px solid rgba(148, 163, 184, 0.26);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .import-review__section-title {
@@ -250,7 +250,7 @@ const metadata = computed(() => [
   display: grid;
   gap: 0.2rem;
   padding-bottom: 0.65rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.4);
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .import-review__list-item strong {
@@ -270,7 +270,7 @@ const metadata = computed(() => [
   padding-left: 1rem;
   display: grid;
   gap: 0.45rem;
-  color: #92400e;
+  color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
   font-size: 0.88rem;
   line-height: 1.7;
 }

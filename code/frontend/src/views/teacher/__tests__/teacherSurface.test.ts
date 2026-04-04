@@ -1,0 +1,41 @@
+import { describe, expect, it } from 'vitest'
+
+import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
+import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
+import studentAnalysisSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
+import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
+import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
+import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
+import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
+
+const teacherSurfacePattern =
+  /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
+
+const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
+
+const teacherSurfaceSources = [
+  ['ClassManagementPage.vue', classManagementSource],
+  ['ClassStudentsPage.vue', classStudentsSource],
+  ['StudentAnalysisPage.vue', studentAnalysisSource],
+  ['StudentManagementPage.vue', studentManagementSource],
+  ['TeacherInstanceManagementPage.vue', instanceManagementSource],
+  ['ReportExport.vue', reportExportSource],
+  ['TeacherStudentReviewArchive.vue', reviewArchiveSource],
+] as const
+
+const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sourceName, source]) =>
+  forbiddenTeacherSurfaceLiterals.map((forbiddenLiteral) => [sourceName, forbiddenLiteral, source] as const)
+)
+
+describe('teacher surface source regression', () => {
+  it.each(teacherSurfaceSources)('%s 应命中教师端 surface 主题模式', (_name, source) => {
+    expect(teacherSurfacePattern.test(source)).toBe(true)
+  })
+
+  it.each(teacherSurfaceForbiddenLiteralCases)(
+    '%s 不应包含教师端高对比亮色 surface 硬编码: %s',
+    (_name, forbiddenLiteral, source) => {
+      expect(source.includes(forbiddenLiteral)).toBe(false)
+    }
+  )
+})

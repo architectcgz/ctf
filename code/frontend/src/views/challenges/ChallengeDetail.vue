@@ -791,12 +791,12 @@ watch(
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 .journal-hero {
@@ -804,7 +804,7 @@ watch(
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 20rem),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
@@ -824,14 +824,14 @@ watch(
 
 .challenge-score-card {
   border-radius: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .challenge-panel {
   border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
 
@@ -859,7 +859,7 @@ watch(
 }
 
 .challenge-input {
-  background: rgba(248, 250, 252, 0.92);
+  background: var(--journal-surface);
   color: var(--journal-ink);
 }
 
@@ -874,14 +874,14 @@ watch(
 .writeup-workbench {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.1), transparent 18rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 244, 255, 0.96));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 96%, var(--color-bg-base)));
 }
 
 .writeup-side-note {
   max-width: 18rem;
   border: 1px solid rgba(99, 102, 241, 0.14);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1rem 1.1rem;
 }
 
@@ -906,9 +906,9 @@ watch(
 }
 
 .writeup-meta-card {
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 0.95rem 1rem;
 }
 
@@ -956,14 +956,14 @@ watch(
 }
 
 .writeup-status-pill--muted {
-  background: rgba(148, 163, 184, 0.16);
+  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
   color: #475569;
 }
 
 .writeup-feedback-panel {
   border: 1px solid rgba(79, 70, 229, 0.16);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.74);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1.1rem 1.2rem;
 }
 
@@ -977,8 +977,8 @@ watch(
 
 .hint-list {
   border-radius: 20px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .hint-item {
@@ -986,21 +986,25 @@ watch(
 }
 
 .hint-item + .hint-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #f1f5f9;
-  --journal-muted: #94a3b8;
-  --journal-border: rgba(51, 65, 85, 0.72);
-  --journal-surface: rgba(15, 23, 42, 0.85);
-  --journal-surface-subtle: rgba(30, 41, 59, 0.6);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 20rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .challenge-score-card,
@@ -1008,6 +1012,6 @@ watch(
 :global([data-theme='dark']) .hint-list,
 :global([data-theme='dark']) .challenge-btn-outline,
 :global([data-theme='dark']) .challenge-input {
-  background: rgba(15, 23, 42, 0.42);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 </style>
