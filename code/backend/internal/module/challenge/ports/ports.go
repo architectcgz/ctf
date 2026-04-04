@@ -61,6 +61,8 @@ type ChallengeWriteupRepository interface {
 	UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) error
 	GetTeacherSubmissionWriteupByID(id int64) (*TeacherSubmissionWriteupRecord, error)
 	ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionWriteupQuery) ([]TeacherSubmissionWriteupRecord, int64, error)
+	ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]RecommendedSolutionRecord, error)
+	ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]CommunitySolutionRecord, int64, error)
 }
 
 type TeacherSubmissionWriteupRecord struct {
@@ -69,7 +71,25 @@ type TeacherSubmissionWriteupRecord struct {
 	StudentName     string
 	ClassName       string
 	ChallengeTitle  string
-	ReviewerName    string
+}
+
+type RecommendedSolutionRecord struct {
+	SourceType    string
+	SourceID      int64
+	ChallengeID   int64
+	Title         string
+	Content       string
+	AuthorName    string
+	IsRecommended bool
+	RecommendedAt *time.Time
+	UpdatedAt     time.Time
+}
+
+type CommunitySolutionRecord struct {
+	Submission   model.SubmissionWriteup
+	AuthorName   string
+	ChallengeID  int64
+	ChallengeTitle string
 }
 
 type ChallengeTopologyRepository interface {

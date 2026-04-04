@@ -19,6 +19,7 @@ const {
   loading,
   saving,
   deleting,
+  togglingRecommendation,
   challenge,
   writeup,
   form,
@@ -27,6 +28,7 @@ const {
   loadPage,
   handleSave,
   handleDelete,
+  handleToggleRecommendation,
   restoreExistingWriteup,
 } = useChallengeWriteupEditorPage(props.challengeId)
 </script>
@@ -139,6 +141,12 @@ const {
             >
               {{ hasWriteup ? '已存在题解' : '尚未创建' }}
             </span>
+            <span
+              v-if="writeup?.is_recommended"
+              class="rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]"
+            >
+              推荐题解
+            </span>
           </div>
         </template>
 
@@ -206,6 +214,14 @@ const {
             </button>
             <button
               v-if="hasWriteup"
+              :disabled="togglingRecommendation"
+              class="rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-5 py-3 text-sm font-medium text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-60"
+              @click="void handleToggleRecommendation()"
+            >
+              {{ togglingRecommendation ? '处理中...' : writeup?.is_recommended ? '取消推荐' : '设为推荐' }}
+            </button>
+            <button
+              v-if="hasWriteup"
               class="rounded-2xl border border-[var(--color-border-default)] px-5 py-3 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
               @click="restoreExistingWriteup"
             >
@@ -247,6 +263,14 @@ const {
             </div>
             <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
               {{ writeup.visibility }}
+            </div>
+          </div>
+          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
+            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              推荐状态
+            </div>
+            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
+              {{ writeup.is_recommended ? '推荐题解' : '未推荐' }}
             </div>
           </div>
           <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">

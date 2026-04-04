@@ -1,6 +1,7 @@
 package infrastructure
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ func (r *Repository) FindWriteupByChallengeID(challengeID int64) (*model.Challen
 func (r *Repository) UpsertWriteup(writeup *model.ChallengeWriteup) error {
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "release_at", "created_by", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "release_at", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
 	}).Create(writeup).Error
 }
 
@@ -83,11 +84,11 @@ func (r *Repository) UpsertSubmissionWriteup(writeup *model.SubmissionWriteup) e
 			"title",
 			"content",
 			"submission_status",
-			"review_status",
-			"submitted_at",
-			"reviewed_by",
-			"reviewed_at",
-			"review_comment",
+			"visibility_status",
+			"is_recommended",
+			"recommended_at",
+			"recommended_by",
+			"published_at",
 			"updated_at",
 		}),
 	}).Create(writeup).Error
@@ -101,18 +102,17 @@ type teacherSubmissionWriteupRow struct {
 	Title            string
 	Content          string
 	SubmissionStatus string
-	ReviewStatus     string
-	SubmittedAt      *time.Time
-	ReviewedBy       *int64
-	ReviewedAt       *time.Time
-	ReviewComment    string
+	VisibilityStatus string
+	IsRecommended    bool
+	RecommendedAt    *time.Time
+	RecommendedBy    *int64
+	PublishedAt      *time.Time
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	StudentUsername  string
 	StudentName      string
 	ClassName        string
 	ChallengeTitle   string
-	ReviewerName     string
 }
 
 func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmissionWriteupRecord {
@@ -125,11 +125,11 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 			Title:            r.Title,
 			Content:          r.Content,
 			SubmissionStatus: r.SubmissionStatus,
-			ReviewStatus:     r.ReviewStatus,
-			SubmittedAt:      r.SubmittedAt,
-			ReviewedBy:       r.ReviewedBy,
-			ReviewedAt:       r.ReviewedAt,
-			ReviewComment:    r.ReviewComment,
+			VisibilityStatus: r.VisibilityStatus,
+			IsRecommended:    r.IsRecommended,
+			RecommendedAt:    r.RecommendedAt,
+			RecommendedBy:    r.RecommendedBy,
+			PublishedAt:      r.PublishedAt,
 			CreatedAt:        r.CreatedAt,
 			UpdatedAt:        r.UpdatedAt,
 		},
@@ -137,7 +137,6 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 		StudentName:     r.StudentName,
 		ClassName:       r.ClassName,
 		ChallengeTitle:  r.ChallengeTitle,
-		ReviewerName:    r.ReviewerName,
 	}
 }
 
@@ -162,6 +161,218 @@ func (r *Repository) ListTeacherSubmissionWriteups(query *dto.TeacherSubmissionW
 	return r.listTeacherSubmissionWriteups(query, nil)
 }
 
+type recommendedSolutionRow struct {
+	SourceType    string
+	SourceID      int64
+	ChallengeID   int64
+	Title         string
+	Content       string
+	AuthorName    string
+	IsRecommended bool
+	RecommendedAt *time.Time
+	UpdatedAt     time.Time
+}
+
+func (r recommendedSolutionRow) toRecord() challengeports.RecommendedSolutionRecord {
+	return challengeports.RecommendedSolutionRecord{
+		SourceType:    r.SourceType,
+		SourceID:      r.SourceID,
+		ChallengeID:   r.ChallengeID,
+		Title:         r.Title,
+		Content:       r.Content,
+		AuthorName:    r.AuthorName,
+		IsRecommended: r.IsRecommended,
+		RecommendedAt: r.RecommendedAt,
+		UpdatedAt:     r.UpdatedAt,
+	}
+}
+
+func (r *Repository) ListRecommendedSolutionsByChallengeID(challengeID int64, now time.Time) ([]challengeports.RecommendedSolutionRecord, error) {
+	rows := make([]recommendedSolutionRow, 0)
+
+	var officialRows []recommendedSolutionRow
+	if err := r.db.Table("challenge_writeups AS cw").
+		Select(strings.TrimSpace(`
+			'official' AS source_type,
+			cw.id AS source_id,
+			cw.challenge_id,
+			cw.title,
+			cw.content,
+			COALESCE(author.name, author.username, '官方题解') AS author_name,
+			cw.is_recommended,
+			cw.recommended_at,
+			cw.updated_at
+		`)).
+		Joins("LEFT JOIN users author ON author.id = cw.created_by").
+		Where("cw.challenge_id = ? AND cw.is_recommended = ?", challengeID, true).
+		Where("cw.visibility = ? OR (cw.visibility = ? AND cw.release_at IS NOT NULL AND cw.release_at <= ?)",
+			model.WriteupVisibilityPublic,
+			model.WriteupVisibilityScheduled,
+			now,
+		).
+		Order("cw.recommended_at DESC, cw.updated_at DESC").
+		Scan(&officialRows).Error; err != nil {
+		return nil, err
+	}
+	rows = append(rows, officialRows...)
+
+	var communityRows []recommendedSolutionRow
+	if err := r.db.Table("submission_writeups AS sw").
+		Select(strings.TrimSpace(`
+			'community' AS source_type,
+			sw.id AS source_id,
+			sw.challenge_id,
+			sw.title,
+			sw.content,
+			COALESCE(u.name, u.username) AS author_name,
+			sw.is_recommended,
+			sw.recommended_at,
+			sw.updated_at
+		`)).
+		Joins("JOIN users u ON u.id = sw.user_id").
+		Where("sw.challenge_id = ? AND sw.submission_status = ? AND sw.visibility_status = ? AND sw.is_recommended = ?",
+			challengeID,
+			model.SubmissionWriteupStatusPublished,
+			model.SubmissionWriteupVisibilityVisible,
+			true,
+		).
+		Order("sw.recommended_at DESC, sw.updated_at DESC").
+		Scan(&communityRows).Error; err != nil {
+		return nil, err
+	}
+	rows = append(rows, communityRows...)
+
+	sort.Slice(rows, func(i, j int) bool {
+		left := rows[i].UpdatedAt
+		if rows[i].RecommendedAt != nil {
+			left = *rows[i].RecommendedAt
+		}
+		right := rows[j].UpdatedAt
+		if rows[j].RecommendedAt != nil {
+			right = *rows[j].RecommendedAt
+		}
+		return left.After(right)
+	})
+
+	items := make([]challengeports.RecommendedSolutionRecord, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, row.toRecord())
+	}
+	return items, nil
+}
+
+type communitySolutionRow struct {
+	ID               int64
+	UserID           int64
+	ChallengeID      int64
+	ContestID        *int64
+	Title            string
+	Content          string
+	SubmissionStatus string
+	VisibilityStatus string
+	IsRecommended    bool
+	RecommendedAt    *time.Time
+	RecommendedBy    *int64
+	PublishedAt      *time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	AuthorName       string
+	ChallengeTitle   string
+}
+
+func (r communitySolutionRow) toRecord() challengeports.CommunitySolutionRecord {
+	return challengeports.CommunitySolutionRecord{
+		Submission: model.SubmissionWriteup{
+			ID:               r.ID,
+			UserID:           r.UserID,
+			ChallengeID:      r.ChallengeID,
+			ContestID:        r.ContestID,
+			Title:            r.Title,
+			Content:          r.Content,
+			SubmissionStatus: r.SubmissionStatus,
+			VisibilityStatus: r.VisibilityStatus,
+			IsRecommended:    r.IsRecommended,
+			RecommendedAt:    r.RecommendedAt,
+			RecommendedBy:    r.RecommendedBy,
+			PublishedAt:      r.PublishedAt,
+			CreatedAt:        r.CreatedAt,
+			UpdatedAt:        r.UpdatedAt,
+		},
+		AuthorName:     r.AuthorName,
+		ChallengeID:    r.ChallengeID,
+		ChallengeTitle: r.ChallengeTitle,
+	}
+}
+
+func (r *Repository) ListCommunitySolutionsByChallengeID(challengeID int64, query *dto.CommunityChallengeSolutionQuery) ([]challengeports.CommunitySolutionRecord, int64, error) {
+	base := r.db.Table("submission_writeups AS sw").
+		Select(strings.TrimSpace(`
+			sw.id,
+			sw.user_id,
+			sw.challenge_id,
+			sw.contest_id,
+			sw.title,
+			sw.content,
+			sw.submission_status,
+			sw.visibility_status,
+			sw.is_recommended,
+			sw.recommended_at,
+			sw.recommended_by,
+			sw.published_at,
+			sw.created_at,
+			sw.updated_at,
+			COALESCE(u.name, u.username) AS author_name,
+			c.title AS challenge_title
+		`)).
+		Joins("JOIN users u ON u.id = sw.user_id").
+		Joins("JOIN challenges c ON c.id = sw.challenge_id").
+		Where("sw.challenge_id = ? AND sw.submission_status = ? AND sw.visibility_status = ?",
+			challengeID,
+			model.SubmissionWriteupStatusPublished,
+			model.SubmissionWriteupVisibilityVisible,
+		)
+
+	if query != nil && strings.TrimSpace(query.Q) != "" {
+		pattern := "%" + strings.TrimSpace(query.Q) + "%"
+		base = base.Where("sw.title LIKE ? OR u.username LIKE ? OR u.name LIKE ?", pattern, pattern, pattern)
+	}
+
+	var total int64
+	if err := base.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	page := 1
+	size := 20
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.Size > 0 {
+			size = query.Size
+		}
+		if query.Sort == "oldest" {
+			base = base.Order("sw.published_at ASC, sw.id ASC")
+		} else {
+			base = base.Order("sw.published_at DESC, sw.id DESC")
+		}
+	} else {
+		base = base.Order("sw.published_at DESC, sw.id DESC")
+	}
+
+	offset := (page - 1) * size
+	var rows []communitySolutionRow
+	if err := base.Offset(offset).Limit(size).Scan(&rows).Error; err != nil {
+		return nil, 0, err
+	}
+
+	items := make([]challengeports.CommunitySolutionRecord, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, row.toRecord())
+	}
+	return items, total, nil
+}
+
 func (r *Repository) listTeacherSubmissionWriteups(
 	query *dto.TeacherSubmissionWriteupQuery,
 	extra func(db *gorm.DB) *gorm.DB,
@@ -175,22 +386,20 @@ func (r *Repository) listTeacherSubmissionWriteups(
 			sw.title,
 			sw.content,
 			sw.submission_status,
-			sw.review_status,
-			sw.submitted_at,
-			sw.reviewed_by,
-			sw.reviewed_at,
-			sw.review_comment,
+			sw.visibility_status,
+			sw.is_recommended,
+			sw.recommended_at,
+			sw.recommended_by,
+			sw.published_at,
 			sw.created_at,
 			sw.updated_at,
 			u.username AS student_username,
 			COALESCE(u.name, '') AS student_name,
 			COALESCE(u.class_name, '') AS class_name,
-			c.title AS challenge_title,
-			COALESCE(reviewer.name, reviewer.username, '') AS reviewer_name
+			c.title AS challenge_title
 		`)).
 		Joins("JOIN users u ON u.id = sw.user_id").
-		Joins("JOIN challenges c ON c.id = sw.challenge_id").
-		Joins("LEFT JOIN users reviewer ON reviewer.id = sw.reviewed_by")
+		Joins("JOIN challenges c ON c.id = sw.challenge_id")
 
 	if query != nil {
 		if query.StudentID != nil {
@@ -205,8 +414,8 @@ func (r *Repository) listTeacherSubmissionWriteups(
 		if query.SubmissionStatus != "" {
 			base = base.Where("sw.submission_status = ?", query.SubmissionStatus)
 		}
-		if query.ReviewStatus != "" {
-			base = base.Where("sw.review_status = ?", query.ReviewStatus)
+		if query.VisibilityStatus != "" {
+			base = base.Where("sw.visibility_status = ?", query.VisibilityStatus)
 		}
 	}
 	if extra != nil {

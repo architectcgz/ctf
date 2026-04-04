@@ -39,9 +39,11 @@ import {
   listContestAWDRoundAttacks,
   listContestAWDRoundTrafficEvents,
   publishAdminNotification,
+  recommendChallengeWriteup,
   runContestAWDRoundCheck,
   saveChallengeTopology,
   saveChallengeWriteup,
+  unrecommendChallengeWriteup,
   updateContest,
 } from '@/api/admin'
 
@@ -1260,6 +1262,9 @@ describe('admin contest api contract', () => {
       visibility: 'scheduled',
       release_at: '2026-03-12T08:00:00.000Z',
       created_by: 9,
+      is_recommended: true,
+      recommended_at: '2026-03-10T04:00:00.000Z',
+      recommended_by: 9,
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T02:00:00.000Z',
     })
@@ -1278,6 +1283,9 @@ describe('admin contest api contract', () => {
       visibility: 'scheduled',
       release_at: '2026-03-12T08:00:00.000Z',
       created_by: '9',
+      is_recommended: true,
+      recommended_at: '2026-03-10T04:00:00.000Z',
+      recommended_by: '9',
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T02:00:00.000Z',
     })
@@ -1290,6 +1298,7 @@ describe('admin contest api contract', () => {
       visibility: 'public',
       release_at: null,
       created_by: 9,
+      is_recommended: false,
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T03:00:00.000Z',
     })
@@ -1309,6 +1318,52 @@ describe('admin contest api contract', () => {
         visibility: 'public',
       },
     })
+  })
+
+  it('应该透传官方题解推荐与取消推荐请求', async () => {
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      challenge_id: 11,
+      title: '官方题解',
+      content: '## Step 1',
+      visibility: 'public',
+      created_by: 9,
+      is_recommended: true,
+      recommended_at: '2026-03-10T04:00:00.000Z',
+      recommended_by: 9,
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T04:00:00.000Z',
+    })
+
+    const recommended = await recommendChallengeWriteup('11')
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/authoring/challenges/11/writeup/recommend',
+    })
+    expect(recommended.is_recommended).toBe(true)
+    expect(recommended.recommended_by).toBe('9')
+
+    requestMock.mockResolvedValueOnce({
+      id: 5,
+      challenge_id: 11,
+      title: '官方题解',
+      content: '## Step 1',
+      visibility: 'public',
+      created_by: 9,
+      is_recommended: false,
+      recommended_at: null,
+      recommended_by: null,
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T05:00:00.000Z',
+    })
+
+    const unrecommended = await unrecommendChallengeWriteup('11')
+    expect(requestMock).toHaveBeenLastCalledWith({
+      method: 'DELETE',
+      url: '/authoring/challenges/11/writeup/recommend',
+    })
+    expect(unrecommended.is_recommended).toBe(false)
+    expect(unrecommended.recommended_by).toBeUndefined()
   })
 
   it('应该在题解不存在时返回 null，并透传删除请求', async () => {

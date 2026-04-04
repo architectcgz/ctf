@@ -53,6 +53,7 @@ const emit = defineEmits<{
   selectStudent: [studentId: string]
   openChallenge: [challengeId: string]
   openManualReview: [submissionId: string]
+  moderateWriteup: [payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' }]
   reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
 }>()
 </script>
@@ -321,6 +322,7 @@ const emit = defineEmits<{
         empty-text="请先从左侧选择一名学生。"
         @open-challenge="emit('openChallenge', $event)"
         @open-manual-review="emit('openManualReview', $event)"
+        @moderate-writeup="emit('moderateWriteup', $event)"
         @review-manual-review="emit('reviewManualReview', $event)"
       />
     </section>

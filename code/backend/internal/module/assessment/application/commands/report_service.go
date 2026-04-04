@@ -720,7 +720,11 @@ func latestReviewArchiveActivity(
 		record(&item.Timestamp)
 	}
 	for _, item := range writeups {
-		record(item.SubmittedAt)
+		if item.PublishedAt != nil {
+			record(item.PublishedAt)
+			continue
+		}
+		record(&item.UpdatedAt)
 	}
 	for _, item := range manualReviews {
 		record(&item.SubmittedAt)
@@ -787,7 +791,7 @@ func buildReviewArchiveObservations(
 
 func hasSubmittedWriteup(writeups []assessmentdomain.ReviewArchiveWriteupItem) bool {
 	for _, item := range writeups {
-		if item.SubmissionStatus == "submitted" {
+		if item.SubmissionStatus == "published" || item.SubmissionStatus == "submitted" {
 			return true
 		}
 	}

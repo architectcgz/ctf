@@ -100,15 +100,18 @@ type TopologyTrafficPolicy struct {
 }
 
 type ChallengeWriteup struct {
-	ID          int64      `gorm:"column:id;primaryKey"`
-	ChallengeID int64      `gorm:"column:challenge_id;uniqueIndex"`
-	Title       string     `gorm:"column:title"`
-	Content     string     `gorm:"column:content"`
-	Visibility  string     `gorm:"column:visibility"`
-	ReleaseAt   *time.Time `gorm:"column:release_at"`
-	CreatedBy   *int64     `gorm:"column:created_by"`
-	CreatedAt   time.Time  `gorm:"column:created_at"`
-	UpdatedAt   time.Time  `gorm:"column:updated_at"`
+	ID            int64      `gorm:"column:id;primaryKey"`
+	ChallengeID   int64      `gorm:"column:challenge_id;uniqueIndex"`
+	Title         string     `gorm:"column:title"`
+	Content       string     `gorm:"column:content"`
+	Visibility    string     `gorm:"column:visibility"`
+	ReleaseAt     *time.Time `gorm:"column:release_at"`
+	CreatedBy     *int64     `gorm:"column:created_by"`
+	IsRecommended bool       `gorm:"column:is_recommended;index:idx_challenge_writeups_recommended"`
+	RecommendedAt *time.Time `gorm:"column:recommended_at"`
+	RecommendedBy *int64     `gorm:"column:recommended_by"`
+	CreatedAt     time.Time  `gorm:"column:created_at"`
+	UpdatedAt     time.Time  `gorm:"column:updated_at"`
 }
 
 func (ChallengeWriteup) TableName() string {

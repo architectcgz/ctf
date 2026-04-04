@@ -40,16 +40,17 @@ const props = defineProps<{
 const emit = defineEmits<{
   openChallenge: [challengeId: string]
   openManualReview: [submissionId: string]
+  moderateWriteup: [payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' }]
   reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
 const weakDimensions = computed(() => getWeakDimensions(props.profile))
-const reviewedWriteupCount = computed(() =>
-  props.writeupSubmissions.filter((item) => item.review_status !== 'pending').length
+const visibleWriteupCount = computed(() =>
+  props.writeupSubmissions.filter((item) => item.visibility_status === 'visible').length
 )
-const excellentWriteupCount = computed(() =>
-  props.writeupSubmissions.filter((item) => item.review_status === 'excellent').length
+const recommendedWriteupCount = computed(() =>
+  props.writeupSubmissions.filter((item) => item.is_recommended).length
 )
 const approvedManualReviewCount = computed(() =>
   props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
@@ -72,34 +73,23 @@ function openManualReview(submissionId: string): void {
   emit('openManualReview', submissionId)
 }
 
-function reviewStatusLabel(status: TeacherSubmissionWriteupItemData['review_status']): string {
-  switch (status) {
-    case 'reviewed':
-      return '已评阅'
-    case 'excellent':
-      return '优秀'
-    case 'needs_revision':
-      return '待修改'
-    default:
-      return '待评阅'
-  }
-}
-
-function reviewStatusClass(status: TeacherSubmissionWriteupItemData['review_status']): string {
-  switch (status) {
-    case 'excellent':
-      return 'writeup-chip writeup-chip--success'
-    case 'needs_revision':
-      return 'writeup-chip writeup-chip--warning'
-    case 'reviewed':
-      return 'writeup-chip writeup-chip--primary'
-    default:
-      return 'writeup-chip writeup-chip--muted'
-  }
-}
-
 function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
-  return status === 'submitted' ? '已提交' : '草稿'
+  return status === 'published' || status === 'submitted' ? '已发布' : '草稿'
+}
+
+function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
+  return status === 'hidden' ? '已隐藏' : '已公开'
+}
+
+function visibilityStatusClass(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
+  return status === 'hidden' ? 'writeup-chip writeup-chip--warning' : 'writeup-chip writeup-chip--success'
+}
+
+function emitWriteupModeration(
+  submissionId: string,
+  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
+): void {
+  emit('moderateWriteup', { submissionId, action })
 }
 
 function manualReviewStatusLabel(status: TeacherManualReviewSubmissionItemData['review_status']): string {
@@ -332,30 +322,30 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </div>
         </SectionCard>
 
-        <SectionCard title="Writeup 状态" subtitle="查看当前学员最近提交的解题复盘与评阅结果。">
+        <SectionCard title="社区题解状态" subtitle="查看当前学员最近的社区题解发布、隐藏与推荐状态。">
           <AppEmpty
             v-if="writeupSubmissions.length === 0"
-            title="暂无 writeup"
-            description="当前学员还没有提交解题复盘。"
+            title="暂无社区题解"
+            description="当前学员还没有保存或发布题解。"
             icon="FileText"
           />
 
           <template v-else>
             <div class="grid gap-3 md:grid-cols-3">
               <article class="insight-kpi-card insight-kpi-card--primary">
-                <div class="insight-kpi-label">最近提交</div>
+                <div class="insight-kpi-label">最近题解</div>
                 <div class="insight-kpi-value">{{ writeupSubmissions.length }}</div>
-                <div class="insight-kpi-hint">当前分析页展示的 writeup 数量</div>
-              </article>
-              <article class="insight-kpi-card insight-kpi-card--warning">
-                <div class="insight-kpi-label">已评阅</div>
-                <div class="insight-kpi-value">{{ reviewedWriteupCount }}</div>
-                <div class="insight-kpi-hint">教师已给出结果的复盘记录</div>
+                <div class="insight-kpi-hint">当前分析页展示的题解数量</div>
               </article>
               <article class="insight-kpi-card insight-kpi-card--success">
-                <div class="insight-kpi-label">优秀</div>
-                <div class="insight-kpi-value">{{ excellentWriteupCount }}</div>
-                <div class="insight-kpi-hint">可直接沉淀为班级样例的记录</div>
+                <div class="insight-kpi-label">公开中</div>
+                <div class="insight-kpi-value">{{ visibleWriteupCount }}</div>
+                <div class="insight-kpi-hint">当前仍对已解题学生可见的题解</div>
+              </article>
+              <article class="insight-kpi-card insight-kpi-card--warning">
+                <div class="insight-kpi-label">推荐中</div>
+                <div class="insight-kpi-value">{{ recommendedWriteupCount }}</div>
+                <div class="insight-kpi-hint">会进入学生端推荐题解区的内容</div>
               </article>
             </div>
 
@@ -379,8 +369,14 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
                     <span class="writeup-chip writeup-chip--muted">
                       {{ submissionStatusLabel(item.submission_status) }}
                     </span>
-                    <span :class="reviewStatusClass(item.review_status)">
-                      {{ reviewStatusLabel(item.review_status) }}
+                    <span :class="visibilityStatusClass(item.visibility_status)">
+                      {{ visibilityStatusLabel(item.visibility_status) }}
+                    </span>
+                    <span
+                      v-if="item.is_recommended"
+                      class="writeup-chip writeup-chip--primary"
+                    >
+                      推荐题解
                     </span>
                   </div>
                 </div>
@@ -391,14 +387,31 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
                   <span>最近更新：{{ new Date(item.updated_at).toLocaleString('zh-CN') }}</span>
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
-                    @click="openChallenge(item.challenge_id)"
-                  >
-                    打开挑战
-                    <ArrowRight class="h-4 w-4" />
-                  </button>
+                  <div class="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
+                      @click="emitWriteupModeration(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
+                    >
+                      {{ item.is_recommended ? '取消推荐' : '设为推荐' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 font-medium"
+                      :class="item.visibility_status === 'hidden' ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'"
+                      @click="emitWriteupModeration(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')"
+                    >
+                      {{ item.visibility_status === 'hidden' ? '恢复可见' : '隐藏题解' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
+                      @click="openChallenge(item.challenge_id)"
+                    >
+                      打开挑战
+                      <ArrowRight class="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </AppCard>
             </div>

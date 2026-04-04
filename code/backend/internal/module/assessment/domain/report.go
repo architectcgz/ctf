@@ -142,12 +142,10 @@ type ReviewArchiveWriteupItem struct {
 	ChallengeTitle   string     `json:"challenge_title"`
 	Title            string     `json:"title"`
 	SubmissionStatus string     `json:"submission_status"`
-	ReviewStatus     string     `json:"review_status"`
-	SubmittedAt      *time.Time `json:"submitted_at,omitempty"`
-	ReviewedAt       *time.Time `json:"reviewed_at,omitempty"`
-	ReviewComment    string     `json:"review_comment,omitempty"`
+	VisibilityStatus string     `json:"visibility_status"`
+	IsRecommended    bool       `json:"is_recommended"`
+	PublishedAt      *time.Time `json:"published_at,omitempty"`
 	UpdatedAt        time.Time  `json:"updated_at"`
-	ReviewerName     string     `json:"reviewer_name,omitempty"`
 }
 
 type ReviewArchiveManualReviewItem struct {
