@@ -119,8 +119,7 @@ function supportsRealtime(status: ContestStatus): boolean {
         <div
           v-for="i in 3"
           :key="i"
-          class="h-32 rounded-[18px] animate-pulse"
-          style="background: rgba(226, 232, 240, 0.5)"
+          class="scoreboard-skeleton-card h-32 rounded-[18px] animate-pulse"
         />
       </div>
 
@@ -344,6 +343,10 @@ function supportsRealtime(status: ContestStatus): boolean {
 .scoreboard-card-divider {
   margin: 1rem 0 1.1rem;
   border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+}
+
+.scoreboard-skeleton-card {
+  background: color-mix(in srgb, var(--journal-surface-subtle) 78%, var(--color-bg-base));
 }
 
 .scoreboard-table-shell {
