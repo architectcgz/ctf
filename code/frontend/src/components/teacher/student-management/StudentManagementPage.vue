@@ -28,11 +28,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="teacher-management-shell space-y-6">
-    <section class="teacher-hero rounded-[30px] border px-6 py-6 md:px-8">
+  <div class="teacher-management-shell teacher-surface space-y-6">
+    <section class="teacher-hero teacher-surface-hero rounded-[30px] border px-6 py-6 md:px-8">
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
-          <div class="teacher-eyebrow">Student Directory</div>
+          <div class="journal-eyebrow">Student Directory</div>
           <h2
             class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
           >
@@ -43,12 +43,16 @@ const emit = defineEmits<{
           </p>
 
           <div class="mt-6 flex flex-wrap gap-3">
-            <button type="button" class="teacher-btn" @click="emit('openClassManagement')">
+            <button
+              type="button"
+              class="teacher-btn teacher-surface-btn"
+              @click="emit('openClassManagement')"
+            >
               班级管理
             </button>
             <button
               type="button"
-              class="teacher-btn teacher-btn--primary"
+              class="teacher-btn teacher-btn--primary teacher-surface-btn teacher-surface-btn--primary"
               @click="emit('openReportExport')"
             >
               导出报告
@@ -56,20 +60,20 @@ const emit = defineEmits<{
           </div>
         </div>
 
-        <article class="teacher-brief rounded-[24px] border px-5 py-5">
+        <article class="teacher-brief teacher-surface-brief journal-brief rounded-[24px] border px-5 py-5">
           <div class="teacher-brief-title">当前学生概况</div>
           <div class="teacher-kpi-grid mt-5 grid gap-3 sm:grid-cols-3">
-            <article class="teacher-kpi-card teacher-kpi-card--primary">
+            <article class="teacher-kpi-card journal-metric">
               <div class="teacher-kpi-label">可访问班级</div>
               <div class="teacher-kpi-value">{{ classes.length }}</div>
               <div class="teacher-kpi-hint">当前教师可切换的班级数量</div>
             </article>
-            <article class="teacher-kpi-card teacher-kpi-card--success">
+            <article class="teacher-kpi-card journal-metric">
               <div class="teacher-kpi-label">当前班级学生</div>
               <div class="teacher-kpi-value">{{ totalStudents }}</div>
               <div class="teacher-kpi-hint">当前选中班级的学生总数</div>
             </article>
-            <article class="teacher-kpi-card teacher-kpi-card--warning">
+            <article class="teacher-kpi-card journal-metric">
               <div class="teacher-kpi-label">搜索结果</div>
               <div class="teacher-kpi-value">{{ filteredStudents.length }}</div>
               <div class="teacher-kpi-hint">当前搜索条件下匹配的学生数量</div>
@@ -83,7 +87,7 @@ const emit = defineEmits<{
       <div class="teacher-hero-section">
         <div class="teacher-hero-section-head">
           <div>
-            <div class="teacher-eyebrow teacher-eyebrow--soft">Student Filters</div>
+            <div class="journal-eyebrow teacher-eyebrow--soft">Student Filters</div>
             <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">学生筛选与列表</h3>
             <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
               先选班级，再按姓名、用户名或学号定位学生。
@@ -96,7 +100,7 @@ const emit = defineEmits<{
             <span class="text-sm text-text-secondary">班级</span>
             <select
               :value="selectedClassName"
-              class="teacher-filter-field w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+              class="teacher-filter-field teacher-surface-filter w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none transition focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
               :disabled="loadingClasses"
               @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
             >
@@ -109,7 +113,7 @@ const emit = defineEmits<{
           <label class="space-y-2">
             <span class="text-sm text-text-secondary">搜索姓名或用户名</span>
             <div
-              class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
+              class="teacher-filter-field teacher-surface-filter flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
             >
               <Search class="h-4 w-4 text-text-muted" />
               <input
@@ -125,7 +129,7 @@ const emit = defineEmits<{
           <label class="space-y-2">
             <span class="text-sm text-text-secondary">按学号查询</span>
             <div
-              class="teacher-filter-field flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
+              class="teacher-filter-field teacher-surface-filter flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3"
             >
               <Search class="h-4 w-4 text-text-muted" />
               <input
@@ -149,19 +153,19 @@ const emit = defineEmits<{
           />
         </div>
 
-        <AppEmpty
-          v-else-if="filteredStudents.length === 0"
-          class="mt-5"
-          icon="Users"
-          title="没有匹配学生"
-          description="调整搜索词或切换班级后再试。"
-        />
+          <AppEmpty
+            v-else-if="filteredStudents.length === 0"
+            class="teacher-surface-empty mt-5"
+            icon="Users"
+            title="没有匹配学生"
+            description="调整搜索词或切换班级后再试。"
+          />
 
         <div v-else class="mt-5">
           <ElTable
             :data="filteredStudents"
             row-key="id"
-            class="teacher-student-table"
+            class="teacher-student-table teacher-surface-table"
             empty-text="没有匹配学生"
           >
             <ElTableColumn label="姓名" min-width="220">
@@ -209,9 +213,13 @@ const emit = defineEmits<{
 
             <ElTableColumn label="操作" width="180" align="right">
               <template #default="{ row }">
-                <ElButton type="primary" plain @click="emit('openStudent', row.id)"
-                  >查看学员分析</ElButton
+                <button
+                  type="button"
+                  class="teacher-btn teacher-surface-btn"
+                  @click="emit('openStudent', row.id)"
                 >
+                  查看学员分析
+                </button>
               </template>
             </ElTableColumn>
           </ElTable>
@@ -221,7 +229,7 @@ const emit = defineEmits<{
 
     <div
       v-if="error"
-      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
+      class="teacher-surface-error rounded-2xl px-5 py-4 text-sm text-[var(--color-danger)]"
     >
       {{ error }}
       <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
@@ -270,26 +278,27 @@ const emit = defineEmits<{
   border-bottom-color: var(--journal-border);
 }
 
+:deep(.teacher-student-table.el-table),
+:deep(.teacher-student-table .el-table__inner-wrapper),
+:deep(.teacher-student-table .el-table__body-wrapper),
+:deep(.teacher-student-table .el-table__header-wrapper),
+:deep(.teacher-student-table .el-table__empty-block) {
+  background: var(--journal-surface);
+}
+
 :deep(.teacher-student-table .el-table__inner-wrapper::before) {
   display: none;
 }
 
 .teacher-management-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
-  --color-text-primary: var(--journal-ink);
-  --color-text-secondary: var(--journal-muted);
-  --color-text-muted: #94a3b8;
-  --color-border-default: var(--journal-border);
-  --color-border-subtle: rgba(226, 232, 240, 0.74);
-  --color-bg-surface: var(--journal-surface);
-  --color-bg-base: #f8fafc;
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -309,10 +318,10 @@ const emit = defineEmits<{
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .teacher-brief {
@@ -320,7 +329,7 @@ const emit = defineEmits<{
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-brief-title {
@@ -331,7 +340,7 @@ const emit = defineEmits<{
 
 .teacher-hero-divider {
   margin-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .teacher-hero-divider--inner {
@@ -383,23 +392,7 @@ const emit = defineEmits<{
 }
 
 .teacher-kpi-card {
-  border: 1px solid var(--journal-border);
-  border-radius: 16px;
-  background: var(--journal-surface-subtle);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
-.teacher-kpi-card--primary {
-  border-top: 3px solid rgba(79, 70, 229, 0.42);
-}
-
-.teacher-kpi-card--success {
-  border-top: 3px solid rgba(16, 185, 129, 0.36);
-}
-
-.teacher-kpi-card--warning {
-  border-top: 3px solid rgba(245, 158, 11, 0.38);
 }
 
 .teacher-kpi-label {

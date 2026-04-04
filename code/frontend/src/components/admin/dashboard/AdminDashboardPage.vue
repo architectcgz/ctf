@@ -261,28 +261,28 @@ function usageTone(value: number | undefined): string {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: rgba(226, 232, 240, 0.84);
-  --journal-surface: rgba(248, 250, 252, 0.92);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -334,7 +334,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .journal-divider {
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .admin-btn {
@@ -342,31 +342,59 @@ function usageTone(value: number | undefined): string {
   align-items: center;
   gap: 0.5rem;
   min-height: 2.75rem;
+  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 150ms ease;
+  box-shadow: var(--admin-btn-shadow, none);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.admin-btn:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-border));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--journal-accent) 16%, transparent),
+    var(--admin-btn-shadow, none);
 }
 
 .admin-btn-primary {
-  background: var(--journal-accent);
-  color: #fff;
+  --admin-btn-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-accent) 76%, var(--journal-surface-subtle))
+  );
+  color: #eff6ff;
 }
 
 .admin-btn-primary:hover {
-  background: #1d4ed8;
+  border-color: color-mix(in srgb, var(--journal-accent) 58%, var(--journal-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 94%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-accent) 82%, var(--journal-surface-subtle))
+  );
+  transform: translateY(-1px);
 }
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
 .admin-btn-ghost:hover {
   border-color: rgba(37, 99, 235, 0.28);
   color: var(--journal-accent);
+  transform: translateY(-1px);
 }
 
 .admin-feedback {
@@ -417,7 +445,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 16px;
   padding: 1rem;
   font-size: 0.875rem;
@@ -431,7 +459,7 @@ function usageTone(value: number | undefined): string {
   gap: 0.75rem;
   border: 1px solid rgba(226, 232, 240, 0.86);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.72);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 0.95rem 1rem;
   text-align: left;
   transition: border-color 150ms ease, background-color 150ms ease;
@@ -439,16 +467,16 @@ function usageTone(value: number | undefined): string {
 
 .admin-action-row:hover {
   border-color: rgba(37, 99, 235, 0.24);
-  background: rgba(248, 250, 252, 0.95);
+  background: var(--journal-surface);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #e2e8f0;
-  --journal-muted: #94a3b8;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: rgba(71, 85, 105, 0.78);
-  --journal-surface: rgba(15, 23, 42, 0.7);
-  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {

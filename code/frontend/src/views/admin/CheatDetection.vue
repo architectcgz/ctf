@@ -227,12 +227,19 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: rgba(226, 232, 240, 0.84);
-  --journal-surface: rgba(248, 250, 252, 0.92);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.72);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  --cheat-card-surface: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 93%, var(--color-bg-base))
+  );
 }
 
 .journal-hero,
@@ -240,9 +247,9 @@ onMounted(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -283,7 +290,7 @@ onMounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  border-top: 1px dashed var(--cheat-divider);
 }
 
 .admin-section-head {
@@ -296,14 +303,15 @@ onMounted(() => {
 
 .risk-row,
 .quick-action-row {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--cheat-card-border);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.74);
+  background: var(--cheat-card-surface);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
   padding: 1rem;
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 16px;
   padding: 1rem;
   font-size: 0.875rem;
@@ -316,15 +324,30 @@ onMounted(() => {
   justify-content: space-between;
   gap: 0.75rem;
   text-align: left;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.quick-action-row:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--cheat-card-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-accent) 3%, var(--journal-surface-subtle))
+  );
+  transform: translateY(-1px);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #e2e8f0;
-  --journal-muted: #94a3b8;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: rgba(71, 85, 105, 0.78);
-  --journal-surface: rgba(15, 23, 42, 0.7);
-  --journal-surface-subtle: rgba(15, 23, 42, 0.78);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero,

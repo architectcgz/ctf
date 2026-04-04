@@ -1,0 +1,29 @@
+import { describe, expect, it } from 'vitest'
+
+import cheatDetectionSource from '../CheatDetection.vue?raw'
+
+describe('cheat detection surface alignment', () => {
+  it('softens risk card borders instead of using the full journal border contrast', () => {
+    expect(cheatDetectionSource).toMatch(
+      /--cheat-card-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 74%, transparent\);/,
+    )
+    expect(cheatDetectionSource).toMatch(
+      /\.risk-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--cheat-card-border\);/s,
+    )
+    expect(cheatDetectionSource).not.toMatch(
+      /\.risk-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--journal-border\);/s,
+    )
+  })
+
+  it('uses a softer section divider so the content bands do not look boxed in', () => {
+    expect(cheatDetectionSource).toMatch(
+      /--cheat-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/,
+    )
+    expect(cheatDetectionSource).toMatch(
+      /\.journal-divider\s*\{[\s\S]*border-top:\s*1px dashed var\(--cheat-divider\);/s,
+    )
+    expect(cheatDetectionSource).not.toMatch(
+      /\.journal-divider\s*\{[^}]*88%, transparent\);/s,
+    )
+  })
+})

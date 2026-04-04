@@ -194,12 +194,12 @@ async function handleDownload(): Promise<void> {
 
 <template>
   <section
-    class="report-shell report-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="report-shell teacher-surface report-hero teacher-surface-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div>
       <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <div class="report-eyebrow">Teacher Export</div>
+          <div class="journal-eyebrow report-eyebrow">Teacher Export</div>
           <h2
             class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
           >
@@ -210,7 +210,7 @@ async function handleDownload(): Promise<void> {
           </p>
         </div>
 
-        <article class="report-brief rounded-[24px] border px-5 py-5">
+        <article class="report-brief teacher-surface-brief journal-brief rounded-[24px] border px-5 py-5">
           <div class="report-brief-title">当前导出概况</div>
           <div class="mt-5 space-y-3">
             <div class="report-note">
@@ -233,7 +233,7 @@ async function handleDownload(): Promise<void> {
         <div>
           <div class="report-section-head">
             <div>
-              <div class="report-eyebrow report-eyebrow--soft">Export Task</div>
+              <div class="journal-eyebrow report-eyebrow report-eyebrow--soft">Export Task</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">创建导出任务</h3>
               <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
                 预览确认无误后，再选择是否下载为 PDF 或 Excel 文件。
@@ -242,7 +242,7 @@ async function handleDownload(): Promise<void> {
           </div>
 
           <AppCard
-            class="report-card report-card--hero mt-5"
+            class="report-card journal-brief mt-5"
             variant="hero"
             accent="primary"
             eyebrow="Export Task"
@@ -257,7 +257,7 @@ async function handleDownload(): Promise<void> {
                 v-model="form.className"
                 type="text"
                 :placeholder="classNamePlaceholder"
-                class="w-full border border-l-2 border-[var(--color-border-default)] bg-transparent px-3 py-2.5 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-0"
+                class="teacher-surface-filter w-full border border-l-2 border-[var(--color-border-default)] bg-transparent px-3 py-2.5 text-[var(--color-text-primary)] outline-none transition focus:border-[var(--color-primary)] focus:ring-0"
               />
             </label>
 
@@ -267,7 +267,7 @@ async function handleDownload(): Promise<void> {
               </legend>
               <div class="grid gap-3 sm:grid-cols-2">
                 <label
-                  class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
+                  class="teacher-surface-filter flex items-start gap-3 border border-l-2 px-3 py-3 transition"
                   :class="
                     form.format === 'pdf'
                       ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
@@ -284,7 +284,7 @@ async function handleDownload(): Promise<void> {
                 </label>
 
                 <label
-                  class="flex items-start gap-3 border border-l-2 px-3 py-3 transition"
+                  class="teacher-surface-filter flex items-start gap-3 border border-l-2 px-3 py-3 transition"
                   :class="
                     form.format === 'excel'
                       ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/6'
@@ -302,7 +302,7 @@ async function handleDownload(): Promise<void> {
               </div>
             </fieldset>
 
-            <AppCard variant="action" accent="neutral" class="report-card report-card--action">
+            <AppCard variant="action" accent="neutral" class="report-card journal-brief">
               如果当前账号已绑定班级，可直接留空使用默认班级；管理员也可手动输入其他班级名称。
             </AppCard>
 
@@ -310,7 +310,7 @@ async function handleDownload(): Promise<void> {
               <button
                 type="button"
                 :disabled="previewLoading"
-                class="report-btn"
+                class="teacher-surface-btn"
                 @click="openPreviewDialog"
               >
                 {{ previewLoading ? '加载预览中...' : '打开报告预览' }}
@@ -319,7 +319,7 @@ async function handleDownload(): Promise<void> {
               <button
                 type="button"
                 :disabled="submitting"
-                class="report-btn report-btn--primary"
+                class="teacher-surface-btn teacher-surface-btn--primary"
                 @click="handleExport"
               >
                 {{ submitting ? '提交中...' : '创建导出任务' }}
@@ -331,7 +331,7 @@ async function handleDownload(): Promise<void> {
         <div class="space-y-6">
           <div class="report-section-head">
             <div>
-              <div class="report-eyebrow report-eyebrow--soft">Latest Task</div>
+              <div class="journal-eyebrow report-eyebrow report-eyebrow--soft">Latest Task</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">最近一次任务</h3>
               <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
                 导出状态、下载信息和任务元数据都在这里收口。
@@ -341,7 +341,7 @@ async function handleDownload(): Promise<void> {
 
           <AppEmpty
             v-if="!latestExport"
-            class="mt-5"
+            class="teacher-surface-empty mt-5"
             title="还没有创建导出任务"
             description="先在左侧创建一次班级报告任务，这里会展示最近一次任务状态。"
             icon="FileChartColumnIncreasing"
@@ -349,7 +349,7 @@ async function handleDownload(): Promise<void> {
 
           <AppCard
             v-else
-            class="report-card report-card--hero"
+            class="report-card journal-brief"
             variant="hero"
             :accent="
               latestExport.result.status === 'ready'
@@ -385,28 +385,28 @@ async function handleDownload(): Promise<void> {
 
             <div class="grid grid-cols-2 gap-3 text-sm">
               <AppCard
-                class="report-card report-card--metric"
+                class="report-card journal-metric"
                 variant="metric"
                 accent="primary"
                 eyebrow="班级"
                 :title="latestExport.className"
               />
               <AppCard
-                class="report-card report-card--metric"
+                class="report-card journal-metric"
                 variant="metric"
                 accent="primary"
                 eyebrow="格式"
                 :title="latestExport.format.toUpperCase()"
               />
               <AppCard
-                class="report-card report-card--metric"
+                class="report-card journal-metric"
                 variant="metric"
                 accent="neutral"
                 eyebrow="创建时间"
                 :title="formatDate(latestExport.createdAt)"
               />
               <AppCard
-                class="report-card report-card--metric"
+                class="report-card journal-metric"
                 variant="metric"
                 accent="neutral"
                 eyebrow="过期时间"
@@ -421,7 +421,7 @@ async function handleDownload(): Promise<void> {
             <button
               type="button"
               :disabled="downloading || latestExport.result.status !== 'ready'"
-              class="report-btn"
+              class="teacher-surface-btn"
               @click="handleDownload"
             >
               {{
@@ -438,7 +438,7 @@ async function handleDownload(): Promise<void> {
 
           <div class="report-section-head">
             <div>
-              <div class="report-eyebrow report-eyebrow--soft">Guide</div>
+              <div class="journal-eyebrow report-eyebrow report-eyebrow--soft">Guide</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">使用说明</h3>
               <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
                 导出链路和当前后端能力边界。
@@ -446,7 +446,7 @@ async function handleDownload(): Promise<void> {
             </div>
           </div>
 
-          <div class="report-guide mt-5">
+          <div class="report-guide teacher-surface-empty mt-5">
             <ol class="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
               <li>1. 先点击“查看当前预览”，直接在页面内查看当前班级报告内容。</li>
               <li>2. 确认需要留档时，再创建后台导出任务。</li>
@@ -467,7 +467,7 @@ async function handleDownload(): Promise<void> {
       <template #header>
         <div class="report-dialog-header">
           <div>
-            <div class="report-eyebrow">Live Preview</div>
+            <div class="journal-eyebrow report-eyebrow">Live Preview</div>
             <h3 class="mt-3 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
               当前报告预览
             </h3>
@@ -498,17 +498,17 @@ async function handleDownload(): Promise<void> {
 
       <template v-else-if="previewSummary">
         <section class="report-kpi-grid grid gap-3 md:grid-cols-3">
-          <article class="report-kpi-card report-kpi-card--success">
+          <article class="report-kpi-card journal-metric">
             <div class="report-kpi-label">班级人数</div>
             <div class="report-kpi-value">{{ previewSummary.student_count }}</div>
             <div class="report-kpi-hint">当前预览班级纳入统计的学生数</div>
           </article>
-          <article class="report-kpi-card report-kpi-card--warning">
+          <article class="report-kpi-card journal-metric">
             <div class="report-kpi-label">平均解题</div>
             <div class="report-kpi-value">{{ averageSolvedText }}</div>
             <div class="report-kpi-hint">当前班级学生的人均解题数</div>
           </article>
-          <article class="report-kpi-card report-kpi-card--primary">
+          <article class="report-kpi-card journal-metric">
             <div class="report-kpi-label">近 7 天活跃率</div>
             <div class="report-kpi-value">{{ activeRateText }}</div>
             <div class="report-kpi-hint">近 7 天至少有一次训练动作的学生占比</div>
@@ -528,6 +528,7 @@ async function handleDownload(): Promise<void> {
 
       <AppEmpty
         v-else
+        class="teacher-surface-empty"
         title="还没有可用预览"
         description="先选择班级并加载一次预览，这里会展示当前报告内容。"
         icon="FileChartColumnIncreasing"
@@ -537,34 +538,13 @@ async function handleDownload(): Promise<void> {
 </template>
 
 <style scoped>
-.report-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-soft: rgba(79, 70, 229, 0.08);
-  --color-text-primary: var(--journal-ink);
-  --color-text-secondary: var(--journal-muted);
-  --color-text-muted: #94a3b8;
-  --color-border-default: var(--journal-border);
-  --color-border-subtle: rgba(226, 232, 240, 0.74);
-  --color-bg-surface: var(--journal-surface);
-  --color-bg-base: #f8fafc;
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-}
-
 :deep(.page-header) {
   border: 1px solid var(--journal-border);
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 :deep(.page-header__eyebrow) {
@@ -594,10 +574,10 @@ async function handleDownload(): Promise<void> {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .report-brief {
@@ -605,7 +585,7 @@ async function handleDownload(): Promise<void> {
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .report-brief-title {
@@ -646,7 +626,7 @@ async function handleDownload(): Promise<void> {
 .report-hero-divider {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .report-section-head {
@@ -657,15 +637,15 @@ async function handleDownload(): Promise<void> {
 }
 
 .report-guide {
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
-  padding-top: 1.25rem;
+  padding: 1.25rem 1.1rem 1.1rem;
 }
 
 :deep(.report-preview-dialog .el-dialog) {
+  border: 1px solid var(--journal-border);
   border-radius: 24px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 20rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.16);
 }
 
@@ -699,70 +679,6 @@ async function handleDownload(): Promise<void> {
   color: var(--journal-accent-strong);
 }
 
-.report-card {
-  border: 1px solid var(--journal-border);
-  border-radius: 16px;
-  background: var(--journal-surface);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
-.report-card--hero {
-  background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 18rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
-}
-
-.report-card--action {
-  background: var(--journal-surface-subtle);
-}
-
-.report-card--metric {
-  background: var(--journal-surface-subtle);
-  box-shadow: none;
-}
-
-.report-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.55rem 1.05rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
-}
-
-.report-btn:hover {
-  border-color: var(--journal-accent);
-  background: rgba(99, 102, 241, 0.06);
-  color: var(--journal-accent);
-}
-
-.report-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: #fff;
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
-}
-
-.report-btn--primary:hover {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: #fff;
-}
-
-.report-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .report-kpi-grid {
   align-items: stretch;
 }
@@ -770,21 +686,9 @@ async function handleDownload(): Promise<void> {
 .report-kpi-card {
   border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: var(--journal-surface-subtle);
+  background: var(--journal-surface);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
-.report-kpi-card--primary {
-  border-top: 3px solid rgba(79, 70, 229, 0.42);
-}
-
-.report-kpi-card--success {
-  border-top: 3px solid rgba(16, 185, 129, 0.36);
-}
-
-.report-kpi-card--warning {
-  border-top: 3px solid rgba(245, 158, 11, 0.38);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .report-kpi-label {

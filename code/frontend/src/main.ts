@@ -7,6 +7,7 @@ import { useAuthStore } from './stores/auth'
 import { redirectToErrorStatusPage } from './utils/errorStatusPage'
 import './style.css'
 import './assets/styles/theme.css'
+import './assets/styles/teacher-surface.css'
 import './assets/styles/element-override.css'
 
 const app = createApp(App)
