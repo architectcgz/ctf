@@ -33,9 +33,9 @@
       <ElButton
         class="auth-login-form__submit"
         type="primary"
+        native-type="submit"
         size="large"
         :loading="loading"
-        @click="onSubmit"
       >
         登录
       </ElButton>

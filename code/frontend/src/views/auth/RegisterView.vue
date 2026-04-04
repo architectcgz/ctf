@@ -36,9 +36,9 @@
       <ElButton
         class="auth-register-form__submit"
         type="primary"
+        native-type="submit"
         size="large"
         :loading="loading"
-        @click="onSubmit"
       >
         注册
       </ElButton>

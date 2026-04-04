@@ -24,7 +24,7 @@ describe('RegisterView', () => {
     return mount(RegisterView, {
       global: {
         stubs: {
-          ElForm: { template: '<form @submit.prevent="$emit(\'submit\')"><slot /></form>' },
+          ElForm: { template: '<form @submit.prevent="$emit(\'submit\', $event)"><slot /></form>' },
           ElFormItem: { template: '<label><slot /></label>' },
           ElInput: {
             props: ['modelValue', 'type', 'autocomplete', 'showPassword', 'size'],
@@ -33,8 +33,8 @@ describe('RegisterView', () => {
               '<input :value="modelValue" :type="type || \'text\'" :data-autocomplete="autocomplete" @input="$emit(\'update:modelValue\', $event.target.value)" />',
           },
           ElButton: {
-            props: ['loading', 'size', 'type', 'disabled'],
-            template: '<button @click="$emit(\'click\')"><slot /></button>',
+            props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
+            template: '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
           },
         },
       },
@@ -73,12 +73,20 @@ describe('RegisterView', () => {
     await usernameInput.setValue('alice')
     await passwordInput.setValue('secure-pass')
     await classNameInput!.setValue('CTF-1')
-    await wrapper.find('button').trigger('click')
+    await wrapper.find('form').trigger('submit.prevent')
 
     expect(authMocks.register).toHaveBeenCalledWith({
       username: 'alice',
       password: 'secure-pass',
       class_name: 'CTF-1',
     })
+  })
+
+  it('注册按钮应使用原生 submit 类型以支持表单回车提交', async () => {
+    const wrapper = mountRegisterView()
+
+    await flushPromises()
+
+    expect(wrapper.get('button').attributes('type')).toBe('submit')
   })
 })
