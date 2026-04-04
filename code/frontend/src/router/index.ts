@@ -10,12 +10,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '登录' },
   },
   {
-    path: '/login/cas/callback',
-    name: 'CASLoginCallback',
-    component: () => import('@/views/auth/CASCallbackView.vue'),
-    meta: { title: 'CAS 登录回调' },
-  },
-  {
     path: '/register',
     name: 'Register',
     component: () => import('@/views/auth/RegisterView.vue'),
@@ -123,9 +117,9 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, title: '通知详情', contentLayout: 'bleed' },
       },
 
-      // Teacher
+      // Teaching Operations
       {
-        path: 'teacher/dashboard',
+        path: 'academy/overview',
         name: 'TeacherDashboard',
         component: () => import('@/views/teacher/TeacherDashboard.vue'),
         meta: {
@@ -137,7 +131,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/classes',
+        path: 'academy/classes',
         name: 'ClassManagement',
         component: () => import('@/views/teacher/ClassManagement.vue'),
         meta: {
@@ -149,7 +143,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/students',
+        path: 'academy/students',
         name: 'TeacherStudentManagement',
         component: () => import('@/views/teacher/TeacherStudentManagement.vue'),
         meta: {
@@ -161,7 +155,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/classes/:className',
+        path: 'academy/classes/:className',
         name: 'TeacherClassStudents',
         component: () => import('@/views/teacher/TeacherClassStudents.vue'),
         meta: {
@@ -172,7 +166,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/classes/:className/students/:studentId',
+        path: 'academy/classes/:className/students/:studentId',
         name: 'TeacherStudentAnalysis',
         component: () => import('@/views/teacher/TeacherStudentAnalysis.vue'),
         meta: {
@@ -183,7 +177,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/classes/:className/students/:studentId/review-archive',
+        path: 'academy/classes/:className/students/:studentId/review-archive',
         name: 'TeacherStudentReviewArchive',
         component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
         meta: {
@@ -194,7 +188,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/instances',
+        path: 'academy/instances',
         name: 'TeacherInstanceManagement',
         component: () => import('@/views/teacher/InstanceManagement.vue'),
         meta: {
@@ -206,7 +200,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'teacher/reports',
+        path: 'academy/reports',
         name: 'ReportExport',
         component: () => import('@/views/teacher/ReportExport.vue'),
         meta: {
@@ -218,9 +212,9 @@ const routes: RouteRecordRaw[] = [
         },
       },
 
-      // Admin
+      // Platform Governance
       {
-        path: 'admin/dashboard',
+        path: 'platform/overview',
         name: 'AdminDashboard',
         component: () => import('@/views/admin/AdminDashboard.vue'),
         meta: {
@@ -232,7 +226,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges',
+        path: 'platform/challenges',
         name: 'ChallengeManage',
         component: () => import('@/views/admin/ChallengeManage.vue'),
         meta: {
@@ -244,7 +238,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id',
+        path: 'platform/challenges/:id',
         name: 'AdminChallengeDetail',
         component: () => import('@/views/admin/ChallengeDetail.vue'),
         meta: {
@@ -255,7 +249,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id/topology',
+        path: 'platform/challenges/:id/topology',
         name: 'AdminChallengeTopologyStudio',
         component: () => import('@/views/admin/ChallengeTopologyStudio.vue'),
         meta: {
@@ -266,7 +260,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/environment-templates',
+        path: 'platform/environment-templates',
         name: 'AdminEnvironmentTemplateLibrary',
         component: () => import('@/views/admin/EnvironmentTemplateLibrary.vue'),
         meta: {
@@ -278,7 +272,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/:id/writeup',
+        path: 'platform/challenges/:id/writeup',
         name: 'AdminChallengeWriteup',
         component: () => import('@/views/admin/ChallengeWriteup.vue'),
         meta: {
@@ -289,7 +283,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/contests',
+        path: 'platform/contests',
         name: 'ContestManage',
         component: () => import('@/views/admin/ContestManage.vue'),
         meta: {
@@ -301,7 +295,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/users',
+        path: 'platform/users',
         name: 'UserManage',
         component: () => import('@/views/admin/UserManage.vue'),
         meta: {
@@ -313,7 +307,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/images',
+        path: 'platform/images',
         name: 'ImageManage',
         component: () => import('@/views/admin/ImageManage.vue'),
         meta: {
@@ -325,7 +319,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/cheat',
+        path: 'platform/integrity',
         name: 'CheatDetection',
         component: () => import('@/views/admin/CheatDetection.vue'),
         meta: {
@@ -337,7 +331,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/audit',
+        path: 'platform/audit',
         name: 'AuditLog',
         component: () => import('@/views/admin/AuditLog.vue'),
         meta: {

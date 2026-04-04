@@ -46,7 +46,7 @@ defineProps<{
 }
 
 :global([data-theme='light']) .page-header {
-  border-color: color-mix(in srgb, var(--color-primary) 10%, rgba(226, 232, 240, 0.92));
+  border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-border-default));
   background: linear-gradient(
     145deg,
     color-mix(in srgb, var(--color-primary) 4%, white),

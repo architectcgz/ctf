@@ -183,7 +183,7 @@ async function handleUserSearch(): Promise<void> {
 
               <div v-else-if="publisher.audienceTarget.value === 'class'" class="publish-subsection mt-3">
                 <div class="mb-2 flex items-center justify-between">
-                  <span class="text-xs text-[var(--color-text-muted)]">班级候选来自 /teacher/classes</span>
+                  <span class="text-xs text-[var(--color-text-muted)]">班级候选来自 /academy/classes</span>
                   <button
                     type="button"
                     class="publish-inline-btn"

@@ -341,13 +341,6 @@ const emit = defineEmits<{
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-primary-soft: rgba(79, 70, 229, 0.08);
-  --color-text-primary: var(--journal-ink);
-  --color-text-secondary: var(--journal-muted);
-  --color-text-muted: var(--theme-text-muted);
-  --color-border-default: var(--teacher-card-border);
-  --color-border-subtle: var(--theme-border-subtle);
-  --color-bg-surface: var(--journal-surface);
-  --color-bg-base: var(--theme-bg-base);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -355,20 +348,24 @@ const emit = defineEmits<{
   border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+    );
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 :deep(.page-header__eyebrow) {
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  border-left: 1px solid rgba(99, 102, 241, 0.18) !important;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent) !important;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.06);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   padding-left: 0.72rem !important;
   letter-spacing: 0.2em;
-  color: var(--journal-accent);
+  color: var(--journal-accent-strong);
 }
 
 :deep(.section-card) {
@@ -401,8 +398,12 @@ const emit = defineEmits<{
 .analysis-hero-card {
   border-color: var(--teacher-card-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
@@ -420,8 +421,8 @@ const emit = defineEmits<{
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.3rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 600;

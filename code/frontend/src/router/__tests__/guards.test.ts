@@ -106,15 +106,15 @@ describe('router guards', () => {
 
     const next = await runBeforeEach(
       createRoute({
-        path: '/admin/dashboard',
-        fullPath: '/admin/dashboard',
+        path: '/platform/overview',
+        fullPath: '/platform/overview',
         meta: { requiresAuth: true },
       })
     )
 
     expect(next).toHaveBeenCalledWith({
       path: '/login',
-      query: { redirect: '/admin/dashboard' },
+      query: { redirect: '/platform/overview' },
     })
   })
 
@@ -125,8 +125,8 @@ describe('router guards', () => {
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
       createRoute({
-        path: '/admin/dashboard',
-        fullPath: '/admin/dashboard',
+        path: '/platform/overview',
+        fullPath: '/platform/overview',
         meta: { requiresAuth: true, roles: ['admin'] },
       })
     )
@@ -143,8 +143,8 @@ describe('router guards', () => {
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
       createRoute({
-        path: '/teacher/reports',
-        fullPath: '/teacher/reports',
+        path: '/academy/reports',
+        fullPath: '/academy/reports',
         meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
       })
     )
@@ -154,18 +154,6 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('应该允许未登录用户访问 CAS 回调页', async () => {
-    const { runBeforeEach } = createRouterMock()
-
-    const next = await runBeforeEach(
-      createRoute({
-        path: '/login/cas/callback',
-        fullPath: '/login/cas/callback?ticket=ST-1',
-      })
-    )
-
-    expect(next).toHaveBeenCalledWith()
-  })
 })
 
 describe('guard helpers', () => {

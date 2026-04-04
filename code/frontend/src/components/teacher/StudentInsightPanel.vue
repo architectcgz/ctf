@@ -624,6 +624,7 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
@@ -631,11 +632,6 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
   --color-primary-soft: rgba(79, 70, 229, 0.08);
-  --color-text-primary: var(--journal-ink);
-  --color-text-secondary: var(--journal-muted);
-  --color-border-default: var(--teacher-card-border);
-  --color-bg-surface: var(--journal-surface);
-  --color-bg-base: var(--theme-bg-base);
 }
 
 .writeup-chip {
