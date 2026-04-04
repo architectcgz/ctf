@@ -329,33 +329,35 @@ const emit = defineEmits<{
 
 <style scoped>
 .teacher-analysis-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: rgba(248, 250, 252, 0.9);
-  --journal-surface-subtle: rgba(241, 245, 249, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-primary-soft: rgba(79, 70, 229, 0.08);
   --color-text-primary: var(--journal-ink);
   --color-text-secondary: var(--journal-muted);
-  --color-text-muted: #94a3b8;
-  --color-border-default: var(--journal-border);
-  --color-border-subtle: rgba(226, 232, 240, 0.74);
+  --color-text-muted: var(--theme-text-muted);
+  --color-border-default: var(--teacher-card-border);
+  --color-border-subtle: var(--theme-border-subtle);
   --color-bg-surface: var(--journal-surface);
-  --color-bg-base: #f8fafc;
+  --color-bg-base: var(--theme-bg-base);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 :deep(.page-header) {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 :deep(.page-header__eyebrow) {
@@ -371,16 +373,16 @@ const emit = defineEmits<{
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px solid var(--teacher-card-border);
   background: var(--journal-surface-subtle);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
+  border-bottom: 1px dashed var(--teacher-divider);
   padding-bottom: 0.75rem;
 }
 
@@ -397,13 +399,13 @@ const emit = defineEmits<{
 }
 
 .analysis-hero-card {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .analysis-hero-head {
@@ -428,7 +430,7 @@ const emit = defineEmits<{
 
 .analysis-note {
   border-radius: 16px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   padding: 0.85rem 0.95rem;
 }
@@ -460,11 +462,11 @@ const emit = defineEmits<{
 }
 
 .teacher-kpi-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background: var(--journal-surface-subtle);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-kpi-card--primary {

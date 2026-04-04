@@ -111,6 +111,7 @@ onMounted(() => {
 
           <AppEmpty
             v-if="!riskData?.suspects.length"
+            class="cheat-empty-state"
             icon="UsersRound"
             title="当前没有超过阈值的高频提交账号"
             description="说明最近窗口内还没有明显的提交爆发样本。"
@@ -154,6 +155,7 @@ onMounted(() => {
 
           <AppEmpty
             v-if="!riskData?.shared_ips.length"
+            class="cheat-empty-state"
             icon="UsersRound"
             title="当前没有共享 IP 线索"
             description="最近 24 小时内还没有发现明显的多账号复用 IP。"
@@ -316,6 +318,12 @@ onMounted(() => {
   padding: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
+}
+
+.cheat-empty-state {
+  border-top-color: var(--cheat-divider);
+  border-bottom-color: var(--cheat-divider);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 58%, transparent);
 }
 
 .quick-action-row {

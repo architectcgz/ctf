@@ -134,7 +134,8 @@ const weakDimensionStats = computed(() => {
 .teacher-panel {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
-  --panel-border: var(--journal-border, rgba(226, 232, 240, 0.8));
+  --panel-border: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
+  --panel-divider: color-mix(in srgb, var(--panel-border) 76%, transparent);
   --panel-surface: var(--journal-surface, var(--color-bg-surface));
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
@@ -147,7 +148,7 @@ const weakDimensionStats = computed(() => {
 }
 
 .teacher-subsection + .teacher-subsection {
-  border-top: 1px dashed color-mix(in srgb, var(--panel-border) 88%, transparent);
+  border-top: 1px dashed var(--panel-divider);
   padding-top: 1.25rem;
 }
 
@@ -193,7 +194,7 @@ const weakDimensionStats = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.9rem;
-  border-bottom: 1px dashed color-mix(in srgb, var(--panel-border) 84%, transparent);
+  border-bottom: 1px dashed var(--panel-divider);
   padding: 0.2rem 0 0.95rem;
 }
 
@@ -254,7 +255,7 @@ const weakDimensionStats = computed(() => {
 }
 
 .dimension-item {
-  border-bottom: 1px dashed color-mix(in srgb, var(--panel-border) 84%, transparent);
+  border-bottom: 1px dashed var(--panel-divider);
   padding: 0.2rem 0 0.85rem;
 }
 

@@ -240,7 +240,7 @@ const emit = defineEmits<{
 <style scoped>
 :deep(.teacher-filter-field) {
   color: var(--journal-ink);
-  border-color: var(--journal-border) !important;
+  border-color: var(--teacher-control-border) !important;
   background: var(--journal-surface) !important;
 }
 
@@ -259,7 +259,7 @@ const emit = defineEmits<{
   --el-table-tr-bg-color: transparent;
   --el-table-expanded-cell-bg-color: transparent;
   --el-table-header-bg-color: var(--journal-surface);
-  --el-table-border-color: var(--journal-border);
+  --el-table-border-color: var(--teacher-card-border);
   --el-table-row-hover-bg-color: rgba(99, 102, 241, 0.06);
   --el-table-text-color: var(--journal-ink);
   --el-table-header-text-color: var(--journal-muted);
@@ -275,7 +275,7 @@ const emit = defineEmits<{
 
 :deep(.teacher-student-table td.el-table__cell),
 :deep(.teacher-student-table th.el-table__cell) {
-  border-bottom-color: var(--journal-border);
+  border-bottom-color: var(--teacher-divider);
 }
 
 :deep(.teacher-student-table.el-table),
@@ -295,6 +295,9 @@ const emit = defineEmits<{
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --color-primary: #4f46e5;
@@ -315,7 +318,7 @@ const emit = defineEmits<{
 }
 
 .teacher-hero {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
@@ -325,7 +328,7 @@ const emit = defineEmits<{
 }
 
 .teacher-brief {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   border-radius: 16px !important;
   overflow: hidden;
@@ -340,7 +343,7 @@ const emit = defineEmits<{
 
 .teacher-hero-divider {
   margin-top: 1.5rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed var(--teacher-divider);
 }
 
 .teacher-hero-divider--inner {
@@ -358,7 +361,7 @@ const emit = defineEmits<{
   gap: 0.45rem;
   min-height: 2.5rem;
   border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-control-border);
   background: var(--journal-surface);
   padding: 0.55rem 1.1rem;
   font-size: 0.875rem;
@@ -371,7 +374,7 @@ const emit = defineEmits<{
 }
 
 .teacher-btn:hover {
-  border-color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: rgba(99, 102, 241, 0.06);
 }
 

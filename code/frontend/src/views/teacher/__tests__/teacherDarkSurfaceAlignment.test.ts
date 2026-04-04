@@ -59,8 +59,9 @@ describe('teacher dark surface alignment', () => {
     expect(studentManagementSource).not.toContain('teacher-kpi-card--primary')
     expect(studentManagementSource).not.toContain('teacher-kpi-card--success')
     expect(studentManagementSource).not.toContain('teacher-kpi-card--warning')
+    expect(instanceManagementSource).toContain('--teacher-card-border:')
     expect(instanceManagementSource).toMatch(
-      /\.teacher-hero\s*\{[\s\S]*border-color:\s*var\(--journal-border\);/s
+      /\.teacher-hero\s*\{[\s\S]*border-color:\s*var\(--teacher-card-border\);/s
     )
   })
 
