@@ -37,8 +37,8 @@ const accentValueMap: Record<NonNullable<Props['accent']>, string> = {
 
 const dynamicHomePath = computed(() => {
   if (!authStore.isLoggedIn) return '/login'
-  if (authStore.isAdmin) return '/admin/dashboard'
-  if (authStore.isTeacher) return '/teacher/dashboard'
+  if (authStore.isAdmin) return '/platform/overview'
+  if (authStore.isTeacher) return '/academy/overview'
   return '/dashboard'
 })
 

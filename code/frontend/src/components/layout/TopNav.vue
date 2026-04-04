@@ -96,8 +96,8 @@ const { theme, toggleTheme } = useTheme()
 const pageTitle = computed(() => resolveRouteTitle(route))
 const routeSection = computed(() => {
   const path = route.path
-  if (path.startsWith('/admin/')) return 'admin'
-  if (path.startsWith('/teacher/')) return 'teaching'
+  if (path.startsWith('/platform/')) return 'platform'
+  if (path.startsWith('/academy/')) return 'academy'
   if (path.startsWith('/profile') || path.startsWith('/settings')) return 'profile'
   if (path.startsWith('/dashboard')) return 'dashboard'
   if (path.startsWith('/challenges')) return 'challenges'

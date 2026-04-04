@@ -364,9 +364,9 @@ const navGroups = computed<NavGroup[]>(() => {
     }
   }
 
-  const mainItems = items.filter((i) => !i.path.startsWith('/admin/') && !i.path.startsWith('/teacher/'))
-  const teacherItems = items.filter((i) => i.path.startsWith('/teacher/'))
-  const adminItems = items.filter((i) => i.path.startsWith('/admin/'))
+  const mainItems = items.filter((i) => !i.path.startsWith('/platform/') && !i.path.startsWith('/academy/'))
+  const teacherItems = items.filter((i) => i.path.startsWith('/academy/'))
+  const adminItems = items.filter((i) => i.path.startsWith('/platform/'))
 
   const groups: NavGroup[] = [{ key: 'main', title: '导航', shortTitle: '导', items: mainItems }]
   if (teacherItems.length > 0) groups.push({ key: 'teacher', title: '教学', shortTitle: '教', items: teacherItems })

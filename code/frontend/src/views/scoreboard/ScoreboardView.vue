@@ -348,15 +348,15 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .scoreboard-table-shell {
   border-radius: 1rem;
-  border: 1px solid rgba(226, 232, 240, 0.72);
+  border: 1px solid var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 :deep(.scoreboard-empty-state) {
   border-top-style: dashed;
   border-bottom-style: dashed;
-  border-top-color: rgba(148, 163, 184, 0.58);
-  border-bottom-color: rgba(148, 163, 184, 0.58);
+  border-top-color: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .sb-index {
@@ -389,7 +389,7 @@ function supportsRealtime(status: ContestStatus): boolean {
   align-items: center;
   border-radius: 999px;
   border: 1px solid var(--journal-border);
-  background: rgba(226, 232, 240, 0.4);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 78%, var(--color-bg-base));
   padding: 0.18rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 600;
@@ -429,7 +429,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 .sb-row td {
   padding: 0.65rem 0.75rem;
   color: var(--journal-ink);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 86%, transparent);
 }
 
 .sb-row--top1 td {

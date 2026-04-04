@@ -315,22 +315,16 @@ const activeRateText = computed(() => {
 .teacher-management-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 70%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: #4f46e5;
+  --journal-accent-strong: #4338ca;
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
-  --color-text-primary: var(--journal-ink);
-  --color-text-secondary: var(--journal-muted);
-  --color-text-muted: var(--theme-text-muted);
-  --color-border-default: var(--teacher-card-border);
-  --color-border-subtle: var(--theme-border-subtle);
-  --color-bg-surface: var(--journal-surface);
-  --color-bg-base: var(--theme-bg-base);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -338,21 +332,25 @@ const activeRateText = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--journal-accent);
+  color: var(--journal-accent-strong);
 }
 
 .teacher-hero {
   border-color: var(--teacher-card-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
@@ -377,12 +375,12 @@ const activeRateText = computed(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.3rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--journal-accent);
+  color: var(--journal-accent-strong);
 }
 
 .teacher-btn {
@@ -406,17 +404,18 @@ const activeRateText = computed(() => {
 
 .teacher-btn:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: rgba(99, 102, 241, 0.06);
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
 }
 
 .teacher-btn--primary {
   border-color: transparent;
   background: var(--journal-accent);
   color: #fff;
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
 }
 
 .teacher-btn--primary:hover {
-  background: #4338ca;
+  background: var(--journal-accent-strong);
   border-color: transparent;
 }
 

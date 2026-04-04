@@ -18,14 +18,14 @@
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-primary"
-          @click="router.push(`/admin/challenges/${String(route.params.id)}/writeup`)"
+          @click="router.push({ name: 'AdminChallengeWriteup', params: { id: String(route.params.id) } })"
         >
           题解管理
         </button>
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-ghost"
-          @click="router.push(`/admin/challenges/${String(route.params.id)}/topology`)"
+          @click="router.push({ name: 'AdminChallengeTopologyStudio', params: { id: String(route.params.id) } })"
         >
           拓扑编排
         </button>
@@ -360,11 +360,11 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #2563eb;
-  --journal-border: rgba(226, 232, 240, 0.84);
-  --journal-surface: rgba(248, 250, 252, 0.92);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
 }
 
 .journal-hero,
@@ -372,9 +372,9 @@ onMounted(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, #ffffff, #f8fafc);
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -403,7 +403,7 @@ onMounted(() => {
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
@@ -435,7 +435,7 @@ onMounted(() => {
   min-height: 2.9rem;
   border: 1px solid var(--journal-border);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 0.8rem 1rem;
   font-size: 0.92rem;
   color: var(--journal-ink);
@@ -459,13 +459,13 @@ onMounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: #e2e8f0;
-  --journal-muted: #94a3b8;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: rgba(71, 85, 105, 0.78);
-  --journal-surface: rgba(15, 23, 42, 0.7);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
 }
 </style>
