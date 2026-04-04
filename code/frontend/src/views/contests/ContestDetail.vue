@@ -382,11 +382,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 <style scoped>
 .contest-detail-view {
   --contest-accent: var(--color-primary);
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: #ffffff;
-  --journal-surface-subtle: rgba(248, 250, 252, 0.92);
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -395,10 +395,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   background:
     radial-gradient(
       circle at top right,
-      color-mix(in srgb, var(--contest-accent) 8%, transparent),
+      color-mix(in srgb, var(--contest-accent) 10%, transparent),
       transparent 20rem
     ),
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
@@ -506,13 +506,13 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   gap: 0.65rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .contest-kpi {
   border-radius: 18px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 0.9rem 1rem;
 }
 
@@ -540,7 +540,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-panel {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   padding-top: 0.9rem;
   margin-top: 1.5rem;
 }
@@ -608,7 +608,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-btn--ghost {
   border-color: color-mix(in srgb, var(--journal-border) 86%, transparent);
   color: var(--journal-ink);
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }
 
 .contest-btn--ghost:hover {

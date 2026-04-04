@@ -151,7 +151,6 @@ const awdCount = computed(() => props.awdContests.length)
 
         <AppEmpty
           v-else-if="list.length === 0"
-          class="contest-empty-state"
           title="暂无竞赛"
           description="当前筛选条件下没有竞赛数据。"
           icon="Trophy"
@@ -198,18 +197,21 @@ const awdCount = computed(() => props.awdContests.length)
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
@@ -218,7 +220,7 @@ const awdCount = computed(() => props.awdContests.length)
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
 .journal-eyebrow {
@@ -259,7 +261,7 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .journal-divider {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .admin-section-head {
@@ -273,9 +275,9 @@ const awdCount = computed(() => props.awdContests.length)
 .admin-section-head-intro {
   position: relative;
   padding: 1rem 1.1rem 1rem 1.35rem;
-  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
   border-radius: 18px;
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent 72%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 72%);
 }
 
 .admin-section-head-intro::before {
@@ -312,23 +314,11 @@ const awdCount = computed(() => props.awdContests.length)
   justify-content: center;
   gap: 0.5rem;
   min-height: 2.75rem;
-  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-control-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  transition: all 150ms ease;
 }
 
 .admin-btn-primary {
@@ -341,62 +331,55 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border: 1px solid var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
 
 .admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--admin-control-border));
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  border-color: rgba(37, 99, 235, 0.28);
   color: var(--journal-accent);
-  transform: translateY(-1px);
 }
 
 .admin-input {
   width: 100%;
   min-height: 2.75rem;
   border-radius: 1rem;
-  border: 1px solid var(--admin-control-border);
+  border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.7rem 1rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease;
+  transition: border-color 150ms ease;
 }
 
 .admin-input:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-control-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
-}
-
-.contest-empty-state {
-  border-top-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 56%, transparent);
+  border-color: rgba(37, 99, 235, 0.42);
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .admin-section-head-intro {
-  border-color: rgba(96, 165, 250, 0.24);
-  background: linear-gradient(90deg, rgba(96, 165, 250, 0.14), rgba(15, 23, 42, 0) 72%);
+  border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 72%);
 }
 
 @media (max-width: 767px) {

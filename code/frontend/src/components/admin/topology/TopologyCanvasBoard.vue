@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="overflow-hidden rounded-[28px] border border-border bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_38%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))] p-4 shadow-[0_24px_60px_var(--color-shadow-soft)]"
+    class="topology-canvas-board__root overflow-hidden rounded-[28px] border border-border bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_38%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))] p-4 shadow-[0_24px_60px_var(--color-shadow-soft)]"
   >
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
     <svg
       ref="svgRef"
       viewBox="0 0 920 600"
-      class="h-[600px] w-full rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.96))]"
+      class="topology-canvas-board__surface h-[600px] w-full rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.96))]"
       @click="handleCanvasClick"
       @pointermove="moveDrag"
       @pointerup="stopDrag"

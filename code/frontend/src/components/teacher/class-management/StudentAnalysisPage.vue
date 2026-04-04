@@ -58,7 +58,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="teacher-analysis-shell space-y-6">
+  <div class="teacher-analysis-shell teacher-surface space-y-6">
     <PageHeader
       eyebrow="Student Analysis"
       :title="selectedStudent?.name || selectedStudent?.username || '学员分析'"
@@ -72,7 +72,7 @@ const emit = defineEmits<{
     </PageHeader>
 
     <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <article class="analysis-hero-card rounded-[30px] border px-6 py-6 md:px-8">
+      <article class="analysis-hero-card teacher-surface-hero px-6 py-6 md:px-8">
         <div class="analysis-hero-head">
           <div>
             <div class="analysis-eyebrow">Focused Student</div>
@@ -83,7 +83,7 @@ const emit = defineEmits<{
               当前学员训练概览。
             </p>
           </div>
-          <span class="analysis-class-chip">{{ selectedClassName || '未选择班级' }}</span>
+          <span class="analysis-class-chip teacher-surface-chip">{{ selectedClassName || '未选择班级' }}</span>
         </div>
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
@@ -106,17 +106,17 @@ const emit = defineEmits<{
       </article>
 
       <div class="teacher-kpi-grid grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <article class="teacher-kpi-card teacher-kpi-card--primary">
+        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--primary">
           <div class="teacher-kpi-label">同班学生</div>
           <div class="teacher-kpi-value">{{ students.length }}</div>
           <div class="teacher-kpi-hint">当前班级可切换的学生数量</div>
         </article>
-        <article class="teacher-kpi-card teacher-kpi-card--success">
+        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--success">
           <div class="teacher-kpi-label">推荐任务</div>
           <div class="teacher-kpi-value">{{ recommendations.length }}</div>
           <div class="teacher-kpi-hint">当前可布置的补强题目数</div>
         </article>
-        <article class="teacher-kpi-card teacher-kpi-card--warning">
+        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--warning">
           <div class="teacher-kpi-label">查看方式</div>
           <div class="teacher-kpi-value">学生画像</div>
           <div class="teacher-kpi-hint">当前学员分析视图</div>
@@ -334,18 +334,14 @@ const emit = defineEmits<{
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
-  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-soft: rgba(79, 70, 229, 0.08);
+  --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 :deep(.page-header) {
-  border: 1px solid var(--teacher-card-border);
+  border: 1px solid var(--journal-border);
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
@@ -358,28 +354,28 @@ const emit = defineEmits<{
 }
 
 :deep(.page-header__eyebrow) {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  border-left: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent) !important;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-left: 1px solid rgba(99, 102, 241, 0.18) !important;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  background: rgba(99, 102, 241, 0.06);
   padding: 0.2rem 0.72rem;
   padding-left: 0.72rem !important;
   letter-spacing: 0.2em;
-  color: var(--journal-accent-strong);
+  color: var(--journal-accent);
 }
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--teacher-card-border);
+  border: 1px solid var(--journal-border);
   border-radius: 16px;
-  border-top: 1px solid var(--teacher-card-border);
+  border-top: 1px solid var(--journal-border);
   background: var(--journal-surface-subtle);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed var(--teacher-divider);
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
   padding-bottom: 0.75rem;
 }
 
@@ -396,7 +392,6 @@ const emit = defineEmits<{
 }
 
 .analysis-hero-card {
-  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
     linear-gradient(
@@ -404,9 +399,7 @@ const emit = defineEmits<{
       color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
       color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
     );
-  border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
 .analysis-hero-head {
@@ -417,22 +410,10 @@ const emit = defineEmits<{
   gap: 1rem;
 }
 
-.analysis-class-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.3rem 0.75rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
 .analysis-note {
   border-radius: 16px;
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface-subtle);
+  border: 1px solid var(--journal-border);
+  background: var(--journal-surface);
   padding: 0.85rem 0.95rem;
 }
 
@@ -463,11 +444,7 @@ const emit = defineEmits<{
 }
 
 .teacher-kpi-card {
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: var(--journal-surface-subtle);
   padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
 }
 
 .teacher-kpi-card--primary {

@@ -13,7 +13,7 @@ function levelClass(level: string): string {
 </script>
 
 <template>
-  <section class="observation-strip">
+  <section class="observation-strip teacher-surface-section">
     <header class="observation-strip__header">
       <div>
         <div class="observation-strip__eyebrow">Teaching Signals</div>
@@ -28,7 +28,7 @@ function levelClass(level: string): string {
       <article
         v-for="item in items"
         :key="item.key"
-        :class="levelClass(item.level)"
+        :class="[levelClass(item.level), 'teacher-surface-metric']"
       >
         <div class="observation__head">
           <span class="observation__label">{{ item.label }}</span>
@@ -43,7 +43,7 @@ function levelClass(level: string): string {
 
 <style scoped>
 .observation-strip {
-  padding: 0.3rem 0;
+  padding: 1.1rem 1.1rem 1.15rem;
 }
 
 .observation-strip__header {
@@ -52,21 +52,21 @@ function levelClass(level: string): string {
   justify-content: space-between;
   align-items: flex-end;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, #1e40af 14%, var(--color-border-subtle));
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .observation-strip__eyebrow {
   font-size: 0.72rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #1d4ed8;
+  color: var(--journal-accent-strong);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .observation-strip__title {
   margin-top: 0.55rem;
   font-size: 1.35rem;
-  color: #0f172a;
+  color: var(--journal-ink);
 }
 
 .observation-strip__hint {
@@ -85,9 +85,8 @@ function levelClass(level: string): string {
 
 .observation {
   padding: 1rem 1.05rem;
-  border: 1px solid color-mix(in srgb, #94a3b8 55%, white);
   border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.9));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
 }
 
 .observation--good {
@@ -107,26 +106,26 @@ function levelClass(level: string): string {
 
 .observation__label {
   font-weight: 700;
-  color: #0f172a;
+  color: var(--journal-ink);
 }
 
 .observation__level {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: #475569;
+  color: var(--journal-muted);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .observation__summary {
   margin-top: 0.8rem;
   line-height: 1.75;
-  color: #1e293b;
+  color: color-mix(in srgb, var(--journal-muted) 80%, var(--journal-ink));
 }
 
 .observation__evidence {
   margin-top: 0.65rem;
-  color: #475569;
+  color: var(--journal-muted);
   font-size: 0.93rem;
   line-height: 1.7;
 }

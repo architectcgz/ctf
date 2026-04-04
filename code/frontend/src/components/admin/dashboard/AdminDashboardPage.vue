@@ -263,18 +263,21 @@ function usageTone(value: number | undefined): string {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --admin-action-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
@@ -283,7 +286,7 @@ function usageTone(value: number | undefined): string {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
 .journal-eyebrow {
@@ -335,7 +338,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .journal-divider {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .admin-btn {
@@ -343,59 +346,31 @@ function usageTone(value: number | undefined): string {
   align-items: center;
   gap: 0.5rem;
   min-height: 2.75rem;
-  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  box-shadow: var(--admin-btn-shadow, none);
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
-}
-
-.admin-btn:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-border));
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--journal-accent) 16%, transparent),
-    var(--admin-btn-shadow, none);
+  transition: all 150ms ease;
 }
 
 .admin-btn-primary {
-  --admin-btn-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-accent) 76%, var(--journal-surface-subtle))
-  );
-  color: #eff6ff;
+  background: var(--journal-accent);
+  color: #fff;
 }
 
 .admin-btn-primary:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 58%, var(--journal-border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 94%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-accent) 82%, var(--journal-surface-subtle))
-  );
-  transform: translateY(-1px);
+  background: #1d4ed8;
 }
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
 
 .admin-btn-ghost:hover {
   border-color: rgba(37, 99, 235, 0.28);
   color: var(--journal-accent);
-  transform: translateY(-1px);
 }
 
 .admin-feedback {
@@ -446,7 +421,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .admin-empty {
-  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
   padding: 1rem;
   font-size: 0.875rem;
@@ -458,54 +433,36 @@ function usageTone(value: number | undefined): string {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 1px solid var(--admin-action-border);
+  border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-  );
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 0.95rem 1rem;
   text-align: left;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    box-shadow 150ms ease,
-    transform 150ms ease;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 
 .admin-action-row:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, var(--admin-action-border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-accent) 3%, var(--journal-surface-subtle))
-  );
-  transform: translateY(-1px);
-}
-
-.admin-action-row:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--admin-action-border));
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent),
-    0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 82%, transparent);
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--journal-border));
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
 }
 
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
 }
 
 @media (max-width: 767px) {

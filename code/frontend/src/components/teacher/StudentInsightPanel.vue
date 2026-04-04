@@ -135,7 +135,7 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 </script>
 
 <template>
-  <div class="student-insight-shell space-y-6">
+  <div class="student-insight-shell teacher-surface space-y-6">
     <AppEmpty
       v-if="!student && !loading"
       title="尚未选择学员"
@@ -626,12 +626,9 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --teacher-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
-  --teacher-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --color-primary: #4f46e5;
-  --color-primary-soft: rgba(79, 70, 229, 0.08);
+  --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
 .writeup-chip {
@@ -644,37 +641,37 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .writeup-chip--primary {
-  background: rgba(79, 70, 229, 0.12);
-  color: #4338ca;
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent-strong);
 }
 
 .writeup-chip--success {
-  background: rgba(16, 185, 129, 0.14);
-  color: #047857;
+  background: color-mix(in srgb, var(--color-success) 14%, transparent);
+  color: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
 }
 
 .writeup-chip--warning {
-  background: rgba(245, 158, 11, 0.16);
-  color: #b45309;
+  background: color-mix(in srgb, var(--color-warning) 16%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 82%, var(--journal-ink));
 }
 
 .writeup-chip--muted {
-  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
-  color: #475569;
+  background: color-mix(in srgb, var(--journal-border) 36%, transparent);
+  color: var(--journal-muted);
 }
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--teacher-card-border);
+  border: 1px solid var(--journal-border);
   border-radius: 16px;
-  border-top: 1px solid var(--teacher-card-border);
+  border-top: 1px solid var(--journal-border);
   background: var(--journal-surface-subtle);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed var(--teacher-divider);
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
   padding-bottom: 0.75rem;
 }
 
@@ -687,9 +684,9 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .insight-kpi-card {
-  border: 1px solid var(--teacher-card-border);
+  border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: var(--journal-surface-subtle);
+  background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
   box-shadow: 0 8px 18px var(--color-shadow-soft);
 }

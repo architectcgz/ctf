@@ -9,6 +9,14 @@ import teacherInterventionPanelSource from '@/components/teacher/TeacherInterven
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
+const teacherSurfacePattern =
+  /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
+const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
+const teacherSurfaceSources = [
+  ['TeacherDashboardPage.vue', teacherDashboardPageSource],
+  ['TeacherClassReviewPanel.vue', teacherClassReviewPanelSource],
+  ['TeacherInterventionPanel.vue', teacherInterventionPanelSource],
+] as const
 
 const teacherApiMocks = vi.hoisted(() => ({
   getClasses: vi.fn(),
@@ -180,10 +188,13 @@ describe('TeacherDashboard', () => {
   })
 
   it('教师概览夜间模式样式应基于主题变量而不是亮色硬编码', () => {
-    expect(teacherDashboardPageSource).toContain('--journal-ink: var(--color-text-primary);')
-    expect(teacherDashboardPageSource).toContain('color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base))')
-    expect(teacherDashboardPageSource).not.toContain('linear-gradient(180deg, #ffffff, #f8fafc);')
-    expect(teacherClassReviewPanelSource).not.toContain('rgba(255, 255, 255, 0.98)')
-    expect(teacherInterventionPanelSource).not.toContain('rgba(255, 255, 255, 0.98)')
+    expect(teacherDashboardPageSource).toMatch(teacherSurfacePattern)
+    for (const [sourceName, source] of teacherSurfaceSources) {
+      for (const forbiddenTeacherSurfaceLiteral of forbiddenTeacherSurfaceLiterals) {
+        expect(source, `${sourceName} contains forbidden literal: ${forbiddenTeacherSurfaceLiteral}`).not.toContain(
+          forbiddenTeacherSurfaceLiteral
+        )
+      }
+    }
   })
 })

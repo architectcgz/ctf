@@ -126,10 +126,14 @@ function handleFileChange(event: Event) {
   width: 100%;
   padding: 1.25rem;
   text-align: left;
-  border: 1px dashed rgba(37, 99, 235, 0.35);
+  border: 1px dashed color-mix(in srgb, var(--journal-accent) 36%, transparent);
   border-radius: 1.25rem;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(239, 246, 255, 0.95)),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+      color-mix(in srgb, #2563eb 8%, var(--journal-surface-subtle))
+    ),
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 45%);
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
   cursor: pointer;
@@ -137,8 +141,8 @@ function handleFileChange(event: Event) {
 
 .import-entry__dropzone:hover:not(:disabled) {
   transform: translateY(-1px);
-  border-color: rgba(37, 99, 235, 0.62);
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  box-shadow: 0 18px 32px var(--color-shadow-soft);
 }
 
 .import-entry__dropzone:disabled {
@@ -173,8 +177,8 @@ function handleFileChange(event: Event) {
   align-items: center;
   padding: 0.38rem 0.72rem;
   border-radius: 999px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1d4ed8;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -184,7 +188,7 @@ function handleFileChange(event: Event) {
   gap: 0.65rem;
   padding: 1.1rem 1rem;
   border-left: 3px solid rgba(37, 99, 235, 0.18);
-  background: rgba(248, 250, 252, 0.9);
+  background: var(--journal-surface);
 }
 
 .import-entry__rail-title {

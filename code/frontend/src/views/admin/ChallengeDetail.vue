@@ -18,14 +18,14 @@
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-primary"
-          @click="router.push({ name: 'AdminChallengeWriteup', params: { id: String(route.params.id) } })"
+          @click="router.push(`/admin/challenges/${String(route.params.id)}/writeup`)"
         >
           题解管理
         </button>
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-ghost"
-          @click="router.push({ name: 'AdminChallengeTopologyStudio', params: { id: String(route.params.id) } })"
+          @click="router.push(`/admin/challenges/${String(route.params.id)}/topology`)"
         >
           拓扑编排
         </button>
@@ -362,17 +362,21 @@ onMounted(() => {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
 }
 
 .journal-hero,
 .journal-panel {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base))
+    );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
@@ -403,7 +407,7 @@ onMounted(() => {
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
 
@@ -435,7 +439,7 @@ onMounted(() => {
   min-height: 2.9rem;
   border: 1px solid var(--journal-border);
   border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
   padding: 0.8rem 1rem;
   font-size: 0.92rem;
   color: var(--journal-ink);
@@ -453,19 +457,23 @@ onMounted(() => {
 :global([data-theme='dark']) .journal-hero,
 :global([data-theme='dark']) .journal-panel {
   background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
+    );
 }
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 :global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
 }
 </style>

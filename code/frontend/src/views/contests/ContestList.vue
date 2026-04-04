@@ -153,7 +153,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
           <div
             v-for="i in 4"
             :key="i"
-            class="contest-skeleton-card h-24 rounded-[18px] animate-pulse"
+            class="contest-skeleton h-24 rounded-[18px] animate-pulse"
           />
         </div>
 
@@ -250,7 +250,11 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 .journal-hero {
   background:
     radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
   border-color: var(--journal-border);
   border-radius: 16px !important;
   overflow: hidden;
@@ -268,7 +272,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 .journal-metric {
   border-color: var(--journal-border);
   background: var(--journal-surface);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -276,7 +280,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .journal-metric:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 35%, transparent);
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 32px var(--color-shadow-soft);
 }
 
 .journal-log {
@@ -350,21 +354,25 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 }
 
 .contest-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .contest-list {
   position: relative;
   border: 1px solid var(--journal-border);
   border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
   overflow: hidden;
 }
 
 .contest-item {
   position: relative;
-  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 86%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
   transition:
     border-color 180ms ease,
     background 180ms ease;
@@ -376,7 +384,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-item:hover,
 .contest-item:focus-visible {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
   outline: none;
 }
 
@@ -398,15 +406,11 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   align-items: center;
   border-radius: 999px;
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 78%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
   padding: 0.18rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--journal-muted);
-}
-
-.contest-skeleton-card {
-  background: color-mix(in srgb, var(--journal-surface-subtle) 78%, var(--color-bg-base));
 }
 
 .contest-action-btn {
@@ -444,11 +448,15 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   border-color: var(--journal-accent);
 }
 
+.contest-skeleton {
+  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
+}
+
 :deep(.contest-empty-state) {
   border-top-style: dashed;
   border-bottom-style: dashed;
-  border-top-color: rgba(148, 163, 184, 0.58);
-  border-bottom-color: rgba(148, 163, 184, 0.58);
+  border-top-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
 }
 
 :global([data-theme='dark']) .journal-shell {
@@ -463,5 +471,12 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   background:
     radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 18rem),
     linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+}
+
+:global([data-theme='dark']) .contest-list,
+:global([data-theme='dark']) .contest-mode,
+:global([data-theme='dark']) .contest-btn,
+:global([data-theme='dark']) .contest-skeleton {
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 </style>

@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <section class="archive-grid">
-    <article class="archive-panel">
+    <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
           <div class="archive-panel__eyebrow">Timeline</div>
@@ -31,7 +31,7 @@ defineProps<{
       </ol>
     </article>
 
-    <article class="archive-panel">
+    <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
           <div class="archive-panel__eyebrow">Evidence</div>
@@ -68,8 +68,7 @@ defineProps<{
 }
 
 .archive-panel {
-  padding: 1rem 0;
-  border-top: 1px solid color-mix(in srgb, #1e40af 18%, var(--color-border-default));
+  padding: 1.1rem 1.1rem 1.15rem;
 }
 
 .archive-panel__header {
@@ -77,21 +76,21 @@ defineProps<{
   justify-content: space-between;
   align-items: flex-end;
   padding-bottom: 0.9rem;
-  border-bottom: 1px solid color-mix(in srgb, #cbd5e1 70%, white);
+  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .archive-panel__eyebrow {
   font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #1d4ed8;
+  color: var(--journal-accent-strong);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .archive-panel__title {
   margin-top: 0.45rem;
   font-size: 1.18rem;
-  color: #0f172a;
+  color: var(--journal-ink);
 }
 
 .archive-panel__empty {
@@ -115,8 +114,12 @@ defineProps<{
   height: 10px;
   margin-top: 0.45rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #1d4ed8, #f59e0b);
-  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.08);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink)),
+    color-mix(in srgb, var(--color-warning) 78%, var(--journal-accent))
+  );
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
 .timeline-item__head,
@@ -133,7 +136,7 @@ defineProps<{
 .evidence-item__head span,
 .evidence-item__meta {
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--journal-muted);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
@@ -141,7 +144,7 @@ defineProps<{
 .evidence-item__detail {
   margin-top: 0.45rem;
   line-height: 1.75;
-  color: #334155;
+  color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
 .evidence-list {
@@ -152,9 +155,9 @@ defineProps<{
 
 .evidence-item {
   padding: 0.95rem 1rem;
-  border: 1px solid color-mix(in srgb, #1e40af 10%, var(--color-border-default));
+  border: 1px solid var(--journal-border);
   border-radius: 18px;
-  background: rgba(248, 250, 252, 0.88);
+  background: var(--journal-surface);
 }
 
 .evidence-item__meta {
