@@ -1,0 +1,37 @@
+api_version: v1
+kind: challenge
+
+meta:
+  slug: web-source-audit-double-wrap-01
+  title: "Web-01 源码审计：双层伪装"
+  category: web
+  difficulty: easy
+  points: 100
+  tags:
+    - kp:source-audit
+    - kp:base64
+    - stack:python
+    - stack:flask
+
+content:
+  statement: statement.md
+  attachments: []
+
+flag:
+  type: dynamic
+  prefix: flag
+
+hints:
+  - level: 1
+    title: Hint 1
+    cost_points: 20
+    content: "从页面源码入手，别只看页面表面。"
+  - level: 2
+    title: Hint 2
+    cost_points: 40
+    content: "有些可疑变量的值不是只编码了一层。"
+
+runtime:
+  type: container
+  image:
+    ref: "registry.example.edu/ctf/web-source-audit-double-wrap-01:20260404"

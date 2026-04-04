@@ -1,0 +1,5 @@
+[
+  "test_app.py::test_index_contains_noise_variables_fake_flags_and_base64_hint",
+  "test_app.py::test_index_embeds_double_base64_runtime_flag_and_no_plaintext",
+  "test_app.py::test_index_falls_back_to_encoded_dev_placeholder_without_500"
+]
