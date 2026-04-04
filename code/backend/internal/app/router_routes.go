@@ -191,6 +191,24 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.WriteupHandler.Upsert,
 	)
+	adminAuthoring.POST("/challenges/:id/writeup/recommend",
+		ownerGuard,
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "challenge_writeup_recommendation",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.RecommendOfficial,
+	)
+	adminAuthoring.DELETE("/challenges/:id/writeup/recommend",
+		ownerGuard,
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "challenge_writeup_recommendation",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.UnrecommendOfficial,
+	)
 	adminAuthoring.DELETE("/challenges/:id/writeup",
 		ownerGuard,
 		audit(middleware.AuditOptions{
@@ -584,6 +602,8 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.GET("/challenges/attachments/*path", deps.challenge.Handler.DownloadAttachment)
 	protected.GET("/challenges/:id/writeup", deps.challenge.WriteupHandler.GetPublished)
+	protected.GET("/challenges/:id/solutions/recommended", deps.challenge.WriteupHandler.ListRecommendedSolutions)
+	protected.GET("/challenges/:id/solutions/community", deps.challenge.WriteupHandler.ListCommunitySolutions)
 	protected.POST("/challenges/:id/writeup-submissions",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionCreate,
@@ -696,16 +716,40 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.practice.Handler.ReviewManualReviewSubmission,
 	)
-	teacherOrAbove.GET("/writeup-submissions", deps.challenge.WriteupHandler.ListTeacherSubmissions)
-	teacherOrAbove.GET("/writeup-submissions/:id", deps.challenge.WriteupHandler.GetTeacherSubmission)
-	teacherOrAbove.PUT("/writeup-submissions/:id/review",
+	teacherOrAbove.POST("/community-writeups/:id/recommend",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionUpdate,
-			ResourceType:    "submission_writeup_review",
+			ResourceType:    "community_writeup_recommendation",
 			ResourceIDParam: "id",
 		}),
-		deps.challenge.WriteupHandler.ReviewSubmission,
+		deps.challenge.WriteupHandler.RecommendCommunity,
 	)
+	teacherOrAbove.DELETE("/community-writeups/:id/recommend",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "community_writeup_recommendation",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.UnrecommendCommunity,
+	)
+	teacherOrAbove.POST("/community-writeups/:id/hide",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "community_writeup_visibility",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.HideCommunity,
+	)
+	teacherOrAbove.POST("/community-writeups/:id/restore",
+		audit(middleware.AuditOptions{
+			Action:          model.AuditActionUpdate,
+			ResourceType:    "community_writeup_visibility",
+			ResourceIDParam: "id",
+		}),
+		deps.challenge.WriteupHandler.RestoreCommunity,
+	)
+	teacherOrAbove.GET("/writeup-submissions", deps.challenge.WriteupHandler.ListTeacherSubmissions)
+	teacherOrAbove.GET("/writeup-submissions/:id", deps.challenge.WriteupHandler.GetTeacherSubmission)
 
 	protected.POST("/reports/personal", deps.assessment.ReportHandler.CreatePersonalReport)
 	protected.GET("/reports/:id", deps.assessment.ReportHandler.GetReportStatus)

@@ -4,12 +4,17 @@ import "time"
 
 const (
 	SubmissionWriteupStatusDraft     = "draft"
-	SubmissionWriteupStatusSubmitted = "submitted"
+	SubmissionWriteupStatusPublished = "published"
 
-	SubmissionWriteupReviewPending       = "pending"
-	SubmissionWriteupReviewReviewed      = "reviewed"
-	SubmissionWriteupReviewExcellent     = "excellent"
-	SubmissionWriteupReviewNeedsRevision = "needs_revision"
+	SubmissionWriteupVisibilityVisible = "visible"
+	SubmissionWriteupVisibilityHidden  = "hidden"
+
+	// Deprecated aliases kept temporarily to reduce cross-package churn during migration.
+	SubmissionWriteupStatusSubmitted      = SubmissionWriteupStatusPublished
+	SubmissionWriteupReviewPending        = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewReviewed       = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewExcellent      = SubmissionWriteupVisibilityVisible
+	SubmissionWriteupReviewNeedsRevision  = SubmissionWriteupVisibilityHidden
 )
 
 type SubmissionWriteup struct {
@@ -20,11 +25,11 @@ type SubmissionWriteup struct {
 	Title            string     `gorm:"column:title"`
 	Content          string     `gorm:"column:content"`
 	SubmissionStatus string     `gorm:"column:submission_status"`
-	ReviewStatus     string     `gorm:"column:review_status;index:idx_submission_writeups_review_status"`
-	SubmittedAt      *time.Time `gorm:"column:submitted_at"`
-	ReviewedBy       *int64     `gorm:"column:reviewed_by"`
-	ReviewedAt       *time.Time `gorm:"column:reviewed_at"`
-	ReviewComment    string     `gorm:"column:review_comment"`
+	VisibilityStatus string     `gorm:"column:visibility_status;index:idx_submission_writeups_visibility_status"`
+	IsRecommended    bool       `gorm:"column:is_recommended;index:idx_submission_writeups_recommended"`
+	RecommendedAt    *time.Time `gorm:"column:recommended_at"`
+	RecommendedBy    *int64     `gorm:"column:recommended_by"`
+	PublishedAt      *time.Time `gorm:"column:published_at"`
 	CreatedAt        time.Time  `gorm:"column:created_at"`
 	UpdatedAt        time.Time  `gorm:"column:updated_at"`
 }

@@ -2,11 +2,13 @@ import { ApiError, getAxiosInstance, request } from './request'
 import { normalizeInstanceData } from './instance'
 
 import type {
+  CommunityChallengeSolutionData,
   ChallengeDetailData,
   ChallengeListItem,
   ChallengeWriteupData,
   InstanceData,
   PageResult,
+  RecommendedChallengeSolutionData,
   SubmissionWriteupData,
   SubmitFlagData,
   UnlockHintData,
@@ -40,6 +42,19 @@ interface RawSubmissionWriteupData extends Omit<SubmissionWriteupData, 'id' | 'u
   challenge_id: string | number
   contest_id?: string | number
   reviewed_by?: string | number
+  recommended_by?: string | number
+}
+
+interface RawRecommendedChallengeSolutionData extends Omit<RecommendedChallengeSolutionData, 'id' | 'source_id' | 'challenge_id'> {
+  id: string | number
+  source_id: string | number
+  challenge_id: string | number
+}
+
+interface RawCommunityChallengeSolutionData extends Omit<CommunityChallengeSolutionData, 'id' | 'challenge_id' | 'user_id'> {
+  id: string | number
+  challenge_id: string | number
+  user_id: string | number
 }
 
 function normalizeChallengeListItem(item: RawChallengeListItem): ChallengeListItem {
@@ -76,6 +91,25 @@ function normalizeSubmissionWriteup(item: RawSubmissionWriteupData): SubmissionW
     challenge_id: String(item.challenge_id),
     contest_id: item.contest_id !== undefined ? String(item.contest_id) : undefined,
     reviewed_by: item.reviewed_by !== undefined ? String(item.reviewed_by) : undefined,
+    recommended_by: item.recommended_by !== undefined ? String(item.recommended_by) : undefined,
+  }
+}
+
+function normalizeRecommendedSolution(item: RawRecommendedChallengeSolutionData): RecommendedChallengeSolutionData {
+  return {
+    ...item,
+    id: String(item.id),
+    source_id: String(item.source_id),
+    challenge_id: String(item.challenge_id),
+  }
+}
+
+function normalizeCommunitySolution(item: RawCommunityChallengeSolutionData): CommunityChallengeSolutionData {
+  return {
+    ...item,
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+    user_id: String(item.user_id),
   }
 }
 
@@ -137,7 +171,7 @@ export async function upsertChallengeWriteupSubmission(
   payload: {
     title: string
     content: string
-    submission_status: 'draft' | 'submitted'
+    submission_status: 'draft' | 'published'
   }
 ): Promise<SubmissionWriteupData> {
   const response = await request<RawSubmissionWriteupData>({
@@ -146,6 +180,29 @@ export async function upsertChallengeWriteupSubmission(
     data: payload,
   })
   return normalizeSubmissionWriteup(response)
+}
+
+export async function getRecommendedChallengeSolutions(id: string): Promise<RecommendedChallengeSolutionData[]> {
+  const payload = await request<PageResult<RawRecommendedChallengeSolutionData>>({
+    method: 'GET',
+    url: `/challenges/${encodeURIComponent(id)}/solutions/recommended`,
+  })
+  return payload.list.map(normalizeRecommendedSolution)
+}
+
+export async function getCommunityChallengeSolutions(
+  id: string,
+  params?: { q?: string; sort?: 'newest' | 'oldest'; page?: number; page_size?: number }
+): Promise<PageResult<CommunityChallengeSolutionData>> {
+  const payload = await request<PageResult<RawCommunityChallengeSolutionData>>({
+    method: 'GET',
+    url: `/challenges/${encodeURIComponent(id)}/solutions/community`,
+    params,
+  })
+  return {
+    ...payload,
+    list: payload.list.map(normalizeCommunitySolution),
+  }
 }
 
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {

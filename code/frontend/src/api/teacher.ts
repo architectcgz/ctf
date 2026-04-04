@@ -7,6 +7,7 @@ import type {
   RecommendationItem,
   ReviewArchiveData,
   ReportExportData,
+  SubmissionWriteupData,
   TeacherClassReviewData,
   SkillProfileData,
   TeacherClassItem,
@@ -60,12 +61,10 @@ interface RawReviewArchiveResponse {
     challenge_title: string
     title: string
     submission_status: string
-    review_status: string
-    submitted_at?: string
-    reviewed_at?: string
-    review_comment?: string
+    visibility_status: string
+    is_recommended: boolean
+    published_at?: string
     updated_at: string
-    reviewer_name?: string
   }>
   manual_reviews: Array<{
     id: string | number
@@ -285,8 +284,8 @@ export async function getTeacherWriteupSubmissions(params?: {
   student_id?: string
   challenge_id?: string
   class_name?: string
-  submission_status?: 'draft' | 'submitted'
-  review_status?: 'pending' | 'reviewed' | 'excellent' | 'needs_revision'
+  submission_status?: 'draft' | 'published'
+  visibility_status?: 'visible' | 'hidden'
   page?: number
   page_size?: number
 }): Promise<PageResult<TeacherSubmissionWriteupItemData>> {
@@ -298,7 +297,7 @@ export async function getTeacherWriteupSubmissions(params?: {
       challenge_id: params?.challenge_id,
       class_name: params?.class_name,
       submission_status: params?.submission_status,
-      review_status: params?.review_status,
+      visibility_status: params?.visibility_status,
       page: params?.page,
       page_size: params?.page_size,
     },
@@ -313,6 +312,89 @@ export async function getTeacherWriteupSubmissions(params?: {
       challenge_id: String(item.challenge_id),
     })),
   }
+}
+
+function normalizeSubmissionWriteupData(
+  item: SubmissionWriteupData & {
+    id: string | number
+    user_id: string | number
+    challenge_id: string | number
+    contest_id?: string | number
+    recommended_by?: string | number
+  }
+): SubmissionWriteupData {
+  return {
+    ...item,
+    id: String(item.id),
+    user_id: String(item.user_id),
+    challenge_id: String(item.challenge_id),
+    contest_id: item.contest_id == null ? undefined : String(item.contest_id),
+    recommended_by: item.recommended_by == null ? undefined : String(item.recommended_by),
+  }
+}
+
+export async function recommendTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+  const payload = await request<
+    SubmissionWriteupData & {
+      id: string | number
+      user_id: string | number
+      challenge_id: string | number
+      contest_id?: string | number
+      recommended_by?: string | number
+    }
+  >({
+    method: 'POST',
+    url: `/teacher/community-writeups/${encodeURIComponent(id)}/recommend`,
+  })
+  return normalizeSubmissionWriteupData(payload)
+}
+
+export async function unrecommendTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+  const payload = await request<
+    SubmissionWriteupData & {
+      id: string | number
+      user_id: string | number
+      challenge_id: string | number
+      contest_id?: string | number
+      recommended_by?: string | number
+    }
+  >({
+    method: 'DELETE',
+    url: `/teacher/community-writeups/${encodeURIComponent(id)}/recommend`,
+  })
+  return normalizeSubmissionWriteupData(payload)
+}
+
+export async function hideTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+  const payload = await request<
+    SubmissionWriteupData & {
+      id: string | number
+      user_id: string | number
+      challenge_id: string | number
+      contest_id?: string | number
+      recommended_by?: string | number
+    }
+  >({
+    method: 'POST',
+    url: `/teacher/community-writeups/${encodeURIComponent(id)}/hide`,
+  })
+  return normalizeSubmissionWriteupData(payload)
+}
+
+export async function restoreTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+  const payload = await request<
+    SubmissionWriteupData & {
+      id: string | number
+      user_id: string | number
+      challenge_id: string | number
+      contest_id?: string | number
+      recommended_by?: string | number
+    }
+  >({
+    method: 'POST',
+    url: `/teacher/community-writeups/${encodeURIComponent(id)}/restore`,
+  })
+  return normalizeSubmissionWriteupData(payload)
 }
 
 export async function getTeacherManualReviewSubmissions(params?: {

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"strconv"
 	"sort"
 	"strings"
 
@@ -95,15 +96,18 @@ func TagRespFromModel(tag *model.Tag) *dto.TagResp {
 
 func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallengeWriteupResp {
 	return &dto.AdminChallengeWriteupResp{
-		ID:          item.ID,
-		ChallengeID: item.ChallengeID,
-		Title:       item.Title,
-		Content:     item.Content,
-		Visibility:  item.Visibility,
-		ReleaseAt:   item.ReleaseAt,
-		CreatedBy:   item.CreatedBy,
-		CreatedAt:   item.CreatedAt,
-		UpdatedAt:   item.UpdatedAt,
+		ID:            item.ID,
+		ChallengeID:   item.ChallengeID,
+		Title:         item.Title,
+		Content:       item.Content,
+		Visibility:    item.Visibility,
+		ReleaseAt:     item.ReleaseAt,
+		CreatedBy:     item.CreatedBy,
+		IsRecommended: item.IsRecommended,
+		RecommendedAt: item.RecommendedAt,
+		RecommendedBy: item.RecommendedBy,
+		CreatedAt:     item.CreatedAt,
+		UpdatedAt:     item.UpdatedAt,
 	}
 }
 
@@ -116,11 +120,11 @@ func SubmissionWriteupRespFromModel(item *model.SubmissionWriteup) *dto.Submissi
 		Title:            item.Title,
 		Content:          item.Content,
 		SubmissionStatus: item.SubmissionStatus,
-		ReviewStatus:     item.ReviewStatus,
-		SubmittedAt:      item.SubmittedAt,
-		ReviewedBy:       item.ReviewedBy,
-		ReviewedAt:       item.ReviewedAt,
-		ReviewComment:    item.ReviewComment,
+		VisibilityStatus: item.VisibilityStatus,
+		IsRecommended:    item.IsRecommended,
+		RecommendedAt:    item.RecommendedAt,
+		RecommendedBy:    item.RecommendedBy,
+		PublishedAt:      item.PublishedAt,
 		CreatedAt:        item.CreatedAt,
 		UpdatedAt:        item.UpdatedAt,
 	}
@@ -138,9 +142,9 @@ func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmi
 		Title:            item.Submission.Title,
 		ContentPreview:   buildContentPreview(item.Submission.Content),
 		SubmissionStatus: item.Submission.SubmissionStatus,
-		ReviewStatus:     item.Submission.ReviewStatus,
-		SubmittedAt:      item.Submission.SubmittedAt,
-		ReviewedAt:       item.Submission.ReviewedAt,
+		VisibilityStatus: item.Submission.VisibilityStatus,
+		IsRecommended:    item.Submission.IsRecommended,
+		PublishedAt:      item.Submission.PublishedAt,
 		UpdatedAt:        item.Submission.UpdatedAt,
 	}
 }
@@ -152,9 +156,40 @@ func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSub
 		StudentName:           item.StudentName,
 		ClassName:             item.ClassName,
 		ChallengeTitle:        item.ChallengeTitle,
-		ReviewerName:          item.ReviewerName,
 	}
 	return resp
+}
+
+func RecommendedSolutionRespFromRecord(item challengeports.RecommendedSolutionRecord) *dto.RecommendedChallengeSolutionResp {
+	return &dto.RecommendedChallengeSolutionResp{
+		ID:            item.SourceType + "-" + strconv.FormatInt(item.SourceID, 10),
+		SourceType:    item.SourceType,
+		SourceID:      item.SourceID,
+		ChallengeID:   item.ChallengeID,
+		Title:         item.Title,
+		Content:       item.Content,
+		AuthorName:    item.AuthorName,
+		IsRecommended: item.IsRecommended,
+		RecommendedAt: item.RecommendedAt,
+		UpdatedAt:     item.UpdatedAt,
+	}
+}
+
+func CommunitySolutionRespFromRecord(item challengeports.CommunitySolutionRecord) *dto.CommunityChallengeSolutionResp {
+	return &dto.CommunityChallengeSolutionResp{
+		ID:               item.Submission.ID,
+		ChallengeID:      item.Submission.ChallengeID,
+		UserID:           item.Submission.UserID,
+		Title:            item.Submission.Title,
+		Content:          item.Submission.Content,
+		ContentPreview:   buildContentPreview(item.Submission.Content),
+		AuthorName:       item.AuthorName,
+		SubmissionStatus: item.Submission.SubmissionStatus,
+		VisibilityStatus: item.Submission.VisibilityStatus,
+		IsRecommended:    item.Submission.IsRecommended,
+		PublishedAt:      item.Submission.PublishedAt,
+		UpdatedAt:        item.Submission.UpdatedAt,
+	}
 }
 
 func buildContentPreview(content string) string {
