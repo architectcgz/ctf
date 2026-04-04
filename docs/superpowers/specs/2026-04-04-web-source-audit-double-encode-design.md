@@ -188,14 +188,19 @@ Flask 服务仅提供一个首页路由：
 
 - `api_version: v1`
 - `kind: challenge`
+- `meta.slug: web-source-audit-double-wrap-01`
+- `meta.title: Web-01 源码审计：双层伪装`
 - `meta.category: web`
 - `meta.difficulty: easy`
 - `meta.points: 100`
+- `content.statement: statement.md`
 - `flag.type: dynamic`
 - `runtime.type: container`
 - `runtime.image.ref` 指向本题构建后的镜像引用
 
 Docker 镜像使用最小 Python Web 运行时即可，不需要额外系统依赖。
+
+`docker/` 目录在本题中作为作者侧源码交付和审计复现材料保留；平台运行时仍以 `runtime.image.ref` 指向的最终镜像为准。
 
 ## 验收标准
 
