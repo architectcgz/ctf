@@ -10,9 +10,7 @@
       </div>
 
       <div class="image-header__side">
-        <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
-          创建镜像
-        </button>
+        <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">创建镜像</button>
         <div class="image-summary-grid">
           <article class="journal-note">
             <div class="journal-note-label">镜像总量</div>
@@ -68,7 +66,10 @@
 
             <div class="image-row__aside">
               <div class="image-row__time">{{ new Date(row.created_at).toLocaleString() }}</div>
-              <button class="admin-btn admin-btn-danger admin-btn-compact" @click="handleDelete(row.id)">
+              <button
+                class="admin-btn admin-btn-danger admin-btn-compact"
+                @click="handleDelete(row.id)"
+              >
                 删除
               </button>
             </div>
@@ -429,5 +430,190 @@ onUnmounted(() => {
 
 :global([data-theme='dark']) .admin-btn-danger {
   background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
+}
+
+.journal-shell {
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+}
+
+.journal-hero {
+  background:
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 16rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
+}
+
+.image-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.image-title {
+  margin-top: 0.85rem;
+  font-size: clamp(1.95rem, 2vw, 2.45rem);
+  font-weight: 700;
+  line-height: 1.06;
+  color: var(--journal-ink);
+}
+
+.image-copy {
+  margin-top: 0.7rem;
+  max-width: 48rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.image-header__side {
+  display: grid;
+  gap: 0.85rem;
+  justify-items: start;
+}
+
+.image-summary-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.image-divider {
+  margin: 1.2rem 0;
+}
+
+.image-board {
+  border: 1px solid var(--journal-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
+  padding: 1.15rem;
+  box-shadow: 0 12px 28px var(--color-shadow-soft);
+}
+
+.image-board__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.image-section-title {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.image-board__hint,
+.image-row__time {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.image-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.image-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+}
+
+.image-row__titleline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.image-row__title,
+.image-row__tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+}
+
+.image-row__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.image-row__tag {
+  color: var(--journal-muted);
+}
+
+.image-row__description {
+  margin-top: 0.65rem;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.image-row__aside {
+  display: flex;
+  min-width: 9rem;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-btn {
+  min-height: 2.65rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.62rem 1rem;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.admin-btn-compact {
+  min-height: 2.2rem;
+  padding: 0.46rem 0.82rem;
+}
+
+.admin-btn-primary {
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
+  box-shadow: none;
+}
+
+.admin-btn-ghost {
+  border-color: var(--admin-control-border);
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+}
+
+.admin-empty,
+.admin-pagination {
+  margin-top: 1rem;
+}
+
+@media (max-width: 1040px) {
+  .image-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .image-row__aside {
+    min-width: 0;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .image-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

@@ -151,6 +151,7 @@ const awdCount = computed(() => props.awdContests.length)
 
         <AppEmpty
           v-else-if="list.length === 0"
+          class="contest-empty-state"
           title="暂无竞赛"
           description="当前筛选条件下没有竞赛数据。"
           icon="Trophy"
@@ -201,6 +202,7 @@ const awdCount = computed(() => props.awdContests.length)
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
 }
 
 .journal-hero {
@@ -331,7 +333,7 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-control-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
@@ -345,7 +347,7 @@ const awdCount = computed(() => props.awdContests.length)
   width: 100%;
   min-height: 2.75rem;
   border-radius: 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
   padding: 0.7rem 1rem;
   font-size: 0.875rem;
@@ -356,6 +358,13 @@ const awdCount = computed(() => props.awdContests.length)
 
 .admin-input:focus {
   border-color: rgba(37, 99, 235, 0.42);
+}
+
+.contest-empty-state {
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
 }
 
 :global([data-theme='dark']) .journal-shell {

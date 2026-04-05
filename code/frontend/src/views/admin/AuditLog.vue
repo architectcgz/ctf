@@ -184,9 +184,7 @@ onMounted(() => {
           应用筛选
         </button>
 
-        <button type="button" class="admin-btn admin-btn-ghost" @click="resetFilters">
-          重置
-        </button>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="resetFilters">重置</button>
       </div>
     </section>
 
@@ -229,11 +227,21 @@ onMounted(() => {
         <table class="min-w-full text-sm">
           <thead class="bg-[var(--journal-surface-subtle)]">
             <tr>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">时间</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">动作</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">资源</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">执行人</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">明细</th>
+              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                时间
+              </th>
+              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                动作
+              </th>
+              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                资源
+              </th>
+              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                执行人
+              </th>
+              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                明细
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-[var(--audit-row-divider)] bg-[var(--journal-surface)]">
@@ -272,7 +280,9 @@ onMounted(() => {
           >
             上一页
           </button>
-          <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ totalPages }}</span>
+          <span class="text-sm text-[var(--color-text-secondary)]"
+            >{{ page }} / {{ totalPages }}</span
+          >
           <button
             type="button"
             :disabled="page >= totalPages"
@@ -303,7 +313,11 @@ onMounted(() => {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 16rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 10%, transparent),
+      transparent 16rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),

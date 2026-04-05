@@ -122,46 +122,43 @@ async function handleCommitPreview() {
   <section
     class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
   >
-    <div class="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
-      <div class="space-y-4">
-        <div class="journal-eyebrow">Package-First Authoring</div>
+    <header class="manage-header">
+      <div class="manage-header__intro">
+        <div class="journal-eyebrow">Challenge Library</div>
         <h1
           class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.6rem]"
         >
           挑战管理
         </h1>
-        <p class="max-w-2xl text-sm leading-8 text-[var(--journal-muted)]">
+        <p class="max-w-3xl text-sm leading-8 text-[var(--journal-muted)]">
           题目创建主流程已经切换为 `challenge.yml`
-          题目包导入。管理员在这里完成预览导入，再继续进入详情、编排与题解。
+          题目包导入，导入后继续在当前页完成查看、编排、题解与发布检查。
         </p>
       </div>
 
-      <article class="journal-brief px-5 py-5">
-        <div class="journal-note-label">题库概况</div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
-            <div class="journal-note-label">题目总量</div>
-            <div class="journal-note-value">{{ total }}</div>
-            <div class="journal-note-helper">当前题库中可管理的题目</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">当前页</div>
-            <div class="journal-note-value">{{ list.length }}</div>
-            <div class="journal-note-helper">当前分页中的题目数量</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">已发布</div>
-            <div class="journal-note-value">{{ publishedCount }}</div>
-            <div class="journal-note-helper">当前页已开放训练的题目</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">草稿</div>
-            <div class="journal-note-value">{{ draftCount }}</div>
-            <div class="journal-note-helper">导入后仍待完善或发布的题目</div>
-          </div>
-        </div>
-      </article>
-    </div>
+      <div class="manage-summary-grid">
+        <article class="journal-note">
+          <div class="journal-note-label">题目总量</div>
+          <div class="journal-note-value">{{ total }}</div>
+          <div class="journal-note-helper">当前题库中可管理的题目</div>
+        </article>
+        <article class="journal-note">
+          <div class="journal-note-label">当前页</div>
+          <div class="journal-note-value">{{ list.length }}</div>
+          <div class="journal-note-helper">当前分页中的题目数量</div>
+        </article>
+        <article class="journal-note">
+          <div class="journal-note-label">已发布</div>
+          <div class="journal-note-value">{{ publishedCount }}</div>
+          <div class="journal-note-helper">当前页已开放训练的题目</div>
+        </article>
+        <article class="journal-note">
+          <div class="journal-note-label">草稿</div>
+          <div class="journal-note-value">{{ draftCount }}</div>
+          <div class="journal-note-helper">导入后仍待完善或发布的题目</div>
+        </article>
+      </div>
+    </header>
 
     <div class="journal-divider" />
 
@@ -398,6 +395,17 @@ async function handleCommitPreview() {
   border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.manage-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.manage-summary-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .list-heading {
   display: flex;
   flex-wrap: wrap;
@@ -522,8 +530,18 @@ async function handleCommitPreview() {
 }
 
 @media (max-width: 960px) {
+  .manage-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .journal-shell {
     padding-inline: 1.1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .manage-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

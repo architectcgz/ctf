@@ -21,16 +21,16 @@ const reportFormat = ref<'pdf' | 'excel'>('pdf')
 const latestReport = ref<ReportExportData | null>(null)
 const latestReportFormat = ref<'pdf' | 'excel'>('pdf')
 const latestReportCreatedAt = ref<string | null>(null)
-const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
+const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 
 const profileFields = computed(() => {
   const current = profile.value
   if (!current) return []
   return [
-    { label: 'Username', value: current.username, icon: 'user' },
-    { label: 'Role', value: current.role, icon: 'role' },
-    { label: 'Class', value: current.class_name || '未分配', icon: 'class' },
-    { label: 'Name', value: current.name || '未填写', icon: 'name' },
+    { label: 'Username', value: current.username },
+    { label: 'Role', value: current.role },
+    { label: 'Class', value: current.class_name || '未分配' },
+    { label: 'Name', value: current.name || '未填写' },
   ]
 })
 
@@ -98,7 +98,7 @@ async function handleDownload(): Promise<void> {
 }
 
 onMounted(() => {
-  loadProfile()
+  void loadProfile()
 })
 
 onUnmounted(() => {
@@ -108,39 +108,32 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div
-      v-if="error"
-      class="rounded-[20px] border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/8 px-5 py-4 text-sm text-[var(--color-warning)]"
-    >
+    <div v-if="error" class="profile-inline-notice">
       {{ error }}
     </div>
 
-    <div v-if="loading" class="space-y-6">
-      <div class="space-y-6">
-        <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
-          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-          <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
-        </div>
+    <div v-if="loading" class="profile-loading">
+      <div class="h-12 animate-pulse rounded-2xl bg-[var(--journal-surface)]/90"></div>
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
+        <div class="h-24 animate-pulse rounded-2xl bg-[var(--journal-surface)]"></div>
+      </div>
+      <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
+        <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
+        <div class="h-72 animate-pulse rounded-[24px] bg-[var(--journal-surface)]"></div>
       </div>
     </div>
 
     <div v-else class="flex flex-1 flex-col">
-      <div class="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_minmax(300px,0.96fr)] xl:items-start">
-        <div>
-          <div class="journal-eyebrow">My Account</div>
-          <h1
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
-            个人资料
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            查看账号信息，并在这里生成个人报告。
-          </p>
+      <header class="profile-header">
+        <div class="profile-header__intro">
+          <div class="journal-eyebrow">Profile</div>
+          <h1 class="profile-page-title">个人资料</h1>
+          <p class="profile-page-copy">查看账号信息，并生成个人训练报告。</p>
 
-          <div class="mt-6 flex flex-wrap gap-3">
+          <div class="profile-header__actions">
             <div class="profile-pill">
               <span class="status-dot status-dot-ready" />
               账号状态正常
@@ -152,15 +145,77 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <aside class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <ShieldCheck class="h-5 w-5 text-[var(--journal-accent)]" />
-            当前概况
-          </div>
-          <div class="mt-5 space-y-3">
-            <div class="journal-note">
+        <div class="profile-summary-grid">
+          <article class="profile-summary-item">
+            <div class="profile-summary-icon">
+              <ShieldCheck class="h-4 w-4" />
+            </div>
+            <div>
               <div class="journal-note-label">报告状态</div>
-              <div class="mt-2 flex items-center gap-2 text-sm font-semibold text-[var(--journal-ink)]">
+              <div class="profile-summary-value">{{ reportTaskMeta.label }}</div>
+            </div>
+          </article>
+          <article class="profile-summary-item">
+            <div class="profile-summary-icon">
+              <Activity class="h-4 w-4" />
+            </div>
+            <div>
+              <div class="journal-note-label">最近生成</div>
+              <div class="profile-summary-value">
+                {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '尚未生成' }}
+              </div>
+            </div>
+          </article>
+        </div>
+      </header>
+
+      <div class="journal-divider profile-divider" />
+
+      <div class="profile-layout">
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <div>
+              <div class="journal-eyebrow journal-eyebrow-soft">Account</div>
+              <h2 class="profile-section-title">
+                <UserCircle2 class="h-5 w-5 text-[var(--journal-accent)]" />
+                账号信息
+              </h2>
+            </div>
+          </div>
+
+          <div v-if="profile" class="profile-field-list">
+            <article v-for="item in profileFields" :key="item.label" class="profile-field-item">
+              <div class="journal-note-label">{{ item.label }}</div>
+              <div class="profile-field-value tech-font">{{ item.value }}</div>
+            </article>
+          </div>
+
+          <AppEmpty
+            v-else
+            title="暂无用户信息"
+            description="当前没有可展示的用户信息。"
+            icon="UsersRound"
+          />
+        </section>
+
+        <section class="profile-section profile-section--report">
+          <div class="profile-section-head">
+            <div>
+              <div class="journal-eyebrow journal-eyebrow-soft">Report</div>
+              <h2 class="profile-section-title">个人报告</h2>
+            </div>
+            <span class="journal-chip" :class="reportTaskMeta.chipClass">
+              {{ reportTaskMeta.label }}
+            </span>
+          </div>
+
+          <div class="profile-status">
+            <div class="profile-status__row">
+              <div class="profile-status__label">
+                <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
+                当前状态
+              </div>
+              <div class="profile-status__value">
                 <span
                   class="status-dot"
                   :class="{
@@ -173,153 +228,84 @@ onUnmounted(() => {
                 {{ reportTaskMeta.label }}
               </div>
             </div>
-            <div class="journal-note">
-              <div class="journal-note-label">最近生成</div>
-              <div class="journal-note-value">
-                {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '尚未生成' }}
-              </div>
+            <div v-if="latestReport" class="profile-status__meta">
+              报告编号：{{ latestReport.report_id }}
             </div>
           </div>
-        </aside>
-      </div>
 
-      <div class="profile-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.98fr)]">
-          <section class="profile-section">
-            <div class="profile-section-head">
-              <div class="journal-eyebrow journal-eyebrow-soft">Account Info</div>
-              <h2 class="mt-3 flex items-center gap-3 text-xl font-semibold text-[var(--journal-ink)]">
-                <UserCircle2 class="h-5 w-5 text-[var(--journal-accent)]" />
-                账号信息
-              </h2>
+          <fieldset class="profile-fieldset">
+            <legend class="profile-fieldset__legend">导出格式</legend>
+            <div class="profile-format-grid">
+              <label
+                class="journal-format-option"
+                :class="{ 'journal-format-option--active': reportFormat === 'pdf' }"
+              >
+                <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
+                <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
+                <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
+              </label>
+              <label
+                class="journal-format-option"
+                :class="{ 'journal-format-option--active': reportFormat === 'excel' }"
+              >
+                <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
+                <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
+                <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
+              </label>
             </div>
+          </fieldset>
 
-            <div v-if="profile" class="profile-field-list mt-5">
-              <article v-for="item in profileFields" :key="item.label" class="profile-field-item">
-                <div class="journal-note-label">{{ item.label }}</div>
-                <div class="mt-2 text-base font-semibold text-[var(--journal-ink)] tech-font">
-                  {{ item.value }}
-                </div>
-              </article>
-            </div>
+          <button
+            type="button"
+            class="journal-btn journal-btn--primary mt-4 w-full justify-center"
+            :disabled="exportLoading"
+            @click="createReport"
+          >
+            <Loader2 v-if="exportLoading" class="h-4 w-4 animate-spin" />
+            {{ exportLoading ? '创建中…' : '生成个人报告' }}
+          </button>
 
-            <AppEmpty
-              v-else
-              title="暂无用户信息"
-              description="当前没有可展示的用户信息。"
-              icon="UsersRound"
-            />
-          </section>
+          <p v-if="exportError" class="profile-error-copy">
+            {{ exportError }}
+          </p>
 
-          <section class="profile-section profile-section--report">
-            <div class="profile-section-head">
-              <div class="journal-eyebrow journal-eyebrow-soft">Personal Export</div>
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <h2 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">个人报告</h2>
-                <span class="journal-chip" :class="reportTaskMeta.chipClass">
-                  {{ reportTaskMeta.label }}
-                </span>
-              </div>
-            </div>
-
-            <div class="profile-status mt-5">
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-                  <Activity class="h-4 w-4 text-[var(--journal-accent)]" />
-                  当前状态
-                </div>
-                <div class="flex items-center gap-2 text-sm font-semibold text-[var(--journal-ink)]">
-                  <span
-                    class="status-dot"
-                    :class="{
-                      'status-dot-ready': reportTaskMeta.status === 'ready',
-                      'status-dot-warning': reportTaskMeta.status === 'processing',
-                      'status-dot-idle': reportTaskMeta.status === 'idle',
-                      'status-dot-danger': reportTaskMeta.status === 'failed',
-                    }"
-                  />
-                  {{ reportTaskMeta.label }}
+          <template v-if="latestReport">
+            <div class="profile-report-meta">
+              <div class="profile-report-meta__item">
+                <div class="journal-note-label">格式</div>
+                <div class="profile-report-meta__value tech-font">
+                  {{ latestReportFormat.toUpperCase() }}
                 </div>
               </div>
-              <div v-if="latestReport" class="mt-2 text-xs text-[var(--journal-muted)]">
-                报告编号：{{ latestReport.report_id }}
+              <div class="profile-report-meta__item">
+                <div class="journal-note-label">创建时间</div>
+                <div class="profile-report-meta__value">
+                  {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '—' }}
+                </div>
+              </div>
+              <div class="profile-report-meta__item">
+                <div class="journal-note-label">有效期</div>
+                <div class="profile-report-meta__value">
+                  {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
+                </div>
               </div>
             </div>
 
-            <fieldset class="mt-5">
-              <legend class="mb-3 text-sm font-medium text-[var(--journal-ink)]">导出格式</legend>
-              <div class="grid gap-3 sm:grid-cols-2">
-                <label
-                  class="journal-format-option"
-                  :class="{ 'journal-format-option--active': reportFormat === 'pdf' }"
-                >
-                  <input v-model="reportFormat" type="radio" value="pdf" class="sr-only" />
-                  <div class="text-sm font-semibold text-[var(--journal-ink)]">PDF 报告</div>
-                  <div class="mt-1 text-xs text-[var(--journal-muted)]">适合阅读和保存</div>
-                </label>
-                <label
-                  class="journal-format-option"
-                  :class="{ 'journal-format-option--active': reportFormat === 'excel' }"
-                >
-                  <input v-model="reportFormat" type="radio" value="excel" class="sr-only" />
-                  <div class="text-sm font-semibold text-[var(--journal-ink)]">Excel 报告</div>
-                  <div class="mt-1 text-xs text-[var(--journal-muted)]">适合筛选和整理数据</div>
-                </label>
-              </div>
-            </fieldset>
+            <p v-if="latestReport.error_message" class="profile-error-copy">
+              {{ latestReport.error_message }}
+            </p>
 
             <button
               type="button"
-              class="journal-btn journal-btn--primary mt-4 w-full justify-center"
-              :disabled="exportLoading"
-              @click="createReport"
+              class="journal-btn journal-btn--download mt-4 w-full justify-center"
+              :disabled="latestReport.status !== 'ready'"
+              @click="handleDownload"
             >
-              <Loader2 v-if="exportLoading" class="h-4 w-4 animate-spin" />
-              {{ exportLoading ? '创建中…' : '生成个人报告' }}
+              <FileDown class="h-4 w-4" />
+              下载最近报告
             </button>
-
-            <p v-if="exportError" class="mt-3 text-sm text-[var(--color-danger)]">
-              {{ exportError }}
-            </p>
-
-            <template v-if="latestReport">
-              <div class="profile-report-meta mt-5">
-                <div class="profile-report-meta__item">
-                  <div class="journal-note-label">格式</div>
-                  <div class="mt-2 text-base font-semibold text-[var(--journal-ink)] tech-font">
-                    {{ latestReportFormat.toUpperCase() }}
-                  </div>
-                </div>
-                <div class="profile-report-meta__item">
-                  <div class="journal-note-label">创建时间</div>
-                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
-                    {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '—' }}
-                  </div>
-                </div>
-                <div class="profile-report-meta__item">
-                  <div class="journal-note-label">有效期</div>
-                  <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
-                    {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
-                  </div>
-                </div>
-              </div>
-
-              <p v-if="latestReport.error_message" class="mt-3 text-sm text-[var(--color-danger)]">
-                {{ latestReport.error_message }}
-              </p>
-
-              <button
-                type="button"
-                class="journal-btn journal-btn--download mt-4 w-full justify-center"
-                :disabled="latestReport.status !== 'ready'"
-                @click="handleDownload"
-              >
-                <FileDown class="h-4 w-4" />
-                下载最近报告
-              </button>
-            </template>
-          </section>
-        </div>
+          </template>
+        </section>
       </div>
     </div>
   </section>
@@ -329,8 +315,8 @@ onUnmounted(() => {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: #2563eb;
+  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
@@ -340,38 +326,26 @@ onUnmounted(() => {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
-  border-radius: 16px !important;
-  overflow: hidden;
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
+.profile-loading {
+  display: grid;
+  gap: 1rem;
+}
+
 .journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
-  padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-  border-color: rgba(148, 163, 184, 0.28);
-  background: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 34%, transparent);
-}
-
-.journal-note {
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
-  padding: 0.875rem 1rem;
 }
 
 .journal-note-label {
@@ -382,11 +356,32 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+.profile-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-page-title {
+  margin-top: 0.85rem;
+  font-size: clamp(2rem, 2.7vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.08;
   color: var(--journal-ink);
+}
+
+.profile-page-copy {
+  margin-top: 0.8rem;
+  max-width: 48rem;
+  font-size: 0.94rem;
+  line-height: 1.75;
+  color: var(--journal-muted);
+}
+
+.profile-header__actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .profile-pill {
@@ -402,18 +397,141 @@ onUnmounted(() => {
   color: var(--journal-ink);
 }
 
-.journal-brief {
-  border-color: var(--journal-border);
-  background: var(--journal-surface-subtle);
+.profile-summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-summary-item {
+  display: flex;
+  gap: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+  padding-top: 0.85rem;
+}
+
+.profile-summary-icon {
+  display: inline-flex;
+  margin-top: 0.1rem;
+  color: var(--journal-accent);
+}
+
+.profile-summary-value {
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.profile-divider {
+  margin: 1.2rem 0 0;
+}
+
+.profile-layout {
+  display: grid;
+  gap: 1.5rem;
+  padding-top: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.98fr);
+}
+
+.profile-section {
+  min-width: 0;
+}
+
+.profile-section + .profile-section {
+  border-left: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+  padding-left: 1.5rem;
+}
+
+.profile-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.profile-section-title {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.profile-field-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-field-item,
+.profile-report-meta__item {
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  padding-bottom: 0.85rem;
+}
+
+.profile-field-value {
+  margin-top: 0.45rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.profile-status {
+  margin-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  padding-top: 1rem;
+}
+
+.profile-status__row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.profile-status__label,
+.profile-status__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  color: var(--journal-ink);
+}
+
+.profile-status__meta {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--journal-muted);
+}
+
+.profile-fieldset {
+  margin-top: 1rem;
+}
+
+.profile-fieldset__legend {
+  margin-bottom: 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.profile-format-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .journal-format-option {
   display: block;
   cursor: pointer;
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
-  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+  padding: 0.8rem 0.95rem;
   transition:
     border-color 0.2s,
     background 0.2s;
@@ -431,22 +549,25 @@ onUnmounted(() => {
 .journal-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-default);
-  padding: 0.5rem 1rem;
+  min-height: 2.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+  padding: 0.62rem 1rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  background: transparent;
+  font-weight: 600;
+  color: var(--journal-ink);
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
   transition:
     border-color 0.2s,
-    color 0.2s;
+    color 0.2s,
+    background 0.2s;
   cursor: pointer;
 }
 
 .journal-btn:hover {
-  border-color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   color: var(--journal-accent);
 }
 
@@ -456,13 +577,17 @@ onUnmounted(() => {
 }
 
 .journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
 }
 
 .journal-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.journal-btn--download {
+  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .journal-chip {
@@ -494,44 +619,37 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
-.profile-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-}
-
-.profile-section {
-  min-width: 0;
-}
-
-.profile-section--report {
-  position: relative;
-}
-
-.profile-section-head {
-  min-height: 5rem;
-}
-
-.profile-field-list,
 .profile-report-meta {
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.profile-field-item,
-.profile-report-meta__item {
-  padding: 1rem 1.1rem;
+.profile-report-meta__value {
+  margin-top: 0.45rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--journal-ink);
 }
 
-.profile-field-item + .profile-field-item,
-.profile-report-meta__item + .profile-report-meta__item {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+.profile-error-copy {
+  margin-top: 0.75rem;
+  font-size: 0.84rem;
+  color: var(--color-danger);
 }
 
-.profile-status {
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  padding: 1rem 1.1rem;
+.profile-inline-notice {
+  margin-bottom: 1rem;
+  border-inline-start: 2px solid color-mix(in srgb, var(--color-warning) 60%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  padding: 0.8rem 0.95rem;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
+}
+
+.tech-font {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .status-dot {
@@ -545,72 +663,46 @@ onUnmounted(() => {
 .status-dot-ready {
   background: #10b981;
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  animation: pulse-dot 2s infinite;
 }
 
 .status-dot-warning {
   background: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-  animation: pulse-dot 2s infinite;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
 }
 
 .status-dot-idle {
   background: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.18);
 }
 
 .status-dot-danger {
   background: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16);
 }
 
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.tech-font {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
-}
-
-@media (min-width: 1280px) {
-  .profile-section--report {
-    padding-left: 1.5rem;
+@media (max-width: 1024px) {
+  .profile-layout {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .profile-section--report::before {
-    content: '';
-    position: absolute;
-    left: -0.75rem;
-    top: 0;
-    bottom: 0;
-    border-left: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  .profile-section + .profile-section {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+    padding-left: 0;
+    padding-top: 1.25rem;
   }
 }
 
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-}
+@media (max-width: 720px) {
+  .journal-shell {
+    padding-inline: 1rem;
+  }
 
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
-}
-
-:global([data-theme='dark']) .journal-note,
-:global([data-theme='dark']) .journal-format-option,
-:global([data-theme='dark']) .profile-status,
-:global([data-theme='dark']) .profile-field-list,
-:global([data-theme='dark']) .profile-report-meta {
-  background: rgba(15, 23, 42, 0.42);
+  .profile-summary-grid,
+  .profile-field-list,
+  .profile-format-grid,
+  .profile-report-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

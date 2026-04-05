@@ -212,11 +212,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    );
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
   border-radius: 16px !important;
   overflow: hidden;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
