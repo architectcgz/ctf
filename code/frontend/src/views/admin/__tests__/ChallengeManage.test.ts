@@ -48,7 +48,6 @@ vi.mock('@/api/admin', () => ({
         id: 'hint-1',
         level: 1,
         title: '入口提示',
-        cost_points: 0,
         content: '从登录页开始排查',
       },
     ],

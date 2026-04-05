@@ -37,10 +37,9 @@ type ChallengePackageFlag struct {
 }
 
 type ChallengePackageHint struct {
-	Level      int    `yaml:"level"`
-	Title      string `yaml:"title"`
-	CostPoints int    `yaml:"cost_points"`
-	Content    string `yaml:"content"`
+	Level   int    `yaml:"level"`
+	Title   string `yaml:"title"`
+	Content string `yaml:"content"`
 }
 
 type ChallengePackageRuntime struct {
@@ -88,8 +87,7 @@ type ParsedChallengePackageAttachment struct {
 }
 
 type ParsedChallengePackageHint struct {
-	Level      int
-	Title      string
-	CostPoints int
-	Content    string
+	Level   int
+	Title   string
+	Content string
 }

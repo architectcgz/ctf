@@ -177,16 +177,10 @@ func resolvePackageHints(hints []ChallengePackageHint) ([]ParsedChallengePackage
 		if title == "" {
 			title = fmt.Sprintf("Hint %d", level)
 		}
-		cost := hint.CostPoints
-		if cost < 0 {
-			cost = 0
-		}
-
 		parsed = append(parsed, ParsedChallengePackageHint{
-			Level:      level,
-			Title:      title,
-			CostPoints: cost,
-			Content:    content,
+			Level:   level,
+			Title:   title,
+			Content: content,
 		})
 	}
 

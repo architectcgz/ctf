@@ -162,9 +162,9 @@ async function handleExportArchive(): Promise<void> {
               <div class="summary-card__hint">已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}</div>
             </article>
             <article class="summary-card summary-card--warning">
-              <div class="summary-card__label">提示次数</div>
-              <div class="summary-card__value">{{ archive.summary.hint_unlock_count }}</div>
-              <div class="summary-card__hint">可用于回看关键转折点</div>
+              <div class="summary-card__label">有效提交</div>
+              <div class="summary-card__value">{{ archive.summary.correct_submission_count }}</div>
+              <div class="summary-card__hint">归档内命中 Flag 的提交次数</div>
             </article>
             <article class="summary-card summary-card--neutral">
               <div class="summary-card__label">最近活跃</div>

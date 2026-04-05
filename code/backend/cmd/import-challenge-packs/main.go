@@ -42,10 +42,9 @@ type challengeSpec struct {
 }
 
 type hintSpec struct {
-	Level      int
-	Title      string
-	CostPoints int
-	Content    string
+	Level   int
+	Title   string
+	Content string
 }
 
 type importResult struct {
@@ -288,10 +287,9 @@ func buildChallengeSpec(parsed *challengedomain.ParsedChallengePackage) (*challe
 	hints := make([]hintSpec, 0, len(parsed.Hints))
 	for _, hint := range parsed.Hints {
 		hints = append(hints, hintSpec{
-			Level:      hint.Level,
-			Title:      hint.Title,
-			CostPoints: hint.CostPoints,
-			Content:    hint.Content,
+			Level:   hint.Level,
+			Title:   hint.Title,
+			Content: hint.Content,
 		})
 	}
 
@@ -346,7 +344,6 @@ func syncChallengeHints(tx *gorm.DB, challengeID int64, hints []hintSpec) error 
 			ChallengeID: challengeID,
 			Level:       hint.Level,
 			Title:       hint.Title,
-			CostPoints:  hint.CostPoints,
 			Content:     hint.Content,
 			CreatedAt:   now,
 			UpdatedAt:   now,

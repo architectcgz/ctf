@@ -146,8 +146,8 @@ func TestNotificationServiceRegisterPracticeEventConsumers(t *testing.T) {
 	if got := len(bus.subscribers[practicecontracts.EventFlagAccepted]); got != 1 {
 		t.Fatalf("flag_accepted subscribers = %d, want 1", got)
 	}
-	if got := len(bus.subscribers[practicecontracts.EventHintUnlocked]); got != 1 {
-		t.Fatalf("hint_unlocked subscribers = %d, want 1", got)
+	if got := len(bus.subscribers); got != 1 {
+		t.Fatalf("practice subscriber count = %d, want 1", got)
 	}
 
 	err := bus.Publish(context.Background(), platformevents.Event{
@@ -162,22 +162,10 @@ func TestNotificationServiceRegisterPracticeEventConsumers(t *testing.T) {
 		t.Fatalf("Publish(flag_accepted) error = %v", err)
 	}
 
-	err = bus.Publish(context.Background(), platformevents.Event{
-		Name: practicecontracts.EventHintUnlocked,
-		Payload: practicecontracts.HintUnlockedEvent{
-			UserID:      7,
-			ChallengeID: 12,
-			HintLevel:   2,
-		},
-	})
-	if err != nil {
-		t.Fatalf("Publish(hint_unlocked) error = %v", err)
+	if len(repo.created) != 1 {
+		t.Fatalf("created notifications len = %d, want 1", len(repo.created))
 	}
-
-	if len(repo.created) != 2 {
-		t.Fatalf("created notifications len = %d, want 2", len(repo.created))
-	}
-	if repo.created[0].Title != "题目解出" || repo.created[1].Title != "提示已解锁" {
+	if repo.created[0].Title != "题目解出" {
 		t.Fatalf("unexpected created notifications = %+v", repo.created)
 	}
 	if repo.created[0].Link == nil || *repo.created[0].Link != "/challenges/12" {

@@ -84,10 +84,6 @@ func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword
 					FROM submissions s
 					WHERE s.user_id = u.id AND s.submitted_at >= ?
 					UNION ALL
-					SELECT hu.id
-					FROM challenge_hint_unlocks hu
-					WHERE hu.user_id = u.id AND hu.unlocked_at >= ?
-					UNION ALL
 					SELECT i.id
 					FROM instances i
 					WHERE i.user_id = u.id AND i.created_at >= ?
@@ -104,7 +100,7 @@ func (r *Repository) ListStudentsByClass(ctx context.Context, className, keyword
 				ORDER BY sp.score ASC, sp.updated_at DESC
 				LIMIT 1
 			) AS weak_dimension
-		`, model.ChallengeStatusPublished, model.ChallengeStatusPublished, since, since, since, since).
+		`, model.ChallengeStatusPublished, model.ChallengeStatusPublished, since, since, since).
 		Where("u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL", model.RoleStudent, className)
 	if keyword != "" {
 		likeKeyword := "%" + strings.ToLower(keyword) + "%"
@@ -238,20 +234,6 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 			LEFT JOIN challenges c ON s.challenge_id = c.id
 			UNION ALL
 			SELECT
-				'hint_unlock' AS type,
-				hu.challenge_id,
-				hu.unlocked_at AS timestamp,
-				NULL AS is_correct,
-				NULL AS points,
-				CASE
-					WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title
-					ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示'
-				END AS detail
-			FROM challenge_hint_unlocks hu
-			JOIN challenge_hints h ON h.id = hu.challenge_hint_id
-			WHERE hu.user_id = ?
-			UNION ALL
-			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
 				i.updated_at AS timestamp,
@@ -264,7 +246,7 @@ func (r *Repository) GetStudentTimeline(ctx context.Context, userID int64, limit
 		LEFT JOIN challenges c ON events.challenge_id = c.id
 		ORDER BY events.timestamp DESC
 		LIMIT ? OFFSET ?
-	`, userID, userID, userID, userID, limit, offset).Scan(&rows).Error; err != nil {
+	`, userID, userID, userID, limit, offset).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get student timeline: %w", err)
 	}
 
@@ -369,41 +351,6 @@ func (r *Repository) GetStudentEvidence(ctx context.Context, userID int64, chall
 			Timestamp:   row.Timestamp,
 			Detail:      buildTeacherProxyTimelineDetail(row.Detail),
 			Meta:        meta,
-		})
-	}
-
-	hintRows := make([]struct {
-		ChallengeID int64     `gorm:"column:challenge_id"`
-		Title       string    `gorm:"column:title"`
-		Timestamp   time.Time `gorm:"column:timestamp"`
-		Detail      string    `gorm:"column:detail"`
-	}, 0)
-	hintQuery := r.db.WithContext(ctx).Table("challenge_hint_unlocks AS hu").
-		Select(strings.Join([]string{
-			"hu.challenge_id AS challenge_id",
-			"COALESCE(c.title, '') AS title",
-			"hu.unlocked_at AS timestamp",
-			"CASE WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示' END AS detail",
-		}, ", ")).
-		Joins("JOIN challenge_hints h ON h.id = hu.challenge_hint_id").
-		Joins("LEFT JOIN challenges c ON c.id = hu.challenge_id").
-		Where("hu.user_id = ?", userID)
-	if challengeID != nil {
-		hintQuery = hintQuery.Where("hu.challenge_id = ?", *challengeID)
-	}
-	if err := hintQuery.Order("hu.unlocked_at ASC").Scan(&hintRows).Error; err != nil {
-		return nil, fmt.Errorf("get student evidence hint rows: %w", err)
-	}
-	for _, row := range hintRows {
-		events = append(events, readmodelports.EvidenceEventRecord{
-			Type:        "challenge_hint_unlock",
-			ChallengeID: row.ChallengeID,
-			Title:       row.Title,
-			Timestamp:   row.Timestamp,
-			Detail:      row.Detail,
-			Meta: map[string]any{
-				"event_stage": "analysis",
-			},
 		})
 	}
 
@@ -593,11 +540,6 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		JOIN users u ON u.id = s.user_id
 		WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND s.submitted_at >= ?
 		UNION ALL
-		SELECT hu.user_id, hu.unlocked_at AS occurred_at, FALSE AS is_solve
-		FROM challenge_hint_unlocks hu
-		JOIN users u ON u.id = hu.user_id
-		WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND hu.unlocked_at >= ?
-		UNION ALL
 		SELECT i.user_id, i.created_at AS occurred_at, FALSE AS is_solve
 		FROM instances i
 		JOIN users u ON u.id = i.user_id
@@ -608,7 +550,7 @@ func (r *Repository) GetClassTrend(ctx context.Context, className string, since 
 		JOIN users u ON u.id = i.user_id
 		WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 			AND i.status IN ('stopped', 'expired') AND i.updated_at >= ?
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&rows).Error; err != nil {
+	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&rows).Error; err != nil {
 		return nil, fmt.Errorf("get class trend: %w", err)
 	}
 
@@ -693,18 +635,13 @@ func (r *Repository) getActiveStudentCountByClass(ctx context.Context, className
 			JOIN users u ON u.id = s.user_id
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND s.submitted_at >= ?
 			UNION
-			SELECT hu.user_id
-			FROM challenge_hint_unlocks hu
-			JOIN users u ON u.id = hu.user_id
-			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND hu.unlocked_at >= ?
-			UNION
 			SELECT i.user_id
 			FROM instances i
 			JOIN users u ON u.id = i.user_id
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 				AND (i.created_at >= ? OR i.updated_at >= ?)
 		) active
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since, since).Scan(&result).Error; err != nil {
+	`, model.RoleStudent, className, since, model.RoleStudent, className, since, since).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get active student count by class: %w", err)
 	}
 	return result.Count, nil
@@ -722,11 +659,6 @@ func (r *Repository) getRecentEventCountByClass(ctx context.Context, className s
 			JOIN users u ON u.id = s.user_id
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND s.submitted_at >= ?
 			UNION ALL
-			SELECT hu.id
-			FROM challenge_hint_unlocks hu
-			JOIN users u ON u.id = hu.user_id
-			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL AND hu.unlocked_at >= ?
-			UNION ALL
 			SELECT i.id
 			FROM instances i
 			JOIN users u ON u.id = i.user_id
@@ -738,7 +670,7 @@ func (r *Repository) getRecentEventCountByClass(ctx context.Context, className s
 			WHERE u.role = ? AND u.class_name = ? AND u.deleted_at IS NULL
 				AND i.status IN ('stopped', 'expired') AND i.updated_at >= ?
 		) recent_events
-	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&result).Error; err != nil {
+	`, model.RoleStudent, className, since, model.RoleStudent, className, since, model.RoleStudent, className, since).Scan(&result).Error; err != nil {
 		return 0, fmt.Errorf("get recent event count by class: %w", err)
 	}
 	return result.Count, nil

@@ -28,10 +28,9 @@ func NormalizeHintModels(reqHints []dto.ChallengeHintReq) ([]*model.ChallengeHin
 		}
 		seenLevels[reqHint.Level] = struct{}{}
 		hints = append(hints, &model.ChallengeHint{
-			Level:      reqHint.Level,
-			Title:      strings.TrimSpace(reqHint.Title),
-			CostPoints: reqHint.CostPoints,
-			Content:    content,
+			Level:   reqHint.Level,
+			Title:   strings.TrimSpace(reqHint.Title),
+			Content: content,
 		})
 	}
 
@@ -45,11 +44,10 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.Challenge
 	adminHints := make([]*dto.ChallengeHintAdminResp, 0, len(hints))
 	for _, hint := range hints {
 		adminHints = append(adminHints, &dto.ChallengeHintAdminResp{
-			ID:         hint.ID,
-			Level:      hint.Level,
-			Title:      hint.Title,
-			CostPoints: hint.CostPoints,
-			Content:    hint.Content,
+			ID:      hint.ID,
+			Level:   hint.Level,
+			Title:   hint.Title,
+			Content: hint.Content,
 		})
 	}
 

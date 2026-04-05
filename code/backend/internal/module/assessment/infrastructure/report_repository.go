@@ -428,20 +428,6 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 			WHERE s.user_id = ? AND s.contest_id IS NULL
 			UNION ALL
 			SELECT
-				'hint_unlock' AS type,
-				hu.challenge_id,
-				hu.unlocked_at AS timestamp,
-				NULL AS is_correct,
-				NULL AS points,
-				CASE
-					WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title
-					ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示'
-				END AS detail
-			FROM challenge_hint_unlocks hu
-			JOIN challenge_hints h ON h.id = hu.challenge_hint_id
-			WHERE hu.user_id = ?
-			UNION ALL
-			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
 				i.updated_at AS timestamp,
@@ -454,7 +440,7 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 		LEFT JOIN challenges c ON c.id = events.challenge_id
 		ORDER BY events.timestamp DESC
 		LIMIT ? OFFSET ?
-	`, userID, userID, userID, userID, limit, offset).Scan(&rows).Error
+	`, userID, userID, userID, limit, offset).Scan(&rows).Error
 	return rows, err
 }
 
@@ -525,41 +511,6 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 			Detail:      row.Detail,
 			Meta: map[string]any{
 				"event_stage": "exploit",
-			},
-		})
-	}
-
-	hintRows := make([]struct {
-		ChallengeID int64     `gorm:"column:challenge_id"`
-		Title       string    `gorm:"column:title"`
-		Timestamp   time.Time `gorm:"column:timestamp"`
-		Detail      string    `gorm:"column:detail"`
-	}, 0)
-	hintQuery := r.db.WithContext(ctx).Table("challenge_hint_unlocks AS hu").
-		Select(strings.Join([]string{
-			"hu.challenge_id AS challenge_id",
-			"COALESCE(c.title, '') AS title",
-			"hu.unlocked_at AS timestamp",
-			"CASE WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示' END AS detail",
-		}, ", ")).
-		Joins("JOIN challenge_hints h ON h.id = hu.challenge_hint_id").
-		Joins("LEFT JOIN challenges c ON c.id = hu.challenge_id").
-		Where("hu.user_id = ?", userID)
-	if challengeID != nil {
-		hintQuery = hintQuery.Where("hu.challenge_id = ?", *challengeID)
-	}
-	if err := hintQuery.Order("hu.unlocked_at ASC").Scan(&hintRows).Error; err != nil {
-		return nil, err
-	}
-	for _, row := range hintRows {
-		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
-			Type:        "challenge_hint_unlock",
-			ChallengeID: row.ChallengeID,
-			Title:       row.Title,
-			Timestamp:   row.Timestamp,
-			Detail:      row.Detail,
-			Meta: map[string]any{
-				"event_stage": "analysis",
 			},
 		})
 	}

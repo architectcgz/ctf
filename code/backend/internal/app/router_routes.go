@@ -620,15 +620,6 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.practice.Handler.SubmitFlag,
 	)
-	protected.POST("/challenges/:id/hints/:level/unlock",
-		audit(middleware.AuditOptions{
-			Action:          model.AuditActionCreate,
-			ResourceType:    "challenge_hint_unlock",
-			ResourceIDParam: "id",
-			DetailBuilder:   middleware.DetailFromParams("id", "level"),
-		}),
-		deps.practice.Handler.UnlockHint,
-	)
 	protected.GET("/instances", deps.runtime.Handler.ListInstances)
 	protected.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{

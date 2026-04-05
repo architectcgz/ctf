@@ -391,7 +391,6 @@ content:
 hints:
   - level: 1
     title: Hint 1
-    cost_points: 0
     content: 从登录参数开始看
 runtime:
   type: container

@@ -9,7 +9,6 @@ import type {
   PageResult,
   SubmissionWriteupData,
   SubmitFlagData,
-  UnlockHintData,
 } from './contracts'
 
 export type GetChallengesData = PageResult<ChallengeListItem>
@@ -150,10 +149,6 @@ export async function upsertChallengeWriteupSubmission(
 
 export async function submitFlag(id: string, flag: string): Promise<SubmitFlagData> {
   return request<SubmitFlagData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/submit`, data: { flag } })
-}
-
-export async function unlockHint(id: string, level: number): Promise<UnlockHintData> {
-  return request<UnlockHintData>({ method: 'POST', url: `/challenges/${encodeURIComponent(id)}/hints/${level}/unlock` })
 }
 
 export async function createInstance(id: string): Promise<InstanceData> {

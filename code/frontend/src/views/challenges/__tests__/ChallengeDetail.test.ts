@@ -50,8 +50,7 @@ describe('ChallengeDetail', () => {
           id: 'hint-1',
           level: 1,
           title: '入口',
-          cost_points: 0,
-          is_unlocked: false,
+          content: '先观察登录表单的参数。',
         },
       ],
     })
@@ -161,14 +160,20 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
+    const editorToggle = wrapper.findAll('button').find((node) => node.text().includes('写题解'))
+    expect(editorToggle).toBeTruthy()
+    await editorToggle!.trigger('click')
+    await wrapper.vm.$nextTick()
+
     const titleInput = wrapper.find('input[placeholder*="完整链路"]')
     const contentInput = wrapper.find('textarea')
-    const draftButton = wrapper.findAll('button').find((node) => node.text().includes('保存草稿'))
+    const draftButton = wrapper.findAll('button').find((node) => node.text().trim() === '保存草稿')
 
     await titleInput.setValue('我的复盘')
     await contentInput.setValue('先找回显，再定位注入。')
     await draftButton!.trigger('click')
     await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(challengeApiMocks.upsertChallengeWriteupSubmission).toHaveBeenCalledWith('1', {
       title: '我的复盘',
@@ -176,6 +181,81 @@ describe('ChallengeDetail', () => {
       submission_status: 'draft',
     })
     expect(wrapper.text()).toContain('草稿')
+  })
+
+  it('个人题解编辑区应默认折叠并在点击后展开', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).not.toContain('解题过程复盘')
+    expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(false)
+
+    const editorToggle = wrapper.findAll('button').find((node) => node.text().includes('写题解'))
+    expect(editorToggle).toBeTruthy()
+
+    await editorToggle!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('解题过程复盘')
+    expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(true)
+  })
+
+  it('Flag 提交应显示在个人题解折叠卡之前', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const text = wrapper.text()
+    const flagIndex = text.indexOf('Flag 提交')
+    const editorIndex = text.indexOf('写题解')
+
+    expect(flagIndex).toBeGreaterThan(-1)
+    expect(editorIndex).toBeGreaterThan(-1)
+    expect(flagIndex).toBeLessThan(editorIndex)
+  })
+
+  it('提示内容应支持前端展开查看且不再调用解锁接口', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).not.toContain('先观察登录表单的参数。')
+    expect(wrapper.text()).not.toContain('解锁提示')
+
+    const toggleButton = wrapper.find('button.hint-toggle')
+    expect(toggleButton.exists()).toBe(true)
+    expect(toggleButton.text()).toContain('展开提示')
+
+    await toggleButton.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('先观察登录表单的参数。')
+    expect(challengeApiMocks.unlockHint).not.toHaveBeenCalled()
   })
 
   it('manual review 提交后应显示待审核反馈', async () => {

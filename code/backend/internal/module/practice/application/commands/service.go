@@ -546,66 +546,6 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	return resp, nil
 }
 
-func (s *Service) UnlockHint(userID, challengeID int64, level int) (*dto.UnlockHintResp, error) {
-	return s.UnlockHintWithContext(context.Background(), userID, challengeID, level)
-}
-
-func (s *Service) UnlockHintWithContext(ctx context.Context, userID, challengeID int64, level int) (*dto.UnlockHintResp, error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	challengeItem, err := s.challengeRepo.FindByID(challengeID)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errcode.ErrChallengeNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-	if challengeItem.Status != model.ChallengeStatusPublished {
-		return nil, errcode.ErrChallengeNotPublish
-	}
-
-	hint, err := s.challengeRepo.FindHintByLevel(challengeID, level)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, errcode.ErrNotFound
-		}
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	if err := s.challengeRepo.CreateHintUnlock(&model.ChallengeHintUnlock{
-		UserID:          userID,
-		ChallengeID:     challengeID,
-		ChallengeHintID: hint.ID,
-		UnlockedAt:      time.Now(),
-	}); err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
-	}
-
-	s.publishWeakEvent(ctx, platformevents.Event{
-		Name: practicecontracts.EventHintUnlocked,
-		Payload: practicecontracts.HintUnlockedEvent{
-			UserID:      userID,
-			ChallengeID: challengeID,
-			Dimension:   challengeItem.Category,
-			HintLevel:   hint.Level,
-			OccurredAt:  time.Now(),
-		},
-	})
-
-	return &dto.UnlockHintResp{
-		Hint: &dto.ChallengeHintResp{
-			ID:         hint.ID,
-			Level:      hint.Level,
-			Title:      hint.Title,
-			CostPoints: hint.CostPoints,
-			IsUnlocked: true,
-			Content:    hint.Content,
-		},
-	}, nil
-}
-
 func (s *Service) ReviewManualReviewSubmissionWithContext(
 	ctx context.Context,
 	submissionID, reviewerID int64,

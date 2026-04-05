@@ -636,16 +636,14 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		"image_id":    env.image.ID,
 		"hints": []map[string]any{
 			{
-				"level":       1,
-				"title":       "入口",
-				"content":     "look at login",
-				"cost_points": 5,
+				"level":   1,
+				"title":   "入口",
+				"content": "look at login",
 			},
 			{
-				"level":       2,
-				"title":       "深入",
-				"content":     "check cookies",
-				"cost_points": 10,
+				"level":   2,
+				"title":   "深入",
+				"content": "check cookies",
 			},
 		},
 	}, adminHeaders)
@@ -678,10 +676,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		"attachment_url": emptyAttachment,
 		"hints": []map[string]any{
 			{
-				"level":       1,
-				"title":       "更新提示",
-				"content":     "updated content",
-				"cost_points": 8,
+				"level":   1,
+				"title":   "更新提示",
+				"content": "updated content",
 			},
 		},
 	}, adminHeaders)
@@ -1128,13 +1125,13 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 	peerHeaders := bearerHeaders(loginForToken(t, env.router, env.peerStudent.Username, "Password123"))
 	teacherHeaders := bearerHeaders(loginForToken(t, env.router, env.teacher.Username, env.teacherPwd))
 
-	resp := performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/hints/1/unlock", env.challenge.ID), nil, studentHeaders)
+	resp := performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d", env.challenge.ID), nil, studentHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var unlocked dto.UnlockHintResp
-	decodeFullRouterData(t, resp, &unlocked)
-	if unlocked.Hint == nil || !unlocked.Hint.IsUnlocked || unlocked.Hint.Level != 1 {
-		t.Fatalf("unexpected unlock response: %+v", unlocked)
+	var detail dto.ChallengeDetailResp
+	decodeFullRouterData(t, resp, &detail)
+	if len(detail.Hints) == 0 || detail.Hints[0].Content == "" {
+		t.Fatalf("expected hint content in challenge detail, got %+v", detail.Hints)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/hints/99/unlock", env.challenge.ID), nil, studentHeaders)
@@ -1142,7 +1139,7 @@ func TestFullRouter_InstanceHintAndProxyStateMatrix(t *testing.T) {
 
 	draftChallenge := createDraftChallengeRecord(t, env, "Draft Hint Challenge")
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/hints/1/unlock", draftChallenge.ID), nil, studentHeaders)
-	assertFullRouterStatus(t, resp, http.StatusForbidden)
+	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/instances/%d/extend", env.instance.ID), nil, peerHeaders)
 	assertFullRouterStatus(t, resp, http.StatusForbidden)

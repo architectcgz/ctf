@@ -315,7 +315,6 @@ interface RawAdminChallengeItem {
     id: string | number
     level: number
     title?: string
-    cost_points?: number
     content: string
   }>
   status: 'draft' | 'published' | 'archived'
@@ -381,7 +380,6 @@ interface RawChallengeImportPreview {
     id?: string | number
     level: number
     title?: string
-    cost_points?: number
     content: string
   }>
   flag: {
@@ -886,7 +884,6 @@ function normalizeChallenge(
     id: String(hint.id),
     level: hint.level,
     title: hint.title,
-    cost_points: hint.cost_points,
     content: hint.content,
   }))
 
@@ -985,7 +982,6 @@ function normalizeChallengeImportPreview(item: RawChallengeImportPreview): Admin
       id: hint.id == null ? undefined : String(hint.id),
       level: hint.level,
       title: hint.title,
-      cost_points: hint.cost_points,
       content: hint.content,
     })),
     flag: item.flag,

@@ -20,7 +20,6 @@ type practiceService interface {
 	StartChallengeWithContext(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error)
 	StartContestChallenge(ctx context.Context, userID, contestID, challengeID int64) (*dto.InstanceResp, error)
 	SubmitFlagWithContext(ctx context.Context, userID, challengeID int64, flag string) (*dto.SubmissionResp, error)
-	UnlockHintWithContext(ctx context.Context, userID, challengeID int64, level int) (*dto.UnlockHintResp, error)
 	ListTeacherManualReviewSubmissions(requesterID int64, requesterRole string, query *dto.TeacherManualReviewSubmissionQuery) (*dto.PageResult, error)
 	GetTeacherManualReviewSubmission(submissionID, requesterID int64, requesterRole string) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
@@ -90,30 +89,6 @@ func (h *Handler) SubmitFlag(c *gin.Context) {
 	}
 
 	resp, err := h.service.SubmitFlagWithContext(c.Request.Context(), userID, challengeID, req.Flag)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
-}
-
-// UnlockHint 解锁题目提示
-// POST /api/v1/challenges/:id/hints/:level/unlock
-func (h *Handler) UnlockHint(c *gin.Context) {
-	userID := authctx.MustCurrentUser(c).UserID
-	challengeID, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		response.Error(c, errcode.ErrInvalidParams)
-		return
-	}
-	level, err := strconv.Atoi(c.Param("level"))
-	if err != nil || level <= 0 {
-		response.Error(c, errcode.ErrInvalidParams)
-		return
-	}
-
-	resp, err := h.service.UnlockHintWithContext(c.Request.Context(), userID, challengeID, level)
 	if err != nil {
 		response.FromError(c, err)
 		return

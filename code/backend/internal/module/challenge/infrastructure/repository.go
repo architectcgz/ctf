@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -222,39 +221,6 @@ func (r *Repository) ListHintsByChallengeIDWithContext(ctx context.Context, chal
 	var hints []*model.ChallengeHint
 	err := r.dbWithContext(ctx).Where("challenge_id = ?", challengeID).Order("level ASC, id ASC").Find(&hints).Error
 	return hints, err
-}
-
-func (r *Repository) FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error) {
-	var hint model.ChallengeHint
-	err := r.db.Where("challenge_id = ? AND level = ?", challengeID, level).First(&hint).Error
-	return &hint, err
-}
-
-func (r *Repository) GetUnlockedHintIDs(userID, challengeID int64) (map[int64]bool, error) {
-	return r.GetUnlockedHintIDsWithContext(context.Background(), userID, challengeID)
-}
-
-func (r *Repository) GetUnlockedHintIDsWithContext(ctx context.Context, userID, challengeID int64) (map[int64]bool, error) {
-	var unlocks []model.ChallengeHintUnlock
-	err := r.dbWithContext(ctx).
-		Where("user_id = ? AND challenge_id = ?", userID, challengeID).
-		Find(&unlocks).Error
-	if err != nil {
-		return nil, err
-	}
-
-	result := make(map[int64]bool, len(unlocks))
-	for _, unlock := range unlocks {
-		result[unlock.ChallengeHintID] = true
-	}
-	return result, nil
-}
-
-func (r *Repository) CreateHintUnlock(unlock *model.ChallengeHintUnlock) error {
-	return r.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "challenge_hint_id"}},
-		DoNothing: true,
-	}).Create(unlock).Error
 }
 
 // ListPublished 查询已发布的靶场列表（学员视图）

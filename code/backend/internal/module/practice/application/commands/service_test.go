@@ -130,14 +130,6 @@ func (s *stubPracticeChallengeContract) FindByID(id int64) (*model.Challenge, er
 	return s.findByIDFn(id)
 }
 
-func (s *stubPracticeChallengeContract) FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error) {
-	return nil, nil
-}
-
-func (s *stubPracticeChallengeContract) CreateHintUnlock(unlock *model.ChallengeHintUnlock) error {
-	return nil
-}
-
 func (s *stubPracticeChallengeContract) FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error) {
 	return nil, nil
 }

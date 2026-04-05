@@ -656,7 +656,6 @@ func buildReviewArchiveSummary(
 		EvidenceEventCount:     len(evidence),
 		WriteupCount:           len(writeups),
 		ManualReviewCount:      len(manualReviews),
-		HintUnlockCount:        countHintUnlocks(timeline, evidence),
 		CorrectSubmissionCount: countCorrectSubmissions(timeline, evidence),
 		LastActivityAt:         latestReviewArchiveActivity(timeline, evidence, writeups, manualReviews),
 	}
@@ -667,27 +666,6 @@ func buildReviewArchiveSummary(
 		summary.TotalAttempts = stats.TotalAttempts
 	}
 	return summary
-}
-
-func countHintUnlocks(
-	timeline []assessmentdomain.ReviewArchiveTimelineEvent,
-	evidence []assessmentdomain.ReviewArchiveEvidenceEvent,
-) int {
-	count := 0
-	for _, item := range timeline {
-		if item.Type == "hint_unlock" {
-			count++
-		}
-	}
-	if count > 0 {
-		return count
-	}
-	for _, item := range evidence {
-		if item.Type == "challenge_hint_unlock" {
-			count++
-		}
-	}
-	return count
 }
 
 func countCorrectSubmissions(
@@ -776,23 +754,13 @@ func buildReviewArchiveObservations(
 		})
 	}
 
-	if summary.HintUnlockCount > 0 {
-		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "hint_usage",
-			Label:    "提示依赖",
-			Level:    "attention",
-			Summary:  "训练过程存在提示介入，适合回看关键转折点。",
-			Evidence: fmt.Sprintf("共记录提示解锁 %d 次。", summary.HintUnlockCount),
-		})
-	} else {
-		items = append(items, assessmentdomain.ReviewArchiveObservation{
-			Key:      "hint_usage",
-			Label:    "提示依赖",
-			Level:    "good",
-			Summary:  "当前归档未记录提示依赖，独立推进迹象较强。",
-			Evidence: "未发现提示解锁事件。",
-		})
-	}
+	items = append(items, assessmentdomain.ReviewArchiveObservation{
+		Key:      "hint_usage",
+		Label:    "提示依赖",
+		Level:    "good",
+		Summary:  "当前归档不再统计提示解锁行为，训练记录聚焦实操与提交表现。",
+		Evidence: "未纳入提示解锁事件。",
+	})
 
 	if hasRepeatedWrongSubmissions(evidence) {
 		items = append(items, assessmentdomain.ReviewArchiveObservation{

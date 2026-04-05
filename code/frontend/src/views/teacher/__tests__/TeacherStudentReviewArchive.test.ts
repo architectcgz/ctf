@@ -58,7 +58,6 @@ describe('TeacherStudentReviewArchive', () => {
         evidence_event_count: 6,
         writeup_count: 1,
         manual_review_count: 1,
-        hint_unlock_count: 1,
         correct_submission_count: 1,
         last_activity_at: '2026-04-01T09:20:00Z',
       },
