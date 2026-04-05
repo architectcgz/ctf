@@ -28,7 +28,7 @@ const {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
       <div>
