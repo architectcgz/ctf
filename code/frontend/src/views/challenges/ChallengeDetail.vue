@@ -13,15 +13,6 @@
       v-else-if="challenge"
       class="detail-content"
     >
-      <div class="workspace-topbar">
-        <div class="overline">
-          Challenge Workspace / 顶部主体切换版
-        </div>
-        <div class="top-note">
-          主体区切换，右侧操作区常驻
-        </div>
-      </div>
-
       <div
         class="workspace-tabbar top-tabs"
         role="tablist"
@@ -1409,7 +1400,7 @@ watch(
   grid-template-columns: minmax(0, 1fr) 200px;
   gap: 26px;
   padding-bottom: 24px;
-  border-bottom: 0;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .question-title {
