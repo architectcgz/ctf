@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import ChallengeList from '../ChallengeList.vue'
+import challengeListSource from '../ChallengeList.vue?raw'
 import { getChallenges } from '@/api/challenge'
 
 vi.mock('@/api/challenge', () => ({
@@ -93,5 +94,15 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('挑战列表加载失败')
     expect(wrapper.text()).toContain('服务暂时不可用，请稍后重试')
     expect(wrapper.text()).not.toContain('请求ID')
+  })
+
+  it('应采用平铺目录式题目列表而不是卡片网格', () => {
+    expect(challengeListSource).toContain('challenge-directory')
+    expect(challengeListSource).toContain('challenge-row')
+    expect(challengeListSource).toContain('题目列表')
+    expect(challengeListSource).toContain('challenge-search-input')
+    expect(challengeListSource).not.toContain('class="challenge-card')
+    expect(challengeListSource).not.toContain('Training Range')
+    expect(challengeListSource).not.toContain('Challenge Filters')
   })
 })
