@@ -41,9 +41,8 @@ const emptyDescription = computed(() =>
 )
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
-
-const solvedCount = computed(() => list.value.filter((c) => c.is_solved).length)
-const unsolvedCount = computed(() => list.value.filter((c) => !c.is_solved).length)
+const solvedCount = computed(() => list.value.filter((challenge) => challenge.is_solved).length)
+const unsolvedCount = computed(() => list.value.filter((challenge) => !challenge.is_solved).length)
 const activeFilterCount = computed(
   () => [searchQuery.value, categoryFilter.value, difficultyFilter.value].filter(Boolean).length
 )
@@ -59,17 +58,17 @@ const summaryStats = computed(() => [
   { key: 'unsolved', label: '待攻克', value: unsolvedCount.value, helper: '仍可直接进入训练' },
 ])
 
-function onSearch() {
+function onSearch(): void {
   page.value = 1
   void refresh()
 }
 
-function onFilterChange() {
+function onFilterChange(): void {
   page.value = 1
   void refresh()
 }
 
-function resetFilters() {
+function resetFilters(): void {
   searchQuery.value = ''
   categoryFilter.value = ''
   difficultyFilter.value = ''
@@ -77,16 +76,16 @@ function resetFilters() {
   void refresh()
 }
 
-function goToDashboard() {
-  router.push({ name: 'Dashboard' })
+function goToDashboard(): void {
+  void router.push({ name: 'Dashboard' })
 }
 
-function openSkillProfile() {
-  router.push({ name: 'SkillProfile' })
+function openSkillProfile(): void {
+  void router.push({ name: 'SkillProfile' })
 }
 
-function goToDetail(id: string) {
-  router.push(`/challenges/${id}`)
+function goToDetail(id: string): void {
+  void router.push(`/challenges/${id}`)
 }
 
 function challengeIndex(index: number): number {
@@ -107,12 +106,12 @@ function getCategoryLabel(category: ChallengeCategory): string {
 
 function getCategoryColor(category: ChallengeCategory): string {
   const map: Record<ChallengeCategory, string> = {
-    web: 'var(--color-cat-web)',
-    pwn: 'var(--color-cat-pwn)',
-    reverse: 'var(--color-cat-reverse)',
-    crypto: 'var(--color-cat-crypto)',
-    misc: 'var(--color-cat-misc)',
-    forensics: 'var(--color-cat-forensics)',
+    web: 'var(--challenge-tone-web)',
+    pwn: 'var(--challenge-tone-pwn)',
+    reverse: 'var(--challenge-tone-reverse)',
+    crypto: 'var(--challenge-tone-crypto)',
+    misc: 'var(--challenge-tone-misc)',
+    forensics: 'var(--challenge-tone-forensics)',
   }
   return map[category]
 }
@@ -130,11 +129,11 @@ function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
 
 function getDifficultyColor(difficulty: ChallengeDifficulty): string {
   const map: Record<ChallengeDifficulty, string> = {
-    beginner: 'var(--color-diff-beginner)',
-    easy: 'var(--color-diff-easy)',
-    medium: 'var(--color-diff-medium)',
-    hard: 'var(--color-diff-hard)',
-    insane: 'var(--color-diff-insane)',
+    beginner: 'var(--challenge-diff-beginner)',
+    easy: 'var(--challenge-diff-easy)',
+    medium: 'var(--challenge-diff-medium)',
+    hard: 'var(--challenge-diff-hard)',
+    insane: 'var(--challenge-diff-insane)',
   }
   return map[difficulty]
 }
@@ -145,119 +144,117 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Training Range</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="challenge-page">
+      <header class="challenge-topbar">
+        <div class="challenge-heading">
+          <h1 class="challenge-title">靶场训练</h1>
+          <p class="challenge-subtitle">按关键词、分类与难度筛选题目，直接进入训练。</p>
+        </div>
+
+        <div class="challenge-actions">
+          <button type="button" class="challenge-btn challenge-btn-primary" @click="goToDashboard">
+            <LayoutDashboard class="h-4 w-4" />
+            返回仪表盘
+          </button>
+          <button type="button" class="challenge-btn challenge-btn-ghost" @click="openSkillProfile">
+            能力画像
+          </button>
+        </div>
+      </header>
+
+      <section class="challenge-summary">
+        <div class="challenge-summary-title">
+          <Target class="h-4 w-4" />
+          <span>当前题库概况</span>
+        </div>
+        <div class="challenge-summary-grid">
+          <div v-for="stat in summaryStats" :key="stat.key" class="challenge-summary-item">
+            <div class="challenge-summary-label">{{ stat.label }}</div>
+            <div class="challenge-summary-value">{{ stat.value }}</div>
+            <div class="challenge-summary-helper">{{ stat.helper }}</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="challenge-controls">
+        <div class="challenge-controls-bar">
+          <div class="challenge-controls-heading">
+            <h2 class="challenge-controls-title">筛选条件</h2>
+            <p class="challenge-controls-copy">快速收束训练范围，定位当前要攻克的题目。</p>
+          </div>
+          <div class="challenge-filter-pill">
+            <Filter class="h-4 w-4" />
+            激活筛选 {{ activeFilterCount }} 项
+          </div>
+          <button
+            v-if="hasActiveFilters"
+            type="button"
+            class="challenge-btn challenge-btn-ghost"
+            @click="resetFilters"
           >
-            靶场训练
-          </h2>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            在这里搜索、筛选并进入题目。
-          </p>
-
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button
-              type="button"
-              class="challenge-btn challenge-btn-primary"
-              @click="goToDashboard"
-            >
-              <LayoutDashboard class="h-4 w-4" />
-              返回仪表盘
-            </button>
-            <button
-              type="button"
-              class="challenge-btn challenge-btn-ghost"
-              @click="openSkillProfile"
-            >
-              能力画像
-            </button>
-          </div>
+            清空筛选
+          </button>
         </div>
 
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <Target class="h-5 w-5 text-[var(--journal-accent)]" />
-            当前题库概况
-          </div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div v-for="stat in summaryStats" :key="stat.key" class="journal-note">
-              <div class="journal-note-label">{{ stat.label }}</div>
-              <div class="journal-note-value">{{ stat.value }}</div>
-              <div class="journal-note-helper">{{ stat.helper }}</div>
-            </div>
-          </div>
-        </article>
-      </div>
-      <div class="challenge-filter-panel mt-6">
-        <div class="challenge-filter-head gap-4">
-          <div>
-            <div class="journal-eyebrow">Challenge Filters</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-              按关键词、分类和难度收束训练范围
-            </h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              用关键词、分类和难度快速筛选题目。
-            </p>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="challenge-filter-pill">
-              <Filter class="h-4 w-4" />
-              激活筛选 {{ activeFilterCount }} 项
-            </div>
-            <button
-              v-if="hasActiveFilters"
-              type="button"
-              class="challenge-btn challenge-btn-ghost"
-              @click="resetFilters"
-            >
-              清空筛选
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_repeat(2,minmax(0,220px))]">
-          <div class="relative">
-            <Search
-              class="challenge-search-icon absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--journal-muted)]"
-            />
+        <div class="challenge-filter-grid">
+          <label class="challenge-input-wrap" for="challenge-search-input">
+            <span class="sr-only">搜索题目</span>
+            <Search class="challenge-search-icon h-4 w-4" />
             <input
+              id="challenge-search-input"
               v-model="searchQuery"
               type="text"
               placeholder="搜索挑战标题或标签..."
               class="challenge-input"
+              aria-describedby="challenge-directory-meta"
               @input="onSearch"
             />
-          </div>
-          <select v-model="categoryFilter" class="challenge-select" @change="onFilterChange">
-            <option value="">全部分类</option>
-            <option value="web">Web</option>
-            <option value="pwn">Pwn</option>
-            <option value="reverse">逆向</option>
-            <option value="crypto">密码</option>
-            <option value="misc">杂项</option>
-            <option value="forensics">取证</option>
-          </select>
-          <select v-model="difficultyFilter" class="challenge-select" @change="onFilterChange">
-            <option value="">全部难度</option>
-            <option value="beginner">入门</option>
-            <option value="easy">简单</option>
-            <option value="medium">中等</option>
-            <option value="hard">困难</option>
-            <option value="insane">地狱</option>
-          </select>
+          </label>
+
+          <label class="challenge-select-wrap" for="challenge-category-filter">
+            <span class="sr-only">按分类筛选</span>
+            <select
+              id="challenge-category-filter"
+              v-model="categoryFilter"
+              class="challenge-select"
+              @change="onFilterChange"
+            >
+              <option value="">全部分类</option>
+              <option value="web">Web</option>
+              <option value="pwn">Pwn</option>
+              <option value="reverse">逆向</option>
+              <option value="crypto">密码</option>
+              <option value="misc">杂项</option>
+              <option value="forensics">取证</option>
+            </select>
+          </label>
+
+          <label class="challenge-select-wrap" for="challenge-difficulty-filter">
+            <span class="sr-only">按难度筛选</span>
+            <select
+              id="challenge-difficulty-filter"
+              v-model="difficultyFilter"
+              class="challenge-select"
+              @change="onFilterChange"
+            >
+              <option value="">全部难度</option>
+              <option value="beginner">入门</option>
+              <option value="easy">简单</option>
+              <option value="medium">中等</option>
+              <option value="hard">困难</option>
+              <option value="insane">地狱</option>
+            </select>
+          </label>
         </div>
-      </div>
+      </section>
 
-      <div class="challenge-panel-divider" />
+      <div class="challenge-divider" />
 
-      <div v-if="loading" class="flex items-center justify-center py-16">
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-        />
+      <div v-if="loading" class="challenge-loading">
+        <div class="challenge-loading-spinner" />
       </div>
 
       <AppEmpty
@@ -287,61 +284,71 @@ onMounted(() => {
       </AppEmpty>
 
       <template v-else>
-        <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <section class="challenge-directory" aria-label="题目目录">
+          <div class="challenge-directory-top">
+            <h2 class="challenge-directory-title">题目列表</h2>
+            <div id="challenge-directory-meta" class="challenge-directory-meta">
+              共 {{ total }} 题
+              <span v-if="hasActiveFilters">· 已按当前筛选收束结果</span>
+            </div>
+          </div>
+
+          <div class="challenge-directory-head">
+            <span>题目</span>
+            <span>标签</span>
+            <span>状态</span>
+            <span>数据</span>
+            <span>操作</span>
+          </div>
+
           <button
             v-for="(challenge, index) in list"
             :key="challenge.id"
             type="button"
-            class="challenge-card rounded-[22px] border px-5 py-5 text-left transition"
-            :style="{ borderTopWidth: '3px', borderTopColor: getCategoryColor(challenge.category) }"
+            class="challenge-row"
+            :style="{ '--challenge-row-accent': getCategoryColor(challenge.category) }"
+            :aria-label="`${challenge.title}，${getCategoryLabel(challenge.category)}，${getDifficultyLabel(challenge.difficulty)}，${challenge.is_solved ? '已解出' : '待攻克'}`"
             @click="goToDetail(challenge.id)"
           >
-            <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2">
-                <span
-                  class="status-dot"
-                  :class="challenge.is_solved ? 'status-dot-solved' : 'status-dot-ready'"
-                />
-                <span class="challenge-card-code">CH-{{ challengeIndex(index) }}</span>
+            <div class="challenge-row-main">
+              <div class="challenge-row-index">CH-{{ challengeIndex(index) }}</div>
+              <div class="challenge-row-title-group">
+                <h2 class="challenge-row-title">{{ challenge.title }}</h2>
+                <div class="challenge-row-points">{{ challenge.points }} pts</div>
               </div>
-              <span
-                class="challenge-card-points"
-                :style="{ color: getCategoryColor(challenge.category) }"
-              >
-                {{ challenge.points }} pts
-              </span>
             </div>
 
-            <div class="mt-4">
-              <h3 class="challenge-card-title">{{ challenge.title }}</h3>
-              <p class="challenge-card-subtitle">
-                {{
-                  challenge.tags.length > 0
-                    ? challenge.tags.join(' / ')
-                    : '暂无标签，直接进入题目查看详情。'
-                }}
-              </p>
-            </div>
-
-            <div class="mt-4 flex flex-wrap gap-2">
+            <div class="challenge-row-tags">
               <span
-                class="challenge-tag"
+                class="challenge-chip"
                 :style="{
-                  background: getCategoryColor(challenge.category) + '20',
-                  color: getCategoryColor(challenge.category),
+                  '--challenge-chip-bg': `${getCategoryColor(challenge.category)}18`,
+                  '--challenge-chip-color': getCategoryColor(challenge.category),
                 }"
               >
                 {{ getCategoryLabel(challenge.category) }}
               </span>
               <span
-                class="challenge-tag"
+                class="challenge-chip"
                 :style="{
-                  background: getDifficultyColor(challenge.difficulty) + '20',
-                  color: getDifficultyColor(challenge.difficulty),
+                  '--challenge-chip-bg': `${getDifficultyColor(challenge.difficulty)}18`,
+                  '--challenge-chip-color': getDifficultyColor(challenge.difficulty),
                 }"
               >
                 {{ getDifficultyLabel(challenge.difficulty) }}
               </span>
+              <span v-for="tag in challenge.tags.slice(0, 2)" :key="tag" class="challenge-chip challenge-chip-muted">
+                {{ tag }}
+              </span>
+              <span
+                v-if="challenge.tags.length === 0"
+                class="challenge-row-fallback"
+              >
+                暂无标签
+              </span>
+            </div>
+
+            <div class="challenge-row-status">
               <span
                 class="challenge-state-chip"
                 :class="
@@ -352,37 +359,34 @@ onMounted(() => {
               </span>
             </div>
 
-            <div class="challenge-card-footer mt-5">
-              <div class="challenge-card-meta">
-                <span>{{ challenge.solved_count }} 人解出</span>
-                <span>尝试 {{ challenge.total_attempts }} 次</span>
-              </div>
-              <span class="challenge-card-cta">
-                {{ challenge.is_solved ? '继续查看' : '开始挑战' }}
-                <ArrowRight class="h-4 w-4" />
-              </span>
+            <div class="challenge-row-metrics">
+              <span>{{ challenge.solved_count }} 人解出</span>
+              <span>尝试 {{ challenge.total_attempts }} 次</span>
+            </div>
+
+            <div class="challenge-row-cta">
+              <span>{{ challenge.is_solved ? '继续查看' : '开始挑战' }}</span>
+              <ArrowRight class="h-4 w-4" />
             </div>
           </button>
-        </div>
+        </section>
 
         <div v-if="totalPages > 1" class="challenge-pagination">
           <div>
-            <div class="journal-note-label">Page Control</div>
-            <div class="mt-2 text-sm text-[var(--journal-muted)]">
-              共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页
-            </div>
+            <div class="challenge-summary-label">Page Control</div>
+            <div class="challenge-pagination-copy">共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页</div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="challenge-pagination-actions">
             <button
               :disabled="page === 1"
-              class="challenge-btn disabled:opacity-40 disabled:cursor-not-allowed"
+              class="challenge-btn disabled:cursor-not-allowed disabled:opacity-40"
               @click="changePage(page - 1)"
             >
               上一页
             </button>
             <button
               :disabled="page >= totalPages"
-              class="challenge-btn disabled:opacity-40 disabled:cursor-not-allowed"
+              class="challenge-btn disabled:cursor-not-allowed disabled:opacity-40"
               @click="changePage(page + 1)"
             >
               下一页
@@ -390,342 +394,582 @@ onMounted(() => {
           </div>
         </div>
       </template>
-    </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --challenge-tone-web: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
+  --challenge-tone-pwn: color-mix(in srgb, var(--color-danger) 72%, var(--journal-ink));
+  --challenge-tone-reverse: color-mix(in srgb, var(--color-success) 74%, var(--journal-ink));
+  --challenge-tone-crypto: color-mix(in srgb, #0f766e 76%, var(--journal-ink));
+  --challenge-tone-misc: color-mix(in srgb, #7c3aed 78%, var(--journal-ink));
+  --challenge-tone-forensics: color-mix(in srgb, #ea580c 78%, var(--journal-ink));
+  --challenge-diff-beginner: color-mix(in srgb, var(--color-success) 76%, var(--journal-ink));
+  --challenge-diff-easy: color-mix(in srgb, #0891b2 78%, var(--journal-ink));
+  --challenge-diff-medium: color-mix(in srgb, #2563eb 80%, var(--journal-ink));
+  --challenge-diff-hard: color-mix(in srgb, #d97706 80%, var(--journal-ink));
+  --challenge-diff-insane: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+.challenge-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.journal-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
+.challenge-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.625rem 0.875rem;
+.challenge-heading {
+  min-width: 0;
 }
 
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+.challenge-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--journal-ink);
 }
 
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
+.challenge-subtitle {
+  margin-top: 12px;
+  max-width: 680px;
+  font-size: 14px;
+  line-height: 1.7;
   color: var(--journal-muted);
 }
 
-.challenge-filter-head {
+.challenge-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: center;
+  gap: 12px;
+}
+
+.challenge-summary {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-accent-strong);
+}
+
+.challenge-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.challenge-summary-item {
+  min-width: 0;
+  padding: 0 0 0 16px;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.challenge-summary-value {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+.challenge-summary-helper {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.challenge-controls {
+  padding: 24px 0 0;
+}
+
+.challenge-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px 16px;
 }
 
-.challenge-filter-panel {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  padding-top: 1.25rem;
+.challenge-controls-heading {
+  min-width: 0;
 }
 
-.challenge-panel-divider {
-  margin-top: 1.5rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+.challenge-controls-title {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
 }
 
-:deep(.challenge-empty-state) {
-  border-top-style: dashed;
-  border-bottom-style: dashed;
-  border-top-color: rgba(148, 163, 184, 0.58);
-  border-bottom-color: rgba(148, 163, 184, 0.58);
+.challenge-controls-copy {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
 }
 
 .challenge-filter-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-  background: rgba(99, 102, 241, 0.06);
-  padding: 0.48rem 0.9rem;
-  font-size: 0.8rem;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  font-size: 12px;
   font-weight: 600;
   color: var(--journal-accent-strong);
 }
 
-.challenge-tag {
-  border-radius: 6px;
-  padding: 0.18rem 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 600;
+.challenge-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 220px));
+  gap: 12px;
+  margin-top: 18px;
 }
 
-.challenge-input {
-  width: 100%;
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.6rem 1rem 0.6rem 2.85rem;
-  font-size: 0.875rem;
-  color: var(--journal-ink);
-  outline: none;
-  transition: border-color 150ms ease;
+.challenge-input-wrap {
+  position: relative;
+  display: block;
+}
+
+.challenge-select-wrap {
+  display: block;
 }
 
 .challenge-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  color: var(--journal-muted);
   pointer-events: none;
+}
+
+.challenge-input,
+.challenge-select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
+  color: var(--journal-ink);
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.challenge-input {
+  padding: 0 14px 0 42px;
+}
+
+.challenge-select {
+  padding: 0 14px;
+  cursor: pointer;
 }
 
 .challenge-input::placeholder {
   color: var(--journal-muted);
 }
 
-.challenge-input:focus {
-  border-color: var(--journal-accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-}
-
-.challenge-select {
-  width: 100%;
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.6rem 1rem;
-  font-size: 0.875rem;
-  color: var(--journal-ink);
-  cursor: pointer;
-  outline: none;
-  transition: border-color 150ms ease;
-}
-
+.challenge-input:focus,
 .challenge-select:focus {
-  border-color: var(--journal-accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  border-color: color-mix(in srgb, var(--journal-accent) 54%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
+}
+
+.challenge-divider {
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.challenge-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top-color: var(--journal-accent);
+  border-radius: 999px;
+  animation: challengeSpin 900ms linear infinite;
+}
+
+:deep(.challenge-empty-state) {
+  margin-top: 24px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-directory {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  margin-top: 24px;
+}
+
+.challenge-directory-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+}
+
+.challenge-directory-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.challenge-directory-meta {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.challenge-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.9fr) 120px 180px 120px;
+  gap: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.challenge-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.9fr) 120px 180px 120px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.challenge-row:hover,
+.challenge-row:focus-visible {
+  background: color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 64%, transparent);
+  outline: none;
+}
+
+.challenge-row-main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.challenge-row-index {
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--journal-muted);
+}
+
+.challenge-row-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.challenge-row-title {
+  min-width: 0;
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--journal-ink);
+}
+
+.challenge-row-points {
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--challenge-row-accent, var(--journal-accent));
+}
+
+.challenge-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.challenge-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--challenge-chip-bg, color-mix(in srgb, var(--journal-accent) 10%, transparent));
+  color: var(--challenge-chip-color, var(--journal-accent-strong));
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.challenge-chip-muted {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
+}
+
+.challenge-row-fallback {
+  font-size: 13px;
+  color: var(--journal-muted);
+}
+
+.challenge-row-status {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.challenge-state-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.challenge-state-chip-solved {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: color-mix(in srgb, var(--color-success) 84%, var(--journal-ink));
+}
+
+.challenge-state-chip-ready {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
+}
+
+.challenge-row-metrics {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.challenge-row-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+.challenge-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-pagination-copy {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--journal-muted);
+}
+
+.challenge-pagination-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .challenge-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  cursor: pointer;
-  border-radius: 0.75rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.4rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--journal-ink);
+  cursor: pointer;
   transition:
-    border-color 150ms ease,
-    background 150ms ease;
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
 }
 
-.challenge-btn:hover {
-  border-color: var(--journal-accent);
-  background: rgba(99, 102, 241, 0.06);
+.challenge-btn:hover,
+.challenge-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  outline: none;
 }
 
 .challenge-btn-primary {
   border-color: transparent;
   background: var(--journal-accent);
-  color: #ffffff;
-  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.18);
+  color: var(--color-bg-base);
 }
 
-.challenge-btn-primary:hover {
+.challenge-btn-primary:hover,
+.challenge-btn-primary:focus-visible {
   border-color: transparent;
   background: var(--journal-accent-strong);
+  color: var(--color-bg-base);
 }
 
 .challenge-btn-ghost {
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
-.challenge-card {
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
-  cursor: pointer;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.challenge-card:hover {
-  border-color: rgba(99, 102, 241, 0.28);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+@keyframes challengeSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.challenge-card-code {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--journal-muted);
+@media (max-width: 1180px) {
+  .challenge-directory-head {
+    display: none;
+  }
+
+  .challenge-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 18px 0;
+  }
+
+  .challenge-row-status,
+  .challenge-row-cta {
+    justify-content: flex-start;
+  }
 }
 
-.challenge-card-points {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.8rem;
-  font-weight: 700;
+@media (max-width: 960px) {
+  .challenge-topbar,
+  .challenge-controls-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .challenge-summary-grid,
+  .challenge-filter-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.challenge-card-title {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.5;
-  color: var(--journal-ink);
-}
+@media (max-width: 640px) {
+  .challenge-title {
+    font-size: 34px;
+  }
 
-.challenge-card-subtitle {
-  margin-top: 0.7rem;
-  min-height: 2.9rem;
-  font-size: 0.83rem;
-  line-height: 1.65;
-  color: var(--journal-muted);
-}
+  .challenge-summary-grid {
+    gap: 16px;
+  }
 
-.challenge-state-chip {
-  border-radius: 999px;
-  padding: 0.32rem 0.75rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
+  .challenge-summary-item {
+    padding-left: 12px;
+  }
 
-.challenge-state-chip-solved {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-}
-
-.challenge-state-chip-ready {
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--journal-accent-strong);
-}
-
-.challenge-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  padding-top: 1rem;
-}
-
-.challenge-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.85rem;
-  font-size: 0.76rem;
-  color: var(--journal-muted);
-}
-
-.challenge-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.challenge-pagination {
-  margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-border);
-  padding-top: 1.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.status-dot {
-  display: inline-block;
-  height: 0.5rem;
-  width: 0.5rem;
-  border-radius: 999px;
-}
-
-.status-dot-solved {
-  background: #10b981;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
-}
-
-.status-dot-ready {
-  background: var(--journal-accent);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
-}
-
-:global([data-theme='dark']) .challenge-card {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82));
-}
-
-:global([data-theme='dark']) .challenge-btn-ghost {
-  background: rgba(15, 23, 42, 0.72);
-}
-
-:global([data-theme='dark']) .challenge-card-footer {
-  border-top-color: rgba(51, 65, 85, 0.72);
+  .challenge-directory-top {
+    align-items: flex-start;
+  }
 }
 </style>
