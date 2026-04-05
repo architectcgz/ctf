@@ -12,7 +12,6 @@ const props = defineProps<{
 }>()
 
 const panelTitle = computed(() => props.title || '近 7 天训练趋势')
-const panelSubtitle = computed(() => props.subtitle || '按天查看训练事件、成功解题和活跃学生变化。')
 
 const categories = computed(() => (props.trend?.points ?? []).map((point) => point.date.slice(5)))
 
@@ -37,9 +36,6 @@ const series = computed(() => [
     <header class="teacher-panel__header">
       <div class="journal-eyebrow">Trend</div>
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
-      <p class="teacher-panel__subtitle">
-        {{ panelSubtitle }}
-      </p>
     </header>
 
     <AppEmpty
