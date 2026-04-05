@@ -12,7 +12,7 @@
       class="sidebar-shell sidebar-shell-mobile fixed inset-y-0 left-0 z-50 flex w-[var(--shell-sidebar-expanded)] flex-col px-3 py-4 transition-transform duration-200 md:hidden"
       :class="mobileOpen ? 'translate-x-0' : '-translate-x-full'"
     >
-      <div class="sidebar-brand-row px-2">
+      <div class="sidebar-brand-row sidebar-brand-row--framed px-2">
         <div class="sidebar-brand">
           <div class="sidebar-brand-mark tech-accent">
             CTF
@@ -33,11 +33,11 @@
         </button>
       </div>
 
-      <div class="mt-6 flex min-h-0 flex-1 overflow-y-auto">
-        <nav class="flex min-h-full flex-col space-y-7">
-          <section v-for="group in navGroups" :key="group.key" class="space-y-2.5">
+      <div class="sidebar-nav-scroll mt-6 flex min-h-0 flex-1 overflow-y-auto">
+        <nav class="sidebar-nav-list flex min-h-full flex-col space-y-7">
+          <section v-for="group in navGroups" :key="group.key" class="sidebar-group space-y-2.5">
             <div class="sidebar-group-title px-2">
-              {{ group.title }}
+              <span>{{ group.title }}</span>
             </div>
             <div class="space-y-1.5">
               <template v-for="item in group.items" :key="item.name">
@@ -104,7 +104,7 @@
       class="sidebar-shell sidebar-shell-desktop sticky top-0 hidden min-h-screen shrink-0 self-stretch px-3 py-4 md:flex md:flex-col"
       :class="collapsed ? 'w-[var(--shell-sidebar-collapsed)]' : 'w-[var(--shell-sidebar-expanded)]'"
     >
-      <div class="sidebar-brand-row px-1">
+      <div class="sidebar-brand-row sidebar-brand-row--framed px-1">
         <button
           type="button"
           class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"
@@ -126,14 +126,21 @@
         </button>
       </div>
 
-      <div class="mt-6 flex min-h-0 flex-1 overflow-y-auto">
-        <nav class="flex min-h-full flex-col space-y-7">
-          <section v-for="group in navGroups" :key="group.key" class="space-y-2.5">
+      <div class="sidebar-nav-scroll mt-6 flex min-h-0 flex-1 overflow-y-auto">
+        <nav class="sidebar-nav-list flex min-h-full flex-col space-y-7">
+          <section v-for="group in navGroups" :key="group.key" class="sidebar-group space-y-2.5">
             <div
               v-if="!collapsed"
               class="sidebar-group-title px-2"
             >
-              {{ group.title }}
+              <span>{{ group.title }}</span>
+            </div>
+            <div
+              v-else
+              class="sidebar-group-title sidebar-group-title--collapsed"
+              :title="group.title"
+            >
+              {{ group.shortTitle }}
             </div>
 
             <div class="space-y-1.5">
@@ -184,7 +191,7 @@
                   class="sidebar-item-button group flex w-full items-center text-left transition"
                   :class="[
                     itemClass(item),
-                    collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3 py-2.5',
+                    collapsed ? 'sidebar-item-button--collapsed justify-center px-0 py-3' : 'gap-3 px-3 py-2.5',
                   ]"
                   :title="collapsed ? item.title : undefined"
                   @click="navigate(item)"
@@ -435,12 +442,13 @@ async function navigate(item: NavItem): Promise<void> {
 .sidebar-shell {
   border-right: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 98%, var(--color-bg-base))),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 14rem);
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 99%, var(--color-bg-base))),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 14rem);
 }
 
 .sidebar-shell-desktop {
   box-shadow: inset -1px 0 0 color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  backdrop-filter: blur(16px);
 }
 
 .sidebar-shell-mobile {
@@ -454,6 +462,11 @@ async function navigate(item: NavItem): Promise<void> {
   gap: 0.75rem;
 }
 
+.sidebar-brand-row--framed {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+}
+
 .sidebar-brand {
   display: flex;
   min-width: 0;
@@ -462,14 +475,14 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .sidebar-brand-button {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
 }
 
 .sidebar-brand-button:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border-default));
+  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 42%, var(--color-bg-surface));
 }
 
 .sidebar-brand-mark {
@@ -479,10 +492,10 @@ async function navigate(item: NavItem): Promise<void> {
   align-items: center;
   justify-content: center;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
   font-size: 0.85rem;
   font-weight: 700;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, var(--color-border-default));
 }
 
 .sidebar-brand-kicker,
@@ -497,9 +510,43 @@ async function navigate(item: NavItem): Promise<void> {
 .sidebar-footer-title {
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-text-muted);
+}
+
+.sidebar-nav-scroll {
+  scrollbar-width: thin;
+}
+
+.sidebar-nav-list {
+  width: 100%;
+}
+
+.sidebar-group {
+  position: relative;
+}
+
+.sidebar-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.sidebar-group-title::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: color-mix(in srgb, var(--color-border-default) 68%, transparent);
+}
+
+.sidebar-group-title--collapsed {
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar-group-title--collapsed::after {
+  display: none;
 }
 
 .sidebar-icon-button {
@@ -508,23 +555,42 @@ async function navigate(item: NavItem): Promise<void> {
   width: 2.5rem;
   align-items: center;
   justify-content: center;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  background: color-mix(in srgb, var(--color-bg-base) 66%, var(--color-bg-surface));
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 48%, var(--color-bg-surface));
   color: var(--color-text-secondary);
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .sidebar-icon-button:hover {
   color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border-default));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default));
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-surface));
+  transform: translateY(-1px);
 }
 
 .sidebar-item-button,
 .sidebar-child-button {
-  border-radius: 16px;
+  position: relative;
+  border-radius: 14px;
   border: 1px solid transparent;
+  min-height: 2.9rem;
+}
+
+.sidebar-item-button::before,
+.sidebar-child-button::before {
+  content: "";
+  position: absolute;
+  left: 0.2rem;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 3px;
+  border-radius: 999px;
+  background: transparent;
 }
 
 .sidebar-item-icon-wrap {
@@ -533,10 +599,13 @@ async function navigate(item: NavItem): Promise<void> {
   width: 2rem;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 68%, transparent);
-  background: color-mix(in srgb, var(--color-bg-base) 72%, var(--color-bg-surface));
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .sidebar-item-icon-wrap-child {
@@ -547,6 +616,15 @@ async function navigate(item: NavItem): Promise<void> {
 
 .sidebar-item-icon-wrap-collapsed {
   margin: 0 auto;
+}
+
+.sidebar-item-button--collapsed::before {
+  left: 50%;
+  top: auto;
+  bottom: 0.2rem;
+  width: 22px;
+  height: 3px;
+  transform: translateX(-50%);
 }
 
 .sidebar-item-icon {
@@ -560,50 +638,57 @@ async function navigate(item: NavItem): Promise<void> {
 
 .sidebar-item-idle:hover,
 .sidebar-child-idle:hover {
-  border-color: color-mix(in srgb, var(--color-border-default) 88%, transparent);
-  background: color-mix(in srgb, var(--color-bg-base) 62%, var(--color-bg-surface));
+  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 50%, var(--color-bg-surface));
   color: var(--color-text-primary);
-  box-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 10%, transparent);
 }
 
 .sidebar-item-idle:hover .sidebar-item-icon-wrap,
 .sidebar-child-idle:hover .sidebar-item-icon-wrap {
-  border-color: transparent;
-  box-shadow: none;
+  border-color: color-mix(in srgb, var(--color-border-default) 60%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 30%, var(--color-bg-surface));
 }
 
 .sidebar-item-active,
 .sidebar-child-active {
-  border-color: color-mix(in srgb, var(--color-primary) 26%, var(--color-border-default));
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 70%),
-    color-mix(in srgb, var(--color-bg-base) 58%, var(--color-bg-surface));
+    linear-gradient(90deg, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 72%),
+    color-mix(in srgb, var(--color-bg-base) 34%, var(--color-bg-surface));
   color: var(--color-text-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-item-active::before,
+.sidebar-child-active::before {
+  background: color-mix(in srgb, var(--color-primary) 84%, white);
 }
 
 .sidebar-item-active .sidebar-item-icon-wrap,
 .sidebar-child-active .sidebar-item-icon-wrap {
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--color-primary) 20%, var(--color-border-default));
   background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface));
   color: var(--color-primary);
-  box-shadow: none;
 }
 
 .sidebar-child-list {
   border-left: 1px solid color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
 }
 
-:global([data-theme="light"]) .sidebar-shell {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base))),
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 14rem);
+.sidebar-item-button:focus-visible,
+.sidebar-child-button:focus-visible,
+.sidebar-icon-button:focus-visible,
+.sidebar-brand-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline-offset: 3px;
 }
 
-:global([data-theme="light"]) .sidebar-brand-button,
-:global([data-theme="light"]) .sidebar-footer-card,
-:global([data-theme="light"]) .sidebar-icon-button,
-:global([data-theme="light"]) .sidebar-item-icon-wrap {
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+:global([data-theme="light"]) .sidebar-shell {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 95%, var(--color-bg-base))),
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.06), transparent 14rem);
+}
+
+:global([data-theme="light"]) .sidebar-shell-mobile {
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
 }
 </style>

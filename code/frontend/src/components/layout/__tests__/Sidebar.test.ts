@@ -11,4 +11,12 @@ describe('Sidebar desktop layout', () => {
       /<nav class="[^"]*flex[^"]*min-h-full[^"]*flex-col[^"]*space-y-7[^"]*">/s
     )
   })
+
+  it('uses a flatter console navigation system instead of stacked card buttons', () => {
+    expect(sidebarSource).toContain('class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"')
+    expect(sidebarSource).toContain('sidebar-nav-scroll')
+    expect(sidebarSource).toContain('sidebar-group-title--collapsed')
+    expect(sidebarSource).toContain('.sidebar-item-active::before,')
+    expect(sidebarSource).toContain('.sidebar-item-button--collapsed::before')
+  })
 })
