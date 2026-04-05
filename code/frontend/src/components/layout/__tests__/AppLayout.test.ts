@@ -27,4 +27,11 @@ describe('AppLayout workspace shell', () => {
     expect(appLayoutSource).toContain('padding-inline: 0;')
     expect(appLayoutSource).toContain('max-width: none;')
   })
+
+  it('makes the topnav content column a flex stack so main can consume the remaining height', () => {
+    expect(appLayoutSource).toContain('<div class="min-w-0 flex flex-1 flex-col">')
+    expect(appLayoutSource).toContain('.workspace-main {')
+    expect(appLayoutSource).toContain('flex: 1 1 auto;')
+    expect(appLayoutSource).toContain('min-height: 0;')
+  })
 })

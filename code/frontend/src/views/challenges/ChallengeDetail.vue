@@ -1253,9 +1253,10 @@ watch(
 }
 
 .workspace-shell {
-  max-width: 1480px;
-  margin: 0 auto;
-  min-height: 100%;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: max(100%, calc(100vh - 5rem));
   overflow: clip;
   border: 1px solid var(--journal-line-soft);
   border-radius: var(--radius-xl);
@@ -1287,7 +1288,9 @@ watch(
 
 .detail-content {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
+  min-height: 0;
 }
 
 .workspace-topbar {
@@ -1363,7 +1366,10 @@ watch(
 .detail-grid,
 .workspace-grid {
   display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
   grid-template-columns: minmax(0, 1.34fr) minmax(320px, 0.66fr);
+  align-items: stretch;
 }
 
 .detail-main,
@@ -1373,11 +1379,18 @@ watch(
   min-width: 0;
 }
 
+.detail-main,
 .content-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 28px;
 }
 
 .tool-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: 28px;
   border-left: 1px solid var(--line-soft);
   background:
@@ -1385,6 +1398,10 @@ watch(
 }
 
 .tool-pane-inner {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 100%;
   position: sticky;
   top: 28px;
 }
@@ -1392,6 +1409,7 @@ watch(
 .workspace-panel,
 .panel {
   display: block;
+  min-height: 100%;
   animation: rise 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1944,6 +1962,7 @@ watch(
 @media (max-width: 1080px) {
   .detail-grid,
   .workspace-grid {
+    flex: initial;
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -1953,6 +1972,7 @@ watch(
   }
 
   .tool-pane-inner {
+    min-height: 0;
     position: static;
   }
 
@@ -2003,6 +2023,12 @@ watch(
 
   .writeup-actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 767px) {
+  .workspace-shell {
+    min-height: 100%;
   }
 }
 

@@ -18,7 +18,7 @@
         @close-mobile="sidebarOpen = false"
         @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
       />
-      <div class="min-w-0 flex-1">
+      <div class="min-w-0 flex flex-1 flex-col">
         <TopNav
           :sidebar-collapsed="sidebarCollapsed"
           :notification-status="notificationStatus"
@@ -74,9 +74,10 @@ watch(
 
 <style scoped>
 .workspace-main {
+  flex: 1 1 auto;
   position: relative;
   isolation: isolate;
-  min-height: calc(100vh - 5rem);
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -131,7 +132,7 @@ watch(
 
 @media (max-width: 767px) {
   .workspace-main {
-    min-height: auto;
+    min-height: 0;
   }
 }
 </style>
