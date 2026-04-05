@@ -108,7 +108,7 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div
       v-if="error"

@@ -117,7 +117,7 @@ async function handleCommitPreview() {
 </script>
 
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-col rounded-[24px] border px-6 py-6 md:px-8">
+  <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8">
     <div class="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
       <div class="space-y-4">
         <div class="journal-eyebrow">Package-First Authoring</div>

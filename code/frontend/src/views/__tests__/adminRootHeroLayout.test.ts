@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '../admin/AuditLog.vue?raw'
 import challengeDetailSource from '../admin/ChallengeDetail.vue?raw'
+import challengeManageSource from '../admin/ChallengeManage.vue?raw'
 import cheatDetectionSource from '../admin/CheatDetection.vue?raw'
+import imageManageSource from '../admin/ImageManage.vue?raw'
 import adminDashboardSource from '../../components/admin/dashboard/AdminDashboardPage.vue?raw'
 import contestOrchestrationSource from '../../components/admin/contest/ContestOrchestrationPage.vue?raw'
 import userGovernanceSource from '../../components/admin/user/UserGovernancePage.vue?raw'
@@ -12,7 +14,9 @@ describe('admin full-bleed hero roots', () => {
     const sources = [
       auditLogSource,
       challengeDetailSource,
+      challengeManageSource,
       cheatDetectionSource,
+      imageManageSource,
       adminDashboardSource,
       contestOrchestrationSource,
       userGovernanceSource,
@@ -21,6 +25,7 @@ describe('admin full-bleed hero roots', () => {
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
       expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
+      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1/s)
     }
   })
 })

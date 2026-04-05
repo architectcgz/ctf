@@ -91,7 +91,7 @@ function timelineStatus(eventType: string): string {
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-col rounded-[30px] border px-6 py-6 md:px-8">
+  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
       <div>
         <div class="journal-eyebrow">Training Journal</div>
         <h2

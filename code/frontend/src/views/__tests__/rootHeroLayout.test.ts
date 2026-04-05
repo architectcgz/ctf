@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import challengeListSource from '../challenges/ChallengeList.vue?raw'
 import contestListSource from '../contests/ContestList.vue?raw'
+import instanceListSource from '../instances/InstanceList.vue?raw'
+import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
+import skillProfileSource from '../profile/SkillProfile.vue?raw'
+import userProfileSource from '../profile/UserProfile.vue?raw'
 import scoreboardViewSource from '../scoreboard/ScoreboardView.vue?raw'
 import categoryProgressSource from '../../components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import difficultyPageSource from '../../components/dashboard/student/StudentDifficultyPage.vue?raw'
@@ -15,8 +19,12 @@ describe('full-bleed hero roots', () => {
     const sources = [
       challengeListSource,
       contestListSource,
+      instanceListSource,
+      notificationListSource,
       scoreboardViewSource,
       securitySettingsSource,
+      skillProfileSource,
+      userProfileSource,
       recommendationPageSource,
       categoryProgressSource,
       timelinePageSource,
@@ -26,7 +34,8 @@ describe('full-bleed hero roots', () => {
 
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
-      expect(source).toMatch(/<section class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
+      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
+      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1/s)
     }
   })
 })
