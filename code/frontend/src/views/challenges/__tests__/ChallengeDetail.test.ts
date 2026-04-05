@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ChallengeDetail from '../ChallengeDetail.vue'
+import challengeDetailSource from '../ChallengeDetail.vue?raw'
 
 const challengeApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn(),
@@ -179,6 +180,12 @@ describe('ChallengeDetail', () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.findAll('.challenge-panel')).toHaveLength(0)
+  })
+
+  it('工作区应建立满高伸展布局链', () => {
+    expect(challengeDetailSource).toContain('min-height: max(100%, calc(100vh - 5rem));')
+    expect(challengeDetailSource).toContain('.detail-content {\n  display: flex;\n  flex: 1 1 auto;')
+    expect(challengeDetailSource).toMatch(/\.detail-grid,\s*\.workspace-grid\s*{\s*display:\s*grid;\s*flex:\s*1 1 auto;/)
   })
 
   it('未解题时应显示题解锁定态', async () => {
