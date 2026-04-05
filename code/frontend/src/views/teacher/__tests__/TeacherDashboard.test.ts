@@ -197,4 +197,65 @@ describe('TeacherDashboard', () => {
       }
     }
   })
+
+  it('教师概览应采用 workspace tabs 结构而不是单一仪表盘堆叠', () => {
+    expect(teacherDashboardPageSource).toContain('class="workspace-shell"')
+    expect(teacherDashboardPageSource).toContain('role="tablist"')
+    expect(teacherDashboardPageSource).toContain('top-tab-overview')
+    expect(teacherDashboardPageSource).toContain('top-tab-portrait')
+    expect(teacherDashboardPageSource).toContain('top-tab-trend')
+    expect(teacherDashboardPageSource).toContain('top-tab-insight')
+    expect(teacherDashboardPageSource).toContain('top-tab-advice')
+    expect(teacherDashboardPageSource).toContain('top-tab-action')
+  })
+
+  it('教师概览的小标题应隔离 overline 样式以避免继承装饰横线', () => {
+    expect(teacherDashboardPageSource).toContain('workspace-overline')
+    expect(teacherDashboardPageSource).not.toContain('class="overline"')
+  })
+
+  it('教师概览趋势页不应保留冗余说明文案', async () => {
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain(
+      '把训练事件、成功解题和活跃学生放在同一条时间轴上观察，能更快判断课堂节奏是否需要调整。'
+    )
+    expect(wrapper.text()).not.toContain('把训练事件、成功解题和活跃学生放在同一条时间轴上观察。')
+  })
+
+  it('教师概览不应渲染设计介绍式文案', async () => {
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    const redundantCopy = [
+      '班级训练进度与能力画像工作台。',
+      '当前班级的薄弱维度按学生集中度排序，优先从人数最多的方向开始补强更容易看到整体提升。',
+      '聚焦风险学生、头部样本和班级主要断层，帮助教师先决定“先拉谁、补什么、怎么讲”。',
+      '这里优先显示可直接转成课堂动作的建议，再补充复盘结论，避免教师在多个面板之间来回跳转。',
+      '把高优先级学生和建议训练题放在同一块工作台里，便于教师直接落实到后续训练安排。',
+    ]
+
+    for (const copy of redundantCopy) {
+      expect(wrapper.text()).not.toContain(copy)
+    }
+  })
 })
