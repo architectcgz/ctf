@@ -1,41 +1,49 @@
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Image Library</div>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">镜像管理</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            在这里查看镜像状态，并继续创建或清理镜像资源。
-          </p>
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+      <div>
+        <div class="journal-eyebrow">Image Library</div>
+        <h1
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+        >
+          镜像管理
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          在这里查看镜像状态，并继续创建或清理镜像资源。
+        </p>
 
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
-              创建镜像
-            </button>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
+            创建镜像
+          </button>
+        </div>
+      </div>
+
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="journal-note-label">镜像概况</div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="journal-note">
+            <div class="journal-note-label">镜像总量</div>
+            <div class="journal-note-value">{{ total }}</div>
+            <div class="journal-note-helper">当前库中的镜像总数</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">当前页</div>
+            <div class="journal-note-value">{{ list.length }}</div>
+            <div class="journal-note-helper">当前分页内的镜像数量</div>
           </div>
         </div>
+      </article>
+    </div>
+    <div class="journal-divider" />
 
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="journal-note-label">镜像概况</div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">镜像总量</div>
-              <div class="journal-note-value">{{ total }}</div>
-              <div class="journal-note-helper">当前库中的镜像总数</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">当前页</div>
-              <div class="journal-note-value">{{ list.length }}</div>
-              <div class="journal-note-helper">当前分页内的镜像数量</div>
-            </div>
-          </div>
-        </article>
-      </div>
-      <div class="journal-divider" />
-
-      <div class="space-y-3">
+    <div class="space-y-3">
       <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"></div>
+        <div
+          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
+        ></div>
       </div>
 
       <template v-else>
@@ -46,16 +54,23 @@
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="font-mono text-base font-semibold text-[var(--journal-ink)]">{{ row.name }}</h2>
+                  <h2 class="font-mono text-base font-semibold text-[var(--journal-ink)]">
+                    {{ row.name }}
+                  </h2>
                   <span class="font-mono text-sm text-[var(--journal-muted)]">:{{ row.tag }}</span>
                   <span
                     class="admin-status-chip"
-                    :style="{ backgroundColor: getStatusColor(row.status) + '18', color: getStatusColor(row.status) }"
+                    :style="{
+                      backgroundColor: getStatusColor(row.status) + '18',
+                      color: getStatusColor(row.status),
+                    }"
                   >
                     {{ getStatusLabel(row.status) }}
                   </span>
                 </div>
-                <p class="mt-2 text-sm text-[var(--journal-muted)]">{{ row.description || '未填写镜像说明' }}</p>
+                <p class="mt-2 text-sm text-[var(--journal-muted)]">
+                  {{ row.description || '未填写镜像说明' }}
+                </p>
               </div>
               <div class="text-right text-sm text-[var(--journal-muted)]">
                 {{ new Date(row.created_at).toLocaleString() }}
@@ -65,7 +80,10 @@
             <div class="journal-divider mt-4" />
 
             <div class="mt-4 flex justify-end">
-              <button class="admin-btn admin-btn-danger admin-btn-compact" @click="handleDelete(row.id)">
+              <button
+                class="admin-btn admin-btn-danger admin-btn-compact"
+                @click="handleDelete(row.id)"
+              >
                 删除
               </button>
             </div>
@@ -93,7 +111,7 @@
           </div>
         </div>
       </template>
-      </div>
+    </div>
 
     <ElDialog v-model="dialogVisible" title="创建镜像" width="500px">
       <ElForm :model="form" label-width="100px">
@@ -104,7 +122,12 @@
           <ElInput v-model="form.tag" placeholder="例如：22.04" />
         </ElFormItem>
         <ElFormItem label="描述">
-          <ElInput v-model="form.description" type="textarea" :rows="3" placeholder="镜像说明（可选）" />
+          <ElInput
+            v-model="form.description"
+            type="textarea"
+            :rows="3"
+            placeholder="镜像说明（可选）"
+          />
         </ElFormItem>
       </ElForm>
       <template #footer>
@@ -181,7 +204,9 @@ function getStatusLabel(status: ImageStatus): string {
 }
 
 function getStatusColor(status: ImageStatus): string {
-  return { pending: '#8b949e', building: '#f59e0b', available: '#10b981', failed: '#ef4444' }[status]
+  return { pending: '#8b949e', building: '#f59e0b', available: '#10b981', failed: '#ef4444' }[
+    status
+  ]
 }
 
 onMounted(() => {
@@ -209,7 +234,15 @@ onUnmounted(() => {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+        var(--color-bg-base)
+      )
+    );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
@@ -253,13 +286,18 @@ onUnmounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .image-row {
   border: 1px solid var(--journal-border);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
   padding: 1rem;
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
@@ -296,7 +334,11 @@ onUnmounted(() => {
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
   color: var(--journal-ink);
 }
 
@@ -310,7 +352,8 @@ onUnmounted(() => {
 }
 
 .admin-empty {
-  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border: 1px dashed
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
   padding: 1rem;
@@ -324,7 +367,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px dashed
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
   padding-top: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);

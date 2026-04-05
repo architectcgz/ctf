@@ -30,7 +30,9 @@ const {
   },
 })
 
-const publishedCount = computed(() => list.value.filter((item) => item.status === 'published').length)
+const publishedCount = computed(
+  () => list.value.filter((item) => item.status === 'published').length
+)
 const draftCount = computed(() => list.value.filter((item) => item.status === 'draft').length)
 
 function getCategoryLabel(category: ChallengeCategory): string {
@@ -117,15 +119,20 @@ async function handleCommitPreview() {
 </script>
 
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8">
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+  >
     <div class="grid gap-8 xl:grid-cols-[1.08fr_0.92fr]">
       <div class="space-y-4">
         <div class="journal-eyebrow">Package-First Authoring</div>
-        <h1 class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.6rem]">
+        <h1
+          class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.6rem]"
+        >
           挑战管理
         </h1>
         <p class="max-w-2xl text-sm leading-8 text-[var(--journal-muted)]">
-          题目创建主流程已经切换为 `challenge.yml` 题目包导入。管理员在这里完成预览导入，再继续进入详情、编排与题解。
+          题目创建主流程已经切换为 `challenge.yml`
+          题目包导入。管理员在这里完成预览导入，再继续进入详情、编排与题解。
         </p>
       </div>
 
@@ -230,7 +237,9 @@ async function handleCommitPreview() {
                   >
                     {{ getDifficultyLabel(row.difficulty) }}
                   </span>
-                  <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
+                  <span class="admin-inline-chip admin-inline-chip-neutral"
+                    >{{ row.points }} pts</span
+                  >
                   <span
                     class="admin-inline-chip"
                     :style="{
@@ -254,13 +263,22 @@ async function handleCommitPreview() {
             <div class="journal-divider mt-4" />
 
             <div class="mt-4 flex flex-wrap gap-2">
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}`)">
+              <button
+                class="admin-btn admin-btn-ghost admin-btn-compact"
+                @click="$router.push(`/admin/challenges/${row.id}`)"
+              >
                 查看
               </button>
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/topology`)">
+              <button
+                class="admin-btn admin-btn-ghost admin-btn-compact"
+                @click="$router.push(`/admin/challenges/${row.id}/topology`)"
+              >
                 编排
               </button>
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="$router.push(`/admin/challenges/${row.id}/writeup`)">
+              <button
+                class="admin-btn admin-btn-ghost admin-btn-compact"
+                @click="$router.push(`/admin/challenges/${row.id}/writeup`)"
+              >
                 题解
               </button>
               <button
@@ -270,7 +288,10 @@ async function handleCommitPreview() {
               >
                 提交发布检查
               </button>
-              <button class="admin-btn admin-btn-danger admin-btn-compact" @click="void remove(row.id)">
+              <button
+                class="admin-btn admin-btn-danger admin-btn-compact"
+                @click="void remove(row.id)"
+              >
                 删除
               </button>
             </div>

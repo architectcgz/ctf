@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { CalendarRange, Clock3, Flame, Trophy } from 'lucide-vue-next'
+import { CalendarRange, Clock3, Trophy } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import { getContests } from '@/api/contest'
@@ -18,7 +18,7 @@ const router = useRouter()
 const { list, loading, error, refresh } = usePagination(getContests)
 
 onMounted(() => {
-  refresh()
+  void refresh()
 })
 
 interface ContestSummaryMetric {
@@ -98,385 +98,446 @@ function getTimelineHint(contest: ContestListItem): string {
 }
 
 function goToDetail(id: string): void {
-  router.push(`/contests/${id}`)
+  void router.push(`/contests/${id}`)
 }
 
 function openContest(contest: ContestListItem): void {
   goToDetail(contest.id)
 }
 
-function onKeyboardOpen(event: KeyboardEvent, contest: ContestListItem): void {
-  if (event.key !== 'Enter' && event.key !== ' ') return
-  event.preventDefault()
-  openContest(contest)
-}
-
 function contestAccentStyle(status: ContestStatus): Record<string, string> {
-  return { '--contest-accent': getContestAccentColor(status) }
+  return { '--contest-row-accent': getContestAccentColor(status) }
 }
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="journal-eyebrow">Contest Center</div>
-      <h2
-        class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="contest-page">
+      <header class="contest-topbar">
+        <div class="contest-heading">
+          <h1 class="contest-title">竞赛中心</h1>
+          <p class="contest-subtitle">查看当前可参加和已结束的竞赛，直接进入竞赛工作区。</p>
+        </div>
+      </header>
+
+      <section class="contest-summary">
+        <div class="contest-summary-title">
+          <Trophy class="h-4 w-4" />
+          <span>当前竞赛概况</span>
+        </div>
+        <div class="contest-summary-grid">
+          <div v-for="stat in summaryMetrics" :key="stat.key" class="contest-summary-item">
+            <div class="contest-summary-label">{{ stat.label }}</div>
+            <div class="contest-summary-value">{{ stat.value }}</div>
+            <div class="contest-summary-helper">{{ stat.hint }}</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="contest-divider" />
+
+      <div v-if="loading" class="contest-loading">
+        <div class="contest-loading-spinner" />
+      </div>
+
+      <AppEmpty
+        v-else-if="loadErrorMessage"
+        class="contest-empty-state"
+        icon="AlertTriangle"
+        title="竞赛列表加载失败"
+        :description="loadErrorMessage"
       >
-        竞赛中心
-      </h2>
-      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-        在这里查看当前可参加和已结束的竞赛。
-      </p>
+        <template #action>
+          <button type="button" class="contest-btn" @click="refresh">重试</button>
+        </template>
+      </AppEmpty>
 
-      <div class="mt-5 grid gap-3 sm:grid-cols-2">
-        <article
-          v-for="stat in summaryMetrics"
-          :key="stat.key"
-          class="journal-metric rounded-[20px] border px-4 py-4"
-        >
-          <div
-            class="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--journal-muted)]"
-          >
-            {{ stat.label }}
-          </div>
-          <div class="mt-2 text-lg font-semibold text-[var(--journal-ink)] tech-font">
-            {{ stat.value }}
-          </div>
-          <div class="mt-2 text-xs leading-5 text-[var(--journal-muted)]">
-            {{ stat.hint }}
-          </div>
-        </article>
-      </div>
+      <AppEmpty
+        v-else-if="list.length === 0"
+        class="contest-empty-state"
+        icon="Flag"
+        title="暂无竞赛"
+        description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
+      />
 
-      <div class="contest-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <div v-if="loading" class="space-y-3 py-1">
-          <div
-            v-for="i in 4"
-            :key="i"
-            class="contest-skeleton h-24 rounded-[18px] animate-pulse"
-          />
+      <section v-else class="contest-directory" aria-label="竞赛目录">
+        <div class="contest-directory-top">
+          <h2 class="contest-directory-title">竞赛列表</h2>
+          <div class="contest-directory-meta">共 {{ list.length }} 场</div>
         </div>
 
-        <AppEmpty
-          v-else-if="loadErrorMessage"
-          class="contest-empty-state"
-          icon="AlertTriangle"
-          title="竞赛列表加载失败"
-          :description="loadErrorMessage"
+        <div class="contest-directory-head">
+          <span>竞赛</span>
+          <span>时间</span>
+          <span>状态</span>
+          <span>节奏</span>
+          <span>操作</span>
+        </div>
+
+        <button
+          v-for="contest in list"
+          :key="contest.id"
+          type="button"
+          class="contest-row"
+          :style="contestAccentStyle(contest.status)"
+          :aria-label="`${contest.title}，${getStatusLabel(contest.status)}，${getModeLabel(contest.mode)}`"
+          @click="openContest(contest)"
         >
-          <template #action>
-            <button type="button" class="contest-btn mt-3" @click="refresh">重试</button>
-          </template>
-        </AppEmpty>
-
-        <AppEmpty
-          v-else-if="list.length === 0"
-          class="contest-empty-state"
-          icon="Flag"
-          title="暂无竞赛"
-          description="当前没有可展示的竞赛，稍后再来查看新的开赛计划。"
-        />
-
-        <div v-else class="contest-list mt-5">
-          <article
-            v-for="contest in list"
-            :key="contest.id"
-            class="contest-item journal-log px-5 py-5 cursor-pointer"
-            :style="{
-              ...contestAccentStyle(contest.status),
-              borderLeftWidth: '3px',
-              borderLeftColor: 'var(--contest-accent)',
-            }"
-            tabindex="0"
-            @click="openContest(contest)"
-            @keydown="onKeyboardOpen($event, contest)"
-          >
-            <div class="flex flex-wrap items-start justify-between gap-4">
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap gap-2 items-center">
-                  <span class="contest-badge">{{ getStatusLabel(contest.status) }}</span>
-                  <span class="contest-mode">{{ getModeLabel(contest.mode) }}</span>
-                </div>
-                <h3 class="mt-2 font-semibold text-lg text-[var(--journal-ink)] leading-snug">
-                  {{ contest.title }}
-                </h3>
-                <div class="mt-3 flex flex-wrap gap-4">
-                  <div class="flex items-center gap-1.5 text-xs text-[var(--journal-muted)]">
-                    <CalendarRange class="h-3.5 w-3.5" />
-                    <span
-                      >{{ formatTime(contest.starts_at) }} ~ {{ formatTime(contest.ends_at) }}</span
-                    >
-                  </div>
-                  <div
-                    class="flex items-center gap-1.5 text-xs font-medium"
-                    :style="{ color: 'var(--contest-accent)' }"
-                  >
-                    <Clock3 class="h-3.5 w-3.5" />
-                    <span>{{ getTimelineHint(contest) }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3 shrink-0">
-                <Trophy class="h-5 w-5 opacity-60" :style="{ color: 'var(--contest-accent)' }" />
-                <button
-                  type="button"
-                  class="contest-action-btn"
-                  :style="{ '--btn-color': 'var(--contest-accent)' }"
-                  @click.stop="openContest(contest)"
-                >
-                  {{ getContestActionLabel(contest.status) }}
-                </button>
-              </div>
+          <div class="contest-row-main">
+            <div class="contest-row-status-strip">
+              <span class="contest-chip" :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }">
+                {{ getStatusLabel(contest.status) }}
+              </span>
+              <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
             </div>
-          </article>
-        </div>
-      </div>
-    </section>
+            <h3 class="contest-row-title">{{ contest.title }}</h3>
+          </div>
+
+          <div class="contest-row-time">
+            <div class="contest-row-time-item">
+              <CalendarRange class="h-3.5 w-3.5" />
+              <span>{{ formatTime(contest.starts_at) }} - {{ formatTime(contest.ends_at) }}</span>
+            </div>
+          </div>
+
+          <div class="contest-row-state">
+            <span class="contest-state-chip" :style="{ '--contest-state-color': 'var(--contest-row-accent)' }">
+              {{ getStatusLabel(contest.status) }}
+            </span>
+          </div>
+
+          <div class="contest-row-timeline">
+            <div class="contest-row-time-item contest-row-time-item-strong">
+              <Clock3 class="h-3.5 w-3.5" />
+              <span>{{ getTimelineHint(contest) }}</span>
+            </div>
+          </div>
+
+          <div class="contest-row-cta">
+            <span>{{ getContestActionLabel(contest.status) }}</span>
+          </div>
+        </button>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
+  border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    );
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+.contest-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.journal-metric {
-  border-color: var(--journal-border);
-  background: var(--journal-surface);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+.contest-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.journal-metric:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 35%, transparent);
-  box-shadow: 0 14px 32px var(--color-shadow-soft);
+.contest-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--journal-ink);
 }
 
-.journal-log {
-  background: var(--journal-surface);
-  border-color: var(--journal-border);
+.contest-subtitle {
+  margin-top: 12px;
+  max-width: 680px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
-.journal-eyebrow {
-  font-size: 0.7rem;
+.contest-summary {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.contest-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
-.journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.625rem 0.875rem;
+.contest-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
+.contest-summary-item {
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.contest-summary-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+.contest-summary-value {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.03em;
   color: var(--journal-ink);
 }
 
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
+.contest-summary-helper {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--journal-muted);
 }
 
-.status-dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.contest-divider {
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.status-dot-ready {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-  animation: pulse-dot 2s infinite;
-}
-
-.tech-font {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
-}
-
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.contest-board {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.contest-list {
-  position: relative;
-  border: 1px solid var(--journal-border);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  overflow: hidden;
-}
-
-.contest-item {
-  position: relative;
-  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 86%, transparent);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  transition:
-    border-color 180ms ease,
-    background 180ms ease;
-}
-
-.contest-item:last-child {
-  border-bottom: 0;
-}
-
-.contest-item:hover,
-.contest-item:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.contest-badge {
-  display: inline-flex;
+.contest-loading {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.contest-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top-color: var(--journal-accent);
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--contest-accent) 30%, transparent);
-  background: color-mix(in srgb, var(--contest-accent) 10%, transparent);
-  padding: 0.18rem 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: color-mix(in srgb, var(--contest-accent) 80%, var(--journal-ink));
-}
-
-.contest-mode {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
-  padding: 0.18rem 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--journal-muted);
-}
-
-.contest-action-btn {
-  border-radius: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--btn-color, var(--journal-accent)) 36%, transparent);
-  background: color-mix(in srgb, var(--btn-color, var(--journal-accent)) 10%, transparent);
-  padding: 0.4rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--btn-color, var(--journal-accent)) 90%, var(--journal-ink));
-  cursor: pointer;
-  transition:
-    background 150ms ease,
-    border-color 150ms ease;
-}
-
-.contest-action-btn:hover {
-  background: color-mix(in srgb, var(--btn-color, var(--journal-accent)) 18%, transparent);
-  border-color: color-mix(in srgb, var(--btn-color, var(--journal-accent)) 60%, transparent);
-}
-
-.contest-btn {
-  border-radius: 0.75rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.4rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--journal-ink);
-  cursor: pointer;
-  transition: border-color 150ms ease;
-}
-
-.contest-btn:hover {
-  border-color: var(--journal-accent);
-}
-
-.contest-skeleton {
-  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
+  animation: contestSpin 900ms linear infinite;
 }
 
 :deep(.contest-empty-state) {
-  border-top-style: dashed;
-  border-bottom-style: dashed;
-  border-top-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  margin-top: 24px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+.contest-directory {
+  margin-top: 24px;
 }
 
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.14), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+.contest-directory-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
 }
 
-:global([data-theme='dark']) .contest-list,
-:global([data-theme='dark']) .contest-mode,
-:global([data-theme='dark']) .contest-btn,
-:global([data-theme='dark']) .contest-skeleton {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+.contest-directory-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.contest-directory-meta {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.contest-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr) 120px 180px 120px;
+  gap: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.contest-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr) 120px 180px 120px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.contest-row:hover,
+.contest-row:focus-visible {
+  background: color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 64%, transparent);
+  outline: none;
+}
+
+.contest-row-main {
+  min-width: 0;
+}
+
+.contest-row-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.contest-row-title {
+  margin-top: 10px;
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--journal-ink);
+}
+
+.contest-chip,
+.contest-state-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.contest-chip {
+  background: color-mix(in srgb, var(--contest-chip-color, var(--journal-accent)) 12%, transparent);
+  color: var(--contest-chip-color, var(--journal-accent));
+}
+
+.contest-chip-muted {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
+}
+
+.contest-state-chip {
+  background: color-mix(in srgb, var(--contest-state-color, var(--journal-accent)) 12%, transparent);
+  color: var(--contest-state-color, var(--journal-accent));
+}
+
+.contest-row-time,
+.contest-row-timeline {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.contest-row-time-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.contest-row-time-item-strong {
+  color: var(--contest-row-accent, var(--journal-accent));
+  font-weight: 600;
+}
+
+.contest-row-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--contest-row-accent, var(--journal-accent));
+}
+
+.contest-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--journal-ink);
+  cursor: pointer;
+}
+
+@keyframes contestSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1180px) {
+  .contest-directory-head {
+    display: none;
+  }
+
+  .contest-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .contest-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .contest-title {
+    font-size: 34px;
+  }
 }
 </style>

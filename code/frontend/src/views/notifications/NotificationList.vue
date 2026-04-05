@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Bell, Flag, GraduationCap, Info, RefreshCw, Trophy } from 'lucide-vue-next'
+import { Bell, RefreshCw } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 
 import { getNotifications, markAsRead } from '@/api/notification'
@@ -47,29 +47,6 @@ function typeLabel(type: string): string {
   return '系统'
 }
 
-function typeIcon(type: string) {
-  if (type === 'contest') return Trophy
-  if (type === 'challenge') return Flag
-  if (type === 'team') return GraduationCap
-  return Info
-}
-
-type NotificationAccent = 'primary' | 'success' | 'warning' | 'violet'
-
-function typeAccent(type: string): NotificationAccent {
-  if (type === 'contest') return 'warning'
-  if (type === 'challenge') return 'success'
-  if (type === 'team') return 'violet'
-  return 'primary'
-}
-
-const accentColorMap: Record<NotificationAccent, string> = {
-  warning: 'var(--color-warning)',
-  success: 'var(--color-success)',
-  violet: 'var(--color-cat-reverse)',
-  primary: 'var(--color-primary)',
-}
-
 function openNotificationDetail(item: NotificationItem): void {
   void router.push(`/notifications/${encodeURIComponent(String(item.id))}`)
 }
@@ -96,7 +73,7 @@ async function markCurrentPageRead(): Promise<void> {
 }
 
 onMounted(() => {
-  refresh()
+  void refresh()
 })
 
 const summaryStats = computed(() => [
@@ -126,63 +103,48 @@ async function handlePublishSuccess(): Promise<void> {
   <section
     class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <div>
-        <div class="journal-eyebrow">Notification Center</div>
-        <h2
-          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          通知中心
-        </h2>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          这里会显示系统、竞赛和训练相关通知。
-        </p>
+    <div class="notification-page">
+      <header class="notification-topbar">
+        <div class="notification-heading">
+          <h1 class="notification-title">通知中心</h1>
+          <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
+        </div>
 
-        <div class="mt-6 flex flex-wrap gap-3">
+        <div class="notification-actions">
           <button
             v-if="canPublishNotification"
             type="button"
-            class="journal-btn journal-btn--primary"
+            class="notification-btn notification-btn-primary"
             @click="openPublishDrawer"
           >
             发布通知
           </button>
-          <button type="button" class="journal-btn" @click="markCurrentPageRead">本页已读</button>
-          <button type="button" class="journal-btn journal-btn--primary" @click="refresh">
+          <button type="button" class="notification-btn" @click="markCurrentPageRead">本页已读</button>
+          <button type="button" class="notification-btn" @click="refresh">
             <RefreshCw class="h-4 w-4" />
             刷新
           </button>
         </div>
-      </div>
+      </header>
 
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-          <Bell class="h-5 w-5 text-[var(--journal-accent)]" />
-          当前消息概况
+      <section class="notification-summary">
+        <div class="notification-summary-title">
+          <Bell class="h-4 w-4" />
+          <span>当前消息概况</span>
         </div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div v-for="stat in summaryStats" :key="stat.key" class="journal-note">
-            <div class="journal-note-label">{{ stat.label }}</div>
-            <div
-              class="journal-note-value"
-              :style="
-                stat.key === 'unread' && unreadOnPage > 0
-                  ? { color: 'var(--color-warning)' }
-                  : undefined
-              "
-            >
-              {{ stat.value }}
-            </div>
-            <div class="journal-note-helper">{{ stat.helper }}</div>
+        <div class="notification-summary-grid">
+          <div v-for="stat in summaryStats" :key="stat.key" class="notification-summary-item">
+            <div class="notification-summary-label">{{ stat.label }}</div>
+            <div class="notification-summary-value">{{ stat.value }}</div>
+            <div class="notification-summary-helper">{{ stat.helper }}</div>
           </div>
         </div>
-      </article>
-    </div>
-    <div class="notification-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-control-border)] border-t-[var(--journal-accent)]"
-        />
+      </section>
+
+      <div class="notification-divider" />
+
+      <div v-if="loading" class="notification-loading">
+        <div class="notification-loading-spinner" />
       </div>
 
       <AppEmpty
@@ -193,7 +155,7 @@ async function handlePublishSuccess(): Promise<void> {
         :description="loadErrorMessage"
       >
         <template #action>
-          <button type="button" class="journal-btn" @click="refresh">重新加载</button>
+          <button type="button" class="notification-btn" @click="refresh">重新加载</button>
         </template>
       </AppEmpty>
 
@@ -206,72 +168,55 @@ async function handlePublishSuccess(): Promise<void> {
       />
 
       <template v-else>
-        <div class="notification-list mt-5">
+        <section class="notification-directory" aria-label="通知目录">
+          <div class="notification-directory-top">
+            <h2 class="notification-directory-title">消息列表</h2>
+            <div class="notification-directory-meta">共 {{ total }} 条</div>
+          </div>
+
+          <div class="notification-directory-head">
+            <span>类型</span>
+            <span>标题与内容</span>
+            <span>时间</span>
+            <span>状态</span>
+          </div>
+
           <button
             v-for="item in list"
             :key="item.id"
             type="button"
-            class="journal-notification-item w-full text-left"
-            :class="{ 'journal-notification-item--unread': item.unread }"
+            class="notification-row"
+            :class="{ 'notification-row-unread': item.unread }"
             @click="openNotificationDetail(item)"
           >
-            <div class="flex items-start gap-3">
-              <div
-                class="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border"
-                :style="{
-                  borderColor: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 20%, transparent)`,
-                  background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 10%, transparent)`,
-                  color: accentColorMap[typeAccent(item.type)],
-                }"
-              >
-                <component :is="typeIcon(item.type)" class="h-5 w-5" />
-              </div>
-
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider"
-                    :style="{
-                      background: `color-mix(in srgb, ${accentColorMap[typeAccent(item.type)]} 12%, transparent)`,
-                      color: accentColorMap[typeAccent(item.type)],
-                    }"
-                    >{{ typeLabel(item.type) }}</span
-                  >
-                </div>
-                <p class="mt-1 text-sm font-medium text-[var(--journal-ink)] line-clamp-1">
-                  {{ item.title }}
-                </p>
-                <p class="mt-0.5 text-xs leading-5 text-[var(--journal-muted)] line-clamp-2">
-                  {{ item.content }}
-                </p>
-              </div>
-
-              <div class="shrink-0 text-right">
-                <div class="text-xs text-[var(--journal-muted)]">
-                  {{ formatDate(item.created_at) }}
-                </div>
-                <div v-if="item.unread" class="mt-2 flex justify-end">
-                  <span class="h-2 w-2 rounded-full" style="background: var(--journal-accent)" />
-                </div>
-              </div>
+            <div class="notification-row-type">
+              <span class="notification-chip">{{ typeLabel(item.type) }}</span>
+            </div>
+            <div class="notification-row-main">
+              <div class="notification-row-title">{{ item.title }}</div>
+              <div class="notification-row-copy">{{ item.content }}</div>
+            </div>
+            <div class="notification-row-time">{{ formatDate(item.created_at) }}</div>
+            <div class="notification-row-state">
+              <span class="notification-state-chip" :class="{ 'notification-state-chip-unread': item.unread }">
+                {{ item.unread ? '未读' : '已读' }}
+              </span>
             </div>
           </button>
-        </div>
+        </section>
 
         <div v-if="total > 0" class="notification-pagination">
           <div>
-            <div class="journal-note-label">Page Control</div>
-            <div class="mt-2 text-sm text-[var(--journal-muted)]">
-              共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
-            </div>
+            <div class="notification-summary-label">Page Control</div>
+            <div class="notification-pagination-copy">共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页</div>
           </div>
-          <div class="flex items-center gap-2">
-            <button type="button" class="journal-btn" :disabled="page === 1" @click="changePage(page - 1)">
+          <div class="notification-pagination-actions">
+            <button type="button" class="notification-btn" :disabled="page === 1" @click="changePage(page - 1)">
               上一页
             </button>
             <button
               type="button"
-              class="journal-btn"
+              class="notification-btn"
               :disabled="page >= totalPages"
               @click="changePage(page + 1)"
             >
@@ -281,6 +226,7 @@ async function handlePublishSuccess(): Promise<void> {
         </div>
       </template>
     </div>
+
     <AdminNotificationPublishDrawer
       :open="publishDrawerOpen"
       @close="closePublishDrawer"
@@ -293,113 +239,249 @@ async function handlePublishSuccess(): Promise<void> {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-shell-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --journal-divider: color-mix(in srgb, var(--journal-border) 56%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.journal-brief {
-  border-color: var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+.notification-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.journal-eyebrow {
+.notification-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.notification-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--journal-ink);
+}
+
+.notification-subtitle {
+  margin-top: 12px;
+  max-width: 720px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notification-summary {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.notification-summary-title {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
-  padding: 0.2rem 0.75rem;
-  font-size: 0.72rem;
+  gap: 10px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
-.journal-note {
-  border-radius: 18px;
-  border: 1px solid var(--journal-shell-border);
-  background: var(--journal-surface);
-  padding: 0.95rem 1rem;
+.notification-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
-.journal-note-label {
+.notification-summary-item {
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.notification-summary-label {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #64748b;
-}
-
-.journal-note-value {
-  margin-top: 0.65rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
   color: var(--journal-muted);
 }
 
-.notification-board {
-  border-top: 1px dashed var(--journal-divider);
+.notification-summary-value {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
 }
 
-.notification-list {
-  border: 1px solid var(--journal-shell-border);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  overflow: hidden;
+.notification-summary-helper {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
 }
 
-.journal-notification-item {
+.notification-divider {
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.notification-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.notification-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top-color: var(--journal-accent);
+  border-radius: 999px;
+  animation: notificationSpin 900ms linear infinite;
+}
+
+:deep(.notification-empty-state) {
+  margin-top: 24px;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.notification-directory {
+  margin-top: 24px;
+}
+
+.notification-directory-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+}
+
+.notification-directory-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.notification-directory-meta,
+.notification-pagination-copy {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.notification-directory-head {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) 180px 120px;
+  gap: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.notification-row {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) 180px 120px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  padding: 18px 0;
   border: 0;
-  border-bottom: 1px dashed var(--journal-divider);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
-  padding: 1rem;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
+  text-align: left;
   cursor: pointer;
 }
 
-.journal-notification-item:last-child {
-  border-bottom: 0;
+.notification-row-unread {
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 56%, transparent);
 }
 
-.journal-notification-item:hover {
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+.notification-row:hover,
+.notification-row:focus-visible {
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+  outline: none;
 }
 
-.journal-notification-item--unread {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-  );
+.notification-chip,
+.notification-state-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.notification-chip {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent);
+}
+
+.notification-row-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.notification-row-copy {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.notification-row-time {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.notification-state-chip {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
+}
+
+.notification-state-chip-unread {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent);
 }
 
 .notification-pagination {
@@ -407,68 +489,69 @@ async function handlePublishSuccess(): Promise<void> {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px dashed var(--journal-divider);
+  gap: 16px;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.journal-btn {
+.notification-pagination-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notification-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  border-radius: 0.9rem;
-  border: 1px solid var(--journal-control-border);
-  background: var(--journal-surface);
-  padding: 0.55rem 1rem;
-  font-size: 0.875rem;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
   font-weight: 600;
   color: var(--journal-ink);
-  transition:
-    border-color 0.2s,
-    color 0.2s,
-    background 0.2s;
   cursor: pointer;
 }
 
-.journal-btn:hover:not(:disabled) {
-  border-color: var(--journal-accent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+.notification-btn-primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
 }
 
-.journal-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+@keyframes notificationSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  color: var(--journal-accent);
+@media (max-width: 1180px) {
+  .notification-directory-head {
+    display: none;
+  }
+
+  .notification-row {
+    grid-template-columns: 1fr;
+  }
 }
 
-.journal-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
+@media (max-width: 960px) {
+  .notification-summary-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-:deep(.notification-empty-state) {
-  border-top-style: dashed;
-  border-bottom-style: dashed;
-  border-top-color: var(--journal-soft-border);
-  border-bottom-color: var(--journal-soft-border);
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, rgba(79, 70, 229, 0.18), transparent 20rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
+@media (max-width: 640px) {
+  .notification-title {
+    font-size: 34px;
+  }
 }
 </style>

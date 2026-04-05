@@ -112,35 +112,41 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Audit Trail</div>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">审计日志</h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            按动作、资源类型和执行人快速检索关键记录。
-          </p>
-        </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="journal-note-label">筛选视角</div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">动作</div>
-              <div class="journal-note-value">{{ filters.action || '全部' }}</div>
-              <div class="journal-note-helper">当前检索动作</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">资源</div>
-              <div class="journal-note-value">{{ filters.resource_type || '全部' }}</div>
-              <div class="journal-note-helper">当前资源类型</div>
-            </div>
-          </div>
-        </article>
+  <section
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+      <div>
+        <div class="journal-eyebrow">Audit Trail</div>
+        <h1
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+        >
+          审计日志
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          按动作、资源类型和执行人快速检索关键记录。
+        </p>
       </div>
-      <div class="journal-divider" />
 
-      <div class="space-y-3">
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="journal-note-label">筛选视角</div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="journal-note">
+            <div class="journal-note-label">动作</div>
+            <div class="journal-note-value">{{ filters.action || '全部' }}</div>
+            <div class="journal-note-helper">当前检索动作</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">资源</div>
+            <div class="journal-note-value">{{ filters.resource_type || '全部' }}</div>
+            <div class="journal-note-helper">当前资源类型</div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="journal-divider" />
+
+    <div class="space-y-3">
       <div class="admin-section-head">
         <div>
           <div class="journal-note-label">Filters</div>
@@ -149,10 +155,7 @@ onMounted(() => {
       </div>
 
       <div class="mt-5 grid gap-3 md:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
-        <select
-          v-model="filters.action"
-          class="admin-input"
-        >
+        <select v-model="filters.action" class="admin-input">
           <option value="">全部动作</option>
           <option value="login">登录</option>
           <option value="logout">登出</option>
@@ -178,21 +181,11 @@ onMounted(() => {
           class="admin-input"
         />
 
-        <button
-          type="button"
-          class="admin-btn admin-btn-primary"
-          @click="applyFilters"
-        >
+        <button type="button" class="admin-btn admin-btn-primary" @click="applyFilters">
           应用筛选
         </button>
 
-        <button
-          type="button"
-          class="admin-btn admin-btn-ghost"
-          @click="resetFilters"
-        >
-          重置
-        </button>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="resetFilters">重置</button>
       </div>
 
       <div class="journal-divider" />
@@ -205,76 +198,106 @@ onMounted(() => {
           </div>
         </div>
 
-      <div v-if="error" class="rounded-xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-4 py-4 text-sm text-[var(--color-danger)]">
-        {{ error }}
-        <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
-      </div>
+        <div
+          v-if="error"
+          class="rounded-xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-4 py-4 text-sm text-[var(--color-danger)]"
+        >
+          {{ error }}
+          <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
+        </div>
 
-      <div v-else-if="loading" class="space-y-3">
-        <div v-for="index in 6" :key="index" class="h-14 animate-pulse rounded-xl bg-[var(--color-bg-base)]"></div>
-      </div>
+        <div v-else-if="loading" class="space-y-3">
+          <div
+            v-for="index in 6"
+            :key="index"
+            class="h-14 animate-pulse rounded-xl bg-[var(--color-bg-base)]"
+          ></div>
+        </div>
 
-      <AppEmpty
-        v-else-if="list.length === 0"
-        icon="Inbox"
-        title="当前筛选条件下没有日志记录"
-        description="可以放宽动作、资源类型或执行人条件，再重新检索。"
-      />
+        <AppEmpty
+          v-else-if="list.length === 0"
+          icon="Inbox"
+          title="当前筛选条件下没有日志记录"
+          description="可以放宽动作、资源类型或执行人条件，再重新检索。"
+        />
 
-      <div v-else class="overflow-hidden rounded-[18px] border border-[var(--journal-border)]">
-        <table class="min-w-full divide-y divide-[var(--color-border-default)] text-sm">
-          <thead class="bg-[var(--journal-surface-subtle)]">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">时间</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">动作</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">资源</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">执行人</th>
-              <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">明细</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--journal-border)] bg-[var(--journal-surface)]">
-            <tr v-for="item in list" :key="item.id">
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ formatDate(item.created_at) }}</td>
-              <td class="px-4 py-3">
-                <span class="rounded-full bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-medium text-[var(--color-primary)]">{{ item.action }}</span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">
-                {{ item.resource_type }}<span v-if="item.resource_id">#{{ item.resource_id }}</span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-primary)]">
-                {{ item.actor_username }}<span v-if="item.actor_user_id" class="text-[var(--color-text-secondary)]"> ({{ item.actor_user_id }})</span>
-              </td>
-              <td class="px-4 py-3 text-[var(--color-text-secondary)]">{{ detailPreview(item.detail) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <div v-else class="overflow-hidden rounded-[18px] border border-[var(--journal-border)]">
+          <table class="min-w-full divide-y divide-[var(--color-border-default)] text-sm">
+            <thead class="bg-[var(--journal-surface-subtle)]">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  时间
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  动作
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  资源
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  执行人
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  明细
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--journal-border)] bg-[var(--journal-surface)]">
+              <tr v-for="item in list" :key="item.id">
+                <td class="px-4 py-3 text-[var(--color-text-secondary)]">
+                  {{ formatDate(item.created_at) }}
+                </td>
+                <td class="px-4 py-3">
+                  <span
+                    class="rounded-full bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-medium text-[var(--color-primary)]"
+                    >{{ item.action }}</span
+                  >
+                </td>
+                <td class="px-4 py-3 text-[var(--color-text-primary)]">
+                  {{ item.resource_type
+                  }}<span v-if="item.resource_id">#{{ item.resource_id }}</span>
+                </td>
+                <td class="px-4 py-3 text-[var(--color-text-primary)]">
+                  {{ item.actor_username
+                  }}<span v-if="item.actor_user_id" class="text-[var(--color-text-secondary)]">
+                    ({{ item.actor_user_id }})</span
+                  >
+                </td>
+                <td class="px-4 py-3 text-[var(--color-text-secondary)]">
+                  {{ detailPreview(item.detail) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-      <div v-if="!loading && total > 0" class="admin-pagination mt-4">
-        <span>共 {{ total }} 条记录</span>
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            :disabled="page === 1"
-            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-            @click="changePage(page - 1)"
-          >
-            上一页
-          </button>
-          <span class="text-sm text-[var(--color-text-secondary)]">{{ page }} / {{ totalPages }}</span>
-          <button
-            type="button"
-            :disabled="page >= totalPages"
-            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-            @click="changePage(page + 1)"
-          >
-            下一页
-          </button>
+        <div v-if="!loading && total > 0" class="admin-pagination mt-4">
+          <span>共 {{ total }} 条记录</span>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              :disabled="page === 1"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
+              @click="changePage(page - 1)"
+            >
+              上一页
+            </button>
+            <span class="text-sm text-[var(--color-text-secondary)]"
+              >{{ page }} / {{ totalPages }}</span
+            >
+            <button
+              type="button"
+              :disabled="page >= totalPages"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
+              @click="changePage(page + 1)"
+            >
+              下一页
+            </button>
+          </div>
         </div>
       </div>
-      </div>
-      </div>
-    </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
@@ -291,7 +314,11 @@ onMounted(() => {
 .journal-panel {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -413,7 +440,11 @@ onMounted(() => {
 :global([data-theme='dark']) .journal-hero,
 :global([data-theme='dark']) .journal-panel {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
