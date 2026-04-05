@@ -555,7 +555,7 @@ async function handleDownload(): Promise<void> {
 
 <style scoped>
 .teacher-management-shell {
-  --journal-ink: var(--color-text-primary);
+  --journal-ink:var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-accent: #4f46e5;
   --journal-accent-strong: #4338ca;

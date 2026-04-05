@@ -421,6 +421,9 @@ function handleImportChange(event: Event): void {
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
+  --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
 }
 
 .journal-hero {
@@ -551,7 +554,7 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-control-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
@@ -571,7 +574,7 @@ function handleImportChange(event: Event): void {
   width: 100%;
   min-height: 2.75rem;
   border-radius: 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
   padding: 0.7rem 1rem;
   font-size: 0.875rem;
@@ -603,7 +606,7 @@ function handleImportChange(event: Event): void {
 
 .user-table-shell {
   overflow: hidden;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--user-table-border);
   border-radius: 18px;
   background: var(--journal-surface);
 }
@@ -621,7 +624,7 @@ function handleImportChange(event: Event): void {
 }
 
 .user-table-row {
-  border-top: 1px solid var(--journal-border);
+  border-top: 1px solid var(--user-row-divider);
   transition: background 180ms ease;
 }
 

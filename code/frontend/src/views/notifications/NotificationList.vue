@@ -241,6 +241,7 @@ async function handlePublishSuccess(): Promise<void> {
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 74%, var(--color-bg-base));
   --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
@@ -251,7 +252,7 @@ async function handlePublishSuccess(): Promise<void> {
   border-color: var(--journal-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
   box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
