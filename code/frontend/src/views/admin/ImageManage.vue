@@ -2,44 +2,42 @@
   <section
     class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <div>
-        <div class="journal-eyebrow">Image Library</div>
-        <h1
-          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          镜像管理
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          在这里查看镜像状态，并继续创建或清理镜像资源。
-        </p>
-
-        <div class="mt-6 flex flex-wrap gap-3">
-          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
-            创建镜像
-          </button>
-        </div>
+    <header class="image-header">
+      <div class="image-header__intro">
+        <div class="journal-eyebrow">Image Registry</div>
+        <h1 class="image-title">镜像管理</h1>
+        <p class="image-copy">集中查看镜像构建状态、描述与创建时间。</p>
       </div>
 
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="journal-note-label">镜像概况</div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
+      <div class="image-header__side">
+        <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
+          创建镜像
+        </button>
+        <div class="image-summary-grid">
+          <article class="journal-note">
             <div class="journal-note-label">镜像总量</div>
             <div class="journal-note-value">{{ total }}</div>
-            <div class="journal-note-helper">当前库中的镜像总数</div>
-          </div>
-          <div class="journal-note">
+            <div class="journal-note-helper">当前查询结果的镜像总数</div>
+          </article>
+          <article class="journal-note">
             <div class="journal-note-label">当前页</div>
             <div class="journal-note-value">{{ list.length }}</div>
-            <div class="journal-note-helper">当前分页内的镜像数量</div>
-          </div>
+            <div class="journal-note-helper">这一页已加载的镜像数量</div>
+          </article>
         </div>
-      </article>
-    </div>
-    <div class="journal-divider" />
+      </div>
+    </header>
+    <div class="journal-divider image-divider" />
 
-    <div class="space-y-3">
+    <section class="image-board">
+      <div class="image-board__head">
+        <div>
+          <div class="journal-note-label">Images</div>
+          <h2 class="image-section-title">镜像列表</h2>
+        </div>
+        <div class="image-board__hint">每 10 秒自动刷新一次状态</div>
+      </div>
+
       <div v-if="loading" class="flex items-center justify-center py-12">
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
@@ -49,48 +47,35 @@
       <template v-else>
         <div v-if="list.length === 0" class="admin-empty">当前还没有镜像。</div>
 
-        <div v-else class="space-y-3">
+        <div v-else class="image-list">
           <article v-for="row in list" :key="row.id" class="image-row">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-              <div class="min-w-0">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="font-mono text-base font-semibold text-[var(--journal-ink)]">
-                    {{ row.name }}
-                  </h2>
-                  <span class="font-mono text-sm text-[var(--journal-muted)]">:{{ row.tag }}</span>
-                  <span
-                    class="admin-status-chip"
-                    :style="{
-                      backgroundColor: getStatusColor(row.status) + '18',
-                      color: getStatusColor(row.status),
-                    }"
-                  >
-                    {{ getStatusLabel(row.status) }}
-                  </span>
-                </div>
-                <p class="mt-2 text-sm text-[var(--journal-muted)]">
-                  {{ row.description || '未填写镜像说明' }}
-                </p>
+            <div class="image-row__main">
+              <div class="image-row__titleline">
+                <h2 class="image-row__title">{{ row.name }}</h2>
+                <span class="image-row__tag">:{{ row.tag }}</span>
+                <span
+                  class="admin-status-chip"
+                  :style="{
+                    backgroundColor: getStatusColor(row.status) + '18',
+                    color: getStatusColor(row.status),
+                  }"
+                >
+                  {{ getStatusLabel(row.status) }}
+                </span>
               </div>
-              <div class="text-right text-sm text-[var(--journal-muted)]">
-                {{ new Date(row.created_at).toLocaleString() }}
-              </div>
+              <p class="image-row__description">{{ row.description || '未填写镜像说明' }}</p>
             </div>
 
-            <div class="journal-divider mt-4" />
-
-            <div class="mt-4 flex justify-end">
-              <button
-                class="admin-btn admin-btn-danger admin-btn-compact"
-                @click="handleDelete(row.id)"
-              >
+            <div class="image-row__aside">
+              <div class="image-row__time">{{ new Date(row.created_at).toLocaleString() }}</div>
+              <button class="admin-btn admin-btn-danger admin-btn-compact" @click="handleDelete(row.id)">
                 删除
               </button>
             </div>
           </article>
         </div>
 
-        <div v-if="total > 0" class="admin-pagination mt-4">
+        <div v-if="total > 0" class="admin-pagination">
           <span>共 {{ total }} 条</span>
           <div class="flex items-center gap-2">
             <button
@@ -111,7 +96,7 @@
           </div>
         </div>
       </template>
-    </div>
+    </section>
 
     <ElDialog v-model="dialogVisible" title="创建镜像" width="500px">
       <ElForm :model="form" label-width="100px">
