@@ -636,11 +636,13 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 .student-insight-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: #2563eb;
+  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
@@ -675,16 +677,15 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
-  border-top: 1px solid var(--journal-border);
   background: var(--journal-surface-subtle);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
+  border-bottom: 1px dashed var(--teacher-divider);
   padding-bottom: 0.75rem;
 }
 
@@ -697,7 +698,7 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .insight-kpi-card {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background: var(--journal-surface);
   padding: 0.9rem 0.95rem;
@@ -705,15 +706,15 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 }
 
 .insight-kpi-card--primary {
-  border-top: 3px solid rgba(79, 70, 229, 0.42);
+  border-top: 3px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
 }
 
 .insight-kpi-card--success {
-  border-top: 3px solid rgba(16, 185, 129, 0.36);
+  border-top: 3px solid color-mix(in srgb, var(--color-success) 34%, transparent);
 }
 
 .insight-kpi-card--warning {
-  border-top: 3px solid rgba(245, 158, 11, 0.38);
+  border-top: 3px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
 }
 
 .insight-kpi-label {

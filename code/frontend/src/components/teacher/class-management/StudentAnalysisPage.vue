@@ -333,17 +333,20 @@ const emit = defineEmits<{
 .teacher-analysis-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: #2563eb;
+  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 :deep(.page-header) {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
@@ -356,28 +359,27 @@ const emit = defineEmits<{
 }
 
 :deep(.page-header__eyebrow) {
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  border-left: 1px solid rgba(99, 102, 241, 0.18) !important;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent) !important;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.06);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: 0.2rem 0.72rem;
   padding-left: 0.72rem !important;
-  letter-spacing: 0.2em;
-  color: var(--journal-accent);
+  letter-spacing: 0.08em;
+  color: var(--journal-accent-strong);
 }
 
 :deep(.section-card) {
   padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   border-radius: 16px;
-  border-top: 1px solid var(--journal-border);
   background: var(--journal-surface-subtle);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed rgba(148, 163, 184, 0.58);
+  border-bottom: 1px dashed var(--teacher-divider);
   padding-bottom: 0.75rem;
 }
 
@@ -385,15 +387,38 @@ const emit = defineEmits<{
   padding-left: 0;
 }
 
+:deep(.page-header__actions .el-button) {
+  min-height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--teacher-control-border);
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+  box-shadow: none;
+  color: var(--journal-ink);
+}
+
+:deep(.page-header__actions .el-button:hover),
+:deep(.page-header__actions .el-button:focus-visible) {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  color: var(--journal-accent-strong);
+}
+
+:deep(.page-header__actions .el-button--primary) {
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+}
+
 .analysis-eyebrow {
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--journal-accent);
+  color: var(--journal-accent-strong);
 }
 
 .analysis-hero-card {
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
     linear-gradient(
@@ -414,7 +439,7 @@ const emit = defineEmits<{
 
 .analysis-note {
   border-radius: 16px;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
   padding: 0.85rem 0.95rem;
 }
@@ -446,19 +471,20 @@ const emit = defineEmits<{
 }
 
 .teacher-kpi-card {
+  border: 1px solid var(--teacher-card-border);
   padding: 0.95rem 1rem;
 }
 
 .teacher-kpi-card--primary {
-  border-top: 3px solid rgba(79, 70, 229, 0.42);
+  border-top: 3px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
 }
 
 .teacher-kpi-card--success {
-  border-top: 3px solid rgba(16, 185, 129, 0.36);
+  border-top: 3px solid color-mix(in srgb, var(--color-success) 34%, transparent);
 }
 
 .teacher-kpi-card--warning {
-  border-top: 3px solid rgba(245, 158, 11, 0.38);
+  border-top: 3px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
 }
 
 .teacher-kpi-label {

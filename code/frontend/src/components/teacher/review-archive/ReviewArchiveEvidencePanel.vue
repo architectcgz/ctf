@@ -81,10 +81,10 @@ defineProps<{
 
 .archive-panel__eyebrow {
   font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .archive-panel__title {
@@ -114,11 +114,7 @@ defineProps<{
   height: 10px;
   margin-top: 0.45rem;
   border-radius: 999px;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink)),
-    color-mix(in srgb, var(--color-warning) 78%, var(--journal-accent))
-  );
+  background: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
@@ -155,7 +151,7 @@ defineProps<{
 
 .evidence-item {
   padding: 0.95rem 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 18px;
   background: var(--journal-surface);
 }

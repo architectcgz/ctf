@@ -75,11 +75,12 @@ const statItems = [
   position: relative;
   overflow: hidden;
   border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background:
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 34%),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 34%),
     linear-gradient(
       135deg,
-      color-mix(in srgb, #1e40af 14%, var(--journal-surface)),
+      color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
       color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
     );
 }
@@ -88,8 +89,8 @@ const statItems = [
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--journal-accent) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 8%, transparent) 1px, transparent 1px);
   background-size: 28px 28px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent);
 }
@@ -110,10 +111,10 @@ const statItems = [
 .archive-hero__eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .archive-hero__title {
@@ -121,7 +122,7 @@ const statItems = [
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.05;
   color: var(--journal-ink);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .archive-hero__description {
@@ -148,8 +149,8 @@ const statItems = [
 .archive-hero__profile,
 .archive-hero__stat {
   border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  backdrop-filter: blur(10px);
 }
 
 .archive-hero__profile {
@@ -187,7 +188,7 @@ const statItems = [
   margin-top: 1.1rem;
   padding: 0.8rem 0.9rem;
   border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-border) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.82rem;

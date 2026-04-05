@@ -6,6 +6,7 @@ import classTrendPanelSource from '@/components/teacher/TeacherClassTrendPanel.v
 import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
+import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
@@ -22,6 +23,12 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
     expect(studentAnalysisSource).toMatch(/\.analysis-note\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
     expect(studentAnalysisSource).toMatch(/:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s)
+
+    expect(reviewArchiveSource).toContain('--teacher-card-border:')
+    expect(reviewArchiveSource).toContain('--teacher-divider:')
+    expect(reviewArchiveSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(reviewArchiveSource).toMatch(/:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s)
+    expect(reviewArchiveSource).toMatch(/\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {

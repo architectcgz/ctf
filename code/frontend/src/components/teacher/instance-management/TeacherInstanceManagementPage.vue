@@ -94,74 +94,62 @@ function remainingExtends(item: TeacherInstanceItem): number {
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface space-y-6">
+  <div class="teacher-management-shell teacher-surface">
     <section class="teacher-hero teacher-surface-hero px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="teacher-surface-eyebrow">Teacher Instance Ops</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
-            实例管理
-          </h2>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            聚焦教师对学生训练实例的查看与处置，先筛班级与学员，再快速定位异常或即将到期的实例。
-          </p>
+      <header class="teacher-header">
+        <div class="teacher-header__main">
+          <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Instance Ops</div>
+          <h2 class="teacher-title">实例管理</h2>
+          <p class="teacher-copy">先筛班级与学员，再快速定位异常或即将到期的训练实例。</p>
 
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button type="button" class="teacher-btn" @click="emit('openDashboard')">
+          <div class="teacher-actions">
+            <button type="button" class="teacher-btn teacher-surface-btn" @click="emit('openDashboard')">
               返回教学概览
             </button>
           </div>
         </div>
 
-        <article class="teacher-brief teacher-surface-brief px-5 py-5">
-          <div class="text-sm font-medium text-[var(--journal-ink)]">当前实例概况</div>
-          <div class="teacher-metric-grid mt-5 grid gap-3 sm:grid-cols-3">
-            <article
-              class="teacher-surface-metric teacher-metric-card teacher-metric-card--accent px-4 py-4"
-            >
-              <div class="teacher-metric-label">当前可见</div>
-              <div class="teacher-metric-value">{{ totalCount }}</div>
-              <div class="teacher-metric-hint">符合当前筛选条件的实例数量</div>
-            </article>
-            <article
-              class="teacher-surface-metric teacher-metric-card teacher-metric-card--calm px-4 py-4"
-            >
-              <div class="teacher-metric-label">运行中</div>
-              <div class="teacher-metric-value">{{ runningCount }}</div>
-              <div class="teacher-metric-hint">仍在占用环境资源的实例数量</div>
-            </article>
-            <article
-              class="teacher-surface-metric teacher-metric-card teacher-metric-card--soft px-4 py-4"
-            >
-              <div class="teacher-metric-label">即将到期</div>
-              <div class="teacher-metric-value">{{ expiringSoonCount }}</div>
-              <div class="teacher-metric-hint">剩余时间不足 10 分钟的实例数量</div>
-            </article>
-          </div>
-        </article>
+        <div class="teacher-badge-grid">
+          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
+            <div class="teacher-badge-label">当前可见</div>
+            <div class="teacher-badge-value">{{ totalCount }}</div>
+            <div class="teacher-badge-hint">符合当前筛选条件的实例数量</div>
+          </article>
+          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
+            <div class="teacher-badge-label">运行中</div>
+            <div class="teacher-badge-value">{{ runningCount }}</div>
+            <div class="teacher-badge-hint">仍在占用环境资源的实例数量</div>
+          </article>
+          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
+            <div class="teacher-badge-label">即将到期</div>
+            <div class="teacher-badge-value">{{ expiringSoonCount }}</div>
+            <div class="teacher-badge-hint">剩余时间不足 10 分钟的实例数量</div>
+          </article>
+        </div>
+      </header>
+
+      <div class="teacher-hero-divider" />
+
+      <div class="teacher-tip-block">
+        <div class="teacher-tip-label">当前范围</div>
+        <div class="teacher-tip-copy">{{ selectedClassLabel }}。支持按班级、用户名关键字、学号精确筛选。</div>
       </div>
 
-      <div class="teacher-surface-board mt-6">
-        <section class="teacher-surface-section teacher-surface-filter">
-          <div>
-            <div class="teacher-surface-eyebrow">Instance Filters</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">实例筛选</h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              当前范围：{{ selectedClassLabel }}。支持按班级、用户名关键字、学号精确筛选。
-            </p>
+      <div class="teacher-surface-board">
+        <section class="teacher-surface-section teacher-filter-panel">
+          <div class="teacher-section-head">
+            <div>
+              <div class="teacher-surface-eyebrow journal-eyebrow">Instance Filters</div>
+              <h3 class="teacher-section-title">实例筛选</h3>
+            </div>
           </div>
 
-          <form
-            class="mt-5 grid gap-4 md:grid-cols-[220px_1fr_1fr]"
-            @submit.prevent="emit('submit')"
-          >
-            <label class="space-y-2">
-              <span class="text-sm text-text-secondary">班级</span>
+          <form class="teacher-filter-grid" @submit.prevent="emit('submit')">
+            <label class="teacher-field">
+              <span class="teacher-field-label">班级</span>
               <select
                 :value="className"
-                class="teacher-filter-field w-full rounded-xl px-4 py-3 text-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
+                class="teacher-field-control"
                 :disabled="loadingClasses || (!isAdmin && classes.length <= 1)"
                 @change="emit('updateClassName', ($event.target as HTMLSelectElement).value)"
               >
@@ -172,56 +160,60 @@ function remainingExtends(item: TeacherInstanceItem): number {
               </select>
             </label>
 
-            <label class="space-y-2">
-              <span class="text-sm text-text-secondary">用户名关键字</span>
-              <div class="teacher-filter-field teacher-filter-control px-4 py-3">
+            <label class="teacher-field">
+              <span class="teacher-field-label">用户名关键字</span>
+              <div class="teacher-field-control teacher-filter-control">
                 <Search class="h-4 w-4 text-text-muted" />
                 <input
                   :value="keyword"
                   type="text"
                   placeholder="按用户名关键字搜索"
-                  class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+                  class="teacher-input"
                   @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
                 />
               </div>
             </label>
 
-            <label class="space-y-2">
-              <span class="text-sm text-text-secondary">按学号查询</span>
-              <div class="teacher-filter-field teacher-filter-control px-4 py-3">
+            <label class="teacher-field">
+              <span class="teacher-field-label">按学号查询</span>
+              <div class="teacher-field-control teacher-filter-control">
                 <Search class="h-4 w-4 text-text-muted" />
                 <input
                   :value="studentNo"
                   type="text"
                   placeholder="输入学号精确查询"
-                  class="w-full bg-transparent text-sm text-text-primary outline-none placeholder:text-text-muted"
+                  class="teacher-input"
                   @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
                 />
               </div>
             </label>
 
-            <div class="md:col-span-3 flex flex-wrap items-center justify-end gap-3">
-              <button type="button" class="teacher-btn" @click="emit('reset')">重置筛选</button>
-              <button type="submit" class="teacher-btn teacher-btn--primary">查询实例</button>
+            <div class="teacher-filter-actions">
+              <button type="button" class="teacher-btn teacher-surface-btn" @click="emit('reset')">
+                重置筛选
+              </button>
+              <button type="submit" class="teacher-btn teacher-surface-btn teacher-btn--primary">
+                查询实例
+              </button>
             </div>
           </form>
         </section>
 
         <section class="teacher-surface-section">
-          <div>
-            <div class="teacher-surface-eyebrow">Instance List</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">实例列表</h3>
-            <p class="mt-2 max-w-3xl text-sm leading-7 text-[var(--journal-muted)]">
-              保留当前筛选范围，并直接在列表中定位运行中、异常或即将到期的实例。
-            </p>
+          <div class="teacher-section-head">
+            <div>
+              <div class="teacher-surface-eyebrow journal-eyebrow">Instance List</div>
+              <h3 class="teacher-section-title">实例列表</h3>
+            </div>
+            <div class="teacher-section-meta">当前 {{ instances.length }} 条记录</div>
           </div>
 
-          <div v-if="loadingInstances" class="mt-5 space-y-3">
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-          />
+          <div v-if="loadingInstances" class="teacher-skeleton-list">
+            <div
+              v-for="index in 6"
+              :key="index"
+              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+            />
           </div>
 
           <AppEmpty
@@ -232,7 +224,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
             description="可以调整筛选条件，或等待学员创建新的训练环境后再查看。"
           />
 
-          <div v-else class="mt-5">
+          <div v-else class="mt-5 teacher-table-shell">
             <ElTable
               :data="instances"
               row-key="id"
@@ -242,10 +234,8 @@ function remainingExtends(item: TeacherInstanceItem): number {
               <ElTableColumn label="学生 / 班级" min-width="220">
                 <template #default="{ row }">
                   <div class="py-1">
-                    <div class="font-semibold text-text-primary">
-                      {{ row.student_name || row.student_username }}
-                    </div>
-                    <div class="mt-1 text-sm text-text-secondary">
+                    <div class="teacher-row-title">{{ row.student_name || row.student_username }}</div>
+                    <div class="teacher-row-copy">
                       @{{ row.student_username }}
                       <span class="mx-1 text-text-muted">·</span>
                       {{ row.class_name }}
@@ -259,7 +249,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
               <ElTableColumn label="题目" min-width="220">
                 <template #default="{ row }">
                   <div class="py-1">
-                    <div class="font-semibold text-text-primary">{{ row.challenge_title }}</div>
+                    <div class="teacher-row-title">{{ row.challenge_title }}</div>
                     <div class="mt-1">
                       <span
                         class="rounded-full border px-3 py-1 text-xs font-semibold"
@@ -282,9 +272,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
               <ElTableColumn label="到期时间" width="180">
                 <template #default="{ row }">
-                  <span class="text-sm text-text-secondary">{{
-                    formatDateTime(row.expires_at)
-                  }}</span>
+                  <span class="teacher-row-copy">{{ formatDateTime(row.expires_at) }}</span>
                 </template>
               </ElTableColumn>
 
@@ -306,24 +294,22 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
               <ElTableColumn label="创建时间" width="180">
                 <template #default="{ row }">
-                  <span class="text-sm text-text-secondary">{{
-                    formatDateTime(row.created_at)
-                  }}</span>
+                  <span class="teacher-row-copy">{{ formatDateTime(row.created_at) }}</span>
                 </template>
               </ElTableColumn>
 
               <ElTableColumn label="操作" width="160" align="right">
                 <template #default="{ row }">
-                  <ElButton
-                    plain
-                    type="danger"
+                  <button
+                    type="button"
+                    class="teacher-row-btn teacher-row-btn--danger"
                     :disabled="destroyingId === row.id"
                     :data-instance-id="row.id"
                     @click="emit('destroy', row.id)"
                   >
-                    <Trash2 class="mr-1 h-4 w-4" />
+                    <Trash2 class="h-4 w-4" />
                     {{ destroyingId === row.id ? '销毁中...' : '销毁实例' }}
-                  </ElButton>
+                  </button>
                 </template>
               </ElTableColumn>
             </ElTable>
@@ -343,12 +329,71 @@ function remainingExtends(item: TeacherInstanceItem): number {
 .teacher-management-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: #2563eb;
+  --journal-accent-strong: #1d4ed8;
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+}
+
+.teacher-hero {
+  border-color: var(--teacher-card-border);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+    );
+}
+
+.journal-eyebrow {
+  letter-spacing: 0.08em;
+}
+
+.journal-brief,
+.journal-metric {
+  border-radius: 18px;
+}
+
+.teacher-header {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.teacher-header__main {
+  max-width: 42rem;
+}
+
+.teacher-title {
+  margin-top: 0.85rem;
+  font-size: clamp(2rem, 2vw, 2.45rem);
+  font-weight: 700;
+  line-height: 1.08;
+  color: var(--journal-ink);
+}
+
+.teacher-copy {
+  margin-top: 0.7rem;
+  max-width: 42rem;
+  font-size: 0.92rem;
+  line-height: 1.72;
+  color: var(--journal-muted);
+}
+
+.teacher-actions {
+  margin-top: 1.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .teacher-btn {
@@ -356,100 +401,265 @@ function remainingExtends(item: TeacherInstanceItem): number {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.5rem;
-  border-radius: 0.9rem;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.55rem 1.1rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--teacher-control-border);
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+  padding: 0.62rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--journal-ink);
-  cursor: pointer;
   transition:
     border-color 0.18s ease,
     background 0.18s ease,
     color 0.18s ease;
 }
 
-.teacher-btn:hover {
-  border-color: var(--journal-accent);
+.teacher-btn:hover,
+.teacher-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
   color: var(--journal-accent-strong);
 }
 
 .teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: #fff;
-  box-shadow: 0 12px 24px var(--color-shadow-soft);
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
 }
 
-.teacher-btn--primary:hover {
-  background: var(--journal-accent-strong);
-  border-color: transparent;
-  color: #fff;
+.teacher-btn--primary:hover,
+.teacher-btn--primary:focus-visible {
+  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
 }
 
-.teacher-filter-field {
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  color: var(--journal-ink);
+.teacher-badge-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.teacher-filter-control {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease;
-}
-
-.teacher-filter-control:focus-within {
-  border-color: var(--journal-accent);
-  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
-}
-
-.teacher-metric-grid {
-  align-items: stretch;
-}
-
-.teacher-metric-card {
+.teacher-badge-card {
   min-height: 100%;
-  border-top: 3px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
+  border: 1px solid var(--teacher-card-border);
+  padding: 1rem 1.05rem 1.05rem;
 }
 
-.teacher-metric-card--accent {
-  border-top-color: color-mix(in srgb, var(--journal-accent) 28%, var(--journal-border));
-}
-
-.teacher-metric-card--calm {
-  border-top-color: color-mix(in srgb, var(--color-success) 22%, var(--journal-border));
-}
-
-.teacher-metric-card--soft {
-  border-top-color: color-mix(in srgb, var(--color-warning) 22%, var(--journal-border));
-}
-
-.teacher-metric-label {
-  font-size: 0.72rem;
+.teacher-badge-label {
+  font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.teacher-metric-value {
-  margin-top: 0.45rem;
-  font-size: 1.18rem;
+.teacher-badge-value {
+  margin-top: 0.55rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
-.teacher-metric-hint {
-  margin-top: 0.45rem;
+.teacher-badge-hint {
+  margin-top: 0.5rem;
   font-size: 0.8rem;
   line-height: 1.55;
   color: var(--journal-muted);
+}
+
+.teacher-hero-divider {
+  margin: 1.35rem 0 1.15rem;
+  border-top: 1px dashed var(--teacher-divider);
+}
+
+.teacher-tip-block {
+  display: grid;
+  gap: 0.35rem;
+  border-top: 1px dashed var(--teacher-divider);
+  padding-top: 1rem;
+}
+
+.teacher-tip-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--journal-accent-strong);
+}
+
+.teacher-tip-copy {
+  font-size: 0.86rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.teacher-filter-panel {
+  padding-top: 1.3rem;
+}
+
+.teacher-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.teacher-section-title {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-section-meta {
+  font-size: 0.82rem;
+  color: var(--journal-muted);
+}
+
+.teacher-filter-grid {
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.teacher-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.teacher-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.teacher-field-label {
+  font-size: 0.84rem;
+  color: var(--journal-muted);
+}
+
+.teacher-field-control {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  padding: 0.72rem 0.95rem;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.teacher-field-control:focus-within,
+.teacher-field-control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
+}
+
+.teacher-filter-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.teacher-input {
+  width: 100%;
+  background: transparent;
+  color: var(--journal-ink);
+  outline: none;
+}
+
+.teacher-input::placeholder {
+  color: color-mix(in srgb, var(--journal-muted) 76%, transparent);
+}
+
+.teacher-skeleton-list {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.teacher-table-shell {
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 18px;
+}
+
+.teacher-row-title {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-ink) 88%, var(--journal-muted));
+}
+
+.teacher-row-copy {
+  font-size: 0.84rem;
+  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+}
+
+.teacher-row-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+  padding: 0.58rem 0.95rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.teacher-row-btn:hover,
+.teacher-row-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 38%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
+  color: var(--journal-accent);
+}
+
+.teacher-row-btn--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 22%, var(--teacher-control-border));
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
+}
+
+.teacher-row-btn--danger:hover,
+.teacher-row-btn--danger:focus-visible {
+  border-color: color-mix(in srgb, var(--color-danger) 36%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 92%, var(--journal-ink));
+}
+
+.teacher-row-btn--danger:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+:deep(.teacher-instance-table.el-table),
+:deep(.teacher-instance-table .el-table__inner-wrapper),
+:deep(.teacher-instance-table .el-scrollbar),
+:deep(.teacher-instance-table .el-scrollbar__view),
+:deep(.teacher-instance-table .el-table__body-wrapper),
+:deep(.teacher-instance-table .el-table__header-wrapper),
+:deep(.teacher-instance-table .el-table__empty-block) {
+  background: var(--journal-surface);
+}
+
+@media (max-width: 1080px) {
+  .teacher-badge-grid,
+  .teacher-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-filter-actions {
+    justify-content: flex-start;
+  }
 }
 </style>
