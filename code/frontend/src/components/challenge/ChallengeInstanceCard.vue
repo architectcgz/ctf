@@ -130,119 +130,323 @@ const openButtonLabel = computed(() => {
 </script>
 
 <template>
-  <section class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-5 shadow-[0_18px_48px_rgba(15,23,42,0.18)]">
-    <div class="flex items-start justify-between gap-3">
-      <div>
-        <div class="text-xs uppercase tracking-[0.22em] text-[var(--color-text-muted)]">Instance</div>
-        <h2 class="mt-2 text-xl font-semibold text-[var(--color-text-primary)]">靶机实例</h2>
-      </div>
-      <span
-        class="rounded-full border border-white/10 px-3 py-1 text-xs font-medium"
-        :class="statusClass"
-      >
-        {{ statusLabel }}
-      </span>
-    </div>
+  <section class="instance-shell tool-group">
+    <div class="instance-kicker">Instance</div>
+    <h2 class="instance-title">靶机实例</h2>
 
-    <div v-if="loading && !instance" class="mt-5 rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-5 text-sm text-[var(--color-text-secondary)]">
+    <div v-if="loading && !instance" class="instance-note">
       正在同步当前题目的实例状态...
     </div>
 
-    <div v-else-if="instance" class="mt-5 space-y-5">
-      <div class="rounded-xl bg-[var(--color-bg-base)] p-4">
-        <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Remaining</div>
-        <div class="mt-2 text-2xl font-semibold" :class="isUrgent ? 'text-[var(--color-warning)]' : 'text-[var(--color-text-primary)]'">
+    <div v-else-if="instance">
+      <div class="instance-hero">
+        <div class="instance-meta-label">剩余时间</div>
+        <div class="instance-time" :class="isUrgent ? 'instance-time--urgent' : ''">
           {{ remainingLabel }}
         </div>
-        <div class="mt-2 text-xs text-[var(--color-text-secondary)]">
+        <div class="instance-created">
           创建于 {{ createdAtLabel }}
         </div>
       </div>
 
-      <div class="space-y-3 text-sm">
-        <div class="rounded-xl border border-[var(--color-border-default)] px-4 py-3">
-          <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Access</div>
-          <div class="mt-2 break-all font-mono text-[var(--color-text-primary)]">
-            {{ accessLabel }}
-          </div>
+      <div class="instance-grid">
+        <div class="instance-stat">
+          <span>状态</span>
+          <strong :class="statusClass">{{ statusLabel }}</strong>
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-xl border border-[var(--color-border-default)] px-4 py-3">
-            <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">剩余延时</div>
-            <div class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">{{ remainingExtendsLabel }}</div>
-          </div>
-          <div class="rounded-xl border border-[var(--color-border-default)] px-4 py-3">
-            <div class="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">实例状态</div>
-            <div class="mt-2 text-lg font-semibold" :class="statusClass">{{ statusLabel }}</div>
-          </div>
+        <div class="instance-stat">
+          <span>剩余延时</span>
+          <strong>{{ remainingExtendsLabel }}</strong>
         </div>
-
-        <div
-          v-if="isWaiting"
-          class="rounded-xl border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 px-4 py-3 text-xs leading-6 text-[var(--color-warning)]"
-        >
-          <div>实例正在排队创建，系统会自动刷新状态。</div>
-          <div>{{ queueLabel }}</div>
-          <div>{{ etaLabel }}</div>
-          <div v-if="progressLabel">{{ progressLabel }}</div>
-        </div>
-        <div
-          v-else-if="isFailed"
-          class="rounded-xl border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-4 py-3 text-xs leading-6 text-[var(--color-danger)]"
-        >
-          <div>实例创建失败或运行异常，当前目标不可访问。</div>
-          <div>建议先销毁当前实例，再重新启动。</div>
+        <div class="instance-stat instance-stat--full">
+          <span>访问地址</span>
+          <strong class="instance-access">{{ accessLabel }}</strong>
         </div>
       </div>
 
-      <div class="space-y-3">
+      <div
+        v-if="isWaiting"
+        class="instance-callout instance-callout--warning"
+      >
+        <div>实例正在排队创建，系统会自动刷新状态。</div>
+        <div>{{ queueLabel }}</div>
+        <div>{{ etaLabel }}</div>
+        <div v-if="progressLabel">{{ progressLabel }}</div>
+      </div>
+      <div
+        v-else-if="isFailed"
+        class="instance-callout instance-callout--danger"
+      >
+        <div>实例创建失败或运行异常，当前目标不可访问。</div>
+        <div>建议先销毁当前实例，再重新启动。</div>
+      </div>
+
+      <div class="tool-actions">
         <button
           type="button"
-          class="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+          class="subtle-action"
           :disabled="!canOpen || opening"
           @click="emit('open')"
         >
           {{ openButtonLabel }}
         </button>
-        <div class="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            class="rounded-xl border border-[var(--color-primary)]/40 bg-[var(--color-primary)]/10 px-4 py-3 text-sm font-medium text-[var(--color-primary-hover)] transition-colors hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:border-[var(--color-border-default)] disabled:bg-[var(--color-bg-base)] disabled:text-[var(--color-text-muted)]"
-            :disabled="!canExtend || extending"
-            @click="emit('extend')"
-          >
-            {{ extending ? '延时中...' : '延时' }}
-          </button>
-          <button
-            type="button"
-            class="rounded-xl border border-[var(--color-danger)]/25 bg-[var(--color-danger)]/10 px-4 py-3 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/20 disabled:cursor-not-allowed disabled:opacity-50"
-            :disabled="destroying"
-            @click="emit('destroy')"
-          >
-            {{ destroying ? '销毁中...' : '销毁' }}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="subtle-action"
+          :disabled="!canExtend || extending"
+          @click="emit('extend')"
+        >
+          {{ extending ? '延时中...' : '延时' }}
+        </button>
+        <button
+          type="button"
+          class="subtle-action subtle-action--danger"
+          :disabled="destroying"
+          @click="emit('destroy')"
+        >
+          {{ destroying ? '销毁中...' : '销毁' }}
+        </button>
       </div>
     </div>
 
-    <div v-else class="mt-5 space-y-4">
-      <div class="rounded-xl border border-dashed border-[var(--color-border-default)] px-4 py-5 text-sm leading-6 text-[var(--color-text-secondary)]">
+    <div v-else>
+      <div class="instance-note">
         <div>实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或销毁。</div>
-        <div class="mt-2">默认有效期 2 小时。</div>
+        <div>默认有效期 2 小时。</div>
       </div>
       <button
         v-if="!challengeSolved"
         type="button"
-        class="w-full rounded-xl bg-[var(--color-primary)] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+        class="primary-action"
         :disabled="creating"
         @click="emit('start')"
       >
         {{ creating ? '正在创建实例...' : '启动靶机' }}
       </button>
-      <div v-else class="rounded-xl border border-[var(--color-success)]/25 bg-[var(--color-success)]/10 px-4 py-3 text-sm text-[var(--color-success)]">
+      <div v-else class="instance-callout instance-callout--success">
         当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。
       </div>
     </div>
   </section>
 </template>
+
+<style scoped>
+.instance-shell {
+  --line-soft: color-mix(in srgb, oklch(38% 0.014 252) 12%, transparent);
+  --line-strong: color-mix(in srgb, oklch(38% 0.014 252) 20%, transparent);
+  --text-main: oklch(24% 0.014 252);
+  --text-subtle: oklch(49% 0.016 252);
+  --text-faint: oklch(61% 0.012 252);
+  --brand: oklch(52% 0.12 254);
+  --warning: oklch(68% 0.14 82);
+  --danger: oklch(58% 0.16 28);
+  --font-sans:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', sans-serif;
+  --font-mono:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  margin-top: 26px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line-soft);
+  font-family: var(--font-sans);
+}
+
+.instance-shell,
+.instance-shell button {
+  font-family: var(--font-sans);
+}
+
+.instance-time,
+.instance-access {
+  font-family: var(--font-mono) !important;
+}
+
+.instance-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--brand) 68%, var(--text-faint));
+}
+
+.instance-title {
+  margin: 10px 0 0;
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.instance-hero {
+  margin-top: 18px;
+  padding-left: 16px;
+  border-left: 2px solid color-mix(in srgb, var(--brand) 24%, transparent);
+}
+
+.instance-meta-label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.instance-time {
+  margin-top: 8px;
+  color: var(--text-main);
+  font: 700 28px/1 var(--font-mono);
+}
+
+.instance-time--urgent {
+  color: var(--warning);
+}
+
+.instance-created {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.instance-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
+}
+
+.instance-stat {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.instance-stat--full {
+  grid-column: 1 / -1;
+}
+
+.instance-stat span {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.instance-stat strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-main);
+}
+
+.instance-access {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.instance-note {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-subtle);
+}
+
+.instance-note div + div {
+  margin-top: 8px;
+}
+
+.instance-callout {
+  margin-top: 16px;
+  border-left: 2px solid currentColor;
+  padding-left: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.instance-callout--warning {
+  color: var(--warning);
+}
+
+.instance-callout--danger {
+  color: var(--danger);
+}
+
+.instance-callout--success {
+  color: color-mix(in srgb, var(--color-success) 80%, var(--text-main));
+}
+
+.tool-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.primary-action,
+.subtle-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text-main);
+  font: 600 14px/1 var(--font-sans);
+}
+
+.primary-action {
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+}
+
+.subtle-action--danger {
+  color: var(--danger);
+}
+
+button {
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand) 44%, white);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 1024px) {
+  .instance-grid,
+  .tool-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+:global([data-theme='dark']) .instance-shell {
+  --line-soft: color-mix(in srgb, var(--color-border-default) 78%, transparent);
+  --line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
+  --text-main: var(--color-text-primary);
+  --text-subtle: var(--color-text-secondary);
+  --text-faint: color-mix(in srgb, var(--color-text-secondary) 82%, var(--color-bg-base));
+  --brand: color-mix(in srgb, var(--color-primary) 88%, white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  button::before,
+  button::after {
+    transition-duration: 0.01ms !important;
+  }
+}
+</style>

@@ -157,8 +157,28 @@ describe('ChallengeDetail', () => {
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.text()).toContain('题目')
+    expect(wrapper.text()).toContain('题解')
+    expect(wrapper.text()).toContain('提交记录')
+    expect(wrapper.text()).toContain('我的复盘')
     expect(wrapper.text()).toContain('Test Challenge')
-    expect(wrapper.text()).toContain('提示系统')
+    expect(wrapper.text()).toContain('题目描述')
+  })
+
+  it('应仅保留外层主容器卡片并移除内部二级卡片', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.findAll('.challenge-panel')).toHaveLength(0)
   })
 
   it('未解题时应显示题解锁定态', async () => {
@@ -174,14 +194,19 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
+    const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
+    expect(solutionTab).toBeTruthy()
+
+    await solutionTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
     expect(wrapper.text()).toContain('解出题目后可查看推荐题解与社区题解')
-    expect(wrapper.text()).toContain('题解')
     expect(wrapper.text()).not.toContain('精选官方题解')
     expect(challengeApiMocks.getRecommendedChallengeSolutions).not.toHaveBeenCalled()
     expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
   })
 
-  it('已解题时应显示推荐题解、社区题解和我的题解', async () => {
+  it('已解题时应通过顶部标签切换到推荐题解、社区题解和我的复盘', async () => {
     challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
       id: '1',
       title: 'Solved Challenge',
@@ -210,9 +235,14 @@ describe('ChallengeDetail', () => {
 
     expect(challengeApiMocks.getRecommendedChallengeSolutions).toHaveBeenCalledWith('1')
     expect(challengeApiMocks.getCommunityChallengeSolutions).toHaveBeenCalledWith('1')
+    const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
+    expect(solutionTab).toBeTruthy()
+
+    await solutionTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
     expect(wrapper.text()).toContain('推荐题解')
     expect(wrapper.text()).toContain('社区题解')
-    expect(wrapper.text()).toContain('我的题解')
     expect(wrapper.text()).toContain('精选官方题解')
 
     const communityTab = wrapper.findAll('button').find((node) => node.text().trim() === '社区题解')
@@ -222,9 +252,17 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('我的 SQLi 复盘')
+
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    expect(writeupTab).toBeTruthy()
+
+    await writeupTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('解题过程复盘')
   })
 
-  it('应支持折叠题解区', async () => {
+  it('顶部主切换应暴露 tabs 语义，题解页签下仍保留次级 tabs 语义', async () => {
     challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
       id: '1',
       title: 'Solved Challenge',
@@ -251,17 +289,20 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    expect(wrapper.text()).toContain('精选官方题解')
+    const tablists = wrapper.findAll('[role="tablist"]')
+    expect(tablists).toHaveLength(1)
 
-    const toggleButton = wrapper.findAll('button').find((node) => node.text().includes('收起题解区'))
-    expect(toggleButton).toBeTruthy()
+    const topTabs = wrapper.findAll('[role="tab"]')
+    expect(topTabs).toHaveLength(4)
+    expect(topTabs[0].attributes('aria-selected')).toBe('true')
+    expect(topTabs[1].attributes('aria-selected')).toBe('false')
 
-    await toggleButton!.trigger('click')
+    await topTabs[1].trigger('click')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('展开题解区')
-    expect(wrapper.text()).not.toContain('精选官方题解')
-    expect(wrapper.text()).not.toContain('我的 SQLi 复盘')
+    const nestedTablists = wrapper.findAll('[role="tablist"]')
+    expect(nestedTablists.length).toBeGreaterThanOrEqual(2)
+    expect(wrapper.find('[role="tabpanel"]').exists()).toBe(true)
   })
 
   it('应该支持保存个人题解草稿', async () => {
@@ -291,9 +332,9 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    const editorToggle = wrapper.findAll('button').find((node) => node.text().includes('写题解'))
-    expect(editorToggle).toBeTruthy()
-    await editorToggle!.trigger('click')
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    expect(writeupTab).toBeTruthy()
+    await writeupTab!.trigger('click')
     await wrapper.vm.$nextTick()
 
     const titleInput = wrapper.find('input[placeholder*="完整链路"]')
@@ -314,7 +355,7 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('草稿')
   })
 
-  it('个人题解编辑区应默认折叠并在点击后展开', async () => {
+  it('我的复盘应通过顶部标签切换进入，默认不显示编辑区', async () => {
     await router.push('/challenges/1')
     await router.isReady()
 
@@ -330,17 +371,17 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('解题过程复盘')
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(false)
 
-    const editorToggle = wrapper.findAll('button').find((node) => node.text().includes('写题解'))
-    expect(editorToggle).toBeTruthy()
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    expect(writeupTab).toBeTruthy()
 
-    await editorToggle!.trigger('click')
+    await writeupTab!.trigger('click')
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('解题过程复盘')
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(true)
   })
 
-  it('Flag 提交应显示在个人题解折叠卡之前', async () => {
+  it('切换主体标签时右侧 Flag 提交区仍应保持可见', async () => {
     await router.push('/challenges/1')
     await router.isReady()
 
@@ -353,13 +394,57 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    const text = wrapper.text()
-    const flagIndex = text.indexOf('Flag 提交')
-    const editorIndex = text.indexOf('写题解')
+    expect(wrapper.text()).toContain('Flag 提交')
 
-    expect(flagIndex).toBeGreaterThan(-1)
-    expect(editorIndex).toBeGreaterThan(-1)
-    expect(flagIndex).toBeLessThan(editorIndex)
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    expect(writeupTab).toBeTruthy()
+
+    await writeupTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Flag 提交')
+    expect(wrapper.text()).toContain('解题过程复盘')
+  })
+
+  it('只有切到题目标签时才显示题目基本信息，题解标签下不重复显示题头', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('Solved Challenge')
+    expect(wrapper.text()).toContain('分值')
+
+    const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
+    expect(solutionTab).toBeTruthy()
+
+    await solutionTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).not.toContain('Solved Challenge')
+    expect(wrapper.text()).not.toContain('分值')
+    expect(wrapper.text()).toContain('推荐题解')
   })
 
   it('提示内容应支持前端展开查看且不再调用解锁接口', async () => {
@@ -420,6 +505,23 @@ describe('ChallengeDetail', () => {
     expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'exploit chain answer')
     expect(wrapper.text()).toContain('答案已提交，等待教师审核')
     expect(wrapper.text()).not.toContain('已完成 ✓')
+  })
+
+  it('Flag 输入应提供可访问标签', async () => {
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.find('input[aria-label="Flag"]')
+    expect(flagInput.exists()).toBe(true)
   })
 
   it('启动靶机后应停留在题目页并显示实例卡片', async () => {
