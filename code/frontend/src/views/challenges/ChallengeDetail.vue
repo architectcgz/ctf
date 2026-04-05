@@ -36,7 +36,10 @@
         </button>
       </div>
 
-      <div class="detail-grid detail-grid--workspace workspace-grid">
+      <div
+        class="detail-grid detail-grid--workspace workspace-grid"
+        :class="{ 'workspace-grid--single': activeWorkspaceTab !== 'question' }"
+      >
         <main class="detail-main content-pane">
           <section
             v-if="activeWorkspaceTab === 'question'"
@@ -481,7 +484,10 @@
           </section>
         </main>
 
-        <aside class="detail-aside tool-pane">
+        <aside
+          v-if="activeWorkspaceTab === 'question'"
+          class="detail-aside tool-pane"
+        >
           <div class="tool-pane-inner">
             <section class="tool-group">
               <div>
@@ -1370,6 +1376,10 @@ watch(
   min-height: 0;
   grid-template-columns: minmax(0, 1.34fr) minmax(320px, 0.66fr);
   align-items: stretch;
+}
+
+.workspace-grid--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .detail-main,

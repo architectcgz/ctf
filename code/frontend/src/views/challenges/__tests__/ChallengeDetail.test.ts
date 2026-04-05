@@ -388,7 +388,7 @@ describe('ChallengeDetail', () => {
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(true)
   })
 
-  it('切换主体标签时右侧 Flag 提交区仍应保持可见', async () => {
+  it('只有题目标签显示右侧工具区，其他标签应切换为单栏内容', async () => {
     await router.push('/challenges/1')
     await router.isReady()
 
@@ -403,13 +403,30 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).toContain('Flag 提交')
 
+    const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
     const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+
+    expect(solutionTab).toBeTruthy()
+    expect(recordsTab).toBeTruthy()
     expect(writeupTab).toBeTruthy()
+
+    await solutionTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).not.toContain('Flag 提交')
+    expect(wrapper.text()).toContain('题解区')
+
+    await recordsTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).not.toContain('Flag 提交')
+    expect(wrapper.text()).toContain('提交记录')
 
     await writeupTab!.trigger('click')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Flag 提交')
+    expect(wrapper.text()).not.toContain('Flag 提交')
     expect(wrapper.text()).toContain('解题过程复盘')
   })
 
