@@ -729,6 +729,9 @@ const lastSyncText = computed(() => {
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
   --workspace-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
@@ -1034,6 +1037,18 @@ const lastSyncText = computed(() => {
 
 .quick-action--compact {
   min-height: 42px;
+}
+
+.teacher-btn {
+  border: 1px solid var(--teacher-control-border);
+}
+
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.teacher-tip-block {
+  border-top: 1px dashed var(--teacher-divider);
 }
 
 .hero-rail {

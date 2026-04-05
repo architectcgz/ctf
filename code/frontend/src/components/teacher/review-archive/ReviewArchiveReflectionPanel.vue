@@ -93,10 +93,10 @@ defineProps<{
 
 .archive-panel__eyebrow {
   font-size: 0.72rem;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .archive-panel__title {
@@ -118,7 +118,7 @@ defineProps<{
 
 .reflection-item {
   padding: 0.95rem 1rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
 }

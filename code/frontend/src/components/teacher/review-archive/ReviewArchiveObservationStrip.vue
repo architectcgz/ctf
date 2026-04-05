@@ -57,10 +57,10 @@ function levelClass(level: string): string {
 
 .observation-strip__eyebrow {
   font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .observation-strip__title {
@@ -86,15 +86,16 @@ function levelClass(level: string): string {
 .observation {
   padding: 1rem 1.05rem;
   border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
 }
 
 .observation--good {
-  border-color: rgba(16, 185, 129, 0.24);
+  border-color: color-mix(in srgb, var(--color-success) 24%, var(--journal-border));
 }
 
 .observation--attention {
-  border-color: rgba(245, 158, 11, 0.26);
+  border-color: color-mix(in srgb, var(--color-warning) 24%, var(--journal-border));
 }
 
 .observation__head {

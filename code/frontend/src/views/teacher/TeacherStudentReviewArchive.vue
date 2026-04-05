@@ -210,23 +210,25 @@ async function handleExportArchive(): Promise<void> {
 .review-archive-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: #2563eb;
+  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   min-height: 100%;
   padding: 0.25rem 0 2rem;
 }
 
 :deep(.section-card) {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface-subtle);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 :deep(.section-card__header) {
-  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom: 1px dashed var(--teacher-divider);
 }
 
 .review-archive-loading__hero,
@@ -266,14 +268,14 @@ async function handleExportArchive(): Promise<void> {
 .summary-card {
   padding: 1rem;
   border-radius: 20px;
-  border: 1px solid color-mix(in srgb, #1e40af 10%, var(--color-border-default));
+  border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
 }
 
 .summary-card--primary {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #1e40af 16%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface)),
     color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base))
   );
 }
