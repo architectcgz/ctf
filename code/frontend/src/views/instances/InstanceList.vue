@@ -28,101 +28,83 @@ const {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-      <div>
-        <div class="journal-eyebrow">Instance Console</div>
-        <h1
-          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          我的实例
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
-        </p>
-      </div>
+    <div class="instance-page">
+      <header class="instance-topbar">
+        <div class="instance-heading">
+          <h1 class="instance-title">我的实例</h1>
+          <p class="instance-subtitle">管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。</p>
+        </div>
+      </header>
 
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="text-sm font-medium text-[var(--journal-ink)]">当前运行概况</div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-3">
-          <div class="journal-note">
-            <div class="journal-note-label">运行中</div>
-            <div class="journal-note-value">{{ runningCount }}</div>
+      <section class="instance-summary">
+        <div class="instance-summary-title">当前运行概况</div>
+        <div class="instance-summary-grid">
+          <div class="instance-summary-item">
+            <div class="instance-summary-label">运行中</div>
+            <div class="instance-summary-value">{{ runningCount }}</div>
           </div>
-          <div class="journal-note">
-            <div class="journal-note-label">等待创建</div>
-            <div class="journal-note-value">{{ waitingCount }}</div>
+          <div class="instance-summary-item">
+            <div class="instance-summary-label">等待创建</div>
+            <div class="instance-summary-value">{{ waitingCount }}</div>
           </div>
-          <div class="journal-note">
-            <div class="journal-note-label">实例上限</div>
-            <div class="journal-note-value">{{ maxInstances }}</div>
+          <div class="instance-summary-item">
+            <div class="instance-summary-label">实例上限</div>
+            <div class="instance-summary-value">{{ maxInstances }}</div>
           </div>
         </div>
-      </article>
-    </div>
+      </section>
 
-    <div class="instance-board mt-6 flex-1 px-1 pt-5 md:px-2 md:pt-6">
-      <div v-if="loading" class="flex justify-center py-12">
-        <div
-          class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-        />
+      <div class="instance-divider" />
+
+      <div v-if="loading" class="instance-loading">
+        <div class="instance-loading-spinner" />
       </div>
 
       <div
         v-else-if="instances.length === 0"
-        class="rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center"
+        class="instance-empty"
       >
-        <div class="text-sm text-[var(--journal-muted)]">暂无运行中或等待创建的实例</div>
-        <router-link
-          to="/challenges"
-          class="mt-3 inline-block text-sm text-[var(--journal-accent)] hover:underline"
-        >
-          前往靶场列表创建实例
-        </router-link>
+        <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
+        <router-link to="/challenges" class="instance-empty-link">前往靶场列表创建实例</router-link>
       </div>
 
-      <div v-else class="instance-list">
-        <article v-for="instance in instances" :key="instance.id" class="instance-item">
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div class="min-w-0">
-              <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-                {{ instance.challenge_title }}
-              </h3>
-              <div class="mt-3 flex flex-wrap gap-2">
-                <span
-                  class="rounded-full bg-[var(--journal-accent)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--journal-accent)]"
-                >
-                  {{ instance.category }}
-                </span>
-                <span
-                  class="rounded-full bg-[var(--color-success)]/10 px-2.5 py-0.5 text-xs font-medium text-[var(--color-success)]"
-                >
-                  {{ instance.difficulty }}
-                </span>
-              </div>
-            </div>
+      <section v-else class="instance-directory" aria-label="实例目录">
+        <div class="instance-directory-top">
+          <h2 class="instance-directory-title">实例列表</h2>
+          <div class="instance-directory-meta">共 {{ instances.length }} 个实例</div>
+        </div>
 
-            <div class="instance-status text-sm">
-              <span :class="getInstanceStatusClass(instance.status)">●</span>
-              <span class="text-[var(--journal-muted)]">{{
-                getInstanceStatusLabel(instance.status)
-              }}</span>
+        <div class="instance-directory-head">
+          <span>题目</span>
+          <span>访问</span>
+          <span>状态</span>
+          <span>剩余时间</span>
+          <span>操作</span>
+        </div>
+
+        <article v-for="instance in instances" :key="instance.id" class="instance-row">
+          <div class="instance-row-main">
+            <h2 class="instance-row-title">{{ instance.challenge_title }}</h2>
+            <div class="instance-row-tags">
+              <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
+              <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
             </div>
           </div>
 
-          <div v-if="instance.status === 'running'" class="instance-meta mt-5">
-            <div class="instance-meta__row">
-              <span class="instance-meta__label">地址</span>
-              <div class="flex flex-wrap items-center justify-end gap-2">
-                <span class="font-mono text-sm text-[var(--journal-ink)]">
-                  {{
-                    instance.access_url ||
-                    (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
-                  }}
-                </span>
+          <div class="instance-row-access">
+            <template v-if="instance.status === 'running'">
+              <div class="instance-row-mono">
+                {{
+                  instance.access_url ||
+                  (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                }}
+              </div>
+              <div class="instance-row-inline-actions">
                 <button
-                  class="instance-action-link"
+                  type="button"
+                  class="instance-link-btn"
                   @click="
                     copyAddress(
                       instance.access_url ||
@@ -134,50 +116,56 @@ const {
                 </button>
                 <button
                   v-if="instance.access_url"
-                  class="instance-action-link"
+                  type="button"
+                  class="instance-link-btn"
                   @click="openTarget(instance.id)"
                 >
                   打开目标
                 </button>
               </div>
-            </div>
-
-            <div class="instance-meta__row">
-              <span class="instance-meta__label">剩余</span>
-              <span
-                class="font-mono text-sm"
-                :class="
-                  instance.remaining < WARNING_THRESHOLD_SECONDS
-                    ? 'font-semibold text-[var(--color-warning)]'
-                    : 'text-[var(--journal-ink)]'
-                "
-              >
-                {{ formatRemainingTime(instance.remaining) }}
-              </span>
+            </template>
+            <div v-else class="instance-row-note">
+              {{ getInstanceWaitingHint(instance) }}
             </div>
           </div>
-          <div
-            v-else-if="instance.status === 'pending' || instance.status === 'creating'"
-            class="mt-5 rounded-[14px] border border-[var(--journal-border)]/80 bg-[var(--journal-surface-subtle)] px-4 py-3 text-xs leading-6 text-[var(--journal-muted)]"
-          >
-            {{ getInstanceWaitingHint(instance) }}
+
+          <div class="instance-row-status">
+            <span class="instance-state-chip">
+              <span :class="getInstanceStatusClass(instance.status)">●</span>
+              <span>{{ getInstanceStatusLabel(instance.status) }}</span>
+            </span>
           </div>
 
-          <div class="mt-5 flex flex-wrap gap-3">
+          <div class="instance-row-remaining">
+            <span
+              v-if="instance.status === 'running'"
+              class="instance-row-mono"
+              :class="
+                instance.remaining < WARNING_THRESHOLD_SECONDS
+                  ? 'instance-row-mono-warning'
+                  : ''
+              "
+            >
+              {{ formatRemainingTime(instance.remaining) }}
+            </span>
+            <span v-else class="instance-row-note">等待创建</span>
+          </div>
+
+          <div class="instance-row-actions">
             <button
               v-if="instance.status === 'running'"
               :disabled="instance.remaining_extends <= 0"
-              class="journal-btn journal-btn--primary"
+              class="instance-btn instance-btn-primary"
               @click="extendTime(instance.id)"
             >
-              延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min ({{ instance.remaining_extends }})
+              延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
             </button>
-            <button class="journal-btn journal-btn--danger" @click="destroyInstance(instance.id)">
+            <button class="instance-btn instance-btn-danger" @click="destroyInstance(instance.id)">
               销毁
             </button>
           </div>
         </article>
-      </div>
+      </section>
     </div>
 
     <div
@@ -191,8 +179,8 @@ const {
           实例 "{{ warningInstance?.challenge_title }}" 剩余时间不足 5 分钟，是否延长？
         </p>
         <div class="mt-6 flex justify-end gap-3">
-          <button class="journal-btn" @click="closeWarning">取消</button>
-          <button class="journal-btn journal-btn--primary" @click="extendFromWarning">
+          <button class="instance-btn" @click="closeWarning">取消</button>
+          <button class="instance-btn instance-btn-primary" @click="extendFromWarning">
             延长 {{ EXTEND_DURATION_SECONDS / 60 }} 分钟
           </button>
         </div>
@@ -203,189 +191,326 @@ const {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: #0f172a;
-  --journal-muted: #64748b;
-  --journal-accent: #4f46e5;
-  --journal-border: rgba(226, 232, 240, 0.8);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 20rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    );
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
-  padding: 0.2rem 0.75rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
+.instance-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.journal-brief {
-  border-color: var(--journal-border);
-  background: var(--journal-surface-subtle);
+.instance-topbar {
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.journal-note {
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
-  padding: 0.875rem 1rem;
-}
-
-.journal-note-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-note-value {
-  margin-top: 0.65rem;
-  font-size: 1.05rem;
-  font-weight: 600;
+.instance-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--journal-ink);
 }
 
-.instance-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+.instance-subtitle {
+  margin-top: 12px;
+  max-width: 720px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
-.instance-list {
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+.instance-summary {
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.instance-item {
-  padding: 1rem 1.1rem;
+.instance-summary-title,
+.instance-summary-label,
+.instance-directory-head {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
-.instance-item + .instance-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+.instance-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.instance-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+.instance-summary-item {
+  padding-left: 16px;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.instance-meta {
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+.instance-summary-value {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
 }
 
-.instance-meta__row {
+.instance-divider {
+  margin-top: 24px;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.instance-loading {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
 }
 
-.instance-meta__row + .instance-meta__row {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+.instance-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 4px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-top-color: var(--journal-accent);
+  border-radius: 999px;
+  animation: instanceSpin 900ms linear infinite;
 }
 
-.instance-meta__label {
-  font-size: 0.78rem;
-  font-weight: 600;
+.instance-empty {
+  margin-top: 24px;
+  padding: 32px 0;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  text-align: center;
+}
+
+.instance-empty-title {
+  font-size: 14px;
   color: var(--journal-muted);
 }
 
-.instance-action-link {
-  border-radius: 999px;
-  padding: 0.25rem 0.65rem;
-  font-size: 0.75rem;
+.instance-empty-link {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--journal-accent);
-  transition: background 0.15s;
 }
 
-.instance-action-link:hover {
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+.instance-directory {
+  margin-top: 24px;
 }
 
-.journal-btn {
+.instance-directory-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+}
+
+.instance-directory-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.instance-directory-meta {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.instance-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 1.2fr) 140px 160px 220px;
+  gap: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.instance-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 1.2fr) 140px 160px 220px;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.instance-row-title {
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--journal-ink);
+}
+
+.instance-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.instance-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  border-radius: 10px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.5rem 1rem;
-  font-size: 0.84rem;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--journal-muted);
-  transition: all 0.15s;
 }
 
-.journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+.instance-chip-category {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
 }
 
-.journal-btn--danger {
-  border-color: rgba(239, 68, 68, 0.2);
-  background: rgba(239, 68, 68, 0.08);
-  color: var(--color-danger);
+.instance-chip-difficulty {
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
 }
 
-.journal-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+.instance-row-access,
+.instance-row-remaining {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.instance-row-mono {
+  font-family:
+    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  color: var(--journal-ink);
+}
+
+.instance-row-mono-warning {
+  font-weight: 700;
+  color: var(--color-warning);
+}
+
+.instance-row-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.instance-link-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--journal-accent);
+  cursor: pointer;
+}
+
+.instance-row-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.instance-state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--journal-accent);
+}
+
+.instance-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.instance-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--journal-ink);
+  cursor: pointer;
+}
+
+.instance-btn-primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
+}
+
+.instance-btn-danger {
+  color: var(--color-danger);
 }
 
 .warning-dialog {
   border-color: var(--journal-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
+  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
 }
 
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+@keyframes instanceSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 20rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
+@media (max-width: 1180px) {
+  .instance-directory-head {
+    display: none;
+  }
+
+  .instance-row {
+    grid-template-columns: 1fr;
+  }
 }
 
-:global([data-theme='dark']) .journal-note,
-:global([data-theme='dark']) .instance-list,
-:global([data-theme='dark']) .instance-meta,
-:global([data-theme='dark']) .warning-dialog,
-:global([data-theme='dark']) .journal-btn {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+@media (max-width: 960px) {
+  .instance-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .instance-title {
+    font-size: 34px;
+  }
 }
 </style>
