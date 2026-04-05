@@ -76,7 +76,6 @@ var fullRouterTestSchemaModels = []any{
 	&model.Tag{},
 	&model.ChallengeTag{},
 	&model.ChallengeHint{},
-	&model.ChallengeHintUnlock{},
 	&model.ChallengeWriteup{},
 	&model.SubmissionWriteup{},
 	&model.EnvironmentTemplate{},

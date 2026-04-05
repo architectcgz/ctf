@@ -191,22 +191,14 @@ func (s *ChallengeService) GetPublishedChallengeWithContext(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	unlockedHintIDs, err := s.repo.GetUnlockedHintIDsWithContext(ctx, userID, challengeID)
-	if err != nil {
-		return nil, err
-	}
 
 	hintList := make([]*dto.ChallengeHintResp, 0, len(hints))
 	for _, hint := range hints {
 		hintResp := &dto.ChallengeHintResp{
-			ID:         hint.ID,
-			Level:      hint.Level,
-			Title:      hint.Title,
-			CostPoints: hint.CostPoints,
-			IsUnlocked: unlockedHintIDs[hint.ID],
-		}
-		if hintResp.IsUnlocked {
-			hintResp.Content = hint.Content
+			ID:      hint.ID,
+			Level:   hint.Level,
+			Title:   hint.Title,
+			Content: hint.Content,
 		}
 		hintList = append(hintList, hintResp)
 	}

@@ -35,7 +35,6 @@ type ChallengeQueryRepository interface {
 	List(query *dto.ChallengeQuery) ([]*model.Challenge, int64, error)
 	ListHintsByChallengeID(challengeID int64) ([]*model.ChallengeHint, error)
 	ListHintsByChallengeIDWithContext(ctx context.Context, challengeID int64) ([]*model.ChallengeHint, error)
-	GetUnlockedHintIDsWithContext(ctx context.Context, userID, challengeID int64) (map[int64]bool, error)
 	GetSolvedStatusWithContext(ctx context.Context, userID, challengeID int64) (bool, error)
 	GetSolvedCountWithContext(ctx context.Context, challengeID int64) (int64, error)
 	GetTotalAttemptsWithContext(ctx context.Context, challengeID int64) (int64, error)

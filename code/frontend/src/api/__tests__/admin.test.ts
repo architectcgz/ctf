@@ -878,7 +878,6 @@ describe('admin contest api contract', () => {
             id: 31,
             level: 1,
             title: '入口提示',
-            cost_points: 0,
             content: '先观察回显位置',
           },
         ],
@@ -915,7 +914,6 @@ describe('admin contest api contract', () => {
         id: '31',
         level: 1,
         title: '入口提示',
-        cost_points: 0,
         content: '先观察回显位置',
       },
     ])
@@ -1070,7 +1068,6 @@ describe('admin contest api contract', () => {
         {
           level: 1,
           title: '提示一',
-          cost_points: 0,
           content: '检查文件包含点',
         },
       ],
@@ -1091,7 +1088,6 @@ describe('admin contest api contract', () => {
           {
             level: 1,
             title: '提示一',
-            cost_points: 0,
             content: '检查文件包含点',
           },
         ],

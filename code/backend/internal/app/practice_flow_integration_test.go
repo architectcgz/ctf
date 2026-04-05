@@ -118,9 +118,8 @@ type flowChallengeDetail struct {
 	NeedTarget    bool   `json:"need_target"`
 	AttachmentURL string `json:"attachment_url"`
 	Hints         []struct {
-		Level      int    `json:"level"`
-		IsUnlocked bool   `json:"is_unlocked"`
-		Content    string `json:"content"`
+		Level   int    `json:"level"`
+		Content string `json:"content"`
 	} `json:"hints"`
 	SolvedCount   int64 `json:"solved_count"`
 	TotalAttempts int64 `json:"total_attempts"`
@@ -281,6 +280,12 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 		t.Fatalf("unexpected challenge detail status: %d body=%s", detailResp.Code, detailResp.Body.String())
 	}
 	detailBody := decodeFlowEnvelope(t, detailResp)
+	if bytes.Contains(detailBody.Data, []byte(`"is_unlocked"`)) {
+		t.Fatalf("expected challenge detail payload to omit is_unlocked, got %s", string(detailBody.Data))
+	}
+	if bytes.Contains(detailBody.Data, []byte(`"cost_points"`)) {
+		t.Fatalf("expected challenge detail payload to omit cost_points, got %s", string(detailBody.Data))
+	}
 	detail := decodeFlowJSON[flowChallengeDetail](t, detailBody.Data)
 	if detail.IsSolved {
 		t.Fatalf("expected challenge detail to be unsolved before submission")
@@ -291,39 +296,8 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	if !detail.NeedTarget {
 		t.Fatalf("expected need_target=true, got false")
 	}
-	if len(detail.Hints) != 1 || detail.Hints[0].IsUnlocked || detail.Hints[0].Content != "" {
-		t.Fatalf("expected locked hint before unlock, got %+v", detail.Hints)
-	}
-
-	unlockResp := performFlowJSONRequest(
-		t,
-		env.router,
-		http.MethodPost,
-		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/hints/1/unlock",
-		nil,
-		bearerHeaders(studentToken),
-		nil,
-	)
-	if unlockResp.Code != http.StatusOK {
-		t.Fatalf("unexpected unlock hint status: %d body=%s", unlockResp.Code, unlockResp.Body.String())
-	}
-
-	detailAfterUnlockResp := performFlowJSONRequest(
-		t,
-		env.router,
-		http.MethodGet,
-		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10),
-		nil,
-		bearerHeaders(studentToken),
-		nil,
-	)
-	if detailAfterUnlockResp.Code != http.StatusOK {
-		t.Fatalf("unexpected challenge detail after unlock status: %d body=%s", detailAfterUnlockResp.Code, detailAfterUnlockResp.Body.String())
-	}
-	detailAfterUnlockBody := decodeFlowEnvelope(t, detailAfterUnlockResp)
-	detailAfterUnlock := decodeFlowJSON[flowChallengeDetail](t, detailAfterUnlockBody.Data)
-	if len(detailAfterUnlock.Hints) != 1 || !detailAfterUnlock.Hints[0].IsUnlocked || detailAfterUnlock.Hints[0].Content == "" {
-		t.Fatalf("expected unlocked hint after unlock, got %+v", detailAfterUnlock.Hints)
+	if len(detail.Hints) != 1 || detail.Hints[0].Content == "" {
+		t.Fatalf("expected hint content available in challenge detail, got %+v", detail.Hints)
 	}
 
 	instanceCreateResp := performFlowJSONRequest(
@@ -553,7 +527,6 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	assertTimelineHasChallengeDetailView(t, timeline.Events, challenge.ID)
 	assertTimelineHasInstanceAccess(t, timeline.Events, challenge.ID)
 	assertTimelineHasProxyTrace(t, timeline.Events, challenge.ID)
-	assertTimelineHasHintUnlock(t, timeline.Events, challenge.ID)
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, false, 0)
 	assertTimelineHasSubmit(t, timeline.Events, challenge.ID, true, 100)
 
@@ -571,8 +544,8 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	}
 	evidenceBody := decodeFlowEnvelope(t, evidenceResp)
 	evidence := decodeFlowJSON[flowTeacherEvidenceReviewResponse](t, evidenceBody.Data)
-	if evidence.Summary.TotalEvents < 5 {
-		t.Fatalf("expected evidence summary to contain >= 5 events, got %+v", evidence.Summary)
+	if evidence.Summary.TotalEvents < 4 {
+		t.Fatalf("expected evidence summary to contain >= 4 events, got %+v", evidence.Summary)
 	}
 	if evidence.Summary.ProxyRequestCount < 1 {
 		t.Fatalf("expected evidence summary to count proxy request, got %+v", evidence.Summary)
@@ -582,7 +555,6 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	}
 	assertTeacherEvidenceHasEvent(t, evidence.Events, "instance_access", challenge.ID, "event_stage", "access")
 	assertTeacherEvidenceHasEvent(t, evidence.Events, "instance_proxy_request", challenge.ID, "event_stage", "exploit")
-	assertTeacherEvidenceHasEvent(t, evidence.Events, "challenge_hint_unlock", challenge.ID, "event_stage", "analysis")
 	assertTeacherEvidenceHasEvent(t, evidence.Events, "challenge_submission", challenge.ID, "event_stage", "submit")
 
 	auditResp := performFlowJSONRequest(
@@ -745,7 +717,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.Challenge{},
 		&model.ChallengePublishCheckJob{},
 		&model.ChallengeHint{},
-		&model.ChallengeHintUnlock{},
 		&model.ChallengeWriteup{},
 		&model.ChallengeTopology{},
 		&model.EnvironmentTemplate{},
@@ -888,7 +859,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		}, logger),
 		practiceHandler.SubmitFlag,
 	)
-	protected.POST("/challenges/:id/hints/:level/unlock", practiceHandler.UnlockHint)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.POST("/instances/:id/access", runtimeHandler.AccessInstance)
 	apiV1.GET("/instances/:id/proxy", runtimeHandler.ProxyInstance)
@@ -1170,29 +1140,6 @@ func assertTimelineHasSubmit(t *testing.T, events []struct {
 	}
 
 	t.Fatalf("expected timeline to contain submit event challenge_id=%d is_correct=%t", challengeID, isCorrect)
-}
-
-func assertTimelineHasHintUnlock(t *testing.T, events []struct {
-	Type        string `json:"type"`
-	ChallengeID int64  `json:"challenge_id"`
-	Title       string `json:"title"`
-	IsCorrect   *bool  `json:"is_correct"`
-	Points      *int   `json:"points"`
-	Detail      string `json:"detail"`
-}, challengeID int64) {
-	t.Helper()
-
-	for _, event := range events {
-		if event.Type != "hint_unlock" || event.ChallengeID != challengeID {
-			continue
-		}
-		if event.Detail == "" {
-			t.Fatalf("expected hint unlock event to include detail, got %+v", event)
-		}
-		return
-	}
-
-	t.Fatalf("expected timeline to contain hint unlock event challenge_id=%d", challengeID)
 }
 
 func assertTeacherEvidenceHasEvent(

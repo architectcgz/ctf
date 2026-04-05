@@ -68,20 +68,6 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 			LEFT JOIN challenges c ON s.challenge_id = c.id
 			UNION ALL
 			SELECT
-				'hint_unlock' AS type,
-				hu.challenge_id,
-				hu.unlocked_at AS timestamp,
-				NULL AS is_correct,
-				NULL AS points,
-				CASE
-					WHEN COALESCE(NULLIF(h.title, ''), '') <> '' THEN '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示：' || h.title
-					ELSE '解锁第 ' || CAST(h.level AS TEXT) || ' 级提示'
-				END AS detail
-			FROM challenge_hint_unlocks hu
-			JOIN challenge_hints h ON h.id = hu.challenge_hint_id
-			WHERE hu.user_id = ?
-			UNION ALL
-			SELECT
 				'instance_destroy' AS type,
 				i.challenge_id,
 				i.updated_at AS timestamp,
@@ -93,7 +79,7 @@ func (r *Repository) GetUserTimeline(ctx context.Context, userID int64, limit, o
 		) events
 		LEFT JOIN challenges c ON events.challenge_id = c.id
 		ORDER BY events.timestamp DESC
-	`, userID, userID, userID, userID).Scan(&events).Error; err != nil {
+	`, userID, userID, userID).Scan(&events).Error; err != nil {
 		return nil, fmt.Errorf("get user timeline: %w", err)
 	}
 

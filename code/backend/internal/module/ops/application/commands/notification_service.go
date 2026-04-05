@@ -48,7 +48,6 @@ func (s *NotificationService) RegisterPracticeEventConsumers(bus platformevents.
 		return
 	}
 	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeFlagAccepted)
-	bus.Subscribe(practicecontracts.EventHintUnlocked, s.handlePracticeHintUnlocked)
 }
 
 func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, evt platformevents.Event) error {
@@ -61,20 +60,6 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 		Type:    "challenge",
 		Title:   "题目解出",
 		Content: fmt.Sprintf("你已成功提交题目 #%d 的 Flag，获得 %d 分。", payload.ChallengeID, payload.Points),
-		Link:    &link,
-	})
-}
-
-func (s *NotificationService) handlePracticeHintUnlocked(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(practicecontracts.HintUnlockedEvent)
-	if !ok {
-		return fmt.Errorf("unexpected practice hint event payload: %T", evt.Payload)
-	}
-	link := fmt.Sprintf("/challenges/%d", payload.ChallengeID)
-	return s.SendNotification(ctx, payload.UserID, &dto.NotificationReq{
-		Type:    "challenge",
-		Title:   "提示已解锁",
-		Content: fmt.Sprintf("你已解锁题目 #%d 的第 %d 级提示。", payload.ChallengeID, payload.HintLevel),
 		Link:    &link,
 	})
 }

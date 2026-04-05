@@ -131,12 +131,6 @@
               <div class="text-sm font-medium text-[var(--color-text-primary)]">
                 Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
               </div>
-              <div
-                v-if="hint.cost_points"
-                class="mt-1 text-xs text-[var(--color-text-secondary)]"
-              >
-                解锁消耗：{{ hint.cost_points }} 分
-              </div>
               <div class="mt-2 text-sm text-[var(--color-text-primary)]">
                 {{ hint.content }}
               </div>

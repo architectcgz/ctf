@@ -31,8 +31,6 @@ type practiceModuleExternalDeps struct {
 
 type practiceRuntimeChallengeContract interface {
 	FindByID(id int64) (*model.Challenge, error)
-	FindHintByLevel(challengeID int64, level int) (*model.ChallengeHint, error)
-	CreateHintUnlock(unlock *model.ChallengeHintUnlock) error
 	FindChallengeTopologyByChallengeID(challengeID int64) (*model.ChallengeTopology, error)
 }
 

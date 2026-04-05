@@ -218,10 +218,9 @@ func buildChallengeImportPreview(
 	hints := make([]dto.ChallengeHintAdminResp, 0, len(parsed.Hints))
 	for _, hint := range parsed.Hints {
 		hints = append(hints, dto.ChallengeHintAdminResp{
-			Level:      hint.Level,
-			Title:      hint.Title,
-			CostPoints: hint.CostPoints,
-			Content:    hint.Content,
+			Level:   hint.Level,
+			Title:   hint.Title,
+			Content: hint.Content,
 		})
 	}
 
@@ -665,7 +664,6 @@ func syncImportedChallengeHints(
 			ChallengeID: challengeID,
 			Level:       hint.Level,
 			Title:       hint.Title,
-			CostPoints:  hint.CostPoints,
 			Content:     hint.Content,
 			CreatedAt:   now,
 			UpdatedAt:   now,

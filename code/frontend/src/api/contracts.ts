@@ -52,8 +52,6 @@ export interface ChallengeHint {
   id: ID
   level: number
   title?: string
-  cost_points?: number
-  is_unlocked: boolean
   content?: string
 }
 
@@ -211,12 +209,6 @@ export interface TeacherManualReviewSubmissionDetailData {
   submitted_at: ISODateTime
   updated_at: ISODateTime
   reviewer_name?: string
-}
-
-export interface UnlockHintData {
-  hint: ChallengeHint
-  points_spent?: number
-  remaining_points?: number
 }
 
 export interface MyProgressData {
@@ -688,7 +680,6 @@ export interface ReviewArchiveSummaryData {
   evidence_event_count: number
   writeup_count: number
   manual_review_count: number
-  hint_unlock_count: number
   correct_submission_count: number
   last_activity_at?: ISODateTime
 }
@@ -837,7 +828,6 @@ export interface AdminChallengeHint {
   id?: ID
   level: number
   title?: string
-  cost_points?: number
   content: string
 }
 

@@ -47,7 +47,6 @@ func (s *RecommendationService) RegisterPracticeEventConsumers(bus platformevent
 		return
 	}
 	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeCacheRefreshEvent)
-	bus.Subscribe(practicecontracts.EventHintUnlocked, s.handlePracticeCacheRefreshEvent)
 }
 
 func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
@@ -58,8 +57,6 @@ func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Cont
 	var userID int64
 	switch payload := evt.Payload.(type) {
 	case practicecontracts.FlagAcceptedEvent:
-		userID = payload.UserID
-	case practicecontracts.HintUnlockedEvent:
 		userID = payload.UserID
 	default:
 		return fmt.Errorf("unexpected practice cache refresh payload: %T", evt.Payload)

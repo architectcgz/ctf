@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"sync/atomic"
@@ -488,8 +490,12 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 		t.Fatalf("buildStudentReviewArchiveData() error = %v", err)
 	}
 
-	if data.Summary.HintUnlockCount != 1 {
-		t.Fatalf("expected 1 hint unlock, got %d", data.Summary.HintUnlockCount)
+	summaryPayload, err := json.Marshal(data.Summary)
+	if err != nil {
+		t.Fatalf("marshal summary: %v", err)
+	}
+	if bytes.Contains(summaryPayload, []byte(`"hint_unlock_count"`)) {
+		t.Fatalf("expected summary payload to omit hint_unlock_count, got %s", string(summaryPayload))
 	}
 	if data.Summary.CorrectSubmissionCount != 1 {
 		t.Fatalf("expected 1 correct submission, got %d", data.Summary.CorrectSubmissionCount)
@@ -511,8 +517,8 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 	}
 
 	hint := findObservation(data.TeacherObservations.Items, "hint_usage")
-	if hint == nil || hint.Level != "attention" {
-		t.Fatalf("expected hint_usage attention observation, got %#v", hint)
+	if hint == nil || hint.Level != "good" {
+		t.Fatalf("expected hint_usage good observation, got %#v", hint)
 	}
 }
 

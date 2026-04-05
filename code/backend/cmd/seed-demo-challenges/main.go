@@ -24,10 +24,9 @@ type seedImageSpec struct {
 }
 
 type seedHintSpec struct {
-	Level      int
-	Title      string
-	CostPoints int
-	Content    string
+	Level   int
+	Title   string
+	Content string
 }
 
 type seedChallengeSpec struct {
@@ -322,7 +321,6 @@ func syncChallengeHints(tx *gorm.DB, challengeID int64, hints []seedHintSpec) er
 			ChallengeID: challengeID,
 			Level:       hint.Level,
 			Title:       hint.Title,
-			CostPoints:  hint.CostPoints,
 			Content:     hint.Content,
 			CreatedAt:   now,
 			UpdatedAt:   now,

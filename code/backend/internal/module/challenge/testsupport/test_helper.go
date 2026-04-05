@@ -23,7 +23,6 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&model.Instance{},
 		&model.Submission{},
 		&model.ChallengeHint{},
-		&model.ChallengeHintUnlock{},
 		&model.ChallengeWriteup{},
 		&model.SubmissionWriteup{},
 		&model.ChallengeTopology{},

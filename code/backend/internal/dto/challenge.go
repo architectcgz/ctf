@@ -3,10 +3,9 @@ package dto
 import "time"
 
 type ChallengeHintReq struct {
-	Level      int    `json:"level" binding:"required,min=1"`
-	Title      string `json:"title" binding:"omitempty,max=128"`
-	CostPoints int    `json:"cost_points" binding:"omitempty,min=0"`
-	Content    string `json:"content" binding:"required"`
+	Level   int    `json:"level" binding:"required,min=1"`
+	Title   string `json:"title" binding:"omitempty,max=128"`
+	Content string `json:"content" binding:"required"`
 }
 
 type CreateChallengeReq struct {
@@ -32,11 +31,10 @@ type UpdateChallengeReq struct {
 }
 
 type ChallengeHintAdminResp struct {
-	ID         int64  `json:"id"`
-	Level      int    `json:"level"`
-	Title      string `json:"title,omitempty"`
-	CostPoints int    `json:"cost_points,omitempty"`
-	Content    string `json:"content"`
+	ID      int64  `json:"id"`
+	Level   int    `json:"level"`
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content"`
 }
 
 type ChallengeResp struct {
@@ -97,16 +95,10 @@ type ChallengeDetailResp struct {
 }
 
 type ChallengeHintResp struct {
-	ID         int64  `json:"id"`
-	Level      int    `json:"level"`
-	Title      string `json:"title,omitempty"`
-	CostPoints int    `json:"cost_points,omitempty"`
-	IsUnlocked bool   `json:"is_unlocked"`
-	Content    string `json:"content,omitempty"`
-}
-
-type UnlockHintResp struct {
-	Hint *ChallengeHintResp `json:"hint"`
+	ID      int64  `json:"id"`
+	Level   int    `json:"level"`
+	Title   string `json:"title,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
 type ConfigureFlagReq struct {

@@ -100,151 +100,6 @@
             </button>
           </div>
 
-          <div class="challenge-panel writeup-workbench p-6">
-            <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-              <div class="max-w-2xl space-y-3">
-                <div class="journal-eyebrow">
-                  Writeup Studio
-                </div>
-                <div>
-                  <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
-                    解题过程复盘
-                  </h2>
-                  <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
-                    把思路、关键利用步骤和踩坑点整理成一份自己的
-                    writeup。草稿可反复保存，正式提交后教师会在分析页看到你的状态与评语。
-                  </p>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <span class="writeup-status-pill writeup-status-pill--primary">
-                    {{ submissionStatusLabel(myWriteup?.submission_status) }}
-                  </span>
-                  <span
-                    v-if="myWriteup"
-                    class="writeup-status-pill"
-                    :class="reviewStatusClass(myWriteup.review_status)"
-                  >
-                    {{ reviewStatusLabel(myWriteup.review_status) }}
-                  </span>
-                  <span
-                    v-if="myWriteup?.submitted_at"
-                    class="writeup-status-pill writeup-status-pill--muted"
-                  >
-                    提交于 {{ formatWriteupTime(myWriteup.submitted_at) }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="writeup-side-note">
-                <div
-                  class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-accent)]"
-                >
-                  Review Focus
-                </div>
-                <div class="mt-3 text-sm leading-6 text-[var(--journal-ink)]">
-                  重点说明你如何定位突破口、怎样验证利用链、哪里走过弯路。
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-6 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-              <label class="writeup-field">
-                <span class="writeup-field-label">标题</span>
-                <input
-                  v-model="writeupTitle"
-                  type="text"
-                  maxlength="256"
-                  placeholder="例如：从回显异常到拿到 flag 的完整链路"
-                  class="challenge-input w-full rounded-2xl border px-4 py-3 text-sm transition-colors focus:outline-none"
-                >
-              </label>
-
-              <div class="writeup-meta-grid">
-                <div class="writeup-meta-card">
-                  <div class="writeup-meta-label">
-                    当前状态
-                  </div>
-                  <div class="writeup-meta-value">
-                    {{ submissionStatusLabel(myWriteup?.submission_status) }}
-                  </div>
-                </div>
-                <div class="writeup-meta-card">
-                  <div class="writeup-meta-label">
-                    评阅结果
-                  </div>
-                  <div class="writeup-meta-value">
-                    {{ reviewStatusLabel(myWriteup?.review_status) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <label class="writeup-field mt-4 block">
-              <span class="writeup-field-label">正文</span>
-              <textarea
-                v-model="writeupContent"
-                rows="10"
-                placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
-                class="challenge-input writeup-textarea w-full rounded-[24px] border px-4 py-4 text-sm leading-7 transition-colors focus:outline-none"
-              />
-            </label>
-
-            <div
-              v-if="myWriteup?.review_comment"
-              class="writeup-feedback-panel mt-5"
-            >
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div
-                    class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-accent)]"
-                  >
-                    Teacher Feedback
-                  </div>
-                  <div class="mt-2 text-sm text-[var(--journal-muted)]">
-                    {{ reviewStatusLabel(myWriteup.review_status) }}
-                  </div>
-                </div>
-                <div
-                  v-if="myWriteup.reviewed_at"
-                  class="text-xs text-[var(--journal-muted)]"
-                >
-                  {{ formatWriteupTime(myWriteup.reviewed_at) }}
-                </div>
-              </div>
-              <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--journal-ink)]">
-                {{ myWriteup.review_comment }}
-              </p>
-            </div>
-
-            <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div class="text-sm text-[var(--journal-muted)]">
-                {{
-                  submissionLoading
-                    ? '正在同步你的 writeup...'
-                    : myWriteup?.updated_at
-                      ? `最近更新：${formatWriteupTime(myWriteup.updated_at)}`
-                      : '还没有提交记录，可以先保存草稿。'
-                }}
-              </div>
-              <div class="flex flex-wrap gap-3">
-                <button
-                  :disabled="submissionLoading || submissionSaving !== null"
-                  class="challenge-btn-outline"
-                  @click="saveWriteup('draft')"
-                >
-                  {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
-                </button>
-                <button
-                  :disabled="submissionLoading || submissionSaving !== null"
-                  class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                  @click="saveWriteup('submitted')"
-                >
-                  {{ submissionSaving === 'submitted' ? '提交中...' : '正式提交' }}
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div class="challenge-panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -304,44 +159,28 @@
                 :key="hint.id"
                 class="hint-item"
               >
-                <div class="flex items-start justify-between gap-3">
-                  <div>
+                <button
+                  type="button"
+                  class="hint-toggle"
+                  :aria-expanded="isHintExpanded(hint.level)"
+                  @click="toggleHint(hint.level)"
+                >
+                  <div class="min-w-0">
                     <div class="text-sm font-medium text-[var(--journal-ink)]">
                       Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
                     </div>
-                    <div
-                      v-if="hint.cost_points"
-                      class="mt-1 text-xs text-[var(--journal-muted)]"
-                    >
-                      解锁消耗：{{ hint.cost_points }} 分
-                    </div>
                   </div>
-                  <button
-                    v-if="!hint.is_unlocked"
-                    :disabled="unlockingLevel === hint.level"
-                    class="challenge-btn-primary rounded-lg px-4 py-2 text-xs font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                    @click="unlockHintHandler(hint.level)"
-                  >
-                    {{ unlockingLevel === hint.level ? '解锁中...' : '解锁提示' }}
-                  </button>
                   <span
-                    v-else
-                    class="rounded bg-[var(--color-success)]/20 px-3 py-1 text-xs font-medium text-[var(--color-success)]"
+                    class="hint-toggle-state"
                   >
-                    已解锁
+                    {{ isHintExpanded(hint.level) ? '收起提示' : '展开提示' }}
                   </span>
-                </div>
+                </button>
                 <div
-                  v-if="hint.is_unlocked"
+                  v-if="isHintExpanded(hint.level)"
                   class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"
                 >
-                  {{ hint.content }}
-                </div>
-                <div
-                  v-else
-                  class="mt-3 text-sm text-[var(--journal-muted)]"
-                >
-                  解锁后显示提示内容
+                  {{ hint.content || '暂无提示内容' }}
                 </div>
               </div>
             </div>
@@ -378,6 +217,190 @@
               class="prose challenge-prose mt-4 max-w-none"
               v-html="sanitizedWriteup"
             />
+          </div>
+
+          <div class="challenge-panel writeup-workbench p-6">
+            <button
+              type="button"
+              class="writeup-collapse-toggle w-full text-left"
+              @click="toggleWriteupEditor"
+            >
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="max-w-2xl space-y-3">
+                  <div class="journal-eyebrow">
+                    Writeup Studio
+                  </div>
+                  <div>
+                    <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                      写题解
+                    </h2>
+                    <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
+                      把思路、关键利用步骤和踩坑点整理成一份自己的 writeup，需要时再展开编辑。
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="writeup-status-pill writeup-status-pill--primary">
+                      {{ submissionStatusLabel(myWriteup?.submission_status) }}
+                    </span>
+                    <span
+                      v-if="myWriteup"
+                      class="writeup-status-pill"
+                      :class="reviewStatusClass(myWriteup.review_status)"
+                    >
+                      {{ reviewStatusLabel(myWriteup.review_status) }}
+                    </span>
+                    <span
+                      v-if="myWriteup?.submitted_at"
+                      class="writeup-status-pill writeup-status-pill--muted"
+                    >
+                      提交于 {{ formatWriteupTime(myWriteup.submitted_at) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="writeup-collapse-summary">
+                  <div class="text-sm text-[var(--journal-muted)]">
+                    {{
+                      submissionLoading
+                        ? '正在同步你的 writeup...'
+                        : myWriteup?.updated_at
+                          ? `最近更新：${formatWriteupTime(myWriteup.updated_at)}`
+                          : '还没有提交记录，可以先保存草稿。'
+                    }}
+                  </div>
+                  <span class="writeup-collapse-action">
+                    {{ writeupEditorExpanded ? '收起写题解' : '展开写题解' }}
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            <div
+              v-if="writeupEditorExpanded"
+              class="mt-6"
+            >
+              <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div class="max-w-2xl space-y-3">
+                  <div>
+                    <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
+                      解题过程复盘
+                    </h2>
+                    <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
+                      把思路、关键利用步骤和踩坑点整理成一份自己的
+                      writeup。草稿可反复保存，正式提交后教师会在分析页看到你的状态与评语。
+                    </p>
+                  </div>
+                </div>
+
+                <div class="writeup-side-note">
+                  <div
+                    class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-accent)]"
+                  >
+                    Review Focus
+                  </div>
+                  <div class="mt-3 text-sm leading-6 text-[var(--journal-ink)]">
+                    重点说明你如何定位突破口、怎样验证利用链、哪里走过弯路。
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+                <label class="writeup-field">
+                  <span class="writeup-field-label">标题</span>
+                  <input
+                    v-model="writeupTitle"
+                    type="text"
+                    maxlength="256"
+                    placeholder="例如：从回显异常到拿到 flag 的完整链路"
+                    class="challenge-input w-full rounded-2xl border px-4 py-3 text-sm transition-colors focus:outline-none"
+                  >
+                </label>
+
+                <div class="writeup-meta-grid">
+                  <div class="writeup-meta-card">
+                    <div class="writeup-meta-label">
+                      当前状态
+                    </div>
+                    <div class="writeup-meta-value">
+                      {{ submissionStatusLabel(myWriteup?.submission_status) }}
+                    </div>
+                  </div>
+                  <div class="writeup-meta-card">
+                    <div class="writeup-meta-label">
+                      评阅结果
+                    </div>
+                    <div class="writeup-meta-value">
+                      {{ reviewStatusLabel(myWriteup?.review_status) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <label class="writeup-field mt-4 block">
+                <span class="writeup-field-label">正文</span>
+                <textarea
+                  v-model="writeupContent"
+                  rows="10"
+                  placeholder="建议按『题目理解 → 利用过程 → 核心 payload / 证据 → 踩坑点』组织。"
+                  class="challenge-input writeup-textarea w-full rounded-[24px] border px-4 py-4 text-sm leading-7 transition-colors focus:outline-none"
+                />
+              </label>
+
+              <div
+                v-if="myWriteup?.review_comment"
+                class="writeup-feedback-panel mt-5"
+              >
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div
+                      class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--journal-accent)]"
+                    >
+                      Teacher Feedback
+                    </div>
+                    <div class="mt-2 text-sm text-[var(--journal-muted)]">
+                      {{ reviewStatusLabel(myWriteup.review_status) }}
+                    </div>
+                  </div>
+                  <div
+                    v-if="myWriteup.reviewed_at"
+                    class="text-xs text-[var(--journal-muted)]"
+                  >
+                    {{ formatWriteupTime(myWriteup.reviewed_at) }}
+                  </div>
+                </div>
+                <p class="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--journal-ink)]">
+                  {{ myWriteup.review_comment }}
+                </p>
+              </div>
+
+              <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="text-sm text-[var(--journal-muted)]">
+                  {{
+                    submissionLoading
+                      ? '正在同步你的 writeup...'
+                      : myWriteup?.updated_at
+                        ? `最近更新：${formatWriteupTime(myWriteup.updated_at)}`
+                        : '还没有提交记录，可以先保存草稿。'
+                  }}
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    :disabled="submissionLoading || submissionSaving !== null"
+                    class="challenge-btn-outline"
+                    @click="saveWriteup('draft')"
+                  >
+                    {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
+                  </button>
+                  <button
+                    :disabled="submissionLoading || submissionSaving !== null"
+                    class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                    @click="saveWriteup('submitted')"
+                  >
+                    {{ submissionSaving === 'submitted' ? '提交中...' : '正式提交' }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
 
@@ -419,7 +442,6 @@ import {
   getChallengeWriteup,
   upsertChallengeWriteupSubmission,
   submitFlag,
-  unlockHint,
 } from '@/api/challenge'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
 import { useChallengeInstance } from '@/composables/useChallengeInstance'
@@ -445,6 +467,7 @@ const challenge = ref<ChallengeDetailData | null>(null)
 const loading = ref(false)
 const submitting = ref(false)
 const writeupVisible = ref(false)
+const writeupEditorExpanded = ref(false)
 const writeupLoading = ref(false)
 const writeup = ref<ChallengeWriteupData | null>(null)
 const myWriteup = ref<SubmissionWriteupData | null>(null)
@@ -453,12 +476,12 @@ const submissionSaving = ref<SubmissionWriteupStatus | null>(null)
 const writeupTitle = ref('')
 const writeupContent = ref('')
 const flagInput = ref('')
+const expandedHintLevels = ref<number[]>([])
 const submitResult = ref<{
   variant: 'success' | 'error' | 'pending'
   className: string
   message: string
 } | null>(null)
-const unlockingLevel = ref<number | null>(null)
 const {
   instance,
   loading: instanceLoading,
@@ -570,6 +593,22 @@ async function toggleWriteup() {
   }
 }
 
+function toggleWriteupEditor() {
+  writeupEditorExpanded.value = !writeupEditorExpanded.value
+}
+
+function isHintExpanded(level: number): boolean {
+  return expandedHintLevels.value.includes(level)
+}
+
+function toggleHint(level: number): void {
+  if (isHintExpanded(level)) {
+    expandedHintLevels.value = expandedHintLevels.value.filter((item) => item !== level)
+    return
+  }
+  expandedHintLevels.value = [...expandedHintLevels.value, level]
+}
+
 async function submitFlagHandler() {
   if (!challenge.value || !flagInput.value.trim()) return
   submitting.value = true
@@ -609,22 +648,6 @@ async function submitFlagHandler() {
     }
   } finally {
     submitting.value = false
-  }
-}
-
-async function unlockHintHandler(level: number) {
-  if (!challenge.value) return
-  unlockingLevel.value = level
-  try {
-    const result = await unlockHint(challenge.value.id, level)
-    challenge.value.hints = challenge.value.hints.map((hint) =>
-      hint.level === level ? result.hint : hint
-    )
-    toast.success('提示已解锁')
-  } catch {
-    toast.error('解锁提示失败')
-  } finally {
-    unlockingLevel.value = null
   }
 }
 
@@ -777,11 +800,13 @@ watch(
   challengeId,
   () => {
     writeupVisible.value = false
+    writeupEditorExpanded.value = false
     writeup.value = null
     myWriteup.value = null
     writeupTitle.value = ''
     writeupContent.value = ''
     flagInput.value = ''
+    expandedHintLevels.value = []
     submitResult.value = null
     void Promise.all([loadChallenge(), loadMyWriteupSubmission()])
   },
@@ -883,6 +908,38 @@ watch(
   border-radius: 20px;
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
   padding: 1rem 1.1rem;
+}
+
+.writeup-collapse-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.writeup-collapse-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.writeup-collapse-action {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(99, 102, 241, 0.08);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--journal-accent);
+}
+
+@media (min-width: 1024px) {
+  .writeup-collapse-summary {
+    align-items: flex-end;
+    text-align: right;
+  }
 }
 
 .writeup-field {
@@ -987,6 +1044,29 @@ watch(
 
 .hint-item + .hint-item {
   border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+}
+
+.hint-toggle {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.hint-toggle-state {
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(79, 70, 229, 0.16);
+  background: rgba(79, 70, 229, 0.08);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--journal-accent);
 }
 
 :global([data-theme='dark']) .journal-shell {

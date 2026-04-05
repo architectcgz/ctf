@@ -101,7 +101,6 @@ type ReviewArchiveSummary struct {
 	EvidenceEventCount     int        `json:"evidence_event_count"`
 	WriteupCount           int        `json:"writeup_count"`
 	ManualReviewCount      int        `json:"manual_review_count"`
-	HintUnlockCount        int        `json:"hint_unlock_count"`
 	CorrectSubmissionCount int        `json:"correct_submission_count"`
 	LastActivityAt         *time.Time `json:"last_activity_at,omitempty"`
 }
