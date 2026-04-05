@@ -94,6 +94,46 @@
             </button>
           </div>
 
+          <div
+            v-if="challenge.hints.length > 0"
+            class="challenge-panel p-6"
+          >
+            <h2 class="mb-4 text-lg font-semibold text-[var(--journal-ink)]">
+              提示系统
+            </h2>
+            <div class="hint-list">
+              <div
+                v-for="hint in challenge.hints"
+                :key="hint.id"
+                class="hint-item"
+              >
+                <button
+                  type="button"
+                  class="hint-toggle"
+                  :aria-expanded="isHintExpanded(hint.level)"
+                  @click="toggleHint(hint.level)"
+                >
+                  <div class="min-w-0">
+                    <div class="text-sm font-medium text-[var(--journal-ink)]">
+                      Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
+                    </div>
+                  </div>
+                  <span
+                    class="hint-toggle-state"
+                  >
+                    {{ isHintExpanded(hint.level) ? '收起提示' : '展开提示' }}
+                  </span>
+                </button>
+                <div
+                  v-if="isHintExpanded(hint.level)"
+                  class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"
+                >
+                  {{ hint.content || '暂无提示内容' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="challenge-panel p-6">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -141,46 +181,6 @@
             </div>
           </div>
 
-          <div
-            v-if="challenge.hints.length > 0"
-            class="challenge-panel p-6"
-          >
-            <h2 class="mb-4 text-lg font-semibold text-[var(--journal-ink)]">
-              提示系统
-            </h2>
-            <div class="hint-list">
-              <div
-                v-for="hint in challenge.hints"
-                :key="hint.id"
-                class="hint-item"
-              >
-                <button
-                  type="button"
-                  class="hint-toggle"
-                  :aria-expanded="isHintExpanded(hint.level)"
-                  @click="toggleHint(hint.level)"
-                >
-                  <div class="min-w-0">
-                    <div class="text-sm font-medium text-[var(--journal-ink)]">
-                      Level {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
-                    </div>
-                  </div>
-                  <span
-                    class="hint-toggle-state"
-                  >
-                    {{ isHintExpanded(hint.level) ? '收起提示' : '展开提示' }}
-                  </span>
-                </button>
-                <div
-                  v-if="isHintExpanded(hint.level)"
-                  class="mt-3 text-sm leading-6 text-[var(--journal-muted)]"
-                >
-                  {{ hint.content || '暂无提示内容' }}
-                </div>
-              </div>
-            </div>
-          </div>
-
           <div class="challenge-panel writeup-workbench p-6">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div class="space-y-3">
@@ -191,9 +191,6 @@
                   <h2 class="text-lg font-semibold text-[var(--journal-ink)]">
                     题解
                   </h2>
-                  <p class="mt-2 text-sm leading-7 text-[var(--journal-muted)]">
-                    像 LeetCode 一样在同一块区域里查看推荐题解、社区题解，并维护你自己的复盘。
-                  </p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                   <span class="writeup-status-pill writeup-status-pill--primary">
