@@ -35,6 +35,7 @@ import {
   getEnvironmentTemplates,
   getImages,
   getUsers,
+  listChallengeImports,
   listAdminContestChallenges,
   listContestAWDRoundAttacks,
   listContestAWDRoundTrafficEvents,
@@ -149,6 +150,18 @@ describe('admin contest api contract', () => {
         scoreboard_frozen: true,
       },
     })
+  })
+
+  it('应该在导入记录接口返回空值时兜底为空数组', async () => {
+    requestMock.mockResolvedValue(null)
+
+    const result = await listChallengeImports()
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/authoring/challenge-imports',
+    })
+    expect(result).toEqual([])
   })
 
   it('应该归一化管理员竞赛题目列表中的题目元信息', async () => {
