@@ -228,33 +228,27 @@ const {
           </div>
 
           <div class="topology-hero-aside topology-hero-aside--library grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-            <AppCard
-              variant="metric"
-              accent="primary"
-              :eyebrow="statusCard.eyebrow"
-              :title="statusCard.title"
-              :subtitle="statusCard.subtitle"
-            >
-              <template #header>
-                <div class="template-metric-icon template-metric-icon--primary">
-                  <Blocks class="h-5 w-5" />
-                </div>
-              </template>
-            </AppCard>
+            <section class="template-hero-note template-hero-note--primary">
+              <div class="template-metric-icon template-metric-icon--primary">
+                <Blocks class="h-5 w-5" />
+              </div>
+              <div class="template-hero-note__body">
+                <div class="template-hero-note__label">{{ statusCard.eyebrow }}</div>
+                <div class="template-hero-note__value">{{ statusCard.title }}</div>
+                <p class="template-hero-note__copy">{{ statusCard.subtitle }}</p>
+              </div>
+            </section>
 
-            <AppCard
-              variant="metric"
-              accent="warning"
-              :eyebrow="secondaryCard.eyebrow"
-              :title="secondaryCard.title"
-              :subtitle="secondaryCard.subtitle"
-            >
-              <template #header>
-                <div class="template-metric-icon template-metric-icon--warning">
-                  <GitBranch class="h-5 w-5" />
-                </div>
-              </template>
-            </AppCard>
+            <section class="template-hero-note template-hero-note--warning">
+              <div class="template-metric-icon template-metric-icon--warning">
+                <GitBranch class="h-5 w-5" />
+              </div>
+              <div class="template-hero-note__body">
+                <div class="template-hero-note__label">{{ secondaryCard.eyebrow }}</div>
+                <div class="template-hero-note__value">{{ secondaryCard.title }}</div>
+                <p class="template-hero-note__copy">{{ secondaryCard.subtitle }}</p>
+              </div>
+            </section>
           </div>
         </section>
 
@@ -263,7 +257,7 @@ const {
         <section class="topology-workbench grid gap-6 xl:grid-cols-[1fr_360px]">
           <div class="space-y-6">
             <div class="flex items-center gap-2">
-              <div class="template-toolbar-tabs flex flex-1 items-center gap-1 rounded-2xl border border-border bg-surface p-1">
+              <div class="template-toolbar-tabs">
                 <button
                   v-for="tab in [
                     { id: 'visual', label: '画布', icon: Layout },
@@ -273,11 +267,11 @@ const {
                   ]"
                   :key="tab.id"
                   type="button"
-                  class="flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition"
+                  class="template-toolbar-tab"
                   :class="
                     activeWorkbenchTab === tab.id
-                      ? 'bg-[var(--color-primary)] text-white shadow-md'
-                      : 'text-text-secondary hover:bg-surface-subtle hover:text-text-primary'
+                      ? 'template-toolbar-tab--active'
+                      : 'template-toolbar-tab--idle'
                   "
                   @click="activeWorkbenchTab = (tab.id as any)"
                 >
@@ -290,7 +284,7 @@ const {
               </div>
               <button
                 type="button"
-                class="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-surface text-text-secondary transition hover:border-primary hover:text-primary"
+                class="template-toolbar-refresh"
                 title="刷新数据"
                 @click="void reloadAll()"
               >
@@ -916,13 +910,19 @@ const {
                   当前没有模板数据
                 </div>
 
-                <div
-                  v-else
-                  class="template-library-list"
-                >
-                  <article
-                    v-for="template in templates"
-                    :key="template.id"
+              <div
+                v-else
+                class="template-library-list"
+              >
+                <div class="template-directory-head" aria-hidden="true">
+                  <span>模板</span>
+                  <span>概况</span>
+                  <span>操作</span>
+                </div>
+
+                <article
+                  v-for="template in templates"
+                  :key="template.id"
                     :class="[
                       'template-library-item',
                       selectedTemplateId === template.id
@@ -930,7 +930,7 @@ const {
                         : 'template-library-item--idle',
                     ]"
                   >
-                    <div class="min-w-0">
+                    <div class="template-library-item__main">
                       <div class="truncate text-base font-bold text-text-primary">
                         {{ template.name }}
                       </div>
@@ -957,10 +957,17 @@ const {
                       </div>
                     </div>
 
-                    <div class="mt-4 flex flex-wrap gap-2">
+                    <div class="template-library-item__meta">
+                      <span>入口 {{ template.entry_node_key }}</span>
+                      <span>{{ template.nodes.length }} 节点</span>
+                      <span>{{ template.networks?.length || 0 }} 网络</span>
+                      <span>使用 {{ template.usage_count }}</span>
+                    </div>
+
+                    <div class="template-library-item__actions">
                       <button
                         type="button"
-                        class="template-action-btn flex-1"
+                        class="template-action-btn"
                         @click="loadTemplateIntoDraft(template)"
                       >
                         载入编辑
@@ -1038,30 +1045,24 @@ const {
               subtitle="避免把未生效能力继续暴露成可用配置。"
             >
               <div class="template-boundary-list">
-                <AppCard
-                  variant="action"
-                  accent="warning"
-                  eyebrow="已开放"
-                  subtitle="多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。"
-                >
-                  <template #default />
-                </AppCard>
-                <AppCard
-                  variant="action"
-                  accent="danger"
-                  eyebrow="暂未开放"
-                  subtitle="protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。"
-                >
-                  <template #default />
-                </AppCard>
-                <AppCard
-                  variant="action"
-                  accent="neutral"
-                  eyebrow="建议"
-                  subtitle="继续开放高级能力前，先补参数校验、可视化提示和误操作保护。"
-                >
-                  <template #default />
-                </AppCard>
+                <article class="template-boundary-item template-boundary-item--warning">
+                  <div class="template-boundary-item__label">已开放</div>
+                  <div class="template-boundary-item__copy">
+                    多网络、节点、逻辑连线、粗粒度 allow/deny 策略、模板复用。
+                  </div>
+                </article>
+                <article class="template-boundary-item template-boundary-item--danger">
+                  <div class="template-boundary-item__label">暂未开放</div>
+                  <div class="template-boundary-item__copy">
+                    protocol / ports 级细粒度 ACL 前端字段、模板版本化与批量比对能力。
+                  </div>
+                </article>
+                <article class="template-boundary-item template-boundary-item--neutral">
+                  <div class="template-boundary-item__label">建议</div>
+                  <div class="template-boundary-item__copy">
+                    继续开放高级能力前，先补参数校验、可视化提示和误操作保护。
+                  </div>
+                </article>
               </div>
             </SectionCard>
           </div>
@@ -2160,6 +2161,40 @@ const {
   padding-left: 0;
 }
 
+.topology-page--template-library .template-hero-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.topology-page--template-library .template-hero-note__body {
+  min-width: 0;
+}
+
+.topology-page--template-library .template-hero-note__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .template-hero-note__value {
+  margin-top: 0.42rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library .template-hero-note__copy {
+  margin-top: 0.35rem;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
 .topology-page--template-library .template-metric-icon {
   display: flex;
   height: 2.75rem;
@@ -2203,6 +2238,65 @@ const {
     border-color 150ms ease,
     background 150ms ease,
     color 150ms ease;
+}
+
+.topology-page--template-library .template-toolbar-tabs {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.topology-page--template-library .template-toolbar-tab {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0 0.1rem;
+  border-bottom: 2px solid transparent;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.topology-page--template-library .template-toolbar-tab--idle {
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .template-toolbar-tab--idle:hover {
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library .template-toolbar-tab--active {
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .template-toolbar-refresh {
+  display: inline-flex;
+  height: 2.5rem;
+  width: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--journal-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  color: var(--journal-muted);
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.topology-page--template-library .template-toolbar-refresh:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  color: var(--journal-accent);
 }
 
 .topology-page--template-library .topology-toolbar-btn--ghost,
@@ -2354,6 +2448,19 @@ const {
   gap: 0;
 }
 
+.topology-page--template-library .template-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
+  gap: 1rem;
+  padding: 0 0 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
 .topology-page--template-library .template-toolbar-tabs,
 .topology-page--template-library .template-canvas-mode-banner,
 .topology-page--template-library .template-quick-editor {
@@ -2362,6 +2469,10 @@ const {
 }
 
 .topology-page--template-library .template-library-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
+  align-items: start;
+  gap: 1rem;
   border-radius: 0;
   padding: 1rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -2384,6 +2495,61 @@ const {
 .topology-page--template-library .template-library-item--active {
   border-left: 2px solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+}
+
+.topology-page--template-library .template-library-item__main {
+  min-width: 0;
+}
+
+.topology-page--template-library .template-library-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  align-content: start;
+  padding-top: 0.1rem;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .template-library-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.topology-page--template-library .template-boundary-item {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem 0 1rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.topology-page--template-library .template-boundary-item__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.topology-page--template-library .template-boundary-item__copy {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .template-boundary-item--warning .template-boundary-item__label {
+  color: var(--color-warning);
+}
+
+.topology-page--template-library .template-boundary-item--danger .template-boundary-item__label {
+  color: var(--color-danger);
+}
+
+.topology-page--template-library .template-boundary-item--neutral .template-boundary-item__label {
+  color: var(--journal-accent);
 }
 
 :global([data-theme='dark']) .topology-page--template-library {
@@ -2416,6 +2582,18 @@ const {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .topology-page--template-library .template-directory-head {
+    display: none;
+  }
+
+  .topology-page--template-library .template-library-item {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topology-page--template-library .template-library-item__actions {
+    justify-content: flex-start;
+  }
+
   .topology-page--template-library .topology-hero-aside--library {
     border-left: 0;
     padding-left: 0;
@@ -2430,6 +2608,11 @@ const {
 @media (max-width: 767px) {
   .topology-page--template-library .topology-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .topology-page--template-library .template-toolbar-tabs {
+    gap: 0.75rem;
+    overflow-x: auto;
   }
 
   .topology-page--template-library .template-search-row {
