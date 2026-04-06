@@ -151,7 +151,9 @@ const emit = defineEmits<{
           </div>
 
           <div class="teacher-directory-head">
-            <span>学生</span>
+            <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
+            <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
+            <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
             <span>标签</span>
             <span>状态</span>
             <span>数据</span>
@@ -166,17 +168,16 @@ const emit = defineEmits<{
             :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
             @click="emit('openStudent', student.id)"
           >
-            <div class="teacher-directory-row-main">
-              <div class="teacher-directory-row-index">
-                {{ student.student_no ? `NO.${student.student_no}` : `USER.${student.username}` }}
-              </div>
-              <div class="teacher-directory-row-title-group">
-                <h4 class="teacher-directory-row-title">{{ student.name || student.username }}</h4>
-                <div class="teacher-directory-row-points">@{{ student.username }}</div>
-              </div>
-              <div class="teacher-directory-row-copy">
-                {{ student.student_no || '未设置学号' }}
-              </div>
+            <div class="teacher-directory-cell teacher-directory-cell-student-no">
+              {{ student.student_no || '未设置学号' }}
+            </div>
+
+            <div class="teacher-directory-cell teacher-directory-cell-name">
+              <h4 class="teacher-directory-row-title">{{ student.name || '未设置姓名' }}</h4>
+            </div>
+
+            <div class="teacher-directory-cell teacher-directory-cell-alias">
+              <div class="teacher-directory-row-points">@{{ student.username }}</div>
             </div>
 
             <div class="teacher-directory-row-tags">
@@ -195,7 +196,7 @@ const emit = defineEmits<{
                     : 'teacher-directory-state-chip-empty'
                 "
               >
-                {{ (student.solved_count ?? 0) > 0 ? '有训练记录' : '待开始' }}
+                {{ (student.solved_count ?? 0) > 0 ? '已有解题记录' : '暂无解题记录' }}
               </span>
             </div>
 
@@ -232,6 +233,14 @@ const emit = defineEmits<{
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --teacher-student-directory-columns:
+    minmax(7.5rem, 0.7fr)
+    minmax(10rem, 1fr)
+    minmax(10rem, 0.9fr)
+    minmax(12rem, 0.95fr)
+    minmax(7rem, 0.7fr)
+    minmax(8rem, 0.8fr)
+    minmax(8.5rem, 0.85fr);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
@@ -511,7 +520,7 @@ const emit = defineEmits<{
 
 .teacher-directory-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 8rem 9rem 9rem;
+  grid-template-columns: var(--teacher-student-directory-columns);
   gap: 1rem;
   padding: 0 0 0.75rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -522,9 +531,15 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 
+.teacher-directory-head-cell {
+  min-width: 0;
+  justify-self: stretch;
+  text-align: left;
+}
+
 .teacher-directory-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 8rem 9rem 9rem;
+  grid-template-columns: var(--teacher-student-directory-columns);
   gap: 1rem;
   align-items: center;
   width: 100%;
@@ -546,38 +561,46 @@ const emit = defineEmits<{
   outline: none;
 }
 
-.teacher-directory-row-main {
+.teacher-directory-cell {
   display: grid;
   gap: 0.5rem;
   min-width: 0;
+  align-content: center;
+  justify-self: stretch;
+  text-align: left;
 }
 
-.teacher-directory-row-index,
+.teacher-directory-cell-alias .teacher-directory-row-points,
 .teacher-directory-row-points {
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
-.teacher-directory-row-index {
+.teacher-directory-cell-student-no {
   font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   color: var(--journal-muted);
-}
-
-.teacher-directory-row-title-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem 0.85rem;
+  font-family: 'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 .teacher-directory-row-title {
+  margin: 0;
   min-width: 0;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+}
+
+.teacher-directory-head-cell-student-no,
+.teacher-directory-head-cell-name,
+.teacher-directory-head-cell-alias,
+.teacher-directory-cell-student-no,
+.teacher-directory-cell-name,
+.teacher-directory-cell-alias {
+  justify-self: start;
+  width: 100%;
 }
 
 .teacher-directory-row-points {
