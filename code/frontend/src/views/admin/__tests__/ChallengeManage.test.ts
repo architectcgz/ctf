@@ -125,6 +125,8 @@ describe('ChallengeManage', () => {
 
     const row = wrapper.find('.challenge-row')
     expect(row.find('.challenge-row__identity').exists()).toBe(true)
+    expect(row.find('.challenge-row__title').classes()).toContain('challenge-row__title')
+    expect(row.find('.challenge-row__failure').classes()).toContain('challenge-row__failure')
     expect(row.find('.challenge-row__category').text()).toContain('Web')
     expect(row.find('.challenge-row__difficulty').text()).toContain('简单')
     expect(row.find('.challenge-row__points').text()).toContain('100 pts')
@@ -152,6 +154,9 @@ describe('ChallengeManage', () => {
       /\.challenge-row,\s*\.queue-row\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/s
     )
     expect(challengeManageSource).not.toMatch(/\.challenge-list\s*\{[^}]*--challenge-list-columns:[^;]*\bauto;/s)
+    expect(challengeManageSource).toContain('.challenge-row__title')
+    expect(challengeManageSource).toMatch(/\.challenge-row__title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(challengeManageSource).toMatch(/\.challenge-row__failure\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 
   it('应该根据 query 切到待确认导入，并支持切换到导入标签后直接看到题目包示例', async () => {
