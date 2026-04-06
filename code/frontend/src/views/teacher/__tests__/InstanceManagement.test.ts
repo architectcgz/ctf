@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
@@ -26,6 +26,7 @@ vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('InstanceManagement', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
@@ -64,6 +65,10 @@ describe('InstanceManagement', () => {
     }, 'token')
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('应该按教师所属班级加载实例', async () => {
     const wrapper = mount(InstanceManagement, {
       global: {
@@ -88,7 +93,7 @@ describe('InstanceManagement', () => {
     expect(wrapper.text()).toContain('@alice')
   })
 
-  it('应该支持筛选并销毁实例', async () => {
+  it('应该支持输入后自动筛选并销毁实例', async () => {
     const wrapper = mount(InstanceManagement, {
       global: {
         components: {
@@ -103,7 +108,8 @@ describe('InstanceManagement', () => {
     const inputs = wrapper.findAll('input')
     await inputs[0].setValue('ali')
     await inputs[1].setValue('S-1001')
-    await wrapper.find('button[type="submit"]').trigger('submit')
+    expect(teacherApiMocks.getTeacherInstances).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(250)
     await flushPromises()
 
     expect(teacherApiMocks.getTeacherInstances).toHaveBeenLastCalledWith({

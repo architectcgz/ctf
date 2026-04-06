@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import UserManage from '../UserManage.vue'
@@ -25,7 +25,12 @@ vi.mock('@/api/admin', async () => {
 
 describe('UserManage', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('应该渲染真实用户列表', async () => {
@@ -138,5 +143,48 @@ describe('UserManage', () => {
     expect(rows[1]?.text()).not.toContain('工号：')
     expect(wrapper.findAll('.user-action-btn')).toHaveLength(4)
     expect(wrapper.find('.user-table .admin-inline-chip').exists()).toBe(false)
+  })
+
+  it('文本筛选应在节流后再请求用户列表', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    adminApiMocks.getUsers.mockClear()
+
+    const inputs = wrapper.findAll('input.admin-input')
+    await inputs[0].setValue('alice')
+    await inputs[1].setValue('S001')
+    await inputs[2].setValue('T001')
+
+    expect(adminApiMocks.getUsers).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(adminApiMocks.getUsers).toHaveBeenCalledTimes(1)
+    expect(adminApiMocks.getUsers).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'alice',
+      student_no: 'S001',
+      teacher_no: 'T001',
+      role: undefined,
+      status: undefined,
+    })
   })
 })

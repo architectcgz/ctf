@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDebounceFn } from '@vueuse/core'
 
 import { getClasses, getClassStudents } from '@/api/teacher'
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
@@ -19,6 +20,9 @@ const loadingClasses = ref(false)
 const loadingStudents = ref(false)
 const error = ref<string | null>(null)
 let latestStudentRequestID = 0
+const scheduleStudentSearch = useDebounceFn((className: string) => {
+  void loadStudents(className)
+}, 250)
 
 async function loadClasses(): Promise<void> {
   loadingClasses.value = true
@@ -99,7 +103,7 @@ function updateStudentNoQuery(value: string): void {
 
 watch([searchQuery, studentNoQuery], async () => {
   if (!selectedClassName.value) return
-  await loadStudents(selectedClassName.value)
+  scheduleStudentSearch(selectedClassName.value)
 })
 
 onMounted(() => {

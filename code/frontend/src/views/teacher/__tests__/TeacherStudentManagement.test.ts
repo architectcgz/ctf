@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
@@ -33,6 +33,7 @@ function deferred<T>() {
 
 describe('TeacherStudentManagement', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     setActivePinia(createPinia())
     localStorage.clear()
     pushMock.mockReset()
@@ -65,6 +66,10 @@ describe('TeacherStudentManagement', () => {
     )
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('应该支持搜索学生并进入学员分析页', async () => {
     const wrapper = mount(TeacherStudentManagement, {
       global: {
@@ -86,6 +91,8 @@ describe('TeacherStudentManagement', () => {
 
     const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
     await searchInput.setValue('Alice')
+    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(250)
     await flushPromises()
 
     expect(teacherApiMocks.getClassStudents).toHaveBeenLastCalledWith('Class A', {
@@ -136,7 +143,10 @@ describe('TeacherStudentManagement', () => {
 
     const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
     await searchInput.setValue('A')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
     await searchInput.setValue('Ali')
+    vi.advanceTimersByTime(250)
 
     fastRequest.resolve([
       { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },

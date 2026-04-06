@@ -25,6 +25,14 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  const promise = new Promise<T>((nextResolve) => {
+    resolve = nextResolve
+  })
+  return { promise, resolve }
+}
+
 describe('useAdminNotificationPublisher', () => {
   beforeEach(() => {
     adminApiMocks.publishAdminNotification.mockReset()
@@ -119,5 +127,74 @@ describe('useAdminNotificationPublisher', () => {
     })
     expect(result).toEqual({ batch_id: 'batch-1', recipient_count: 42 })
     expect(toastMocks.success).toHaveBeenCalled()
+  })
+
+  it('空关键词时不应请求用户搜索，并且过期结果不应覆盖最新结果', async () => {
+    const slowRequest = deferred<{
+      list: Array<{
+        id: string
+        username: string
+        name?: string
+        status: 'active'
+        roles: ['student']
+        created_at: string
+      }>
+      total: number
+      page: number
+      page_size: number
+    }>()
+
+    adminApiMocks.getUsers
+      .mockReset()
+      .mockImplementationOnce(() => slowRequest.promise)
+      .mockResolvedValueOnce({
+        list: [
+          {
+            id: 'u-2',
+            username: 'alice',
+            name: 'Alice',
+            status: 'active',
+            roles: ['student'],
+            created_at: '2026-03-31T08:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      })
+
+    const publisher = useAdminNotificationPublisher()
+    const slowSearch = publisher.searchUsers('bob')
+    await publisher.searchUsers('alice')
+
+    expect(publisher.userOptions.value).toEqual([
+      expect.objectContaining({ username: 'alice' }),
+    ])
+
+    slowRequest.resolve({
+      list: [
+        {
+          id: 'u-1',
+          username: 'bob',
+          name: 'Bob',
+          status: 'active',
+          roles: ['student'],
+          created_at: '2026-03-31T08:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    await slowSearch
+
+    expect(publisher.userOptions.value).toEqual([
+      expect.objectContaining({ username: 'alice' }),
+    ])
+
+    adminApiMocks.getUsers.mockClear()
+    await publisher.searchUsers('   ')
+    expect(adminApiMocks.getUsers).not.toHaveBeenCalled()
+    expect(publisher.userOptions.value).toEqual([])
   })
 })
