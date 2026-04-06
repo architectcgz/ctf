@@ -6,8 +6,8 @@ import instanceManagementSource from '@/components/teacher/instance-management/T
 import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import teacherSurfaceSource from '@/assets/styles/teacher-surface.css?raw'
 
-const tableWrapperPattern =
-  /el-table__inner-wrapper[\s\S]*el-table__body-wrapper[\s\S]*el-table__header-wrapper[\s\S]*el-table__empty-block/s
+const teacherDirectoryPattern =
+  /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*teacher-directory-row-main[\s\S]*teacher-directory-row-tags/s
 
 describe('teacher dark surface alignment', () => {
   it('teacher management pages should use shared teacher surface classes', () => {
@@ -17,13 +17,19 @@ describe('teacher dark surface alignment', () => {
     expect(reportExportSource).toContain('teacher-surface')
   })
 
-  it('target pages should reuse dashboard journal surface vocabulary instead of page-local skins', () => {
-    expect(classManagementSource).toContain('journal-brief')
-    expect(classManagementSource).toContain('journal-metric')
+  it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {
+    expect(classManagementSource).toContain('journal-eyebrow')
+    expect(classManagementSource).toContain('teacher-summary-item')
+    expect(classManagementSource).toContain('teacher-directory-head')
+    expect(classManagementSource).toContain('teacher-directory-row')
     expect(studentManagementSource).toContain('journal-eyebrow')
-    expect(studentManagementSource).toContain('journal-metric')
-    expect(instanceManagementSource).toContain('journal-brief')
-    expect(instanceManagementSource).toContain('journal-metric')
+    expect(studentManagementSource).toContain('teacher-controls')
+    expect(studentManagementSource).toContain('teacher-directory-head')
+    expect(studentManagementSource).toContain('teacher-directory-row')
+    expect(instanceManagementSource).toContain('journal-eyebrow')
+    expect(instanceManagementSource).toContain('teacher-controls')
+    expect(instanceManagementSource).toContain('teacher-directory-head')
+    expect(instanceManagementSource).toContain('teacher-directory-row')
     expect(reportExportSource).toContain('journal-eyebrow')
     expect(reportExportSource).toContain('journal-brief')
     expect(reportExportSource).toContain('journal-metric')
@@ -34,7 +40,8 @@ describe('teacher dark surface alignment', () => {
 
   it('class management should not leak element-plus primary plain button chrome', () => {
     expect(classManagementSource).not.toContain('<ElButton type="primary" plain')
-    expect(classManagementSource).toContain("class=\"teacher-btn teacher-surface-btn\"")
+    expect(classManagementSource).toContain('class="teacher-btn teacher-btn--primary"')
+    expect(classManagementSource).toContain('class="teacher-btn teacher-btn--ghost"')
   })
 
   it('shared teacher surface should not remap base theme background tokens darker than dashboard', () => {
@@ -49,10 +56,13 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).not.toMatch(/--color-bg-base:\s*var\(--theme-bg-base\);/)
   })
 
-  it('teacher tables should cover table wrappers and empty state layers', () => {
-    expect(classManagementSource).toMatch(tableWrapperPattern)
-    expect(studentManagementSource).toMatch(tableWrapperPattern)
-    expect(instanceManagementSource).toMatch(tableWrapperPattern)
+  it('teacher management list pages should render shared directory shells for rows and empty states', () => {
+    expect(classManagementSource).toMatch(teacherDirectoryPattern)
+    expect(studentManagementSource).toMatch(teacherDirectoryPattern)
+    expect(instanceManagementSource).toMatch(teacherDirectoryPattern)
+    expect(classManagementSource).toContain('teacher-empty-state')
+    expect(studentManagementSource).toContain('teacher-empty-state')
+    expect(instanceManagementSource).toContain('teacher-empty-state')
   })
 
   it('student and instance pages should not keep darker or louder local skins than dashboard', () => {
