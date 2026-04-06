@@ -557,8 +557,8 @@ async function handleDownload(): Promise<void> {
 .teacher-management-shell {
   --journal-ink:var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));

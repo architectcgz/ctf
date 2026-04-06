@@ -3,9 +3,11 @@ import { reactive, ref } from 'vue'
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
+import { useTheme } from '@/composables/useTheme'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
+const { theme, brand, availableBrands, setBrand } = useTheme()
 
 const passwordSaving = ref(false)
 const passwordError = ref<string | null>(null)
@@ -229,6 +231,43 @@ async function submitPasswordChange(): Promise<void> {
             <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
           </div>
         </div>
+
+        <div class="security-theme-block">
+          <div class="security-section-head">
+            <div>
+              <div class="journal-eyebrow journal-eyebrow-soft">Theme</div>
+              <h2 class="security-section-title">主题色</h2>
+            </div>
+          </div>
+
+          <p class="security-theme-copy">
+            当前模式：{{ theme === 'dark' ? '深色' : '浅色' }}。主题色仅保存在当前浏览器。
+          </p>
+
+          <fieldset class="security-theme-fieldset">
+            <legend class="sr-only">选择主题色</legend>
+            <label
+              v-for="option in availableBrands"
+              :key="option.value"
+              class="security-theme-option"
+              :class="{ 'security-theme-option--active': brand === option.value }"
+            >
+              <input
+                class="sr-only"
+                type="radio"
+                name="theme-brand"
+                :value="option.value"
+                :checked="brand === option.value"
+                @change="setBrand(option.value)"
+              />
+              <span class="security-theme-option__swatch" :data-brand-preview="option.value" />
+              <span class="security-theme-option__body">
+                <span class="security-theme-option__label">{{ option.label }}</span>
+                <span class="security-theme-option__description">{{ option.description }}</span>
+              </span>
+            </label>
+          </fieldset>
+        </div>
       </aside>
     </div>
   </section>
@@ -238,8 +277,8 @@ async function submitPasswordChange(): Promise<void> {
 .journal-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-accent-strong: #1d4ed8;
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
@@ -468,6 +507,89 @@ async function submitPasswordChange(): Promise<void> {
 .security-tip-item:last-child {
   border-bottom: 0;
   padding-bottom: 0;
+}
+
+.security-theme-block {
+  margin-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
+  padding-top: 1rem;
+}
+
+.security-theme-copy {
+  font-size: 0.84rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.security-theme-fieldset {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.security-theme-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+  padding: 0.85rem 0.95rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+
+.security-theme-option:hover,
+.security-theme-option:has(input:focus-visible) {
+  border-color: color-mix(in srgb, var(--journal-accent) 38%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
+}
+
+.security-theme-option--active {
+  border-color: color-mix(in srgb, var(--journal-accent) 54%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
+}
+
+.security-theme-option__swatch {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  margin-top: 0.16rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: var(--color-primary);
+}
+
+.security-theme-option__swatch[data-brand-preview='green'] {
+  background: #2f8f5b;
+}
+
+.security-theme-option__swatch[data-brand-preview='cyan'] {
+  background: #0f7f99;
+}
+
+.security-theme-option__swatch[data-brand-preview='blue'] {
+  background: #2563eb;
+}
+
+.security-theme-option__body {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.security-theme-option__label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.security-theme-option__description {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
 }
 
 .security-actions {

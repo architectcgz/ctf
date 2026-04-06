@@ -79,6 +79,8 @@ describe('TeacherStudentManagement', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('学生管理')
+    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
 

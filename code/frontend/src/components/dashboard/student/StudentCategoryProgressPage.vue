@@ -198,8 +198,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
 <style scoped>
 .journal-shell {
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);

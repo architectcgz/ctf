@@ -290,7 +290,7 @@ const awdCount = computed(() => props.awdContests.length)
   bottom: 0.95rem;
   width: 3px;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(37, 99, 235, 0.92), rgba(59, 130, 246, 0.2));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink)), color-mix(in srgb, var(--journal-accent) 20%, transparent));
 }
 
 .admin-section-head-intro .journal-note-label {
@@ -302,8 +302,8 @@ const awdCount = computed(() => props.awdContests.length)
   align-items: center;
   gap: 0.45rem;
   border-radius: 999px;
-  border: 1px solid rgba(37, 99, 235, 0.16);
-  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
   padding: 0.48rem 0.9rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -329,7 +329,7 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .admin-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .admin-btn-ghost {
@@ -339,7 +339,7 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .admin-btn-ghost:hover {
-  border-color: rgba(37, 99, 235, 0.28);
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
   color: var(--journal-accent);
 }
 
@@ -357,7 +357,7 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 .admin-input:focus {
-  border-color: rgba(37, 99, 235, 0.42);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
 
 .contest-empty-state {
@@ -370,7 +370,7 @@ const awdCount = computed(() => props.awdContests.length)
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #60a5fa;
+  --journal-accent: var(--color-primary-hover);
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
