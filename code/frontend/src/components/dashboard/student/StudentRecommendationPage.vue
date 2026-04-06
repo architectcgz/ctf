@@ -25,11 +25,9 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
       <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div class="journal-eyebrow">Priority Focus</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
+          <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
             补短板计划
-          </h2>
+          </h1>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
             优先看最适合当前阶段的题目。
           </p>
@@ -46,7 +44,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
             </template>
             <span
               v-else
-              class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
+              class="journal-weak-tag journal-weak-tag--stable"
             >
               暂无明显短板
             </span>
@@ -117,7 +115,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
                       {{ difficultyLabel(item.difficulty) }}
                     </span>
                     <span
-                      class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium uppercase text-slate-500"
+                      class="journal-category-chip"
                     >
                       {{ item.category }}
                     </span>
@@ -136,12 +134,12 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
               <div class="journal-eyebrow journal-eyebrow-soft">Full List</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">推荐列表</h3>
             </div>
-            <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部</button>
+            <button class="journal-btn-primary" @click="emit('openChallenges')">浏览全部</button>
           </div>
 
           <div
             v-if="recommendations.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
             当前没有推荐题目，可以先去挑战列表探索新的方向。
           </div>
@@ -172,7 +170,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
                       {{ difficultyLabel(item.difficulty) }}
                     </span>
                     <span
-                      class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium uppercase text-slate-500"
+                      class="journal-category-chip"
                     >
                       {{ item.category }}
                     </span>
@@ -196,14 +194,20 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
@@ -212,14 +216,21 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
+.journal-page-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
 .journal-brief {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);
 }
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--journal-soft-border);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
   padding: 0.875rem 1rem;
 }
@@ -236,8 +247,8 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -248,8 +259,8 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-  border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  border-color: var(--journal-soft-border);
+  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
 }
 
 .journal-note-value {
@@ -259,35 +270,58 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   color: var(--journal-ink);
 }
 
+.journal-btn-primary,
 .journal-btn-outline {
-  border: 1px solid var(--journal-border);
+  min-height: 34px;
   border-radius: 10px;
-  background: var(--journal-surface);
   padding: 0.4rem 1rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--journal-muted);
   transition: all 0.15s;
 }
 
+.journal-btn-outline {
+  border: 1px solid var(--journal-control-border);
+  border-radius: 10px;
+  background: var(--journal-surface);
+  color: var(--journal-muted);
+}
+
 .journal-btn-outline:hover {
-  border-color: #6366f1;
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
   color: var(--journal-accent-strong);
 }
 
+.journal-btn-primary {
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
+}
+
+.journal-btn-primary:hover {
+  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.journal-btn-primary:focus-visible,
+.journal-btn-outline:focus-visible,
+.recommend-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline-offset: 2px;
+}
+
 .recommend-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .recommend-section + .recommend-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .recommend-list {
   border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
@@ -297,7 +331,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 }
 
 .recommend-item + .recommend-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .recommend-item:hover {
@@ -322,15 +356,50 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 }
 
 .rec-index--rest {
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   color: var(--journal-accent);
+}
+
+.journal-category-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--journal-soft-border);
+  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
+  padding: 0.125rem 0.5rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-weak-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--journal-accent-strong);
+}
+
+.journal-weak-tag--stable {
+  border-color: color-mix(in srgb, #16a34a 22%, transparent);
+  background: color-mix(in srgb, #16a34a 10%, transparent);
+  color: #15803d;
 }
 
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
@@ -348,5 +417,12 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 :global([data-theme='dark']) .journal-note,
 :global([data-theme='dark']) .recommend-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+@media (max-width: 767px) {
+  .journal-btn-primary,
+  .journal-btn-outline {
+    min-height: 36px;
+  }
 }
 </style>
