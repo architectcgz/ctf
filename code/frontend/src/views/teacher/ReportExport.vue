@@ -236,246 +236,249 @@ async function handleDownload(): Promise<void> {
   <section
     class="report-shell report-hero journal-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <header class="report-header">
-      <div class="report-header__intro">
-        <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Export</div>
-        <h1 class="report-title">报告导出</h1>
-        <p class="report-copy">
-          先在页内确认班级预览，再创建导出任务；最近一次任务状态与下载入口保持在同一工作面。
-        </p>
-      </div>
+    <div class="report-page">
+      <header class="report-topbar">
+        <div class="report-header__intro">
+          <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Export</div>
+          <h1 class="report-title">报告导出</h1>
+          <p class="report-copy">
+            先在页内确认班级预览，再创建导出任务；最近一次任务状态与下载入口保持在同一工作面。
+          </p>
+        </div>
+      </header>
 
-      <div class="report-kpi-grid">
-        <article class="journal-brief journal-metric report-kpi-card">
-          <div class="report-kpi-label">当前账号</div>
-          <div class="report-kpi-value">{{ authStore.user?.username || '-' }}</div>
-          <div class="report-kpi-hint">用于发起当前导出任务的教师账号</div>
-        </article>
-        <article class="journal-brief journal-metric report-kpi-card">
-          <div class="report-kpi-label">默认班级</div>
-          <div class="report-kpi-value">{{ authStore.user?.class_name || '未绑定' }}</div>
-          <div class="report-kpi-hint">留空时将优先使用当前账号绑定班级</div>
-        </article>
-        <article class="journal-brief journal-metric report-kpi-card">
-          <div class="report-kpi-label">当前格式</div>
-          <div class="report-kpi-value">{{ selectedFormatLabel }}</div>
-          <div class="report-kpi-hint">{{ selectedFormatHint }}</div>
-        </article>
-        <article class="journal-brief journal-metric report-kpi-card">
-          <div class="report-kpi-label">最近状态</div>
-          <div class="report-kpi-value">{{ latestStatusMeta.label }}</div>
-          <div class="report-kpi-hint">
-            {{
-              latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。'
-            }}
+      <section class="report-summary">
+        <div class="report-summary-title">Export Snapshot</div>
+        <div class="report-summary-grid">
+          <div class="report-summary-item">
+            <div class="report-summary-label">当前账号</div>
+            <div class="report-summary-value">{{ authStore.user?.username || '-' }}</div>
+            <div class="report-summary-helper">用于发起当前导出任务的教师账号</div>
           </div>
-        </article>
-      </div>
-    </header>
-
-    <div class="report-hero-divider" />
-
-    <div class="report-workspace">
-      <div class="report-main">
-        <section class="teacher-surface-section report-panel">
-          <div class="report-section-head">
-            <div>
-              <div class="teacher-surface-eyebrow journal-eyebrow">Export Task</div>
-              <h2 class="report-section-title">创建导出任务</h2>
+          <div class="report-summary-item">
+            <div class="report-summary-label">默认班级</div>
+            <div class="report-summary-value">{{ authStore.user?.class_name || '未绑定' }}</div>
+            <div class="report-summary-helper">留空时将优先使用当前账号绑定班级</div>
+          </div>
+          <div class="report-summary-item">
+            <div class="report-summary-label">当前格式</div>
+            <div class="report-summary-value">{{ selectedFormatLabel }}</div>
+            <div class="report-summary-helper">{{ selectedFormatHint }}</div>
+          </div>
+          <div class="report-summary-item">
+            <div class="report-summary-label">最近状态</div>
+            <div class="report-summary-value">{{ latestStatusMeta.label }}</div>
+            <div class="report-summary-helper">
+              {{ latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。' }}
             </div>
-            <p class="report-section-copy">预览和导出彼此独立，不会影响当前页面浏览。</p>
           </div>
+        </div>
+      </section>
 
-          <div class="report-command-grid">
-            <div class="space-y-4">
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--journal-muted)]">班级名称</span>
-                <input
-                  v-model="form.className"
-                  type="text"
-                  :placeholder="classNamePlaceholder"
-                  class="report-field w-full px-4 py-3 text-sm outline-none transition"
-                />
-              </label>
+      <div class="report-hero-divider" />
 
-              <fieldset class="space-y-2">
-                <legend class="text-sm text-[var(--journal-muted)]">导出格式</legend>
-                <div class="report-format-grid">
-                  <label
-                    class="report-format-option"
-                    :class="{ 'report-format-option--active': form.format === 'pdf' }"
-                  >
-                    <input v-model="form.format" type="radio" value="pdf" class="mt-1" />
-                    <span>
-                      <span class="block font-medium text-[var(--journal-ink)]">PDF</span>
-                      <span class="mt-1 block text-sm text-[var(--journal-muted)]">
-                        适合打印、归档和正式汇报。
-                      </span>
-                    </span>
-                  </label>
-
-                  <label
-                    class="report-format-option"
-                    :class="{ 'report-format-option--active': form.format === 'excel' }"
-                  >
-                    <input v-model="form.format" type="radio" value="excel" class="mt-1" />
-                    <span>
-                      <span class="block font-medium text-[var(--journal-ink)]">Excel</span>
-                      <span class="mt-1 block text-sm text-[var(--journal-muted)]">
-                        适合继续分析、筛选和二次加工。
-                      </span>
-                    </span>
-                  </label>
-                </div>
-              </fieldset>
-
-              <div class="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  :disabled="previewLoading"
-                  class="teacher-btn"
-                  @click="openPreviewDialog"
-                >
-                  {{ previewLoading ? '加载预览中...' : '打开报告预览' }}
-                </button>
-                <button
-                  type="button"
-                  :disabled="submitting"
-                  class="teacher-btn teacher-btn--primary"
-                  @click="handleExport"
-                >
-                  {{ submitting ? '提交中...' : '创建导出任务' }}
-                </button>
-              </div>
-            </div>
-
-            <aside class="report-side-notes">
-              <article class="report-note">
-                <div class="report-note-label">当前目标班级</div>
-                <div class="report-note-value">{{ normalizedClassNameText }}</div>
-                <div class="report-note-helper">导出与预览都将以这个班级名称作为优先目标。</div>
-              </article>
-              <article class="report-note">
-                <div class="report-note-label">当前导出格式</div>
-                <div class="report-note-value">{{ selectedFormatLabel }}</div>
-                <div class="report-note-helper">{{ selectedFormatHint }}</div>
-              </article>
-              <article class="report-note">
-                <div class="report-note-label">建议流程</div>
-                <ol class="report-guide-list">
-                  <li>1. 先打开报告预览，确认当前班级数据内容。</li>
-                  <li>2. 需要留档时，再创建后台导出任务。</li>
-                  <li>3. 任务完成后下载文件，生成中会自动轮询状态。</li>
-                </ol>
-              </article>
-            </aside>
-          </div>
-        </section>
-
-        <section class="teacher-surface-section report-panel">
-          <div class="report-section-head">
-            <div>
-              <div class="teacher-surface-eyebrow journal-eyebrow">Latest Task</div>
-              <h2 class="report-section-title">最近一次任务</h2>
-            </div>
-            <p class="report-section-copy">导出状态、下载入口和任务元数据统一收在这里。</p>
-          </div>
-
-          <AppEmpty
-            v-if="!latestExport"
-            class="mt-5"
-            title="还没有创建导出任务"
-            description="先创建一次班级报告任务，这里会展示最近一次任务状态。"
-            icon="FileChartColumnIncreasing"
-          />
-
-          <div v-else class="mt-5 space-y-4">
-            <div class="report-status-banner">
+      <div class="report-workspace">
+        <div class="report-main">
+          <section class="report-flat-section">
+            <div class="report-section-head">
               <div>
-                <div class="report-note-label">任务编号</div>
-                <div class="report-note-value">#{{ latestExport.result.report_id }}</div>
-                <div class="report-note-helper">{{ derivedDownloadHint }}</div>
+                <div class="teacher-surface-eyebrow journal-eyebrow">Export Task</div>
+                <h2 class="report-section-title">创建导出任务</h2>
               </div>
-              <span class="report-status-chip" :class="latestStatusMeta.chipClass">
-                {{ latestStatusMeta.label }}
-              </span>
+              <p class="report-section-copy">预览和导出彼此独立，不会影响当前页面浏览。</p>
             </div>
 
-            <div class="report-kpi-grid report-kpi-grid--task">
-              <article class="journal-brief journal-metric report-kpi-card">
-                <div class="report-kpi-label">班级</div>
-                <div class="report-kpi-value">{{ latestExport.className }}</div>
-                <div class="report-kpi-hint">本次导出的目标班级</div>
-              </article>
-              <article class="journal-brief journal-metric report-kpi-card">
-                <div class="report-kpi-label">格式</div>
-                <div class="report-kpi-value">{{ latestExport.format.toUpperCase() }}</div>
-                <div class="report-kpi-hint">本次任务选择的导出文件格式</div>
-              </article>
-              <article class="journal-brief journal-metric report-kpi-card">
-                <div class="report-kpi-label">创建时间</div>
-                <div class="report-kpi-value">{{ formatDate(latestExport.createdAt) }}</div>
-                <div class="report-kpi-hint">最近一次任务创建时间</div>
-              </article>
-              <article class="journal-brief journal-metric report-kpi-card">
-                <div class="report-kpi-label">过期时间</div>
-                <div class="report-kpi-value">{{ latestExpiresText }}</div>
-                <div class="report-kpi-hint">文件生成完成后，后端会返回有效期截止时间</div>
-              </article>
+            <div class="report-command-grid">
+              <div class="space-y-4">
+                <label class="space-y-2">
+                  <span class="text-sm text-[var(--journal-muted)]">班级名称</span>
+                  <input
+                    v-model="form.className"
+                    type="text"
+                    :placeholder="classNamePlaceholder"
+                    class="report-field w-full px-4 py-3 text-sm outline-none transition"
+                  />
+                </label>
+
+                <fieldset class="space-y-2">
+                  <legend class="text-sm text-[var(--journal-muted)]">导出格式</legend>
+                  <div class="report-format-grid">
+                    <label
+                      class="report-format-option"
+                      :class="{ 'report-format-option--active': form.format === 'pdf' }"
+                    >
+                      <input v-model="form.format" type="radio" value="pdf" class="mt-1" />
+                      <span>
+                        <span class="block font-medium text-[var(--journal-ink)]">PDF</span>
+                        <span class="mt-1 block text-sm text-[var(--journal-muted)]">
+                          适合打印、归档和正式汇报。
+                        </span>
+                      </span>
+                    </label>
+
+                    <label
+                      class="report-format-option"
+                      :class="{ 'report-format-option--active': form.format === 'excel' }"
+                    >
+                      <input v-model="form.format" type="radio" value="excel" class="mt-1" />
+                      <span>
+                        <span class="block font-medium text-[var(--journal-ink)]">Excel</span>
+                        <span class="mt-1 block text-sm text-[var(--journal-muted)]">
+                          适合继续分析、筛选和二次加工。
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <div class="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    :disabled="previewLoading"
+                    class="teacher-btn"
+                    @click="openPreviewDialog"
+                  >
+                    {{ previewLoading ? '加载预览中...' : '打开报告预览' }}
+                  </button>
+                  <button
+                    type="button"
+                    :disabled="submitting"
+                    class="teacher-btn teacher-btn--primary"
+                    @click="handleExport"
+                  >
+                    {{ submitting ? '提交中...' : '创建导出任务' }}
+                  </button>
+                </div>
+              </div>
+
+              <aside class="report-side-notes">
+                <article class="report-note">
+                  <div class="report-note-label">当前目标班级</div>
+                  <div class="report-note-value">{{ normalizedClassNameText }}</div>
+                  <div class="report-note-helper">导出与预览都将以这个班级名称作为优先目标。</div>
+                </article>
+                <article class="report-note">
+                  <div class="report-note-label">当前导出格式</div>
+                  <div class="report-note-value">{{ selectedFormatLabel }}</div>
+                  <div class="report-note-helper">{{ selectedFormatHint }}</div>
+                </article>
+                <article class="report-note">
+                  <div class="report-note-label">建议流程</div>
+                  <ol class="report-guide-list">
+                    <li>1. 先打开报告预览，确认当前班级数据内容。</li>
+                    <li>2. 需要留档时，再创建后台导出任务。</li>
+                    <li>3. 任务完成后下载文件，生成中会自动轮询状态。</li>
+                  </ol>
+                </article>
+              </aside>
+            </div>
+          </section>
+
+          <section class="report-flat-section">
+            <div class="report-section-head">
+              <div>
+                <div class="teacher-surface-eyebrow journal-eyebrow">Latest Task</div>
+                <h2 class="report-section-title">最近一次任务</h2>
+              </div>
+              <p class="report-section-copy">导出状态、下载入口和任务元数据统一收在这里。</p>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                :disabled="downloading || latestExport.result.status !== 'ready'"
-                class="teacher-btn"
-                @click="handleDownload"
-              >
-                {{
-                  downloading
-                    ? '下载中...'
-                    : latestExport.result.status === 'ready'
-                      ? '下载报告'
-                      : polling
-                        ? '正在等待完成...'
-                        : '等待生成完成'
-                }}
-              </button>
-              <p class="text-sm leading-6 text-[var(--journal-muted)]">{{ derivedDownloadHint }}</p>
+            <AppEmpty
+              v-if="!latestExport"
+              class="mt-5"
+              title="还没有创建导出任务"
+              description="先创建一次班级报告任务，这里会展示最近一次任务状态。"
+              icon="FileChartColumnIncreasing"
+            />
+
+            <div v-else class="mt-5 space-y-4">
+              <div class="report-status-banner">
+                <div>
+                  <div class="report-note-label">任务编号</div>
+                  <div class="report-note-value">#{{ latestExport.result.report_id }}</div>
+                  <div class="report-note-helper">{{ derivedDownloadHint }}</div>
+                </div>
+                <span class="report-status-chip" :class="latestStatusMeta.chipClass">
+                  {{ latestStatusMeta.label }}
+                </span>
+              </div>
+
+              <div class="report-kpi-grid report-kpi-grid--task">
+                <article class="journal-brief journal-metric report-kpi-card">
+                  <div class="report-kpi-label">班级</div>
+                  <div class="report-kpi-value">{{ latestExport.className }}</div>
+                  <div class="report-kpi-hint">本次导出的目标班级</div>
+                </article>
+                <article class="journal-brief journal-metric report-kpi-card">
+                  <div class="report-kpi-label">格式</div>
+                  <div class="report-kpi-value">{{ latestExport.format.toUpperCase() }}</div>
+                  <div class="report-kpi-hint">本次任务选择的导出文件格式</div>
+                </article>
+                <article class="journal-brief journal-metric report-kpi-card">
+                  <div class="report-kpi-label">创建时间</div>
+                  <div class="report-kpi-value">{{ formatDate(latestExport.createdAt) }}</div>
+                  <div class="report-kpi-hint">最近一次任务创建时间</div>
+                </article>
+                <article class="journal-brief journal-metric report-kpi-card">
+                  <div class="report-kpi-label">过期时间</div>
+                  <div class="report-kpi-value">{{ latestExpiresText }}</div>
+                  <div class="report-kpi-hint">文件生成完成后，后端会返回有效期截止时间</div>
+                </article>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  :disabled="downloading || latestExport.result.status !== 'ready'"
+                  class="teacher-btn"
+                  @click="handleDownload"
+                >
+                  {{
+                    downloading
+                      ? '下载中...'
+                      : latestExport.result.status === 'ready'
+                        ? '下载报告'
+                        : polling
+                          ? '正在等待完成...'
+                          : '等待生成完成'
+                  }}
+                </button>
+                <p class="text-sm leading-6 text-[var(--journal-muted)]">{{ derivedDownloadHint }}</p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+
+        <aside class="report-aside">
+          <section class="report-flat-section report-flat-section--aside">
+            <div class="report-section-head">
+              <div>
+                <div class="teacher-surface-eyebrow journal-eyebrow">Guide</div>
+                <h2 class="report-section-title">使用说明</h2>
+              </div>
+            </div>
+
+            <div class="report-guide-stack">
+              <article class="report-note">
+                <div class="report-note-label">预览优先</div>
+                <div class="report-note-helper">报告内容可以直接在页面内查看，不必先发起下载。</div>
+              </article>
+              <article class="report-note">
+                <div class="report-note-label">任务异步</div>
+                <div class="report-note-helper">
+                  导出任务提交后由后端异步生成，页面会自动刷新任务状态。
+                </div>
+              </article>
+              <article class="report-note">
+                <div class="report-note-label">下载触发</div>
+                <div class="report-note-helper">
+                  只有状态变为“已就绪”后才可下载，失败时会保留错误信息便于重试。
+                </div>
+              </article>
+            </div>
+          </section>
+        </aside>
       </div>
-
-      <aside class="report-aside">
-        <section class="teacher-surface-section report-panel">
-          <div class="report-section-head">
-            <div>
-              <div class="teacher-surface-eyebrow journal-eyebrow">Guide</div>
-              <h2 class="report-section-title">使用说明</h2>
-            </div>
-          </div>
-
-          <div class="report-guide-stack">
-            <article class="report-note">
-              <div class="report-note-label">预览优先</div>
-              <div class="report-note-helper">报告内容可以直接在页面内查看，不必先发起下载。</div>
-            </article>
-            <article class="report-note">
-              <div class="report-note-label">任务异步</div>
-              <div class="report-note-helper">
-                导出任务提交后由后端异步生成，页面会自动刷新任务状态。
-              </div>
-            </article>
-            <article class="report-note">
-              <div class="report-note-label">下载触发</div>
-              <div class="report-note-helper">
-                只有状态变为“已就绪”后才可下载，失败时会保留错误信息便于重试。
-              </div>
-            </article>
-          </div>
-        </section>
-      </aside>
     </div>
 
     <ElDialog
@@ -574,17 +577,13 @@ async function handleDownload(): Promise<void> {
 .report-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 18rem
-    ),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      var(--journal-surface)
     );
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
@@ -606,46 +605,117 @@ async function handleDownload(): Promise<void> {
   border-radius: 18px;
 }
 
-.report-header {
-  display: grid;
-  gap: 1rem;
+.report-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.report-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .report-title {
-  margin-top: 0.85rem;
-  font-size: clamp(1.95rem, 2vw, 2.45rem);
+  margin-top: 0.8rem;
+  font-size: clamp(2rem, 4vw, 2.85rem);
   font-weight: 700;
-  line-height: 1.08;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--journal-ink);
 }
 
 .report-copy {
-  margin-top: 0.7rem;
+  margin-top: 0.75rem;
   max-width: 52rem;
-  font-size: 0.92rem;
-  line-height: 1.72;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.report-summary {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.report-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-accent-strong);
+}
+
+.report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.report-summary-item {
+  min-width: 0;
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.report-summary-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.report-summary-value {
+  margin-top: 0.55rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+.report-summary-helper {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
   color: var(--journal-muted);
 }
 
 .report-hero-divider {
-  margin: 1.2rem 0;
+  margin-top: 1.5rem;
   border-top: 1px dashed var(--report-divider);
 }
 
 .report-workspace {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
   grid-template-columns: minmax(0, 1.28fr) minmax(280px, 0.72fr);
+  padding-top: 1.5rem;
 }
 
 .report-main,
 .report-aside {
   display: grid;
+  gap: 1.5rem;
+}
+
+.report-flat-section {
+  display: grid;
   gap: 1rem;
 }
 
-.report-panel {
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+.report-flat-section--aside {
+  align-content: start;
 }
 
 .report-section-head {
@@ -956,6 +1026,7 @@ async function handleDownload(): Promise<void> {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .report-summary-grid,
   .report-command-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -967,6 +1038,7 @@ async function handleDownload(): Promise<void> {
 }
 
 @media (max-width: 720px) {
+  .report-summary-grid,
   .report-kpi-grid,
   .report-kpi-grid--task,
   .report-kpi-grid--dialog,

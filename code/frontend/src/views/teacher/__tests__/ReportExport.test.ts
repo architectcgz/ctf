@@ -146,6 +146,7 @@ describe('ReportExport', () => {
     expect(wrapper.classes()).toContain('report-shell')
     expect(wrapper.classes()).toContain('report-hero')
     expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.findAll('.report-summary-item')).toHaveLength(4)
 
     const classInput = wrapper.find('input[type="text"]')
     expect((classInput.element as HTMLInputElement).value).toBe('Class A')
