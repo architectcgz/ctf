@@ -389,11 +389,7 @@ onMounted(() => {
 
 .admin-toolbar,
 .admin-board {
-  border: 1px solid var(--journal-border);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
-  padding: 1.15rem;
-  box-shadow: 0 12px 28px var(--color-shadow-soft);
+  padding: 0;
 }
 
 .admin-divider {
@@ -546,11 +542,6 @@ onMounted(() => {
 
   .journal-shell {
     padding-inline: 1rem;
-  }
-
-  .admin-toolbar,
-  .admin-board {
-    padding: 1rem;
   }
 }
 </style>
