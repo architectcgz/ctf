@@ -716,6 +716,9 @@ async function handleDownload(): Promise<void> {
 
 .report-flat-section--aside {
   align-content: start;
+  gap: 1rem;
+  border-left: 1px solid var(--report-divider);
+  padding-left: 1rem;
 }
 
 .report-section-head {
@@ -745,6 +748,14 @@ async function handleDownload(): Promise<void> {
   display: grid;
   gap: 1rem;
   grid-template-columns: minmax(0, 1.08fr) minmax(260px, 0.92fr);
+}
+
+.report-side-notes {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  border-left: 1px solid var(--report-divider);
+  padding-left: 1rem;
 }
 
 .report-field {
@@ -831,6 +842,21 @@ async function handleDownload(): Promise<void> {
   margin-top: 1rem;
   display: grid;
   gap: 0.85rem;
+}
+
+.report-side-notes .report-note,
+.report-guide-stack .report-note {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  border-bottom: 1px solid var(--report-divider);
+  padding: 0 0 0.85rem;
+}
+
+.report-side-notes .report-note:last-child,
+.report-guide-stack .report-note:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
 }
 
 .report-kpi-grid {
@@ -1029,6 +1055,14 @@ async function handleDownload(): Promise<void> {
   .report-summary-grid,
   .report-command-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-flat-section--aside,
+  .report-side-notes {
+    border-left: 0;
+    border-top: 1px solid var(--report-divider);
+    padding-left: 0;
+    padding-top: 1rem;
   }
 
   .report-kpi-grid,
