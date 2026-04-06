@@ -48,11 +48,9 @@ const nextFocus = computed(
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Difficulty Ladder</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
+          <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
             难度层级总览
-          </h2>
+          </h1>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
             看不同难度的完成情况和下一步训练重点。
           </p>
@@ -89,7 +87,7 @@ const nextFocus = computed(
 
           <div
             v-if="orderedStats.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
             暂无难度统计数据。
           </div>
@@ -115,7 +113,7 @@ const nextFocus = computed(
                   </div>
                 </div>
               </div>
-              <div class="mt-4 h-2 rounded-full bg-[rgba(226,232,240,0.65)]">
+              <div class="difficulty-track mt-4 h-2 rounded-full">
                 <div
                   class="h-2 rounded-full transition-all"
                   :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
@@ -167,7 +165,7 @@ const nextFocus = computed(
             <aside class="difficulty-focus">
               <div class="journal-eyebrow journal-eyebrow-soft">Focus Card</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">当前突破口</h3>
-              <div class="mt-5 rounded-[22px] border border-[var(--journal-border)]/60 bg-[var(--journal-surface)]/70 p-4">
+              <div class="mt-5 rounded-[22px] border border-[var(--journal-shell-border)] bg-[var(--journal-surface)]/70 p-4">
                 <div v-if="nextFocus" class="space-y-3">
                   <div class="journal-note-label">优先难度</div>
                   <div class="text-lg font-semibold text-[var(--journal-ink)]">
@@ -192,14 +190,20 @@ const nextFocus = computed(
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
@@ -208,14 +212,21 @@ const nextFocus = computed(
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
+.journal-page-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
 .journal-brief {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);
 }
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--journal-soft-border);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
   padding: 0.875rem 1rem;
 }
@@ -232,8 +243,8 @@ const nextFocus = computed(
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -244,8 +255,8 @@ const nextFocus = computed(
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-  border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  border-color: var(--journal-soft-border);
+  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
 }
 
 .journal-note-value {
@@ -256,19 +267,19 @@ const nextFocus = computed(
 }
 
 .difficulty-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .difficulty-section + .difficulty-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .difficulty-list,
 .difficulty-insight-list {
   border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
@@ -279,7 +290,7 @@ const nextFocus = computed(
 
 .difficulty-item + .difficulty-item,
 .difficulty-insight-item + .difficulty-insight-item {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .difficulty-focus {
@@ -294,7 +305,7 @@ const nextFocus = computed(
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
+  border: 1px solid var(--journal-soft-border);
   background: var(--journal-surface-subtle);
 }
 
@@ -310,6 +321,10 @@ const nextFocus = computed(
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
+.difficulty-track {
+  background: var(--journal-track);
+}
+
 @media (min-width: 1280px) {
   .difficulty-focus {
     padding-left: 1.5rem;
@@ -321,14 +336,18 @@ const nextFocus = computed(
     left: -0.75rem;
     top: 0;
     bottom: 0;
-    border-left: 1px dashed rgba(148, 163, 184, 0.6);
+    border-left: 1px solid var(--journal-divider);
   }
 }
 
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
