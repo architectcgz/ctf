@@ -468,43 +468,46 @@ function formatDateTime(value: string): string {
 
 .top-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  padding: 0.2rem 0 1rem;
+  gap: 28px;
+  margin-top: 10px;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-ink) 10%, transparent);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .top-tab {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  padding: 0.5rem 0.9rem;
-  font-size: 0.82rem;
+  min-height: 52px;
+  padding: 10px 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--journal-muted);
+  line-height: 1;
+  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
+  white-space: nowrap;
+  cursor: pointer;
   transition:
     border-color 0.16s ease,
-    background-color 0.16s ease,
     color 0.16s ease;
 }
 
-.top-tab:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 30%, var(--journal-border));
-  color: var(--journal-ink);
-}
-
-.top-tab.active {
-  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent);
-}
-
+.top-tab:hover,
+.top-tab.active,
 .top-tab:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
+  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
+  outline: none;
 }
 
 .tab-panel {
@@ -612,18 +615,22 @@ function formatDateTime(value: string): string {
 
 @media (max-width: 720px) {
   .top-tabs {
-    gap: 0.45rem;
-  }
-
-  .top-tab {
-    min-height: 38px;
-    padding-inline: 0.8rem;
+    gap: 22px;
   }
 
   .top-note {
     width: 100%;
     flex-direction: column;
     gap: 0.3rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .top-tabs {
+    margin-left: -2rem;
+    margin-right: -2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }
 </style>
