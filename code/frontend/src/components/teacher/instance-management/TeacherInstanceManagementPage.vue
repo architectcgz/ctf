@@ -102,7 +102,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
         <header class="teacher-topbar">
           <div class="teacher-heading">
             <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Instance Ops</div>
-            <h2 class="teacher-title">实例管理</h2>
+            <h1 class="teacher-title">实例管理</h1>
             <p class="teacher-copy">先筛班级与学员，再快速定位异常或即将到期的训练实例。</p>
           </div>
 
@@ -342,9 +342,8 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-title {
-  margin-top: 0.8rem;
-  font-size: clamp(2rem, 4vw, 2.85rem);
-  font-weight: 700;
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;
   color: var(--journal-ink);

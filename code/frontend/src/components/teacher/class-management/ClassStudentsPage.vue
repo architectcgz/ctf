@@ -59,9 +59,9 @@ const activeRateText = computed(() => {
             }}</span>
           </div>
 
-          <h2 class="teacher-title">
+          <h1 class="teacher-title">
             {{ selectedClassName ? `${selectedClassName} · 学生列表` : '班级学生' }}
-          </h2>
+          </h1>
           <p class="teacher-copy">查看当前班级学生名单，并继续进入学员分析。</p>
 
           <div class="teacher-actions">
@@ -325,10 +325,10 @@ const activeRateText = computed(() => {
 }
 
 .teacher-title {
-  margin-top: 0.85rem;
-  font-size: clamp(2rem, 2vw, 2.45rem);
-  font-weight: 700;
-  line-height: 1.08;
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--journal-ink);
 }
 

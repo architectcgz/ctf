@@ -27,7 +27,7 @@ const emit = defineEmits<{
         <header class="teacher-topbar">
           <div class="teacher-heading">
             <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-            <h2 class="teacher-title">班级管理</h2>
+            <h1 class="teacher-title">班级管理</h1>
             <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
           </div>
 
@@ -217,9 +217,8 @@ const emit = defineEmits<{
 }
 
 .teacher-title {
-  margin-top: 0.8rem;
-  font-size: clamp(2rem, 4vw, 2.85rem);
-  font-weight: 700;
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;
   color: var(--journal-ink);
