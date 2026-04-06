@@ -296,6 +296,8 @@ onMounted(() => {
 
           <div class="challenge-directory-head">
             <span>题目</span>
+            <span>分类</span>
+            <span>难度</span>
             <span>标签</span>
             <span>状态</span>
             <span>数据</span>
@@ -319,7 +321,7 @@ onMounted(() => {
               </div>
             </div>
 
-            <div class="challenge-row-tags">
+            <div class="challenge-row-category">
               <span
                 class="challenge-chip"
                 :style="{
@@ -329,6 +331,9 @@ onMounted(() => {
               >
                 {{ getCategoryLabel(challenge.category) }}
               </span>
+            </div>
+
+            <div class="challenge-row-difficulty">
               <span
                 class="challenge-chip"
                 :style="{
@@ -338,14 +343,11 @@ onMounted(() => {
               >
                 {{ getDifficultyLabel(challenge.difficulty) }}
               </span>
+            </div>
+
+            <div class="challenge-row-tags">
               <span v-for="tag in challenge.tags.slice(0, 2)" :key="tag" class="challenge-chip challenge-chip-muted">
                 {{ tag }}
-              </span>
-              <span
-                v-if="challenge.tags.length === 0"
-                class="challenge-row-fallback"
-              >
-                暂无标签
               </span>
             </div>
 
@@ -700,7 +702,14 @@ onMounted(() => {
 
 .challenge-directory-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.9fr) 120px 180px 120px;
+  grid-template-columns:
+    minmax(0, 1.35fr)
+    minmax(96px, 0.38fr)
+    minmax(96px, 0.38fr)
+    minmax(160px, 0.82fr)
+    120px
+    180px
+    120px;
   gap: 16px;
   padding: 0 0 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -713,7 +722,14 @@ onMounted(() => {
 
 .challenge-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(220px, 0.9fr) 120px 180px 120px;
+  grid-template-columns:
+    minmax(0, 1.35fr)
+    minmax(96px, 0.38fr)
+    minmax(96px, 0.38fr)
+    minmax(160px, 0.82fr)
+    120px
+    180px
+    120px;
   gap: 16px;
   align-items: center;
   width: 100%;
@@ -775,10 +791,18 @@ onMounted(() => {
   color: var(--challenge-row-accent, var(--journal-accent));
 }
 
+.challenge-row-category,
+.challenge-row-difficulty {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .challenge-row-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
 }
 
 .challenge-chip {

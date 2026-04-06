@@ -97,11 +97,43 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).not.toContain('请求ID')
   })
 
+  it('只有分类和难度标签时不应额外显示暂无标签', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: 'Tagless Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          tags: [],
+          solved_count: 10,
+          total_attempts: 20,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage()
+
+    expect(wrapper.text()).toContain('Web')
+    expect(wrapper.text()).toContain('简单')
+    expect(wrapper.text()).not.toContain('暂无标签')
+  })
+
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
+    expect(challengeListSource).toContain('<span>分类</span>')
+    expect(challengeListSource).toContain('<span>难度</span>')
+    expect(challengeListSource).toContain('class="challenge-row-category"')
+    expect(challengeListSource).toContain('class="challenge-row-difficulty"')
     expect(challengeListSource).not.toContain('class="challenge-card')
     expect(challengeListSource).not.toContain('Training Range')
     expect(challengeListSource).not.toContain('Challenge Filters')
