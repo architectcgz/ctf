@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import TeacherClassStudents from '../TeacherClassStudents.vue'
+import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 
 const pushMock = vi.fn()
 const routeMock = {
@@ -146,6 +147,16 @@ describe('TeacherClassStudents', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('学生列表')
+    expect(wrapper.find('.teacher-topbar').exists()).toBe(true)
+    expect(wrapper.find('.teacher-summary').exists()).toBe(true)
+    expect(wrapper.find('.teacher-controls').exists()).toBe(true)
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-overview').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-trend').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-students').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-review').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-insight').exists()).toBe(true)
+    expect(wrapper.find('#class-tab-action').exists()).toBe(true)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
     expect(wrapper.text()).toContain('50%')
@@ -161,6 +172,12 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.text()).toContain('建议训练题')
     expect(wrapper.text()).toContain('推荐训练题')
     expect(wrapper.text()).toContain('crypto-lab')
+    await wrapper.find('#class-tab-students').trigger('click')
+    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
     expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
 
@@ -170,6 +187,16 @@ describe('TeacherClassStudents', () => {
       name: 'TeacherStudentAnalysis',
       params: { className: 'Class A', studentId: 'stu-1' },
     })
+  })
+
+  it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构', () => {
+    expect(classStudentsPageSource).toContain('class="workspace-shell"')
+    expect(classStudentsPageSource).toContain('class="workspace-topbar"')
+    expect(classStudentsPageSource).toContain('class="top-tabs"')
+    expect(classStudentsPageSource).toContain('class="content-pane"')
+    expect(classStudentsPageSource).toMatch(
+      /<div class="workspace-shell">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+    )
   })
 
   it('应该保留已解码的班级名并使用原值请求学生列表', async () => {
