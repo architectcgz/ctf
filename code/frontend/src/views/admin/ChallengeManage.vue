@@ -430,33 +430,22 @@ onMounted(() => {
         :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
         v-show="activePanel === 'import'"
       >
-        <div class="panel-lead">
-          <div>
-            <div class="journal-note-label">Challenge Package</div>
-            <h1 class="manage-title manage-title--compact">导入题目包</h1>
-            <p class="panel-copy">
-              上传符合 `challenge.yml` 规范的 zip 题目包，先检查预览，再确认导入。
-            </p>
-          </div>
-          <aside class="sample-rail">
-            <div class="sample-rail__eyebrow">Uploader Guide</div>
-            <h2 class="sample-rail__title">先对照示例再上传</h2>
-            <p class="sample-rail__copy">
-              单独页面提供目录结构、最小 `challenge.yml` 和常见约束，便于出题人自查。
-            </p>
-            <button class="admin-btn admin-btn-ghost" type="button" @click="openPackageFormatPage">
-              查看题目包示例
-            </button>
-          </aside>
-        </div>
-
-        <div class="journal-divider" />
-
         <ChallengePackageImportEntry
           :uploading="uploading"
           :selected-file-name="selectedFileName"
           @select="handleSelectPackage"
         />
+
+        <aside class="sample-rail sample-rail--inline">
+          <div class="sample-rail__eyebrow">Uploader Guide</div>
+          <h2 class="sample-rail__title">先对照示例再上传</h2>
+          <p class="sample-rail__copy">
+            单独页面提供目录结构、最小 `challenge.yml` 和常见约束，便于出题人自查。
+          </p>
+          <button class="admin-btn admin-btn-ghost" type="button" @click="openPackageFormatPage">
+            查看题目包示例
+          </button>
+        </aside>
 
         <ChallengePackageImportReview
           v-if="hasPreview && preview"
@@ -884,13 +873,6 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
-.panel-lead {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr);
-  align-items: start;
-}
-
 .panel-copy {
   margin: 0.5rem 0 0;
   max-width: 54rem;
@@ -909,6 +891,10 @@ onMounted(() => {
     color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
     color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
   );
+}
+
+.sample-rail--inline {
+  margin-top: -0.15rem;
 }
 
 .sample-rail__eyebrow {
@@ -983,12 +969,6 @@ onMounted(() => {
   .challenge-row__actions,
   .queue-row__actions {
     justify-content: flex-start;
-  }
-}
-
-@media (max-width: 960px) {
-  .panel-lead {
-    grid-template-columns: 1fr;
   }
 }
 
