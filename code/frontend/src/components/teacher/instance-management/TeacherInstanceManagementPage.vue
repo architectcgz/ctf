@@ -306,7 +306,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-hero {
-  border-color: var(--journal-border);
+  border-color: var(--teacher-card-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
     linear-gradient(
