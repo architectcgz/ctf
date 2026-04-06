@@ -154,8 +154,7 @@ const emit = defineEmits<{
             <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
             <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
             <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
-            <span>标签</span>
-            <span>状态</span>
+            <span>薄弱项</span>
             <span>数据</span>
             <span>操作</span>
           </div>
@@ -181,22 +180,8 @@ const emit = defineEmits<{
             </div>
 
             <div class="teacher-directory-row-tags">
-              <span class="teacher-directory-chip">Student</span>
               <span class="teacher-directory-chip teacher-directory-chip-muted">
                 {{ student.weak_dimension || '暂无薄弱项' }}
-              </span>
-            </div>
-
-            <div class="teacher-directory-row-status">
-              <span
-                class="teacher-directory-state-chip"
-                :class="
-                  (student.solved_count ?? 0) > 0
-                    ? 'teacher-directory-state-chip-ready'
-                    : 'teacher-directory-state-chip-empty'
-                "
-              >
-                {{ (student.solved_count ?? 0) > 0 ? '已有解题记录' : '暂无解题记录' }}
               </span>
             </div>
 
@@ -238,7 +223,6 @@ const emit = defineEmits<{
     minmax(10rem, 1fr)
     minmax(10rem, 0.9fr)
     minmax(12rem, 0.95fr)
-    minmax(7rem, 0.7fr)
     minmax(8rem, 0.8fr)
     minmax(8.5rem, 0.85fr);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
@@ -634,31 +618,6 @@ const emit = defineEmits<{
 }
 
 .teacher-directory-chip-muted {
-  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
-  color: var(--journal-muted);
-}
-
-.teacher-directory-row-status {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.teacher-directory-state-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.75rem;
-  padding: 0 0.62rem;
-  border-radius: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.teacher-directory-state-chip-ready {
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.teacher-directory-state-chip-empty {
   background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
   color: var(--journal-muted);
 }
