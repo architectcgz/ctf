@@ -10,7 +10,17 @@
       </div>
 
       <div class="image-header__side">
-        <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">创建镜像</button>
+        <div class="image-header__actions" role="group" aria-label="镜像列表操作">
+          <button
+            :disabled="loading"
+            class="admin-btn admin-btn-ghost"
+            data-testid="image-refresh-button"
+            @click="handleManualRefresh"
+          >
+            立即刷新
+          </button>
+          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">创建镜像</button>
+        </div>
         <div class="image-summary-grid">
           <article class="journal-note">
             <div class="journal-note-label">镜像总量</div>
@@ -33,7 +43,7 @@
           <div class="journal-note-label">Images</div>
           <h2 class="image-section-title">镜像列表</h2>
         </div>
-        <div class="image-board__hint">每 10 秒自动刷新一次状态</div>
+        <div class="image-board__hint">{{ refreshHint }}</div>
       </div>
 
       <div v-if="loading" class="flex items-center justify-center py-12">
@@ -144,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { getImages, createImage, deleteImage } from '@/api/admin'
 import { usePagination } from '@/composables/usePagination'
@@ -163,6 +173,28 @@ const form = reactive({
 const { list, total, page, pageSize, loading, changePage, refresh } = usePagination(getImages)
 
 let pollTimer: number | null = null
+
+const hasActiveImages = computed(() =>
+  list.value.some((row) => row.status === 'pending' || row.status === 'building')
+)
+
+const refreshHint = computed(() =>
+  hasActiveImages.value ? '构建中镜像会每 10 秒自动刷新' : '当前无进行中镜像，可手动刷新'
+)
+
+function stopPolling() {
+  if (pollTimer !== null) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+function startPolling() {
+  if (pollTimer !== null) return
+  pollTimer = window.setInterval(() => {
+    void refresh()
+  }, 10000)
+}
 
 async function handleCreate() {
   if (!form.name || !form.tag) {
@@ -196,6 +228,10 @@ async function handleDelete(id: string) {
   }
 }
 
+async function handleManualRefresh() {
+  await refresh()
+}
+
 function getStatusLabel(status: ImageStatus): string {
   return { pending: '等待中', building: '构建中', available: '可用', failed: '失败' }[status]
 }
@@ -206,13 +242,24 @@ function getStatusColor(status: ImageStatus): string {
   ]
 }
 
+watch(
+  hasActiveImages,
+  (active) => {
+    if (active) {
+      startPolling()
+      return
+    }
+    stopPolling()
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
-  refresh()
-  pollTimer = window.setInterval(refresh, 10000)
+  void refresh()
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  stopPolling()
 })
 </script>
 
@@ -414,6 +461,12 @@ onUnmounted(() => {
   display: grid;
   gap: 0.85rem;
   justify-items: start;
+}
+
+.image-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .image-summary-grid {
