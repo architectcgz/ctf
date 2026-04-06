@@ -130,10 +130,6 @@ async function handleCommitPreview() {
         >
           挑战管理
         </h1>
-        <p class="max-w-3xl text-sm leading-8 text-[var(--journal-muted)]">
-          题目创建主流程已经切换为 `challenge.yml`
-          题目包导入，导入后继续在当前页完成查看、编排、题解与发布检查。
-        </p>
       </div>
 
       <div class="manage-summary-grid">
@@ -184,9 +180,6 @@ async function handleCommitPreview() {
           <div class="journal-note-label">Imported Challenges</div>
           <h2 class="list-heading__title">已导入题目</h2>
         </div>
-        <p class="list-heading__copy">
-          保留查看、编排、题解、发布检查和删除操作；手工创建与手工编辑入口已移除。
-        </p>
       </header>
 
       <div v-if="loading" class="flex items-center justify-center py-12">
@@ -199,8 +192,16 @@ async function handleCommitPreview() {
         <div v-if="list.length === 0" class="admin-empty">当前还没有题目，请先导入题目包。</div>
 
         <div v-else class="space-y-3">
+          <div class="manage-directory-head" aria-hidden="true">
+            <span>题目</span>
+            <span>标签</span>
+            <span>发布检查</span>
+            <span>操作</span>
+          </div>
+
           <article v-for="row in list" :key="row.id" class="challenge-row">
-            <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="challenge-row__identity">
+              <div class="challenge-row__index">CH-{{ String(row.id).slice(0, 6).toUpperCase() }}</div>
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
                   <h2 class="text-base font-semibold text-[var(--journal-ink)]">{{ row.title }}</h2>
@@ -215,51 +216,48 @@ async function handleCommitPreview() {
                   </span>
                 </div>
 
-                <div class="mt-3 flex flex-wrap gap-2">
-                  <span
-                    class="admin-inline-chip"
-                    :style="{
-                      backgroundColor: getCategoryColor(row.category) + '16',
-                      color: getCategoryColor(row.category),
-                    }"
-                  >
-                    {{ getCategoryLabel(row.category) }}
-                  </span>
-                  <span
-                    class="admin-inline-chip"
-                    :style="{
-                      backgroundColor: getDifficultyColor(row.difficulty) + '16',
-                      color: getDifficultyColor(row.difficulty),
-                    }"
-                  >
-                    {{ getDifficultyLabel(row.difficulty) }}
-                  </span>
-                  <span class="admin-inline-chip admin-inline-chip-neutral"
-                    >{{ row.points }} pts</span
-                  >
-                  <span
-                    class="admin-inline-chip"
-                    :style="{
-                      backgroundColor: getPublishRequestColor(row.latestPublishRequest) + '16',
-                      color: getPublishRequestColor(row.latestPublishRequest),
-                    }"
-                  >
-                    {{ getPublishRequestLabel(row.latestPublishRequest) }}
-                  </span>
-                </div>
-
                 <p
                   v-if="row.latestPublishRequest?.failure_summary"
-                  class="mt-3 text-sm text-[var(--color-danger)]"
+                  class="challenge-row__failure"
                 >
                   {{ row.latestPublishRequest.failure_summary }}
                 </p>
               </div>
             </div>
 
-            <div class="journal-divider mt-4" />
+            <div class="challenge-row__meta">
+              <span
+                class="admin-inline-chip"
+                :style="{
+                  backgroundColor: getCategoryColor(row.category) + '16',
+                  color: getCategoryColor(row.category),
+                }"
+              >
+                {{ getCategoryLabel(row.category) }}
+              </span>
+              <span
+                class="admin-inline-chip"
+                :style="{
+                  backgroundColor: getDifficultyColor(row.difficulty) + '16',
+                  color: getDifficultyColor(row.difficulty),
+                }"
+              >
+                {{ getDifficultyLabel(row.difficulty) }}
+              </span>
+              <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
+            </div>
 
-            <div class="mt-4 flex flex-wrap gap-2">
+            <div class="challenge-row__review">
+              <div class="journal-note-label">Publish Check</div>
+              <div
+                class="challenge-row__review-status"
+                :style="{ color: getPublishRequestColor(row.latestPublishRequest) }"
+              >
+                {{ getPublishRequestLabel(row.latestPublishRequest) }}
+              </div>
+            </div>
+
+            <div class="challenge-row__actions">
               <button
                 class="admin-btn admin-btn-ghost admin-btn-compact"
                 @click="$router.push(`/admin/challenges/${row.id}`)"
@@ -333,13 +331,13 @@ async function handleCommitPreview() {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+      var(--journal-surface)
     );
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .journal-brief {
@@ -362,10 +360,9 @@ async function handleCommitPreview() {
 }
 
 .journal-note {
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.85rem 0.95rem;
-  border-radius: 14px;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
 }
 
 .journal-note-label {
@@ -397,7 +394,9 @@ async function handleCommitPreview() {
 
 .manage-header {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .manage-summary-grid {
@@ -409,7 +408,6 @@ async function handleCommitPreview() {
 .list-heading {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   gap: 0.8rem;
   align-items: flex-end;
 }
@@ -421,24 +419,76 @@ async function handleCommitPreview() {
   color: var(--journal-ink);
 }
 
-.list-heading__copy {
-  margin: 0;
-  max-width: 32rem;
-  font-size: 0.84rem;
-  line-height: 1.7;
+.manage-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
+  gap: 1rem;
+  padding: 0 0 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
 .challenge-row {
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-  );
-  padding: 1rem;
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.challenge-row__identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.challenge-row__index {
+  padding-top: 0.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.challenge-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.challenge-row__review {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.challenge-row__review-status {
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.challenge-row__failure {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--color-danger);
+}
+
+.challenge-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .admin-btn {
@@ -446,12 +496,15 @@ async function handleCommitPreview() {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 2.7rem;
-  border-radius: 999px;
-  padding: 0.62rem 1rem;
+  min-height: 2.45rem;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.95rem;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
 }
 
 .admin-btn-compact {
@@ -482,8 +535,8 @@ async function handleCommitPreview() {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  border-radius: 999px;
-  padding: 0.34rem 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.32rem 0.65rem;
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -494,10 +547,7 @@ async function handleCommitPreview() {
 }
 
 .admin-empty {
-  border: 1px dashed color-mix(in srgb, var(--journal-border) 76%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-  padding: 1rem;
+  padding: 1rem 0 0;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -532,6 +582,18 @@ async function handleCommitPreview() {
 @media (max-width: 960px) {
   .manage-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manage-directory-head {
+    display: none;
+  }
+
+  .challenge-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .challenge-row__actions {
+    justify-content: flex-start;
   }
 
   .journal-shell {
