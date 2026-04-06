@@ -14,10 +14,13 @@ const emit = defineEmits<{
 }>()
 
 const publisher = useAdminNotificationPublisher()
+type DebouncedUserSearch = ReturnType<typeof useDebounceFn> & {
+  cancel?: () => void
+}
 const scheduleUserSearch = useDebounceFn(() => {
   if (publisher.audienceTarget.value !== 'user') return
   void publisher.searchUsers(publisher.userKeyword.value)
-}, 250)
+}, 250) as DebouncedUserSearch
 
 watch(
   () => props.open,
@@ -108,173 +111,207 @@ async function handleUserSearch(): Promise<void> {
         aria-modal="true"
         aria-label="发布通知"
       >
-          <header class="publish-header border-b px-6 py-4">
-            <div class="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-              Admin Actions
+        <header class="publish-header border-b px-6 py-4">
+          <div
+            class="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
+          >
+            Admin Actions
+          </div>
+          <div class="mt-2 flex items-center justify-between">
+            <h3 class="text-2xl font-semibold text-[var(--color-text)]">发布通知</h3>
+            <button type="button" class="publish-close-btn" @click="handleClose">关闭</button>
+          </div>
+          <p class="mt-2 text-sm text-[var(--color-text-muted)]">
+            配置通知内容与受众范围，发布后会立即写入目标用户通知中心。
+          </p>
+        </header>
+
+        <form
+          class="publish-form flex-1 space-y-5 overflow-y-auto px-6 py-5"
+          @submit.prevent="handleSubmit"
+        >
+          <label class="publish-field">
+            <span class="publish-label">通知类型</span>
+            <select v-model="publisher.form.type" class="publish-input">
+              <option value="system">系统</option>
+              <option value="contest">竞赛</option>
+              <option value="challenge">训练</option>
+              <option value="team">团队</option>
+            </select>
+          </label>
+
+          <label class="publish-field">
+            <span class="publish-label">标题</span>
+            <input
+              v-model="publisher.form.title"
+              type="text"
+              class="publish-input"
+              placeholder="例如：平台将于今晚进行维护"
+            />
+            <span v-if="publisher.errors.title" class="publish-error">{{
+              publisher.errors.title
+            }}</span>
+          </label>
+
+          <label class="publish-field">
+            <span class="publish-label">内容</span>
+            <textarea
+              v-model="publisher.form.content"
+              rows="5"
+              class="publish-input"
+              placeholder="输入通知详情，支持纯文本。"
+            />
+            <span v-if="publisher.errors.content" class="publish-error">{{
+              publisher.errors.content
+            }}</span>
+          </label>
+
+          <label class="publish-field">
+            <span class="publish-label">跳转链接（可选）</span>
+            <input
+              v-model="publisher.form.link"
+              type="text"
+              class="publish-input"
+              placeholder="例如：https://ctf.example.com/contests/12"
+            />
+          </label>
+
+          <fieldset class="publish-field">
+            <legend class="publish-label">发送范围</legend>
+            <div class="publish-audience-grid mt-2">
+              <label
+                v-for="item in [
+                  { value: 'all', label: '所有用户' },
+                  { value: 'role', label: '按角色' },
+                  { value: 'class', label: '按班级' },
+                  { value: 'user', label: '指定用户' },
+                ]"
+                :key="item.value"
+                class="publish-target-option"
+              >
+                <input
+                  type="radio"
+                  name="audience-target"
+                  :value="item.value"
+                  :checked="publisher.audienceTarget.value === item.value"
+                  @change="onAudienceChange(item.value as 'all' | 'role' | 'class' | 'user')"
+                />
+                <span>{{ item.label }}</span>
+              </label>
             </div>
-            <div class="mt-2 flex items-center justify-between">
-              <h3 class="text-2xl font-semibold text-[var(--color-text)]">发布通知</h3>
-              <button type="button" class="publish-close-btn" @click="handleClose">关闭</button>
+
+            <div v-if="publisher.audienceTarget.value === 'role'" class="publish-subsection mt-3">
+              <label v-for="role in USER_ROLES" :key="role" class="publish-check-item">
+                <input
+                  type="checkbox"
+                  :checked="publisher.selectedRoles.value.includes(role)"
+                  @change="toggleRole(role, ($event.target as HTMLInputElement).checked)"
+                />
+                <span>{{ role }}</span>
+              </label>
             </div>
-            <p class="mt-2 text-sm text-[var(--color-text-muted)]">
-              配置通知内容与受众范围，发布后会立即写入目标用户通知中心。
-            </p>
-          </header>
 
-          <form class="publish-form flex-1 space-y-5 overflow-y-auto px-6 py-5" @submit.prevent="handleSubmit">
-            <label class="publish-field">
-              <span class="publish-label">通知类型</span>
-              <select v-model="publisher.form.type" class="publish-input">
-                <option value="system">系统</option>
-                <option value="contest">竞赛</option>
-                <option value="challenge">训练</option>
-                <option value="team">团队</option>
-              </select>
-            </label>
-
-            <label class="publish-field">
-              <span class="publish-label">标题</span>
-              <input
-                v-model="publisher.form.title"
-                type="text"
-                class="publish-input"
-                placeholder="例如：平台将于今晚进行维护"
-              />
-              <span v-if="publisher.errors.title" class="publish-error">{{ publisher.errors.title }}</span>
-            </label>
-
-            <label class="publish-field">
-              <span class="publish-label">内容</span>
-              <textarea
-                v-model="publisher.form.content"
-                rows="5"
-                class="publish-input"
-                placeholder="输入通知详情，支持纯文本。"
-              />
-              <span v-if="publisher.errors.content" class="publish-error">{{ publisher.errors.content }}</span>
-            </label>
-
-            <label class="publish-field">
-              <span class="publish-label">跳转链接（可选）</span>
-              <input
-                v-model="publisher.form.link"
-                type="text"
-                class="publish-input"
-                placeholder="例如：https://ctf.example.com/contests/12"
-              />
-            </label>
-
-            <fieldset class="publish-field">
-              <legend class="publish-label">发送范围</legend>
-              <div class="publish-audience-grid mt-2">
+            <div
+              v-else-if="publisher.audienceTarget.value === 'class'"
+              class="publish-subsection mt-3"
+            >
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-xs text-[var(--color-text-muted)]"
+                  >班级候选来自 /teacher/classes</span
+                >
+                <button
+                  type="button"
+                  class="publish-inline-btn"
+                  :disabled="publisher.loadingClasses.value"
+                  @click="publisher.loadClasses"
+                >
+                  {{ publisher.loadingClasses.value ? '加载中...' : '刷新班级' }}
+                </button>
+              </div>
+              <div class="publish-options-list">
                 <label
-                  v-for="item in [
-                    { value: 'all', label: '所有用户' },
-                    { value: 'role', label: '按角色' },
-                    { value: 'class', label: '按班级' },
-                    { value: 'user', label: '指定用户' },
-                  ]"
-                  :key="item.value"
-                  class="publish-target-option"
+                  v-for="item in publisher.classOptions.value"
+                  :key="item.name"
+                  class="publish-check-item"
                 >
                   <input
-                    type="radio"
-                    name="audience-target"
-                    :value="item.value"
-                    :checked="publisher.audienceTarget.value === item.value"
-                    @change="onAudienceChange(item.value as 'all' | 'role' | 'class' | 'user')"
+                    type="checkbox"
+                    :checked="publisher.selectedClasses.value.includes(item.name)"
+                    @change="toggleClass(item.name, ($event.target as HTMLInputElement).checked)"
                   />
-                  <span>{{ item.label }}</span>
+                  <span>{{ item.name }}</span>
                 </label>
+                <div
+                  v-if="
+                    publisher.classOptions.value.length === 0 && !publisher.loadingClasses.value
+                  "
+                  class="publish-empty"
+                >
+                  暂无班级数据，请点击“刷新班级”。
+                </div>
               </div>
+            </div>
 
-              <div v-if="publisher.audienceTarget.value === 'role'" class="publish-subsection mt-3">
-                <label v-for="role in USER_ROLES" :key="role" class="publish-check-item">
+            <div
+              v-else-if="publisher.audienceTarget.value === 'user'"
+              class="publish-subsection mt-3"
+            >
+              <div class="mb-2 flex gap-2">
+                <input
+                  v-model="publisher.userKeyword.value"
+                  type="text"
+                  class="publish-input"
+                  placeholder="输入用户名/学号搜索"
+                  @keyup.enter.prevent="handleUserSearch"
+                />
+                <button
+                  type="button"
+                  class="publish-inline-btn"
+                  :disabled="publisher.loadingUsers.value"
+                  @click="handleUserSearch"
+                >
+                  {{ publisher.loadingUsers.value ? '搜索中...' : '搜索' }}
+                </button>
+              </div>
+              <div class="publish-options-list">
+                <label
+                  v-for="user in publisher.userOptions.value"
+                  :key="user.id"
+                  class="publish-check-item"
+                >
                   <input
                     type="checkbox"
-                    :checked="publisher.selectedRoles.value.includes(role)"
-                    @change="toggleRole(role, ($event.target as HTMLInputElement).checked)"
+                    :checked="publisher.selectedUserIds.value.includes(user.id)"
+                    @change="toggleUser(user.id, ($event.target as HTMLInputElement).checked)"
                   />
-                  <span>{{ role }}</span>
+                  <span>{{ user.name || user.username }}（{{ user.username }}）</span>
                 </label>
-              </div>
-
-              <div v-else-if="publisher.audienceTarget.value === 'class'" class="publish-subsection mt-3">
-                <div class="mb-2 flex items-center justify-between">
-                  <span class="text-xs text-[var(--color-text-muted)]">班级候选来自 /teacher/classes</span>
-                  <button
-                    type="button"
-                    class="publish-inline-btn"
-                    :disabled="publisher.loadingClasses.value"
-                    @click="publisher.loadClasses"
-                  >
-                    {{ publisher.loadingClasses.value ? '加载中...' : '刷新班级' }}
-                  </button>
-                </div>
-                <div class="publish-options-list">
-                  <label v-for="item in publisher.classOptions.value" :key="item.name" class="publish-check-item">
-                    <input
-                      type="checkbox"
-                      :checked="publisher.selectedClasses.value.includes(item.name)"
-                      @change="toggleClass(item.name, ($event.target as HTMLInputElement).checked)"
-                    />
-                    <span>{{ item.name }}</span>
-                  </label>
-                  <div
-                    v-if="publisher.classOptions.value.length === 0 && !publisher.loadingClasses.value"
-                    class="publish-empty"
-                  >
-                    暂无班级数据，请点击“刷新班级”。
-                  </div>
+                <div
+                  v-if="publisher.userOptions.value.length === 0 && !publisher.loadingUsers.value"
+                  class="publish-empty"
+                >
+                  输入关键词并搜索用户。
                 </div>
               </div>
+            </div>
 
-              <div v-else-if="publisher.audienceTarget.value === 'user'" class="publish-subsection mt-3">
-                <div class="mb-2 flex gap-2">
-                  <input
-                    v-model="publisher.userKeyword.value"
-                    type="text"
-                    class="publish-input"
-                    placeholder="输入用户名/学号搜索"
-                    @keyup.enter.prevent="handleUserSearch"
-                  />
-                  <button
-                    type="button"
-                    class="publish-inline-btn"
-                    :disabled="publisher.loadingUsers.value"
-                    @click="handleUserSearch"
-                  >
-                    {{ publisher.loadingUsers.value ? '搜索中...' : '搜索' }}
-                  </button>
-                </div>
-                <div class="publish-options-list">
-                  <label v-for="user in publisher.userOptions.value" :key="user.id" class="publish-check-item">
-                    <input
-                      type="checkbox"
-                      :checked="publisher.selectedUserIds.value.includes(user.id)"
-                      @change="toggleUser(user.id, ($event.target as HTMLInputElement).checked)"
-                    />
-                    <span>{{ user.name || user.username }}（{{ user.username }}）</span>
-                  </label>
-                  <div
-                    v-if="publisher.userOptions.value.length === 0 && !publisher.loadingUsers.value"
-                    class="publish-empty"
-                  >
-                    输入关键词并搜索用户。
-                  </div>
-                </div>
-              </div>
+            <span v-if="publisher.errors.audience" class="publish-error mt-2">{{
+              publisher.errors.audience
+            }}</span>
+          </fieldset>
+        </form>
 
-              <span v-if="publisher.errors.audience" class="publish-error mt-2">{{ publisher.errors.audience }}</span>
-            </fieldset>
-          </form>
-
-          <footer class="publish-footer border-t px-6 py-4">
-            <button type="button" class="publish-btn" @click="handleClose">取消</button>
-            <button type="button" class="publish-btn publish-btn-primary" :disabled="publisher.submitting.value" @click="handleSubmit">
-              {{ publisher.submitting.value ? '发布中...' : '确认发布' }}
-            </button>
-          </footer>
+        <footer class="publish-footer border-t px-6 py-4">
+          <button type="button" class="publish-btn" @click="handleClose">取消</button>
+          <button
+            type="button"
+            class="publish-btn publish-btn-primary"
+            :disabled="publisher.submitting.value"
+            @click="handleSubmit"
+          >
+            {{ publisher.submitting.value ? '发布中...' : '确认发布' }}
+          </button>
+        </footer>
       </aside>
     </div>
   </Transition>

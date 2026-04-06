@@ -33,8 +33,14 @@ export function useTeacherInstances() {
 
   const isAdmin = computed(() => authStore.user?.role === 'admin')
   const totalCount = computed(() => instances.value.length)
-  const runningCount = computed(() => instances.value.filter((item) => item.status === 'running').length)
-  const expiringSoonCount = computed(() => instances.value.filter((item) => item.status === 'running' && item.remaining_time <= 600).length)
+  const runningCount = computed(
+    () => instances.value.filter((item) => item.status === 'running').length
+  )
+  const expiringSoonCount = computed(
+    () =>
+      instances.value.filter((item) => item.status === 'running' && item.remaining_time <= 600)
+        .length
+  )
 
   async function initialize(): Promise<void> {
     loadingClasses.value = true
@@ -82,9 +88,12 @@ export function useTeacherInstances() {
     }
   }
 
+  type DebouncedInstanceSearch = ReturnType<typeof useDebounceFn> & {
+    cancel?: () => void
+  }
   const scheduleInstanceSearch = useDebounceFn(() => {
     void loadInstances()
-  }, 250)
+  }, 250) as DebouncedInstanceSearch
 
   async function submitFilters(): Promise<void> {
     scheduleInstanceSearch.cancel?.()
@@ -96,12 +105,17 @@ export function useTeacherInstances() {
     scheduleInstanceSearch.cancel?.()
     filters.keyword = ''
     filters.studentNo = ''
-    filters.className = isAdmin.value ? '' : authStore.user?.class_name || classes.value[0]?.name || ''
+    filters.className = isAdmin.value
+      ? ''
+      : authStore.user?.class_name || classes.value[0]?.name || ''
     await loadInstances()
     autoSearchReady.value = true
   }
 
-  function updateFilter<K extends keyof TeacherInstanceFilters>(key: K, value: TeacherInstanceFilters[K]): void {
+  function updateFilter<K extends keyof TeacherInstanceFilters>(
+    key: K,
+    value: TeacherInstanceFilters[K]
+  ): void {
     filters[key] = value
   }
 

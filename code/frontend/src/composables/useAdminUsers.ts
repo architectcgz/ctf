@@ -70,9 +70,12 @@ export function useAdminUsers() {
   )
 
   const dialogMode = computed<'create' | 'edit'>(() => (editingUserId.value ? 'edit' : 'create'))
+  type DebouncedRefresh = ReturnType<typeof useDebounceFn> & {
+    cancel?: () => void
+  }
   const scheduleTextFilterRefresh = useDebounceFn(() => {
     void pagination.changePage(1)
-  }, 250)
+  }, 250) as DebouncedRefresh
 
   watch([keyword, studentNo, teacherNo], () => {
     scheduleTextFilterRefresh()

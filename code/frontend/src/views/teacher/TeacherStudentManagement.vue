@@ -1,28 +1,30 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { useDebounceFn } from '@vueuse/core'
 
-import { getClasses, getClassStudents } from '@/api/teacher'
-import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
+import { getClasses } from '@/api/teacher'
+import type { TeacherClassItem } from '@/api/contracts'
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
+import { useStudentFilters } from '@/composables/useStudentFilters'
+import { useStudentListQuery } from '@/composables/useStudentListQuery'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const classes = ref<TeacherClassItem[]>([])
-const students = ref<TeacherStudentItem[]>([])
-const selectedClassName = ref('')
-const searchQuery = ref('')
-const studentNoQuery = ref('')
 const loadingClasses = ref(false)
-const loadingStudents = ref(false)
-const error = ref<string | null>(null)
-let latestStudentRequestID = 0
-const scheduleStudentSearch = useDebounceFn((className: string) => {
-  void loadStudents(className)
-}, 250)
+const pageError = ref<string | null>(null)
+const filters = useStudentFilters()
+const studentListQuery = useStudentListQuery({
+  debounceMs: 250,
+  errorMessage: '加载学生列表失败，请稍后重试',
+  getParams: () => filters.studentQueryParams.value,
+})
+
+const { selectedClassName, searchQuery, studentNoQuery } = filters
+const { students, loading: loadingStudents } = studentListQuery
+const error = computed(() => pageError.value ?? studentListQuery.error.value)
 
 async function loadClasses(): Promise<void> {
   loadingClasses.value = true
@@ -33,53 +35,22 @@ async function loadClasses(): Promise<void> {
   }
 }
 
-async function loadStudents(className: string): Promise<void> {
-  if (!className) {
-    latestStudentRequestID += 1
-    students.value = []
-    selectedClassName.value = ''
-    loadingStudents.value = false
-    return
-  }
-
-  const requestID = ++latestStudentRequestID
-  loadingStudents.value = true
-  error.value = null
-  selectedClassName.value = className
-
-  try {
-    const nextStudents = await getClassStudents(className, {
-      keyword: searchQuery.value.trim() || undefined,
-      student_no: studentNoQuery.value.trim() || undefined,
-    })
-    if (requestID !== latestStudentRequestID) {
-      return
-    }
-    students.value = nextStudents
-  } catch (err) {
-    if (requestID !== latestStudentRequestID) {
-      return
-    }
-    console.error('加载学生列表失败:', err)
-    error.value = '加载学生列表失败，请稍后重试'
-    students.value = []
-  } finally {
-    if (requestID === latestStudentRequestID) {
-      loadingStudents.value = false
-    }
-  }
+async function selectClass(className: string): Promise<void> {
+  studentListQuery.cancelScheduledLoad()
+  filters.updateSelectedClassName(className)
+  await studentListQuery.loadStudents(className)
 }
 
 async function initialize(): Promise<void> {
-  error.value = null
+  pageError.value = null
 
   try {
     await loadClasses()
     const preferredClass = authStore.user?.class_name || classes.value[0]?.name || ''
-    await loadStudents(preferredClass)
+    await selectClass(preferredClass)
   } catch (err) {
     console.error('初始化学生管理失败:', err)
-    error.value = '加载学生管理失败，请稍后重试'
+    pageError.value = '加载学生管理失败，请稍后重试'
   }
 }
 
@@ -94,20 +65,20 @@ function openStudent(studentId: string): void {
 }
 
 function updateSearchQuery(value: string): void {
-  searchQuery.value = value
+  filters.updateSearchQuery(value)
 }
 
 function updateStudentNoQuery(value: string): void {
-  studentNoQuery.value = value
+  filters.updateStudentNoQuery(value)
 }
 
-watch([searchQuery, studentNoQuery], async () => {
+watch([searchQuery, studentNoQuery], () => {
   if (!selectedClassName.value) return
-  scheduleStudentSearch(selectedClassName.value)
+  studentListQuery.scheduleLoadStudents(selectedClassName.value)
 })
 
 onMounted(() => {
-  initialize()
+  void initialize()
 })
 </script>
 
@@ -118,7 +89,9 @@ onMounted(() => {
     :search-query="searchQuery"
     :student-no-query="studentNoQuery"
     :filtered-students="students"
-    :total-students="classes.find((item) => item.name === selectedClassName)?.student_count || students.length"
+    :total-students="
+      classes.find((item) => item.name === selectedClassName)?.student_count || students.length
+    "
     :loading-classes="loadingClasses"
     :loading-students="loadingStudents"
     :error="error"
@@ -127,7 +100,7 @@ onMounted(() => {
     @open-report-export="router.push({ name: 'ReportExport' })"
     @update-search-query="updateSearchQuery"
     @update-student-no-query="updateStudentNoQuery"
-    @select-class="loadStudents"
+    @select-class="selectClass"
     @open-student="openStudent"
   />
 </template>
