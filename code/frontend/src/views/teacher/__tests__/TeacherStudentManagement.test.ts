@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import TeacherStudentManagement from '../TeacherStudentManagement.vue'
+import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -131,6 +132,8 @@ describe('TeacherStudentManagement', () => {
     expect(rows[0].find('.teacher-directory-cell-student-no').text()).toContain('2024001')
     expect(rows[0].find('.teacher-directory-cell-name').text()).toContain('Alice Zhang')
     expect(rows[0].find('.teacher-directory-cell-alias').text()).toContain('@alice')
+    expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
+    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('@alice')
     expect(rows[0].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
     expect(rows[0].find('.teacher-directory-row-tags').text()).not.toContain('Student')
     expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
@@ -222,5 +225,12 @@ describe('TeacherStudentManagement', () => {
 
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).not.toContain('bob')
+  })
+
+  it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
+    expect(studentManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s)
+    expect(studentManagementSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s)
+    expect(studentManagementSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(studentManagementSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   })
 })

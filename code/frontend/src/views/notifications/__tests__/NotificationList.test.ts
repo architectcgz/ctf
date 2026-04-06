@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
 import NotificationList from '../NotificationList.vue'
+import notificationListSource from '../NotificationList.vue?raw'
 import { useNotificationStore } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
 
@@ -117,6 +118,10 @@ describe('NotificationList', () => {
     expect(className).not.toContain('md:-mx-6')
     expect(className).not.toContain('xl:-mx-8')
     expect(className).not.toContain('md:min-h-[calc(100vh-5rem)]')
+
+    const firstRow = wrapper.find('.notification-row')
+    expect(firstRow.find('.notification-row-title').attributes('title')).toBe('系统通知')
+    expect(firstRow.find('.notification-row-copy').attributes('title')).toBe('请及时查看系统更新说明。')
   })
 
   it('keeps bulk mark-as-read action working on the list page', async () => {
@@ -142,5 +147,12 @@ describe('NotificationList', () => {
 
     const teacherPage = await mountPage('teacher')
     expect(teacherPage.wrapper.text()).not.toContain('发布通知')
+  })
+
+  it('keeps notification list titles and content truncated with full hover text', () => {
+    expect(notificationListSource).toMatch(/class="notification-row-title"[\s\S]*:title="item\.title"/s)
+    expect(notificationListSource).toMatch(/class="notification-row-copy"[\s\S]*:title="item\.content"/s)
+    expect(notificationListSource).toMatch(/\.notification-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(notificationListSource).toMatch(/\.notification-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 })

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import ContestList from '../ContestList.vue'
+import contestListSource from '../ContestList.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -42,5 +43,11 @@ describe('ContestList', () => {
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('Contests')
     expect(wrapper.text()).toContain('竞赛中心')
+    expect(wrapper.find('.contest-row-title').attributes('title')).toBe('2026 春季校园 CTF 挑战赛')
+  })
+
+  it('应该为竞赛列表长标题保留省略样式和完整悬浮提示', () => {
+    expect(contestListSource).toMatch(/class="contest-row-title"[\s\S]*:title="contest\.title"/s)
+    expect(contestListSource).toMatch(/\.contest-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   })
 })

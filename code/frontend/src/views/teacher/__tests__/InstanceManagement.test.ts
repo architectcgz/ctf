@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import InstanceManagement from '../InstanceManagement.vue'
+import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -91,6 +92,8 @@ describe('InstanceManagement', () => {
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
+    expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice')
+    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('Web SQLi 101')
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {
@@ -123,5 +126,14 @@ describe('InstanceManagement', () => {
 
     expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
     expect(wrapper.text()).not.toContain('Web SQLi 101')
+  })
+
+  it('应该为教师实例列表长文本保留省略样式与完整提示', () => {
+    expect(instanceManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="item\.student_name \|\| item\.student_username"/s)
+    expect(instanceManagementSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="item\.challenge_title"/s)
+    expect(instanceManagementSource).toMatch(/class="teacher-directory-row-copy"[\s\S]*:title="/s)
+    expect(instanceManagementSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(instanceManagementSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(instanceManagementSource).toMatch(/\.teacher-directory-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 })

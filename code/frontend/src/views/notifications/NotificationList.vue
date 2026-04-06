@@ -194,8 +194,8 @@ async function handlePublishSuccess(): Promise<void> {
               <span class="notification-chip">{{ typeLabel(item.type) }}</span>
             </div>
             <div class="notification-row-main">
-              <div class="notification-row-title">{{ item.title }}</div>
-              <div class="notification-row-copy">{{ item.content }}</div>
+              <div class="notification-row-title" :title="item.title">{{ item.title }}</div>
+              <div class="notification-row-copy" :title="item.content">{{ item.content }}</div>
             </div>
             <div class="notification-row-time">{{ formatDate(item.created_at) }}</div>
             <div class="notification-row-state">
@@ -466,17 +466,28 @@ async function handlePublishSuccess(): Promise<void> {
   color: var(--journal-accent);
 }
 
+.notification-row-main {
+  min-width: 0;
+}
+
 .notification-row-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notification-row-copy {
   margin-top: 6px;
+  display: -webkit-box;
   font-size: 13px;
   line-height: 1.6;
   color: var(--journal-muted);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .notification-row-time {
