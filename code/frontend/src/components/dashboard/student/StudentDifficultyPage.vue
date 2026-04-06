@@ -188,8 +188,8 @@ const nextFocus = computed(
 
 <style scoped>
 .journal-shell {
-  --journal-accent: #4f46e5;
-  --journal-accent-strong: #4338ca;
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
@@ -305,9 +305,9 @@ const nextFocus = computed(
 }
 
 .stat-icon--primary {
-  color: #4f46e5;
-  border-color: rgba(79, 70, 229, 0.2);
-  background: rgba(79, 70, 229, 0.08);
+  color: var(--journal-accent);
+  border-color: color-mix(in srgb, var(--journal-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
 @media (min-width: 1280px) {

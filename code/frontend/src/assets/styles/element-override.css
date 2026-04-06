@@ -1,7 +1,7 @@
 :root {
-  --el-color-primary: #0891b2;
-  --el-color-primary-light-3: #06b6d4;
-  --el-color-primary-light-5: #22d3ee;
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: color-mix(in srgb, var(--color-primary-hover) 78%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--color-primary-hover) 58%, white);
   --el-bg-color: #161b22;
   --el-bg-color-page: #0f1117;
   --el-text-color-primary: #e6edf3;
@@ -10,9 +10,9 @@
 }
 
 [data-theme="light"] {
-  --el-color-primary: #0891b2;
-  --el-color-primary-light-3: #06b6d4;
-  --el-color-primary-light-5: #22d3ee;
+  --el-color-primary: var(--color-primary);
+  --el-color-primary-light-3: color-mix(in srgb, var(--color-primary-hover) 78%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--color-primary-hover) 58%, white);
   --el-bg-color: #ffffff;
   --el-bg-color-page: #f4f7fb;
   --el-text-color-primary: #0f172a;

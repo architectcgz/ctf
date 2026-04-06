@@ -5,6 +5,7 @@ describe('useTheme', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.removeAttribute('data-theme')
+    document.documentElement.removeAttribute('data-brand')
     vi.clearAllMocks()
 
     // Mock window.matchMedia
@@ -66,5 +67,33 @@ describe('useTheme', () => {
 
     expect(theme.value).toBe('dark')
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
+  })
+
+  it('应该设置品牌主题并写入 data-brand', () => {
+    const { brand, setBrand } = useTheme()
+
+    expect(brand.value).toBe('green')
+    setBrand('green')
+
+    expect(brand.value).toBe('green')
+    expect(document.documentElement.getAttribute('data-brand')).toBe('green')
+  })
+
+  it('应该持久化品牌主题到 localStorage', () => {
+    const { setBrand } = useTheme()
+
+    setBrand('green')
+
+    expect(localStorage.getItem('theme-brand')).toBe('green')
+  })
+
+  it('应该从 localStorage 恢复品牌主题', () => {
+    localStorage.setItem('theme-brand', 'green')
+
+    const { brand, initTheme } = useTheme()
+    initTheme()
+
+    expect(brand.value).toBe('green')
+    expect(document.documentElement.getAttribute('data-brand')).toBe('green')
   })
 })

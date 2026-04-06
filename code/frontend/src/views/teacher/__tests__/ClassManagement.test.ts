@@ -47,6 +47,9 @@ describe('ClassManagement', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('班级管理')
+    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(3)
+    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('Class B')
 

@@ -19,118 +19,139 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface">
-    <section class="teacher-hero teacher-surface-hero px-6 py-6 md:px-8">
-      <header class="teacher-header">
-        <div class="teacher-header__main">
-          <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-          <h2 class="teacher-title">班级管理</h2>
-          <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
+  <div class="teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col">
+    <section
+      class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    >
+      <div class="teacher-page">
+        <header class="teacher-topbar">
+          <div class="teacher-heading">
+            <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
+            <h2 class="teacher-title">班级管理</h2>
+            <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
+          </div>
 
           <div class="teacher-actions">
-            <button type="button" class="teacher-btn teacher-surface-btn" @click="emit('openDashboard')">
+            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
               教学概览
             </button>
-            <button
-              type="button"
-              class="teacher-btn teacher-surface-btn teacher-btn--primary"
-              @click="emit('openReportExport')"
-            >
+            <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReportExport')">
               导出报告
             </button>
           </div>
-        </div>
+        </header>
 
-        <div class="teacher-badge-grid">
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">班级数量</div>
-            <div class="teacher-badge-value">{{ classes.length }}</div>
-            <div class="teacher-badge-hint">当前可管理班级总数</div>
-          </article>
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">学生总量</div>
-            <div class="teacher-badge-value">
-              {{ classes.reduce((sum, item) => sum + (item.student_count || 0), 0) }}
-            </div>
-            <div class="teacher-badge-hint">各班级学生数汇总</div>
-          </article>
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">当前状态</div>
-            <div class="teacher-badge-value">{{ loading ? '同步中' : '已就绪' }}</div>
-            <div class="teacher-badge-hint">班级目录与入口操作已同步</div>
-          </article>
-        </div>
-      </header>
-
-      <div class="teacher-hero-divider" />
-
-      <div class="teacher-tip-block">
-        <div class="teacher-tip-label">当前焦点</div>
-        <div class="teacher-tip-copy">先进入班级，再继续查看学生名单、训练趋势与学员分析。</div>
-      </div>
-
-      <div class="teacher-surface-board">
-        <section class="teacher-surface-section">
-          <div class="teacher-section-head">
-            <div>
-              <div class="teacher-surface-eyebrow journal-eyebrow">Class List</div>
-              <h3 class="teacher-section-title">班级列表</h3>
-            </div>
-            <div class="teacher-section-meta">共 {{ classes.length }} 个班级</div>
+        <section class="teacher-summary">
+          <div class="teacher-summary-title">
+            <FolderKanban class="h-4 w-4" />
+            <span>Directory Snapshot</span>
           </div>
-
-          <div v-if="loading" class="teacher-skeleton-list">
-            <div
-              v-for="index in 5"
-              :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-            />
+          <div class="teacher-summary-grid">
+            <div class="teacher-summary-item">
+              <div class="teacher-summary-label">班级数量</div>
+              <div class="teacher-summary-value">{{ classes.length }}</div>
+              <div class="teacher-summary-helper">当前可管理班级总数</div>
+            </div>
+            <div class="teacher-summary-item">
+              <div class="teacher-summary-label">学生总量</div>
+              <div class="teacher-summary-value">
+                {{ classes.reduce((sum, item) => sum + (item.student_count || 0), 0) }}
+              </div>
+              <div class="teacher-summary-helper">各班级学生数汇总</div>
+            </div>
+            <div class="teacher-summary-item">
+              <div class="teacher-summary-label">当前状态</div>
+              <div class="teacher-summary-value">{{ loading ? '同步中' : '已就绪' }}</div>
+              <div class="teacher-summary-helper">班级目录与入口操作已同步</div>
+            </div>
           </div>
+        </section>
 
-          <AppEmpty
-            v-else-if="classes.length === 0"
-            class="mt-5"
-            icon="Users"
-            title="暂无班级"
-            description="当前教师账号下还没有可访问的班级。"
+        <div class="teacher-divider" />
+
+        <div v-if="loading" class="teacher-skeleton-list">
+          <div
+            v-for="index in 5"
+            :key="index"
+            class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
           />
+        </div>
 
-          <div v-else class="mt-5 teacher-table-shell">
-            <ElTable
-              :data="classes"
-              row-key="name"
-              class="teacher-surface-table teacher-class-table"
-              empty-text="暂无班级"
-            >
-              <ElTableColumn prop="name" label="班级名称" min-width="260">
-                <template #default="{ row }">
-                  <div class="py-1">
-                    <div class="teacher-class-name">{{ row.name }}</div>
-                    <div class="teacher-class-copy">查看班级学生名单。</div>
-                  </div>
-                </template>
-              </ElTableColumn>
+        <AppEmpty
+          v-else-if="classes.length === 0"
+          class="teacher-empty-state"
+          icon="Users"
+          title="暂无班级"
+          description="当前教师账号下还没有可访问的班级。"
+        />
 
-              <ElTableColumn prop="student_count" label="学生数" width="140" align="center">
-                <template #default="{ row }">
-                  <span class="teacher-class-count">{{ row.student_count || 0 }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="操作" width="180" align="right">
-                <template #default="{ row }">
-                  <button
-                    type="button"
-                    class="teacher-row-btn"
-                    @click="emit('openClass', row.name)"
-                  >
-                    进入班级
-                    <ArrowRight class="h-4 w-4" />
-                  </button>
-                </template>
-              </ElTableColumn>
-            </ElTable>
+        <section v-else class="teacher-directory" aria-label="班级目录">
+          <div class="teacher-directory-top">
+            <h3 class="teacher-directory-title">班级目录</h3>
+            <div class="teacher-directory-meta">共 {{ classes.length }} 个班级</div>
           </div>
+
+          <div class="teacher-directory-head">
+            <span>班级</span>
+            <span>标签</span>
+            <span>状态</span>
+            <span>数据</span>
+            <span>操作</span>
+          </div>
+
+          <button
+            v-for="(item, index) in classes"
+            :key="item.name"
+            type="button"
+            class="teacher-directory-row"
+            :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
+            @click="emit('openClass', item.name)"
+          >
+            <div class="teacher-directory-row-main">
+              <div class="teacher-directory-row-index">CL-{{ String(index + 1).padStart(2, '0') }}</div>
+              <div class="teacher-directory-row-title-group">
+                <h4 class="teacher-directory-row-title">{{ item.name }}</h4>
+                <div class="teacher-directory-row-points">{{ item.student_count || 0 }} Students</div>
+              </div>
+              <div class="teacher-directory-row-copy">查看班级学生名单与训练表现。</div>
+            </div>
+
+            <div class="teacher-directory-row-tags">
+              <span class="teacher-directory-chip">Teaching Class</span>
+              <span class="teacher-directory-chip teacher-directory-chip-muted">
+                {{
+                  (item.student_count || 0) >= 40
+                    ? 'Large'
+                    : (item.student_count || 0) >= 20
+                      ? 'Standard'
+                      : 'Compact'
+                }}
+              </span>
+            </div>
+
+            <div class="teacher-directory-row-status">
+              <span
+                class="teacher-directory-state-chip"
+                :class="
+                  (item.student_count || 0) > 0
+                    ? 'teacher-directory-state-chip-ready'
+                    : 'teacher-directory-state-chip-empty'
+                "
+              >
+                {{ (item.student_count || 0) > 0 ? '可查看' : '待入班' }}
+              </span>
+            </div>
+
+            <div class="teacher-directory-row-metrics">
+              <span>{{ item.student_count || 0 }} 名学生</span>
+              <span>{{ (item.student_count || 0) > 0 ? '可继续查看训练趋势' : '当前还没有学生加入' }}</span>
+            </div>
+
+            <div class="teacher-directory-row-cta">
+              <span>进入班级</span>
+              <ArrowRight class="h-4 w-4" />
+            </div>
+          </button>
         </section>
       </div>
     </section>
@@ -149,65 +170,70 @@ const emit = defineEmits<{
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --journal-accent: #2563eb;
-  --journal-accent-strong: #1d4ed8;
+  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .teacher-hero {
-  border-color: var(--teacher-card-border);
+  border-color: var(--journal-border);
   background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 18rem
-    ),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      var(--journal-surface)
     );
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .journal-eyebrow {
   letter-spacing: 0.08em;
 }
 
-.journal-brief,
-.journal-metric {
-  border-radius: 18px;
+.teacher-page {
+  display: flex;
+  min-height: 100%;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
 
-.teacher-header {
-  display: grid;
-  gap: 1.25rem;
+.teacher-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.teacher-header__main {
-  max-width: 42rem;
+.teacher-heading {
+  min-width: 0;
 }
 
 .teacher-title {
-  margin-top: 0.85rem;
-  font-size: clamp(2rem, 2vw, 2.45rem);
+  margin-top: 0.8rem;
+  font-size: clamp(2rem, 4vw, 2.85rem);
   font-weight: 700;
-  line-height: 1.08;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--journal-ink);
 }
 
 .teacher-copy {
-  margin-top: 0.7rem;
-  max-width: 42rem;
-  font-size: 0.92rem;
-  line-height: 1.72;
+  margin-top: 0.75rem;
+  max-width: 42.5rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
   color: var(--journal-muted);
 }
 
 .teacher-actions {
-  margin-top: 1.3rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -218,183 +244,314 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.75rem;
-  border-radius: 999px;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
   border: 1px solid var(--teacher-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.62rem 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--journal-ink);
   transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .teacher-btn:hover,
 .teacher-btn:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  color: var(--journal-accent-strong);
+  outline: none;
 }
 
 .teacher-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
 }
 
 .teacher-btn--primary:hover,
 .teacher-btn--primary:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
+  border-color: transparent;
+  background: var(--journal-accent-strong);
+  color: var(--color-bg-base);
 }
 
-.teacher-badge-grid {
+.teacher-btn--ghost {
+  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
+}
+
+.teacher-summary {
   display: grid;
-  gap: 0.9rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.teacher-badge-card {
-  min-height: 100%;
-  border: 1px solid var(--teacher-card-border);
-  padding: 1rem 1.05rem 1.05rem;
-}
-
-.teacher-badge-label {
-  font-size: 0.74rem;
+.teacher-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.teacher-badge-value {
-  margin-top: 0.55rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.teacher-badge-hint {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
-}
-
-.teacher-hero-divider {
-  margin: 1.35rem 0 1.15rem;
-  border-top: 1px dashed var(--teacher-divider);
-}
-
-.teacher-tip-block {
-  display: grid;
-  gap: 0.35rem;
-  border-top: 1px dashed var(--teacher-divider);
-  padding-top: 1rem;
-}
-
-.teacher-tip-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
 }
 
-.teacher-tip-copy {
-  font-size: 0.86rem;
-  line-height: 1.65;
+.teacher-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.teacher-summary-item {
+  min-width: 0;
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.teacher-summary-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.teacher-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.85rem;
-}
-
-.teacher-section-title {
-  margin-top: 0.35rem;
-  font-size: 1.15rem;
+.teacher-summary-value {
+  margin-top: 0.55rem;
+  font-size: 1.35rem;
   font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--journal-ink);
 }
 
-.teacher-section-meta {
-  font-size: 0.82rem;
+.teacher-summary-helper {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
   color: var(--journal-muted);
 }
 
+.teacher-divider {
+  margin-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
 .teacher-skeleton-list {
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   display: grid;
   gap: 0.75rem;
 }
 
-.teacher-table-shell {
+.teacher-empty-state {
+  margin-top: 1.5rem;
+}
+
+.teacher-badge-card {
   border: 1px solid var(--teacher-card-border);
-  border-radius: 18px;
 }
 
-.teacher-class-name {
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-ink) 88%, var(--journal-muted));
+.teacher-tip-block {
+  border-top: 1px dashed var(--teacher-divider);
 }
 
-.teacher-class-copy {
-  margin-top: 0.3rem;
+.teacher-directory {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.5rem;
+}
+
+.teacher-directory-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.9rem;
+}
+
+.teacher-directory-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-meta {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.teacher-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 7rem 10rem 7rem;
+  gap: 1rem;
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.teacher-directory-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 7rem 10rem 7rem;
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+  padding: 1.1rem 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.teacher-directory-row:hover,
+.teacher-directory-row:focus-visible {
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
+  outline: none;
+}
+
+.teacher-directory-row-main {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.teacher-directory-row-index,
+.teacher-directory-row-points {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.teacher-directory-row-index {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--journal-muted);
+}
+
+.teacher-directory-row-title-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.85rem;
+}
+
+.teacher-directory-row-title {
+  min-width: 0;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 1.08rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-row-points {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+.teacher-directory-row-copy {
   font-size: 0.84rem;
+  line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
 }
 
-.teacher-class-count {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-ink) 84%, var(--journal-muted));
+.teacher-directory-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.teacher-row-btn {
+.teacher-directory-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.42rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  padding: 0.58rem 0.95rem;
-  font-size: 0.84rem;
+  min-height: 1.65rem;
+  padding: 0 0.62rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  font-size: 0.75rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+  color: var(--journal-accent-strong);
 }
 
-.teacher-row-btn:hover,
-.teacher-row-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 38%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
-  color: var(--journal-accent);
+.teacher-directory-chip-muted {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
 }
 
-:deep(.teacher-class-table.el-table),
-:deep(.teacher-class-table .el-table__inner-wrapper),
-:deep(.teacher-class-table .el-scrollbar),
-:deep(.teacher-class-table .el-scrollbar__view),
-:deep(.teacher-class-table .el-table__body-wrapper),
-:deep(.teacher-class-table .el-table__header-wrapper),
-:deep(.teacher-class-table .el-table__empty-block) {
-  background: var(--journal-surface);
+.teacher-directory-row-status {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.teacher-directory-state-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0 0.62rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.teacher-directory-state-chip-ready {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
+}
+
+.teacher-directory-state-chip-empty {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
+}
+
+.teacher-directory-row-metrics {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.81rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.teacher-directory-row-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--journal-accent-strong);
 }
 
 @media (max-width: 960px) {
-  .teacher-badge-grid {
+  .teacher-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teacher-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .teacher-directory-head {
+    display: none;
+  }
+
+  .teacher-directory-row {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    padding: 1rem 0;
   }
 }
 </style>
