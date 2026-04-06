@@ -212,7 +212,7 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -221,20 +221,16 @@ import {
   ChevronDown,
   Circle,
   ClipboardList,
-  FileChartColumnIncreasing,
   FileDown,
   GraduationCap,
   LayoutDashboard,
-  LayoutList,
   Layers,
-  Lightbulb,
   Radar,
   ScanEye,
   Server,
   Settings,
   Shield,
   Swords,
-  Timer,
   Trophy,
   User,
   Users,
@@ -308,39 +304,6 @@ function resolveIcon(name?: string): IconComp {
   return iconRegistry[name] || Circle
 }
 
-function buildDashboardChildren(): NavItem[] {
-  return [
-    {
-      name: 'DashboardRecommendation',
-      path: '/dashboard',
-      title: '训练建议',
-      icon: Lightbulb,
-      query: { panel: 'recommendation' },
-    },
-    {
-      name: 'DashboardCategory',
-      path: '/dashboard',
-      title: '分类进度',
-      icon: LayoutList,
-      query: { panel: 'category' },
-    },
-    {
-      name: 'DashboardTimeline',
-      path: '/dashboard',
-      title: '近期动态',
-      icon: Timer,
-      query: { panel: 'timeline' },
-    },
-    {
-      name: 'DashboardDifficulty',
-      path: '/dashboard',
-      title: '难度分布',
-      icon: FileChartColumnIncreasing,
-      query: { panel: 'difficulty' },
-    },
-  ]
-}
-
 const navGroups = computed<NavGroup[]>(() => {
   const root = routes.find((r) => r.path === '/')
   const children = (root?.children || []).filter(
@@ -364,13 +327,6 @@ const navGroups = computed<NavGroup[]>(() => {
     roles: r.meta?.roles as string[] | undefined,
   }))
 
-  if (role === 'student') {
-    const dashboardItem = items.find((item) => item.path === '/dashboard')
-    if (dashboardItem) {
-      dashboardItem.children = buildDashboardChildren()
-    }
-  }
-
   const mainItems = items.filter((i) => !i.path.startsWith('/platform/') && !i.path.startsWith('/academy/'))
   const teacherItems = items.filter((i) => i.path.startsWith('/academy/'))
   const adminItems = items.filter((i) => i.path.startsWith('/platform/'))
@@ -380,16 +336,6 @@ const navGroups = computed<NavGroup[]>(() => {
   if (adminItems.length > 0) groups.push({ key: 'admin', title: '管理', shortTitle: '管', items: adminItems })
   return groups
 })
-
-watch(
-  () => route.fullPath,
-  () => {
-    if (route.path === '/dashboard') {
-      expandedMenus.value.Dashboard = true
-    }
-  },
-  { immediate: true },
-)
 
 function queryMatches(query?: NavQuery): boolean {
   if (!query) return true

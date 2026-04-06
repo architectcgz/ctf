@@ -5,10 +5,16 @@ import { ArrowRight, Crosshair, ShieldAlert, Sparkles } from 'lucide-vue-next'
 import type { RecommendationItem } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 
-const props = defineProps<{
-  weakDimensions: string[]
-  recommendations: RecommendationItem[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    weakDimensions: string[]
+    recommendations: RecommendationItem[]
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false,
+  }
+)
 
 const emit = defineEmits<{
   openChallenge: [challengeId: string]
@@ -21,8 +27,15 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+  <section
+    class="space-y-6 flex min-h-full flex-1 flex-col"
+    :class="
+      embedded
+        ? 'journal-shell-embedded'
+        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+    "
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div>
           <div class="journal-eyebrow">Priority Focus</div>
           <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
@@ -77,10 +90,10 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
             </div>
           </div>
         </article>
-      </div>
+    </div>
 
-      <div class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <section v-if="topRecs.length > 0" class="recommend-section">
+    <div class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6" :class="{ 'recommend-board--embedded': embedded }">
+      <section v-if="topRecs.length > 0" class="recommend-section">
           <div class="flex items-start justify-between gap-4">
             <div>
               <div class="journal-eyebrow journal-eyebrow-soft">Top Queue</div>
@@ -126,9 +139,9 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
               </div>
             </button>
           </div>
-        </section>
+      </section>
 
-        <section class="recommend-section">
+      <section class="recommend-section">
           <div class="flex items-start justify-between gap-4">
             <div>
               <div class="journal-eyebrow journal-eyebrow-soft">Full List</div>
@@ -183,12 +196,13 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
               </div>
             </button>
           </div>
-        </section>
-      </div>
-    </section>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.journal-shell-embedded,
 .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
@@ -204,6 +218,14 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
+}
+
+.journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .journal-hero {
@@ -311,6 +333,10 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 
 .recommend-board {
   border-top: 1px solid var(--journal-divider);
+}
+
+.recommend-board--embedded {
+  margin-top: 1.25rem;
 }
 
 .recommend-section + .recommend-section {

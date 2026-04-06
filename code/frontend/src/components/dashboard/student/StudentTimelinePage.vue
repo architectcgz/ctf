@@ -7,9 +7,15 @@ import { formatTime } from '@/utils/format'
 
 import { timelineSummary, timelineTypeLabel, timelineTypeTone } from './utils'
 
-const props = defineProps<{
-  timeline: TimelineEvent[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    timeline: TimelineEvent[]
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false,
+  }
+)
 
 const solveCount = computed(() => props.timeline.filter((item) => item.type === 'solve').length)
 const submitCount = computed(() => props.timeline.filter((item) => item.type === 'submit').length)
@@ -37,8 +43,15 @@ const groupedTimeline = computed(() => {
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+  <section
+    class="space-y-6 flex min-h-full flex-1 flex-col"
+    :class="
+      embedded
+        ? 'journal-shell-embedded'
+        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+    "
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Training Timeline</div>
           <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
@@ -73,10 +86,10 @@ const groupedTimeline = computed(() => {
             </div>
           </div>
         </article>
-      </div>
+    </div>
 
-      <div class="timeline-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <section class="timeline-section">
+    <div class="timeline-board mt-6 px-1 pt-5 md:px-2 md:pt-6" :class="{ 'timeline-board--embedded': embedded }">
+      <section class="timeline-section">
           <div class="journal-eyebrow journal-eyebrow-soft">Rhythm Signals</div>
           <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">节奏信号</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
@@ -135,9 +148,9 @@ const groupedTimeline = computed(() => {
               </div>
             </article>
           </div>
-        </section>
+      </section>
 
-        <section class="timeline-section">
+      <section class="timeline-section">
           <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
           <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练时间线</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
@@ -191,12 +204,13 @@ const groupedTimeline = computed(() => {
               </div>
             </section>
           </div>
-        </section>
-      </div>
-    </section>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.journal-shell-embedded,
 .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
@@ -212,6 +226,14 @@ const groupedTimeline = computed(() => {
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
+}
+
+.journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .journal-hero {
@@ -280,6 +302,10 @@ const groupedTimeline = computed(() => {
 
 .timeline-board {
   border-top: 1px solid var(--journal-divider);
+}
+
+.timeline-board--embedded {
+  margin-top: 1.25rem;
 }
 
 .timeline-section + .timeline-section {

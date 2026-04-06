@@ -12,9 +12,15 @@ interface DifficultyStat {
   solved: number
 }
 
-const props = defineProps<{
-  difficultyStats: DifficultyStat[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    difficultyStats: DifficultyStat[]
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false,
+  }
+)
 
 const difficultyOrder = ['beginner', 'easy', 'medium', 'hard', 'insane']
 const barColorMap: Record<string, string> = {
@@ -44,8 +50,15 @@ const nextFocus = computed(
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+  <section
+    class="space-y-6 flex min-h-full flex-1 flex-col"
+    :class="
+      embedded
+        ? 'journal-shell-embedded'
+        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+    "
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Difficulty Ladder</div>
           <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
@@ -78,10 +91,10 @@ const nextFocus = computed(
             </div>
           </div>
         </article>
-      </div>
+    </div>
 
-      <div class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <section class="difficulty-section">
+    <div class="difficulty-board mt-6 px-1 pt-5 md:px-2 md:pt-6" :class="{ 'difficulty-board--embedded': embedded }">
+      <section class="difficulty-section">
           <div class="journal-eyebrow journal-eyebrow-soft">Difficulty Layer View</div>
           <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">难度层级视图</h3>
 
@@ -121,9 +134,9 @@ const nextFocus = computed(
               </div>
             </div>
           </div>
-        </section>
+      </section>
 
-        <section class="difficulty-section">
+      <section class="difficulty-section">
           <div class="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
             <div>
               <div class="journal-eyebrow journal-eyebrow-soft">Difficulty Interpretation</div>
@@ -179,12 +192,13 @@ const nextFocus = computed(
               </div>
             </aside>
           </div>
-        </section>
-      </div>
-    </section>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.journal-shell-embedded,
 .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
@@ -200,6 +214,14 @@ const nextFocus = computed(
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
+}
+
+.journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .journal-hero {
@@ -268,6 +290,10 @@ const nextFocus = computed(
 
 .difficulty-board {
   border-top: 1px solid var(--journal-divider);
+}
+
+.difficulty-board--embedded {
+  margin-top: 1.25rem;
 }
 
 .difficulty-section + .difficulty-section {

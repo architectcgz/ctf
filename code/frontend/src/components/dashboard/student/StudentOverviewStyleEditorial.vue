@@ -2,21 +2,25 @@
 import { computed } from 'vue'
 import {
   Activity,
-  ArrowRight,
   BellRing,
   MapPinned,
-  Sparkles,
   Trophy,
 } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
-import { difficultyClass, difficultyLabel } from '@/utils/challenge'
-import { formatDate } from '@/utils/format'
 
 import type { StudentOverviewProps } from './overviewProps'
-import { timelineSummary } from './utils'
 
-const props = defineProps<StudentOverviewProps>()
+const props = withDefaults(
+  defineProps<
+    StudentOverviewProps & {
+      embedded?: boolean
+    }
+  >(),
+  {
+    embedded: false,
+  }
+)
 
 const emit = defineEmits<{
   openChallenges: []
@@ -24,8 +28,6 @@ const emit = defineEmits<{
   openChallenge: [challengeId: string]
 }>()
 
-const quickRecommendations = computed(() => props.recommendations.slice(0, 3))
-const recentTimeline = computed(() => props.timeline.slice(0, 4))
 const storyMetrics = computed(() => [
   { label: '总得分', value: props.progress.total_score ?? 0, tone: 'default' },
   { label: '已解题数', value: props.progress.total_solved ?? 0, tone: 'success' },
@@ -40,10 +42,10 @@ const rankSummary = computed(() => props.progress.rank ?? '-')
 const operationsSummary = computed(() => [
   {
     label: '环境状态',
-    value: quickRecommendations.value.length > 0 ? '可训练' : '空闲',
+    value: props.recommendations.length > 0 ? '可训练' : '空闲',
     description:
-      quickRecommendations.value.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
-    status: quickRecommendations.value.length > 0 ? 'ready' : 'idle',
+      props.recommendations.length > 0 ? '存在可立即进入的推荐题目' : '当前没有推荐训练任务',
+    status: props.recommendations.length > 0 ? 'ready' : 'idle',
     icon: Activity,
   },
   {
@@ -65,49 +67,33 @@ const operationsSummary = computed(() => [
     icon: BellRing,
   },
 ])
-
-const categoryThemeMap: Record<string, string> = {
-  web: 'tag-web',
-  pwn: 'tag-pwn',
-  reverse: 'tag-reverse',
-  crypto: 'tag-crypto',
-  misc: 'tag-misc',
-  forensics: 'tag-forensics',
-}
-
-function categoryClass(category: string): string {
-  return categoryThemeMap[category] || 'tag-default'
-}
-
-function recommendationStatus(itemId: string): string {
-  return Number(itemId) % 2 === 0 ? 'ready' : 'idle'
-}
-
-function timelineStatus(eventType: string): string {
-  if (eventType === 'solve') return 'solved'
-  if (eventType === 'instance' || eventType.includes('instance')) return 'ready'
-  return 'idle'
-}
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div>
+  <section
+    class="space-y-6 flex min-h-full flex-1 flex-col"
+    :class="
+      embedded
+        ? 'journal-shell-embedded'
+        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+    "
+  >
+    <div>
         <div class="journal-eyebrow">Training Journal</div>
         <h1 class="journal-page-title mt-3 max-w-3xl text-[var(--journal-ink)]">
           {{ displayName }} 的训练总览
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          这里汇总了训练进度、推荐题目和最近动态。
+          这里汇总了训练进度、能力分布和近期状态。
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3">
           <ElButton type="primary" @click="emit('openChallenges')">继续训练</ElButton>
           <ElButton plain @click="emit('openSkillProfile')">查看能力画像</ElButton>
         </div>
-      </div>
-      <div class="journal-board">
-        <section class="journal-bento">
+    </div>
+    <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
+      <section class="journal-bento">
           <article class="journal-panel journal-radar-card px-6 py-6">
             <div class="flex items-center justify-between gap-4">
               <div>
@@ -202,114 +188,13 @@ function timelineStatus(eventType: string): string {
               </article>
             </div>
           </article>
-
-          <article class="journal-panel journal-recommend-card px-6 py-6">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow">Recommended Track</div>
-                <h3 class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">推荐训练队列</h3>
-              </div>
-              <Sparkles class="hidden h-10 w-10 text-[var(--journal-accent)] md:block" />
-            </div>
-
-            <div
-              v-if="quickRecommendations.length === 0"
-              class="mt-6 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
-            >
-              当前没有推荐题目，直接去挑战列表挑一道新题即可。
-            </div>
-
-            <div v-else class="mt-6 grid gap-3">
-              <button
-                v-for="item in quickRecommendations"
-                :key="item.challenge_id"
-                type="button"
-                class="journal-rec-item flex w-full items-start gap-4 px-4 py-4 text-left transition"
-                @click="emit('openChallenge', item.challenge_id)"
-              >
-                <div
-                  class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--journal-soft-border)] bg-[var(--journal-track)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font"
-                >
-                  #{{ item.challenge_id }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div class="space-y-2">
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span
-                          class="status-dot"
-                          :class="`status-dot-${recommendationStatus(item.challenge_id)}`"
-                        />
-                        <div class="text-base font-semibold text-[var(--journal-ink)]">
-                          {{ item.title }}
-                        </div>
-                      </div>
-                      <div class="flex flex-wrap items-center gap-2">
-                        <span class="category-chip" :class="categoryClass(item.category)">{{
-                          item.category.toUpperCase()
-                        }}</span>
-                        <span
-                          class="rounded-full px-2.5 py-1 text-xs font-medium"
-                          :class="difficultyClass(item.difficulty)"
-                        >
-                          <span class="difficulty-dot" :class="`difficulty-${item.difficulty}`" />
-                          {{ difficultyLabel(item.difficulty) }}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
-                  </div>
-                  <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
-                    {{ item.reason }}
-                  </p>
-                </div>
-              </button>
-            </div>
-          </article>
-
-          <article class="journal-panel journal-timeline-card px-6 py-6">
-            <div class="journal-eyebrow">Recent Notes</div>
-            <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
-
-            <div
-              v-if="recentTimeline.length === 0"
-              class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
-            >
-              当前还没有训练动态。
-            </div>
-
-            <div v-else class="mt-5 space-y-3">
-              <article
-                v-for="event in recentTimeline"
-                :key="event.id"
-                class="journal-log px-4 py-4"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex min-w-0 items-center gap-3">
-                    <span
-                      class="status-dot shrink-0"
-                      :class="`status-dot-${timelineStatus(event.type)}`"
-                    />
-                    <div class="truncate text-sm font-medium text-[var(--journal-ink)]">
-                      {{ event.title }}
-                    </div>
-                  </div>
-                  <div class="tech-font text-xs text-[var(--journal-muted)]">
-                    {{ formatDate(event.created_at) }}
-                  </div>
-                </div>
-                <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  {{ timelineSummary(event) }}
-                </div>
-              </article>
-            </div>
-          </article>
-        </section>
-      </div>
-    </section>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.journal-shell-embedded,
 .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
@@ -325,6 +210,14 @@ function timelineStatus(eventType: string): string {
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
+}
+
+.journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .journal-hero {
@@ -348,6 +241,10 @@ function timelineStatus(eventType: string): string {
   padding-top: 1.25rem;
 }
 
+.journal-board--embedded {
+  margin-top: 1.25rem;
+}
+
 .journal-panel {
   border: 0;
   border-radius: 0;
@@ -356,8 +253,6 @@ function timelineStatus(eventType: string): string {
 }
 
 .journal-metric,
-.journal-rec-item,
-.journal-log,
 .journal-inline-item,
 .journal-rank-summary {
   border: 1px solid var(--journal-shell-border);
@@ -388,9 +283,7 @@ function timelineStatus(eventType: string): string {
 @media (min-width: 1280px) {
   .journal-bento {
     grid-template-columns: 1.1fr 0.92fr 0.88fr;
-    grid-template-areas:
-      'radar rank ops'
-      'recommend recommend timeline';
+    grid-template-areas: 'radar rank ops';
   }
 
   .journal-radar-card {
@@ -424,44 +317,6 @@ function timelineStatus(eventType: string): string {
   .journal-ops-card {
     grid-area: ops;
   }
-  .journal-recommend-card {
-    grid-area: recommend;
-    position: relative;
-    padding-right: 1.5rem;
-    padding-top: 1.75rem;
-  }
-
-  .journal-recommend-card::before {
-    content: '';
-    position: absolute;
-    top: -0.625rem;
-    left: 0;
-    right: 0.625rem;
-    border-top: 1px solid var(--journal-divider);
-  }
-
-  .journal-recommend-card::after {
-    content: '';
-    position: absolute;
-    top: 0.5rem;
-    right: -0.625rem;
-    bottom: 0.5rem;
-    border-right: 1px solid var(--journal-divider);
-  }
-  .journal-timeline-card {
-    grid-area: timeline;
-    position: relative;
-    padding-top: 1.75rem;
-  }
-
-  .journal-timeline-card::before {
-    content: '';
-    position: absolute;
-    top: -0.625rem;
-    left: 0;
-    right: 0;
-    border-top: 1px solid var(--journal-divider);
-  }
 }
 
 .journal-metric-accent {
@@ -474,64 +329,6 @@ function timelineStatus(eventType: string): string {
 
 .journal-inline-item + .journal-inline-item {
   margin-top: 0.75rem;
-}
-
-.journal-rec-item:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
-}
-
-.journal-rec-item:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
-}
-
-.journal-log {
-  transition: all 0.2s ease-in-out;
-}
-
-.journal-log:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
-}
-
-.category-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 0.28rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.tag-web {
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
-  color: var(--journal-accent-strong);
-}
-.tag-pwn {
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-accent-strong);
-}
-.tag-reverse {
-  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-  color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
-}
-.tag-crypto {
-  background: color-mix(in srgb, #16a34a 14%, transparent);
-  color: #15803d;
-}
-.tag-misc {
-  background: color-mix(in srgb, #d97706 14%, transparent);
-  color: #b45309;
-}
-.tag-forensics {
-  background: color-mix(in srgb, #0284c7 14%, transparent);
-  color: #0369a1;
-}
-.tag-default {
-  background: color-mix(in srgb, var(--journal-soft-border) 56%, transparent);
-  color: var(--journal-muted);
 }
 
 .tech-font {
@@ -561,28 +358,6 @@ function timelineStatus(eventType: string): string {
 
 .status-dot-solved {
   background: #22c55e;
-}
-
-.difficulty-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 6px;
-  border-radius: 999px;
-}
-
-.difficulty-beginner,
-.difficulty-easy {
-  background-color: #10b981;
-}
-.difficulty-medium {
-  background-color: #f59e0b;
-}
-.difficulty-hard {
-  background-color: #f97316;
-}
-.difficulty-insane {
-  background-color: #ef4444;
 }
 
 :global([data-theme='dark']) .journal-shell {
