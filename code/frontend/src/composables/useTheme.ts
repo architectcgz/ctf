@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 export type Theme = 'light' | 'dark'
-export type ThemeBrand = 'green' | 'cyan' | 'blue'
+export type ThemeBrand = 'green' | 'cyan' | 'blue' | 'orange'
 
 type ThemeBrandOption = {
   value: ThemeBrand
@@ -21,6 +21,7 @@ const availableBrands: ThemeBrandOption[] = [
   { value: 'green', label: '绿色', description: '更贴近学校 CTF 的默认技术主题' },
   { value: 'cyan', label: '青色', description: '保留当前较冷静的青蓝技术感' },
   { value: 'blue', label: '蓝色', description: '更传统、更中性的控制台色调' },
+  { value: 'orange', label: '橙色', description: '偏琥珀的操作台橙色，更醒目但不过度张扬' },
 ]
 
 function isTheme(value: string | null): value is Theme {
@@ -28,7 +29,7 @@ function isTheme(value: string | null): value is Theme {
 }
 
 function isThemeBrand(value: string | null): value is ThemeBrand {
-  return value === 'green' || value === 'cyan' || value === 'blue'
+  return value === 'green' || value === 'cyan' || value === 'blue' || value === 'orange'
 }
 
 function syncDocumentTheme(): void {

@@ -96,4 +96,14 @@ describe('useTheme', () => {
     expect(brand.value).toBe('green')
     expect(document.documentElement.getAttribute('data-brand')).toBe('green')
   })
+
+  it('应该支持橙色品牌主题', () => {
+    const { brand, setBrand } = useTheme()
+
+    setBrand('orange')
+
+    expect(brand.value).toBe('orange')
+    expect(document.documentElement.getAttribute('data-brand')).toBe('orange')
+    expect(localStorage.getItem('theme-brand')).toBe('orange')
+  })
 })

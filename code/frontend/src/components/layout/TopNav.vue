@@ -32,6 +32,44 @@
             <Moon v-else class="h-4 w-4" />
           </button>
 
+          <div ref="brandPickerRef" class="topnav-brand-picker">
+            <button
+              type="button"
+              class="topnav-icon-button"
+              aria-label="切换主题色"
+              aria-controls="topnav-brand-picker-panel"
+              :aria-expanded="brandPickerOpen ? 'true' : 'false'"
+              :title="`当前主题色：${currentBrandLabel}`"
+              @click="toggleBrandPicker"
+            >
+              <Palette class="h-4 w-4" />
+            </button>
+
+            <div
+              v-if="brandPickerOpen"
+              id="topnav-brand-picker-panel"
+              class="topnav-brand-picker-panel"
+              role="menu"
+              aria-label="主题色选择"
+            >
+              <button
+                v-for="option in availableBrands"
+                :key="option.value"
+                type="button"
+                class="topnav-brand-dot"
+                :class="{ 'topnav-brand-dot--active': option.value === brand }"
+                role="menuitemradio"
+                :aria-checked="option.value === brand"
+                :aria-label="`切换到${option.label}主题`"
+                :data-brand="option.value"
+                :title="option.label"
+                @click="selectBrand(option.value)"
+              >
+                <span class="sr-only">{{ option.label }}</span>
+              </button>
+            </div>
+          </div>
+
           <NotificationDropdown :realtime-status="notificationStatus" />
         </div>
 
@@ -65,7 +103,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { LogOut, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
+import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -88,11 +126,12 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const isMobile = ref(window.innerWidth < 768)
+const brandPickerRef = ref<HTMLElement | null>(null)
+const brandPickerOpen = ref(false)
+
 function onResize() { isMobile.value = window.innerWidth < 768 }
-onMounted(() => window.addEventListener('resize', onResize))
-onUnmounted(() => window.removeEventListener('resize', onResize))
 const { logout } = useAuth()
-const { theme, toggleTheme } = useTheme()
+const { availableBrands, brand, setBrand, theme, toggleTheme } = useTheme()
 
 const pageTitle = computed(() => resolveRouteTitle(route))
 const roleCaption = computed(() => {
@@ -101,8 +140,51 @@ const roleCaption = computed(() => {
   if (role === 'teacher') return '教学空间'
   return '学生空间'
 })
+const currentBrandLabel = computed(
+  () => availableBrands.find((option) => option.value === brand.value)?.label || '绿色'
+)
 const userDisplayName = computed(() => authStore.user?.name || authStore.user?.username || '未登录')
 const userInitial = computed(() => userDisplayName.value.slice(0, 1).toUpperCase())
+
+function toggleBrandPicker(): void {
+  brandPickerOpen.value = !brandPickerOpen.value
+}
+
+function closeBrandPicker(): void {
+  brandPickerOpen.value = false
+}
+
+function selectBrand(nextBrand: (typeof availableBrands)[number]['value']): void {
+  setBrand(nextBrand)
+  closeBrandPicker()
+}
+
+function handleDocumentPointerDown(event: MouseEvent): void {
+  if (!brandPickerOpen.value) return
+
+  const target = event.target
+  if (!(target instanceof Node)) return
+  if (brandPickerRef.value?.contains(target)) return
+
+  closeBrandPicker()
+}
+
+function handleDocumentKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape' || !brandPickerOpen.value) return
+  closeBrandPicker()
+}
+
+onMounted(() => {
+  window.addEventListener('resize', onResize)
+  document.addEventListener('mousedown', handleDocumentPointerDown)
+  document.addEventListener('keydown', handleDocumentKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
+  document.removeEventListener('mousedown', handleDocumentPointerDown)
+  document.removeEventListener('keydown', handleDocumentKeydown)
+})
 </script>
 
 <style scoped>
@@ -124,6 +206,7 @@ const userInitial = computed(() => userDisplayName.value.slice(0, 1).toUpperCase
 }
 
 .topnav-tool-cluster {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -131,6 +214,69 @@ const userInitial = computed(() => userDisplayName.value.slice(0, 1).toUpperCase
   border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
   border-radius: 16px;
   background: color-mix(in srgb, var(--color-bg-surface) 54%, var(--color-bg-base));
+}
+
+.topnav-brand-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.topnav-brand-picker-panel {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base)));
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 90%, transparent);
+}
+
+.topnav-brand-dot {
+  --brand-dot-color: var(--color-primary);
+  display: inline-flex;
+  height: 1.15rem;
+  width: 1.15rem;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: var(--brand-dot-color);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 28%, transparent);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.topnav-brand-dot:hover {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.topnav-brand-dot[data-brand="green"] {
+  --brand-dot-color: #16a34a;
+}
+
+.topnav-brand-dot[data-brand="cyan"] {
+  --brand-dot-color: #0891b2;
+}
+
+.topnav-brand-dot[data-brand="blue"] {
+  --brand-dot-color: #2563eb;
+}
+
+.topnav-brand-dot[data-brand="orange"] {
+  --brand-dot-color: #e18a2a;
+}
+
+.topnav-brand-dot--active {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-bg-base) 92%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--color-primary) 26%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, white 34%, transparent);
 }
 
 .topnav-actions :deep(.notification-trigger) {
@@ -234,6 +380,11 @@ const userInitial = computed(() => userDisplayName.value.slice(0, 1).toUpperCase
 }
 
 .topnav-icon-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
+  outline-offset: 3px;
+}
+
+.topnav-brand-dot:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-primary) 44%, white);
   outline-offset: 3px;
 }

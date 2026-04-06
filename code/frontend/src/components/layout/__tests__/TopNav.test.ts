@@ -1,19 +1,140 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import { createPinia, setActivePinia } from 'pinia'
 
-import topNavSource from '../TopNav.vue?raw'
+import TopNav from '../TopNav.vue'
+import { useAuthStore } from '@/stores/auth'
 
-describe('TopNav layout language', () => {
-  it('removes the route protocol label and keeps the header as an action bar', () => {
-    expect(topNavSource).not.toContain('route://')
-    expect(topNavSource).toContain('class="topnav-main flex min-w-0 items-center gap-3 md:gap-4"')
-    expect(topNavSource).toContain('class="topnav-actions flex shrink-0 items-center gap-3"')
-    expect(topNavSource).toContain('class="topnav-tool-cluster"')
+const authMocks = vi.hoisted(() => ({
+  logout: vi.fn(),
+}))
+
+vi.mock('@/composables/useAuth', () => ({
+  useAuth: () => authMocks,
+}))
+
+vi.mock('@/components/layout/NotificationDropdown.vue', () => ({
+  default: {
+    name: 'NotificationDropdown',
+    props: ['realtimeStatus'],
+    template: '<div class="notification-dropdown-stub" />',
+  },
+}))
+
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/student/dashboard',
+        component: { template: '<div>dashboard</div>' },
+        meta: { title: '仪表盘' },
+      },
+    ],
+  })
+}
+
+async function mountTopNav() {
+  setActivePinia(createPinia())
+  localStorage.clear()
+  document.documentElement.removeAttribute('data-brand')
+  document.documentElement.removeAttribute('data-theme')
+  authMocks.logout.mockReset()
+
+  const authStore = useAuthStore()
+  authStore.setAuth(
+    {
+      id: 'student-1',
+      username: 'alice',
+      name: 'Alice',
+      role: 'student',
+    },
+    'token'
+  )
+
+  const router = createTestRouter()
+  await router.push('/student/dashboard')
+  await router.isReady()
+
+  const wrapper = mount(TopNav, {
+    attachTo: document.body,
+    props: {
+      sidebarCollapsed: false,
+      notificationStatus: 'open',
+    },
+    global: {
+      plugins: [router],
+    },
   })
 
-  it('compresses the user area to name plus role', () => {
-    expect(topNavSource).toContain('class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3"')
-    expect(topNavSource).toContain('class="topnav-user-name truncate text-sm font-semibold text-text-primary"')
-    expect(topNavSource).not.toContain('topnav-user-meta')
-    expect(topNavSource).toContain('topnav-logout')
+  await flushPromises()
+
+  return { wrapper }
+}
+
+describe('TopNav', () => {
+  beforeEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  it('保持紧凑头部布局并展示当前用户信息', async () => {
+    const { wrapper } = await mountTopNav()
+
+    expect(wrapper.find('.topnav-main').exists()).toBe(true)
+    expect(wrapper.find('.topnav-actions').exists()).toBe(true)
+    expect(wrapper.find('.topnav-user-name').text()).toBe('Alice')
+    expect(wrapper.find('.topnav-user-role').text()).toBe('学生空间')
+
+    wrapper.unmount()
+  })
+
+  it('点击调色盘后会弹出 4 个主题色圆点并完成切换', async () => {
+    const { wrapper } = await mountTopNav()
+    const paletteButton = wrapper.find('button[aria-label="切换主题色"]')
+
+    expect(paletteButton.attributes('aria-expanded')).toBe('false')
+
+    await paletteButton.trigger('click')
+    await flushPromises()
+
+    expect(paletteButton.attributes('aria-expanded')).toBe('true')
+
+    const brandOptions = wrapper.findAll('button[role="menuitemradio"]')
+    expect(brandOptions).toHaveLength(4)
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(true)
+
+    const orangeOption = wrapper.find('button[aria-label="切换到橙色主题"]')
+    await orangeOption.trigger('click')
+    await flushPromises()
+
+    expect(localStorage.getItem('theme-brand')).toBe('orange')
+    expect(document.documentElement.getAttribute('data-brand')).toBe('orange')
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(false)
+
+    wrapper.unmount()
+  })
+
+  it('支持点击外部和按 Esc 关闭主题色面板', async () => {
+    const { wrapper } = await mountTopNav()
+    const paletteButton = wrapper.find('button[aria-label="切换主题色"]')
+
+    await paletteButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(true)
+
+    document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    await flushPromises()
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(false)
+
+    await paletteButton.trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(true)
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await flushPromises()
+    expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(false)
+
+    wrapper.unmount()
   })
 })
