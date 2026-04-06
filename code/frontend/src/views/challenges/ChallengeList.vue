@@ -296,6 +296,7 @@ onMounted(() => {
 
           <div class="challenge-directory-head">
             <span>题目</span>
+            <span>积分</span>
             <span>分类</span>
             <span>难度</span>
             <span>标签</span>
@@ -317,9 +318,10 @@ onMounted(() => {
               <div class="challenge-row-index">CH-{{ challengeIndex(index) }}</div>
               <div class="challenge-row-title-group">
                 <h2 class="challenge-row-title">{{ challenge.title }}</h2>
-                <div class="challenge-row-points">{{ challenge.points }} pts</div>
               </div>
             </div>
+
+            <div class="challenge-row-points">{{ challenge.points }} pts</div>
 
             <div class="challenge-row-category">
               <span
@@ -672,6 +674,15 @@ onMounted(() => {
 }
 
 .challenge-directory {
+  --challenge-directory-columns:
+    minmax(0, 1.25fr)
+    minmax(88px, 0.32fr)
+    minmax(96px, 0.38fr)
+    minmax(96px, 0.38fr)
+    minmax(160px, 0.82fr)
+    120px
+    180px
+    120px;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -702,14 +713,7 @@ onMounted(() => {
 
 .challenge-directory-head {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1.35fr)
-    minmax(96px, 0.38fr)
-    minmax(96px, 0.38fr)
-    minmax(160px, 0.82fr)
-    120px
-    180px
-    120px;
+  grid-template-columns: var(--challenge-directory-columns);
   gap: 16px;
   padding: 0 0 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -722,14 +726,7 @@ onMounted(() => {
 
 .challenge-row {
   display: grid;
-  grid-template-columns:
-    minmax(0, 1.35fr)
-    minmax(96px, 0.38fr)
-    minmax(96px, 0.38fr)
-    minmax(160px, 0.82fr)
-    120px
-    180px
-    120px;
+  grid-template-columns: var(--challenge-directory-columns);
   gap: 16px;
   align-items: center;
   width: 100%;
@@ -768,9 +765,7 @@ onMounted(() => {
 
 .challenge-row-title-group {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
 }
 
 .challenge-row-title {
@@ -784,6 +779,8 @@ onMounted(() => {
 }
 
 .challenge-row-points {
+  display: flex;
+  align-items: center;
   font-family:
     'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 13px;
