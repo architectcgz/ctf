@@ -23,12 +23,15 @@ export function usePagination<T>(
   const pageSize = ref(DEFAULT_PAGE_SIZE)
   const loading = ref(false)
   const error = ref<unknown | null>(null)
+  let latestRequestId = 0
 
   async function refresh(): Promise<void> {
+    const requestId = ++latestRequestId
     loading.value = true
     error.value = null
     try {
       const data = await fetchFn({ page: page.value, page_size: pageSize.value })
+      if (requestId !== latestRequestId) return
       if (!Number.isInteger(data.page_size) || data.page_size < 1) {
         throw new Error('分页响应缺少合法的 page_size 字段')
       }
@@ -37,8 +40,10 @@ export function usePagination<T>(
       page.value = data.page
       pageSize.value = data.page_size
     } catch (err) {
+      if (requestId !== latestRequestId) return
       error.value = err
     } finally {
+      if (requestId !== latestRequestId) return
       loading.value = false
     }
   }

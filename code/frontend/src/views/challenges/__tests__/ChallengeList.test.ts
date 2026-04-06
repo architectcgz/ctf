@@ -12,6 +12,16 @@ vi.mock('@/api/challenge', () => ({
 
 const mockedGetChallenges = vi.mocked(getChallenges)
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}
+
 function createTestRouter() {
   return createRouter({
     history: createMemoryHistory(),
@@ -96,6 +106,84 @@ describe('ChallengeList', () => {
       })
     )
     expect(mockedGetChallenges.mock.lastCall?.[0]).not.toHaveProperty('search')
+  })
+
+  it('旧请求晚返回时不应覆盖新的搜索结果', async () => {
+    const initialRequest = createDeferred<{
+      list: Array<{
+        id: string
+        title: string
+        category: 'web'
+        difficulty: 'easy'
+        tags: string[]
+        solved_count: number
+        total_attempts: number
+        is_solved: boolean
+        points: number
+        created_at: string
+      }>
+      total: number
+      page: number
+      page_size: number
+    }>()
+
+    mockedGetChallenges.mockImplementation(async (params) => {
+      if ((params as { keyword?: string }).keyword === 'sql') {
+        return {
+          list: [
+            {
+              id: '2',
+              title: 'SQL Search Hit',
+              category: 'web',
+              difficulty: 'easy',
+              tags: ['sql'],
+              solved_count: 3,
+              total_attempts: 8,
+              is_solved: false,
+              points: 200,
+              created_at: '2024-01-02T00:00:00Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 20,
+        }
+      }
+
+      return initialRequest.promise
+    })
+
+    const wrapper = await mountPage()
+
+    await wrapper.get('#challenge-search-input').setValue('sql')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('SQL Search Hit')
+    expect(wrapper.text()).not.toContain('Initial Full List')
+
+    initialRequest.resolve({
+      list: [
+        {
+          id: '1',
+          title: 'Initial Full List',
+          category: 'web',
+          difficulty: 'easy',
+          tags: ['initial'],
+          solved_count: 10,
+          total_attempts: 20,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('SQL Search Hit')
+    expect(wrapper.text()).not.toContain('Initial Full List')
   })
 
   it('应该显示空列表提示', async () => {
