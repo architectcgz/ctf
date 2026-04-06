@@ -383,7 +383,7 @@ interface RawChallengeImportPreview {
     content: string
   }>
   flag: {
-    type: 'static' | 'dynamic'
+    type: 'static' | 'dynamic' | 'regex' | 'manual_review'
     prefix?: string
   }
   runtime: {
@@ -1239,6 +1239,14 @@ export async function previewChallengeImport(file: File): Promise<AdminChallenge
     headers: { 'Content-Type': 'multipart/form-data' },
   })
   return normalizeChallengeImportPreview(response)
+}
+
+export async function listChallengeImports(): Promise<AdminChallengeImportPreview[]> {
+  const response = await request<RawChallengeImportPreview[]>({
+    method: 'GET',
+    url: '/authoring/challenge-imports',
+  })
+  return response.map(normalizeChallengeImportPreview)
 }
 
 export async function getChallengeImport(id: string): Promise<AdminChallengeImportPreview> {

@@ -62,10 +62,10 @@ function openAudit(query: Record<string, string>) {
 }
 
 async function switchPanel(panelKey: CheatPanelKey): Promise<void> {
-  const nextQuery = { ...route.query, panel: panelKey }
-  if (panelKey === 'overview') {
-    delete nextQuery.panel
-  }
+  const nextQuery =
+    panelKey === 'overview'
+      ? (({ panel: _panel, ...restQuery }) => restQuery)(route.query)
+      : { ...route.query, panel: panelKey }
   await router.replace({ name: 'CheatDetection', query: nextQuery })
 }
 
