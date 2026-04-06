@@ -34,4 +34,16 @@ describe('cheat detection surface alignment', () => {
       /\.cheat-empty-state\s*\{[\s\S]*border-top-color:\s*var\(--cheat-divider\);[\s\S]*border-bottom-color:\s*var\(--cheat-divider\);/s,
     )
   })
+
+  it('aligns the tab rail with the teacher dashboard underline style instead of pill tabs', () => {
+    expect(cheatDetectionSource).toMatch(
+      /\.top-tabs\s*\{[\s\S]*gap:\s*28px;[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-ink\) 10%, transparent\);[\s\S]*overflow-x:\s*auto;/s,
+    )
+    expect(cheatDetectionSource).toMatch(
+      /\.top-tab\s*\{[\s\S]*border-bottom:\s*2px solid transparent;[\s\S]*background:\s*transparent;[\s\S]*font-size:\s*15px;[\s\S]*white-space:\s*nowrap;/s,
+    )
+    expect(cheatDetectionSource).toMatch(
+      /\.top-tab:hover,\s*\.top-tab.active,\s*\.top-tab:focus-visible\s*\{[\s\S]*border-bottom-color:\s*color-mix\(in srgb, var\(--journal-accent\) 86%, var\(--journal-ink\)\);/s,
+    )
+  })
 })
