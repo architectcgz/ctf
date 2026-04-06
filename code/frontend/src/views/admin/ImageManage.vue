@@ -46,26 +46,37 @@
         <div v-if="list.length === 0" class="admin-empty">当前还没有镜像。</div>
 
         <div v-else class="image-list">
+          <div class="image-directory-head" aria-hidden="true">
+            <span>镜像</span>
+            <span>状态</span>
+            <span>创建时间</span>
+            <span>操作</span>
+          </div>
+
           <article v-for="row in list" :key="row.id" class="image-row">
             <div class="image-row__main">
               <div class="image-row__titleline">
                 <h2 class="image-row__title">{{ row.name }}</h2>
                 <span class="image-row__tag">:{{ row.tag }}</span>
-                <span
-                  class="admin-status-chip"
-                  :style="{
-                    backgroundColor: getStatusColor(row.status) + '18',
-                    color: getStatusColor(row.status),
-                  }"
-                >
-                  {{ getStatusLabel(row.status) }}
-                </span>
               </div>
               <p class="image-row__description">{{ row.description || '未填写镜像说明' }}</p>
             </div>
 
-            <div class="image-row__aside">
-              <div class="image-row__time">{{ new Date(row.created_at).toLocaleString() }}</div>
+            <div class="image-row__status">
+              <span
+                class="admin-status-chip"
+                :style="{
+                  backgroundColor: getStatusColor(row.status) + '18',
+                  color: getStatusColor(row.status),
+                }"
+              >
+                {{ getStatusLabel(row.status) }}
+              </span>
+            </div>
+
+            <div class="image-row__time">{{ new Date(row.created_at).toLocaleString() }}</div>
+
+            <div class="image-row__actions">
               <button
                 class="admin-btn admin-btn-danger admin-btn-compact"
                 @click="handleDelete(row.id)"
@@ -210,34 +221,25 @@ onUnmounted(() => {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
   --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --admin-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
-.journal-hero,
-.journal-panel {
+.journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)),
-      color-mix(
-        in srgb,
-        var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
-        var(--color-bg-base)
-      )
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      var(--journal-surface)
     );
-  border-radius: 16px !important;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .journal-eyebrow,
@@ -250,10 +252,9 @@ onUnmounted(() => {
 }
 
 .journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.75rem 0.875rem;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
 }
 
 .journal-note-value {
@@ -272,20 +273,7 @@ onUnmounted(() => {
 
 .journal-divider {
   margin-block: 1rem;
-  border-top: 1px dashed
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-}
-
-.image-row {
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 92%,
-    var(--color-bg-base)
-  );
-  padding: 1rem;
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .admin-btn {
@@ -293,12 +281,15 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: 0.65rem 1rem;
+  min-height: 2.45rem;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.95rem;
   font-size: 0.875rem;
   font-weight: 600;
-  transition: all 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
 }
 
 .admin-btn-compact {
@@ -320,29 +311,21 @@ onUnmounted(() => {
 
 .admin-btn-ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(
-    in srgb,
-    var(--journal-surface, var(--color-bg-surface)) 92%,
-    var(--color-bg-base)
-  );
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
 .admin-status-chip {
   display: inline-flex;
   align-items: center;
-  border-radius: 999px;
-  padding: 0.34rem 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.32rem 0.65rem;
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .admin-empty {
-  border: 1px dashed
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-  padding: 1rem;
+  padding: 1rem 0 0;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -353,8 +336,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-top: 1px dashed
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   padding-top: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
@@ -368,7 +350,7 @@ onUnmounted(() => {
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+      var(--journal-surface)
     );
   box-shadow: 0 24px 60px var(--color-shadow-soft);
 }
@@ -405,52 +387,11 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary-hover);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero,
-:global([data-theme='dark']) .journal-panel {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
-}
-
-:global([data-theme='dark']) .image-row,
-:global([data-theme='dark']) .admin-btn-ghost,
-:global([data-theme='dark']) :deep(.el-input__wrapper),
-:global([data-theme='dark']) :deep(.el-textarea__inner) {
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-}
-
-:global([data-theme='dark']) .admin-btn-danger {
-  background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
-}
-
-.journal-shell {
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-  --admin-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
-}
-
-.journal-hero {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 16rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
-}
-
 .image-header {
   display: grid;
-  gap: 1rem;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .image-title {
@@ -486,11 +427,7 @@ onUnmounted(() => {
 }
 
 .image-board {
-  border: 1px solid var(--journal-border);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
-  padding: 1.15rem;
-  box-shadow: 0 12px 28px var(--color-shadow-soft);
+  padding-top: 0.2rem;
 }
 
 .image-board__head {
@@ -516,17 +453,36 @@ onUnmounted(() => {
 }
 
 .image-list {
-  margin-top: 1rem;
   display: grid;
-  gap: 0.85rem;
+  gap: 0;
+}
+
+.image-directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(7rem, 0.72fr) minmax(10rem, 0.9fr) auto;
+  gap: 1rem;
+  padding: 1rem 0 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
 .image-row {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1fr) auto;
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  grid-template-columns: minmax(0, 1.45fr) minmax(7rem, 0.72fr) minmax(10rem, 0.9fr) auto;
+  align-items: start;
+  padding: 1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.image-row__main,
+.image-row__status,
+.image-row__actions {
+  min-width: 0;
 }
 
 .image-row__titleline {
@@ -558,56 +514,60 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
-.image-row__aside {
+.image-row__status {
   display: flex;
-  min-width: 9rem;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: flex-start;
 }
 
-.admin-btn {
-  min-height: 2.65rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 0.62rem 1rem;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
+.image-row__time {
+  padding-top: 0.15rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
 }
 
-.admin-btn-compact {
-  min-height: 2.2rem;
-  padding: 0.46rem 0.82rem;
+.image-row__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  box-shadow: none;
+:global([data-theme='dark']) .journal-shell {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-accent: var(--color-primary-hover);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
-.admin-btn-ghost {
-  border-color: var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
+:global([data-theme='dark']) .journal-hero {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
 }
 
-.admin-empty,
-.admin-pagination {
-  margin-top: 1rem;
+:global([data-theme='dark']) .admin-btn-ghost,
+:global([data-theme='dark']) :deep(.el-input__wrapper),
+:global([data-theme='dark']) :deep(.el-textarea__inner) {
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+:global([data-theme='dark']) .admin-btn-danger {
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--journal-surface));
 }
 
 @media (max-width: 1040px) {
+  .image-directory-head {
+    display: none;
+  }
+
   .image-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .image-row__aside {
-    min-width: 0;
+  .image-row__actions {
     align-items: flex-start;
+    justify-content: flex-start;
   }
 }
 

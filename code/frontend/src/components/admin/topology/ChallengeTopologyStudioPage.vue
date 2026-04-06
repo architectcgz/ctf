@@ -2047,21 +2047,25 @@ const {
 .topology-page--template-library {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: var(--color-primary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   display: grid;
   gap: 1.25rem;
 }
 
-.topology-page--template-library .template-library-main {
+.topology-page--template-library .template-library-main,
+.topology-page--template-library :deep(.page-header) {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.08), transparent 20rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
-  border-radius: 16px !important;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      var(--journal-surface)
+    );
+  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .topology-page--template-library .template-library-toolbar {
@@ -2072,14 +2076,88 @@ const {
 }
 
 .topology-page--template-library .template-library-divider {
-  margin: 1rem 0;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  margin: 1.5rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.topology-page--template-library .topology-hero-lead--library {
+  padding: 0;
+}
+
+.topology-page--template-library .topology-hero-kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .topology-hero-badge {
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
+  padding: 0.26rem 0.55rem;
+  color: var(--journal-accent);
+}
+
+.topology-page--template-library .topology-hero-title {
+  margin-top: 0.85rem;
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  color: var(--journal-ink);
+}
+
+.topology-page--template-library .topology-hero-description {
+  margin-top: 0.8rem;
+  max-width: 46rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .topology-summary-grid {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.topology-page--template-library .topology-summary-tile,
+.topology-page--template-library .template-focus-card,
+.topology-page--template-library .template-empty-state {
+  padding: 0 0 0 1rem;
+  border: 0;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.topology-page--template-library .topology-summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.topology-page--template-library .topology-summary-value {
+  margin-top: 0.42rem;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .topology-page--template-library .topology-hero-aside--library {
   align-self: start;
-  border-left: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  padding-left: 1rem;
+  border-left: 0;
+  padding-left: 0;
 }
 
 .topology-page--template-library .template-metric-icon {
@@ -2088,7 +2166,7 @@ const {
   width: 2.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: 1rem;
+  border-radius: 0.9rem;
 }
 
 .topology-page--template-library .template-metric-icon--primary {
@@ -2109,118 +2187,54 @@ const {
   color: var(--color-danger);
 }
 
-.topology-page--template-library .topology-toolbar-btn {
+.topology-page--template-library .topology-toolbar-btn,
+.topology-page--template-library .template-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: 0.65rem 1rem;
-  font-size: 0.875rem;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--journal-border);
+  padding: 0.55rem 0.95rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  transition: all 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
 }
 
-.topology-page--template-library .topology-toolbar-btn--ghost {
-  border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+.topology-page--template-library .topology-toolbar-btn--ghost,
+.topology-page--template-library .template-action-btn {
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
   color: var(--journal-ink);
 }
 
-.topology-page--template-library .topology-toolbar-btn--ghost:hover {
+.topology-page--template-library .topology-toolbar-btn--ghost:hover,
+.topology-page--template-library .template-action-btn:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
   color: var(--journal-accent);
 }
 
-.topology-page--template-library .topology-toolbar-btn--primary {
+.topology-page--template-library .topology-toolbar-btn--primary,
+.topology-page--template-library .template-action-btn--primary {
+  border-color: transparent;
   background: var(--journal-accent);
   color: #fff;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
-.topology-page--template-library .topology-toolbar-btn--primary:hover {
+.topology-page--template-library .topology-toolbar-btn--primary:hover,
+.topology-page--template-library .template-action-btn--primary:hover {
   background: color-mix(in srgb, var(--journal-accent) 88%, black);
+  color: #fff;
 }
 
-.topology-page--template-library .topology-hero-lead--library {
-  padding: 0;
-}
-
-.topology-page--template-library .topology-hero-kicker {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.topology-page--template-library .topology-hero-badge {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.28rem 0.6rem;
-  color: var(--journal-accent);
-}
-
-.topology-page--template-library .topology-hero-title {
-  margin-top: 0.85rem;
-  font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.topology-page--template-library .topology-hero-description {
-  margin-top: 0.9rem;
-  max-width: 46rem;
-  font-size: 0.92rem;
-  line-height: 1.75;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .topology-summary-grid {
-  margin-top: 1.5rem;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.topology-page--template-library .topology-summary-tile {
-  border: 1px solid var(--journal-border);
-  border-radius: 14px;
-  background: var(--journal-surface);
-  padding: 0.95rem 1rem;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
-}
-
-.topology-page--template-library .topology-summary-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .topology-summary-value {
-  margin-top: 0.5rem;
-  font-size: 1.65rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.topology-page--template-library :deep(.page-header) {
-  border-color: var(--journal-border);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.06), transparent 20rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+.topology-page--template-library .template-action-btn--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .topology-page--template-library :deep(.page-header__eyebrow) {
@@ -2230,18 +2244,18 @@ const {
 }
 
 .topology-page--template-library :deep(.section-card) {
-  padding: 1.1rem 0 0.15rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  padding: 1.1rem 0 0.2rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .topology-page--template-library :deep(.section-card__header) {
   margin-bottom: 1rem;
   align-items: center;
-  border-bottom: 0;
-  padding: 0.95rem 1.1rem 0.95rem 1.35rem;
-  border-radius: 18px;
-  border: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent 72%);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .topology-page--template-library :deep(.section-card__header h2) {
@@ -2258,18 +2272,8 @@ const {
 }
 
 .topology-page--template-library :deep(.topology-hero-aside--library > section) {
-  padding: 0.2rem 0 0.9rem 1rem;
-  border-bottom-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 6%, transparent),
-    transparent 72%
-  );
-}
-
-.topology-page--template-library :deep(.topology-hero-aside--library > section:last-child) {
-  border-bottom: 0;
-  padding-bottom: 0.2rem;
+  padding-left: 0;
+  background: transparent;
 }
 
 .topology-page--template-library :deep(.topology-hero-aside--library > section h2) {
@@ -2293,8 +2297,8 @@ const {
 
 .topology-page--template-library :deep([data-node-editor]) {
   border-color: var(--journal-border);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
 }
 
 .topology-page--template-library :deep([data-node-editor].border-primary) {
@@ -2326,30 +2330,15 @@ const {
 }
 
 .topology-page--template-library .topology-side-stack--library {
-  border: 1px solid var(--journal-border);
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.05), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 96%, var(--color-bg-base)));
-  padding: 0.35rem 1rem 0.85rem;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 .topology-page--template-library .topology-side-stack--library :deep(.section-card:first-child) {
-  padding-top: 0.5rem;
+  padding-top: 0;
   border-top: 0;
-}
-
-.topology-page--template-library .topology-side-stack--library :deep(.section-card) {
-  padding-top: 1rem;
-}
-
-.topology-page--template-library .template-focus-card,
-.topology-page--template-library .template-empty-state {
-  border: 1px solid var(--journal-border);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  padding: 1rem;
 }
 
 .topology-page--template-library .template-search-row {
@@ -2362,127 +2351,58 @@ const {
 .topology-page--template-library .template-writeback-form,
 .topology-page--template-library .template-boundary-list {
   display: grid;
-  gap: 0.75rem;
+  gap: 0;
 }
 
 .topology-page--template-library .template-toolbar-tabs,
 .topology-page--template-library .template-canvas-mode-banner,
 .topology-page--template-library .template-quick-editor {
   border: 0;
+  box-shadow: none;
 }
 
 .topology-page--template-library .template-library-item {
-  border-radius: 16px;
-  padding: 1rem;
-  transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  border-radius: 0;
+  padding: 1rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  box-shadow: none;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease;
 }
 
 .topology-page--template-library .template-library-item--idle {
-  border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  border-left: 0;
+  background: transparent;
 }
 
 .topology-page--template-library .template-library-item--idle:hover {
-  border-color: rgba(37, 99, 235, 0.22);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(in srgb, var(--journal-accent) 4%, transparent);
 }
 
 .topology-page--template-library .template-library-item--active {
-  border: 1px solid rgba(37, 99, 235, 0.34);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #2563eb 12%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-  );
-}
-
-.topology-page--template-library .template-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.4rem;
-  border: 1px solid var(--journal-border);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
-  padding: 0.52rem 0.9rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition: all 150ms ease;
-}
-
-.topology-page--template-library .template-action-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-  color: var(--journal-accent);
-}
-
-.topology-page--template-library .template-action-btn--primary {
-  background: var(--journal-accent);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 10px 24px color-mix(in srgb, var(--journal-accent) 18%, transparent);
-}
-
-.topology-page--template-library .template-action-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 88%, black);
-  color: #fff;
-}
-
-.topology-page--template-library .template-action-btn--danger {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  border-left: 2px solid color-mix(in srgb, var(--journal-accent) 58%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
 }
 
 :global([data-theme='dark']) .topology-page--template-library {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: var(--color-primary-hover);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
 }
 
-:global([data-theme='dark']) .topology-page--template-library :deep(.page-header),
-:global([data-theme='dark']) .topology-page--template-library .template-library-main {
+:global([data-theme='dark']) .topology-page--template-library .template-library-main,
+:global([data-theme='dark']) .topology-page--template-library :deep(.page-header) {
   background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-    );
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 18rem),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
 }
 
-:global([data-theme='dark']) .topology-page--template-library :deep(.section-card__header) {
-  border-color: color-mix(in srgb, var(--journal-accent) 26%, transparent);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 12%, transparent),
-    transparent 72%
-  );
-}
-
-:global([data-theme='dark']) .topology-page--template-library .topology-side-stack--library {
-  background:
-    radial-gradient(circle at top right, rgba(96, 165, 250, 0.08), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    );
-}
-
-:global([data-theme='dark']) .topology-page--template-library .topology-hero-aside--library {
-  border-left-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-}
-
-:global([data-theme='dark']) .topology-page--template-library .template-library-item--idle,
-:global([data-theme='dark']) .topology-page--template-library .template-focus-card,
-:global([data-theme='dark']) .topology-page--template-library .template-empty-state,
+:global([data-theme='dark']) .topology-page--template-library .topology-toolbar-btn--ghost,
 :global([data-theme='dark']) .topology-page--template-library .template-action-btn,
 :global([data-theme='dark']) .topology-page--template-library :deep([data-node-editor]),
 :global([data-theme='dark']) .topology-page--template-library :deep(input),

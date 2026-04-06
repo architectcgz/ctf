@@ -33,12 +33,9 @@ function handleFileChange(event: Event) {
     <div class="import-entry__lead">
       <div class="import-entry__eyebrow">Challenge Package</div>
       <h2 class="import-entry__title">导入题目包</h2>
-      <p class="import-entry__copy">
-        使用 `challenge.yml` 作为唯一主规范导入题目。题面、附件、Flag、提示和运行时镜像会在这里一次进入平台。
-      </p>
     </div>
 
-    <div class="import-entry__panel">
+    <div class="import-entry__panel import-entry__panel--single">
       <button
         class="import-entry__dropzone"
         type="button"
@@ -62,16 +59,6 @@ function handleFileChange(event: Event) {
         accept=".zip,application/zip"
         @change="handleFileChange"
       >
-
-      <div class="import-entry__rail">
-        <div class="import-entry__rail-title">首版导入范围</div>
-        <ul class="import-entry__rail-list">
-          <li>题目元数据与题面 Markdown</li>
-          <li>附件与提示系统</li>
-          <li>静态或动态 Flag 配置</li>
-          <li>运行时镜像引用与拓扑扩展提示</li>
-        </ul>
-      </div>
     </div>
   </section>
 </template>
@@ -104,19 +91,15 @@ function handleFileChange(event: Event) {
   color: var(--journal-ink);
 }
 
-.import-entry__copy {
-  margin: 0;
-  max-width: 42rem;
-  font-size: 0.95rem;
-  line-height: 1.8;
-  color: var(--journal-muted);
-}
-
 .import-entry__panel {
   display: grid;
   gap: 1rem;
   grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
   align-items: stretch;
+}
+
+.import-entry__panel--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .import-entry__dropzone {
@@ -181,32 +164,6 @@ function handleFileChange(event: Event) {
   color: var(--journal-accent);
   font-size: 0.78rem;
   font-weight: 700;
-}
-
-.import-entry__rail {
-  display: grid;
-  gap: 0.65rem;
-  padding: 1.1rem 1rem;
-  border-left: 3px solid rgba(37, 99, 235, 0.18);
-  background: var(--journal-surface);
-}
-
-.import-entry__rail-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.import-entry__rail-list {
-  display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding-left: 1rem;
-  color: var(--journal-ink);
-  font-size: 0.9rem;
-  line-height: 1.7;
 }
 
 @media (max-width: 960px) {
