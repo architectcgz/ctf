@@ -82,28 +82,19 @@ const activePanel = computed<DashboardPanelKey | null>(() => {
   return null
 })
 const isOverview = computed(() => activePanel.value === null)
-const panelCopyMap: Record<DashboardPanelKey, { title: string; description: string }> = {
-  recommendation: {
-    title: '训练建议',
-    description: '基于当前画像推荐更适合补短板的题目，帮助你用更短路径补齐能力缺口。',
-  },
-  category: {
-    title: '分类进度',
-    description: '查看不同题型方向的完成比例，识别当前训练覆盖是否均衡。',
-  },
-  timeline: {
-    title: '近期动态',
-    description: '回看最近实例与提交记录，快速理解自己的训练节奏。',
-  },
-  difficulty: {
-    title: '难度分布',
-    description: '观察不同难度层级的完成情况，避免训练结构长期失衡。',
-  },
-}
-const panelHeader = computed(() => {
-  if (!activePanel.value) return null
-  return panelCopyMap[activePanel.value]
-})
+const panelTabs: Array<{ key: DashboardPanelKey | null; label: string; panelId: string; tabId: string }> =
+  [
+    { key: null, label: '总览', panelId: 'dashboard-panel-overview', tabId: 'dashboard-tab-overview' },
+    {
+      key: 'recommendation',
+      label: '训练建议',
+      panelId: 'dashboard-panel-recommendation',
+      tabId: 'dashboard-tab-recommendation',
+    },
+    { key: 'category', label: '分类进度', panelId: 'dashboard-panel-category', tabId: 'dashboard-tab-category' },
+    { key: 'timeline', label: '近期动态', panelId: 'dashboard-panel-timeline', tabId: 'dashboard-tab-timeline' },
+    { key: 'difficulty', label: '难度分布', panelId: 'dashboard-panel-difficulty', tabId: 'dashboard-tab-difficulty' },
+  ]
 
 async function loadDashboard(): Promise<void> {
   const role = authStore.user?.role
@@ -149,6 +140,20 @@ function openSkillProfile(): void {
 function openChallenge(challengeId: string): void {
   router.push(`/challenges/${challengeId}`)
 }
+
+function isPanelActive(panelKey: DashboardPanelKey | null): boolean {
+  return panelKey === null ? isOverview.value : activePanel.value === panelKey
+}
+
+function switchPanel(panelKey: DashboardPanelKey | null): void {
+  const nextQuery = { ...route.query }
+  if (panelKey === null) {
+    delete nextQuery.panel
+  } else {
+    nextQuery.panel = panelKey
+  }
+  void router.replace({ query: nextQuery })
+}
 </script>
 
 <template>
@@ -170,38 +175,143 @@ function openChallenge(challengeId: string): void {
     </div>
 
     <template v-else-if="progress">
-      <StudentOverviewVariantSwitcher
+      <section class="dashboard-tab-rail rounded-2xl border px-4 py-3">
+        <div class="dashboard-tab-list" role="tablist" aria-label="学生仪表盘视图切换">
+          <button
+            v-for="tab in panelTabs"
+            :id="tab.tabId"
+            :key="tab.tabId"
+            type="button"
+            role="tab"
+            class="dashboard-tab"
+            :class="{ 'dashboard-tab--active': isPanelActive(tab.key) }"
+            :aria-selected="isPanelActive(tab.key)"
+            :aria-controls="tab.panelId"
+            @click="switchPanel(tab.key)"
+          >
+            {{ tab.label }}
+          </button>
+        </div>
+      </section>
+
+      <div
         v-if="isOverview"
-        :display-name="displayName"
-        :class-name="authStore.user?.class_name"
-        :progress="progress"
-        :completion-rate="completionRate"
-        :highlight-items="highlightItems"
-        :recommendations="recommendations"
-        :timeline="timeline"
-        :weak-dimensions="weakDimensions"
-        :skill-dimensions="skillProfile?.dimensions ?? []"
-        @open-challenge="openChallenge"
-        @open-challenges="openChallenges"
-        @open-skill-profile="openSkillProfile"
-      />
-      <StudentRecommendationPage
+        id="dashboard-panel-overview"
+        role="tabpanel"
+        aria-labelledby="dashboard-tab-overview"
+      >
+        <StudentOverviewVariantSwitcher
+          :display-name="displayName"
+          :class-name="authStore.user?.class_name"
+          :progress="progress"
+          :completion-rate="completionRate"
+          :highlight-items="highlightItems"
+          :recommendations="recommendations"
+          :timeline="timeline"
+          :weak-dimensions="weakDimensions"
+          :skill-dimensions="skillProfile?.dimensions ?? []"
+          @open-challenge="openChallenge"
+          @open-challenges="openChallenges"
+          @open-skill-profile="openSkillProfile"
+        />
+      </div>
+
+      <div
         v-else-if="activePanel === 'recommendation'"
-        :weak-dimensions="weakDimensions"
-        :recommendations="recommendations"
-        @open-challenge="openChallenge"
-        @open-challenges="openChallenges"
-        @open-skill-profile="openSkillProfile"
-      />
-      <StudentCategoryProgressPage
+        id="dashboard-panel-recommendation"
+        role="tabpanel"
+        aria-labelledby="dashboard-tab-recommendation"
+      >
+        <StudentRecommendationPage
+          :weak-dimensions="weakDimensions"
+          :recommendations="recommendations"
+          @open-challenge="openChallenge"
+          @open-challenges="openChallenges"
+          @open-skill-profile="openSkillProfile"
+        />
+      </div>
+
+      <div
         v-else-if="activePanel === 'category'"
-        :category-stats="categoryStats"
-        :completion-rate="completionRate"
-        @open-challenges="openChallenges"
-        @open-skill-profile="openSkillProfile"
-      />
-      <StudentTimelinePage v-else-if="activePanel === 'timeline'" :timeline="timeline" />
-      <StudentDifficultyPage v-else :difficulty-stats="difficultyStats" />
+        id="dashboard-panel-category"
+        role="tabpanel"
+        aria-labelledby="dashboard-tab-category"
+      >
+        <StudentCategoryProgressPage
+          :category-stats="categoryStats"
+          :completion-rate="completionRate"
+          @open-challenges="openChallenges"
+          @open-skill-profile="openSkillProfile"
+        />
+      </div>
+
+      <div
+        v-else-if="activePanel === 'timeline'"
+        id="dashboard-panel-timeline"
+        role="tabpanel"
+        aria-labelledby="dashboard-tab-timeline"
+      >
+        <StudentTimelinePage :timeline="timeline" />
+      </div>
+
+      <div
+        v-else
+        id="dashboard-panel-difficulty"
+        role="tabpanel"
+        aria-labelledby="dashboard-tab-difficulty"
+      >
+        <StudentDifficultyPage :difficulty-stats="difficultyStats" />
+      </div>
     </template>
   </div>
 </template>
+
+<style scoped>
+.dashboard-tab-rail {
+  border-color: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+}
+
+.dashboard-tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dashboard-tab {
+  min-height: 34px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  border-radius: 10px;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-surface) 94%, transparent);
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.dashboard-tab:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border-default));
+  color: var(--color-text-primary);
+}
+
+.dashboard-tab--active {
+  border-color: color-mix(in srgb, var(--color-primary) 56%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-hover);
+}
+
+.dashboard-tab:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, white);
+  outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .dashboard-tab {
+    min-height: 36px;
+  }
+}
+</style>

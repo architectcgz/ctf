@@ -152,7 +152,7 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Training Journal')
-    expect(wrapper.text()).toContain('alice 的极简训练面板')
+    expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
     expect(wrapper.text()).toContain('推荐训练队列')
@@ -204,7 +204,7 @@ describe('DashboardView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Training Journal')
-    expect(wrapper.text()).toContain('alice 的极简训练面板')
+    expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('推荐训练队列')
   })
 

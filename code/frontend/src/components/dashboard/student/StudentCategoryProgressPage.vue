@@ -38,15 +38,13 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
       <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Coverage Overview</div>
-          <h2
-            class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-          >
+          <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
             分类覆盖概况
-          </h2>
+          </h1>
           <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
             看各分类的完成情况和当前强弱项。
           </p>
-          <div class="mt-6 flex flex-wrap gap-3">
+          <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">
             <button class="journal-btn-primary" @click="emit('openChallenges')">去训练</button>
             <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
           </div>
@@ -159,33 +157,30 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
           <div
             v-if="rankedCategories.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
           >
             当前还没有分类统计数据，先完成几道题再回来查看。
           </div>
 
           <div v-else class="category-list mt-5">
+            <div class="category-head" aria-hidden="true">
+              <span>分类</span>
+              <span>完成率</span>
+              <span>已解 / 总量</span>
+            </div>
             <div
               v-for="item in rankedCategories"
               :key="item.category"
               class="category-item"
             >
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div
-                  class="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--journal-ink)]"
-                >
-                  {{ item.category }}
-                </div>
-                <div class="text-right">
-                  <span class="text-sm font-semibold text-[var(--journal-ink)]">{{ item.rate }}%</span>
-                  <span class="ml-2 text-xs text-[var(--journal-muted)]"
-                    >{{ item.solved }}/{{ item.total }}</span
-                  >
-                </div>
+              <div class="category-row">
+                <span class="category-row__name">{{ item.category }}</span>
+                <span class="category-row__rate">{{ item.rate }}%</span>
+                <span class="category-row__count">{{ item.solved }}/{{ item.total }}</span>
               </div>
               <div class="category-track mt-3 h-2 rounded-full">
                 <div
-                  class="h-2 rounded-full bg-[linear-gradient(90deg,rgba(34,211,238,0.95),rgba(56,189,248,0.72))]"
+                  class="category-track-fill h-2 rounded-full"
                   :style="{ width: `${item.rate}%` }"
                 />
               </div>
@@ -202,14 +197,21 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --category-cols: minmax(130px, 1fr) minmax(88px, 120px) minmax(110px, 150px);
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
@@ -218,14 +220,21 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
+.journal-page-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
 .journal-brief {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);
 }
 
 .journal-note {
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border: 1px solid var(--journal-soft-border);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
   padding: 0.875rem 1rem;
 }
@@ -242,8 +251,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -254,8 +263,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-  border-color: rgba(148, 163, 184, 0.28);
-  background: rgba(148, 163, 184, 0.08);
+  border-color: var(--journal-soft-border);
+  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
 }
 
 .journal-note-value {
@@ -266,31 +275,83 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-board {
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .category-section + .category-section {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .category-highlight,
 .category-list {
   border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 1rem 1.1rem;
+}
+
+.category-head {
+  display: grid;
+  grid-template-columns: var(--category-cols);
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.category-head > :nth-child(2),
+.category-head > :nth-child(3) {
+  text-align: right;
 }
 
 .category-item + .category-item {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.58);
+  border-top: 1px solid var(--journal-divider);
 }
 
 .category-track {
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
+  background: var(--journal-track);
+}
+
+.category-track-fill {
+  background: color-mix(in srgb, var(--journal-accent) 68%, #0ea5e9);
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: var(--category-cols);
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.category-row__name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-ink);
+}
+
+.category-row__rate,
+.category-row__count {
+  text-align: right;
+}
+
+.category-row__rate {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.category-row__count {
+  font-size: 0.78rem;
+  color: var(--journal-muted);
 }
 
 .direction-icon {
@@ -317,6 +378,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  min-height: 34px;
   border-radius: 10px;
   padding: 0.45rem 1rem;
   font-size: 0.82rem;
@@ -335,20 +397,30 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .journal-btn-outline {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-control-border);
   background: var(--journal-surface);
   color: var(--journal-muted);
 }
 
 .journal-btn-outline:hover {
-  border-color: #6366f1;
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
   color: var(--journal-accent-strong);
+}
+
+.journal-btn-primary:focus-visible,
+.journal-btn-outline:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline-offset: 2px;
 }
 
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
@@ -368,5 +440,16 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 :global([data-theme='dark']) .category-list,
 :global([data-theme='dark']) .journal-btn-outline {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+@media (max-width: 767px) {
+  .journal-shell {
+    --category-cols: minmax(100px, 1fr) minmax(68px, 84px) minmax(92px, 116px);
+  }
+
+  .journal-btn-primary,
+  .journal-btn-outline {
+    min-height: 36px;
+  }
 }
 </style>
