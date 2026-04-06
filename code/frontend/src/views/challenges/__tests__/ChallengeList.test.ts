@@ -125,6 +125,34 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).not.toContain('暂无标签')
   })
 
+  it('应将积分作为独立列展示而不是放在题目后面', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: 'Point Column Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          tags: ['test'],
+          solved_count: 10,
+          total_attempts: 20,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage()
+
+    expect(wrapper.find('.challenge-directory-head').text()).toContain('积分')
+    expect(wrapper.find('.challenge-row-main .challenge-row-points').exists()).toBe(false)
+    expect(wrapper.find('.challenge-row-points').text()).toContain('100 pts')
+  })
+
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
