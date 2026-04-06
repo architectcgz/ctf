@@ -115,8 +115,8 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.find('.teacher-directory-head').text()).toContain('薄弱项')
     expect(wrapper.find('.teacher-directory-head').text()).not.toContain('标签')
     expect(wrapper.find('.teacher-directory-head').text()).not.toContain('状态')
-    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map((element) =>
-      element.className.toString()
+    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map(
+      (element) => element.className.toString()
     )
     expect(headChildren[0]).toContain('teacher-directory-head-cell-student-no')
     expect(headChildren[1]).toContain('teacher-directory-head-cell-name')
@@ -166,14 +166,26 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该忽略过期搜索请求的返回结果', async () => {
-    const slowRequest =
-      deferred<
-        Array<{ id: string; username: string; name?: string; recent_event_count?: number }>
-      >()
-    const fastRequest =
-      deferred<
-        Array<{ id: string; username: string; name?: string; recent_event_count?: number }>
-      >()
+    const slowRequest = deferred<
+      Array<{
+        id: string
+        username: string
+        name?: string
+        student_no?: string
+        recent_event_count?: number
+        solved_count?: number
+      }>
+    >()
+    const fastRequest = deferred<
+      Array<{
+        id: string
+        username: string
+        name?: string
+        student_no?: string
+        recent_event_count?: number
+        solved_count?: number
+      }>
+    >()
 
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassStudents
@@ -228,9 +240,17 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
-    expect(studentManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s)
-    expect(studentManagementSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s)
-    expect(studentManagementSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(studentManagementSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(studentManagementSource).toMatch(
+      /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
+    )
+    expect(studentManagementSource).toMatch(
+      /class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s
+    )
+    expect(studentManagementSource).toMatch(
+      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(studentManagementSource).toMatch(
+      /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
   })
 })

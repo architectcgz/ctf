@@ -80,7 +80,12 @@ function focusTab(tab: WorkspaceTab): void {
 }
 
 function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
     return
   }
 
@@ -151,7 +156,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             <div class="teacher-heading">
               <div class="teacher-eyebrow-row">
                 <div class="teacher-surface-eyebrow journal-eyebrow">Class Students</div>
-                <span class="teacher-class-chip teacher-surface-chip">{{ selectedClassName || '未选择班级' }}</span>
+                <span class="teacher-class-chip teacher-surface-chip">{{
+                  selectedClassName || '未选择班级'
+                }}</span>
               </div>
 
               <h1 class="teacher-title">
@@ -161,13 +168,25 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             </div>
 
             <div class="teacher-actions">
-              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openClassManagement')">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--ghost"
+                @click="emit('openClassManagement')"
+              >
                 返回班级管理
               </button>
-              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openDashboard')">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--ghost"
+                @click="emit('openDashboard')"
+              >
                 教学概览
               </button>
-              <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openReportExport')">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--primary"
+                @click="emit('openReportExport')"
+              >
                 导出报告
               </button>
             </div>
@@ -177,7 +196,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             <div class="workspace-alert-title">班级详情加载失败</div>
             <div class="workspace-alert-copy">{{ error }}</div>
             <div class="workspace-alert-actions">
-              <button type="button" class="quick-action quick-action--compact" @click="emit('retry')">
+              <button
+                type="button"
+                class="quick-action quick-action--compact"
+                @click="emit('retry')"
+              >
                 <span>重试加载</span>
                 <span>→</span>
               </button>
@@ -198,7 +221,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                   </div>
                   <div class="teacher-summary-item">
                     <div class="teacher-summary-label">班级人数</div>
-                    <div class="teacher-summary-value">{{ props.summary?.student_count ?? students.length }}</div>
+                    <div class="teacher-summary-value">
+                      {{ props.summary?.student_count ?? students.length }}
+                    </div>
                     <div class="teacher-summary-helper">当前班级纳入统计的学生数量</div>
                   </div>
                   <div class="teacher-summary-item">
@@ -220,33 +245,19 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                     <div class="teacher-surface-eyebrow journal-eyebrow">Class Workspace</div>
                     <h3 class="teacher-controls-title">班级详情</h3>
                     <p class="teacher-controls-copy">
-                      {{ selectedClassName || '当前未选择班级' }}。先看班级趋势与复盘，再按学号快速定位学生。
+                      {{
+                        selectedClassName || '当前未选择班级'
+                      }}。先看班级趋势与复盘，再按学号快速定位学生。
                     </p>
                   </div>
                 </div>
 
-                <div class="teacher-filter-grid">
-                  <div class="teacher-context-card">
-                    <div class="teacher-field-label">当前班级</div>
-                    <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
-                    <div class="teacher-context-copy">
-                      {{ props.summary?.student_count ?? students.length }} 名学生
-                    </div>
+                <div class="teacher-context-card">
+                  <div class="teacher-field-label">当前班级</div>
+                  <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
+                  <div class="teacher-context-copy">
+                    {{ props.summary?.student_count ?? students.length }} 名学生
                   </div>
-
-                  <label class="teacher-field">
-                    <span class="teacher-field-label">按学号查询</span>
-                    <div class="teacher-field-control teacher-filter-control">
-                      <Search class="h-4 w-4 text-text-muted" />
-                      <input
-                        :value="studentNoQuery"
-                        type="text"
-                        placeholder="输入学号后实时查询"
-                        class="teacher-input"
-                        @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-                      />
-                    </div>
-                  </label>
                 </div>
               </section>
 
@@ -259,7 +270,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             <div class="teacher-summary-cards">
               <article class="teacher-summary-card">
                 <div class="teacher-summary-label">近 7 天训练事件</div>
-                <div class="teacher-summary-value">{{ props.summary?.recent_event_count ?? '--' }}</div>
+                <div class="teacher-summary-value">
+                  {{ props.summary?.recent_event_count ?? '--' }}
+                </div>
                 <div class="teacher-summary-helper">提交、实例启动与销毁等动作总数</div>
               </article>
               <article class="teacher-summary-card">
@@ -292,143 +305,188 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         <section
           id="class-students"
           class="tab-panel section"
-            :class="{ active: activeTab === 'students' }"
-            role="tabpanel"
-            aria-labelledby="class-tab-students"
+          :class="{ active: activeTab === 'students' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-students"
           :aria-hidden="activeTab === 'students' ? 'false' : 'true'"
           v-show="activeTab === 'students'"
         >
-            <section class="teacher-student-list-section">
-              <div class="teacher-section-head">
-                <div>
-                  <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
-                  <h3 class="teacher-section-title">学生列表</h3>
-                  <p class="teacher-section-copy">选择学生后进入学员分析。</p>
-                </div>
-                <button type="button" class="teacher-inline-link" @click="emit('openClassManagement')">
-                  <ChevronLeft class="h-4 w-4" />
-                  返回班级列表
-                </button>
+          <section class="teacher-student-list-section">
+            <div class="teacher-section-head">
+              <div>
+                <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
+                <h3 class="teacher-section-title">学生列表</h3>
+                <p class="teacher-section-copy">选择学生后进入学员分析。</p>
               </div>
+              <button
+                type="button"
+                class="teacher-inline-link"
+                @click="emit('openClassManagement')"
+              >
+                <ChevronLeft class="h-4 w-4" />
+                返回班级列表
+              </button>
+            </div>
 
-              <div class="teacher-student-toolbar">
+            <section class="teacher-controls teacher-student-controls">
+              <div class="teacher-controls-bar">
+                <div>
+                  <div class="teacher-surface-eyebrow journal-eyebrow">Student Filters</div>
+                  <h3 class="teacher-controls-title">学生筛选</h3>
+                  <p class="teacher-controls-copy">按学号快速定位学生，并继续进入学员分析。</p>
+                </div>
                 <div class="teacher-section-meta">共 {{ students.length }} 名学生</div>
               </div>
 
-              <div v-if="loadingStudents" class="teacher-skeleton-list">
-                <div
-                  v-for="index in 6"
-                  :key="index"
-                  class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-                />
-              </div>
-
-              <AppEmpty
-                v-else-if="students.length === 0"
-                class="teacher-empty-state"
-                icon="Users"
-                title="当前班级暂无学生"
-                description="该班级下还没有可用学生记录。"
-              />
-
-              <section v-else class="teacher-directory" aria-label="学生目录">
-                <div class="teacher-directory-head">
-                  <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
-                  <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
-                  <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
-                  <span>状态</span>
-                  <span>数据</span>
-                  <span>操作</span>
+              <div class="teacher-filter-grid">
+                <div class="teacher-context-card">
+                  <div class="teacher-field-label">当前班级</div>
+                  <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
+                  <div class="teacher-context-copy">{{ students.length }} 名学生</div>
                 </div>
 
-                <button
-                  v-for="student in students"
-                  :key="student.id"
-                  type="button"
-                  class="teacher-directory-row"
-                  :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
-                  @click="emit('openStudent', student.id)"
-                >
-                  <div class="teacher-directory-cell teacher-directory-cell-student-no">
-                    {{ student.student_no || '未设置学号' }}
-                  </div>
-
-                  <div class="teacher-directory-cell teacher-directory-cell-name">
-                    <h4 class="teacher-directory-row-title">{{ student.name || '未设置姓名' }}</h4>
-                  </div>
-
-                  <div class="teacher-directory-cell teacher-directory-cell-alias">
-                    <div class="teacher-directory-row-points">@{{ student.username }}</div>
-                  </div>
-
-                  <div class="teacher-directory-row-status">
-                    <span
-                      class="teacher-directory-state-chip"
-                      :class="
-                        (student.solved_count ?? 0) > 0
-                          ? 'teacher-directory-state-chip-ready'
-                          : 'teacher-directory-state-chip-empty'
+                <label class="teacher-field">
+                  <span class="teacher-field-label">按学号查询</span>
+                  <div class="teacher-field-control teacher-filter-control">
+                    <Search class="h-4 w-4 text-text-muted" />
+                    <input
+                      :value="studentNoQuery"
+                      type="text"
+                      placeholder="输入学号精确查询"
+                      class="teacher-input"
+                      @input="
+                        emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)
                       "
-                    >
-                      {{ (student.solved_count ?? 0) > 0 ? '已有解题记录' : '暂无解题记录' }}
-                    </span>
+                    />
                   </div>
+                </label>
+              </div>
+            </section>
 
-                  <div class="teacher-directory-row-metrics">
-                    <span>{{ student.solved_count ?? 0 }} 题</span>
-                    <span>{{ student.total_score ?? 0 }} 分</span>
-                  </div>
+            <div v-if="loadingStudents" class="teacher-skeleton-list">
+              <div
+                v-for="index in 6"
+                :key="index"
+                class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+              />
+            </div>
 
-                  <div class="teacher-directory-row-cta">
-                    <span>查看学员分析</span>
-                    <ArrowRight class="h-4 w-4" />
+            <AppEmpty
+              v-else-if="students.length === 0"
+              class="teacher-empty-state"
+              icon="Users"
+              title="当前班级暂无学生"
+              description="该班级下还没有可用学生记录。"
+            />
+
+            <section v-else class="teacher-directory" aria-label="学生目录">
+              <div class="teacher-directory-head">
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no"
+                  >学号</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
+                  >学生名称</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-alias"
+                  >昵称</span
+                >
+                <span>状态</span>
+                <span>数据</span>
+                <span>操作</span>
+              </div>
+
+              <button
+                v-for="student in students"
+                :key="student.id"
+                type="button"
+                class="teacher-directory-row"
+                :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
+                @click="emit('openStudent', student.id)"
+              >
+                <div class="teacher-directory-cell teacher-directory-cell-student-no">
+                  {{ student.student_no || '未设置学号' }}
+                </div>
+
+                <div class="teacher-directory-cell teacher-directory-cell-name">
+                  <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
+                    {{ student.name || '未设置姓名' }}
+                  </h4>
+                </div>
+
+                <div class="teacher-directory-cell teacher-directory-cell-alias">
+                  <div class="teacher-directory-row-points" :title="`@${student.username}`">
+                    @{{ student.username }}
                   </div>
-                </button>
-              </section>
+                </div>
+
+                <div class="teacher-directory-row-status">
+                  <span
+                    class="teacher-directory-state-chip"
+                    :class="
+                      (student.solved_count ?? 0) > 0
+                        ? 'teacher-directory-state-chip-ready'
+                        : 'teacher-directory-state-chip-empty'
+                    "
+                  >
+                    {{ (student.solved_count ?? 0) > 0 ? '已有解题记录' : '暂无解题记录' }}
+                  </span>
+                </div>
+
+                <div class="teacher-directory-row-metrics">
+                  <span>{{ student.solved_count ?? 0 }} 题</span>
+                  <span>{{ student.total_score ?? 0 }} 分</span>
+                </div>
+
+                <div class="teacher-directory-row-cta">
+                  <span>查看学员分析</span>
+                  <ArrowRight class="h-4 w-4" />
+                </div>
+              </button>
             </section>
           </section>
+        </section>
 
         <section
           id="class-review"
           class="tab-panel section"
-            :class="{ active: activeTab === 'review' }"
-            role="tabpanel"
-            aria-labelledby="class-tab-review"
+          :class="{ active: activeTab === 'review' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-review"
           :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
           v-show="activeTab === 'review'"
         >
-            <div class="workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
-            </div>
-          </section>
+          <div class="workspace-subpanel workspace-subpanel--flat">
+            <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
+          </div>
+        </section>
 
         <section
           id="class-insight"
           class="tab-panel section"
-            :class="{ active: activeTab === 'insight' }"
-            role="tabpanel"
-            aria-labelledby="class-tab-insight"
+          :class="{ active: activeTab === 'insight' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-insight"
           :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
           v-show="activeTab === 'insight'"
         >
-            <div class="workspace-subpanel workspace-subpanel--flat">
-              <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
-            </div>
-          </section>
+          <div class="workspace-subpanel workspace-subpanel--flat">
+            <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
+          </div>
+        </section>
 
         <section
           id="class-action"
           class="tab-panel section"
-            :class="{ active: activeTab === 'action' }"
-            role="tabpanel"
-            aria-labelledby="class-tab-action"
+          :class="{ active: activeTab === 'action' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-action"
           :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
           v-show="activeTab === 'action'"
         >
-            <div class="workspace-subpanel workspace-subpanel--flat">
-              <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
-            </div>
-          </section>
+          <div class="workspace-subpanel workspace-subpanel--flat">
+            <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -454,17 +512,14 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
   --workspace-brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
-  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-shadow-shell: 0 24px 84px
+    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-panel: 0 14px 34px
+    color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
-  --teacher-student-directory-columns:
-    minmax(7.5rem, 0.7fr)
-    minmax(10rem, 1fr)
-    minmax(10rem, 0.9fr)
-    minmax(8rem, 0.8fr)
-    minmax(8rem, 0.8fr)
-    minmax(8.5rem, 0.85fr);
+  --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
+    minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -472,7 +527,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-xl);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand) 6%, transparent),
+      transparent 26rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--workspace-shell-bg) 96%, var(--workspace-page)),
@@ -818,7 +877,13 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--workspace-faint);
-  font: 600 15px/1 'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font:
+    600 15px/1 'IBM Plex Sans',
+    'Noto Sans SC',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
   white-space: nowrap;
   cursor: pointer;
   transition:

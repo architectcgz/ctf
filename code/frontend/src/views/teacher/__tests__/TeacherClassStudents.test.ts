@@ -50,6 +50,8 @@ describe('TeacherClassStudents', () => {
     teacherApiMocks.getClasses.mockReset()
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassReview.mockReset()
+    teacherApiMocks.getClassSummary.mockReset()
+    teacherApiMocks.getClassTrend.mockReset()
     teacherApiMocks.getStudentRecommendations.mockReset()
 
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
@@ -326,8 +328,9 @@ describe('TeacherClassStudents', () => {
     })
 
     await flushPromises()
+    await wrapper.find('#class-tab-students').trigger('click')
 
-    const studentNoInput = wrapper.find('input[placeholder="输入学号后实时查询"]')
+    const studentNoInput = wrapper.find('input[placeholder="输入学号精确查询"]')
     await studentNoInput.setValue('20260001')
     await studentNoInput.setValue('20260002')
 
@@ -358,5 +361,40 @@ describe('TeacherClassStudents', () => {
 
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).not.toContain('bob')
+  })
+
+  it('按学号筛选时应该只刷新学生列表，不重复请求班级概览数据', async () => {
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.find('#class-tab-students').trigger('click')
+
+    expect(wrapper.text()).toContain('学生筛选')
+
+    const studentNoInput = wrapper.find('input[placeholder="输入学号精确查询"]')
+    expect(studentNoInput.exists()).toBe(true)
+
+    await studentNoInput.setValue('20260001')
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenLastCalledWith('Class A', {
+      student_no: '20260001',
+    })
+    expect(teacherApiMocks.getClassReview).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.getClassSummary).toHaveBeenCalledTimes(1)
+    expect(teacherApiMocks.getClassTrend).toHaveBeenCalledTimes(1)
   })
 })
