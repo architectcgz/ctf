@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type {
@@ -20,7 +20,7 @@ const validPanelKeys = new Set<ChallengePanelKey>(['manage', 'import', 'queue'])
 const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string; tabId: string }> = [
   { key: 'manage', label: '题目管理', panelId: 'challenge-panel-manage', tabId: 'challenge-tab-manage' },
   { key: 'import', label: '导入题目包', panelId: 'challenge-panel-import', tabId: 'challenge-tab-import' },
-  { key: 'queue', label: '上传队列', panelId: 'challenge-panel-queue', tabId: 'challenge-tab-queue' },
+  { key: 'queue', label: '待确认导入', panelId: 'challenge-panel-queue', tabId: 'challenge-tab-queue' },
 ]
 
 const route = useRoute()
@@ -62,6 +62,41 @@ const activePanel = computed<ChallengePanelKey>(() => {
 })
 
 const queueCount = computed(() => queue.value.length)
+const openActionMenuId = ref<string | null>(null)
+
+const packageTree = `challenge-package.zip
+  challenge.yml
+  statement.md
+  attachments/
+    web-demo.zip
+  docker/
+    topology.yml`
+
+const challengeManifest = `api_version: v1
+kind: challenge
+
+meta:
+  slug: web-demo
+  title: Web Demo
+  category: web
+  difficulty: easy
+  points: 100
+
+content:
+  statement: statement.md
+  attachments:
+    - path: attachments/web-demo.zip
+      name: web-demo.zip
+
+flag:
+  type: static
+  value: flag{example}
+  prefix: flag
+
+runtime:
+  type: container
+  image:
+    ref: ctf/web-demo:latest`
 
 function getCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
@@ -190,13 +225,42 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   focusTabByIndex(nextIndex)
 }
 
-async function openPackageFormatPage() {
-  await router.push({ name: 'AdminChallengePackageFormat' })
-}
-
 async function inspectImportTask(item: AdminChallengeImportPreview) {
   await loadPreview(item.id)
   await switchPanel('import')
+}
+
+function toggleActionMenu(challengeId: string): void {
+  openActionMenuId.value = openActionMenuId.value === challengeId ? null : challengeId
+}
+
+function closeActionMenu(): void {
+  openActionMenuId.value = null
+}
+
+function openChallengeDetail(challengeId: string): void {
+  closeActionMenu()
+  void router.push(`/admin/challenges/${challengeId}`)
+}
+
+function openChallengeTopology(challengeId: string): void {
+  closeActionMenu()
+  void router.push(`/admin/challenges/${challengeId}/topology`)
+}
+
+function openChallengeWriteup(challengeId: string): void {
+  closeActionMenu()
+  void router.push(`/admin/challenges/${challengeId}/writeup`)
+}
+
+async function submitPublishCheck(row: (typeof list.value)[number]): Promise<void> {
+  closeActionMenu()
+  await publish(row)
+}
+
+async function removeChallenge(challengeId: string): Promise<void> {
+  closeActionMenu()
+  await remove(challengeId)
 }
 
 onMounted(() => {
@@ -296,29 +360,22 @@ onMounted(() => {
           <template v-else>
             <div v-if="list.length === 0" class="admin-empty">当前还没有题目，请先导入题目包。</div>
 
-            <div v-else class="space-y-3">
+            <div v-else class="challenge-list">
               <div class="manage-directory-head" aria-hidden="true">
                 <span>题目</span>
-                <span>标签</span>
+                <span>分类</span>
+                <span>难度</span>
+                <span>分值</span>
+                <span>发布状态</span>
                 <span>发布检查</span>
-                <span>操作</span>
+                <span class="manage-directory-head__actions">操作</span>
               </div>
 
               <article v-for="row in list" :key="row.id" class="challenge-row">
                 <div class="challenge-row__identity">
-                  <div class="challenge-row__index">CH-{{ String(row.id).slice(0, 6).toUpperCase() }}</div>
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                       <h2 class="text-base font-semibold text-[var(--journal-ink)]">{{ row.title }}</h2>
-                      <span
-                        class="admin-status-chip"
-                        :style="{
-                          backgroundColor: getStatusColor(row.status) + '18',
-                          color: getStatusColor(row.status),
-                        }"
-                      >
-                        {{ getStatusLabel(row.status) }}
-                      </span>
                     </div>
 
                     <p
@@ -330,7 +387,7 @@ onMounted(() => {
                   </div>
                 </div>
 
-                <div class="challenge-row__meta">
+                <div class="challenge-row__category">
                   <span
                     class="admin-inline-chip"
                     :style="{
@@ -340,6 +397,9 @@ onMounted(() => {
                   >
                     {{ getCategoryLabel(row.category) }}
                   </span>
+                </div>
+
+                <div class="challenge-row__difficulty">
                   <span
                     class="admin-inline-chip"
                     :style="{
@@ -349,11 +409,25 @@ onMounted(() => {
                   >
                     {{ getDifficultyLabel(row.difficulty) }}
                   </span>
+                </div>
+
+                <div class="challenge-row__points">
                   <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
                 </div>
 
+                <div class="challenge-row__status">
+                  <span
+                    class="admin-status-chip"
+                    :style="{
+                      backgroundColor: getStatusColor(row.status) + '18',
+                      color: getStatusColor(row.status),
+                    }"
+                  >
+                    {{ getStatusLabel(row.status) }}
+                  </span>
+                </div>
+
                 <div class="challenge-row__review">
-                  <div class="journal-note-label">Publish Check</div>
                   <div
                     class="challenge-row__review-status"
                     :style="{ color: getPublishRequestColor(row.latestPublishRequest) }"
@@ -364,36 +438,56 @@ onMounted(() => {
 
                 <div class="challenge-row__actions" role="group" aria-label="题目操作">
                   <button
-                    class="admin-btn admin-btn-ghost admin-btn-compact"
-                    @click="router.push(`/admin/challenges/${row.id}`)"
+                    class="admin-btn admin-btn-primary admin-btn-compact"
+                    @click="openChallengeDetail(row.id)"
                   >
                     查看
                   </button>
                   <button
                     class="admin-btn admin-btn-ghost admin-btn-compact"
-                    @click="router.push(`/admin/challenges/${row.id}/topology`)"
+                    data-testid="challenge-more-actions"
+                    :aria-expanded="openActionMenuId === row.id ? 'true' : 'false'"
+                    @click="toggleActionMenu(row.id)"
                   >
-                    编排
+                    更多
                   </button>
-                  <button
-                    class="admin-btn admin-btn-ghost admin-btn-compact"
-                    @click="router.push(`/admin/challenges/${row.id}/writeup`)"
+
+                  <div
+                    v-if="openActionMenuId === row.id"
+                    class="challenge-row__actions-menu"
+                    role="menu"
+                    aria-label="更多题目操作"
                   >
-                    题解
-                  </button>
-                  <button
-                    v-if="row.status !== 'published'"
-                    class="admin-btn admin-btn-success admin-btn-compact"
-                    @click="void publish(row)"
-                  >
-                    提交发布检查
-                  </button>
-                  <button
-                    class="admin-btn admin-btn-danger admin-btn-compact"
-                    @click="void remove(row.id)"
-                  >
-                    删除
-                  </button>
+                    <button
+                      class="admin-btn admin-btn-ghost admin-btn-compact challenge-row__menu-button"
+                      role="menuitem"
+                      @click="openChallengeTopology(row.id)"
+                    >
+                      编排
+                    </button>
+                    <button
+                      class="admin-btn admin-btn-ghost admin-btn-compact challenge-row__menu-button"
+                      role="menuitem"
+                      @click="openChallengeWriteup(row.id)"
+                    >
+                      题解
+                    </button>
+                    <button
+                      v-if="row.status !== 'published'"
+                      class="admin-btn admin-btn-success admin-btn-compact challenge-row__menu-button"
+                      role="menuitem"
+                      @click="void submitPublishCheck(row)"
+                    >
+                      提交发布检查
+                    </button>
+                    <button
+                      class="admin-btn admin-btn-danger admin-btn-compact challenge-row__menu-button"
+                      role="menuitem"
+                      @click="void removeChallenge(row.id)"
+                    >
+                      删除
+                    </button>
+                  </div>
                 </div>
               </article>
             </div>
@@ -436,16 +530,29 @@ onMounted(() => {
           @select="handleSelectPackage"
         />
 
-        <aside class="sample-rail sample-rail--inline">
-          <div class="sample-rail__eyebrow">Uploader Guide</div>
-          <h2 class="sample-rail__title">先对照示例再上传</h2>
-          <p class="sample-rail__copy">
-            单独页面提供目录结构、最小 `challenge.yml` 和常见约束，便于出题人自查。
-          </p>
-          <button class="admin-btn admin-btn-ghost" type="button" @click="openPackageFormatPage">
-            查看题目包示例
-          </button>
-        </aside>
+        <section class="sample-guide">
+          <div class="sample-guide__header">
+            <div>
+              <div class="sample-guide__eyebrow">Uploader Guide</div>
+              <h2 class="sample-guide__title">题目包示例</h2>
+            </div>
+            <p class="sample-guide__copy">
+              上传前先核对目录结构和最小 `challenge.yml`，避免进入预览后才发现格式问题。
+            </p>
+          </div>
+
+          <div class="sample-guide__grid">
+            <article class="sample-card">
+              <div class="sample-card__label">目录结构</div>
+              <pre class="sample-card__code"><code>{{ packageTree }}</code></pre>
+            </article>
+
+            <article class="sample-card">
+              <div class="sample-card__label">challenge.yml</div>
+              <pre class="sample-card__code"><code>{{ challengeManifest }}</code></pre>
+            </article>
+          </div>
+        </section>
 
         <ChallengePackageImportReview
           v-if="hasPreview && preview"
@@ -466,13 +573,13 @@ onMounted(() => {
       >
         <div class="admin-section-head">
           <div>
-            <div class="journal-note-label">Import Queue</div>
-            <h1 class="manage-title manage-title--compact">上传队列</h1>
+            <div class="journal-note-label">Import Review</div>
+            <h1 class="manage-title manage-title--compact">待确认导入</h1>
           </div>
         </div>
 
         <p class="panel-copy">
-          这里列出服务端已生成预览、尚未确认导入的题目包任务。可直接继续查看预览并完成导入。
+          这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
         </p>
 
         <div v-if="queueLoading" class="flex items-center justify-center py-12">
@@ -724,9 +831,22 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
+.challenge-list {
+  --challenge-list-columns:
+    minmax(16rem, 1.7fr)
+    minmax(6.5rem, 0.68fr)
+    minmax(6.5rem, 0.68fr)
+    minmax(5.6rem, 0.58fr)
+    minmax(7rem, 0.72fr)
+    minmax(7rem, 0.76fr)
+    minmax(9.5rem, 9.5rem);
+  display: grid;
+  gap: 0;
+}
+
 .manage-directory-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
+  grid-template-columns: var(--challenge-list-columns);
   gap: 1rem;
   padding: 0 0 0.8rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -737,16 +857,27 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
+.manage-directory-head > span {
+  min-width: 0;
+}
+
+.manage-directory-head__actions {
+  text-align: right;
+}
+
 .challenge-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
+  grid-template-columns: var(--challenge-list-columns);
   align-items: start;
   gap: 1rem;
   padding: 1rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.challenge-row__identity,
+.challenge-row > div {
+  min-width: 0;
+}
+
 .queue-row__identity {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -755,21 +886,32 @@ onMounted(() => {
   min-width: 0;
 }
 
-.challenge-row__index {
-  padding-top: 0.1rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+.challenge-row__identity {
+  min-width: 0;
 }
 
-.challenge-row__meta,
+.challenge-row__category,
+.challenge-row__difficulty,
+.challenge-row__points,
+.challenge-row__status,
 .queue-row__summary {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-content: start;
+}
+
+.challenge-row__points,
+.challenge-row__status {
+  min-width: 0;
+}
+
+.challenge-row__category,
+.challenge-row__difficulty,
+.challenge-row__points,
+.challenge-row__status,
+.challenge-row__review {
+  justify-self: start;
 }
 
 .challenge-row__review {
@@ -791,12 +933,48 @@ onMounted(() => {
   color: var(--color-danger);
 }
 
-.challenge-row__actions,
+.challenge-row__actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 0.5rem;
+  position: relative;
+  justify-self: end;
+}
+
 .queue-row__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: flex-start;
   gap: 0.5rem;
+  position: relative;
+}
+
+.challenge-row__actions-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 10;
+  display: grid;
+  gap: 0.45rem;
+  min-width: 10rem;
+  padding: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
+  border-radius: 0.9rem;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+    );
+  box-shadow: 0 16px 32px var(--color-shadow-soft);
+}
+
+.challenge-row__menu-button {
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .admin-btn {
@@ -880,10 +1058,10 @@ onMounted(() => {
   line-height: 1.7;
 }
 
-.sample-rail {
+.sample-guide {
   display: grid;
-  gap: 0.8rem;
-  padding: 1rem 1.1rem;
+  gap: 1rem;
+  padding: 1rem 1.1rem 1.1rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 1rem;
   background: linear-gradient(
@@ -893,11 +1071,13 @@ onMounted(() => {
   );
 }
 
-.sample-rail--inline {
-  margin-top: -0.15rem;
+.sample-guide__header {
+  display: grid;
+  gap: 0.7rem;
 }
 
-.sample-rail__eyebrow {
+.sample-guide__eyebrow,
+.sample-card__label {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -905,17 +1085,41 @@ onMounted(() => {
   color: var(--journal-accent);
 }
 
-.sample-rail__title {
+.sample-guide__title {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
-.sample-rail__copy {
+.sample-guide__copy {
   margin: 0;
   color: var(--journal-muted);
   line-height: 1.65;
+}
+
+.sample-guide__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sample-card {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.sample-card__code {
+  overflow-x: auto;
+  margin: 0;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 80%, #0f172a 20%);
+  padding: 1rem;
+  color: var(--journal-ink);
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
 }
 
 .queue-list {
@@ -961,18 +1165,45 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .challenge-row,
+  .challenge-list {
+    --challenge-list-columns:
+      minmax(13rem, 1.45fr)
+      minmax(5.4rem, 0.6fr)
+      minmax(5.4rem, 0.6fr)
+      minmax(5rem, 0.54fr)
+      minmax(6.2rem, 0.66fr)
+      minmax(6.2rem, 0.7fr)
+      minmax(8.6rem, 8.6rem);
+  }
+
   .queue-row {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .challenge-row__actions,
   .queue-row__actions {
     justify-content: flex-start;
   }
 }
 
+@media (max-width: 960px) {
+  .manage-directory-head {
+    display: none;
+  }
+
+  .challenge-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .challenge-row__actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 720px) {
+  .sample-guide__grid {
+    grid-template-columns: 1fr;
+  }
+
   .top-tabs {
     gap: 18px;
     margin-left: -1rem;

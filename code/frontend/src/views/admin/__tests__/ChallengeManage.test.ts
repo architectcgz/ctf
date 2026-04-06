@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
+import challengeManageSource from '../ChallengeManage.vue?raw'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -110,16 +111,50 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).toContain('靶场管理')
     expect(wrapper.text()).toContain('题目管理')
     expect(wrapper.text()).toContain('导入题目包')
-    expect(wrapper.text()).toContain('上传队列')
+    expect(wrapper.text()).toContain('待确认导入')
     expect(wrapper.find('#challenge-tab-manage').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#challenge-panel-manage').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#challenge-panel-import').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('#challenge-panel-queue').attributes('aria-hidden')).toBe('true')
     expect(wrapper.text()).toContain('Test Challenge')
-    expect(wrapper.text()).toContain('提交发布检查')
+    expect(wrapper.text()).not.toContain('CH-')
+    expect(wrapper.text()).not.toContain('Publish Check')
+
+    const headers = wrapper.findAll('.manage-directory-head span').map((item) => item.text())
+    expect(headers).toEqual(['题目', '分类', '难度', '分值', '发布状态', '发布检查', '操作'])
+
+    const row = wrapper.find('.challenge-row')
+    expect(row.find('.challenge-row__identity').exists()).toBe(true)
+    expect(row.find('.challenge-row__category').text()).toContain('Web')
+    expect(row.find('.challenge-row__difficulty').text()).toContain('简单')
+    expect(row.find('.challenge-row__points').text()).toContain('100 pts')
+    expect(row.find('.challenge-row__status').text()).toContain('草稿')
+    expect(row.findAll('.challenge-row__actions > button')).toHaveLength(2)
+    expect(row.find('.challenge-row__actions').text()).toContain('查看')
+    expect(row.find('.challenge-row__actions').text()).toContain('更多')
+    expect(row.find('.challenge-row__actions').text()).not.toContain('编排')
+    expect(row.find('.challenge-row__actions').text()).not.toContain('题解')
+    expect(row.find('.challenge-row__actions').text()).not.toContain('提交发布检查')
+    expect(row.find('.challenge-row__actions').text()).not.toContain('删除')
+
+    await row.get('[data-testid="challenge-more-actions"]').trigger('click')
+    await flushPromises()
+
+    expect(row.find('.challenge-row__actions-menu').exists()).toBe(true)
+    expect(row.find('.challenge-row__actions-menu').text()).toContain('编排')
+    expect(row.find('.challenge-row__actions-menu').text()).toContain('题解')
+    expect(row.find('.challenge-row__actions-menu').text()).toContain('提交发布检查')
+    expect(row.find('.challenge-row__actions-menu').text()).toContain('删除')
   })
 
-  it('应该根据 query 切到上传队列，并支持切换到导入标签和示例页', async () => {
+  it('不应该在 1200px 断点把题目列表强制折成单列', () => {
+    expect(challengeManageSource).not.toMatch(
+      /\.challenge-row,\s*\.queue-row\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/s
+    )
+    expect(challengeManageSource).not.toMatch(/\.challenge-list\s*\{[^}]*--challenge-list-columns:[^;]*\bauto;/s)
+  })
+
+  it('应该根据 query 切到待确认导入，并支持切换到导入标签后直接看到题目包示例', async () => {
     routeState.query = { panel: 'queue' }
 
     const wrapper = mount(ChallengeManage)
@@ -142,15 +177,8 @@ describe('ChallengeManage', () => {
     const importWrapper = mount(ChallengeManage)
     await flushPromises()
 
-    const sampleButton = importWrapper
-      .findAll('button')
-      .find((button) => button.text().includes('查看题目包示例'))
-
-    expect(sampleButton).toBeTruthy()
-    await sampleButton!.trigger('click')
-
-    expect(pushMock).toHaveBeenCalledWith({
-      name: 'AdminChallengePackageFormat',
-    })
+    expect(importWrapper.text()).toContain('题目包示例')
+    expect(importWrapper.text()).toContain('challenge-package.zip')
+    expect(importWrapper.text()).toContain('api_version: v1')
   })
 })
