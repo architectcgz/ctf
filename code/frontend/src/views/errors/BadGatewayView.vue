@@ -14,7 +14,7 @@ import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
     :icon="Network"
     :primary-icon="Home"
     :secondary-icon="BellRing"
-    primary-to="/dashboard"
+    primary-to="/student/dashboard"
     primary-label="返回工作台"
   />
 </template>

@@ -79,7 +79,7 @@ async function onSubmit() {
   loading.value = true
   try {
     const redirectTo = sanitizeRedirectPath(route.query.redirect)
-    await login({ username: form.username, password: form.password }, redirectTo)
+    await login({ username: form.username, password: form.password }, redirectTo === '/' ? undefined : redirectTo)
   } finally {
     loading.value = false
   }

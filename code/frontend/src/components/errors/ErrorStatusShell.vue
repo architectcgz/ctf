@@ -3,6 +3,7 @@ import { computed, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 interface Props {
   statusCode: string
@@ -37,9 +38,7 @@ const accentValueMap: Record<NonNullable<Props['accent']>, string> = {
 
 const dynamicHomePath = computed(() => {
   if (!authStore.isLoggedIn) return '/login'
-  if (authStore.isAdmin) return '/platform/overview'
-  if (authStore.isTeacher) return '/academy/overview'
-  return '/dashboard'
+  return getRoleDashboardPath(authStore.user?.role)
 })
 
 const dynamicHomeLabel = computed(() => {

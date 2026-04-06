@@ -44,7 +44,7 @@ describe('additional error views', () => {
 
     expect(wrapper.text()).toContain('429')
     expect(wrapper.text()).toContain('请求过于频繁')
-    expect(links[0]?.props('to')).toBe('/dashboard')
+    expect(links[0]?.props('to')).toBe('/student/dashboard')
   })
 
   it('renders server-side failure pages with workspace recovery actions', () => {
@@ -68,7 +68,7 @@ describe('additional error views', () => {
 
       expect(wrapper.text()).toContain(page.code)
       expect(wrapper.text()).toContain(page.text)
-      expect(links[0]?.props('to')).toBe('/dashboard')
+      expect(links[0]?.props('to')).toBe('/student/dashboard')
       expect(links[1]?.props('to')).toBe('/notifications')
     }
   })

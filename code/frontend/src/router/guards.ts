@@ -9,6 +9,7 @@ import { getProfile } from '@/api/auth'
 import type { UserRole } from '@/utils/constants'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 import { redirectToErrorStatusPage } from '@/utils/errorStatusPage'
+import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 NProgress.configure({ showSpinner: false })
 
@@ -60,8 +61,9 @@ export function setupRouterGuards(router: Router): void {
     try {
       if (isPublicRoute(to)) {
         if (isAuthLandingRoute(to) && authStore.isLoggedIn) {
+          await ensureProfileLoaded()
           const redirectTo = sanitizeRedirectPath(to.query.redirect)
-          next(redirectTo)
+          next(redirectTo === '/' ? getRoleDashboardPath(authStore.user?.role) : redirectTo)
           return
         }
         next()

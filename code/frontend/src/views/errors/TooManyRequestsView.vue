@@ -14,7 +14,7 @@ import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
     :icon="Gauge"
     :primary-icon="RotateCcw"
     :secondary-icon="BellRing"
-    primary-to="/dashboard"
+    primary-to="/student/dashboard"
     primary-label="返回工作台"
   />
 </template>

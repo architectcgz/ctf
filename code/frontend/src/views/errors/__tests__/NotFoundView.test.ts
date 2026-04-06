@@ -51,6 +51,6 @@ describe('NotFoundView', () => {
     const links = wrapper.findAllComponents(RouterLinkStub)
 
     expect(wrapper.text()).toContain('返回管理工作台')
-    expect(links[0]?.props('to')).toBe('/platform/overview')
+    expect(links[0]?.props('to')).toBe('/admin/dashboard')
   })
 })
