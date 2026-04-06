@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ArrowRight, ChevronLeft } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { ArrowRight, ChevronLeft, Search } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
 import type {
   TeacherClassItem,
@@ -45,276 +45,509 @@ const activeRateText = computed(() => {
   if (!props.summary) return '--'
   return `${Math.round(props.summary.active_rate)}%`
 })
+
+type WorkspaceTab = 'overview' | 'trend' | 'students' | 'review' | 'insight' | 'action'
+
+interface WorkspaceTabItem {
+  key: WorkspaceTab
+  label: string
+  buttonId: string
+  panelId: string
+}
+
+const workspaceTabs: WorkspaceTabItem[] = [
+  { key: 'overview', label: '主看板', buttonId: 'class-tab-overview', panelId: 'class-overview' },
+  { key: 'trend', label: '趋势复盘', buttonId: 'class-tab-trend', panelId: 'class-trend' },
+  { key: 'students', label: '学生列表', buttonId: 'class-tab-students', panelId: 'class-students' },
+  { key: 'review', label: '复盘结论', buttonId: 'class-tab-review', panelId: 'class-review' },
+  { key: 'insight', label: '学生洞察', buttonId: 'class-tab-insight', panelId: 'class-insight' },
+  { key: 'action', label: '介入建议', buttonId: 'class-tab-action', panelId: 'class-action' },
+]
+
+const activeTab = ref<WorkspaceTab>('overview')
+const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
+
+function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
+  tabButtonRefs[tab] = element
+}
+
+function selectTab(tab: WorkspaceTab): void {
+  activeTab.value = tab
+}
+
+function focusTab(tab: WorkspaceTab): void {
+  tabButtonRefs[tab]?.focus()
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+    return
+  }
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    selectTab(workspaceTabs[0].key)
+    focusTab(workspaceTabs[0].key)
+    return
+  }
+
+  if (event.key === 'End') {
+    const lastTab = workspaceTabs[workspaceTabs.length - 1]
+    selectTab(lastTab.key)
+    focusTab(lastTab.key)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + workspaceTabs.length) % workspaceTabs.length
+  const nextTab = workspaceTabs[nextIndex]
+  selectTab(nextTab.key)
+  focusTab(nextTab.key)
+}
 </script>
 
 <template>
-  <div class="teacher-management-shell teacher-surface">
-    <section class="teacher-hero teacher-surface-hero px-6 py-6 md:px-8">
-      <header class="teacher-header">
-        <div class="teacher-header__main">
-          <div class="teacher-eyebrow-row">
-            <div class="teacher-surface-eyebrow journal-eyebrow">Class Students</div>
-            <span class="teacher-class-chip teacher-surface-chip">{{
-              selectedClassName || '未选择班级'
-            }}</span>
-          </div>
-
-          <h1 class="teacher-title">
-            {{ selectedClassName ? `${selectedClassName} · 学生列表` : '班级学生' }}
-          </h1>
-          <p class="teacher-copy">查看当前班级学生名单，并继续进入学员分析。</p>
-
-          <div class="teacher-actions">
-            <button
-              type="button"
-              class="teacher-btn teacher-surface-btn"
-              @click="emit('openClassManagement')"
-            >
-              返回班级管理
-            </button>
-            <button
-              type="button"
-              class="teacher-btn teacher-surface-btn"
-              @click="emit('openDashboard')"
-            >
-              教学概览
-            </button>
-            <button
-              type="button"
-              class="teacher-btn teacher-surface-btn teacher-btn--primary"
-              @click="emit('openReportExport')"
-            >
-              导出报告
-            </button>
-          </div>
-        </div>
-
-        <div class="teacher-badge-grid">
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">可访问班级</div>
-            <div class="teacher-badge-value">{{ classes.length }}</div>
-            <div class="teacher-badge-hint">当前教师可切换的班级数量</div>
-          </article>
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">班级人数</div>
-            <div class="teacher-badge-value">{{ props.summary?.student_count ?? students.length }}</div>
-            <div class="teacher-badge-hint">当前班级纳入统计的学生数量</div>
-          </article>
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">平均解题</div>
-            <div class="teacher-badge-value">{{ averageSolvedText }}</div>
-            <div class="teacher-badge-hint">班级当前平均完成情况</div>
-          </article>
-          <article class="teacher-badge-card teacher-surface-metric journal-brief journal-metric">
-            <div class="teacher-badge-label">近 7 天活跃率</div>
-            <div class="teacher-badge-value">{{ activeRateText }}</div>
-            <div class="teacher-badge-hint">当前班级近 7 天训练参与情况</div>
-          </article>
-        </div>
-      </header>
-
-      <div class="teacher-hero-divider" />
-
-      <div class="teacher-tip-block">
-        <div class="teacher-tip-label">当前焦点</div>
-        <div class="teacher-tip-copy">
-          先看班级趋势和复盘结论，再从学生名单进入单个学员分析。
-        </div>
+  <div class="workspace-shell">
+    <header class="workspace-topbar">
+      <div class="topbar-leading">
+        <span class="workspace-overline">Class Workspace</span>
+        <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
       </div>
+    </header>
 
-      <div class="teacher-summary-grid">
-        <article class="teacher-summary-card">
-          <div class="teacher-summary-label">近 7 天训练事件</div>
-          <div class="teacher-summary-value">{{ props.summary?.recent_event_count ?? '--' }}</div>
-          <div class="teacher-summary-hint">提交、实例启动与销毁等动作总数</div>
-        </article>
-        <article class="teacher-summary-card">
-          <div class="teacher-summary-label">当前学生记录</div>
-          <div class="teacher-summary-value">{{ students.length }}</div>
-          <div class="teacher-summary-hint">当前列表内可直接进入分析的学生数量</div>
-        </article>
-      </div>
+    <nav class="top-tabs" role="tablist" aria-label="班级详情标签页">
+      <button
+        v-for="(tab, index) in workspaceTabs"
+        :id="tab.buttonId"
+        :key="tab.key"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+        class="top-tab"
+        :class="{ active: activeTab === tab.key }"
+        type="button"
+        role="tab"
+        :tabindex="activeTab === tab.key ? 0 : -1"
+        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        @click="selectTab(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
 
-      <div class="teacher-surface-board">
-        <div v-if="error" class="teacher-surface-error" role="alert" aria-live="polite">
-          {{ error }}
-          <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-        </div>
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <section
+          id="class-overview"
+          class="tab-panel section active"
+          :class="{ active: activeTab === 'overview' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+          v-show="activeTab === 'overview'"
+        >
+          <header class="teacher-topbar">
+            <div class="teacher-heading">
+              <div class="teacher-eyebrow-row">
+                <div class="teacher-surface-eyebrow journal-eyebrow">Class Students</div>
+                <span class="teacher-class-chip teacher-surface-chip">{{ selectedClassName || '未选择班级' }}</span>
+              </div>
 
-        <section id="teacher-trend" class="teacher-anchor-section">
-          <TeacherClassTrendPanel
-            :trend="trend"
-            title="班级近 7 天训练趋势"
-            subtitle="先看整体节奏，再下钻到具体学生。"
-          />
-        </section>
-
-        <section id="teacher-review" class="teacher-anchor-section">
-          <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
-        </section>
-
-        <section id="teacher-insight" class="teacher-anchor-section">
-          <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
-        </section>
-
-        <section id="teacher-intervention" class="teacher-anchor-section">
-          <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
-        </section>
-
-        <section class="teacher-surface-section teacher-student-list-section">
-          <div class="teacher-section-head">
-            <div>
-              <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
-              <h3 class="teacher-section-title">学生列表</h3>
-              <p class="teacher-section-copy">选择学生后进入学员分析。</p>
+              <h1 class="teacher-title">
+                {{ selectedClassName ? `${selectedClassName} · 学生列表` : '班级学生' }}
+              </h1>
+              <p class="teacher-copy">查看当前班级学生名单，并继续进入学员分析。</p>
             </div>
-            <button type="button" class="teacher-inline-link" @click="emit('openClassManagement')">
-              <ChevronLeft class="h-4 w-4" />
-              返回班级列表
-            </button>
+
+            <div class="teacher-actions">
+              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openClassManagement')">
+                返回班级管理
+              </button>
+              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openDashboard')">
+                教学概览
+              </button>
+              <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openReportExport')">
+                导出报告
+              </button>
+            </div>
+          </header>
+
+          <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
+            <div class="workspace-alert-title">班级详情加载失败</div>
+            <div class="workspace-alert-copy">{{ error }}</div>
+            <div class="workspace-alert-actions">
+              <button type="button" class="quick-action quick-action--compact" @click="emit('retry')">
+                <span>重试加载</span>
+                <span>→</span>
+              </button>
+            </div>
           </div>
 
-          <div class="teacher-student-toolbar">
-            <div class="teacher-section-meta">共 {{ students.length }} 名学生</div>
-            <label class="teacher-search-field">
-              <span class="teacher-field-label">按学号查询</span>
-              <input
-                :value="studentNoQuery"
-                type="text"
-                placeholder="输入学号后实时查询"
-                class="teacher-search-input"
-                @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-              />
-            </label>
-          </div>
+          <div class="teacher-surface-board">
+            <div class="teacher-tip-block">
+              <section class="teacher-summary">
+                <div class="teacher-summary-title">
+                  <span>Class Snapshot</span>
+                </div>
+                <div class="teacher-summary-grid">
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">可访问班级</div>
+                    <div class="teacher-summary-value">{{ classes.length }}</div>
+                    <div class="teacher-summary-helper">当前教师可切换的班级数量</div>
+                  </div>
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">班级人数</div>
+                    <div class="teacher-summary-value">{{ props.summary?.student_count ?? students.length }}</div>
+                    <div class="teacher-summary-helper">当前班级纳入统计的学生数量</div>
+                  </div>
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">平均解题</div>
+                    <div class="teacher-summary-value">{{ averageSolvedText }}</div>
+                    <div class="teacher-summary-helper">班级当前平均完成情况</div>
+                  </div>
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">近 7 天活跃率</div>
+                    <div class="teacher-summary-value">{{ activeRateText }}</div>
+                    <div class="teacher-summary-helper">当前班级近 7 天训练参与情况</div>
+                  </div>
+                </div>
+              </section>
 
-          <div v-if="loadingStudents" class="teacher-skeleton-list">
-            <div
-              v-for="index in 6"
-              :key="index"
-              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+              <section class="teacher-controls">
+                <div class="teacher-controls-bar">
+                  <div class="teacher-controls-heading">
+                    <div class="teacher-surface-eyebrow journal-eyebrow">Class Workspace</div>
+                    <h3 class="teacher-controls-title">班级详情</h3>
+                    <p class="teacher-controls-copy">
+                      {{ selectedClassName || '当前未选择班级' }}。先看班级趋势与复盘，再按学号快速定位学生。
+                    </p>
+                  </div>
+                </div>
+
+                <div class="teacher-filter-grid">
+                  <div class="teacher-context-card">
+                    <div class="teacher-field-label">当前班级</div>
+                    <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
+                    <div class="teacher-context-copy">
+                      {{ props.summary?.student_count ?? students.length }} 名学生
+                    </div>
+                  </div>
+
+                  <label class="teacher-field">
+                    <span class="teacher-field-label">按学号查询</span>
+                    <div class="teacher-field-control teacher-filter-control">
+                      <Search class="h-4 w-4 text-text-muted" />
+                      <input
+                        :value="studentNoQuery"
+                        type="text"
+                        placeholder="输入学号后实时查询"
+                        class="teacher-input"
+                        @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
+                      />
+                    </div>
+                  </label>
+                </div>
+              </section>
+
+              <div class="teacher-hero-divider" />
+
+              <div class="teacher-tip-label">当前焦点</div>
+              <div class="teacher-tip-copy">先看班级趋势和复盘结论，再决定课堂介入动作。</div>
+            </div>
+
+            <div class="teacher-summary-cards">
+              <article class="teacher-summary-card">
+                <div class="teacher-summary-label">近 7 天训练事件</div>
+                <div class="teacher-summary-value">{{ props.summary?.recent_event_count ?? '--' }}</div>
+                <div class="teacher-summary-helper">提交、实例启动与销毁等动作总数</div>
+              </article>
+              <article class="teacher-summary-card">
+                <div class="teacher-summary-label">当前学生记录</div>
+                <div class="teacher-summary-value">{{ students.length }}</div>
+                <div class="teacher-summary-helper">当前列表内可直接进入分析的学生数量</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="class-trend"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'trend' }"
+          role="tabpanel"
+          aria-labelledby="class-tab-trend"
+          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
+          v-show="activeTab === 'trend'"
+        >
+          <div class="workspace-subpanel workspace-subpanel--flat">
+            <TeacherClassTrendPanel
+              :trend="trend"
+              title="班级近 7 天训练趋势"
+              subtitle="先看整体节奏，再下钻到具体学生。"
             />
           </div>
-
-          <AppEmpty
-            v-else-if="students.length === 0"
-            icon="Users"
-            title="当前班级暂无学生"
-            description="该班级下还没有可用学生记录。"
-          />
-
-          <div v-else class="teacher-table-shell">
-            <ElTable
-              :data="students"
-              row-key="id"
-              class="teacher-surface-table teacher-student-table"
-              empty-text="当前班级暂无学生"
-            >
-              <ElTableColumn label="姓名" min-width="220">
-                <template #default="{ row }">
-                  <div class="py-1">
-                    <div class="teacher-row-title">{{ row.name || row.username }}</div>
-                    <div class="teacher-row-copy">@{{ row.username }}</div>
-                  </div>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn prop="username" label="用户名" min-width="220">
-                <template #default="{ row }">
-                  <span class="teacher-row-copy">@{{ row.username }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="学号" min-width="180">
-                <template #default="{ row }">
-                  <span class="teacher-row-copy">{{ row.student_no || '未设置' }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="解题数" width="120" align="center">
-                <template #default="{ row }">
-                  <span class="teacher-row-stat">{{ row.solved_count ?? 0 }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="得分" width="120" align="center">
-                <template #default="{ row }">
-                  <span class="teacher-row-stat">{{ row.total_score ?? 0 }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="薄弱项" min-width="160">
-                <template #default="{ row }">
-                  <span class="teacher-row-copy">{{ row.weak_dimension || '暂无' }}</span>
-                </template>
-              </ElTableColumn>
-
-              <ElTableColumn label="操作" width="180" align="right">
-                <template #default="{ row }">
-                  <button
-                    type="button"
-                    class="teacher-row-btn"
-                    @click="emit('openStudent', row.id)"
-                  >
-                    查看学员分析
-                    <ArrowRight class="h-4 w-4" />
-                  </button>
-                </template>
-              </ElTableColumn>
-            </ElTable>
-          </div>
         </section>
-      </div>
-    </section>
+
+        <section
+          id="class-students"
+          class="tab-panel section"
+            :class="{ active: activeTab === 'students' }"
+            role="tabpanel"
+            aria-labelledby="class-tab-students"
+          :aria-hidden="activeTab === 'students' ? 'false' : 'true'"
+          v-show="activeTab === 'students'"
+        >
+            <section class="teacher-student-list-section">
+              <div class="teacher-section-head">
+                <div>
+                  <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
+                  <h3 class="teacher-section-title">学生列表</h3>
+                  <p class="teacher-section-copy">选择学生后进入学员分析。</p>
+                </div>
+                <button type="button" class="teacher-inline-link" @click="emit('openClassManagement')">
+                  <ChevronLeft class="h-4 w-4" />
+                  返回班级列表
+                </button>
+              </div>
+
+              <div class="teacher-student-toolbar">
+                <div class="teacher-section-meta">共 {{ students.length }} 名学生</div>
+              </div>
+
+              <div v-if="loadingStudents" class="teacher-skeleton-list">
+                <div
+                  v-for="index in 6"
+                  :key="index"
+                  class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+                />
+              </div>
+
+              <AppEmpty
+                v-else-if="students.length === 0"
+                class="teacher-empty-state"
+                icon="Users"
+                title="当前班级暂无学生"
+                description="该班级下还没有可用学生记录。"
+              />
+
+              <section v-else class="teacher-directory" aria-label="学生目录">
+                <div class="teacher-directory-head">
+                  <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
+                  <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
+                  <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
+                  <span>状态</span>
+                  <span>数据</span>
+                  <span>操作</span>
+                </div>
+
+                <button
+                  v-for="student in students"
+                  :key="student.id"
+                  type="button"
+                  class="teacher-directory-row"
+                  :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
+                  @click="emit('openStudent', student.id)"
+                >
+                  <div class="teacher-directory-cell teacher-directory-cell-student-no">
+                    {{ student.student_no || '未设置学号' }}
+                  </div>
+
+                  <div class="teacher-directory-cell teacher-directory-cell-name">
+                    <h4 class="teacher-directory-row-title">{{ student.name || '未设置姓名' }}</h4>
+                  </div>
+
+                  <div class="teacher-directory-cell teacher-directory-cell-alias">
+                    <div class="teacher-directory-row-points">@{{ student.username }}</div>
+                  </div>
+
+                  <div class="teacher-directory-row-status">
+                    <span
+                      class="teacher-directory-state-chip"
+                      :class="
+                        (student.solved_count ?? 0) > 0
+                          ? 'teacher-directory-state-chip-ready'
+                          : 'teacher-directory-state-chip-empty'
+                      "
+                    >
+                      {{ (student.solved_count ?? 0) > 0 ? '已有解题记录' : '暂无解题记录' }}
+                    </span>
+                  </div>
+
+                  <div class="teacher-directory-row-metrics">
+                    <span>{{ student.solved_count ?? 0 }} 题</span>
+                    <span>{{ student.total_score ?? 0 }} 分</span>
+                  </div>
+
+                  <div class="teacher-directory-row-cta">
+                    <span>查看学员分析</span>
+                    <ArrowRight class="h-4 w-4" />
+                  </div>
+                </button>
+              </section>
+            </section>
+          </section>
+
+        <section
+          id="class-review"
+          class="tab-panel section"
+            :class="{ active: activeTab === 'review' }"
+            role="tabpanel"
+            aria-labelledby="class-tab-review"
+          :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
+          v-show="activeTab === 'review'"
+        >
+            <div class="workspace-subpanel workspace-subpanel--flat">
+              <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
+            </div>
+          </section>
+
+        <section
+          id="class-insight"
+          class="tab-panel section"
+            :class="{ active: activeTab === 'insight' }"
+            role="tabpanel"
+            aria-labelledby="class-tab-insight"
+          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
+          v-show="activeTab === 'insight'"
+        >
+            <div class="workspace-subpanel workspace-subpanel--flat">
+              <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
+            </div>
+          </section>
+
+        <section
+          id="class-action"
+          class="tab-panel section"
+            :class="{ active: activeTab === 'action' }"
+            role="tabpanel"
+            aria-labelledby="class-tab-action"
+          :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
+          v-show="activeTab === 'action'"
+        >
+            <div class="workspace-subpanel workspace-subpanel--flat">
+              <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
+            </div>
+          </section>
+      </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.teacher-management-shell {
+.workspace-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-}
-
-.teacher-hero {
-  border-color: var(--teacher-card-border);
+  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --workspace-faint: color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base));
+  --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --workspace-brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-radius-xl: 28px;
+  --workspace-radius-lg: 18px;
+  --teacher-student-directory-columns:
+    minmax(7.5rem, 0.7fr)
+    minmax(10rem, 1fr)
+    minmax(10rem, 0.9fr)
+    minmax(8rem, 0.8fr)
+    minmax(8rem, 0.8fr)
+    minmax(8.5rem, 0.85fr);
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+  min-height: 100%;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: var(--workspace-radius-xl);
   background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 18rem
-    ),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+      color-mix(in srgb, var(--workspace-shell-bg) 96%, var(--workspace-page)),
+      var(--workspace-shell-bg)
     );
+  box-shadow: var(--workspace-shadow-shell);
+  overflow: clip;
+  color: var(--journal-ink);
+}
+
+.workspace-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 28px 0;
+}
+
+.topbar-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.workspace-overline {
+  display: inline-block;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--workspace-brand) 66%, var(--workspace-faint));
+}
+
+.class-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--workspace-brand) 22%, transparent);
+  border-radius: 8px;
+  background: var(--workspace-brand-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--workspace-brand-ink);
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.content-pane {
+  min-width: 0;
+  padding: 28px;
 }
 
 .journal-eyebrow {
   letter-spacing: 0.08em;
 }
 
-.journal-brief,
-.journal-metric {
-  border-radius: 18px;
+.teacher-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.teacher-header {
-  display: grid;
-  gap: 1.25rem;
-}
-
-.teacher-header__main {
-  max-width: 42rem;
+.teacher-heading {
+  min-width: 0;
 }
 
 .teacher-eyebrow-row {
@@ -322,6 +555,19 @@ const activeRateText = computed(() => {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.65rem;
+}
+
+.teacher-class-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--journal-muted);
 }
 
 .teacher-title {
@@ -333,15 +579,14 @@ const activeRateText = computed(() => {
 }
 
 .teacher-copy {
-  margin-top: 0.7rem;
-  max-width: 42rem;
-  font-size: 0.92rem;
-  line-height: 1.72;
+  margin-top: 0.75rem;
+  max-width: 42.5rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
   color: var(--journal-muted);
 }
 
 .teacher-actions {
-  margin-top: 1.3rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -352,75 +597,321 @@ const activeRateText = computed(() => {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.75rem;
-  border-radius: 999px;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
   border: 1px solid var(--teacher-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.62rem 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--journal-ink);
   transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .teacher-btn:hover,
 .teacher-btn:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  color: var(--journal-accent-strong);
+  outline: none;
 }
 
 .teacher-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
 }
 
 .teacher-btn--primary:hover,
 .teacher-btn--primary:focus-visible {
-  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
+  border-color: transparent;
+  background: var(--journal-accent-strong);
+  color: var(--color-bg-base);
 }
 
-.teacher-badge-grid {
+.teacher-btn--ghost {
+  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
+}
+
+.teacher-summary {
   display: grid;
-  gap: 0.9rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.teacher-badge-card {
-  min-height: 100%;
-  border: 1px solid var(--teacher-card-border);
-  padding: 1rem 1.05rem 1.05rem;
-}
-
-.teacher-badge-label {
-  font-size: 0.74rem;
+.teacher-summary-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-accent-strong);
+}
+
+.teacher-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.teacher-summary-item {
+  min-width: 0;
+  padding-left: 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.teacher-summary-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.teacher-badge-value {
+.teacher-summary-value {
   margin-top: 0.55rem;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+.teacher-summary-helper {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.teacher-controls {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem 0 0;
+}
+
+.teacher-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.teacher-controls-title {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
-.teacher-badge-hint {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
+.teacher-controls-copy {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
   color: var(--journal-muted);
 }
 
+.teacher-filter-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+}
+
+.teacher-context-card,
+.teacher-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.teacher-context-card {
+  min-height: 2.9rem;
+  align-content: center;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  padding: 0.72rem 0.95rem;
+}
+
+.teacher-context-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-context-copy {
+  font-size: 0.82rem;
+  color: var(--journal-muted);
+}
+
+.teacher-field-label {
+  font-size: 0.84rem;
+  color: var(--journal-muted);
+}
+
+.teacher-field-control {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  padding: 0.72rem 0.95rem;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.teacher-field-control:focus-within,
+.teacher-field-control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
+}
+
+.teacher-filter-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.teacher-input {
+  width: 100%;
+  background: transparent;
+  color: var(--journal-ink);
+  outline: none;
+}
+
+.teacher-input::placeholder {
+  color: color-mix(in srgb, var(--journal-muted) 76%, transparent);
+}
+
 .teacher-hero-divider {
-  margin: 1.35rem 0 1.15rem;
+  margin-top: 1.5rem;
   border-top: 1px dashed var(--teacher-divider);
+}
+
+.top-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 0 28px;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--workspace-line-soft);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--workspace-faint);
+  font: 600 15px/1 'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: var(--workspace-brand-ink);
+  border-bottom-color: var(--workspace-brand);
+  outline: none;
+}
+
+.workspace-alert {
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: var(--workspace-radius-lg);
+  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  box-shadow: var(--workspace-shadow-panel);
+  padding: 1rem 1.1rem;
+}
+
+.workspace-alert-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.workspace-alert-copy {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.workspace-alert-actions {
+  margin-top: 0.85rem;
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
+  color: var(--journal-ink);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.quick-action span:last-child {
+  color: var(--workspace-faint);
+}
+
+.quick-action:hover,
+.quick-action:focus-visible {
+  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel));
+  color: var(--workspace-brand-ink);
+  outline: none;
+}
+
+.quick-action--compact {
+  min-height: 42px;
+}
+
+.teacher-surface-board {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+  animation: tabPanelIn 180ms ease both;
+}
+
+.tab-panel.section {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .teacher-tip-block {
@@ -444,7 +935,7 @@ const activeRateText = computed(() => {
   color: var(--journal-muted);
 }
 
-.teacher-summary-grid {
+.teacher-summary-cards {
   margin-top: 1.25rem;
   display: grid;
   gap: 0.9rem;
@@ -456,26 +947,83 @@ const activeRateText = computed(() => {
   padding-top: 0.95rem;
 }
 
-.teacher-summary-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+.teacher-badge-card {
+  border: 1px solid var(--teacher-card-border);
 }
 
-.teacher-summary-value {
-  margin-top: 0.45rem;
-  font-size: 1.15rem;
+.teacher-table-shell {
+  border: 1px solid var(--teacher-card-border);
+}
+
+.workspace-subpanel :deep(.teacher-panel) {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  box-shadow: 0 14px 34px var(--color-shadow-soft);
+  padding: 20px;
+}
+
+.workspace-subpanel :deep(.teacher-panel__header),
+.workspace-subpanel :deep(.teacher-subsection__header) {
+  margin-bottom: 16px;
+}
+
+.workspace-subpanel :deep(.journal-eyebrow) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
+}
+
+.workspace-subpanel :deep(.teacher-panel__title) {
+  margin-top: 10px;
+  font-size: 22px;
+  line-height: 1.15;
   color: var(--journal-ink);
 }
 
-.teacher-summary-hint {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
+.workspace-subpanel :deep(.teacher-subsection + .teacher-subsection) {
+  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.workspace-subpanel :deep(.top-student-item),
+.workspace-subpanel :deep(.dimension-item),
+.workspace-subpanel :deep(.review-item__recommendation),
+.workspace-subpanel :deep(.review-item),
+.workspace-subpanel :deep(.intervention-item) {
+  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.workspace-subpanel :deep(.teacher-panel__chart) {
+  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
+}
+
+.workspace-subpanel--flat :deep(.teacher-panel) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.workspace-subpanel--flat :deep(.teacher-panel__chart) {
+  margin-top: 0;
+}
+
+.workspace-subpanel :deep(.review-item) {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
+}
+
+.workspace-subpanel :deep(.top-student-item__rank),
+.workspace-subpanel :deep(.teacher-tip-index) {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .teacher-anchor-section {
@@ -524,37 +1072,9 @@ const activeRateText = computed(() => {
   margin: 1rem 0;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-}
-
-.teacher-search-field {
-  display: grid;
-  gap: 0.45rem;
-  min-width: min(100%, 20rem);
-}
-
-.teacher-field-label {
-  font-size: 0.84rem;
-  color: var(--journal-muted);
-}
-
-.teacher-search-input {
-  width: 100%;
-  min-height: 2.9rem;
-  border-radius: 1rem;
-  border: 1px solid var(--teacher-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.72rem 0.95rem;
-  font-size: 0.875rem;
-  color: var(--journal-ink);
-  outline: none;
-}
-
-.teacher-search-input:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
 }
 
 .teacher-skeleton-list {
@@ -562,71 +1082,201 @@ const activeRateText = computed(() => {
   gap: 0.75rem;
 }
 
-.teacher-table-shell {
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 18px;
+.teacher-empty-state {
+  margin-top: 1.5rem;
 }
 
-.teacher-row-title {
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-ink) 88%, var(--journal-muted));
+.teacher-student-list-section {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
-.teacher-row-copy {
-  font-size: 0.84rem;
-  color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+.teacher-directory {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
 }
 
-.teacher-row-stat {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-ink) 84%, var(--journal-muted));
+.teacher-directory-head {
+  display: grid;
+  grid-template-columns: var(--teacher-student-directory-columns);
+  gap: 1rem;
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
-.teacher-row-btn {
+.teacher-directory-head-cell {
+  min-width: 0;
+  justify-self: stretch;
+  text-align: left;
+}
+
+.teacher-directory-row {
+  display: grid;
+  grid-template-columns: var(--teacher-student-directory-columns);
+  gap: 1rem;
+  align-items: center;
+  width: 100%;
+  padding: 1.1rem 0;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.teacher-directory-row:hover,
+.teacher-directory-row:focus-visible {
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--journal-accent) 62%, transparent);
+  outline: none;
+}
+
+.teacher-directory-cell {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  align-content: center;
+  justify-self: stretch;
+  text-align: left;
+}
+
+.teacher-directory-cell-alias .teacher-directory-row-points,
+.teacher-directory-row-points {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.teacher-directory-cell-student-no {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--journal-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-directory-row-title {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-head-cell-student-no,
+.teacher-directory-head-cell-name,
+.teacher-directory-head-cell-alias,
+.teacher-directory-cell-student-no,
+.teacher-directory-cell-name,
+.teacher-directory-cell-alias {
+  justify-self: start;
+  width: 100%;
+}
+
+.teacher-directory-row-points {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+.teacher-directory-row-status {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.teacher-directory-state-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.42rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  padding: 0.58rem 0.95rem;
-  font-size: 0.84rem;
+  min-height: 1.75rem;
+  padding: 0 0.62rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
 }
 
-.teacher-row-btn:hover,
-.teacher-row-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 38%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 16%, var(--journal-surface));
-  color: var(--journal-accent);
+.teacher-directory-state-chip-ready {
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent-strong);
 }
 
-:deep(.teacher-student-table.el-table),
-:deep(.teacher-student-table .el-table__inner-wrapper),
-:deep(.teacher-student-table .el-scrollbar),
-:deep(.teacher-student-table .el-scrollbar__view),
-:deep(.teacher-student-table .el-table__body-wrapper),
-:deep(.teacher-student-table .el-table__header-wrapper),
-:deep(.teacher-student-table .el-table__empty-block) {
-  background: var(--journal-surface);
+.teacher-directory-state-chip-empty {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
 }
 
-@media (max-width: 1100px) {
-  .teacher-badge-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.teacher-directory-row-metrics {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.81rem;
+  line-height: 1.5;
+  color: var(--journal-muted);
+}
+
+.teacher-directory-row-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+@keyframes tabPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 767px) {
-  .teacher-badge-grid,
-  .teacher-summary-grid {
+@media (max-width: 1080px) {
+  .teacher-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .teacher-summary-grid,
+  .teacher-filter-grid,
+  .teacher-summary-cards {
     grid-template-columns: 1fr;
+  }
+
+  .teacher-directory-head {
+    display: none;
+  }
+
+  .teacher-directory-row {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+    padding: 1rem 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-topbar,
+  .top-tabs,
+  .content-pane {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .workspace-topbar {
+    display: block;
   }
 }
 </style>
