@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import UserManage from '../UserManage.vue'
+import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 const adminApiMocks = vi.hoisted(() => ({
   getUsers: vi.fn(),
@@ -9,6 +10,11 @@ const adminApiMocks = vi.hoisted(() => ({
   updateUser: vi.fn(),
   deleteUser: vi.fn(),
   importUsers: vi.fn(),
+}))
+const pushMock = vi.fn()
+const replaceMock = vi.fn()
+const routeState = vi.hoisted(() => ({
+  query: {} as Record<string, string>,
 }))
 
 vi.mock('@/api/admin', async () => {
@@ -22,11 +28,22 @@ vi.mock('@/api/admin', async () => {
     importUsers: adminApiMocks.importUsers,
   }
 })
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRoute: () => routeState,
+    useRouter: () => ({ push: pushMock, replace: replaceMock }),
+  }
+})
 
 describe('UserManage', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     Object.values(adminApiMocks).forEach((mock) => mock.mockReset())
+    pushMock.mockReset()
+    replaceMock.mockReset()
+    routeState.query = {}
   })
 
   afterEach(() => {
@@ -75,6 +92,96 @@ describe('UserManage', () => {
       role: undefined,
       status: undefined,
     })
+  })
+
+  it('应该将用户治理拆成概览、用户列表、导入用户三个标签页', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('#user-tab-overview').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#user-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#user-panel-directory').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#user-panel-import').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.text()).toContain('概览')
+    expect(wrapper.text()).toContain('用户列表')
+    expect(wrapper.text()).toContain('导入用户')
+    expect(wrapper.find('#user-panel-overview').text()).toContain('当前治理概况')
+    expect(wrapper.find('#user-panel-directory .user-table-shell').exists()).toBe(true)
+    expect(wrapper.find('#user-panel-import').text()).toContain('导入回执')
+
+    await wrapper.get('#user-tab-import').trigger('click')
+    await flushPromises()
+
+    expect(replaceMock).toHaveBeenLastCalledWith({
+      name: 'UserManage',
+      query: { panel: 'import' },
+    })
+  })
+
+  it('应支持通过 query 直接打开用户列表标签页', async () => {
+    routeState.query = { panel: 'directory' }
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          student_no: 'S001',
+          teacher_no: 'T001',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('#user-tab-directory').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#user-panel-directory').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#user-panel-directory .user-table-shell').exists()).toBe(true)
+    expect(wrapper.find('#user-panel-directory').text()).toContain('筛选条件')
+    expect(wrapper.find('#user-panel-directory').text()).toContain('用户列表')
   })
 
   it('应该使用统一容器渲染用户分段列表', async () => {
@@ -186,5 +293,22 @@ describe('UserManage', () => {
       role: undefined,
       status: undefined,
     })
+  })
+
+  it('用户治理页应使用顶层 tabs 分隔概览、列表和导入区域', () => {
+    expect(userGovernanceSource).toContain('user-tab-overview')
+    expect(userGovernanceSource).toContain('user-tab-directory')
+    expect(userGovernanceSource).toContain('user-tab-import')
+    expect(userGovernanceSource).toContain('user-panel-overview')
+    expect(userGovernanceSource).toContain('user-panel-directory')
+    expect(userGovernanceSource).toContain('user-panel-import')
+    expect(userGovernanceSource).toMatch(/role="tablist"/s)
+    expect(userGovernanceSource.indexOf('User Governance')).toBeLessThan(
+      userGovernanceSource.indexOf('role="tablist"')
+    )
+    expect(userGovernanceSource.indexOf('role="tablist"')).toBeLessThan(
+      userGovernanceSource.indexOf('用户治理台')
+    )
+    expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
   })
 })
