@@ -73,6 +73,31 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('开始挑战')
   })
 
+  it('搜索时应通过 keyword 参数请求真实筛选', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage()
+    mockedGetChallenges.mockClear()
+
+    await wrapper.get('#challenge-search-input').setValue('sql')
+    await flushPromises()
+
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        keyword: 'sql',
+      })
+    )
+    expect(mockedGetChallenges.mock.lastCall?.[0]).not.toHaveProperty('search')
+  })
+
   it('应该显示空列表提示', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [],
@@ -158,6 +183,7 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('challenge-row')
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
+    expect(challengeListSource).toContain('搜索挑战标题或描述')
     expect(challengeListSource).toContain('<span>分类</span>')
     expect(challengeListSource).toContain('<span>难度</span>')
     expect(challengeListSource).toContain('class="challenge-row-category"')
