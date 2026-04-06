@@ -402,10 +402,6 @@ const trendSignals = computed(() => {
   ]
 })
 
-const lastSyncText = computed(() => {
-  const latestPoint = recentTrendPoints.value.at(-1)
-  return latestPoint ? latestPoint.date : '近 7 天'
-})
 </script>
 
 <template>
@@ -414,10 +410,6 @@ const lastSyncText = computed(() => {
       <div class="topbar-leading">
         <span class="workspace-overline">Teaching Workspace</span>
         <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
-      </div>
-      <div class="top-note">
-        <span>数据窗口: 近 7 天</span>
-        <span>最后同步: {{ lastSyncText }}</span>
       </div>
     </header>
 
