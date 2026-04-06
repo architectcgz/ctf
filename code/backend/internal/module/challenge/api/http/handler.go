@@ -30,6 +30,7 @@ type challengeCommandService interface {
 	GetLatestPublishCheck(ctx context.Context, id int64) (*dto.ChallengePublishCheckJobResp, error)
 	SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error)
 	PreviewChallengeImport(ctx context.Context, actorUserID int64, fileName string, reader io.Reader) (*dto.ChallengeImportPreviewResp, error)
+	ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error)
 	GetChallengeImport(actorUserID int64, id string) (*dto.ChallengeImportPreviewResp, error)
 	CommitChallengeImport(ctx context.Context, actorUserID int64, id string) (*dto.ChallengeResp, error)
 }
@@ -159,6 +160,15 @@ func (h *Handler) PreviewChallengeImport(c *gin.Context) {
 	}
 
 	response.SuccessWithStatus(c, nethttp.StatusCreated, resp)
+}
+
+func (h *Handler) ListChallengeImports(c *gin.Context) {
+	resp, err := h.commands.ListChallengeImports(authctx.MustCurrentUser(c).UserID)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
 }
 
 func (h *Handler) GetChallengeImport(c *gin.Context) {

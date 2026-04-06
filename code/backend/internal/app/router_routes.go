@@ -96,6 +96,7 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 		}),
 		deps.challenge.Handler.PreviewChallengeImport,
 	)
+	adminAuthoring.GET("/challenge-imports", deps.challenge.Handler.ListChallengeImports)
 	adminAuthoring.GET("/challenge-imports/:id", deps.challenge.Handler.GetChallengeImport)
 	adminAuthoring.POST("/challenge-imports/:id/commit",
 		audit(middleware.AuditOptions{

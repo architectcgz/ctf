@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import auditLogSource from '../admin/AuditLog.vue?raw'
 import challengeDetailSource from '../admin/ChallengeDetail.vue?raw'
 import challengeManageSource from '../admin/ChallengeManage.vue?raw'
+import challengePackageFormatSource from '../admin/ChallengePackageFormat.vue?raw'
 import cheatDetectionSource from '../admin/CheatDetection.vue?raw'
 import imageManageSource from '../admin/ImageManage.vue?raw'
 import adminDashboardSource from '../../components/admin/dashboard/AdminDashboardPage.vue?raw'
@@ -15,6 +16,7 @@ describe('admin full-bleed hero roots', () => {
       auditLogSource,
       challengeDetailSource,
       challengeManageSource,
+      challengePackageFormatSource,
       cheatDetectionSource,
       imageManageSource,
       adminDashboardSource,
