@@ -66,6 +66,12 @@
   --theme-primary-soft: rgba(37, 99, 235, 0.16);
 }
 
+[data-brand="orange"] {
+  --theme-primary: #c97018;
+  --theme-primary-hover: #e18a2a;
+  --theme-primary-soft: rgba(225, 138, 42, 0.18);
+}
+
 [data-theme="light"] {
   --theme-bg-base: #f4f7fb;
   --theme-bg-surface: #ffffff;
