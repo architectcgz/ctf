@@ -375,12 +375,18 @@ onMounted(() => {
                 <div class="challenge-row__identity">
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                      <h2 class="text-base font-semibold text-[var(--journal-ink)]">{{ row.title }}</h2>
+                      <h2
+                        class="challenge-row__title text-base font-semibold text-[var(--journal-ink)]"
+                        :title="row.title"
+                      >
+                        {{ row.title }}
+                      </h2>
                     </div>
 
                     <p
                       v-if="row.latestPublishRequest?.failure_summary"
                       class="challenge-row__failure"
+                      :title="row.latestPublishRequest.failure_summary"
                     >
                       {{ row.latestPublishRequest.failure_summary }}
                     </p>
@@ -890,6 +896,13 @@ onMounted(() => {
   min-width: 0;
 }
 
+.challenge-row__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .challenge-row__category,
 .challenge-row__difficulty,
 .challenge-row__points,
@@ -928,9 +941,13 @@ onMounted(() => {
 
 .challenge-row__failure {
   margin-top: 0.7rem;
+  display: -webkit-box;
   font-size: 0.82rem;
   line-height: 1.6;
   color: var(--color-danger);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .challenge-row__actions {
