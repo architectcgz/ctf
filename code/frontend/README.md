@@ -22,6 +22,12 @@
 
 ## 常用命令
 
+新建 worktree 时，如果仓库里已有其他 worktree 安装过同一份前端依赖，优先在仓库根目录执行：
+
+```bash
+./scripts/bootstrap-frontend-deps.sh
+```
+
 ```bash
 npm run dev
 npm run build
