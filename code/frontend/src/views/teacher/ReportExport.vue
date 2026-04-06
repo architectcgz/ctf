@@ -242,7 +242,7 @@ async function handleDownload(): Promise<void> {
           <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Export</div>
           <h1 class="report-title">报告导出</h1>
           <p class="report-copy">
-            先在页内确认班级预览，再创建导出任务；最近一次任务状态与下载入口保持在同一工作面。
+            选择班级并创建导出任务，生成完成后下载报告文件。
           </p>
         </div>
       </header>
@@ -285,7 +285,6 @@ async function handleDownload(): Promise<void> {
                 <div class="teacher-surface-eyebrow journal-eyebrow">Export Task</div>
                 <h2 class="report-section-title">创建导出任务</h2>
               </div>
-              <p class="report-section-copy">预览和导出彼此独立，不会影响当前页面浏览。</p>
             </div>
 
             <div class="report-command-grid">
@@ -362,14 +361,6 @@ async function handleDownload(): Promise<void> {
                   <div class="report-note-value">{{ selectedFormatLabel }}</div>
                   <div class="report-note-helper">{{ selectedFormatHint }}</div>
                 </article>
-                <article class="report-note">
-                  <div class="report-note-label">建议流程</div>
-                  <ol class="report-guide-list">
-                    <li>1. 先打开报告预览，确认当前班级数据内容。</li>
-                    <li>2. 需要留档时，再创建后台导出任务。</li>
-                    <li>3. 任务完成后下载文件，生成中会自动轮询状态。</li>
-                  </ol>
-                </article>
               </aside>
             </div>
           </section>
@@ -380,7 +371,6 @@ async function handleDownload(): Promise<void> {
                 <div class="teacher-surface-eyebrow journal-eyebrow">Latest Task</div>
                 <h2 class="report-section-title">最近一次任务</h2>
               </div>
-              <p class="report-section-copy">导出状态、下载入口和任务元数据统一收在这里。</p>
             </div>
 
             <AppEmpty
