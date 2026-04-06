@@ -155,10 +155,6 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
-    expect(wrapper.text()).toContain('推荐训练队列')
-    expect(wrapper.text()).toContain('查看题目详情')
-    expect(wrapper.text()).toContain('访问攻击目标')
-    expect(wrapper.text()).toContain('解锁第 1 级提示')
   })
 
   it('应该在 recommendation 子菜单下展示训练建议', async () => {
@@ -205,7 +201,30 @@ describe('DashboardView', () => {
 
     expect(wrapper.text()).toContain('Training Journal')
     expect(wrapper.text()).toContain('alice 的训练总览')
-    expect(wrapper.text()).toContain('推荐训练队列')
+  })
+
+  it('应该在 timeline 子菜单下展示训练记录', async () => {
+    routeState.query = { panel: 'timeline' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('训练时间线')
+    expect(wrapper.text()).toContain('查看题目详情')
+    expect(wrapper.text()).toContain('访问攻击目标')
+    expect(wrapper.text()).toContain('解锁第 1 级提示')
   })
 
   it('应该把教师用户重定向到教师首页', async () => {

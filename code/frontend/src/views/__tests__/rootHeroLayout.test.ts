@@ -34,8 +34,13 @@ describe('full-bleed hero roots', () => {
 
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
-      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
-      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1/s)
+      const hasDirectHeroRoot = /<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1/s.test(source)
+      const hasEmbeddableHeroRoot =
+        source.includes("embedded?: boolean") &&
+        source.includes("'journal-shell journal-hero") &&
+        source.includes("class=\"space-y-6 flex min-h-full flex-1 flex-col\"")
+
+      expect(hasDirectHeroRoot || hasEmbeddableHeroRoot).toBe(true)
     }
   })
 })

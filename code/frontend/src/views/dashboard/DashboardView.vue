@@ -12,7 +12,7 @@ import type {
 } from '@/api/contracts'
 import StudentCategoryProgressPage from '@/components/dashboard/student/StudentCategoryProgressPage.vue'
 import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficultyPage.vue'
-import StudentOverviewVariantSwitcher from '@/components/dashboard/student/StudentOverviewVariantSwitcher.vue'
+import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'
 import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -154,164 +154,326 @@ function switchPanel(panelKey: DashboardPanelKey | null): void {
   }
   void router.replace({ query: nextQuery })
 }
+
+function focusTabByIndex(index: number): void {
+  const safeIndex = Math.max(0, Math.min(index, panelTabs.length - 1))
+  const targetTab = panelTabs[safeIndex]
+  if (!targetTab) return
+  document.getElementById(targetTab.tabId)?.focus()
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+    return
+  }
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    switchPanel(panelTabs[0].key)
+    focusTabByIndex(0)
+    return
+  }
+
+  if (event.key === 'End') {
+    const endIndex = panelTabs.length - 1
+    switchPanel(panelTabs[endIndex].key)
+    focusTabByIndex(endIndex)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
+  switchPanel(panelTabs[nextIndex].key)
+  focusTabByIndex(nextIndex)
+}
 </script>
 
 <template>
-  <div class="dashboard-view space-y-6">
-    <div
-      v-if="error"
-      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
-    >
-      {{ error }}
-      <button type="button" class="ml-3 font-medium underline" @click="loadDashboard">重试</button>
-    </div>
+  <section class="workspace-shell">
+    <nav class="top-tabs" role="tablist" aria-label="学生仪表盘视图切换">
+      <button
+        v-for="(tab, index) in panelTabs"
+        :id="tab.tabId"
+        :key="tab.tabId"
+        type="button"
+        role="tab"
+        class="top-tab"
+        :class="{ active: isPanelActive(tab.key) }"
+        :aria-selected="isPanelActive(tab.key) ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        :tabindex="isPanelActive(tab.key) ? 0 : -1"
+        @click="switchPanel(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
 
-    <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <div
-        v-for="index in 4"
-        :key="index"
-        class="h-32 animate-pulse rounded-2xl bg-[var(--color-bg-surface)]"
-      />
-    </div>
-
-    <template v-else-if="progress">
-      <section class="dashboard-tab-rail rounded-2xl border px-4 py-3">
-        <div class="dashboard-tab-list" role="tablist" aria-label="学生仪表盘视图切换">
-          <button
-            v-for="tab in panelTabs"
-            :id="tab.tabId"
-            :key="tab.tabId"
-            type="button"
-            role="tab"
-            class="dashboard-tab"
-            :class="{ 'dashboard-tab--active': isPanelActive(tab.key) }"
-            :aria-selected="isPanelActive(tab.key)"
-            :aria-controls="tab.panelId"
-            @click="switchPanel(tab.key)"
-          >
-            {{ tab.label }}
-          </button>
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <div
+          v-if="error"
+          class="workspace-alert"
+          role="alert"
+          aria-live="polite"
+        >
+          {{ error }}
+          <button type="button" class="workspace-alert-action" @click="loadDashboard">重试</button>
         </div>
-      </section>
 
-      <div
-        v-if="isOverview"
-        id="dashboard-panel-overview"
-        role="tabpanel"
-        aria-labelledby="dashboard-tab-overview"
-      >
-        <StudentOverviewVariantSwitcher
-          :display-name="displayName"
-          :class-name="authStore.user?.class_name"
-          :progress="progress"
-          :completion-rate="completionRate"
-          :highlight-items="highlightItems"
-          :recommendations="recommendations"
-          :timeline="timeline"
-          :weak-dimensions="weakDimensions"
-          :skill-dimensions="skillProfile?.dimensions ?? []"
-          @open-challenge="openChallenge"
-          @open-challenges="openChallenges"
-          @open-skill-profile="openSkillProfile"
-        />
-      </div>
+        <div v-if="loading" class="dashboard-loading-grid">
+          <div
+            v-for="index in 4"
+            :key="index"
+            class="dashboard-loading-item"
+          />
+        </div>
 
-      <div
-        v-else-if="activePanel === 'recommendation'"
-        id="dashboard-panel-recommendation"
-        role="tabpanel"
-        aria-labelledby="dashboard-tab-recommendation"
-      >
-        <StudentRecommendationPage
-          :weak-dimensions="weakDimensions"
-          :recommendations="recommendations"
-          @open-challenge="openChallenge"
-          @open-challenges="openChallenges"
-          @open-skill-profile="openSkillProfile"
-        />
-      </div>
+        <template v-else-if="progress">
+          <StudentOverviewStyleEditorial
+            id="dashboard-panel-overview"
+            class="tab-panel"
+            :class="{ active: isOverview }"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab-overview"
+            :aria-hidden="isOverview ? 'false' : 'true'"
+            v-show="isOverview"
+            embedded
+            :display-name="displayName"
+            :class-name="authStore.user?.class_name"
+            :progress="progress"
+            :completion-rate="completionRate"
+            :highlight-items="highlightItems"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :weak-dimensions="weakDimensions"
+            :skill-dimensions="skillProfile?.dimensions ?? []"
+            @open-challenge="openChallenge"
+            @open-challenges="openChallenges"
+            @open-skill-profile="openSkillProfile"
+          />
 
-      <div
-        v-else-if="activePanel === 'category'"
-        id="dashboard-panel-category"
-        role="tabpanel"
-        aria-labelledby="dashboard-tab-category"
-      >
-        <StudentCategoryProgressPage
-          :category-stats="categoryStats"
-          :completion-rate="completionRate"
-          @open-challenges="openChallenges"
-          @open-skill-profile="openSkillProfile"
-        />
-      </div>
+          <StudentRecommendationPage
+            id="dashboard-panel-recommendation"
+            class="tab-panel"
+            :class="{ active: activePanel === 'recommendation' }"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab-recommendation"
+            :aria-hidden="activePanel === 'recommendation' ? 'false' : 'true'"
+            v-show="activePanel === 'recommendation'"
+            embedded
+            :weak-dimensions="weakDimensions"
+            :recommendations="recommendations"
+            @open-challenge="openChallenge"
+            @open-challenges="openChallenges"
+            @open-skill-profile="openSkillProfile"
+          />
 
-      <div
-        v-else-if="activePanel === 'timeline'"
-        id="dashboard-panel-timeline"
-        role="tabpanel"
-        aria-labelledby="dashboard-tab-timeline"
-      >
-        <StudentTimelinePage :timeline="timeline" />
-      </div>
+          <StudentCategoryProgressPage
+            id="dashboard-panel-category"
+            class="tab-panel"
+            :class="{ active: activePanel === 'category' }"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab-category"
+            :aria-hidden="activePanel === 'category' ? 'false' : 'true'"
+            v-show="activePanel === 'category'"
+            embedded
+            :category-stats="categoryStats"
+            :completion-rate="completionRate"
+            @open-challenges="openChallenges"
+            @open-skill-profile="openSkillProfile"
+          />
 
-      <div
-        v-else
-        id="dashboard-panel-difficulty"
-        role="tabpanel"
-        aria-labelledby="dashboard-tab-difficulty"
-      >
-        <StudentDifficultyPage :difficulty-stats="difficultyStats" />
-      </div>
-    </template>
-  </div>
+          <StudentTimelinePage
+            id="dashboard-panel-timeline"
+            class="tab-panel"
+            :class="{ active: activePanel === 'timeline' }"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab-timeline"
+            :aria-hidden="activePanel === 'timeline' ? 'false' : 'true'"
+            v-show="activePanel === 'timeline'"
+            embedded
+            :timeline="timeline"
+          />
+
+          <StudentDifficultyPage
+            id="dashboard-panel-difficulty"
+            class="tab-panel"
+            :class="{ active: activePanel === 'difficulty' }"
+            role="tabpanel"
+            aria-labelledby="dashboard-tab-difficulty"
+            :aria-hidden="activePanel === 'difficulty' ? 'false' : 'true'"
+            v-show="activePanel === 'difficulty'"
+            embedded
+            :difficulty-stats="difficultyStats"
+          />
+        </template>
+      </main>
+    </div>
+  </section>
 </template>
 
 <style scoped>
-.dashboard-tab-rail {
-  border-color: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+.workspace-shell {
+  --journal-ink: var(--color-text-primary);
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --workspace-faint: color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base));
+  --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --workspace-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-danger: var(--color-danger);
+  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-font-sans:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  min-height: 100%;
+  flex: 1 1 auto;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
+    linear-gradient(180deg, color-mix(in srgb, var(--workspace-shell) 96%, var(--workspace-page)), var(--workspace-shell));
+  box-shadow: var(--workspace-shadow-shell);
+  overflow: clip;
+  font-family: var(--workspace-font-sans);
+  color: var(--journal-ink);
 }
 
-.dashboard-tab-list {
+.top-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 28px;
+  padding: 0 28px;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--workspace-line-soft);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.dashboard-tab {
-  min-height: 34px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  border-radius: 10px;
-  padding: 0.375rem 0.875rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  background: color-mix(in srgb, var(--color-bg-surface) 94%, transparent);
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--workspace-faint);
+  font: 600 15px/1 var(--workspace-font-sans);
+  white-space: nowrap;
+  cursor: pointer;
   transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    color 0.18s ease;
+    color 160ms ease,
+    border-color 160ms ease;
 }
 
-.dashboard-tab:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 52%, var(--color-border-default));
-  color: var(--color-text-primary);
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: var(--workspace-brand-ink);
+  border-bottom-color: var(--workspace-brand);
+  outline: none;
 }
 
-.dashboard-tab--active {
-  border-color: color-mix(in srgb, var(--color-primary) 56%, transparent);
-  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  color: var(--color-primary-hover);
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
-.dashboard-tab:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary) 60%, white);
-  outline-offset: 2px;
+.content-pane {
+  min-width: 0;
+  min-height: 0;
+  padding: 28px;
 }
 
-@media (max-width: 767px) {
-  .dashboard-tab {
-    min-height: 36px;
+.tab-panel {
+  display: none;
+  min-height: 0;
+}
+
+.tab-panel.active {
+  display: block;
+  animation: tabPanelIn 180ms ease both;
+}
+
+.workspace-alert {
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--journal-ink);
+}
+
+.workspace-alert-action {
+  margin-left: 10px;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  text-decoration: underline;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dashboard-loading-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-loading-item {
+  height: 7.5rem;
+  border-radius: 18px;
+  background: var(--journal-track);
+  animation: dashboardPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes tabPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboardPulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .top-tabs {
+    gap: 18px;
+    padding: 0 18px;
+  }
+
+  .content-pane {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-loading-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

@@ -10,10 +10,16 @@ interface CategoryStat {
   solved: number
 }
 
-const props = defineProps<{
-  categoryStats: CategoryStat[]
-  completionRate: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    categoryStats: CategoryStat[]
+    completionRate: number
+    embedded?: boolean
+  }>(),
+  {
+    embedded: false,
+  }
+)
 
 const emit = defineEmits<{
   openChallenges: []
@@ -34,8 +40,15 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 </script>
 
 <template>
-  <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+  <section
+    class="space-y-6 flex min-h-full flex-1 flex-col"
+    :class="
+      embedded
+        ? 'journal-shell-embedded'
+        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+    "
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
         <div>
           <div class="journal-eyebrow">Coverage Overview</div>
           <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
@@ -74,10 +87,10 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
             </div>
           </div>
         </article>
-      </div>
+    </div>
 
-      <div class="category-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <section class="category-section">
+    <div class="category-board mt-6 px-1 pt-5 md:px-2 md:pt-6" :class="{ 'category-board--embedded': embedded }">
+      <section class="category-section">
           <div class="grid gap-6 xl:grid-cols-2">
             <article class="category-highlight">
               <div class="flex items-start justify-between gap-4">
@@ -141,9 +154,9 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
               </div>
             </article>
           </div>
-        </section>
+      </section>
 
-        <section class="category-section">
+      <section class="category-section">
           <div class="flex items-start justify-between gap-4">
             <div>
               <div class="journal-eyebrow journal-eyebrow-soft">Category Board</div>
@@ -186,12 +199,13 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
               </div>
             </div>
           </div>
-        </section>
-      </div>
-    </section>
+      </section>
+    </div>
+  </section>
 </template>
 
 <style scoped>
+.journal-shell-embedded,
 .journal-shell {
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
@@ -208,6 +222,14 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
+}
+
+.journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .journal-hero {
@@ -276,6 +298,10 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
 .category-board {
   border-top: 1px solid var(--journal-divider);
+}
+
+.category-board--embedded {
+  margin-top: 1.25rem;
 }
 
 .category-section + .category-section {
