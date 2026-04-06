@@ -94,11 +94,9 @@ function timelineStatus(eventType: string): string {
   <section class="journal-shell space-y-6 journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
       <div>
         <div class="journal-eyebrow">Training Journal</div>
-        <h2
-          class="mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          {{ displayName }} 的极简训练面板
-        </h2>
+        <h1 class="journal-page-title mt-3 max-w-3xl text-[var(--journal-ink)]">
+          {{ displayName }} 的训练总览
+        </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           这里汇总了训练进度、推荐题目和最近动态。
         </p>
@@ -123,7 +121,7 @@ function timelineStatus(eventType: string): string {
             </div>
             <div
               v-else
-              class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+              class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
             >
               当前能力数据不足，完成更多题目后将生成雷达图。
             </div>
@@ -216,7 +214,7 @@ function timelineStatus(eventType: string): string {
 
             <div
               v-if="quickRecommendations.length === 0"
-              class="mt-6 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+              class="mt-6 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
             >
               当前没有推荐题目，直接去挑战列表挑一道新题即可。
             </div>
@@ -230,7 +228,7 @@ function timelineStatus(eventType: string): string {
                 @click="emit('openChallenge', item.challenge_id)"
               >
                 <div
-                  class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font"
+                  class="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--journal-soft-border)] bg-[var(--journal-track)] text-sm font-semibold text-[var(--color-text-secondary)] tech-font"
                 >
                   #{{ item.challenge_id }}
                 </div>
@@ -275,7 +273,7 @@ function timelineStatus(eventType: string): string {
 
             <div
               v-if="recentTimeline.length === 0"
-              class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+              class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
             >
               当前还没有训练动态。
             </div>
@@ -317,23 +315,36 @@ function timelineStatus(eventType: string): string {
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
 }
 
 .journal-hero {
-  border-color: var(--journal-border);
+  border-color: var(--journal-shell-border);
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
+.journal-page-title {
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+}
+
 .journal-board {
   margin-top: 1.5rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.68);
+  border-top: 1px solid var(--journal-divider);
   padding-top: 1.25rem;
 }
 
@@ -349,18 +360,24 @@ function timelineStatus(eventType: string): string {
 .journal-log,
 .journal-inline-item,
 .journal-rank-summary {
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--journal-shell-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   box-shadow: none;
 }
 
 .journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  padding: 0.2rem 0.75rem;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--journal-accent-strong);
 }
 
 .journal-bento {
@@ -388,7 +405,7 @@ function timelineStatus(eventType: string): string {
     top: 0.5rem;
     right: -0.625rem;
     bottom: 0.5rem;
-    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+    border-right: 1px solid var(--journal-divider);
   }
   .journal-rank-card {
     grid-area: rank;
@@ -402,7 +419,7 @@ function timelineStatus(eventType: string): string {
     top: 0.5rem;
     right: -0.625rem;
     bottom: 0.5rem;
-    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+    border-right: 1px solid var(--journal-divider);
   }
   .journal-ops-card {
     grid-area: ops;
@@ -420,7 +437,7 @@ function timelineStatus(eventType: string): string {
     top: -0.625rem;
     left: 0;
     right: 0.625rem;
-    border-top: 1px dashed rgba(148, 163, 184, 0.62);
+    border-top: 1px solid var(--journal-divider);
   }
 
   .journal-recommend-card::after {
@@ -429,7 +446,7 @@ function timelineStatus(eventType: string): string {
     top: 0.5rem;
     right: -0.625rem;
     bottom: 0.5rem;
-    border-right: 1px dashed rgba(148, 163, 184, 0.62);
+    border-right: 1px solid var(--journal-divider);
   }
   .journal-timeline-card {
     grid-area: timeline;
@@ -443,7 +460,7 @@ function timelineStatus(eventType: string): string {
     top: -0.625rem;
     left: 0;
     right: 0;
-    border-top: 1px dashed rgba(148, 163, 184, 0.62);
+    border-top: 1px solid var(--journal-divider);
   }
 }
 
@@ -460,8 +477,13 @@ function timelineStatus(eventType: string): string {
 }
 
 .journal-rec-item:hover {
-  border-color: #6366f1;
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
+}
+
+.journal-rec-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline-offset: 2px;
 }
 
 .journal-log {
@@ -469,7 +491,7 @@ function timelineStatus(eventType: string): string {
 }
 
 .journal-log:hover {
-  border-color: #6366f1;
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-shell-border));
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
 }
 
@@ -488,32 +510,32 @@ function timelineStatus(eventType: string): string {
   color: var(--journal-accent-strong);
 }
 .tag-pwn {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent-strong);
 }
 .tag-reverse {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
 }
 .tag-crypto {
-  background: #dcfce7;
+  background: color-mix(in srgb, #16a34a 14%, transparent);
   color: #15803d;
 }
 .tag-misc {
-  background: #fef3c7;
+  background: color-mix(in srgb, #d97706 14%, transparent);
   color: #b45309;
 }
 .tag-forensics {
-  background: #e0f2fe;
+  background: color-mix(in srgb, #0284c7 14%, transparent);
   color: #0369a1;
 }
 .tag-default {
-  background: #e2e8f0;
-  color: #334155;
+  background: color-mix(in srgb, var(--journal-soft-border) 56%, transparent);
+  color: var(--journal-muted);
 }
 
 .tech-font {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .status-dot {
@@ -566,7 +588,11 @@ function timelineStatus(eventType: string): string {
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
 }
