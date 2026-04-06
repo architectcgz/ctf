@@ -200,9 +200,9 @@ const {
               <span>{{ heroEyebrow }}</span>
               <span class="topology-hero-badge">真实接口</span>
             </div>
-            <h2 class="topology-hero-title">
+            <h1 class="topology-hero-title">
               {{ heroTitle }}
-            </h2>
+            </h1>
             <p class="topology-hero-description">
               {{ heroDescription }}
             </p>
@@ -2106,10 +2106,9 @@ const {
 }
 
 .topology-page--template-library .topology-hero-title {
-  margin-top: 0.85rem;
-  font-size: clamp(2rem, 3vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1.04;
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
   letter-spacing: -0.04em;
   color: var(--journal-ink);
 }

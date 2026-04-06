@@ -125,11 +125,7 @@ async function handleCommitPreview() {
     <header class="manage-header">
       <div class="manage-header__intro">
         <div class="journal-eyebrow">Challenge Library</div>
-        <h1
-          class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.6rem]"
-        >
-          挑战管理
-        </h1>
+        <h1 class="manage-title">挑战管理</h1>
       </div>
 
       <div class="manage-summary-grid">
@@ -397,6 +393,14 @@ async function handleCommitPreview() {
   gap: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.manage-title {
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--journal-ink);
 }
 
 .manage-summary-grid {
