@@ -82,6 +82,8 @@ describe('InstanceManagement', () => {
       keyword: undefined,
       student_no: undefined,
     })
+    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(3)
+    expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
   })
