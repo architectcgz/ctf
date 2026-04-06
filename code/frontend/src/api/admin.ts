@@ -1246,7 +1246,7 @@ export async function listChallengeImports(): Promise<AdminChallengeImportPrevie
     method: 'GET',
     url: '/authoring/challenge-imports',
   })
-  return response.map(normalizeChallengeImportPreview)
+  return Array.isArray(response) ? response.map(normalizeChallengeImportPreview) : []
 }
 
 export async function getChallengeImport(id: string): Promise<AdminChallengeImportPreview> {
