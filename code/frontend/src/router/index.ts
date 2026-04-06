@@ -314,8 +314,23 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'admin/challenges/package-format',
+        name: 'AdminChallengePackageFormat',
+        component: () => import('@/views/admin/ChallengePackageFormat.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '题目包示例',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'platform/challenges',
         redirect: redirectWithQuery('/admin/challenges'),
+      },
+      {
+        path: 'platform/challenges/package-format',
+        redirect: redirectWithQuery('/admin/challenges/package-format'),
       },
       {
         path: 'admin/challenges/:id',

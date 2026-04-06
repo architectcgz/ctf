@@ -865,7 +865,7 @@ export interface AdminChallengeImportAttachment {
 }
 
 export interface AdminChallengeImportFlag {
-  type: Extract<FlagType, 'static' | 'dynamic'>
+  type: Extract<FlagType, 'static' | 'dynamic' | 'regex' | 'manual_review'>
   prefix?: string
 }
 
