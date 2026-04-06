@@ -154,6 +154,21 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith()
   })
 
+  it('已登录用户访问登录页且没有 redirect 时应返回角色工作台', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(buildUser('teacher'), 'token')
+
+    const { runBeforeEach } = createRouterMock()
+    const next = await runBeforeEach(
+      createRoute({
+        path: '/login',
+        fullPath: '/login',
+      })
+    )
+
+    expect(next).toHaveBeenCalledWith('/teacher/dashboard')
+  })
+
 })
 
 describe('guard helpers', () => {

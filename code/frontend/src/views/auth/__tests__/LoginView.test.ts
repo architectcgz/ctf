@@ -7,22 +7,24 @@ import LoginView from '@/views/auth/LoginView.vue'
 const authMocks = vi.hoisted(() => ({
   login: vi.fn(),
 }))
+const routeState = vi.hoisted(() => ({
+  query: {
+    redirect: undefined as string | undefined,
+  },
+}))
 
 vi.mock('@/composables/useAuth', () => ({
   useAuth: () => authMocks,
 }))
 vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
-  useRoute: () => ({
-    query: {
-      redirect: '/dashboard',
-    },
-  }),
+  useRoute: () => routeState,
 }))
 
 describe('LoginView', () => {
   beforeEach(() => {
     authMocks.login.mockReset()
+    routeState.query.redirect = undefined
   })
 
   function mountLoginView() {
@@ -86,10 +88,7 @@ describe('LoginView', () => {
     await passwordInput.setValue('saved-password')
     await usernameInput.trigger('keyup.enter')
 
-    expect(authMocks.login).toHaveBeenCalledWith(
-      { username: 'alice', password: 'saved-password' },
-      '/dashboard'
-    )
+    expect(authMocks.login).toHaveBeenCalledWith({ username: 'alice', password: 'saved-password' }, undefined)
   })
 
   it('登录按钮应使用原生 submit 类型以支持表单回车提交', async () => {
@@ -118,7 +117,27 @@ describe('LoginView', () => {
 
     expect(authMocks.login).toHaveBeenCalledWith(
       { username: 'alice', password: 'browser-saved-password' },
-      '/dashboard'
+      undefined
+    )
+  })
+
+  it('携带 redirect 参数时应继续把目标路径传给登录逻辑', async () => {
+    routeState.query.redirect = '/teacher/dashboard'
+    authMocks.login.mockResolvedValue(undefined)
+
+    const wrapper = mountLoginView()
+    await flushPromises()
+
+    const usernameInput = wrapper.find('input[data-autocomplete="username"]')
+    const passwordInput = wrapper.find('input[data-autocomplete="current-password"]')
+
+    await usernameInput.setValue('alice')
+    await passwordInput.setValue('saved-password')
+    await usernameInput.trigger('keyup.enter')
+
+    expect(authMocks.login).toHaveBeenCalledWith(
+      { username: 'alice', password: 'saved-password' },
+      '/teacher/dashboard'
     )
   })
 })
