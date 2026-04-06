@@ -43,14 +43,36 @@ describe('TeacherStudentManagement', () => {
     teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 2 }])
     teacherApiMocks.getClassStudents.mockImplementation(async (_className, params) => {
       if (params?.keyword === 'alice') {
-        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 }]
+        return [
+          {
+            id: 'stu-1',
+            username: 'alice',
+            name: 'Alice Zhang',
+            student_no: '2024001',
+            recent_event_count: 0,
+          },
+        ]
       }
       if (params?.keyword === 'Alice') {
-        return [{ id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 }]
+        return [
+          {
+            id: 'stu-1',
+            username: 'alice',
+            name: 'Alice Zhang',
+            student_no: '2024001',
+            recent_event_count: 0,
+          },
+        ]
       }
       return [
-        { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2 },
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice Zhang',
+          student_no: '2024001',
+          recent_event_count: 0,
+        },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1 },
       ]
     })
 
@@ -86,6 +108,31 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).toContain('学生管理')
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
+    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map((element) =>
+      element.className.toString()
+    )
+    expect(headChildren[0]).toContain('teacher-directory-head-cell-student-no')
+    expect(headChildren[1]).toContain('teacher-directory-head-cell-name')
+    expect(headChildren[2]).toContain('teacher-directory-head-cell-alias')
+
+    const rows = wrapper.findAll('.teacher-directory-row')
+    const firstRowChildren = Array.from(rows[0].element.children).map((element) =>
+      element.className.toString()
+    )
+    expect(firstRowChildren[0]).toContain('teacher-directory-cell-student-no')
+    expect(firstRowChildren[1]).toContain('teacher-directory-cell-name')
+    expect(firstRowChildren[2]).toContain('teacher-directory-cell-alias')
+    expect(rows[0].find('.teacher-directory-cell-student-no').text()).toContain('2024001')
+    expect(rows[0].find('.teacher-directory-cell-name').text()).toContain('Alice Zhang')
+    expect(rows[0].find('.teacher-directory-cell-alias').text()).toContain('@alice')
+    expect(rows[0].find('.teacher-directory-row-status').text()).toContain('暂无解题记录')
+    expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
+    expect(rows[1].find('.teacher-directory-cell-name').text()).toContain('未设置姓名')
+    expect(rows[1].find('.teacher-directory-cell-alias').text()).toContain('@bob')
+    expect(rows[1].find('.teacher-directory-row-status').text()).toContain('已有解题记录')
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
 
@@ -123,8 +170,14 @@ describe('TeacherStudentManagement', () => {
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassStudents
       .mockResolvedValueOnce([
-        { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
-        { id: 'stu-2', username: 'bob', recent_event_count: 2 },
+        {
+          id: 'stu-1',
+          username: 'alice',
+          name: 'Alice Zhang',
+          student_no: '2024001',
+          recent_event_count: 0,
+        },
+        { id: 'stu-2', username: 'bob', recent_event_count: 2, solved_count: 1 },
       ])
       .mockImplementationOnce(() => slowRequest.promise)
       .mockImplementationOnce(() => fastRequest.promise)
@@ -149,7 +202,13 @@ describe('TeacherStudentManagement', () => {
     vi.advanceTimersByTime(250)
 
     fastRequest.resolve([
-      { id: 'stu-1', username: 'alice', name: 'Alice Zhang', recent_event_count: 0 },
+      {
+        id: 'stu-1',
+        username: 'alice',
+        name: 'Alice Zhang',
+        student_no: '2024001',
+        recent_event_count: 0,
+      },
     ])
     await flushPromises()
 

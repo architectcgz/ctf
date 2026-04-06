@@ -7,7 +7,7 @@ import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import teacherSurfaceSource from '@/assets/styles/teacher-surface.css?raw'
 
 const teacherDirectoryPattern =
-  /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*teacher-directory-row-main[\s\S]*teacher-directory-row-tags/s
+  /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*(teacher-directory-row-main|teacher-directory-cell)[\s\S]*teacher-directory-row-tags/s
 
 describe('teacher dark surface alignment', () => {
   it('teacher management pages should use shared teacher surface classes', () => {
