@@ -20,6 +20,14 @@ cd code/backend && make run
 cd code/frontend && npm run dev
 ```
 
+如果是新建 worktree，且其他 worktree 已经装过前端依赖，可以先执行：
+
+```bash
+./scripts/bootstrap-frontend-deps.sh
+```
+
+脚本会优先复用 `package-lock.json` 一致的 `code/frontend/node_modules`，找不到可复用依赖时再回退到 `npm ci --prefer-offline`。
+
 开发容器栈（推荐，后端与依赖在同一个 Compose 项目中）：
 
 ```bash
