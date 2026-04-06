@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
 import { useAdminNotificationPublisher } from '@/composables/useAdminNotificationPublisher'
@@ -13,6 +14,10 @@ const emit = defineEmits<{
 }>()
 
 const publisher = useAdminNotificationPublisher()
+const scheduleUserSearch = useDebounceFn(() => {
+  if (publisher.audienceTarget.value !== 'user') return
+  void publisher.searchUsers(publisher.userKeyword.value)
+}, 250)
 
 watch(
   () => props.open,
@@ -20,6 +25,18 @@ watch(
     if (open) {
       publisher.reset()
     }
+  }
+)
+
+watch(
+  () => [publisher.audienceTarget.value, publisher.userKeyword.value],
+  ([audienceTarget, keyword]) => {
+    if (audienceTarget !== 'user') return
+    if (!keyword.trim()) {
+      void publisher.searchUsers('')
+      return
+    }
+    scheduleUserSearch()
   }
 )
 
@@ -73,6 +90,7 @@ function toggleUser(id: string, checked: boolean): void {
 }
 
 async function handleUserSearch(): Promise<void> {
+  scheduleUserSearch.cancel?.()
   await publisher.searchUsers(publisher.userKeyword.value)
 }
 </script>

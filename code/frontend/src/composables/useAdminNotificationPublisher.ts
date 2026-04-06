@@ -55,6 +55,7 @@ export function useAdminNotificationPublisher() {
   const classOptions = ref<TeacherClassItem[]>([])
   const userOptions = ref<AdminUserListItem[]>([])
   const userKeyword = ref('')
+  let latestUserSearchRequestID = 0
 
   const errors = reactive<NotificationPublishErrors>({})
 
@@ -168,16 +169,27 @@ export function useAdminNotificationPublisher() {
   }
 
   async function searchUsers(keyword: string): Promise<void> {
+    const normalizedKeyword = keyword.trim()
     userKeyword.value = keyword
+    if (!normalizedKeyword) {
+      latestUserSearchRequestID += 1
+      userOptions.value = []
+      loadingUsers.value = false
+      return
+    }
+
+    const requestID = ++latestUserSearchRequestID
     loadingUsers.value = true
     try {
       const response = await getUsers({
         page: 1,
         page_size: 20,
-        keyword: keyword.trim() || undefined,
+        keyword: normalizedKeyword,
       })
+      if (requestID !== latestUserSearchRequestID) return
       userOptions.value = response.list
     } finally {
+      if (requestID !== latestUserSearchRequestID) return
       loadingUsers.value = false
     }
   }

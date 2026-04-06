@@ -1,4 +1,5 @@
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 
 import { destroyTeacherInstance, getClasses, getTeacherInstances } from '@/api/teacher'
 import type { TeacherClassItem, TeacherInstanceItem } from '@/api/contracts'
@@ -27,6 +28,8 @@ export function useTeacherInstances() {
   const loadingInstances = ref(false)
   const destroyingId = ref('')
   const error = ref<string | null>(null)
+  const autoSearchReady = ref(false)
+  let latestInstanceRequestID = 0
 
   const isAdmin = computed(() => authStore.user?.role === 'admin')
   const totalCount = computed(() => instances.value.length)
@@ -36,6 +39,7 @@ export function useTeacherInstances() {
   async function initialize(): Promise<void> {
     loadingClasses.value = true
     error.value = null
+    autoSearchReady.value = false
 
     try {
       classes.value = await getClasses()
@@ -43,6 +47,7 @@ export function useTeacherInstances() {
         filters.className = authStore.user?.class_name || classes.value[0]?.name || ''
       }
       await loadInstances()
+      autoSearchReady.value = true
     } catch (err) {
       console.error('加载教师实例管理页失败:', err)
       error.value = '加载实例管理数据失败，请稍后重试'
@@ -54,33 +59,46 @@ export function useTeacherInstances() {
   }
 
   async function loadInstances(): Promise<void> {
+    const requestID = ++latestInstanceRequestID
     loadingInstances.value = true
     error.value = null
 
     try {
-      instances.value = await getTeacherInstances({
+      const nextInstances = await getTeacherInstances({
         class_name: filters.className || undefined,
         keyword: filters.keyword.trim() || undefined,
         student_no: filters.studentNo.trim() || undefined,
       })
+      if (requestID !== latestInstanceRequestID) return
+      instances.value = nextInstances
     } catch (err) {
+      if (requestID !== latestInstanceRequestID) return
       console.error('加载教师实例列表失败:', err)
       error.value = '加载实例列表失败，请稍后重试'
       instances.value = []
     } finally {
+      if (requestID !== latestInstanceRequestID) return
       loadingInstances.value = false
     }
   }
 
+  const scheduleInstanceSearch = useDebounceFn(() => {
+    void loadInstances()
+  }, 250)
+
   async function submitFilters(): Promise<void> {
+    scheduleInstanceSearch.cancel?.()
     await loadInstances()
   }
 
   async function resetFilters(): Promise<void> {
+    autoSearchReady.value = false
+    scheduleInstanceSearch.cancel?.()
     filters.keyword = ''
     filters.studentNo = ''
     filters.className = isAdmin.value ? '' : authStore.user?.class_name || classes.value[0]?.name || ''
     await loadInstances()
+    autoSearchReady.value = true
   }
 
   function updateFilter<K extends keyof TeacherInstanceFilters>(key: K, value: TeacherInstanceFilters[K]): void {
@@ -100,6 +118,14 @@ export function useTeacherInstances() {
       destroyingId.value = ''
     }
   }
+
+  watch(
+    () => [filters.className, filters.keyword, filters.studentNo],
+    () => {
+      if (!autoSearchReady.value) return
+      scheduleInstanceSearch()
+    }
+  )
 
   return {
     classes,

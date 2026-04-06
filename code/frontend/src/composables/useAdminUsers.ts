@@ -1,4 +1,5 @@
 import { computed, ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 
 import {
   createUser,
@@ -69,8 +70,16 @@ export function useAdminUsers() {
   )
 
   const dialogMode = computed<'create' | 'edit'>(() => (editingUserId.value ? 'edit' : 'create'))
+  const scheduleTextFilterRefresh = useDebounceFn(() => {
+    void pagination.changePage(1)
+  }, 250)
 
-  watch([keyword, studentNo, teacherNo, roleFilter, statusFilter], async () => {
+  watch([keyword, studentNo, teacherNo], () => {
+    scheduleTextFilterRefresh()
+  })
+
+  watch([roleFilter, statusFilter], async () => {
+    scheduleTextFilterRefresh.cancel?.()
     await pagination.changePage(1)
   })
 
