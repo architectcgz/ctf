@@ -150,6 +150,7 @@ onMounted(() => {
     <div class="challenge-page">
       <header class="challenge-topbar">
         <div class="challenge-heading">
+          <div class="journal-eyebrow">Challenges</div>
           <h1 class="challenge-title">靶场训练</h1>
           <p class="challenge-subtitle">按关键词、分类与难度筛选题目，直接进入训练。</p>
         </div>
@@ -451,7 +452,16 @@ onMounted(() => {
   min-width: 0;
 }
 
+.journal-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
 .challenge-title {
+  margin-top: 0.85rem;
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;

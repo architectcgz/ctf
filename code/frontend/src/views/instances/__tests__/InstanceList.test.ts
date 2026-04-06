@@ -64,6 +64,7 @@ describe('InstanceList', () => {
     expect(wrapper.element.tagName).toBe('SECTION')
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.text()).toContain('Instances')
     expect(wrapper.text()).toContain('我的实例')
     expect(wrapper.text()).toContain('SQL 注入基础')
     expect(wrapper.text()).toContain('反序列化迷宫')

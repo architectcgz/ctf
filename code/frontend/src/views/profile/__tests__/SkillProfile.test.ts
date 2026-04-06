@@ -92,6 +92,8 @@ describe('SkillProfile', () => {
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.text()).toContain('靶场训练')
+    expect(wrapper.text()).toContain('按关键词、分类与难度筛选题目，直接进入训练。')
     expect(wrapper.text()).toContain('能力维度分析')
     expect(wrapper.text()).toContain('薄弱项提示')
     expect(wrapper.text()).toContain('密码学入门')

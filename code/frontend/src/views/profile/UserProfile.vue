@@ -130,8 +130,8 @@ onUnmounted(() => {
       <header class="profile-header">
         <div class="profile-header__intro">
           <div class="journal-eyebrow">Profile</div>
-          <h1 class="profile-page-title">个人资料</h1>
-          <p class="profile-page-copy">查看账号信息，并生成个人训练报告。</p>
+          <h1 class="profile-page-title">靶场训练</h1>
+          <p class="profile-page-copy">按关键词、分类与难度筛选题目，直接进入训练。</p>
 
           <div class="profile-header__actions">
             <div class="profile-pill">

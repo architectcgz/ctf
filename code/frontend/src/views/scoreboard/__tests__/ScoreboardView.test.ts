@@ -145,6 +145,7 @@ describe('ScoreboardView', () => {
 
     const cards = wrapper.findAll('[data-testid="scoreboard-card"]')
 
+    expect(wrapper.text()).toContain('Scoreboard')
     expect(cards).toHaveLength(3)
     expect(cards[0].text()).toContain('当前竞赛')
     expect(cards[1].text()).toContain('冻结竞赛')

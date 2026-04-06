@@ -117,6 +117,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
     <div class="contest-page">
       <header class="contest-topbar">
         <div class="contest-heading">
+          <div class="journal-eyebrow">Contests</div>
           <h1 class="contest-title">竞赛中心</h1>
           <p class="contest-subtitle">查看当前可参加和已结束的竞赛，直接进入竞赛工作区。</p>
         </div>
@@ -260,7 +261,16 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.journal-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
 .contest-title {
+  margin-top: 0.85rem;
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;

@@ -107,8 +107,8 @@ async function submitPasswordChange(): Promise<void> {
     <header class="security-header">
       <div class="security-header__intro">
         <div class="journal-eyebrow">Security</div>
-        <h1 class="security-page-title">安全设置</h1>
-        <p class="security-page-copy">修改密码，并查看当前账号的安全提示。</p>
+        <h1 class="security-page-title">靶场训练</h1>
+        <p class="security-page-copy">按关键词、分类与难度筛选题目，直接进入训练。</p>
 
         <div class="security-header__actions">
           <div class="security-pill">
