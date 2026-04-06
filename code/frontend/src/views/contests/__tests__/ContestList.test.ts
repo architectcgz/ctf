@@ -40,6 +40,7 @@ describe('ContestList', () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Contests')
     expect(wrapper.text()).toContain('竞赛中心')
   })
 })

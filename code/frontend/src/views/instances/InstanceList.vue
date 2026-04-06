@@ -33,6 +33,7 @@ const {
     <div class="instance-page">
       <header class="instance-topbar">
         <div class="instance-heading">
+          <div class="journal-eyebrow">Instances</div>
           <h1 class="instance-title">我的实例</h1>
           <p class="instance-subtitle">管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。</p>
         </div>
@@ -221,7 +222,16 @@ const {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.journal-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
 .instance-title {
+  margin-top: 0.85rem;
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;

@@ -91,6 +91,8 @@ describe('UserProfile', () => {
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
+    expect(wrapper.text()).toContain('靶场训练')
+    expect(wrapper.text()).toContain('按关键词、分类与难度筛选题目，直接进入训练。')
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('生成个人报告')

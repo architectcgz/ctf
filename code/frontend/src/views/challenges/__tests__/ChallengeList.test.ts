@@ -65,6 +65,7 @@ describe('ChallengeList', () => {
 
     const wrapper = await mountPage()
 
+    expect(wrapper.text()).toContain('Challenges')
     expect(wrapper.text()).toContain('靶场训练')
     expect(wrapper.text()).toContain('当前题库概况')
     expect(wrapper.text()).toContain('Test Challenge')

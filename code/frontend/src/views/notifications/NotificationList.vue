@@ -106,6 +106,7 @@ async function handlePublishSuccess(): Promise<void> {
     <div class="notification-page">
       <header class="notification-topbar">
         <div class="notification-heading">
+          <div class="journal-eyebrow">Notifications</div>
           <h1 class="notification-title">通知中心</h1>
           <p class="notification-subtitle">系统、竞赛和训练相关通知会在这里按时间顺序汇总。</p>
         </div>
@@ -273,7 +274,16 @@ async function handlePublishSuccess(): Promise<void> {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.journal-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
 .notification-title {
+  margin-top: 0.85rem;
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;

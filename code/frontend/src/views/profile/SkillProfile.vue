@@ -61,10 +61,10 @@ const {
       <div>
         <div class="journal-eyebrow">Skill Profile</div>
         <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
-          能力画像
+          靶场训练
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          查看能力画像和推荐靶场。
+          按关键词、分类与难度筛选题目，直接进入训练。
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="能力画像快捷操作">
@@ -248,23 +248,15 @@ const {
 }
 
 .journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.2rem 0.75rem;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--journal-accent);
 }
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-  border-color: var(--journal-soft-border);
-  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
 }
 
 .journal-note-label {

@@ -108,6 +108,7 @@ describe('NotificationList', () => {
     const className = wrapper.attributes('class')
 
     expect(wrapper.element.tagName).toBe('SECTION')
+    expect(wrapper.text()).toContain('Notifications')
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.classes()).toContain('space-y-6')
