@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -103,6 +104,25 @@ func (s *ChallengeService) GetChallengeImport(actorUserID int64, id string) (*dt
 	}
 	preview := record.Preview
 	return &preview, nil
+}
+
+func (s *ChallengeService) ListChallengeImports(actorUserID int64) ([]dto.ChallengeImportPreviewResp, error) {
+	records, err := loadChallengeImportPreviewRecords()
+	if err != nil {
+		return nil, err
+	}
+
+	previews := make([]dto.ChallengeImportPreviewResp, 0, len(records))
+	for _, record := range records {
+		if record == nil {
+			continue
+		}
+		if record.CreatedBy != 0 && record.CreatedBy != actorUserID {
+			continue
+		}
+		previews = append(previews, record.Preview)
+	}
+	return previews, nil
 }
 
 func (s *ChallengeService) CommitChallengeImport(
@@ -449,6 +469,37 @@ func loadChallengeImportPreviewRecord(id string) (*storedChallengeImportPreview,
 		return nil, fmt.Errorf("parse challenge import preview: %w", err)
 	}
 	return &record, nil
+}
+
+func loadChallengeImportPreviewRecords() ([]*storedChallengeImportPreview, error) {
+	root := challengeImportPreviewRoot()
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	records := make([]*storedChallengeImportPreview, 0, len(entries))
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		record, err := loadChallengeImportPreviewRecord(entry.Name())
+		if err != nil {
+			if errors.Is(err, errcode.ErrNotFound) {
+				continue
+			}
+			return nil, err
+		}
+		records = append(records, record)
+	}
+
+	sort.Slice(records, func(i, j int) bool {
+		return records[i].CreatedAt.After(records[j].CreatedAt)
+	})
+	return records, nil
 }
 
 func persistImportedAttachmentBundle(parsed *domain.ParsedChallengePackage) (string, error) {
