@@ -83,6 +83,33 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('开始挑战')
   })
 
+  it('题目列表不应显示编号前缀', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: 'Hidden Index Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          tags: ['test'],
+          solved_count: 10,
+          total_attempts: 20,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage()
+
+    expect(wrapper.text()).not.toContain('CH-1')
+    expect(wrapper.find('.challenge-row-index').exists()).toBe(false)
+  })
+
   it('搜索时应通过 keyword 参数请求真实筛选', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [],
@@ -272,6 +299,8 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
     expect(challengeListSource).toContain('搜索挑战标题或描述')
+    expect(challengeListSource).not.toContain('challenge-row-index')
+    expect(challengeListSource).not.toContain('CH-{{ challengeIndex(index) }}')
     expect(challengeListSource).toContain('<span>分类</span>')
     expect(challengeListSource).toContain('<span>难度</span>')
     expect(challengeListSource).toContain('class="challenge-row-category"')

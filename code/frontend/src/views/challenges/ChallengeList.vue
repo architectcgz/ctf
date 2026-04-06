@@ -88,10 +88,6 @@ function goToDetail(id: string): void {
   void router.push(`/challenges/${id}`)
 }
 
-function challengeIndex(index: number): number {
-  return (page.value - 1) * pageSize.value + index + 1
-}
-
 function getCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
     web: 'Web',
@@ -306,7 +302,7 @@ onMounted(() => {
           </div>
 
           <button
-            v-for="(challenge, index) in list"
+            v-for="challenge in list"
             :key="challenge.id"
             type="button"
             class="challenge-row"
@@ -315,7 +311,6 @@ onMounted(() => {
             @click="goToDetail(challenge.id)"
           >
             <div class="challenge-row-main">
-              <div class="challenge-row-index">CH-{{ challengeIndex(index) }}</div>
               <div class="challenge-row-title-group">
                 <h2 class="challenge-row-title">{{ challenge.title }}</h2>
               </div>
@@ -752,15 +747,6 @@ onMounted(() => {
   display: grid;
   gap: 10px;
   min-width: 0;
-}
-
-.challenge-row-index {
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--journal-muted);
 }
 
 .challenge-row-title-group {
