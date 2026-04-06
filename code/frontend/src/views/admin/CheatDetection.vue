@@ -105,15 +105,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 onMounted(() => {
   void loadRiskData()
 })
-
-const lastSyncText = computed(() => {
-  if (!riskData.value?.generated_at) return '近 24 小时'
-  return formatDateTime(riskData.value.generated_at)
-})
-
-function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString('zh-CN')
-}
 </script>
 
 <template>
@@ -122,10 +113,6 @@ function formatDateTime(value: string): string {
         <div class="topbar-leading">
           <span class="workspace-overline">Integrity Workspace</span>
           <span class="class-chip">风险排查</span>
-        </div>
-        <div class="top-note">
-          <span>数据窗口: 近 24 小时</span>
-          <span>最后同步: {{ lastSyncText }}</span>
         </div>
       </header>
 
