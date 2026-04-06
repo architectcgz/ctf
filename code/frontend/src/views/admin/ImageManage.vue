@@ -47,20 +47,20 @@
 
         <div v-else class="image-list">
           <div class="image-directory-head" aria-hidden="true">
-            <span>镜像</span>
+            <span>镜像名称</span>
+            <span>标签</span>
+            <span>描述</span>
             <span>状态</span>
             <span>创建时间</span>
-            <span>操作</span>
+            <span class="image-directory-head__actions">操作</span>
           </div>
 
           <article v-for="row in list" :key="row.id" class="image-row">
-            <div class="image-row__main">
-              <div class="image-row__titleline">
-                <h2 class="image-row__title">{{ row.name }}</h2>
-                <span class="image-row__tag">:{{ row.tag }}</span>
-              </div>
-              <p class="image-row__description">{{ row.description || '未填写镜像说明' }}</p>
-            </div>
+            <div class="image-row__name">{{ row.name }}</div>
+
+            <div class="image-row__tag">{{ row.tag }}</div>
+
+            <p class="image-row__description">{{ row.description || '未填写镜像说明' }}</p>
 
             <div class="image-row__status">
               <span
@@ -453,13 +453,20 @@ onUnmounted(() => {
 }
 
 .image-list {
+  --image-list-columns:
+    minmax(10rem, 1fr)
+    minmax(8rem, 0.78fr)
+    minmax(0, 1.5fr)
+    minmax(7rem, 0.78fr)
+    minmax(10rem, 0.92fr)
+    auto;
   display: grid;
   gap: 0;
 }
 
 .image-directory-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(7rem, 0.72fr) minmax(10rem, 0.9fr) auto;
+  grid-template-columns: var(--image-list-columns);
   gap: 1rem;
   padding: 1rem 0 0.8rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -470,45 +477,44 @@ onUnmounted(() => {
   color: var(--journal-muted);
 }
 
+.image-directory-head__actions {
+  text-align: right;
+}
+
 .image-row {
   display: grid;
   gap: 1rem;
-  grid-template-columns: minmax(0, 1.45fr) minmax(7rem, 0.72fr) minmax(10rem, 0.9fr) auto;
+  grid-template-columns: var(--image-list-columns);
   align-items: start;
   padding: 1rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.image-row__main,
+.image-row__name,
+.image-row__tag,
+.image-row__description,
 .image-row__status,
 .image-row__actions {
   min-width: 0;
 }
 
-.image-row__titleline {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.image-row__title,
+.image-row__name,
 .image-row__tag {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 }
 
-.image-row__title {
+.image-row__name {
   font-size: 1rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .image-row__tag {
+  padding-top: 0.1rem;
   color: var(--journal-muted);
 }
 
 .image-row__description {
-  margin-top: 0.65rem;
   font-size: 0.88rem;
   line-height: 1.65;
   color: var(--journal-muted);
