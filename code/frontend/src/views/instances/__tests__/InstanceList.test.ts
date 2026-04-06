@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import InstanceList from '../InstanceList.vue'
+import instanceListSource from '../InstanceList.vue?raw'
 
 const instanceApiMocks = vi.hoisted(() => ({
   getMyInstances: vi.fn(),
@@ -70,5 +71,14 @@ describe('InstanceList', () => {
     expect(wrapper.text()).toContain('反序列化迷宫')
     expect(wrapper.text()).toContain('等待创建')
     expect(wrapper.text()).toContain('实例正在排队创建')
+    expect(wrapper.find('.instance-row-title').attributes('title')).toBe('SQL 注入基础')
+    expect(wrapper.find('.instance-row-access-value').attributes('title')).toBe('http://example.test')
+  })
+
+  it('应该为实例列表长标题和访问地址保留省略样式与完整提示', () => {
+    expect(instanceListSource).toMatch(/class="instance-row-title"[\s\S]*:title="instance\.challenge_title"/s)
+    expect(instanceListSource).toMatch(/instance-row-access-value[\s\S]*:title="/s)
+    expect(instanceListSource).toMatch(/\.instance-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(instanceListSource).toMatch(/\.instance-row-access-value\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 })

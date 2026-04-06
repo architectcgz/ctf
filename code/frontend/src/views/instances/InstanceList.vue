@@ -87,7 +87,7 @@ const {
 
         <article v-for="instance in instances" :key="instance.id" class="instance-row">
           <div class="instance-row-main">
-            <h2 class="instance-row-title">{{ instance.challenge_title }}</h2>
+            <h2 class="instance-row-title" :title="instance.challenge_title">{{ instance.challenge_title }}</h2>
             <div class="instance-row-tags">
               <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
               <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
@@ -96,7 +96,13 @@ const {
 
           <div class="instance-row-access">
             <template v-if="instance.status === 'running'">
-              <div class="instance-row-mono">
+              <div
+                class="instance-row-mono instance-row-access-value"
+                :title="
+                  instance.access_url ||
+                  (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                "
+              >
                 {{
                   instance.access_url ||
                   (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
@@ -373,6 +379,9 @@ const {
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .instance-row-tags {
@@ -404,6 +413,7 @@ const {
 
 .instance-row-access,
 .instance-row-remaining {
+  min-width: 0;
   font-size: 13px;
   line-height: 1.6;
   color: var(--journal-muted);
@@ -413,6 +423,13 @@ const {
   font-family:
     'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   color: var(--journal-ink);
+}
+
+.instance-row-access-value {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .instance-row-mono-warning {

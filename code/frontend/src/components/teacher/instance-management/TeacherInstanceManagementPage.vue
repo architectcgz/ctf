@@ -236,10 +236,17 @@ function remainingExtends(item: TeacherInstanceItem): number {
             <div class="teacher-directory-row-main">
               <div class="teacher-directory-row-index">{{ item.student_no || `@${item.student_username}` }}</div>
               <div class="teacher-directory-row-title-group">
-                <h4 class="teacher-directory-row-title">{{ item.student_name || item.student_username }}</h4>
-                <div class="teacher-directory-row-points">{{ item.challenge_title }}</div>
+                <h4 class="teacher-directory-row-title" :title="item.student_name || item.student_username">
+                  {{ item.student_name || item.student_username }}
+                </h4>
+                <div class="teacher-directory-row-points" :title="item.challenge_title">
+                  {{ item.challenge_title }}
+                </div>
               </div>
-              <div class="teacher-directory-row-copy">
+              <div
+                class="teacher-directory-row-copy"
+                :title="`@${item.student_username} · ${item.class_name} · ${item.access_url || '暂未分配访问地址'}`"
+              >
                 @{{ item.student_username }} · {{ item.class_name }} ·
                 <span class="teacher-directory-url">{{ item.access_url || '暂未分配访问地址' }}</span>
               </div>
@@ -653,18 +660,28 @@ function remainingExtends(item: TeacherInstanceItem): number {
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-row-points {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-row-copy {
+  display: -webkit-box;
   font-size: 0.84rem;
   line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .teacher-directory-url {

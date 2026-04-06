@@ -193,7 +193,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
               </span>
               <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
             </div>
-            <h3 class="contest-row-title">{{ contest.title }}</h3>
+            <h3 class="contest-row-title" :title="contest.title">{{ contest.title }}</h3>
           </div>
 
           <div class="contest-row-time">
@@ -448,6 +448,9 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .contest-chip,

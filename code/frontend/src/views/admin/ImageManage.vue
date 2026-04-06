@@ -66,11 +66,13 @@
           </div>
 
           <article v-for="row in list" :key="row.id" class="image-row">
-            <div class="image-row__name">{{ row.name }}</div>
+            <div class="image-row__name" :title="row.name">{{ row.name }}</div>
 
-            <div class="image-row__tag">{{ row.tag }}</div>
+            <div class="image-row__tag" :title="row.tag">{{ row.tag }}</div>
 
-            <p class="image-row__description">{{ row.description || '未填写镜像说明' }}</p>
+            <p class="image-row__description" :title="row.description || '未填写镜像说明'">
+              {{ row.description || '未填写镜像说明' }}
+            </p>
 
             <div class="image-row__status">
               <span
@@ -560,17 +562,27 @@ onUnmounted(() => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .image-row__tag {
   padding-top: 0.1rem;
   color: var(--journal-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .image-row__description {
+  display: -webkit-box;
   font-size: 0.88rem;
   line-height: 1.65;
   color: var(--journal-muted);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .image-row__status {

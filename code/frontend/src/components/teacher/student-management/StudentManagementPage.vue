@@ -172,11 +172,15 @@ const emit = defineEmits<{
             </div>
 
             <div class="teacher-directory-cell teacher-directory-cell-name">
-              <h4 class="teacher-directory-row-title">{{ student.name || '未设置姓名' }}</h4>
+              <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
+                {{ student.name || '未设置姓名' }}
+              </h4>
             </div>
 
             <div class="teacher-directory-cell teacher-directory-cell-alias">
-              <div class="teacher-directory-row-points">@{{ student.username }}</div>
+              <div class="teacher-directory-row-points" :title="`@${student.username}`">
+                @{{ student.username }}
+              </div>
             </div>
 
             <div class="teacher-directory-row-tags">
@@ -575,6 +579,9 @@ const emit = defineEmits<{
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-head-cell-student-no,
@@ -591,6 +598,9 @@ const emit = defineEmits<{
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-row-copy {

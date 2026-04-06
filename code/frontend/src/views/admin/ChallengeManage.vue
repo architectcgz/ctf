@@ -603,8 +603,8 @@ onMounted(() => {
             <div class="queue-row__identity">
               <div class="challenge-row__index">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
               <div class="min-w-0">
-                <h2 class="queue-row__title">{{ item.title }}</h2>
-                <p class="queue-row__meta-text">{{ item.file_name }}</p>
+                <h2 class="queue-row__title" :title="item.title">{{ item.title }}</h2>
+                <p class="queue-row__meta-text" :title="item.file_name">{{ item.file_name }}</p>
               </div>
             </div>
 
@@ -1158,6 +1158,9 @@ onMounted(() => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .queue-row__meta-text,
@@ -1165,6 +1168,12 @@ onMounted(() => {
   margin: 0.3rem 0 0;
   font-size: 0.82rem;
   color: var(--journal-muted);
+}
+
+.queue-row__meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .queue-row__details {

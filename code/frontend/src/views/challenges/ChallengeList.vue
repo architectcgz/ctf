@@ -312,7 +312,7 @@ onMounted(() => {
           >
             <div class="challenge-row-main">
               <div class="challenge-row-title-group">
-                <h2 class="challenge-row-title">{{ challenge.title }}</h2>
+                <h2 class="challenge-row-title" :title="challenge.title">{{ challenge.title }}</h2>
               </div>
             </div>
 
@@ -762,6 +762,9 @@ onMounted(() => {
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .challenge-row-points {

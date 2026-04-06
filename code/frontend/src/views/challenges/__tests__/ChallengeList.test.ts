@@ -81,6 +81,7 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目总数')
     expect(wrapper.text()).toContain('开始挑战')
+    expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
   })
 
   it('题目列表不应显示编号前缀', async () => {
@@ -305,6 +306,8 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('<span>难度</span>')
     expect(challengeListSource).toContain('class="challenge-row-category"')
     expect(challengeListSource).toContain('class="challenge-row-difficulty"')
+    expect(challengeListSource).toMatch(/class="challenge-row-title"[\s\S]*:title="challenge\.title"/s)
+    expect(challengeListSource).toMatch(/\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
     expect(challengeListSource).not.toContain('class="challenge-card')
     expect(challengeListSource).not.toContain('Training Range')
     expect(challengeListSource).not.toContain('Challenge Filters')

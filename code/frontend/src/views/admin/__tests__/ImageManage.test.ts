@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ImageManage from '../ImageManage.vue'
+import imageManageSource from '../ImageManage.vue?raw'
 
 const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
   getImagesMock: vi.fn(),
@@ -87,6 +88,20 @@ describe('ImageManage', () => {
     const headers = wrapper.findAll('.image-directory-head span').map((item) => item.text())
 
     expect(headers).toEqual(['镜像名称', '标签', '描述', '状态', '创建时间', '操作'])
+
+    const row = wrapper.find('.image-row')
+    expect(row.find('.image-row__name').attributes('title')).toBe('ubuntu')
+    expect(row.find('.image-row__tag').attributes('title')).toBe('22.04')
+    expect(row.find('.image-row__description').attributes('title')).toBe('基础运行环境')
+  })
+
+  it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
+    expect(imageManageSource).toMatch(/class="image-row__name"[\s\S]*:title="row\.name"/s)
+    expect(imageManageSource).toMatch(/class="image-row__tag"[\s\S]*:title="row\.tag"/s)
+    expect(imageManageSource).toMatch(/class="image-row__description"[\s\S]*:title="row\.description \|\| '未填写镜像说明'"/s)
+    expect(imageManageSource).toMatch(/\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(imageManageSource).toMatch(/\.image-row__tag\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(imageManageSource).toMatch(/\.image-row__description\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 
   it('应该支持手动刷新镜像列表', async () => {
