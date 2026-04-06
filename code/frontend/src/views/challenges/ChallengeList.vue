@@ -17,7 +17,7 @@ const difficultyFilter = ref<ChallengeDifficulty | ''>('')
 const { list, total, page, pageSize, loading, error, changePage, refresh } = usePagination(
   (params) => {
     const filters: Record<string, unknown> = { ...params }
-    if (searchQuery.value) filters.search = searchQuery.value
+    if (searchQuery.value) filters.keyword = searchQuery.value
     if (categoryFilter.value) filters.category = categoryFilter.value
     if (difficultyFilter.value) filters.difficulty = difficultyFilter.value
     return getChallenges(filters)
@@ -208,7 +208,7 @@ onMounted(() => {
               id="challenge-search-input"
               v-model="searchQuery"
               type="text"
-              placeholder="搜索挑战标题或标签..."
+              placeholder="搜索挑战标题或描述..."
               class="challenge-input"
               aria-describedby="challenge-directory-meta"
               @input="onSearch"
