@@ -436,20 +436,8 @@ onUnmounted(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.image-title {
-  margin-top: 0.85rem;
-  font-size: clamp(1.95rem, 2vw, 2.45rem);
-  font-weight: 700;
-  line-height: 1.06;
-  color: var(--journal-ink);
-}
-
 .image-copy {
-  margin-top: 0.7rem;
   max-width: 48rem;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .image-header__side {

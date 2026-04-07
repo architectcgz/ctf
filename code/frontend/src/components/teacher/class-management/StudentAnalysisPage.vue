@@ -662,20 +662,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   color: var(--journal-muted);
 }
 
-.teacher-title {
-  margin-top: 0.75rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .teacher-copy {
-  margin-top: 0.75rem;
   max-width: 42rem;
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .teacher-actions {

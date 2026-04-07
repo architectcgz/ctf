@@ -519,15 +519,6 @@ onMounted(() => {
   gap: 1.5rem;
 }
 
-.hero-title {
-  margin-top: 0.75rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .hero-summary {
   margin-top: 0.75rem;
   max-width: 48rem;

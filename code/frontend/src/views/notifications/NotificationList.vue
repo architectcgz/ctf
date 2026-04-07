@@ -282,20 +282,8 @@ async function handlePublishSuccess(): Promise<void> {
   color: var(--journal-accent);
 }
 
-.notification-title {
-  margin-top: 0.85rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .notification-subtitle {
-  margin-top: 12px;
   max-width: 720px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .notification-actions {
@@ -571,9 +559,4 @@ async function handlePublishSuccess(): Promise<void> {
   }
 }
 
-@media (max-width: 640px) {
-  .notification-title {
-    font-size: 34px;
-  }
-}
 </style>

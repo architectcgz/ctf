@@ -19,6 +19,13 @@
   --workspace-tab-panel-gap-top-tight: 0.2rem;
   --workspace-directory-gap-top: 0.75rem;
   --workspace-directory-gap-pagination: 0.5rem;
+  --workspace-page-title-margin-top: 0.85rem;
+  --workspace-page-title-font-size: clamp(32px, 4vw, 46px);
+  --workspace-page-title-line-height: 1.02;
+  --workspace-page-title-letter-spacing: -0.04em;
+  --workspace-page-copy-margin-top: 0.8rem;
+  --workspace-page-copy-font-size: 0.94rem;
+  --workspace-page-copy-line-height: 1.75;
   color-scheme: dark;
 }
 
@@ -81,6 +88,52 @@ select {
   padding: 0.7rem 1.1rem 1.05rem;
   font-size: 0.875rem;
   color: var(--journal-muted, var(--color-text-secondary));
+}
+
+:where(
+  .workspace-page-title,
+  .journal-page-title,
+  .contest-page .contest-title,
+  .instance-page .instance-title,
+  .scoreboard-page .scoreboard-title,
+  .notification-page .notification-title,
+  .workspace-shell .teacher-title,
+  .workspace-shell .manage-title,
+  .workspace-shell .hero-title,
+  .hero-copy .hero-title,
+  .admin-page-title,
+  .image-header .image-title,
+  .report-page .report-title,
+  .topology-page--template-library .topology-hero-title
+) {
+  margin: var(--workspace-page-title-margin-top) 0 0;
+  font-size: var(--workspace-page-title-font-size);
+  line-height: var(--workspace-page-title-line-height);
+  letter-spacing: var(--workspace-page-title-letter-spacing);
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+:where(
+  .workspace-page-copy,
+  .contest-page .contest-subtitle,
+  .instance-page .instance-subtitle,
+  .scoreboard-page .scoreboard-subtitle,
+  .notification-page .notification-subtitle,
+  .workspace-shell .teacher-copy,
+  .admin-page-copy,
+  .image-header .image-copy,
+  .report-page .report-copy,
+  .skill-overview-copy,
+  .topology-page--template-library .topology-hero-description
+) {
+  margin-top: var(--workspace-page-copy-margin-top);
+  font-size: var(--workspace-page-copy-font-size);
+  line-height: var(--workspace-page-copy-line-height);
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
+.workspace-page-copy {
+  max-width: 48rem;
 }
 
 .top-tabs + .tab-panel,

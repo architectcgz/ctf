@@ -619,21 +619,8 @@ async function handleDownload(): Promise<void> {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.report-title {
-  margin-top: 0.8rem;
-  font-size: clamp(2rem, 4vw, 2.85rem);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .report-copy {
-  margin-top: 0.75rem;
   max-width: 52rem;
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .report-summary {

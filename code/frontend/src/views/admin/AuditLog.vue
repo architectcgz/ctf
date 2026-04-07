@@ -351,20 +351,8 @@ onMounted(() => {
   gap: 1rem;
 }
 
-.admin-page-title {
-  margin-top: 0.85rem;
-  font-size: clamp(1.9rem, 2vw, 2.4rem);
-  font-weight: 700;
-  line-height: 1.08;
-  color: var(--journal-ink);
-}
-
 .admin-page-copy {
-  margin-top: 0.7rem;
   max-width: 48rem;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .admin-summary-grid {

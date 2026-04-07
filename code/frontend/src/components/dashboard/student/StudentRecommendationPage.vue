@@ -238,13 +238,6 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
-.journal-page-title {
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  font-weight: 600;
-}
-
 .journal-brief {
   border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);

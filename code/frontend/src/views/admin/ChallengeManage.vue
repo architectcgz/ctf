@@ -795,14 +795,6 @@ onMounted(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.manage-title {
-  margin-top: 0.75rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .manage-title--compact {
   margin-top: 0.35rem;
   font-size: clamp(24px, 3vw, 34px);

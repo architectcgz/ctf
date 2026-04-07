@@ -269,20 +269,8 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   color: var(--journal-accent);
 }
 
-.contest-title {
-  margin-top: 0.85rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .contest-subtitle {
-  margin-top: 12px;
   max-width: 680px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .contest-summary {
@@ -548,9 +536,4 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   }
 }
 
-@media (max-width: 640px) {
-  .contest-title {
-    font-size: 34px;
-  }
-}
 </style>
