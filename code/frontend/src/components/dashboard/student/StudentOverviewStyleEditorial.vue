@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
+import type { SkillDimensionScore } from '@/api/contracts'
 
 import type { StudentOverviewProps } from './overviewProps'
 
@@ -29,10 +30,28 @@ const storyMetrics = computed(() => [
   { label: '当前排名', value: `#${props.progress.rank ?? '-'}`, tone: 'accent' },
   { label: '完成率', value: `${props.completionRate}%`, tone: 'accent' },
 ])
-const radarIndicators = computed(() =>
-  props.skillDimensions.map((item) => ({ name: item.name, max: 100 }))
+const normalizedSkillDimensions = computed<SkillDimensionScore[]>(() =>
+  props.skillDimensions
+    .map((item, index) => {
+      const normalizedName = item.name?.trim()
+      const numericValue = Number(item.value)
+      if (!normalizedName || !Number.isFinite(numericValue)) {
+        return null
+      }
+      return {
+        ...item,
+        key: item.key || `${normalizedName}-${index}`,
+        name: normalizedName,
+        value: Math.min(100, Math.max(0, numericValue)),
+      }
+    })
+    .filter((item): item is SkillDimensionScore => item !== null)
 )
-const radarValues = computed(() => props.skillDimensions.map((item) => item.value))
+const hasRadarData = computed(() => normalizedSkillDimensions.value.length > 0)
+const radarIndicators = computed(() =>
+  normalizedSkillDimensions.value.map((item) => ({ name: item.name, max: 100 }))
+)
+const radarValues = computed(() => normalizedSkillDimensions.value.map((item) => item.value))
 const rankSummary = computed(() => props.progress.rank ?? '-')
 const operationsSummary = computed(() => [
   {
@@ -94,15 +113,40 @@ const operationsSummary = computed(() => [
     <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
       <section class="journal-bento">
         <article class="journal-panel journal-radar-card px-6 py-6">
-          <div class="flex items-center justify-between gap-4">
+          <div class="journal-panel-head">
             <div>
               <div class="journal-eyebrow">Skill Matrix</div>
               <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
             </div>
             <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
           </div>
-          <div v-if="skillDimensions.length > 0" class="mt-4">
-            <RadarChart :indicators="radarIndicators" :values="radarValues" name="能力值" />
+          <div v-if="hasRadarData" class="journal-radar-body mt-4">
+            <div class="journal-radar-chart">
+              <div class="skill-dimension-chart__frame">
+                <div class="skill-dimension-chart__inner">
+                  <RadarChart
+                    :indicators="radarIndicators"
+                    :values="radarValues"
+                    name="能力值"
+                    height-class="h-[18rem] md:h-[21rem] xl:h-[23rem]"
+                    :label-font-size="15"
+                    :axis-name-gap="10"
+                    radius="70%"
+                    center-y="50%"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="journal-radar-dimensions mt-4">
+              <article
+                v-for="item in normalizedSkillDimensions"
+                :key="item.key"
+                class="journal-radar-dimension"
+              >
+                <div class="journal-radar-dimension__label">{{ item.name }}</div>
+                <div class="journal-radar-dimension__value tech-font">{{ item.value }}</div>
+              </article>
+            </div>
           </div>
           <div
             v-else
@@ -113,7 +157,7 @@ const operationsSummary = computed(() => [
         </article>
 
         <article class="journal-panel journal-rank-card px-6 py-6">
-          <div class="flex items-start justify-between gap-4">
+          <div class="journal-panel-head">
             <div>
               <div class="journal-eyebrow">Leaderboard</div>
               <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
@@ -149,7 +193,7 @@ const operationsSummary = computed(() => [
         </article>
 
         <article class="journal-panel journal-ops-card px-6 py-6">
-          <div class="flex items-center justify-between gap-4">
+          <div class="journal-panel-head">
             <div>
               <div class="journal-eyebrow">Operations</div>
               <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
@@ -199,8 +243,19 @@ const operationsSummary = computed(() => [
 
 .journal-board {
   margin-top: 1.5rem;
-  border-top: 1px solid var(--journal-divider);
+  position: relative;
   padding-top: 1.25rem;
+  --journal-board-divider: color-mix(in srgb, var(--journal-ink) 22%, transparent);
+}
+
+.journal-board::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--journal-board-divider);
 }
 
 .journal-board--embedded {
@@ -225,13 +280,134 @@ const operationsSummary = computed(() => [
 
 .journal-bento {
   display: grid;
-  gap: 1.25rem;
+  gap: 0;
+  --journal-bento-divider: color-mix(in srgb, var(--journal-ink) 22%, transparent);
+}
+
+.journal-bento > .journal-panel + .journal-panel {
+  position: relative;
+  padding-top: 1.25rem;
+}
+
+.journal-bento > .journal-panel + .journal-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--journal-bento-divider);
 }
 
 .journal-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.journal-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.journal-radar-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.journal-radar-chart {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.skill-dimension-chart__frame {
+  position: relative;
+  margin: 0 auto;
+  width: min(100%, 420px);
+  aspect-ratio: 1.04;
+  overflow: visible;
+}
+
+.skill-dimension-chart__frame::before,
+.skill-dimension-chart__frame::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.skill-dimension-chart__frame::before {
+  inset: 0;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 96%,
+        var(--color-bg-base)
+      )
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent);
+  border: 1px solid var(--journal-shell-border);
+}
+
+.skill-dimension-chart__frame::after {
+  inset: 18px;
+  clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 60%
+    ),
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 76%, var(--color-bg-base));
+}
+
+.skill-dimension-chart__inner {
+  position: absolute;
+  inset: 18px;
+  z-index: 1;
+}
+
+.journal-radar-dimensions {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-radius: 16px;
+  border: 1px solid var(--journal-shell-border);
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+.journal-radar-dimension {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 0.95rem;
+}
+
+.journal-radar-dimension:nth-child(n + 3) {
+  border-top: 1px solid var(--journal-divider);
+}
+
+.journal-radar-dimension:nth-child(2n) {
+  border-left: 1px solid var(--journal-divider);
+}
+
+.journal-radar-dimension__label {
+  font-size: 0.82rem;
+  color: var(--journal-muted);
+}
+
+.journal-radar-dimension__value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--journal-ink);
 }
 
 @media (min-width: 1280px) {
@@ -243,33 +419,31 @@ const operationsSummary = computed(() => [
   .journal-radar-card {
     grid-area: radar;
     position: relative;
-    padding-right: 1.5rem;
+    padding-right: 1.25rem;
   }
 
-  .journal-radar-card::after {
-    content: '';
-    position: absolute;
-    top: 0.5rem;
-    right: -0.625rem;
-    bottom: 0.5rem;
-    border-right: 1px solid var(--journal-divider);
-  }
   .journal-rank-card {
     grid-area: rank;
     position: relative;
-    padding-right: 1.5rem;
+    padding-right: 1.25rem;
+    padding-left: 1.25rem;
   }
 
-  .journal-rank-card::after {
-    content: '';
-    position: absolute;
-    top: 0.5rem;
-    right: -0.625rem;
-    bottom: 0.5rem;
-    border-right: 1px solid var(--journal-divider);
-  }
   .journal-ops-card {
     grid-area: ops;
+    padding-left: 1.25rem;
+  }
+
+  .journal-bento > .journal-panel + .journal-panel {
+    padding-top: 0;
+  }
+
+  .journal-bento > .journal-panel + .journal-panel::before {
+    top: 0.5rem;
+    right: auto;
+    bottom: 0.5rem;
+    width: 1px;
+    height: auto;
   }
 }
 
@@ -331,5 +505,32 @@ const operationsSummary = computed(() => [
     --journal-soft-button-height: 38px;
     --journal-soft-button-padding: 0.5rem 0.95rem;
   }
+
+  .journal-radar-dimensions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .journal-radar-dimension:nth-child(2n) {
+    border-left: 0;
+  }
+
+  .journal-radar-dimension + .journal-radar-dimension {
+    border-top: 1px solid var(--journal-divider);
+  }
+}
+
+:global([data-theme='dark']) .skill-dimension-chart__frame::before {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    ),
+    linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 18%, transparent), transparent);
+}
+
+:global([data-theme='dark']) .skill-dimension-chart__frame::after {
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  border-color: rgba(148, 163, 184, 0.2);
 }
 </style>
