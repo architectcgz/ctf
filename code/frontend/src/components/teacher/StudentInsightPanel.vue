@@ -21,6 +21,8 @@ import type {
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { getWeakDimensions, toRadarScores } from '@/utils/skillProfile'
 
+type StudentInsightSection = 'all' | 'overview' | 'recommendations' | 'writeups' | 'manual-review' | 'evidence'
+
 const props = defineProps<{
   student: TeacherStudentItem | null
   progress: MyProgressData | null
@@ -35,6 +37,7 @@ const props = defineProps<{
   manualReviewSaving: boolean
   loading: boolean
   emptyText?: string
+  activeSection?: StudentInsightSection
 }>()
 
 const emit = defineEmits<{
@@ -122,6 +125,10 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
     reviewComment: manualReviewComment.value.trim() || undefined,
   })
 }
+
+function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boolean {
+  return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
+}
 </script>
 
 <template>
@@ -148,7 +155,7 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
       </div>
 
       <template v-else-if="student">
-        <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <div v-if="isSectionVisible('overview')" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
           <SectionCard title="当前学员" subtitle="聚合进度、难度完成情况和薄弱维度。">
             <AppCard
               variant="hero"
@@ -281,7 +288,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </SectionCard>
         </div>
 
-        <SectionCard title="推荐训练任务" subtitle="根据当前能力薄弱维度筛出的优先训练题目。">
+        <SectionCard
+          v-if="isSectionVisible('recommendations')"
+          title="推荐训练任务"
+          subtitle="根据当前能力薄弱维度筛出的优先训练题目。"
+        >
           <AppEmpty
             v-if="recommendations.length === 0"
             title="暂无推荐题目"
@@ -322,7 +333,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </div>
         </SectionCard>
 
-        <SectionCard title="社区题解状态" subtitle="查看当前学员最近的社区题解发布、隐藏与推荐状态。">
+        <SectionCard
+          v-if="isSectionVisible('writeups')"
+          title="社区题解状态"
+          subtitle="查看当前学员最近的社区题解发布、隐藏与推荐状态。"
+        >
           <AppEmpty
             v-if="writeupSubmissions.length === 0"
             title="暂无社区题解"
@@ -418,7 +433,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </template>
         </SectionCard>
 
-        <SectionCard title="人工审核题" subtitle="查看该学员待教师评阅的非标准答案题目。">
+        <SectionCard
+          v-if="isSectionVisible('manual-review')"
+          title="人工审核题"
+          subtitle="查看该学员待教师评阅的非标准答案题目。"
+        >
           <AppEmpty
             v-if="manualReviewSubmissions.length === 0"
             title="暂无人工审核提交"
@@ -559,7 +578,11 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </template>
         </SectionCard>
 
-        <SectionCard title="攻防证据链" subtitle="教师按关键动作查看该学员的利用过程。">
+        <SectionCard
+          v-if="isSectionVisible('evidence')"
+          title="攻防证据链"
+          subtitle="教师按关键动作查看该学员的利用过程。"
+        >
           <AppEmpty
             v-if="!evidence || evidence.events.length === 0"
             title="暂无证据链数据"
@@ -626,7 +649,7 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
           </template>
         </SectionCard>
 
-        <StudentTimelinePage :timeline="timeline" />
+        <StudentTimelinePage v-if="isSectionVisible('evidence')" :timeline="timeline" />
       </template>
     </template>
   </div>

@@ -19,9 +19,11 @@ describe('teacher detail surface alignment', () => {
 
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
-    expect(studentAnalysisSource).toMatch(/:deep\(\.page-header\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(studentAnalysisSource).toContain('class="workspace-shell"')
+    expect(studentAnalysisSource).toContain('class="workspace-topbar"')
+    expect(studentAnalysisSource).toContain('class="top-tabs"')
     expect(studentAnalysisSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(studentAnalysisSource).toMatch(/\.analysis-note\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(studentAnalysisSource).toMatch(/\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
     expect(studentAnalysisSource).toMatch(/:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s)
 
     expect(reviewArchiveSource).toContain('--teacher-card-border:')
