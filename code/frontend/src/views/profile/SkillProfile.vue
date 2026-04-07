@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
@@ -23,6 +24,77 @@ const {
   goToChallenges,
 } = useSkillProfilePage()
 
+type SkillProfileTabKey = 'analysis' | 'weakness' | 'recommendations'
+
+const contentTabs: Array<{
+  key: SkillProfileTabKey
+  label: string
+  buttonId: string
+  panelId: string
+}> = [
+  {
+    key: 'analysis',
+    label: '能力维度分析',
+    buttonId: 'skill-profile-tab-analysis',
+    panelId: 'skill-profile-panel-analysis',
+  },
+  {
+    key: 'weakness',
+    label: '薄弱项提示',
+    buttonId: 'skill-profile-tab-weakness',
+    panelId: 'skill-profile-panel-weakness',
+  },
+  {
+    key: 'recommendations',
+    label: '推荐靶场',
+    buttonId: 'skill-profile-tab-recommendations',
+    panelId: 'skill-profile-panel-recommendations',
+  },
+]
+
+const activeTab = ref<SkillProfileTabKey>('analysis')
+const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
+
+function selectTab(tabKey: SkillProfileTabKey): void {
+  activeTab.value = tabKey
+}
+
+function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
+  tabButtonRefs.value[index] = element
+}
+
+function focusTab(index: number): void {
+  const normalizedIndex = (index + contentTabs.length) % contentTabs.length
+  const nextTab = contentTabs[normalizedIndex]
+  if (!nextTab) {
+    return
+  }
+  activeTab.value = nextTab.key
+  tabButtonRefs.value[normalizedIndex]?.focus()
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  switch (event.key) {
+    case 'ArrowRight':
+    case 'ArrowDown':
+      event.preventDefault()
+      focusTab(index + 1)
+      break
+    case 'ArrowLeft':
+    case 'ArrowUp':
+      event.preventDefault()
+      focusTab(index - 1)
+      break
+    case 'Home':
+      event.preventDefault()
+      focusTab(0)
+      break
+    case 'End':
+      event.preventDefault()
+      focusTab(contentTabs.length - 1)
+      break
+  }
+}
 </script>
 
 <template>
@@ -60,19 +132,26 @@ const {
     <div v-else class="flex flex-1 flex-col">
       <div>
         <div class="journal-eyebrow">Skill Profile</div>
-        <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
-          能力画像
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          查看当前能力维度表现，并根据薄弱项获取推荐靶场。
-        </p>
 
-        <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="能力画像快捷操作">
-          <button type="button" class="journal-btn" @click="loadCurrentData">刷新</button>
-          <button type="button" class="journal-btn journal-btn--primary" @click="goToChallenges">
-            去做题
+        <nav class="top-tabs" role="tablist" aria-label="能力画像内容切换">
+          <button
+            v-for="(tab, index) in contentTabs"
+            :id="tab.buttonId"
+            :key="tab.key"
+            :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+            class="top-tab"
+            :class="{ active: activeTab === tab.key }"
+            type="button"
+            role="tab"
+            :tabindex="activeTab === tab.key ? 0 : -1"
+            :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+            :aria-controls="tab.panelId"
+            @click="selectTab(tab.key)"
+            @keydown="handleTabKeydown($event, index)"
+          >
+            {{ tab.label }}
           </button>
-        </div>
+        </nav>
       </div>
 
       <div v-if="isTeacher" class="skill-teacher-panel mt-6">
@@ -91,10 +170,36 @@ const {
         </select>
       </div>
 
-      <div class="skill-board mt-6 px-1 pt-5 md:px-2 md:pt-6">
-        <section class="skill-section">
+      <div class="skill-board px-1 md:px-2">
+        <section
+          id="skill-profile-panel-analysis"
+          class="tab-panel skill-section"
+          role="tabpanel"
+          aria-labelledby="skill-profile-tab-analysis"
+          :aria-hidden="activeTab === 'analysis' ? 'false' : 'true'"
+          v-show="activeTab === 'analysis'"
+        >
           <div class="skill-analysis-stack">
             <div>
+              <div class="skill-overview-head">
+                <h1 class="journal-page-title text-[var(--journal-ink)]">
+                  能力画像
+                </h1>
+                <p class="skill-overview-copy">
+                  查看当前能力维度表现，并根据薄弱项获取推荐靶场。
+                </p>
+                <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
+                  <button type="button" class="journal-btn" @click="loadCurrentData">刷新</button>
+                  <button
+                    type="button"
+                    class="journal-btn journal-btn--primary"
+                    @click="goToChallenges"
+                  >
+                    去做题
+                  </button>
+                </div>
+              </div>
+
               <div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>
               <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">能力维度分析</h3>
 
@@ -137,31 +242,47 @@ const {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div class="skill-weak-wrap">
-                <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
-                <div class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]">
-                  <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
-                  薄弱项提示
-                </div>
-                <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
-                  <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
-                    <div class="journal-note-label">建议加强</div>
-                    <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">{{ dim }}</div>
-                  </div>
-                </div>
-                <div v-else class="skill-weak-list mt-5">
-                  <div class="skill-weak-item">
-                    <div class="journal-note-label">当前状态</div>
-                    <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">暂时没有明显短板</div>
-                  </div>
-                </div>
+        <section
+          id="skill-profile-panel-weakness"
+          class="tab-panel skill-section"
+          role="tabpanel"
+          aria-labelledby="skill-profile-tab-weakness"
+          :aria-hidden="activeTab === 'weakness' ? 'false' : 'true'"
+          v-show="activeTab === 'weakness'"
+        >
+          <div class="skill-weak-wrap">
+            <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
+            <div class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]">
+              <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
+              薄弱项提示
+            </div>
+            <div v-if="weakDimensions.length > 0" class="skill-weak-list mt-5">
+              <div v-for="dim in weakDimensions.slice(0, 4)" :key="dim" class="skill-weak-item">
+                <div class="journal-note-label">建议加强</div>
+                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">{{ dim }}</div>
+              </div>
+            </div>
+            <div v-else class="skill-weak-list mt-5">
+              <div class="skill-weak-item">
+                <div class="journal-note-label">当前状态</div>
+                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">暂时没有明显短板</div>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="skill-section">
+        <section
+          id="skill-profile-panel-recommendations"
+          class="tab-panel skill-section"
+          role="tabpanel"
+          aria-labelledby="skill-profile-tab-recommendations"
+          :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
+          v-show="activeTab === 'recommendations'"
+        >
           <div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>
           <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">推荐靶场</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
@@ -259,6 +380,51 @@ const {
   color: var(--journal-muted);
 }
 
+.top-tabs {
+  display: flex;
+  gap: 1.2rem;
+  margin: 0 -0.5rem 1.5rem;
+  padding: 0 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-soft-border) 92%, transparent);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.4rem 0 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
+  outline: none;
+}
+
+.tab-panel {
+  min-width: 0;
+}
+
 .journal-note-label {
   font-size: 0.68rem;
   font-weight: 600;
@@ -340,14 +506,24 @@ const {
   outline-offset: 2px;
 }
 
-.skill-board {
-  border-top: 1px solid var(--journal-divider);
+.skill-overview-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.75rem;
 }
 
-.skill-section + .skill-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--journal-divider);
+.skill-overview-copy {
+  max-width: 42rem;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--journal-muted);
+}
+
+.skill-overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .skill-analysis-stack {
@@ -356,12 +532,6 @@ const {
 
 .skill-dimension-wrap {
   margin-top: 1.25rem;
-}
-
-.skill-weak-wrap {
-  margin-top: 1.75rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--journal-divider);
 }
 
 .skill-recommend-list,

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import SkillProfile from '../SkillProfile.vue'
+import skillProfileSource from '../SkillProfile.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
@@ -92,11 +93,60 @@ describe('SkillProfile', () => {
     expect(wrapper.classes()).toContain('journal-shell')
     expect(wrapper.classes()).toContain('journal-hero')
     expect(wrapper.classes()).toContain('min-h-full')
-    expect(wrapper.text()).toContain('能力画像')
-    expect(wrapper.text()).toContain('查看当前能力维度表现，并根据薄弱项获取推荐靶场。')
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
+    expect(wrapper.find('#skill-profile-tab-analysis').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('.skill-overview-head').exists()).toBe(true)
+    expect(wrapper.find('.skill-overview-head').text()).toContain('能力画像')
+    expect(wrapper.find('.skill-overview-head').text()).toContain('查看当前能力维度表现，并根据薄弱项获取推荐靶场。')
+    expect(wrapper.find('.skill-overview-actions').exists()).toBe(true)
     expect(wrapper.text()).toContain('能力维度分析')
-    expect(wrapper.text()).toContain('薄弱项提示')
-    expect(wrapper.text()).toContain('密码学入门')
     expect(wrapper.find('[data-test="radar-chart"]').exists()).toBe(true)
+
+    await wrapper.get('#skill-profile-tab-weakness').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('#skill-profile-tab-weakness').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-head').exists()).toBe(false)
+    expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(false)
+    expect(wrapper.text()).toContain('薄弱项提示')
+
+    await wrapper.get('#skill-profile-tab-recommendations').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('#skill-profile-tab-recommendations').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-head').exists()).toBe(false)
+    expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-actions').exists()).toBe(false)
+    expect(wrapper.text()).toContain('密码学入门')
+  })
+
+  it('应该将标签栏放在内容区前部，保持与学生仪表盘一致的层级位置', () => {
+    expect(skillProfileSource).toContain('class="top-tabs"')
+    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeGreaterThan(
+      skillProfileSource.indexOf('<div class="journal-eyebrow">Skill Profile</div>')
+    )
+    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+      skillProfileSource.indexOf('<h1 class="journal-page-title')
+    )
+    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+      skillProfileSource.indexOf('class="skill-teacher-panel')
+    )
+    expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
+      skillProfileSource.indexOf('class="skill-board')
+    )
+    expect(skillProfileSource).toMatch(
+      /id="skill-profile-panel-analysis"[\s\S]*class="skill-overview-head"[\s\S]*<h1 class="journal-page-title[\s\S]*<p class="skill-overview-copy[\s\S]*class="skill-overview-actions"/s
+    )
+    expect(skillProfileSource).toContain('class="skill-board px-1 md:px-2"')
+    expect(skillProfileSource).not.toContain('class="skill-board mt-6')
+    expect(skillProfileSource).not.toMatch(/\.skill-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s)
+    expect(skillProfileSource).not.toMatch(
+      /\.skill-section \+ \.skill-section\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+    )
   })
 })
