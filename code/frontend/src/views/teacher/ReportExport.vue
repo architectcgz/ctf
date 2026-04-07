@@ -558,6 +558,8 @@ async function handleDownload(): Promise<void> {
 
 <style scoped>
 .teacher-management-shell {
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
