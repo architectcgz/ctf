@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { ContestDetailData } from '@/api/contracts'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import { getModeLabel, getStatusBadgeClass, getStatusLabel } from '@/utils/contest'
 
 const props = defineProps<{
@@ -35,7 +36,9 @@ function formatTime(value: string): string {
     <div class="overflow-hidden rounded-2xl border border-border">
       <table class="min-w-full divide-y divide-border">
         <thead class="bg-surface-alt/70">
-          <tr class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+          <tr
+            class="text-left text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-muted)]"
+          >
             <th class="px-4 py-3">竞赛</th>
             <th class="px-4 py-3">模式</th>
             <th class="px-4 py-3">状态</th>
@@ -70,7 +73,9 @@ function formatTime(value: string): string {
             </td>
             <td class="px-4 py-4 align-top text-sm text-[var(--color-text-secondary)]">
               <p>{{ formatTime(contest.starts_at) }}</p>
-              <p class="mt-1 text-[var(--color-text-muted)]">至 {{ formatTime(contest.ends_at) }}</p>
+              <p class="mt-1 text-[var(--color-text-muted)]">
+                至 {{ formatTime(contest.ends_at) }}
+              </p>
             </td>
             <td class="px-4 py-4 align-top">
               <div class="flex flex-wrap gap-2">
@@ -95,27 +100,14 @@ function formatTime(value: string): string {
       </table>
     </div>
 
-    <div class="flex flex-col gap-3 text-sm text-[var(--color-text-muted)] sm:flex-row sm:items-center sm:justify-between">
-      <span>共 {{ total }} 场竞赛</span>
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :disabled="page <= 1"
-          @click="emit('changePage', page - 1)"
-        >
-          上一页
-        </button>
-        <span>{{ page }} / {{ totalPages }}</span>
-        <button
-          type="button"
-          class="rounded-xl border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :disabled="page >= totalPages"
-          @click="emit('changePage', page + 1)"
-        >
-          下一页
-        </button>
-      </div>
+    <div class="admin-pagination text-sm text-[var(--color-text-muted)]">
+      <AdminPaginationControls
+        :page="page"
+        :total-pages="totalPages"
+        :total="total"
+        :total-label="`共 ${total} 场竞赛`"
+        @change-page="emit('changePage', $event)"
+      />
     </div>
   </div>
 </template>

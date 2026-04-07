@@ -9,6 +9,7 @@ import type {
   ChallengeDifficulty,
   ChallengeStatus,
 } from '@/api/contracts'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
 import ChallengePackageImportReview from '@/components/admin/challenge/ChallengePackageImportReview.vue'
 import { useAdminChallenges } from '@/composables/useAdminChallenges'
@@ -17,11 +18,27 @@ import { useChallengePackageImport } from '@/composables/useChallengePackageImpo
 type ChallengePanelKey = 'manage' | 'import' | 'queue'
 
 const validPanelKeys = new Set<ChallengePanelKey>(['manage', 'import', 'queue'])
-const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string; tabId: string }> = [
-  { key: 'manage', label: '题目管理', panelId: 'challenge-panel-manage', tabId: 'challenge-tab-manage' },
-  { key: 'import', label: '导入题目包', panelId: 'challenge-panel-import', tabId: 'challenge-tab-import' },
-  { key: 'queue', label: '待确认导入', panelId: 'challenge-panel-queue', tabId: 'challenge-tab-queue' },
-]
+const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string; tabId: string }> =
+  [
+    {
+      key: 'manage',
+      label: '题目管理',
+      panelId: 'challenge-panel-manage',
+      tabId: 'challenge-tab-manage',
+    },
+    {
+      key: 'import',
+      label: '导入题目包',
+      panelId: 'challenge-panel-import',
+      tabId: 'challenge-tab-import',
+    },
+    {
+      key: 'queue',
+      label: '待确认导入',
+      panelId: 'challenge-panel-queue',
+      tabId: 'challenge-tab-queue',
+    },
+  ]
 
 const route = useRoute()
 const router = useRouter()
@@ -170,7 +187,12 @@ function focusTabByIndex(index: number): void {
 }
 
 function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
     return
   }
 
@@ -321,14 +343,19 @@ onMounted(() => {
             </div>
           </header>
 
-          <div v-if="loading" class="workspace-directory-loading flex items-center justify-center py-12">
+          <div
+            v-if="loading"
+            class="workspace-directory-loading flex items-center justify-center py-12"
+          >
             <div
               class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
             />
           </div>
 
           <template v-else>
-            <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">当前还没有题目，请先导入题目包。</div>
+            <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+              当前还没有题目，请先导入题目包。
+            </div>
 
             <div v-else class="challenge-list workspace-directory-list">
               <div class="manage-directory-head" aria-hidden="true">
@@ -388,7 +415,9 @@ onMounted(() => {
                 </div>
 
                 <div class="challenge-row__points">
-                  <span class="admin-inline-chip admin-inline-chip-neutral">{{ row.points }} pts</span>
+                  <span class="admin-inline-chip admin-inline-chip-neutral"
+                    >{{ row.points }} pts</span
+                  >
                 </div>
 
                 <div class="challenge-row__status">
@@ -469,24 +498,13 @@ onMounted(() => {
             </div>
 
             <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-              <span>共 {{ total }} 条</span>
-              <div class="flex items-center gap-2">
-                <button
-                  :disabled="page === 1"
-                  class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-                  @click="void changePage(page - 1)"
-                >
-                  上一页
-                </button>
-                <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-                <button
-                  :disabled="page >= Math.ceil(total / pageSize)"
-                  class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-                  @click="void changePage(page + 1)"
-                >
-                  下一页
-                </button>
-              </div>
+              <AdminPaginationControls
+                :page="page"
+                :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+                :total="total"
+                :total-label="`共 ${total} 条`"
+                @change-page="void changePage($event)"
+              />
             </div>
           </template>
         </section>
@@ -513,7 +531,8 @@ onMounted(() => {
               <h2 class="sample-guide__title">题目包示例</h2>
             </div>
             <p class="sample-guide__copy">
-              导入页只保留上传和预览流程，目录结构与 `challenge.yml` 示例统一放到独立说明页，避免同一份规则重复维护。
+              导入页只保留上传和预览流程，目录结构与 `challenge.yml`
+              示例统一放到独立说明页，避免同一份规则重复维护。
             </p>
           </div>
 
@@ -563,9 +582,7 @@ onMounted(() => {
           />
         </div>
 
-        <div v-else-if="queue.length === 0" class="admin-empty">
-          当前没有待确认的导入任务。
-        </div>
+        <div v-else-if="queue.length === 0" class="admin-empty">当前没有待确认的导入任务。</div>
 
         <div v-else class="queue-list">
           <article v-for="item in queue" :key="item.id" class="queue-row">
@@ -605,7 +622,10 @@ onMounted(() => {
             </div>
 
             <div class="queue-row__actions" role="group" aria-label="导入任务操作">
-              <button class="admin-btn admin-btn-ghost admin-btn-compact" @click="inspectImportTask(item)">
+              <button
+                class="admin-btn admin-btn-ghost admin-btn-compact"
+                @click="inspectImportTask(item)"
+              >
                 继续查看预览
               </button>
             </div>
@@ -629,7 +649,11 @@ onMounted(() => {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -807,14 +831,8 @@ onMounted(() => {
 }
 
 .challenge-list {
-  --challenge-list-columns:
-    minmax(16rem, 1.7fr)
-    minmax(6.5rem, 0.68fr)
-    minmax(6.5rem, 0.68fr)
-    minmax(5.6rem, 0.58fr)
-    minmax(7rem, 0.72fr)
-    minmax(7rem, 0.76fr)
-    minmax(9.5rem, 9.5rem);
+  --challenge-list-columns: minmax(16rem, 1.7fr) minmax(6.5rem, 0.68fr) minmax(6.5rem, 0.68fr)
+    minmax(5.6rem, 0.58fr) minmax(7rem, 0.72fr) minmax(7rem, 0.76fr) minmax(9.5rem, 9.5rem);
   display: grid;
   gap: 0;
 }
@@ -949,12 +967,11 @@ onMounted(() => {
   padding: 0.6rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
   border-radius: 0.9rem;
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
   box-shadow: 0 16px 32px var(--color-shadow-soft);
 }
 
@@ -1159,14 +1176,8 @@ onMounted(() => {
   }
 
   .challenge-list {
-    --challenge-list-columns:
-      minmax(13rem, 1.45fr)
-      minmax(5.4rem, 0.6fr)
-      minmax(5.4rem, 0.6fr)
-      minmax(5rem, 0.54fr)
-      minmax(6.2rem, 0.66fr)
-      minmax(6.2rem, 0.7fr)
-      minmax(8.6rem, 8.6rem);
+    --challenge-list-columns: minmax(13rem, 1.45fr) minmax(5.4rem, 0.6fr) minmax(5.4rem, 0.6fr)
+      minmax(5rem, 0.54fr) minmax(6.2rem, 0.66fr) minmax(6.2rem, 0.7fr) minmax(8.6rem, 8.6rem);
   }
 
   .queue-row {

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin'
 import type { AuditLogItem } from '@/api/contracts'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 
 const route = useRoute()
@@ -270,28 +271,13 @@ onMounted(() => {
       </div>
 
       <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
-        <span>共 {{ total }} 条记录</span>
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            :disabled="page === 1"
-            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-            @click="changePage(page - 1)"
-          >
-            上一页
-          </button>
-          <span class="text-sm text-[var(--color-text-secondary)]"
-            >{{ page }} / {{ totalPages }}</span
-          >
-          <button
-            type="button"
-            :disabled="page >= totalPages"
-            class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-            @click="changePage(page + 1)"
-          >
-            下一页
-          </button>
-        </div>
+        <AdminPaginationControls
+          :page="page"
+          :total-pages="totalPages"
+          :total="total"
+          :total-label="`共 ${total} 条记录`"
+          @change-page="void changePage($event)"
+        />
       </div>
     </section>
   </section>
