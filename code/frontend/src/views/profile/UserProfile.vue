@@ -135,8 +135,8 @@ onUnmounted(() => {
       <header class="profile-header">
         <div class="profile-header__intro">
           <div class="journal-eyebrow">Profile</div>
-          <h1 class="profile-page-title">个人资料</h1>
-          <p class="profile-page-copy">{{ pageCopy }}</p>
+          <h1 class="workspace-page-title">个人资料</h1>
+          <p class="workspace-page-copy">{{ pageCopy }}</p>
 
           <div class="profile-header__actions">
             <div class="profile-pill">
@@ -364,22 +364,6 @@ onUnmounted(() => {
 .profile-header {
   display: grid;
   gap: 1rem;
-}
-
-.profile-page-title {
-  margin-top: 0.85rem;
-  font-size: clamp(2rem, 2.7vw, 2.8rem);
-  font-weight: 700;
-  line-height: 1.08;
-  color: var(--journal-ink);
-}
-
-.profile-page-copy {
-  margin-top: 0.8rem;
-  max-width: 48rem;
-  font-size: 0.94rem;
-  line-height: 1.75;
-  color: var(--journal-muted);
 }
 
 .profile-header__actions {

@@ -679,12 +679,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .hero-title {
-  margin: 12px 0 0;
   max-width: 11ch;
-  font-size: clamp(32px, 4vw, 48px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
 }
 
 .hero-summary {

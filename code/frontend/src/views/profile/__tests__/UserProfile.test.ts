@@ -93,6 +93,8 @@ describe('UserProfile', () => {
     expect(wrapper.classes()).toContain('min-h-full')
     expect(wrapper.text()).toContain('个人资料')
     expect(wrapper.text()).toContain('查看账号信息、个人报告与最近导出状态。')
+    expect(wrapper.get('h1').classes()).toContain('workspace-page-title')
+    expect(wrapper.find('.workspace-page-copy').exists()).toBe(true)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('生成个人报告')
@@ -146,6 +148,8 @@ describe('UserProfile', () => {
 
     expect(wrapper.text()).toContain('个人资料')
     expect(wrapper.text()).toContain('查看账号信息与当前账号状态。')
+    expect(wrapper.get('h1').classes()).toContain('workspace-page-title')
+    expect(wrapper.find('.workspace-page-copy').exists()).toBe(true)
     expect(wrapper.text()).toContain('Admin')
     expect(wrapper.text()).not.toContain('报告状态')
     expect(wrapper.text()).not.toContain('最近生成')

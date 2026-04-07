@@ -184,14 +184,6 @@ extensions:
   padding-top: 1.5rem;
 }
 
-.hero-title {
-  margin: 0.7rem 0 0;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .hero-summary {
   margin: 0.9rem 0 0;
   color: var(--journal-muted);

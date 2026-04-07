@@ -249,20 +249,8 @@ function supportsRealtime(status: ContestStatus): boolean {
   color: var(--journal-accent);
 }
 
-.scoreboard-title {
-  margin-top: 0.85rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .scoreboard-subtitle {
-  margin-top: 12px;
   max-width: 760px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .scoreboard-summary {
@@ -553,9 +541,4 @@ function supportsRealtime(status: ContestStatus): boolean {
   }
 }
 
-@media (max-width: 640px) {
-  .scoreboard-title {
-    font-size: 34px;
-  }
-}
 </style>

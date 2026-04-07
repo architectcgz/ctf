@@ -236,20 +236,8 @@ const {
   color: var(--journal-accent);
 }
 
-.instance-title {
-  margin-top: 0.85rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .instance-subtitle {
-  margin-top: 12px;
   max-width: 720px;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .instance-summary {
@@ -535,9 +523,4 @@ const {
   }
 }
 
-@media (max-width: 640px) {
-  .instance-title {
-    font-size: 34px;
-  }
-}
 </style>

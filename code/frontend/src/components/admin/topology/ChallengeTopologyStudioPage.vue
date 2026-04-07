@@ -2105,20 +2105,8 @@ const {
   color: var(--journal-accent);
 }
 
-.topology-page--template-library .topology-hero-title {
-  margin-top: 0.75rem;
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  color: var(--journal-ink);
-}
-
 .topology-page--template-library .topology-hero-description {
-  margin-top: 0.8rem;
   max-width: 46rem;
-  font-size: 0.92rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .topology-page--template-library .topology-summary-grid {

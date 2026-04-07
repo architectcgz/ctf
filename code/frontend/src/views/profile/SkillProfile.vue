@@ -361,13 +361,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   overflow: hidden;
 }
 
-.journal-page-title {
-  font-size: clamp(32px, 4vw, 46px);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-  font-weight: 600;
-}
-
 .journal-eyebrow {
   font-size: 0.72rem;
   font-weight: 700;

@@ -105,8 +105,8 @@ async function submitPasswordChange(): Promise<void> {
     <header class="security-header">
       <div class="security-header__intro">
         <div class="journal-eyebrow">Security</div>
-        <h1 class="security-page-title">安全设置</h1>
-        <p class="security-page-copy">更新账号密码并检查当前安全策略。</p>
+        <h1 class="workspace-page-title">安全设置</h1>
+        <p class="workspace-page-copy">更新账号密码并检查当前安全策略。</p>
 
         <div class="security-header__actions">
           <div class="security-pill">
@@ -284,22 +284,6 @@ async function submitPasswordChange(): Promise<void> {
 .security-header {
   display: grid;
   gap: 1rem;
-}
-
-.security-page-title {
-  margin-top: 0.85rem;
-  font-size: clamp(2rem, 2.7vw, 2.8rem);
-  font-weight: 700;
-  line-height: 1.08;
-  color: var(--journal-ink);
-}
-
-.security-page-copy {
-  margin-top: 0.8rem;
-  max-width: 46rem;
-  font-size: 0.94rem;
-  line-height: 1.75;
-  color: var(--journal-muted);
 }
 
 .security-header__actions {
