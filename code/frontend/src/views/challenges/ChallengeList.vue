@@ -754,26 +754,6 @@ onMounted(() => {
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.challenge-btn:hover,
-.challenge-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.challenge-btn-primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.challenge-btn-primary:hover,
-.challenge-btn-primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
 .challenge-btn-ghost {
   background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }

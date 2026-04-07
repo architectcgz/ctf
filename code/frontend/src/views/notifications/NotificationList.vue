@@ -399,12 +399,6 @@ async function handlePublishSuccess(): Promise<void> {
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.notification-btn-primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
 @keyframes notificationSpin {
   from {
     transform: rotate(0deg);
