@@ -113,14 +113,14 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/student/skill-profile'),
       },
       {
-        path: 'student/profile',
+        path: 'profile',
         name: 'Profile',
         component: () => import('@/views/profile/UserProfile.vue'),
         meta: { requiresAuth: true, title: '个人资料', icon: 'User', contentLayout: 'bleed' },
       },
       {
-        path: 'profile',
-        redirect: redirectWithQuery('/student/profile'),
+        path: 'student/profile',
+        redirect: redirectWithQuery('/profile'),
       },
       {
         path: 'student/settings/security',
