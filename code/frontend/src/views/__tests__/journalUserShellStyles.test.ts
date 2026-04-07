@@ -17,6 +17,10 @@ const journalUserShellSource = readFileSync(
   `${process.cwd()}/src/assets/styles/journal-user-shell.css`,
   'utf-8'
 )
+const surfaceShellBackgroundSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/surface-shell-background.css`,
+  'utf-8'
+)
 
 function extractScopedStyle(source: string): string {
   const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
@@ -29,7 +33,7 @@ describe('journal user shell shared styles', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user.journal-hero')
     expect(journalUserShellSource).toContain('--journal-shell-accent')
     expect(journalUserShellSource).toContain("[data-theme='dark'] .journal-shell.journal-shell-user")
-    expect(journalUserShellSource).toContain(
+    expect(surfaceShellBackgroundSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
     )
   })

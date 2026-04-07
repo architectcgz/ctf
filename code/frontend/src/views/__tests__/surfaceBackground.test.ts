@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 import categoryProgressSource from '../../components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import difficultyPageSource from '../../components/dashboard/student/StudentDifficultyPage.vue?raw'
@@ -8,15 +10,29 @@ import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
 import userProfileSource from '../profile/UserProfile.vue?raw'
 
-const tokenizedHeroBackgroundPattern =
-  /background:\s*radial-gradient\(circle at top right, [\s\S]*linear-gradient\(180deg,\s*color-mix\(in srgb, var\(--journal-surface(?:, var\(--color-bg-surface\))?\) 96%, var\(--color-bg-base\)\),\s*color-mix\(in srgb, var\(--journal-surface-subtle(?:, var\(--color-bg-elevated\))?\) 94%, var\(--color-bg-base\)\)\);/s
+const surfaceShellBackgroundSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/surface-shell-background.css`,
+  'utf-8'
+)
 
 describe('member-facing page surfaces', () => {
-  it('should use tokenized hero backgrounds that follow the active theme palette', () => {
-    const sources = [
-      userProfileSource,
-      securitySettingsSource,
-      notificationListSource,
+  it('should centralize tokenized hero background formula in shared surface stylesheet', () => {
+    expect(surfaceShellBackgroundSource).toContain('.journal-shell.journal-shell-user.journal-hero')
+    expect(surfaceShellBackgroundSource).toContain('.journal-soft-surface .journal-shell.journal-hero')
+    expect(surfaceShellBackgroundSource).toContain(
+      "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
+    )
+    expect(surfaceShellBackgroundSource).toContain(
+      "[data-theme='dark'] .journal-soft-surface .journal-shell.journal-hero"
+    )
+    expect(surfaceShellBackgroundSource).toMatch(
+      /background:\s*radial-gradient\([\s\S]*linear-gradient\(180deg,\s*var\(--surface-shell-top\),\s*var\(--surface-shell-end\)\);/s
+    )
+  })
+
+  it('member pages should consume shared hero shell classes instead of duplicating formula', () => {
+    const userShellSources = [userProfileSource, securitySettingsSource, notificationListSource]
+    const softSurfaceSources = [
       recommendationPageSource,
       categoryProgressSource,
       difficultyPageSource,
@@ -24,8 +40,13 @@ describe('member-facing page surfaces', () => {
       overviewPageSource,
     ]
 
-    for (const source of sources) {
-      expect(source).toMatch(tokenizedHeroBackgroundPattern)
+    for (const source of userShellSources) {
+      expect(source).toContain('journal-shell-user')
+      expect(source).toContain('journal-hero')
+    }
+
+    for (const source of softSurfaceSources) {
+      expect(source).toContain('journal-hero')
     }
   })
 })

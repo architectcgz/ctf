@@ -1972,17 +1972,9 @@ watch(
 }
 
 :global([data-theme='dark']) .workspace-shell {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--brand) 14%, transparent),
-      transparent 24rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-shell) 97%, var(--color-bg-base)),
-      var(--bg-shell)
-    );
+  --workspace-shell-radial-strength: 14%;
+  --workspace-shell-radial-size: 24rem;
+  --workspace-shell-top-strength: 97%;
 }
 
 :global([data-theme='dark']) .challenge-input,
