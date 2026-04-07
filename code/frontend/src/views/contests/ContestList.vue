@@ -112,7 +112,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="contest-page">
       <header class="contest-topbar">
@@ -188,7 +188,10 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         >
           <div class="contest-row-main">
             <div class="contest-row-status-strip">
-              <span class="contest-chip" :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }">
+              <span
+                class="contest-chip"
+                :style="{ '--contest-chip-color': 'var(--contest-row-accent)' }"
+              >
                 {{ getStatusLabel(contest.status) }}
               </span>
               <span class="contest-chip contest-chip-muted">{{ getModeLabel(contest.mode) }}</span>
@@ -204,7 +207,10 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
           </div>
 
           <div class="contest-row-state">
-            <span class="contest-state-chip" :style="{ '--contest-state-color': 'var(--contest-row-accent)' }">
+            <span
+              class="contest-state-chip"
+              :style="{ '--contest-state-color': 'var(--contest-row-accent)' }"
+            >
               {{ getStatusLabel(contest.status) }}
             </span>
           </div>
@@ -227,22 +233,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
+  --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
 }
 
 .contest-page {
@@ -259,14 +250,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   gap: 24px;
   padding-bottom: 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .contest-subtitle {
@@ -414,7 +397,8 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 .contest-row:hover,
 .contest-row:focus-visible {
   background: color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 64%, transparent);
+  box-shadow: inset 2px 0 0
+    color-mix(in srgb, var(--contest-row-accent, var(--journal-accent)) 64%, transparent);
   outline: none;
 }
 
@@ -430,8 +414,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-row-title {
   margin-top: 10px;
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -463,7 +446,11 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 }
 
 .contest-state-chip {
-  background: color-mix(in srgb, var(--contest-state-color, var(--journal-accent)) 12%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--contest-state-color, var(--journal-accent)) 12%,
+    transparent
+  );
   color: var(--contest-state-color, var(--journal-accent));
 }
 
@@ -535,5 +522,4 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

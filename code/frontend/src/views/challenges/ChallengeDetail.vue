@@ -1,23 +1,13 @@
 <template>
   <section class="journal-shell journal-hero workspace-shell min-h-full">
-    <div
-      v-if="loading"
-      class="flex items-center justify-center py-12"
-    >
+    <div v-if="loading" class="flex items-center justify-center py-12">
       <div
         class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
       />
     </div>
 
-    <div
-      v-else-if="challenge"
-      class="detail-content"
-    >
-      <div
-        class="workspace-tabbar top-tabs"
-        role="tablist"
-        aria-label="题目页面主切换"
-      >
+    <div v-else-if="challenge" class="detail-content">
+      <div class="workspace-tabbar top-tabs" role="tablist" aria-label="题目页面主切换">
         <button
           v-for="tab in workspaceTabs"
           :id="`challenge-workspace-tab-${tab.id}`"
@@ -50,9 +40,7 @@
           >
             <div class="question-hero">
               <div>
-                <div class="overline">
-                  Question
-                </div>
+                <div class="overline">Question</div>
                 <h1 class="question-title">
                   {{ challenge.title }}
                 </h1>
@@ -69,35 +57,17 @@
                   >
                     {{ getDifficultyLabel(challenge.difficulty) }}
                   </span>
-                  <span
-                    v-if="challenge?.is_solved"
-                    class="meta-pill"
-                  >
-                    已解出
-                  </span>
-                  <span
-                    v-if="challenge.attachment_url"
-                    class="meta-pill"
-                  >
-                    附件可下载
-                  </span>
-                  <span
-                    v-for="tag in challenge.tags"
-                    :key="tag"
-                    class="meta-pill"
-                  >
+                  <span v-if="challenge?.is_solved" class="meta-pill"> 已解出 </span>
+                  <span v-if="challenge.attachment_url" class="meta-pill"> 附件可下载 </span>
+                  <span v-for="tag in challenge.tags" :key="tag" class="meta-pill">
                     {{ tag }}
                   </span>
                 </div>
               </div>
 
               <aside class="score-rail">
-                <div class="score-label">
-                  分值
-                </div>
-                <div class="score-value">
-                  {{ challenge.points }} <small>pts</small>
-                </div>
+                <div class="score-label">分值</div>
+                <div class="score-value">{{ challenge.points }} <small>pts</small></div>
                 <div class="score-note">
                   {{ challenge.attachment_url ? '当前题目包含附件。' : '当前题目无附件。' }}
                 </div>
@@ -107,12 +77,8 @@
             <section class="section">
               <div class="section-head">
                 <div>
-                  <div class="overline">
-                    Statement
-                  </div>
-                  <h2 class="section-title">
-                    题目描述
-                  </h2>
+                  <div class="overline">Statement</div>
+                  <h2 class="section-title">题目描述</h2>
                 </div>
                 <button
                   v-if="challenge.attachment_url"
@@ -130,29 +96,16 @@
               />
             </section>
 
-            <section
-              v-if="challenge.hints.length > 0"
-              class="section"
-            >
+            <section v-if="challenge.hints.length > 0" class="section">
               <div class="section-head">
                 <div>
-                  <div class="overline">
-                    Hints
-                  </div>
-                  <h2 class="section-title">
-                    提示
-                  </h2>
+                  <div class="overline">Hints</div>
+                  <h2 class="section-title">提示</h2>
                 </div>
-                <div class="section-hint">
-                  共 {{ challenge.hints.length }} 条
-                </div>
+                <div class="section-hint">共 {{ challenge.hints.length }} 条</div>
               </div>
               <div class="hint-list">
-                <div
-                  v-for="hint in challenge.hints"
-                  :key="hint.id"
-                  class="hint-line"
-                >
+                <div v-for="hint in challenge.hints" :key="hint.id" class="hint-line">
                   <div>
                     <div class="hint-label">
                       提示 {{ hint.level }}{{ hint.title ? ` · ${hint.title}` : '' }}
@@ -189,12 +142,8 @@
             <section class="section section--flat">
               <div class="section-head">
                 <div>
-                  <div class="overline">
-                    Solutions
-                  </div>
-                  <h2 class="section-title">
-                    题解区
-                  </h2>
+                  <div class="overline">Solutions</div>
+                  <h2 class="section-title">题解区</h2>
                 </div>
                 <div class="section-hint">
                   推荐 {{ recommendedSolutions.length }} · 社区 {{ communitySolutions.length }}
@@ -202,118 +151,107 @@
               </div>
 
               <div class="space-y-5">
-              <div
-                v-if="!challenge?.is_solved"
-                class="inline-note inline-note--warning"
-              >
-                解出题目后可查看推荐题解与社区题解。
-              </div>
+                <div v-if="!challenge?.is_solved" class="inline-note inline-note--warning">
+                  解出题目后可查看推荐题解与社区题解。
+                </div>
 
-              <template v-else>
-                <div
-                  class="solution-layout"
-                >
-                  <div class="solution-nav">
-                    <div
-                      class="solution-tabbar sub-tabs"
-                      role="tablist"
-                      aria-label="题解分类"
-                    >
+                <template v-else>
+                  <div class="solution-layout">
+                    <div class="solution-nav">
+                      <div class="solution-tabbar sub-tabs" role="tablist" aria-label="题解分类">
+                        <button
+                          id="challenge-solutions-tab-recommended"
+                          type="button"
+                          role="tab"
+                          class="solution-tab sub-tab"
+                          :class="{ 'solution-tab--active': activeSolutionTab === 'recommended' }"
+                          :aria-selected="activeSolutionTab === 'recommended'"
+                          aria-controls="challenge-solutions-panel-recommended"
+                          :tabindex="activeSolutionTab === 'recommended' ? 0 : -1"
+                          @click="activeSolutionTab = 'recommended'"
+                          @keydown="handleSolutionTabKeydown($event, 'recommended')"
+                        >
+                          推荐题解
+                        </button>
+                        <button
+                          id="challenge-solutions-tab-community"
+                          type="button"
+                          role="tab"
+                          class="solution-tab sub-tab"
+                          :class="{ 'solution-tab--active': activeSolutionTab === 'community' }"
+                          :aria-selected="activeSolutionTab === 'community'"
+                          aria-controls="challenge-solutions-panel-community"
+                          :tabindex="activeSolutionTab === 'community' ? 0 : -1"
+                          @click="activeSolutionTab = 'community'"
+                          @keydown="handleSolutionTabKeydown($event, 'community')"
+                        >
+                          社区题解
+                        </button>
+                      </div>
+
+                      <div v-if="displayedSolutionCards.length === 0" class="inline-note">
+                        {{
+                          activeSolutionTab === 'recommended'
+                            ? '还没有推荐题解。'
+                            : '还没有公开的社区题解。'
+                        }}
+                      </div>
+
                       <button
-                        id="challenge-solutions-tab-recommended"
+                        v-for="item in displayedSolutionCards"
+                        :key="item.id"
                         type="button"
-                        role="tab"
-                        class="solution-tab sub-tab"
-                        :class="{ 'solution-tab--active': activeSolutionTab === 'recommended' }"
-                        :aria-selected="activeSolutionTab === 'recommended'"
-                        aria-controls="challenge-solutions-panel-recommended"
-                        :tabindex="activeSolutionTab === 'recommended' ? 0 : -1"
-                        @click="activeSolutionTab = 'recommended'"
-                        @keydown="handleSolutionTabKeydown($event, 'recommended')"
+                        class="solution-list-item solution-item"
+                        :class="{
+                          'solution-list-item--active active': item.id === activeSolution?.id,
+                        }"
+                        @click="selectedSolutionId = item.id"
                       >
-                        推荐题解
-                      </button>
-                      <button
-                        id="challenge-solutions-tab-community"
-                        type="button"
-                        role="tab"
-                        class="solution-tab sub-tab"
-                        :class="{ 'solution-tab--active': activeSolutionTab === 'community' }"
-                        :aria-selected="activeSolutionTab === 'community'"
-                        aria-controls="challenge-solutions-panel-community"
-                        :tabindex="activeSolutionTab === 'community' ? 0 : -1"
-                        @click="activeSolutionTab = 'community'"
-                        @keydown="handleSolutionTabKeydown($event, 'community')"
-                      >
-                        社区题解
+                        <strong>{{ item.title }}</strong>
+                        <span>{{ item.authorName }} · {{ formatWriteupTime(item.updatedAt) }}</span>
                       </button>
                     </div>
 
-                    <div
-                      v-if="displayedSolutionCards.length === 0"
-                      class="inline-note"
+                    <article
+                      :id="`challenge-solutions-panel-${activeSolutionTab}`"
+                      class="solution-preview"
+                      role="tabpanel"
+                      :aria-labelledby="`challenge-solutions-tab-${activeSolutionTab}`"
                     >
-                      {{ activeSolutionTab === 'recommended' ? '还没有推荐题解。' : '还没有公开的社区题解。' }}
-                    </div>
-
-                    <button
-                      v-for="item in displayedSolutionCards"
-                      :key="item.id"
-                      type="button"
-                      class="solution-list-item solution-item"
-                      :class="{ 'solution-list-item--active active': item.id === activeSolution?.id }"
-                      @click="selectedSolutionId = item.id"
-                    >
-                      <strong>{{ item.title }}</strong>
-                      <span>{{ item.authorName }} · {{ formatWriteupTime(item.updatedAt) }}</span>
-                    </button>
-                  </div>
-
-                  <article
-                    :id="`challenge-solutions-panel-${activeSolutionTab}`"
-                    class="solution-preview"
-                    role="tabpanel"
-                    :aria-labelledby="`challenge-solutions-tab-${activeSolutionTab}`"
-                  >
-                    <template v-if="activeSolution">
-                      <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
-                            {{ activeSolution.title }}
-                          </h3>
-                          <div class="mt-2 text-sm text-[var(--journal-muted)]">
-                            {{ activeSolution.authorName }} · {{ activeSolution.sourceLabel }}
+                      <template v-if="activeSolution">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <h3 class="text-lg font-semibold text-[var(--journal-ink)]">
+                              {{ activeSolution.title }}
+                            </h3>
+                            <div class="mt-2 text-sm text-[var(--journal-muted)]">
+                              {{ activeSolution.authorName }} · {{ activeSolution.sourceLabel }}
+                            </div>
+                          </div>
+                          <div class="flex flex-wrap gap-2">
+                            <span
+                              v-if="activeSolution.badge"
+                              class="writeup-status-pill"
+                              :class="activeSolution.badgeClass"
+                            >
+                              {{ activeSolution.badge }}
+                            </span>
+                            <span class="writeup-status-pill writeup-status-pill--muted">
+                              {{ formatWriteupTime(activeSolution.updatedAt) }}
+                            </span>
                           </div>
                         </div>
-                        <div class="flex flex-wrap gap-2">
-                          <span
-                            v-if="activeSolution.badge"
-                            class="writeup-status-pill"
-                            :class="activeSolution.badgeClass"
-                          >
-                            {{ activeSolution.badge }}
-                          </span>
-                          <span class="writeup-status-pill writeup-status-pill--muted">
-                            {{ formatWriteupTime(activeSolution.updatedAt) }}
-                          </span>
-                        </div>
-                      </div>
-                      <!-- eslint-disable-next-line vue/no-v-html -->
-                      <div
-                        class="prose challenge-prose solution-preview__content mt-6 max-w-none"
-                        v-html="sanitizedActiveSolutionContent"
-                      />
-                    </template>
+                        <!-- eslint-disable-next-line vue/no-v-html -->
+                        <div
+                          class="prose challenge-prose solution-preview__content mt-6 max-w-none"
+                          v-html="sanitizedActiveSolutionContent"
+                        />
+                      </template>
 
-                    <div
-                      v-else
-                      class="inline-note"
-                    >
-                      当前分组还没有可展示的题解。
-                    </div>
-                  </article>
-                </div>
-              </template>
+                      <div v-else class="inline-note">当前分组还没有可展示的题解。</div>
+                    </article>
+                  </div>
+                </template>
               </div>
             </section>
           </section>
@@ -328,48 +266,36 @@
             <section class="section section--flat">
               <div class="section-head">
                 <div>
-                  <div class="overline">
-                    Submissions
-                  </div>
-                  <h2 class="section-title">
-                    提交记录
-                  </h2>
+                  <div class="overline">Submissions</div>
+                  <h2 class="section-title">提交记录</h2>
                 </div>
-                <div class="section-hint">
-                  最近提交
-                </div>
+                <div class="section-hint">最近提交</div>
               </div>
 
-            <div
-              v-if="submissionRecords.length === 0"
-              class="inline-note"
-            >
-              还没有提交记录。你在右侧提交 Flag 后，新的提交结果会出现在这里。
-            </div>
+              <div v-if="submissionRecords.length === 0" class="inline-note">
+                还没有提交记录。你在右侧提交 Flag 后，新的提交结果会出现在这里。
+              </div>
 
-            <div
-              v-else
-              class="submission-records record-list"
-            >
-              <div
-                v-for="item in submissionRecords"
-                :key="item.id"
-                class="submission-record-item record-item"
-              >
-                <div class="submission-record-time record-time">
-                  {{ formatSubmissionTime(item.submittedAt) }}
-                </div>
-                <div class="submission-record-answer record-answer">
-                  {{ item.answer }}
-                </div>
+              <div v-else class="submission-records record-list">
                 <div
-                  class="submission-record-status status-chip"
-                  :class="`submission-record-status--${item.status}`"
+                  v-for="item in submissionRecords"
+                  :key="item.id"
+                  class="submission-record-item record-item"
                 >
-                  {{ submissionStatusText(item.status) }}
+                  <div class="submission-record-time record-time">
+                    {{ formatSubmissionTime(item.submittedAt) }}
+                  </div>
+                  <div class="submission-record-answer record-answer">
+                    {{ item.answer }}
+                  </div>
+                  <div
+                    class="submission-record-status status-chip"
+                    :class="`submission-record-status--${item.status}`"
+                  >
+                    {{ submissionStatusText(item.status) }}
+                  </div>
                 </div>
               </div>
-            </div>
             </section>
           </section>
 
@@ -383,12 +309,8 @@
             <section class="section section--flat">
               <div class="section-head">
                 <div>
-                  <div class="overline">
-                    My Writeup
-                  </div>
-                  <h2 class="section-title">
-                    我的复盘
-                  </h2>
+                  <div class="overline">My Writeup</div>
+                  <h2 class="section-title">我的复盘</h2>
                 </div>
                 <div class="section-hint">
                   解题过程复盘 · {{ challenge?.is_solved ? '可发布到社区' : '仅可保存草稿' }}
@@ -399,7 +321,7 @@
                 v-if="myWriteup?.visibility_status === 'hidden'"
                 class="inline-note inline-note--warning"
               >
-              当前题解已被教师或管理员隐藏，仅你自己可见。
+                当前题解已被教师或管理员隐藏，仅你自己可见。
               </div>
 
               <div class="meta-strip meta-strip--compact">
@@ -413,7 +335,10 @@
                   已隐藏
                 </span>
                 <span
-                  v-else-if="myWriteup?.submission_status === 'published' || myWriteup?.submission_status === 'submitted'"
+                  v-else-if="
+                    myWriteup?.submission_status === 'published' ||
+                    myWriteup?.submission_status === 'submitted'
+                  "
                   class="writeup-status-pill writeup-status-pill--success"
                 >
                   社区可见
@@ -436,7 +361,7 @@
                     maxlength="256"
                     placeholder="例如：从回显异常到拿到 flag 的完整链路"
                     class="challenge-input"
-                  >
+                  />
                 </div>
 
                 <div class="field">
@@ -471,7 +396,9 @@
                     </button>
                     <button
                       type="button"
-                      :disabled="submissionLoading || submissionSaving !== null || !challenge?.is_solved"
+                      :disabled="
+                        submissionLoading || submissionSaving !== null || !challenge?.is_solved
+                      "
                       class="primary-action disabled:cursor-not-allowed disabled:opacity-50"
                       @click="saveWriteup('published')"
                     >
@@ -484,22 +411,13 @@
           </section>
         </main>
 
-        <aside
-          v-if="activeWorkspaceTab === 'question'"
-          class="detail-aside tool-pane"
-        >
+        <aside v-if="activeWorkspaceTab === 'question'" class="detail-aside tool-pane">
           <div class="tool-pane-inner">
             <section class="tool-group">
               <div>
-                <div class="overline">
-                  Primary Action
-                </div>
-                <h2 class="tool-title">
-                  Flag 提交
-                </h2>
-                <p class="tool-copy">
-                  输入当前题目的 Flag 并提交验证。
-                </p>
+                <div class="overline">Primary Action</div>
+                <h2 class="tool-title">Flag 提交</h2>
+                <p class="tool-copy">输入当前题目的 Flag 并提交验证。</p>
               </div>
               <span
                 v-if="challenge?.is_solved"
@@ -508,12 +426,7 @@
                 已通过
               </span>
               <div class="flag-field">
-                <label
-                  for="challenge-flag-input"
-                  class="flag-label"
-                >
-                  Flag
-                </label>
+                <label for="challenge-flag-input" class="flag-label"> Flag </label>
                 <div class="flag-row">
                   <input
                     id="challenge-flag-input"
@@ -525,7 +438,7 @@
                     class="challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
                     :class="submitInputClass"
                     @keyup.enter="submitFlagHandler"
-                  >
+                  />
                   <button
                     type="button"
                     :disabled="challenge?.is_solved || submitting"
@@ -732,7 +645,9 @@ const communitySolutionCards = computed<SolutionCard[]>(() =>
 )
 
 const displayedSolutionCards = computed(() =>
-  activeSolutionTab.value === 'recommended' ? recommendedSolutionCards.value : communitySolutionCards.value
+  activeSolutionTab.value === 'recommended'
+    ? recommendedSolutionCards.value
+    : communitySolutionCards.value
 )
 
 const activeSolution = computed(() => {
@@ -743,7 +658,9 @@ const activeSolution = computed(() => {
   )
 })
 
-const sanitizedActiveSolutionContent = computed(() => renderRichContent(activeSolution.value?.content))
+const sanitizedActiveSolutionContent = computed(() =>
+  renderRichContent(activeSolution.value?.content)
+)
 
 const submitPlaceholder = computed(() => {
   if (challenge.value?.is_solved) return '该题已通过'
@@ -885,7 +802,8 @@ function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: SolutionTab)
   if (event.key === 'ArrowRight') {
     activeSolutionTab.value = solutionTabs[(currentIndex + 1) % solutionTabs.length]
   } else if (event.key === 'ArrowLeft') {
-    activeSolutionTab.value = solutionTabs[(currentIndex - 1 + solutionTabs.length) % solutionTabs.length]
+    activeSolutionTab.value =
+      solutionTabs[(currentIndex - 1 + solutionTabs.length) % solutionTabs.length]
   } else if (event.key === 'Home') {
     activeSolutionTab.value = solutionTabs[0]
   } else if (event.key === 'End') {
@@ -1037,7 +955,10 @@ function submissionStatusText(status: SubmissionRecordItem['status']): string {
 
 function visibilityStatusLabel(status?: SubmissionWriteupVisibilityStatus): string {
   if (status === 'hidden') return '已隐藏'
-  if (myWriteup.value?.submission_status === 'published' || myWriteup.value?.submission_status === 'submitted') {
+  if (
+    myWriteup.value?.submission_status === 'published' ||
+    myWriteup.value?.submission_status === 'submitted'
+  ) {
     return '已公开'
   }
   return '未发布'
@@ -1123,9 +1044,17 @@ watch(
 watch(
   [recommendedSolutionCards, communitySolutionCards],
   ([recommended, community]) => {
-    if (activeSolutionTab.value === 'recommended' && recommended.length === 0 && community.length > 0) {
+    if (
+      activeSolutionTab.value === 'recommended' &&
+      recommended.length === 0 &&
+      community.length > 0
+    ) {
       activeSolutionTab.value = 'community'
-    } else if (activeSolutionTab.value === 'community' && community.length === 0 && recommended.length > 0) {
+    } else if (
+      activeSolutionTab.value === 'community' &&
+      community.length === 0 &&
+      recommended.length > 0
+    ) {
       activeSolutionTab.value = 'recommended'
     }
   },
@@ -1222,10 +1151,9 @@ watch(
   --radius-xl: 28px;
   --radius-lg: 18px;
   --font-sans:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', sans-serif;
-  --font-mono:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   --journal-ink: var(--text-main);
   --journal-muted: var(--text-subtle);
   --journal-faint: var(--text-faint);
@@ -1256,22 +1184,33 @@ watch(
   --challenge-tone-medium: var(--challenge-tone-crypto);
   --challenge-tone-hard: var(--challenge-tone-pwn);
   --challenge-tone-insane: var(--challenge-tone-reverse);
+  --page-top-tabs-gap: 28px;
+  --page-top-tabs-margin: 10px 0 0;
+  --page-top-tabs-padding: 0 28px;
+  --page-top-tabs-border: var(--line-soft);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-font-size: 15px;
+  --page-top-tab-font-weight: 600;
+  --page-top-tab-color: var(--text-faint);
+  --page-top-tab-active-color: var(--brand-ink);
+  --page-top-tab-active-border: var(--brand);
 }
 
 .workspace-shell {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
+  --workspace-shell-border: var(--journal-line-soft);
+  --workspace-shell-page: var(--bg-page);
+  --workspace-shell-bg: var(--bg-shell);
+  --workspace-brand: var(--brand);
+  --workspace-brand-ink: var(--brand-ink);
+  --workspace-brand-soft: var(--brand-soft);
+  --workspace-faint: var(--text-faint);
+  --workspace-shadow-shell: var(--journal-shadow);
+  --workspace-radius-xl: var(--radius-xl);
+  --workspace-font-sans: var(--font-sans);
   min-height: max(100%, calc(100vh - 5rem));
-  overflow: clip;
-  border: 1px solid var(--journal-line-soft);
-  border-radius: var(--radius-xl);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--brand) 7%, transparent), transparent 24rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-shell) 96%, white), var(--bg-shell));
-  box-shadow: var(--journal-shadow);
+  flex: 1 1 auto;
   color: var(--text-main);
-  font-family: var(--font-sans);
 }
 
 .workspace-shell,
@@ -1299,14 +1238,6 @@ watch(
   min-height: 0;
 }
 
-.workspace-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 22px 28px 0;
-}
-
 .overline {
   display: inline-block;
   border: 0 !important;
@@ -1330,37 +1261,9 @@ watch(
   color: var(--text-faint);
 }
 
-.top-tabs,
-.workspace-tabbar {
-  display: flex;
-  gap: 28px;
-  margin-top: 10px;
-  padding: 0 28px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--line-soft);
-  scrollbar-width: none;
-}
-
 .top-tabs::-webkit-scrollbar,
-.workspace-tabbar::-webkit-scrollbar,
 .sub-tabs::-webkit-scrollbar {
   display: none;
-}
-
-.top-tab,
-.workspace-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  padding: 10px 0 13px;
-  font: 600 15px/1 var(--font-sans);
-  font-weight: 600;
-  white-space: nowrap;
-  color: var(--text-faint);
 }
 
 .workspace-tab--active,
@@ -1403,8 +1306,11 @@ watch(
   min-height: 0;
   padding: 28px;
   border-left: 1px solid var(--line-soft);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-panel) 95%, white), color-mix(in srgb, var(--bg-shell) 92%, white));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-panel) 95%, white),
+    color-mix(in srgb, var(--bg-shell) 92%, white)
+  );
 }
 
 .tool-pane-inner {
@@ -2067,8 +1973,16 @@ watch(
 
 :global([data-theme='dark']) .workspace-shell {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--brand) 14%, transparent), transparent 24rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--bg-shell) 97%, var(--color-bg-base)), var(--bg-shell));
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--brand) 14%, transparent),
+      transparent 24rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg-shell) 97%, var(--color-bg-base)),
+      var(--bg-shell)
+    );
 }
 
 :global([data-theme='dark']) .challenge-input,

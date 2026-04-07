@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
@@ -8,19 +10,28 @@ import instanceManagementSource from '@/components/teacher/instance-management/T
 import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
+const teacherSurfaceSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/teacher-surface.css`,
+  'utf-8'
+)
+
 const teacherSurfacePattern =
   /--journal-ink:\s*var\(--color-text-primary\);[\s\S]*--journal-surface:\s*color-mix\(in srgb, var\(--color-bg-surface\) 88%, var\(--color-bg-base\)\);/s
 
 const forbiddenTeacherSurfaceLiterals = ['rgba(255, 255, 255, 0.98)', '#ffffff', '#f8fafc']
 
 const teacherSurfaceSources = [
-  ['ClassManagementPage.vue', classManagementSource],
+  ['teacher-surface.css', teacherSurfaceSource],
   ['ClassStudentsPage.vue', classStudentsSource],
   ['StudentAnalysisPage.vue', studentAnalysisSource],
+  ['TeacherStudentReviewArchive.vue', reviewArchiveSource],
+] as const
+
+const teacherManagementSources = [
+  ['ClassManagementPage.vue', classManagementSource],
   ['StudentManagementPage.vue', studentManagementSource],
   ['TeacherInstanceManagementPage.vue', instanceManagementSource],
   ['ReportExport.vue', reportExportSource],
-  ['TeacherStudentReviewArchive.vue', reviewArchiveSource],
 ] as const
 
 const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sourceName, source]) =>
@@ -30,6 +41,11 @@ const teacherSurfaceForbiddenLiteralCases = teacherSurfaceSources.flatMap(([sour
 describe('teacher surface source regression', () => {
   it.each(teacherSurfaceSources)('%s 应命中教师端 surface 主题模式', (_name, source) => {
     expect(teacherSurfacePattern.test(source)).toBe(true)
+  })
+
+  it.each(teacherManagementSources)('%s 应通过共享 teacher-management-shell 承接教师端 surface token', (_name, source) => {
+    expect(source).toContain('teacher-management-shell')
+    expect(source).not.toContain('--journal-ink: var(--color-text-primary);')
   })
 
   it.each(teacherSurfaceForbiddenLiteralCases)(

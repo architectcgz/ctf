@@ -285,12 +285,7 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
@@ -307,22 +302,10 @@ onMounted(() => {
   --journal-note-value-weight: 700;
   --journal-note-helper-margin-top: 0.45rem;
   --journal-note-helper-line-height: 1.55;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 10%, transparent),
-      transparent 16rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  --journal-shell-hero-radial-strength: 10%;
+  --journal-shell-hero-radial-size: 16rem;
+  --journal-shell-hero-top-strength: 97%;
+  --journal-shell-hero-end-strength: 95%;
 }
 
 .admin-overview {

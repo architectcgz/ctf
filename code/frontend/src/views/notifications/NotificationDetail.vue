@@ -101,7 +101,9 @@ watch(
 
 <template>
   <div class="notification-detail-shell">
-    <section class="journal-shell journal-hero notification-workspace min-h-full">
+    <section
+      class="journal-shell journal-shell-user journal-hero notification-workspace min-h-full rounded-[30px] border"
+    >
       <section v-if="loading && !notification" class="notification-detail-loading">
         <div class="notification-detail-spinner" />
         <span>正在加载通知详情...</span>
@@ -227,28 +229,24 @@ watch(
 </template>
 
 <style scoped>
-.journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-}
-
-.journal-hero {
-  border: 1px solid var(--journal-border);
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
-}
-
 .notification-detail-shell {
+  --journal-shell-accent: var(--color-primary);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 76%,
+    var(--color-bg-base)
+  );
+  --journal-shell-hero-radial-strength: 8%;
+  --journal-shell-hero-radial-size: 18rem;
+  --journal-shell-hero-top-strength: 97%;
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 95%,
+    var(--color-bg-base)
+  );
+  --journal-shell-hero-shadow: none;
   width: 100%;
   min-width: 0;
   flex: 1 1 auto;

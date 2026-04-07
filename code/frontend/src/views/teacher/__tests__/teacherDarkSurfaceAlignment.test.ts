@@ -1,10 +1,16 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
-import teacherSurfaceSource from '@/assets/styles/teacher-surface.css?raw'
+
+const teacherSurfaceSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/teacher-surface.css`,
+  'utf-8'
+)
 
 const teacherDirectoryPattern =
   /teacher-directory-head[\s\S]*teacher-directory-row[\s\S]*(teacher-directory-row-main|teacher-directory-cell)[\s\S]*teacher-directory-row-tags/s
@@ -69,10 +75,9 @@ describe('teacher dark surface alignment', () => {
     expect(studentManagementSource).not.toContain('teacher-kpi-card--primary')
     expect(studentManagementSource).not.toContain('teacher-kpi-card--success')
     expect(studentManagementSource).not.toContain('teacher-kpi-card--warning')
-    expect(instanceManagementSource).toContain('--teacher-card-border:')
-    expect(instanceManagementSource).toMatch(
-      /\.teacher-hero\s*\{[\s\S]*border-color:\s*var\(--teacher-card-border\);/s
-    )
+    expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-hero')
+    expect(instanceManagementSource).toContain('--teacher-management-hero-border: var(--teacher-card-border);')
+    expect(instanceManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
   })
 
   it('report export should not keep page-local teacher token duplication or bright hardcoded surfaces', () => {

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
+import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
 import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -20,6 +21,7 @@ describe('page tabs shared styles', () => {
   it('使用共享页签轨道的页面应改为注入变量，而不是继续本地重写整套样式', () => {
     for (const source of [
       classManagementSource,
+      challengeDetailSource,
       skillProfileSource,
       userGovernanceSource,
       challengeManageSource,

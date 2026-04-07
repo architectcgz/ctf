@@ -233,7 +233,11 @@ watch(
 .teacher-panel {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
-  --panel-border: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
+  --panel-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 74%,
+    transparent
+  );
   --panel-surface: var(--journal-surface, var(--color-bg-surface));
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
@@ -247,20 +251,6 @@ watch(
 
 .teacher-panel__header {
   margin-bottom: 1rem;
-}
-
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--panel-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--panel-accent) 10%, transparent);
-  padding: 0.2rem 0.72rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--panel-accent-strong);
 }
 
 .teacher-panel__title {

@@ -25,7 +25,9 @@ const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 const currentRole = computed(() => profile.value?.role ?? authStore.user?.role)
 const canManagePersonalReport = computed(() => currentRole.value !== 'admin')
 const pageCopy = computed(() =>
-  canManagePersonalReport.value ? '查看账号信息、个人报告与最近导出状态。' : '查看账号信息与当前账号状态。'
+  canManagePersonalReport.value
+    ? '查看账号信息、个人报告与最近导出状态。'
+    : '查看账号信息与当前账号状态。'
 )
 
 const profileFields = computed(() => {
@@ -113,7 +115,7 @@ onUnmounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div v-if="error" class="profile-inline-notice">
       {{ error }}
@@ -291,7 +293,9 @@ onUnmounted(() => {
               <div class="profile-report-meta__item">
                 <div class="journal-note-label">有效期</div>
                 <div class="profile-report-meta__value">
-                  {{ latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回' }}
+                  {{
+                    latestReport.expires_at ? formatDate(latestReport.expires_at) : '待完成后返回'
+                  }}
                 </div>
               </div>
             </div>
@@ -318,47 +322,20 @@ onUnmounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  --journal-shell-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-shell-accent: var(--color-primary);
+  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-hero-radial-strength: 8%;
+  --journal-shell-hero-radial-size: 18rem;
+  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --journal-shell-hero-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
 }
 
 .profile-loading {
   display: grid;
   gap: 1rem;
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-eyebrow-soft {
-  color: var(--journal-muted);
-}
-
-.journal-note-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
 }
 
 .profile-header {

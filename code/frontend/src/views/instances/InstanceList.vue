@@ -28,14 +28,16 @@ const {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="instance-page">
       <header class="instance-topbar">
         <div class="instance-heading">
           <div class="journal-eyebrow">Instances</div>
           <h1 class="instance-title">我的实例</h1>
-          <p class="instance-subtitle">管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。</p>
+          <p class="instance-subtitle">
+            管理运行中与等待创建中的靶机实例，查看状态并执行延时或销毁。
+          </p>
         </div>
       </header>
 
@@ -63,10 +65,7 @@ const {
         <div class="instance-loading-spinner" />
       </div>
 
-      <div
-        v-else-if="instances.length === 0"
-        class="instance-empty"
-      >
+      <div v-else-if="instances.length === 0" class="instance-empty">
         <div class="instance-empty-title">暂无运行中或等待创建的实例</div>
         <router-link to="/challenges" class="instance-empty-link">前往靶场列表创建实例</router-link>
       </div>
@@ -87,7 +86,9 @@ const {
 
         <article v-for="instance in instances" :key="instance.id" class="instance-row">
           <div class="instance-row-main">
-            <h2 class="instance-row-title" :title="instance.challenge_title">{{ instance.challenge_title }}</h2>
+            <h2 class="instance-row-title" :title="instance.challenge_title">
+              {{ instance.challenge_title }}
+            </h2>
             <div class="instance-row-tags">
               <span class="instance-chip instance-chip-category">{{ instance.category }}</span>
               <span class="instance-chip instance-chip-difficulty">{{ instance.difficulty }}</span>
@@ -115,7 +116,9 @@ const {
                   @click="
                     copyAddress(
                       instance.access_url ||
-                        (instance.ssh_info ? `${instance.ssh_info.host}:${instance.ssh_info.port}` : '')
+                        (instance.ssh_info
+                          ? `${instance.ssh_info.host}:${instance.ssh_info.port}`
+                          : '')
                     )
                   "
                 >
@@ -148,9 +151,7 @@ const {
               v-if="instance.status === 'running'"
               class="instance-row-mono"
               :class="
-                instance.remaining < WARNING_THRESHOLD_SECONDS
-                  ? 'instance-row-mono-warning'
-                  : ''
+                instance.remaining < WARNING_THRESHOLD_SECONDS ? 'instance-row-mono-warning' : ''
               "
             >
               {{ formatRemainingTime(instance.remaining) }}
@@ -198,22 +199,7 @@ const {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
+  --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
 }
 
 .instance-page {
@@ -226,14 +212,6 @@ const {
 .instance-topbar {
   padding-bottom: 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .instance-subtitle {
@@ -361,8 +339,7 @@ const {
 }
 
 .instance-row-title {
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -408,8 +385,7 @@ const {
 }
 
 .instance-row-mono {
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   color: var(--journal-ink);
 }
 
@@ -522,5 +498,4 @@ const {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

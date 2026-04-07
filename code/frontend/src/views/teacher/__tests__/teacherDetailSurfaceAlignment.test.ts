@@ -34,7 +34,7 @@ describe('teacher detail surface alignment', () => {
 
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
-    expect(studentAnalysisSource).toContain('class="workspace-shell"')
+    expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
     expect(studentAnalysisSource).toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="top-tabs"')
     expect(studentAnalysisSource).toMatch(
@@ -62,13 +62,13 @@ describe('teacher detail surface alignment', () => {
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
     expect(classTrendPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
     expect(classInsightsPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
     expect(classReviewPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')

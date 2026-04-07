@@ -64,7 +64,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="scoreboard-page">
       <header class="scoreboard-topbar">
@@ -163,10 +163,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
             <div class="scoreboard-card-divider" />
 
-            <div
-              v-if="section.error"
-              class="scoreboard-inline-note scoreboard-inline-note-danger"
-            >
+            <div v-if="section.error" class="scoreboard-inline-note scoreboard-inline-note-danger">
               该竞赛排行榜加载失败，请稍后重试
             </div>
 
@@ -211,22 +208,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
+  --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
 }
 
 .scoreboard-page {
@@ -239,14 +221,6 @@ function supportsRealtime(status: ContestStatus): boolean {
 .scoreboard-topbar {
   padding-bottom: 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .scoreboard-subtitle {
@@ -401,8 +375,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .scoreboard-card-title {
   margin-top: 10px;
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -502,8 +475,7 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .sb-cell--rank,
 .sb-cell--mono {
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .sb-cell--muted {
@@ -540,5 +512,4 @@ function supportsRealtime(status: ContestStatus): boolean {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

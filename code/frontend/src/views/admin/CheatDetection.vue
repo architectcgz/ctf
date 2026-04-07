@@ -359,12 +359,6 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
   --journal-topbar-padding-bottom: 0.85rem;
@@ -380,24 +374,7 @@ onMounted(() => {
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-divider-border: 1px dashed var(--cheat-divider);
-}
-
-.journal-hero,
-.journal-panel {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-    );
-  border-radius: 16px !important;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  --journal-shell-dark-accent: #60a5fa;
 }
 
 .journal-brief {
@@ -467,30 +444,6 @@ onMounted(() => {
   justify-content: space-between;
   gap: 0.75rem;
   text-align: left;
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero,
-:global([data-theme='dark']) .journal-panel {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 16%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
 }
 
 @media (min-width: 1280px) {

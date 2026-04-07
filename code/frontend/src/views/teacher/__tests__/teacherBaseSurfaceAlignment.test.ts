@@ -18,11 +18,14 @@ describe('teacher base surface alignment', () => {
     expect(teacherSurfaceSource).toMatch(
       /\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s
     )
+    expect(teacherSurfaceSource).toContain('.teacher-management-shell {')
+    expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-hero')
+    expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-summary')
 
-    expect(classManagementSource).toContain('--teacher-card-border:')
-    expect(classManagementSource).toContain('--teacher-control-border:')
-    expect(classManagementSource).toContain('--teacher-divider:')
+    expect(classManagementSource).toContain('teacher-management-shell')
     expect(classManagementSource).not.toContain('.teacher-btn {')
+    expect(classManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(classManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(classManagementSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -30,10 +33,10 @@ describe('teacher base surface alignment', () => {
       /\.teacher-tip-block\s*\{[\s\S]*border-top:\s*1px dashed var\(--teacher-divider\);/s
     )
 
-    expect(studentManagementSource).toContain('--teacher-card-border:')
-    expect(studentManagementSource).toContain('--teacher-control-border:')
-    expect(studentManagementSource).toContain('--teacher-divider:')
+    expect(studentManagementSource).toContain('teacher-management-shell')
     expect(studentManagementSource).not.toContain('.teacher-btn {')
+    expect(studentManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(studentManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(studentManagementSource).toMatch(
       /\.teacher-hero-divider\s*\{[\s\S]*border-top:\s*1px dashed var\(--teacher-divider\);/s
     )
@@ -51,10 +54,11 @@ describe('teacher base surface alignment', () => {
       /\.teacher-tip-block\s*\{[\s\S]*border-top:\s*1px dashed var\(--teacher-divider\);/s
     )
 
-    expect(instanceManagementSource).toContain('--teacher-card-border:')
-    expect(instanceManagementSource).toContain('--teacher-control-border:')
-    expect(instanceManagementSource).toContain('--teacher-divider:')
+    expect(instanceManagementSource).toContain('teacher-management-shell')
     expect(instanceManagementSource).not.toContain('.teacher-btn {')
+    expect(instanceManagementSource).toContain('--teacher-management-hero-border: var(--teacher-card-border);')
+    expect(instanceManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(instanceManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(instanceManagementSource).toMatch(
       /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -66,6 +70,8 @@ describe('teacher base surface alignment', () => {
   it('report export should soften page header, cards, divider, and dialog borders', () => {
     expect(reportExportSource).toContain('--report-card-border:')
     expect(reportExportSource).toContain('--report-divider:')
+    expect(reportExportSource).not.toMatch(/^\.report-hero\s*\{/m)
+    expect(reportExportSource).not.toMatch(/^\.report-summary\s*\{/m)
     expect(reportExportSource).toMatch(
       /:deep\(\.page-header\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
     )

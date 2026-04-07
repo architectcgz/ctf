@@ -121,7 +121,9 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
 
 <template>
   <div class="contest-page-shell" :style="contestAccentStyle">
-    <section class="journal-shell journal-hero contest-detail-view min-h-full">
+    <section
+      class="journal-shell journal-shell-user journal-hero contest-detail-view min-h-full rounded-[30px] border"
+    >
       <div v-if="loading" class="contest-loading">
         <div class="contest-loading__spinner" />
         <div class="contest-loading__text">正在同步竞赛详情...</div>
@@ -579,32 +581,24 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
 <style scoped>
 .contest-page-shell {
   --contest-accent: var(--color-primary);
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --journal-shell-accent: var(--contest-accent);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --journal-shell-hero-radial-strength: 10%;
+  --journal-shell-hero-radial-size: 18rem;
+  --journal-shell-hero-top-strength: 97%;
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 95%,
+    var(--color-bg-base)
+  );
+  --journal-shell-hero-shadow: none;
   flex: 1 1 auto;
 }
 
 .journal-shell {
   padding: 1.5rem;
-}
-
-.journal-hero {
-  border: 1px solid var(--journal-border);
-  border-radius: 30px;
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--contest-accent) 10%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
 }
 
 .contest-loading,
