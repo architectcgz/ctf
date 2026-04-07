@@ -242,6 +242,73 @@ describe('ContestManage', () => {
     })
   })
 
+  it('应该将主窗口、赛事列表与 AWD 运维视图拆分为顶部标签页', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'registering',
+          starts_at: '2026-03-15T09:00:00.000Z',
+          ends_at: '2026-03-15T13:00:00.000Z',
+        },
+        {
+          id: '2',
+          title: '2026 AWD 联赛',
+          description: '攻防赛',
+          mode: 'awd',
+          status: 'running',
+          starts_at: '2026-03-18T09:00:00.000Z',
+          ends_at: '2026-03-18T18:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.get('#contest-tab-overview').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('false')
+    expect(wrapper.get('#contest-tab-operations').attributes('aria-selected')).toBe('false')
+    expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('#contest-panel-operations').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('#contest-panel-overview').text()).toContain('赛事编排台')
+    expect(wrapper.get('#contest-panel-overview').find('select').exists()).toBe(false)
+    expect(wrapper.get('#contest-panel-overview').text()).not.toContain('选择 AWD 赛事')
+
+    await wrapper.get('#contest-tab-list').trigger('click')
+
+    expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('状态筛选')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('当前筛选结果')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('2026 AWD 联赛')
+    expect(wrapper.get('#contest-panel-list').text()).not.toContain('选择 AWD 赛事')
+
+    await wrapper.get('#contest-tab-operations').trigger('click')
+
+    expect(wrapper.get('#contest-tab-operations').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-panel-operations').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.get('#contest-panel-operations').text()).toContain('选择 AWD 赛事')
+    expect(wrapper.get('#contest-panel-operations').text()).not.toContain('状态筛选')
+    expect(wrapper.get('#contest-panel-operations').text()).not.toContain('赛事编排台')
+  })
+
   it('应该在空列表时展示显式空态', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [],

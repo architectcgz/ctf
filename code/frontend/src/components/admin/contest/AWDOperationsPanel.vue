@@ -185,6 +185,7 @@ async function handleResetTrafficFilters() {
         :disabled="contests.length === 0"
         @change="updateSelectedContestId(($event.target as HTMLSelectElement).value)"
       >
+        <option v-if="contests.length === 0" value="" disabled>暂无 AWD 赛事</option>
         <option v-for="contest in contests" :key="contest.id" :value="contest.id">
           {{ contest.title }}
         </option>
@@ -198,8 +199,15 @@ async function handleResetTrafficFilters() {
       icon="Flag"
     />
 
+    <AppEmpty
+      v-else-if="!selectedContest"
+      title="暂无 AWD 赛事"
+      description="当前没有可用的 AWD 赛事选择，请先返回赛事列表确认筛选结果。"
+      icon="Flag"
+    />
+
     <AWDRoundInspector
-      v-else-if="selectedContest"
+      v-else
       :contest="selectedContest"
       :rounds="rounds"
       :selected-round-id="selectedRoundId"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { CalendarClock, RefreshCw, Trophy, UserPlus } from 'lucide-vue-next'
+import { computed, nextTick, ref } from 'vue'
+import { Trophy } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -33,193 +33,332 @@ const emit = defineEmits<{
   'update:selectedAwdContestId': [value: string]
 }>()
 
+const panelTabs = [
+  {
+    key: 'overview',
+    label: '主窗口',
+    tabId: 'contest-tab-overview',
+    panelId: 'contest-panel-overview',
+  },
+  {
+    key: 'list',
+    label: '赛事列表',
+    tabId: 'contest-tab-list',
+    panelId: 'contest-panel-list',
+  },
+  {
+    key: 'operations',
+    label: 'AWD 运维视图',
+    tabId: 'contest-tab-operations',
+    panelId: 'contest-panel-operations',
+  },
+] as const
+
+type ContestPanelKey = (typeof panelTabs)[number]['key']
+
+const activePanel = ref<ContestPanelKey>('overview')
+const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
+
 const registeringCount = computed(
   () => props.list.filter((item) => item.status === 'registering').length
 )
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
 const awdCount = computed(() => props.awdContests.length)
+const listCount = computed(() => props.list.length)
+
+function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
+  tabButtonRefs.value[index] = element
+}
+
+function selectPanel(panelKey: ContestPanelKey): void {
+  activePanel.value = panelKey
+}
+
+function focusTabByIndex(index: number): void {
+  nextTick(() => {
+    tabButtonRefs.value[index]?.focus()
+  })
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    selectPanel(panelTabs[0].key)
+    focusTabByIndex(0)
+    return
+  }
+
+  if (event.key === 'End') {
+    const endIndex = panelTabs.length - 1
+    selectPanel(panelTabs[endIndex].key)
+    focusTabByIndex(endIndex)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
+  selectPanel(panelTabs[nextIndex].key)
+  focusTabByIndex(nextIndex)
+}
 </script>
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero journal-eyebrow-text workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <div>
-        <div class="journal-eyebrow">Contest Orchestration</div>
-        <h1
-          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          赛事编排台
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          在这里查看赛事窗口、状态流转和 AWD 运维入口。
-        </p>
-
-        <div class="mt-6 flex flex-wrap gap-3">
-          <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-            <RefreshCw class="h-4 w-4" />
-            刷新列表
-          </button>
-          <button
-            type="button"
-            class="admin-btn admin-btn-primary"
-            @click="emit('openCreateDialog')"
-          >
-            <UserPlus class="h-4 w-4" />
-            创建竞赛
-          </button>
-        </div>
+    <header class="workspace-topbar">
+      <div class="topbar-leading">
+        <span class="workspace-overline">Contest Workspace</span>
+        <span class="class-chip">赛事管理</span>
       </div>
-
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-          <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
-          当前赛事概况
-        </div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
-            <div class="journal-note-label">赛事总量</div>
-            <div class="journal-note-value">{{ total }}</div>
-            <div class="journal-note-helper">当前筛选条件下的赛事总数</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">报名中</div>
-            <div class="journal-note-value">{{ registeringCount }}</div>
-            <div class="journal-note-helper">当前页开放报名的赛事</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">进行中</div>
-            <div class="journal-note-value">{{ runningCount }}</div>
-            <div class="journal-note-helper">当前页正在进行的赛事</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">AWD</div>
-            <div class="journal-note-value">{{ awdCount }}</div>
-            <div class="journal-note-helper">当前页可直接进入运维视图</div>
-          </div>
-        </div>
-      </article>
-    </div>
-    <div class="journal-divider mt-6" />
-
-    <div class="admin-section-head admin-section-head-intro">
-      <div>
-        <div class="journal-note-label">Status Window</div>
-        <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">状态窗口</h2>
+      <div class="top-note">
+        <span>当前页 {{ listCount }} 场</span>
+        <span>进行中 {{ runningCount }} 场</span>
+        <span>AWD {{ awdCount }} 场</span>
       </div>
-      <div class="admin-pill">
-        <CalendarClock class="h-4 w-4" />
-        {{ statusFilter === 'all' ? '全部状态' : statusFilter }}
-      </div>
-    </div>
+    </header>
 
-    <div class="mt-5 grid gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
-      <label class="space-y-2">
-        <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
-        <select
-          :value="statusFilter"
-          class="admin-input"
-          @change="
-            emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)
-          "
-        >
-          <option value="all">全部状态</option>
-          <option value="draft">草稿</option>
-          <option value="registering">报名中</option>
-          <option value="running">进行中</option>
-          <option value="frozen">已冻结</option>
-          <option value="ended">已结束</option>
-        </select>
-      </label>
-
-      <div class="grid gap-3 md:grid-cols-3">
-        <div class="journal-note">
-          <div class="journal-note-label">列表状态</div>
-          <div class="journal-note-helper">创建、编辑和分页都在当前主卡片内完成。</div>
-        </div>
-        <div class="journal-note">
-          <div class="journal-note-label">时间窗口</div>
-          <div class="journal-note-helper">筛选后直接判断哪些比赛需要调整。</div>
-        </div>
-        <div class="journal-note">
-          <div class="journal-note-label">AWD 入口</div>
-          <div class="journal-note-helper">有 AWD 赛事时会在下方直接展开运维视图。</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="journal-divider mt-6" />
-
-    <section class="space-y-4">
-      <div class="admin-section-head">
-        <div>
-          <div class="journal-note-label">Contests</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">赛事列表</h2>
-        </div>
-      </div>
-
-      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
-        <AppLoading>正在同步竞赛列表...</AppLoading>
-      </div>
-
-      <AppEmpty
-        v-else-if="list.length === 0"
-        class="contest-empty-state"
-        title="暂无竞赛"
-        description="当前筛选条件下没有竞赛数据。"
-        icon="Trophy"
+    <nav class="top-tabs" role="tablist" aria-label="赛事管理视图切换">
+      <button
+        v-for="(tab, index) in panelTabs"
+        :id="tab.tabId"
+        :key="tab.key"
+        :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+        type="button"
+        role="tab"
+        class="top-tab"
+        :class="{ active: activePanel === tab.key }"
+        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        :tabindex="activePanel === tab.key ? 0 : -1"
+        @click="selectPanel(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
       >
-        <template #action>
-          <button
-            type="button"
-            class="admin-btn admin-btn-primary"
-            @click="emit('openCreateDialog')"
+        {{ tab.label }}
+      </button>
+    </nav>
+
+    <main class="content-pane">
+      <section
+        id="contest-panel-overview"
+        class="tab-panel contest-panel"
+        :class="{ active: activePanel === 'overview' }"
+        role="tabpanel"
+        aria-labelledby="contest-tab-overview"
+        :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
+      >
+        <header class="panel-head panel-head--overview">
+          <div class="panel-copy">
+            <div class="journal-eyebrow">Contest Orchestration</div>
+            <h1 class="hero-title">赛事编排台</h1>
+            <p class="admin-page-copy">在这里查看赛事窗口、状态筛选和 AWD 运维入口。</p>
+          </div>
+
+          <article class="journal-brief panel-brief rounded-[24px] border px-5 py-5">
+            <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+              <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
+              当前赛事概况
+            </div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              <div class="journal-note">
+                <div class="journal-note-label">赛事总量</div>
+                <div class="journal-note-value">{{ total }}</div>
+                <div class="journal-note-helper">当前筛选条件下的赛事总数</div>
+              </div>
+              <div class="journal-note">
+                <div class="journal-note-label">报名中</div>
+                <div class="journal-note-value">{{ registeringCount }}</div>
+                <div class="journal-note-helper">当前页开放报名的赛事</div>
+              </div>
+              <div class="journal-note">
+                <div class="journal-note-label">进行中</div>
+                <div class="journal-note-value">{{ runningCount }}</div>
+                <div class="journal-note-helper">当前页正在进行的赛事</div>
+              </div>
+              <div class="journal-note">
+                <div class="journal-note-label">AWD</div>
+                <div class="journal-note-value">{{ awdCount }}</div>
+                <div class="journal-note-helper">当前页可直接切换到攻防运维视图</div>
+              </div>
+            </div>
+          </article>
+        </header>
+
+      </section>
+
+      <section
+        id="contest-panel-list"
+        class="tab-panel contest-panel"
+        :class="{ active: activePanel === 'list' }"
+        role="tabpanel"
+        aria-labelledby="contest-tab-list"
+        :aria-hidden="activePanel === 'list' ? 'false' : 'true'"
+      >
+        <section class="contest-list-filters">
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
+            <select
+              :value="statusFilter"
+              class="admin-input"
+              @change="
+                emit(
+                  'updateStatusFilter',
+                  ($event.target as HTMLSelectElement).value as StatusFilter
+                )
+              "
+            >
+              <option value="all">全部状态</option>
+              <option value="draft">草稿</option>
+              <option value="registering">报名中</option>
+              <option value="running">进行中</option>
+              <option value="frozen">已冻结</option>
+              <option value="ended">已结束</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="workspace-directory-section contest-list-panel">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Contests</div>
+              <h3 class="list-heading__title">当前筛选结果</h3>
+            </div>
+          </header>
+
+          <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+            <AppLoading>正在同步竞赛列表...</AppLoading>
+          </div>
+
+          <AppEmpty
+            v-else-if="list.length === 0"
+            class="contest-empty-state"
+            title="暂无竞赛"
+            description="当前筛选条件下没有竞赛数据。"
+            icon="Trophy"
           >
-            创建第一场竞赛
-          </button>
-        </template>
-      </AppEmpty>
+            <template #action>
+              <button
+                type="button"
+                class="admin-btn admin-btn-primary"
+                @click="emit('openCreateDialog')"
+              >
+                创建第一场竞赛
+              </button>
+            </template>
+          </AppEmpty>
 
-      <AdminContestTable
-        v-else
-        :contests="list"
-        :page="page"
-        :page-size="pageSize"
-        :total="total"
-        @edit="emit('openEditDialog', $event)"
-        @export="emit('exportContest', $event)"
-        @change-page="emit('changePage', $event)"
-      />
-    </section>
+          <AdminContestTable
+            v-else
+            :contests="list"
+            :page="page"
+            :page-size="pageSize"
+            :total="total"
+            @edit="emit('openEditDialog', $event)"
+            @export="emit('exportContest', $event)"
+            @change-page="emit('changePage', $event)"
+          />
+        </section>
+      </section>
 
-    <div class="journal-divider mt-6" />
-
-    <section class="space-y-4">
-      <div class="admin-section-head">
-        <div>
-          <div class="journal-note-label">AWD Operations</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">AWD 运维视图</h2>
-        </div>
-      </div>
-
-      <AWDOperationsPanel
-        :contests="awdContests"
-        :selected-contest-id="selectedAwdContestId"
-        @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
-      />
-    </section>
+      <section
+        id="contest-panel-operations"
+        class="tab-panel contest-panel"
+        :class="{ active: activePanel === 'operations' }"
+        role="tabpanel"
+        aria-labelledby="contest-tab-operations"
+        :aria-hidden="activePanel === 'operations' ? 'false' : 'true'"
+      >
+        <AWDOperationsPanel
+          :contests="awdContests"
+          :selected-contest-id="selectedAwdContestId"
+          @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
+        />
+      </section>
+    </main>
   </section>
 </template>
 
 <style scoped>
 .journal-shell {
+  --workspace-shell-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --workspace-shell-bg: var(--journal-surface);
+  --workspace-shell-shadow: 0 22px 50px var(--color-shadow-soft);
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --workspace-faint: var(--journal-muted);
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
-  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
+  --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
+}
+
+.content-pane {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contest-panel {
+  gap: 1rem;
+}
+
+.workspace-shell .tab-panel.contest-panel {
+  display: none;
+}
+
+.workspace-shell .tab-panel.contest-panel.active {
+  display: grid;
+  gap: 1rem;
+}
+
+.contest-list-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel-head {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.panel-head--overview {
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  align-items: start;
+}
+
+.panel-copy {
+  max-width: 42rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.panel-title {
+  margin: 0.35rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.panel-copy > p {
+  max-width: 48rem;
+}
+
+.panel-copy > p {
+  margin-top: 0.85rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.contest-list-filters {
+  display: grid;
+  max-width: 20rem;
+  gap: 0.75rem;
 }
 
 .journal-brief {
@@ -268,17 +407,18 @@ const awdCount = computed(() => props.awdContests.length)
   color: var(--journal-accent);
 }
 
-.admin-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 16%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
-  padding: 0.48rem 0.9rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--journal-accent);
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.8rem;
+}
+
+.list-heading__title {
+  margin: 0.3rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .admin-btn {
@@ -348,9 +488,13 @@ const awdCount = computed(() => props.awdContests.length)
 }
 
 @media (max-width: 767px) {
-  .journal-hero {
-    padding-left: 1rem;
-    padding-right: 1rem;
+  .content-pane {
+    gap: 1.25rem;
+    padding: 1.25rem 1rem 1.5rem;
+  }
+
+  .panel-head--overview {
+    grid-template-columns: 1fr;
   }
 }
 </style>
