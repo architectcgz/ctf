@@ -1,8 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { createMemoryHistory, createRouter } from 'vue-router'
+import { createPinia, setActivePinia } from 'pinia'
 
 import sidebarSource from '../Sidebar.vue?raw'
+import Sidebar from '../Sidebar.vue'
+import { useAuthStore } from '@/stores/auth'
 
 describe('Sidebar desktop layout', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
   it('stretches the desktop nav to align its bottom edge with the content area', () => {
     expect(sidebarSource).toMatch(
       /<aside\s+class="[^"]*sidebar-shell-desktop[^"]*min-h-screen[^"]*self-stretch[^"]*"/s
@@ -18,5 +27,50 @@ describe('Sidebar desktop layout', () => {
     expect(sidebarSource).toContain('sidebar-group-title--collapsed')
     expect(sidebarSource).toContain('.sidebar-item-active::before,')
     expect(sidebarSource).toContain('.sidebar-item-button--collapsed::before')
+  })
+
+  it('uses a role-neutral profile url when admin opens the profile page from sidebar', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/profile', component: { template: '<div>profile</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        name: 'Admin',
+      },
+      'token'
+    )
+
+    await router.push('/admin/dashboard')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const profileButton = wrapper.findAll('.sidebar-shell-desktop button').find((node) => node.text().includes('个人资料'))
+
+    expect(profileButton).toBeTruthy()
+
+    await profileButton!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/profile')
+
+    wrapper.unmount()
   })
 })
