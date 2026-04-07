@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { computed, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  FileUp,
-  RefreshCw,
-  UserPlus,
-  UsersRound,
-  UserRoundCheck,
-} from 'lucide-vue-next'
+import { FileUp, RefreshCw, UserPlus, UsersRound, UserRoundCheck } from 'lucide-vue-next'
 
 import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/contracts'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import type { UserRole } from '@/utils/constants'
@@ -77,7 +72,9 @@ const activePanel = computed<UserPanelKey>(() => {
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
 const activeCount = computed(() => props.list.filter((item) => item.status === 'active').length)
-const teacherCount = computed(() => props.list.filter((item) => item.roles.includes('teacher')).length)
+const teacherCount = computed(
+  () => props.list.filter((item) => item.roles.includes('teacher')).length
+)
 const importSummary = computed(() => {
   if (!props.importResult) return '暂无导入记录'
   return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
@@ -210,7 +207,9 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
     >
       <template v-if="activePanel === 'overview'">
-        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+        <h1
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+        >
           用户治理台
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
@@ -267,7 +266,11 @@ function handleImportChange(event: Event): void {
             <RefreshCw class="h-4 w-4" />
             刷新列表
           </button>
-          <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+          <button
+            type="button"
+            class="admin-btn admin-btn-primary"
+            @click="emit('openCreateDialog')"
+          >
             <UserPlus class="h-4 w-4" />
             创建用户
           </button>
@@ -293,7 +296,10 @@ function handleImportChange(event: Event): void {
               :value="roleFilter"
               class="admin-input"
               @change="
-                emit('updateRoleFilter', ($event.target as HTMLSelectElement).value as UserFilterRole)
+                emit(
+                  'updateRoleFilter',
+                  ($event.target as HTMLSelectElement).value as UserFilterRole
+                )
               "
             >
               <option value="all">全部角色</option>
@@ -326,11 +332,7 @@ function handleImportChange(event: Event): void {
       </div>
     </section>
 
-    <div
-      v-show="activePanel === 'directory'"
-      class="journal-divider mt-6"
-      aria-hidden="true"
-    />
+    <div v-show="activePanel === 'directory'" class="journal-divider mt-6" aria-hidden="true" />
 
     <section v-show="activePanel === 'directory'" class="workspace-directory-section">
       <div class="admin-section-head">
@@ -340,7 +342,10 @@ function handleImportChange(event: Event): void {
         </div>
       </div>
 
-      <div v-if="loading && list.length === 0" class="workspace-directory-loading flex justify-center py-10">
+      <div
+        v-if="loading && list.length === 0"
+        class="workspace-directory-loading flex justify-center py-10"
+      >
         <AppLoading>正在同步用户列表...</AppLoading>
       </div>
 
@@ -352,7 +357,11 @@ function handleImportChange(event: Event): void {
         icon="UsersRound"
       >
         <template #action>
-          <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+          <button
+            type="button"
+            class="admin-btn admin-btn-primary"
+            @click="emit('openCreateDialog')"
+          >
             创建第一个用户
           </button>
         </template>
@@ -363,17 +372,33 @@ function handleImportChange(event: Event): void {
           <table class="user-table min-w-full text-sm">
             <thead class="user-table-head">
               <tr>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">用户</th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">姓名</th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">邮箱</th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">角色</th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">状态</th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">班级</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  用户
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  姓名
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  邮箱
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  角色
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  状态
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  班级
+                </th>
                 <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
                   学号 / 工号
                 </th>
-                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">创建时间</th>
-                <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">操作</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  创建时间
+                </th>
+                <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody class="user-table-body">
@@ -391,7 +416,11 @@ function handleImportChange(event: Event): void {
                 </td>
                 <td class="px-4 py-3 align-top">
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="role in user.roles" :key="`${user.id}-${role}`" class="admin-role-chip">
+                    <span
+                      v-for="role in user.roles"
+                      :key="`${user.id}-${role}`"
+                      class="admin-role-chip"
+                    >
                       <UserRoundCheck class="h-3.5 w-3.5" />
                       {{ role }}
                     </span>
@@ -437,26 +466,13 @@ function handleImportChange(event: Event): void {
         </div>
 
         <div class="admin-pagination workspace-directory-pagination">
-          <span>共 {{ total }} 个用户</span>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
-              :disabled="page <= 1"
-              @click="emit('changePage', page - 1)"
-            >
-              上一页
-            </button>
-            <span>{{ page }} / {{ totalPages }}</span>
-            <button
-              type="button"
-              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
-              :disabled="page >= totalPages"
-              @click="emit('changePage', page + 1)"
-            >
-              下一页
-            </button>
-          </div>
+          <AdminPaginationControls
+            :page="page"
+            :total-pages="totalPages"
+            :total="total"
+            :total-label="`共 ${total} 个用户`"
+            @change-page="emit('changePage', $event)"
+          />
         </div>
       </template>
     </section>
@@ -489,11 +505,7 @@ function handleImportChange(event: Event): void {
       </div>
     </section>
 
-    <div
-      v-show="activePanel === 'import'"
-      class="journal-divider mt-6"
-      aria-hidden="true"
-    />
+    <div v-show="activePanel === 'import'" class="journal-divider mt-6" aria-hidden="true" />
 
     <section v-show="activePanel === 'import'" class="space-y-4">
       <div class="admin-section-head">
@@ -504,7 +516,10 @@ function handleImportChange(event: Event): void {
       </div>
 
       <div v-if="importResult" class="admin-receipt">
-        <p>创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败 {{ importResult.failed }}</p>
+        <p>
+          创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败
+          {{ importResult.failed }}
+        </p>
         <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
           <li v-for="item in importResult.errors.slice(0, 5)" :key="`${item.row}-${item.message}`">
             第 {{ item.row }} 行：{{ item.message }}
@@ -540,7 +555,11 @@ function handleImportChange(event: Event): void {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -865,7 +884,11 @@ function handleImportChange(event: Event): void {
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),

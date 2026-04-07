@@ -14,6 +14,7 @@ import type {
   ContestDetailData,
   ScoreboardRow,
 } from '@/api/contracts'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -74,7 +75,10 @@ function getInspectorFilterStorageKey(contestId: string, roundId: string): strin
   return `ctf_admin_awd_filters:${contestId}:${roundId}`
 }
 
-function loadInspectorFilterState(contestId: string, roundId: string): AWDRoundInspectorFilterState | null {
+function loadInspectorFilterState(
+  contestId: string,
+  roundId: string
+): AWDRoundInspectorFilterState | null {
   if (typeof window === 'undefined') {
     return null
   }
@@ -87,7 +91,9 @@ function loadInspectorFilterState(contestId: string, roundId: string): AWDRoundI
     return {
       service_team_id: typeof parsed.service_team_id === 'string' ? parsed.service_team_id : '',
       service_status:
-        parsed.service_status === 'up' || parsed.service_status === 'down' || parsed.service_status === 'compromised'
+        parsed.service_status === 'up' ||
+        parsed.service_status === 'down' ||
+        parsed.service_status === 'compromised'
           ? parsed.service_status
           : 'all',
       service_check_source:
@@ -96,7 +102,9 @@ function loadInspectorFilterState(contestId: string, roundId: string): AWDRoundI
         typeof parsed.service_alert_reason === 'string' ? parsed.service_alert_reason : '',
       attack_team_id: typeof parsed.attack_team_id === 'string' ? parsed.attack_team_id : '',
       attack_result:
-        parsed.attack_result === 'success' || parsed.attack_result === 'failed' ? parsed.attack_result : 'all',
+        parsed.attack_result === 'success' || parsed.attack_result === 'failed'
+          ? parsed.attack_result
+          : 'all',
       attack_source:
         parsed.attack_source === 'manual_attack_log' ||
         parsed.attack_source === 'submission' ||
@@ -117,7 +125,10 @@ function persistInspectorFilterState(
   if (typeof window === 'undefined') {
     return
   }
-  window.sessionStorage.setItem(getInspectorFilterStorageKey(contestId, roundId), JSON.stringify(state))
+  window.sessionStorage.setItem(
+    getInspectorFilterStorageKey(contestId, roundId),
+    JSON.stringify(state)
+  )
 }
 
 const props = defineProps<{
@@ -239,8 +250,6 @@ const trafficErrorRate = computed(() => {
 const trafficTotalPages = computed(() =>
   Math.max(1, Math.ceil(props.trafficEventsTotal / Math.max(props.trafficFilters.page_size, 1)))
 )
-const canGotoTrafficPrevPage = computed(() => props.trafficFilters.page > 1)
-const canGotoTrafficNextPage = computed(() => props.trafficFilters.page < trafficTotalPages.value)
 
 function formatDateTime(value?: string): string {
   if (!value) {
@@ -267,9 +276,12 @@ function getRoundStatusLabel(status: AWDRoundData['status']): string {
 
 function getRoundStatusClass(status: AWDRoundData['status']): string {
   const classes: Record<AWDRoundData['status'], string> = {
-    pending: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-    running: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-    finished: 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20',
+    pending:
+      'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
+    running:
+      'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
+    finished:
+      'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20',
   }
   return classes[status]
 }
@@ -287,7 +299,8 @@ function getServiceStatusClass(status: AWDTeamServiceData['service_status']): st
   const classes: Record<AWDTeamServiceData['service_status'], string> = {
     up: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
     down: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-    compromised: 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
+    compromised:
+      'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
   }
   return classes[status]
 }
@@ -763,9 +776,13 @@ function applyTrafficFilterPatch(patch: Partial<AWDTrafficFilters>): void {
   emit('applyTrafficFilters', patch)
 }
 
-function moveTrafficPage(delta: number): void {
-  const targetPage = props.trafficFilters.page + delta
-  if (targetPage < 1 || targetPage > trafficTotalPages.value) {
+function handleTrafficPageChange(targetPage: number): void {
+  if (
+    props.loadingTrafficEvents ||
+    targetPage < 1 ||
+    targetPage > trafficTotalPages.value ||
+    targetPage === props.trafficFilters.page
+  ) {
     return
   }
   emit('changeTrafficPage', targetPage)
@@ -809,12 +826,16 @@ function getServiceAlertReason(service: AWDTeamServiceData): string {
     return ''
   }
   const errorCode =
-    typeof service.check_result.error_code === 'string' ? service.check_result.error_code.trim() : ''
+    typeof service.check_result.error_code === 'string'
+      ? service.check_result.error_code.trim()
+      : ''
   if (errorCode) {
     return errorCode
   }
   const statusReason =
-    typeof service.check_result.status_reason === 'string' ? service.check_result.status_reason.trim() : ''
+    typeof service.check_result.status_reason === 'string'
+      ? service.check_result.status_reason.trim()
+      : ''
   if (statusReason && statusReason !== 'healthy') {
     return statusReason
   }
@@ -829,7 +850,9 @@ function getServiceAlertReason(service: AWDTeamServiceData): string {
 
 function getServiceAlertSubtitle(alert: AWDServiceAlertView): string {
   const teamLabel =
-    alert.affected_teams.length === 0 ? '无受影响队伍' : `影响队伍 ${alert.affected_teams.slice(0, 3).join(' / ')}`
+    alert.affected_teams.length === 0
+      ? '无受影响队伍'
+      : `影响队伍 ${alert.affected_teams.slice(0, 3).join(' / ')}`
   return `${teamLabel}${alert.affected_teams.length > 3 ? ' 等' : ''}`
 }
 
@@ -865,16 +888,19 @@ function exportFilteredServices() {
       赛事: props.contest.title,
       轮次: getSelectedRoundLabel(),
       筛选队伍: serviceTeamFilter.value
-        ? serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)?.team_name || serviceTeamFilter.value
+        ? serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
+            ?.team_name || serviceTeamFilter.value
         : '全部队伍',
       筛选状态:
-        serviceStatusFilter.value === 'all' ? '全部状态' : getServiceStatusLabel(serviceStatusFilter.value),
-      筛选来源:
-        serviceCheckSourceFilter.value
-          ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
-          : '全部来源',
-      筛选告警:
-        serviceAlertReasonFilter.value ? getServiceAlertLabel(serviceAlertReasonFilter.value) : '全部告警',
+        serviceStatusFilter.value === 'all'
+          ? '全部状态'
+          : getServiceStatusLabel(serviceStatusFilter.value),
+      筛选来源: serviceCheckSourceFilter.value
+        ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
+        : '全部来源',
+      筛选告警: serviceAlertReasonFilter.value
+        ? getServiceAlertLabel(serviceAlertReasonFilter.value)
+        : '全部告警',
       队伍: item.team_name,
       靶题: getChallengeTitle(item.challenge_id),
       服务状态: getServiceStatusLabel(item.service_status),
@@ -897,7 +923,8 @@ function exportFilteredAttacks() {
       赛事: props.contest.title,
       轮次: getSelectedRoundLabel(),
       筛选队伍: attackTeamFilter.value
-        ? attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name || attackTeamFilter.value
+        ? attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name ||
+          attackTeamFilter.value
         : '全部队伍',
       筛选结果:
         attackResultFilter.value === 'all'
@@ -906,7 +933,9 @@ function exportFilteredAttacks() {
             ? '仅成功'
             : '仅失败',
       筛选来源:
-        attackSourceFilter.value === 'all' ? '全部来源' : getAttackSourceLabel(attackSourceFilter.value),
+        attackSourceFilter.value === 'all'
+          ? '全部来源'
+          : getAttackSourceLabel(attackSourceFilter.value),
       时间: formatDateTime(item.created_at),
       攻击方: item.attacker_team,
       受害方: item.victim_team,
@@ -947,21 +976,28 @@ function exportReviewPackage() {
       service: {
         team_id: serviceTeamFilter.value || null,
         team_name:
-          serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)?.team_name || null,
+          serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
+            ?.team_name || null,
         status: serviceStatusFilter.value,
         check_source: serviceCheckSourceFilter.value || null,
         check_source_label: serviceCheckSourceFilter.value
           ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
           : '全部来源',
         alert_reason: serviceAlertReasonFilter.value || null,
-        alert_reason_label: serviceAlertReasonFilter.value ? getServiceAlertLabel(serviceAlertReasonFilter.value) : '全部告警',
+        alert_reason_label: serviceAlertReasonFilter.value
+          ? getServiceAlertLabel(serviceAlertReasonFilter.value)
+          : '全部告警',
       },
       attack: {
         team_id: attackTeamFilter.value || null,
-        team_name: attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name || null,
+        team_name:
+          attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name || null,
         result: attackResultFilter.value,
         source: attackSourceFilter.value,
-        source_label: attackSourceFilter.value === 'all' ? '全部来源' : getAttackSourceLabel(attackSourceFilter.value),
+        source_label:
+          attackSourceFilter.value === 'all'
+            ? '全部来源'
+            : getAttackSourceLabel(attackSourceFilter.value),
       },
     },
     summary: {
@@ -1097,8 +1133,12 @@ const checkButtonLabel = computed(() => {
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-      <div class="rounded-[28px] border border-[var(--color-primary)]/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.15),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75">
+      <div
+        class="rounded-[28px] border border-[var(--color-primary)]/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.15),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+      >
+        <div
+          class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75"
+        >
           <span>AWD Operations</span>
           <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
         </div>
@@ -1164,10 +1204,7 @@ const checkButtonLabel = computed(() => {
             {{ checkButtonLabel }}
           </button>
         </div>
-        <p
-          v-if="shouldAutoRefresh"
-          class="mt-3 text-xs text-[var(--color-primary-hover)]/70"
-        >
+        <p v-if="shouldAutoRefresh" class="mt-3 text-xs text-[var(--color-primary-hover)]/70">
           当前正在跟随 live 轮次，面板会每 15 秒自动刷新一次。
         </p>
         <p
@@ -1185,17 +1222,33 @@ const checkButtonLabel = computed(() => {
       </div>
 
       <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <AppCard variant="metric" accent="primary" eyebrow="轮次数量" :title="String(rounds.length)" subtitle="当前赛事已创建的 AWD 轮次。">
+        <AppCard
+          variant="metric"
+          accent="primary"
+          eyebrow="轮次数量"
+          :title="String(rounds.length)"
+          subtitle="当前赛事已创建的 AWD 轮次。"
+        >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
+            >
               <TimerReset class="h-5 w-5" />
             </div>
           </template>
         </AppCard>
 
-        <AppCard variant="metric" accent="warning" eyebrow="失陷服务" :title="String(compromisedCount)" subtitle="当前所选轮次中已被攻破的服务数。">
+        <AppCard
+          variant="metric"
+          accent="warning"
+          eyebrow="失陷服务"
+          :title="String(compromisedCount)"
+          subtitle="当前所选轮次中已被攻破的服务数。"
+        >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]"
+            >
               <ShieldAlert class="h-5 w-5" />
             </div>
           </template>
@@ -1209,7 +1262,9 @@ const checkButtonLabel = computed(() => {
           :subtitle="`成功 ${successfulAttackCount} / 失败 ${failedAttackCount}`"
         >
           <template #header>
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-success)]/20 bg-[var(--color-success)]/10 text-[var(--color-success)]"
+            >
               <Sword class="h-5 w-5" />
             </div>
           </template>
@@ -1247,7 +1302,12 @@ const checkButtonLabel = computed(() => {
           />
 
           <div v-else-if="selectedRound" class="grid gap-3">
-            <AppCard variant="action" accent="neutral" eyebrow="轮次状态" :subtitle="getRoundStatusLabel(selectedRound.status)">
+            <AppCard
+              variant="action"
+              accent="neutral"
+              eyebrow="轮次状态"
+              :subtitle="getRoundStatusLabel(selectedRound.status)"
+            >
               <template #default>
                 <div class="text-sm text-[var(--color-text-secondary)]">
                   <p>攻击分值：{{ selectedRound.attack_score }}</p>
@@ -1256,7 +1316,12 @@ const checkButtonLabel = computed(() => {
               </template>
             </AppCard>
 
-            <AppCard variant="action" accent="neutral" eyebrow="时间窗口" :subtitle="formatDateTime(selectedRound.started_at)">
+            <AppCard
+              variant="action"
+              accent="neutral"
+              eyebrow="时间窗口"
+              :subtitle="formatDateTime(selectedRound.started_at)"
+            >
               <template #default>
                 <div class="text-sm text-[var(--color-text-secondary)]">
                   <p>开始：{{ formatDateTime(selectedRound.started_at) }}</p>
@@ -1265,7 +1330,12 @@ const checkButtonLabel = computed(() => {
               </template>
             </AppCard>
 
-            <AppCard variant="action" accent="warning" eyebrow="异常速览" :subtitle="`下线 ${downCount} · 失陷 ${compromisedCount}`">
+            <AppCard
+              variant="action"
+              accent="warning"
+              eyebrow="异常速览"
+              :subtitle="`下线 ${downCount} · 失陷 ${compromisedCount}`"
+            >
               <template #default>
                 <div class="text-sm text-[var(--color-text-secondary)]">
                   <p>服务总数：{{ totalServiceCount }}</p>
@@ -1337,12 +1407,16 @@ const checkButtonLabel = computed(() => {
           <section class="space-y-4 border-t border-border pt-6">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <h3 class="text-base font-semibold text-[var(--color-text-primary)]">攻击流量态势</h3>
+                <h3 class="text-base font-semibold text-[var(--color-text-primary)]">
+                  攻击流量态势
+                </h3>
                 <p class="mt-1 text-xs text-[var(--color-text-muted)]">
                   代理请求摘要，不等同于已确认攻破结果。
                 </p>
               </div>
-              <span class="text-xs text-[var(--color-text-muted)]">最近更新时间：{{ formatDateTime(selectedRound.updated_at) }}</span>
+              <span class="text-xs text-[var(--color-text-muted)]"
+                >最近更新时间：{{ formatDateTime(selectedRound.updated_at) }}</span
+              >
             </div>
 
             <div
@@ -1358,17 +1432,23 @@ const checkButtonLabel = computed(() => {
               当前轮次暂未返回攻击流量摘要。
             </div>
             <template v-else>
-              <div class="border-y border-border/80 bg-[linear-gradient(180deg,rgba(8,145,178,0.06),rgba(8,145,178,0))]">
+              <div
+                class="border-y border-border/80 bg-[linear-gradient(180deg,rgba(8,145,178,0.06),rgba(8,145,178,0))]"
+              >
                 <div class="grid gap-0 md:grid-cols-2 xl:grid-cols-5">
                   <div
                     v-for="item in trafficSummaryStats"
                     :key="item.key"
                     class="border-b border-border/70 px-4 py-4 last:border-b-0 md:[&:nth-last-child(-n+2)]:border-b-0 xl:border-b-0 xl:border-r xl:last:border-r-0"
                   >
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                    <p
+                      class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >
                       {{ item.label }}
                     </p>
-                    <p class="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]">
+                    <p
+                      class="mt-3 text-2xl font-semibold tracking-tight text-[var(--color-text-primary)]"
+                    >
                       {{ item.value }}
                     </p>
                     <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
@@ -1381,7 +1461,11 @@ const checkButtonLabel = computed(() => {
               <div class="grid gap-4 xl:grid-cols-[1.3fr_0.7fr]">
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <div class="rounded-xl border border-border/80">
-                    <div class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">热点攻击队</div>
+                    <div
+                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
+                    >
+                      热点攻击队
+                    </div>
                     <ol class="divide-y divide-border/70">
                       <li
                         v-for="item in trafficSummary.top_attackers.slice(0, 5)"
@@ -1389,15 +1473,24 @@ const checkButtonLabel = computed(() => {
                         class="flex items-center justify-between px-3 py-2 text-sm"
                       >
                         <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                        <span class="font-medium text-[var(--color-text-secondary)]">{{ item.request_count }}</span>
+                        <span class="font-medium text-[var(--color-text-secondary)]">{{
+                          item.request_count
+                        }}</span>
                       </li>
-                      <li v-if="trafficSummary.top_attackers.length === 0" class="px-3 py-3 text-xs text-[var(--color-text-muted)]">
+                      <li
+                        v-if="trafficSummary.top_attackers.length === 0"
+                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
+                      >
                         暂无攻击队热点数据
                       </li>
                     </ol>
                   </div>
                   <div class="rounded-xl border border-border/80">
-                    <div class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">热点受害队</div>
+                    <div
+                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
+                    >
+                      热点受害队
+                    </div>
                     <ol class="divide-y divide-border/70">
                       <li
                         v-for="item in trafficSummary.top_victims.slice(0, 5)"
@@ -1405,41 +1498,68 @@ const checkButtonLabel = computed(() => {
                         class="flex items-center justify-between px-3 py-2 text-sm"
                       >
                         <span class="text-[var(--color-text-primary)]">{{ item.team_name }}</span>
-                        <span class="font-medium text-[var(--color-text-secondary)]">{{ item.request_count }}</span>
+                        <span class="font-medium text-[var(--color-text-secondary)]">{{
+                          item.request_count
+                        }}</span>
                       </li>
-                      <li v-if="trafficSummary.top_victims.length === 0" class="px-3 py-3 text-xs text-[var(--color-text-muted)]">
+                      <li
+                        v-if="trafficSummary.top_victims.length === 0"
+                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
+                      >
                         暂无目标热点数据
                       </li>
                     </ol>
                   </div>
                   <div class="rounded-xl border border-border/80">
-                    <div class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">热点题目</div>
+                    <div
+                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
+                    >
+                      热点题目
+                    </div>
                     <ol class="divide-y divide-border/70">
                       <li
                         v-for="item in trafficSummary.top_challenges.slice(0, 5)"
                         :key="`traffic-challenge-${item.challenge_id}`"
                         class="flex items-center justify-between gap-3 px-3 py-2 text-sm"
                       >
-                        <span class="truncate text-[var(--color-text-primary)]">{{ getTrafficChallengeTitle(item.challenge_id, item.challenge_title) }}</span>
-                        <span class="shrink-0 font-medium text-[var(--color-text-secondary)]">{{ item.request_count }}</span>
+                        <span class="truncate text-[var(--color-text-primary)]">{{
+                          getTrafficChallengeTitle(item.challenge_id, item.challenge_title)
+                        }}</span>
+                        <span class="shrink-0 font-medium text-[var(--color-text-secondary)]">{{
+                          item.request_count
+                        }}</span>
                       </li>
-                      <li v-if="trafficSummary.top_challenges.length === 0" class="px-3 py-3 text-xs text-[var(--color-text-muted)]">
+                      <li
+                        v-if="trafficSummary.top_challenges.length === 0"
+                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
+                      >
                         暂无题目热点数据
                       </li>
                     </ol>
                   </div>
                   <div class="rounded-xl border border-border/80">
-                    <div class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">异常路径</div>
+                    <div
+                      class="border-b border-border bg-surface-alt/40 px-3 py-2 text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
+                    >
+                      异常路径
+                    </div>
                     <ol class="divide-y divide-border/70">
                       <li
                         v-for="item in trafficSummary.top_error_paths.slice(0, 5)"
                         :key="`traffic-path-${item.path}`"
                         class="px-3 py-2 text-sm"
                       >
-                        <p class="truncate font-mono text-[var(--color-text-primary)]">{{ item.path }}</p>
-                        <p class="mt-1 text-xs text-[var(--color-text-muted)]">请求 {{ item.request_count }} / 错误 {{ item.error_count }}</p>
+                        <p class="truncate font-mono text-[var(--color-text-primary)]">
+                          {{ item.path }}
+                        </p>
+                        <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                          请求 {{ item.request_count }} / 错误 {{ item.error_count }}
+                        </p>
                       </li>
-                      <li v-if="trafficSummary.top_error_paths.length === 0" class="px-3 py-3 text-xs text-[var(--color-text-muted)]">
+                      <li
+                        v-if="trafficSummary.top_error_paths.length === 0"
+                        class="px-3 py-3 text-xs text-[var(--color-text-muted)]"
+                      >
                         暂无异常路径数据
                       </li>
                     </ol>
@@ -1448,8 +1568,14 @@ const checkButtonLabel = computed(() => {
 
                 <div class="rounded-xl border border-border/80">
                   <div class="border-b border-border bg-surface-alt/40 px-3 py-2">
-                    <p class="text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]">趋势摘要（最近 12 桶）</p>
-                    <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">{{ trafficTrendNarrative }}</p>
+                    <p
+                      class="text-xs font-semibold tracking-[0.12em] text-[var(--color-text-muted)]"
+                    >
+                      趋势摘要（最近 12 桶）
+                    </p>
+                    <p class="mt-2 text-xs leading-6 text-[var(--color-text-muted)]">
+                      {{ trafficTrendNarrative }}
+                    </p>
                   </div>
                   <div class="space-y-2 px-3 py-3">
                     <div
@@ -1457,18 +1583,25 @@ const checkButtonLabel = computed(() => {
                       :key="bucket.bucket_start_at"
                       class="space-y-1"
                     >
-                      <div class="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                      <div
+                        class="flex items-center justify-between text-xs text-[var(--color-text-muted)]"
+                      >
                         <span>{{ bucket.label }}</span>
                         <span>请求 {{ bucket.request_count }} / 错误 {{ bucket.error_count }}</span>
                       </div>
-                      <div class="h-1.5 overflow-hidden rounded-full bg-[var(--color-text-muted)]/20">
+                      <div
+                        class="h-1.5 overflow-hidden rounded-full bg-[var(--color-text-muted)]/20"
+                      >
                         <div
                           class="h-full rounded-full bg-[var(--color-primary)]/70"
                           :style="{ width: `${bucket.ratio}%` }"
                         />
                       </div>
                     </div>
-                    <p v-if="trafficTrendRows.length === 0" class="text-xs text-[var(--color-text-muted)]">
+                    <p
+                      v-if="trafficTrendRows.length === 0"
+                      class="text-xs text-[var(--color-text-muted)]"
+                    >
                       当前没有趋势桶数据。
                     </p>
                   </div>
@@ -1477,10 +1610,14 @@ const checkButtonLabel = computed(() => {
             </template>
 
             <div class="overflow-hidden rounded-xl border border-border">
-              <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3">
+              <div
+                class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"
+              >
                 <div>
                   <p class="text-sm font-semibold text-[var(--color-text-primary)]">流量明细表</p>
-                  <p class="mt-1 text-xs text-[var(--color-text-muted)]">按攻击方、受害方、题目、状态分桶和路径关键字筛选。</p>
+                  <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                    按攻击方、受害方、题目、状态分桶和路径关键字筛选。
+                  </p>
                 </div>
                 <button
                   id="awd-traffic-reset-filters"
@@ -1492,64 +1629,109 @@ const checkButtonLabel = computed(() => {
                 </button>
               </div>
 
-              <div class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-5">
+              <div
+                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-5"
+              >
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">攻击方</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >攻击方</span
+                  >
                   <select
                     id="awd-traffic-filter-attacker"
                     :value="trafficFilters.attacker_team_id"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                    @change="applyTrafficFilterPatch({ attacker_team_id: ($event.target as HTMLSelectElement).value })"
+                    @change="
+                      applyTrafficFilterPatch({
+                        attacker_team_id: ($event.target as HTMLSelectElement).value,
+                      })
+                    "
                   >
                     <option value="">全部攻击方</option>
-                    <option v-for="team in trafficTeamOptions" :key="`traffic-attacker-option-${team.id}`" :value="team.id">
+                    <option
+                      v-for="team in trafficTeamOptions"
+                      :key="`traffic-attacker-option-${team.id}`"
+                      :value="team.id"
+                    >
                       {{ team.name }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">受害方</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >受害方</span
+                  >
                   <select
                     id="awd-traffic-filter-victim"
                     :value="trafficFilters.victim_team_id"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                    @change="applyTrafficFilterPatch({ victim_team_id: ($event.target as HTMLSelectElement).value })"
+                    @change="
+                      applyTrafficFilterPatch({
+                        victim_team_id: ($event.target as HTMLSelectElement).value,
+                      })
+                    "
                   >
                     <option value="">全部受害方</option>
-                    <option v-for="team in trafficTeamOptions" :key="`traffic-victim-option-${team.id}`" :value="team.id">
+                    <option
+                      v-for="team in trafficTeamOptions"
+                      :key="`traffic-victim-option-${team.id}`"
+                      :value="team.id"
+                    >
                       {{ team.name }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">题目</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >题目</span
+                  >
                   <select
                     id="awd-traffic-filter-challenge"
                     :value="trafficFilters.challenge_id"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                    @change="applyTrafficFilterPatch({ challenge_id: ($event.target as HTMLSelectElement).value })"
+                    @change="
+                      applyTrafficFilterPatch({
+                        challenge_id: ($event.target as HTMLSelectElement).value,
+                      })
+                    "
                   >
                     <option value="">全部题目</option>
-                    <option v-for="challenge in challengeLinks" :key="challenge.id" :value="challenge.challenge_id">
+                    <option
+                      v-for="challenge in challengeLinks"
+                      :key="challenge.id"
+                      :value="challenge.challenge_id"
+                    >
                       {{ challenge.title || `Challenge #${challenge.challenge_id}` }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">状态分桶</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >状态分桶</span
+                  >
                   <select
                     id="awd-traffic-filter-status-group"
                     :value="trafficFilters.status_group"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                     @change="onTrafficStatusGroupChange(($event.target as HTMLSelectElement).value)"
                   >
-                    <option v-for="item in trafficStatusGroupOptions" :key="item.value" :value="item.value">
+                    <option
+                      v-for="item in trafficStatusGroupOptions"
+                      :key="item.value"
+                      :value="item.value"
+                    >
                       {{ item.label }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">路径关键字</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >路径关键字</span
+                  >
                   <div class="flex items-center gap-2">
                     <input
                       id="awd-traffic-filter-path"
@@ -1580,7 +1762,9 @@ const checkButtonLabel = computed(() => {
               </div>
 
               <table class="min-w-full divide-y divide-border">
-                <thead class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                <thead
+                  class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                >
                   <tr>
                     <th class="px-4 py-3">时间</th>
                     <th class="px-4 py-3">攻击方 / 受害方</th>
@@ -1591,21 +1775,38 @@ const checkButtonLabel = computed(() => {
                 </thead>
                 <tbody class="divide-y divide-border bg-surface/70">
                   <tr v-if="loadingTrafficEvents">
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">正在加载流量明细...</td>
+                    <td
+                      colspan="5"
+                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                    >
+                      正在加载流量明细...
+                    </td>
                   </tr>
                   <tr
                     v-for="event in trafficEvents"
                     :key="`${event.occurred_at}-${event.attacker_team_id}-${event.victim_team_id}-${event.challenge_id}-${event.method}-${event.path}`"
                   >
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">{{ formatDateTime(event.occurred_at) }}</td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
-                      <p>{{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}</p>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">→ {{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}</p>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+                      {{ formatDateTime(event.occurred_at) }}
                     </td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">{{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}</td>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
+                      <p>
+                        {{ getTrafficTeamName(event.attacker_team_id, event.attacker_team_name) }}
+                      </p>
+                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        → {{ getTrafficTeamName(event.victim_team_id, event.victim_team_name) }}
+                      </p>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+                      {{ getTrafficChallengeTitle(event.challenge_id, event.challenge_title) }}
+                    </td>
                     <td class="px-4 py-4 text-sm">
-                      <p class="font-mono text-[var(--color-text-primary)]">{{ event.method.toUpperCase() }} {{ event.path }}</p>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">HTTP {{ event.status_code }}</p>
+                      <p class="font-mono text-[var(--color-text-primary)]">
+                        {{ event.method.toUpperCase() }} {{ event.path }}
+                      </p>
+                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        HTTP {{ event.status_code }}
+                      </p>
                     </td>
                     <td class="px-4 py-4 text-sm">
                       <span
@@ -1614,47 +1815,40 @@ const checkButtonLabel = computed(() => {
                       >
                         {{ getTrafficStatusGroupLabel(event.status_group) }}
                       </span>
-                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">{{ getTrafficSourceLabel(event.source) }}</p>
+                      <p class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {{ getTrafficSourceLabel(event.source) }}
+                      </p>
                     </td>
                   </tr>
                   <tr v-if="!loadingTrafficEvents && trafficEvents.length === 0">
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                    <td
+                      colspan="5"
+                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                    >
                       当前筛选条件下没有流量事件。
                     </td>
                   </tr>
                 </tbody>
               </table>
 
-              <div class="flex items-center justify-between gap-3 border-t border-border bg-surface-alt/20 px-4 py-3 text-xs text-[var(--color-text-muted)]">
-                <span>共 {{ trafficEventsTotal }} 条 · 第 {{ trafficFilters.page }} / {{ trafficTotalPages }} 页</span>
-                <div class="flex items-center gap-2">
-                  <button
-                    id="awd-traffic-page-prev"
-                    type="button"
-                    class="rounded-lg border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="!canGotoTrafficPrevPage || loadingTrafficEvents"
-                    @click="moveTrafficPage(-1)"
-                  >
-                    上一页
-                  </button>
-                  <button
-                    id="awd-traffic-page-next"
-                    type="button"
-                    class="rounded-lg border border-border px-3 py-1.5 text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
-                    :disabled="!canGotoTrafficNextPage || loadingTrafficEvents"
-                    @click="moveTrafficPage(1)"
-                  >
-                    下一页
-                  </button>
-                </div>
+              <div
+                class="border-t border-border bg-surface-alt/20 px-4 py-3 text-xs text-[var(--color-text-muted)]"
+              >
+                <AdminPaginationControls
+                  :page="trafficFilters.page"
+                  :total-pages="trafficTotalPages"
+                  :total="trafficEventsTotal"
+                  :disabled="loadingTrafficEvents"
+                  :total-label="`共 ${trafficEventsTotal} 条流量事件`"
+                  prev-button-id="awd-traffic-page-prev"
+                  next-button-id="awd-traffic-page-next"
+                  @change-page="handleTrafficPageChange"
+                />
               </div>
             </div>
           </section>
 
-          <div
-            v-if="serviceAlerts.length > 0"
-            class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3"
-          >
+          <div v-if="serviceAlerts.length > 0" class="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
             <button
               v-for="alert in serviceAlerts"
               :key="alert.key"
@@ -1687,7 +1881,11 @@ const checkButtonLabel = computed(() => {
                       </div>
                     </div>
                     <div class="mt-2 text-xs text-[var(--color-text-secondary)]/80">
-                      {{ serviceAlertReasonFilter === alert.key ? '再次点击可取消筛选' : '点击筛选同类异常' }}
+                      {{
+                        serviceAlertReasonFilter === alert.key
+                          ? '再次点击可取消筛选'
+                          : '点击筛选同类异常'
+                      }}
                     </div>
                   </div>
                 </template>
@@ -1696,7 +1894,9 @@ const checkButtonLabel = computed(() => {
           </div>
 
           <div class="overflow-hidden rounded-2xl border border-border">
-            <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3">
+            <div
+              class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3"
+            >
               <div class="text-sm font-semibold text-[var(--color-text-primary)]">实时排行榜</div>
               <span
                 v-if="scoreboardFrozen"
@@ -1706,7 +1906,9 @@ const checkButtonLabel = computed(() => {
               </span>
             </div>
             <table class="min-w-full divide-y divide-border">
-              <thead class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              <thead
+                class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+              >
                 <tr>
                   <th class="px-4 py-3">排名</th>
                   <th class="px-4 py-3">队伍</th>
@@ -1717,14 +1919,27 @@ const checkButtonLabel = computed(() => {
               </thead>
               <tbody class="divide-y divide-border bg-surface/70">
                 <tr v-for="item in scoreboardRows" :key="item.team_id">
-                  <td class="px-4 py-4 text-sm font-semibold text-[var(--color-text-primary)]">#{{ item.rank }}</td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">{{ item.team_name }}</td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">{{ formatScore(item.score) }}</td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">{{ item.solved_count }}</td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">{{ formatDateTime(item.last_submission_at) }}</td>
+                  <td class="px-4 py-4 text-sm font-semibold text-[var(--color-text-primary)]">
+                    #{{ item.rank }}
+                  </td>
+                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
+                    {{ item.team_name }}
+                  </td>
+                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
+                    {{ formatScore(item.score) }}
+                  </td>
+                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
+                    {{ item.solved_count }}
+                  </td>
+                  <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
+                    {{ formatDateTime(item.last_submission_at) }}
+                  </td>
                 </tr>
                 <tr v-if="scoreboardRows.length === 0">
-                  <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
+                  <td
+                    colspan="5"
+                    class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                  >
                     当前赛事还没有排行榜数据。
                   </td>
                 </tr>
@@ -1733,11 +1948,15 @@ const checkButtonLabel = computed(() => {
           </div>
 
           <div class="overflow-hidden rounded-2xl border border-border">
-            <div class="border-b border-border bg-surface-alt/70 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)]">
+            <div
+              class="border-b border-border bg-surface-alt/70 px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)]"
+            >
               本轮汇总
             </div>
             <table class="min-w-full divide-y divide-border">
-              <thead class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              <thead
+                class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+              >
                 <tr>
                   <th class="px-4 py-3">队伍</th>
                   <th class="px-4 py-3">总分</th>
@@ -1748,16 +1967,22 @@ const checkButtonLabel = computed(() => {
               </thead>
               <tbody class="divide-y divide-border bg-surface/70">
                 <tr v-for="item in summary?.items || []" :key="item.team_id">
-                  <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">{{ item.team_name }}</td>
-                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">{{ item.total_score }}</td>
+                  <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">
+                    {{ item.team_name }}
+                  </td>
+                  <td class="px-4 py-4 text-sm text-[var(--color-text-primary)]">
+                    {{ item.total_score }}
+                  </td>
                   <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
                     {{ item.attack_score }} / {{ item.defense_score }}
                   </td>
                   <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    正常 {{ item.service_up_count }} / 下线 {{ item.service_down_count }} / 失陷 {{ item.service_compromised_count }}
+                    正常 {{ item.service_up_count }} / 下线 {{ item.service_down_count }} / 失陷
+                    {{ item.service_compromised_count }}
                   </td>
                   <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    攻破 {{ item.successful_breach_count }} 次，攻击方 {{ item.unique_attackers_against }} 支
+                    攻破 {{ item.successful_breach_count }} 次，攻击方
+                    {{ item.unique_attackers_against }} 支
                   </td>
                 </tr>
               </tbody>
@@ -1766,7 +1991,9 @@ const checkButtonLabel = computed(() => {
 
           <div class="grid gap-6 xl:grid-cols-2">
             <div class="overflow-hidden rounded-2xl border border-border">
-              <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3">
+              <div
+                class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3"
+              >
                 <div class="text-sm font-semibold text-[var(--color-text-primary)]">服务状态表</div>
                 <button
                   id="awd-export-services"
@@ -1778,22 +2005,34 @@ const checkButtonLabel = computed(() => {
                   导出当前筛选
                 </button>
               </div>
-              <div class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-4">
+              <div
+                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-4"
+              >
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">队伍</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >队伍</span
+                  >
                   <select
                     id="awd-service-filter-team"
                     v-model="serviceTeamFilter"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   >
                     <option value="">全部队伍</option>
-                    <option v-for="team in serviceTeamOptions" :key="team.team_id" :value="team.team_id">
+                    <option
+                      v-for="team in serviceTeamOptions"
+                      :key="team.team_id"
+                      :value="team.team_id"
+                    >
                       {{ team.team_name }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">状态</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >状态</span
+                  >
                   <select
                     id="awd-service-filter-status"
                     v-model="serviceStatusFilter"
@@ -1806,20 +2045,30 @@ const checkButtonLabel = computed(() => {
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">巡检来源</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >巡检来源</span
+                  >
                   <select
                     id="awd-service-filter-source"
                     v-model="serviceCheckSourceFilter"
                     class="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   >
                     <option value="">全部来源</option>
-                    <option v-for="source in serviceCheckSourceOptions" :key="source" :value="source">
+                    <option
+                      v-for="source in serviceCheckSourceOptions"
+                      :key="source"
+                      :value="source"
+                    >
                       {{ getCheckSourceLabel(source) || source }}
                     </option>
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">告警类型</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >告警类型</span
+                  >
                   <select
                     id="awd-service-filter-alert"
                     v-model="serviceAlertReasonFilter"
@@ -1833,7 +2082,9 @@ const checkButtonLabel = computed(() => {
                 </label>
               </div>
               <table class="min-w-full divide-y divide-border">
-                <thead class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                <thead
+                  class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                >
                   <tr>
                     <th class="px-4 py-3">队伍</th>
                     <th class="px-4 py-3">靶题</th>
@@ -1844,8 +2095,12 @@ const checkButtonLabel = computed(() => {
                 </thead>
                 <tbody class="divide-y divide-border bg-surface/70">
                   <tr v-for="service in filteredServices" :key="service.id">
-                    <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">{{ service.team_name }}</td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">{{ getChallengeTitle(service.challenge_id) }}</td>
+                    <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">
+                      {{ service.team_name }}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+                      {{ getChallengeTitle(service.challenge_id) }}
+                    </td>
                     <td class="px-4 py-4">
                       <span
                         class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
@@ -1869,7 +2124,9 @@ const checkButtonLabel = computed(() => {
                         v-if="getCheckTargets(service.check_result).length > 0"
                         class="mt-2 rounded-xl border border-border/80 bg-surface-alt/40 p-3 text-xs text-[var(--color-text-secondary)]"
                       >
-                        <summary class="cursor-pointer select-none text-[var(--color-text-primary)]">
+                        <summary
+                          class="cursor-pointer select-none text-[var(--color-text-primary)]"
+                        >
                           查看探测明细
                         </summary>
                         <div class="mt-3 space-y-3">
@@ -1882,9 +2139,13 @@ const checkButtonLabel = computed(() => {
                               {{ target.access_url || `Target #${targetIndex + 1}` }}
                             </div>
                             <div class="mt-1 text-[var(--color-text-muted)]">
-                              {{ getProbeStatusText(target.healthy, target.error_code, target.error) }}
+                              {{
+                                getProbeStatusText(target.healthy, target.error_code, target.error)
+                              }}
                               <span v-if="target.probe"> · {{ target.probe.toUpperCase() }}</span>
-                              <span v-if="formatLatency(target.latency_ms)"> · {{ formatLatency(target.latency_ms) }}</span>
+                              <span v-if="formatLatency(target.latency_ms)">
+                                · {{ formatLatency(target.latency_ms) }}</span
+                              >
                             </div>
                             <div
                               v-if="target.attempts.length > 0"
@@ -1896,8 +2157,17 @@ const checkButtonLabel = computed(() => {
                               >
                                 Attempt {{ attemptIndex + 1 }}:
                                 {{ attempt.probe.toUpperCase() || 'UNKNOWN' }}
-                                · {{ getProbeStatusText(attempt.healthy, attempt.error_code, attempt.error) }}
-                                <span v-if="formatLatency(attempt.latency_ms)"> · {{ formatLatency(attempt.latency_ms) }}</span>
+                                ·
+                                {{
+                                  getProbeStatusText(
+                                    attempt.healthy,
+                                    attempt.error_code,
+                                    attempt.error
+                                  )
+                                }}
+                                <span v-if="formatLatency(attempt.latency_ms)">
+                                  · {{ formatLatency(attempt.latency_ms) }}</span
+                                >
                               </div>
                             </div>
                           </div>
@@ -1906,8 +2176,15 @@ const checkButtonLabel = computed(() => {
                     </td>
                   </tr>
                   <tr v-if="filteredServices.length === 0">
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
-                      {{ services.length === 0 ? '当前轮次还没有服务巡检记录。' : '当前筛选条件下没有服务记录。' }}
+                    <td
+                      colspan="5"
+                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                    >
+                      {{
+                        services.length === 0
+                          ? '当前轮次还没有服务巡检记录。'
+                          : '当前筛选条件下没有服务记录。'
+                      }}
                     </td>
                   </tr>
                 </tbody>
@@ -1915,7 +2192,9 @@ const checkButtonLabel = computed(() => {
             </div>
 
             <div class="overflow-hidden rounded-2xl border border-border">
-              <div class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3">
+              <div
+                class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/70 px-4 py-3"
+              >
                 <div class="text-sm font-semibold text-[var(--color-text-primary)]">攻击日志</div>
                 <button
                   id="awd-export-attacks"
@@ -1927,9 +2206,14 @@ const checkButtonLabel = computed(() => {
                   导出当前筛选
                 </button>
               </div>
-              <div class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-3">
+              <div
+                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-3"
+              >
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">队伍</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >队伍</span
+                  >
                   <select
                     id="awd-attack-filter-team"
                     v-model="attackTeamFilter"
@@ -1942,7 +2226,10 @@ const checkButtonLabel = computed(() => {
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">结果</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >结果</span
+                  >
                   <select
                     id="awd-attack-filter-result"
                     v-model="attackResultFilter"
@@ -1954,7 +2241,10 @@ const checkButtonLabel = computed(() => {
                   </select>
                 </label>
                 <label class="space-y-1">
-                  <span class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">记录来源</span>
+                  <span
+                    class="text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                    >记录来源</span
+                  >
                   <select
                     id="awd-attack-filter-source"
                     v-model="attackSourceFilter"
@@ -1968,7 +2258,9 @@ const checkButtonLabel = computed(() => {
                 </label>
               </div>
               <table class="min-w-full divide-y divide-border">
-                <thead class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                <thead
+                  class="bg-surface-alt/40 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-text-muted)]"
+                >
                   <tr>
                     <th class="px-4 py-3">时间</th>
                     <th class="px-4 py-3">攻击方</th>
@@ -1979,18 +2271,32 @@ const checkButtonLabel = computed(() => {
                 </thead>
                 <tbody class="divide-y divide-border bg-surface/70">
                   <tr v-for="attack in filteredAttacks" :key="attack.id">
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">{{ formatDateTime(attack.created_at) }}</td>
-                    <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">{{ attack.attacker_team }}</td>
-                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">{{ attack.victim_team }}</td>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+                      {{ formatDateTime(attack.created_at) }}
+                    </td>
+                    <td class="px-4 py-4 text-sm font-medium text-[var(--color-text-primary)]">
+                      {{ attack.attacker_team }}
+                    </td>
+                    <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
+                      {{ attack.victim_team }}
+                    </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
                       <div>{{ getAttackTypeLabel(attack.attack_type) }}</div>
-                      <div class="mt-1 text-xs text-[var(--color-text-muted)]">{{ getChallengeTitle(attack.challenge_id) }}</div>
-                      <div class="mt-1 text-xs text-[var(--color-text-muted)]">{{ getAttackSourceLabel(attack.source) }}</div>
+                      <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {{ getChallengeTitle(attack.challenge_id) }}
+                      </div>
+                      <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {{ getAttackSourceLabel(attack.source) }}
+                      </div>
                     </td>
                     <td class="px-4 py-4 text-sm">
                       <span
                         class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
-                        :class="attack.is_success ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]' : 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)]'"
+                        :class="
+                          attack.is_success
+                            ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
+                            : 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)]'
+                        "
                       >
                         <ShieldCheck v-if="attack.is_success" class="h-3.5 w-3.5" />
                         {{ attack.is_success ? `成功 +${attack.score_gained}` : '失败' }}
@@ -1998,8 +2304,15 @@ const checkButtonLabel = computed(() => {
                     </td>
                   </tr>
                   <tr v-if="filteredAttacks.length === 0">
-                    <td colspan="5" class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
-                      {{ attacks.length === 0 ? '当前轮次还没有攻击记录。' : '当前筛选条件下没有攻击记录。' }}
+                    <td
+                      colspan="5"
+                      class="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                    >
+                      {{
+                        attacks.length === 0
+                          ? '当前轮次还没有攻击记录。'
+                          : '当前筛选条件下没有攻击记录。'
+                      }}
                     </td>
                   </tr>
                 </tbody>

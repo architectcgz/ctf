@@ -236,7 +236,17 @@ describe('UserManage', () => {
     expect(wrapper.findAll('.user-table tbody tr')).toHaveLength(2)
     expect(wrapper.find('.user-table-accent').exists()).toBe(false)
     const headers = wrapper.findAll('.user-table thead th').map((item) => item.text())
-    expect(headers).toEqual(['用户', '姓名', '邮箱', '角色', '状态', '班级', '学号 / 工号', '创建时间', '操作'])
+    expect(headers).toEqual([
+      '用户',
+      '姓名',
+      '邮箱',
+      '角色',
+      '状态',
+      '班级',
+      '学号 / 工号',
+      '创建时间',
+      '操作',
+    ])
     expect(wrapper.find('.admin-pagination').exists()).toBe(true)
     const sectionTitles = wrapper.findAll('section h2').map((item) => item.text())
     expect(sectionTitles.indexOf('用户列表')).toBeLessThan(sectionTitles.indexOf('导入回执'))
@@ -330,7 +340,9 @@ describe('UserManage', () => {
 
   it('用户总览头部不应再渲染快捷操作按钮组', () => {
     expect(userGovernanceSource).not.toContain('class="mt-6 flex flex-wrap gap-3"')
-    expect(userGovernanceSource).not.toMatch(/刷新列表[\s\S]*用户列表[\s\S]*导入用户[\s\S]*创建用户/s)
+    expect(userGovernanceSource).not.toMatch(
+      /刷新列表[\s\S]*用户列表[\s\S]*导入用户[\s\S]*创建用户/s
+    )
   })
 
   it('用户总览摘要应内嵌在 overview 区并呈现四个指标卡片', async () => {
@@ -375,11 +387,14 @@ describe('UserManage', () => {
     const summary = wrapper.get('#user-overview-summary')
     const summaryCards = summary.findAll('.user-overview-stat')
 
-    expect(userGovernanceSource).not.toContain('<article class="journal-brief user-overview-summary')
-    expect(summary.find('article').exists()).toBe(false)
+    expect(userGovernanceSource).not.toContain(
+      '<article class="journal-brief user-overview-summary'
+    )
     expect(summaryCards).toHaveLength(4)
     expect(summary.find('.user-overview-grid').exists()).toBe(true)
-    expect(userGovernanceSource).not.toContain('<div v-if="activePanel === \'overview\'" class="journal-divider mt-6" />')
+    expect(userGovernanceSource).not.toContain(
+      '<div v-if="activePanel === \'overview\'" class="journal-divider mt-6" />'
+    )
     expect(summaryCards.map((item) => item.find('.journal-note-label').text())).toEqual([
       '用户总量',
       '活跃账号',

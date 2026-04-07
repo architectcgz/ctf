@@ -19,7 +19,9 @@
           >
             立即刷新
           </button>
-          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">创建镜像</button>
+          <button class="admin-btn admin-btn-primary" @click="dialogVisible = true">
+            创建镜像
+          </button>
         </div>
         <div class="image-summary-grid">
           <article class="journal-note">
@@ -46,14 +48,19 @@
         <div class="image-board__hint">{{ refreshHint }}</div>
       </div>
 
-      <div v-if="loading" class="workspace-directory-loading flex items-center justify-center py-12">
+      <div
+        v-if="loading"
+        class="workspace-directory-loading flex items-center justify-center py-12"
+      >
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         ></div>
       </div>
 
       <template v-else>
-        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">当前还没有镜像。</div>
+        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+          当前还没有镜像。
+        </div>
 
         <div v-else class="image-list workspace-directory-list">
           <div class="image-directory-head" aria-hidden="true">
@@ -100,24 +107,13 @@
         </div>
 
         <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
-          <span>共 {{ total }} 条</span>
-          <div class="flex items-center gap-2">
-            <button
-              :disabled="page === 1"
-              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-              @click="changePage(page - 1)"
-            >
-              上一页
-            </button>
-            <span>{{ page }} / {{ Math.ceil(total / pageSize) }}</span>
-            <button
-              :disabled="page >= Math.ceil(total / pageSize)"
-              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-50"
-              @click="changePage(page + 1)"
-            >
-              下一页
-            </button>
-          </div>
+          <AdminPaginationControls
+            :page="page"
+            :total-pages="Math.max(1, Math.ceil(total / pageSize))"
+            :total="total"
+            :total-label="`共 ${total} 条`"
+            @change-page="void changePage($event)"
+          />
         </div>
       </template>
     </section>
@@ -159,6 +155,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { getImages, createImage, deleteImage } from '@/api/admin'
+import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import type { ImageStatus } from '@/api/contracts'
@@ -282,7 +279,11 @@ onUnmounted(() => {
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -383,7 +384,11 @@ onUnmounted(() => {
   border: 1px solid var(--journal-border);
   border-radius: 20px;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 8%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -496,13 +501,8 @@ onUnmounted(() => {
 }
 
 .image-list {
-  --image-list-columns:
-    minmax(10rem, 1fr)
-    minmax(8rem, 0.78fr)
-    minmax(0, 1.5fr)
-    minmax(7rem, 0.78fr)
-    minmax(10rem, 0.92fr)
-    auto;
+  --image-list-columns: minmax(10rem, 1fr) minmax(8rem, 0.78fr) minmax(0, 1.5fr)
+    minmax(7rem, 0.78fr) minmax(10rem, 0.92fr) auto;
   display: grid;
   gap: 0;
 }
@@ -601,7 +601,11 @@ onUnmounted(() => {
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 10%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
 }
 
