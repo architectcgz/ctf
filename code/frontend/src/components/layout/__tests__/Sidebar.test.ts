@@ -73,4 +73,50 @@ describe('Sidebar desktop layout', () => {
 
     wrapper.unmount()
   })
+
+  it('uses academy paths for shared teaching entries when admin navigates from the sidebar', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/academy/classes', component: { template: '<div>academy classes</div>' } },
+        { path: '/teacher/classes', component: { template: '<div>legacy teacher classes</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        name: 'Admin',
+      },
+      'token'
+    )
+
+    await router.push('/admin/dashboard')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const classButton = wrapper.findAll('.sidebar-shell-desktop button').find((node) => node.text().includes('班级管理'))
+
+    expect(classButton).toBeTruthy()
+
+    await classButton!.trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/academy/classes')
+
+    wrapper.unmount()
+  })
 })
