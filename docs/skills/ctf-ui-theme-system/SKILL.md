@@ -35,6 +35,8 @@ Core outcome: **professional, restrained, technical, high-readability workspace 
   - `line-height: 1.02`
   - `letter-spacing: -0.04em`
 - Avoid forcing extra heavy weight unless truly needed; width/weight must not feel bloated.
+- Reuse shared workspace page-header styles/tokens instead of duplicating the same title typography inside page-local scoped CSS.
+- If a page needs a different intro width, keep that as a local layout override like `max-width`; do not re-declare the shared `font-size` / `line-height` / `letter-spacing` metrics per page.
 
 ### Eyebrow labels
 - Keep structural eyebrow labels (English short labels are acceptable).
@@ -218,6 +220,7 @@ Core outcome: **professional, restrained, technical, high-readability workspace 
 ## Implementation Checklist
 - Page has one dominant workspace shell.
 - Main title uses `h1` and approved title metrics.
+- Page-title and intro-copy typography come from shared workspace styles; local page CSS keeps only necessary layout overrides.
 - Internal areas are flattened (divider/list/rail first).
 - List/table columns are strictly aligned (header and data share track + alignment).
 - Each visible column has a clear responsibility; unrelated fields are not stuffed back into the title column.
