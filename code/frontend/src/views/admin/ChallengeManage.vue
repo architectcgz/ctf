@@ -240,17 +240,17 @@ function closeActionMenu(): void {
 
 function openChallengeDetail(challengeId: string): void {
   closeActionMenu()
-  void router.push(`/admin/challenges/${challengeId}`)
+  void router.push(`/platform/challenges/${challengeId}`)
 }
 
 function openChallengeTopology(challengeId: string): void {
   closeActionMenu()
-  void router.push(`/admin/challenges/${challengeId}/topology`)
+  void router.push(`/platform/challenges/${challengeId}/topology`)
 }
 
 function openChallengeWriteup(challengeId: string): void {
   closeActionMenu()
-  void router.push(`/admin/challenges/${challengeId}/writeup`)
+  void router.push(`/platform/challenges/${challengeId}/writeup`)
 }
 
 async function submitPublishCheck(row: (typeof list.value)[number]): Promise<void> {
