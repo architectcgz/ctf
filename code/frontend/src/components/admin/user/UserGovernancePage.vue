@@ -176,7 +176,7 @@ function handleImportChange(event: Event): void {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="journal-eyebrow">User Governance</div>
 
@@ -552,6 +552,10 @@ function handleImportChange(event: Event): void {
   --page-top-tab-font-size: 15px;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
+  --journal-note-label-weight: 600;
+  --journal-note-label-spacing: 0.15em;
+  --journal-note-label-color: var(--journal-muted);
+  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .journal-hero {
@@ -577,25 +581,10 @@ function handleImportChange(event: Event): void {
   gap: 1rem;
 }
 
-.journal-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
 .user-overview-grid {
   display: grid;
   gap: 0.85rem;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.75rem 0.875rem;
 }
 
 .user-overview-stat {
@@ -605,37 +594,10 @@ function handleImportChange(event: Event): void {
   justify-content: space-between;
 }
 
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .user-overview-stat .journal-note-value {
   font-size: clamp(1.35rem, 2vw, 1.9rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
-.journal-divider,
-.journal-divider {
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .admin-section-head {

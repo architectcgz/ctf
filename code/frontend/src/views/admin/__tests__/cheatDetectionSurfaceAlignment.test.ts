@@ -4,6 +4,10 @@ import { describe, expect, it } from 'vitest'
 
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 
+const journalNotesSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/journal-notes.css`,
+  'utf-8'
+)
 const pageTabsSource = readFileSync(`${process.cwd()}/src/assets/styles/page-tabs.css`, 'utf-8')
 
 describe('cheat detection surface alignment', () => {
@@ -23,10 +27,13 @@ describe('cheat detection surface alignment', () => {
     expect(cheatDetectionSource).toMatch(
       /--cheat-divider:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/
     )
-    expect(cheatDetectionSource).toMatch(
-      /\.journal-divider\s*\{[\s\S]*border-top:\s*1px dashed var\(--cheat-divider\);/s
+    expect(cheatDetectionSource).toContain(
+      '--journal-divider-border: 1px dashed var(--cheat-divider);'
     )
-    expect(cheatDetectionSource).not.toMatch(/\.journal-divider\s*\{[^}]*88%, transparent\);/s)
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin \.journal-divider\s*\{[\s\S]*border-top:\s*var\(/s
+    )
+    expect(cheatDetectionSource).not.toMatch(/\.journal-divider\s*\{/s)
   })
 
   it('overrides the empty state top and bottom borders instead of inheriting AppEmpty bright border-y lines', () => {

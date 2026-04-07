@@ -53,7 +53,7 @@ extensions:
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
@@ -118,6 +118,7 @@ extensions:
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --journal-divider-margin-block: 1.5rem;
 }
 
 .journal-hero {
@@ -137,7 +138,6 @@ extensions:
 }
 
 .workspace-overline,
-.journal-eyebrow,
 .guide-section__label {
   font-size: 0.7rem;
   font-weight: 700;
@@ -169,11 +169,6 @@ extensions:
   margin: 0.9rem 0 0;
   color: var(--journal-muted);
   line-height: 1.75;
-}
-
-.journal-divider {
-  margin-block: 1.5rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .guide-grid {

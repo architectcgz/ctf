@@ -262,7 +262,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
@@ -654,6 +654,7 @@ onMounted(() => {
   --page-top-tab-font-size: 15px;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
+  --journal-note-value-weight: 700;
 }
 
 .journal-hero {
@@ -672,9 +673,7 @@ onMounted(() => {
   box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.workspace-overline,
-.journal-note-label,
-.journal-eyebrow {
+.workspace-overline {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.2em;
@@ -686,31 +685,6 @@ onMounted(() => {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-}
-
-.journal-note {
-  padding: 0 0 0 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
-.journal-divider {
-  margin-block: 1rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .manage-header {
