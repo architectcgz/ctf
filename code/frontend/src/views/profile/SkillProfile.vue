@@ -154,7 +154,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         </nav>
       </div>
 
-      <div v-if="isTeacher" class="skill-teacher-panel mt-6">
+      <div v-if="isTeacher" class="skill-teacher-panel">
         <div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>
         <h3 class="mt-3 text-base font-semibold text-[var(--journal-ink)]">查看学员能力画像</h3>
         <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
@@ -472,6 +472,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .skill-teacher-panel {
+  margin-top: var(--workspace-tab-panel-gap-top-tight);
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
