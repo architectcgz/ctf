@@ -163,8 +163,6 @@ describe('TeacherDashboard', () => {
 
     expect(wrapper.text()).toContain('教学介入台')
     expect(wrapper.text()).toContain('Class A')
-    expect(wrapper.text()).toContain('班级管理')
-    expect(wrapper.text()).toContain('导出报告')
     expect(wrapper.text()).toContain('3.5')
     expect(wrapper.text()).toContain('100%')
     expect(wrapper.text()).toContain('教学复盘结论')
@@ -257,5 +255,26 @@ describe('TeacherDashboard', () => {
     for (const copy of redundantCopy) {
       expect(wrapper.text()).not.toContain(copy)
     }
+  })
+
+  it('教师概览页不应再渲染快捷操作区块', async () => {
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.find('.overview-quick-actions').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Quick Actions')
+    expect(wrapper.text()).not.toContain('班级管理')
+    expect(wrapper.text()).not.toContain('导出报告')
+    expect(wrapper.text()).not.toContain('展开能力画像')
+    expect(wrapper.text()).not.toContain('查看介入建议')
   })
 })
