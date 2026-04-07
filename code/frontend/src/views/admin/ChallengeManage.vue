@@ -343,7 +343,7 @@ onMounted(() => {
 
         <div class="journal-divider" />
 
-        <section class="space-y-3">
+        <section class="workspace-directory-section">
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Imported Challenges</div>
@@ -351,16 +351,16 @@ onMounted(() => {
             </div>
           </header>
 
-          <div v-if="loading" class="flex items-center justify-center py-12">
+          <div v-if="loading" class="workspace-directory-loading flex items-center justify-center py-12">
             <div
               class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
             />
           </div>
 
           <template v-else>
-            <div v-if="list.length === 0" class="admin-empty">当前还没有题目，请先导入题目包。</div>
+            <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">当前还没有题目，请先导入题目包。</div>
 
-            <div v-else class="challenge-list">
+            <div v-else class="challenge-list workspace-directory-list">
               <div class="manage-directory-head" aria-hidden="true">
                 <span>题目</span>
                 <span>分类</span>
@@ -498,7 +498,7 @@ onMounted(() => {
               </article>
             </div>
 
-            <div v-if="total > 0" class="admin-pagination mt-4">
+            <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
               <span>共 {{ total }} 条</span>
               <div class="flex items-center gap-2">
                 <button
@@ -1057,14 +1057,6 @@ onMounted(() => {
 
 .admin-empty {
   padding: 1rem 0;
-  color: var(--journal-muted);
-}
-
-.admin-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   color: var(--journal-muted);
 }
 

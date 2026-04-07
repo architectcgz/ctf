@@ -97,4 +97,22 @@ describe('AdminDashboard', () => {
       adminDashboardPageSource.indexOf('系统值守台'),
     )
   })
+
+  it('应该采用与 teacher dashboard 一致的 workspace 骨架，而不是独立的中后台容器风格', () => {
+    expect(adminDashboardPageSource).toContain('class="workspace-shell"')
+    expect(adminDashboardPageSource).toContain('class="workspace-topbar"')
+    expect(adminDashboardPageSource).toContain('class="content-pane"')
+    expect(adminDashboardPageSource).toContain('class="workspace-hero tab-panel"')
+    expect(adminDashboardPageSource).toContain('class="hero-title"')
+    expect(adminDashboardPageSource).toContain('系统值守台')
+    expect(adminDashboardPageSource).toContain('class="hero-summary"')
+    expect(adminDashboardPageSource).toContain('class="meta-strip"')
+    expect(adminDashboardPageSource).toContain('class="progress-strip"')
+    expect(adminDashboardPageSource).toContain('class="hero-rail"')
+  })
+
+  it('总览面板不应再保留额外的 pulse article 区块', () => {
+    expect(adminDashboardPageSource).not.toContain('overview-pulse-panel')
+    expect(adminDashboardPageSource).not.toContain('运行脉搏')
+  })
 })

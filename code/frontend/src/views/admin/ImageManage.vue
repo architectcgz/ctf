@@ -37,7 +37,7 @@
     </header>
     <div class="journal-divider image-divider" />
 
-    <section class="image-board">
+    <section class="image-board workspace-directory-section">
       <div class="image-board__head">
         <div>
           <div class="journal-note-label">Images</div>
@@ -46,16 +46,16 @@
         <div class="image-board__hint">{{ refreshHint }}</div>
       </div>
 
-      <div v-if="loading" class="flex items-center justify-center py-12">
+      <div v-if="loading" class="workspace-directory-loading flex items-center justify-center py-12">
         <div
           class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
         ></div>
       </div>
 
       <template v-else>
-        <div v-if="list.length === 0" class="admin-empty">当前还没有镜像。</div>
+        <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">当前还没有镜像。</div>
 
-        <div v-else class="image-list">
+        <div v-else class="image-list workspace-directory-list">
           <div class="image-directory-head" aria-hidden="true">
             <span>镜像名称</span>
             <span>标签</span>
@@ -99,7 +99,7 @@
           </article>
         </div>
 
-        <div v-if="total > 0" class="admin-pagination">
+        <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
           <span>共 {{ total }} 条</span>
           <div class="flex items-center gap-2">
             <button
@@ -375,18 +375,6 @@ onUnmounted(() => {
 
 .admin-empty {
   padding: 1rem 0 0;
-  font-size: 0.875rem;
-  color: var(--journal-muted);
-}
-
-.admin-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  padding-top: 1rem;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
