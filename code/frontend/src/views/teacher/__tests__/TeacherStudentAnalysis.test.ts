@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherStudentAnalysis from '../TeacherStudentAnalysis.vue'
+import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
 
 const pushMock = vi.fn()
 const routeMock = {
@@ -385,5 +386,31 @@ describe('TeacherStudentAnalysis', () => {
         studentId: 'stu-1',
       },
     })
+  })
+
+  it('应采用顶部 tabs 工作区壳层而不是把所有内容堆叠在主页面', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-overview').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-recommendations').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-writeups').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-manual-review').exists()).toBe(true)
+    expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
+    expect(studentAnalysisPageSource).toContain('class="workspace-shell"')
+    expect(studentAnalysisPageSource).toContain('class="workspace-topbar"')
+    expect(studentAnalysisPageSource).toContain('class="top-tabs"')
+    expect(studentAnalysisPageSource).toContain('class="content-pane"')
+    expect(studentAnalysisPageSource).toMatch(
+      /<div class="workspace-shell">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+    )
   })
 })
