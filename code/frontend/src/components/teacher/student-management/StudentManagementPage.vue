@@ -3,6 +3,7 @@ import { ArrowRight, Search } from 'lucide-vue-next'
 
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -221,26 +222,13 @@ const emit = defineEmits<{
             v-if="filteredTotal > 0"
             class="teacher-directory-pagination workspace-directory-pagination"
           >
-            <span>共 {{ filteredTotal }} 名学生</span>
-            <div class="teacher-directory-pagination-actions">
-              <button
-                type="button"
-                class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
-                :disabled="page === 1"
-                @click="emit('changePage', page - 1)"
-              >
-                上一页
-              </button>
-              <span>{{ page }} / {{ totalPages }}</span>
-              <button
-                type="button"
-                class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
-                :disabled="page >= totalPages"
-                @click="emit('changePage', page + 1)"
-              >
-                下一页
-              </button>
-            </div>
+            <PagePaginationControls
+              :page="page"
+              :total-pages="totalPages"
+              :total="filteredTotal"
+              :total-label="`共 ${filteredTotal} 名学生`"
+              @change-page="emit('changePage', $event)"
+            />
           </div>
         </section>
       </div>
@@ -375,21 +363,6 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
   margin-top: 1.5rem;
-}
-
-.teacher-directory-pagination-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.teacher-directory-pagination-button {
-  min-width: 5.5rem;
-}
-
-.teacher-directory-pagination-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
 }
 
 .teacher-directory-top {

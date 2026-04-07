@@ -451,7 +451,8 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).toContain('Student 20')
     expect(wrapper.text()).not.toContain('Student 21')
 
-    await wrapper.get('button.teacher-directory-pagination-button:last-of-type').trigger('click')
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
     await flushPromises()
 
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)

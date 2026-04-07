@@ -49,3 +49,52 @@
     );
   box-shadow: var(--journal-shell-hero-shadow, 0 22px 50px var(--color-shadow-soft));
 }
+
+[data-theme='dark'] .journal-shell.journal-shell-user {
+  --journal-ink: var(--journal-shell-dark-ink, var(--color-text-primary));
+  --journal-muted: var(--journal-shell-dark-muted, var(--color-text-secondary));
+  --journal-border: var(
+    --journal-shell-dark-border,
+    color-mix(in srgb, var(--color-border-default) 82%, transparent)
+  );
+  --journal-surface: var(
+    --journal-shell-dark-surface,
+    color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base))
+  );
+  --journal-surface-subtle: var(
+    --journal-shell-dark-surface-subtle,
+    color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base))
+  );
+}
+
+[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(
+        in srgb,
+        var(--journal-accent)
+          var(
+            --journal-shell-dark-hero-radial-strength,
+            var(--journal-shell-hero-radial-strength, 16%)
+          ),
+        transparent
+      ),
+      transparent
+        var(
+          --journal-shell-dark-hero-radial-size,
+          var(--journal-shell-hero-radial-size, 20rem)
+        )
+    ),
+    linear-gradient(
+      180deg,
+      var(
+        --journal-shell-dark-hero-top,
+        color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base))
+      ),
+      var(
+        --journal-shell-dark-hero-end,
+        color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+      )
+    );
+}

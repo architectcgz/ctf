@@ -4,6 +4,7 @@ import { ArrowRight, FolderKanban, Search } from 'lucide-vue-next'
 
 import type { TeacherClassItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -334,26 +335,13 @@ const currentPageStudentCount = computed(() =>
               v-if="total > 0"
               class="teacher-directory-pagination workspace-directory-pagination"
             >
-              <span>共 {{ total }} 个班级</span>
-              <div class="teacher-directory-pagination-actions">
-                <button
-                  type="button"
-                  class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
-                  :disabled="page === 1"
-                  @click="emit('changePage', page - 1)"
-                >
-                  上一页
-                </button>
-                <span>{{ page }} / {{ totalPages }}</span>
-                <button
-                  type="button"
-                  class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
-                  :disabled="page >= totalPages"
-                  @click="emit('changePage', page + 1)"
-                >
-                  下一页
-                </button>
-              </div>
+              <PagePaginationControls
+                :page="page"
+                :total-pages="totalPages"
+                :total="total"
+                :total-label="`共 ${total} 个班级`"
+                @change-page="emit('changePage', $event)"
+              />
             </div>
           </section>
         </section>
@@ -700,22 +688,6 @@ const currentPageStudentCount = computed(() =>
   color: var(--journal-accent-strong);
 }
 
-.teacher-directory-pagination-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.teacher-directory-pagination-button {
-  min-height: 2.2rem;
-  padding: 0 0.85rem;
-}
-
-.teacher-directory-pagination-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 @media (max-width: 960px) {
   .top-tabs {
     margin-left: -1rem;
@@ -740,11 +712,6 @@ const currentPageStudentCount = computed(() =>
     grid-template-columns: 1fr;
     gap: 0.85rem;
     padding: 1rem 0;
-  }
-
-  .teacher-directory-pagination-actions {
-    width: 100%;
-    justify-content: space-between;
   }
 }
 </style>

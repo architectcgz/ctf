@@ -7,6 +7,7 @@ import { getNotifications, markAsRead } from '@/api/notification'
 import type { NotificationItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AdminNotificationPublishDrawer from '@/components/notifications/AdminNotificationPublishDrawer.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
@@ -211,31 +212,14 @@ async function handlePublishSuccess(): Promise<void> {
           </button>
         </section>
 
-        <div v-if="total > 0" class="notification-pagination">
-          <div>
-            <div class="notification-summary-label">Page Control</div>
-            <div class="notification-pagination-copy">
-              共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
-            </div>
-          </div>
-          <div class="notification-pagination-actions">
-            <button
-              type="button"
-              class="notification-btn"
-              :disabled="page === 1"
-              @click="changePage(page - 1)"
-            >
-              上一页
-            </button>
-            <button
-              type="button"
-              class="notification-btn"
-              :disabled="page >= totalPages"
-              @click="changePage(page + 1)"
-            >
-              下一页
-            </button>
-          </div>
+        <div v-if="total > 0" class="notification-pagination workspace-directory-pagination">
+          <PagePaginationControls
+            :page="page"
+            :total-pages="totalPages"
+            :total="total"
+            :total-label="`共 ${total} 条`"
+            @change-page="changePage"
+          />
         </div>
       </template>
     </div>
@@ -384,8 +368,7 @@ async function handlePublishSuccess(): Promise<void> {
   color: var(--journal-ink);
 }
 
-.notification-directory-meta,
-.notification-pagination-copy {
+.notification-directory-meta {
   font-size: 13px;
   line-height: 1.6;
   color: var(--journal-muted);
@@ -485,20 +468,9 @@ async function handlePublishSuccess(): Promise<void> {
 }
 
 .notification-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 24px;
   margin-top: 24px;
+  padding-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.notification-pagination-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .notification-btn {

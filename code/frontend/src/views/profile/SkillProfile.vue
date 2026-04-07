@@ -365,6 +365,16 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
     var(--color-bg-base)
   );
+  --journal-shell-dark-ink: var(--color-text-primary);
+  --journal-shell-dark-muted: var(--color-text-secondary);
+  --journal-shell-dark-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-shell-dark-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-dark-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
+  --journal-shell-dark-hero-radial-strength: 16%;
   --page-top-tabs-gap: 1.2rem;
   --page-top-tabs-margin: 0 -0.5rem 1.5rem;
   --page-top-tabs-padding: 0 0.5rem;
@@ -634,32 +644,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   .skill-weak-item:nth-child(2n) {
     border-left: 1px solid var(--journal-divider);
   }
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 16%, transparent),
-      transparent 20rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
 }
 
 :global([data-theme='dark']) .skill-teacher-panel,
