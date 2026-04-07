@@ -246,16 +246,6 @@ async function handlePublishSuccess(): Promise<void> {
   flex-direction: column;
 }
 
-.notification-topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .notification-subtitle {
   max-width: 720px;
 }
@@ -264,13 +254,6 @@ async function handlePublishSuccess(): Promise<void> {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.notification-summary {
-  display: grid;
-  gap: 18px;
-  padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .notification-summary-title {
@@ -282,41 +265,6 @@ async function handlePublishSuccess(): Promise<void> {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.notification-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.notification-summary-item {
-  min-width: 0;
-  padding-left: 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.notification-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.notification-summary-value {
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.notification-summary-helper {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .notification-divider {
@@ -350,28 +298,6 @@ async function handlePublishSuccess(): Promise<void> {
 
 .notification-directory {
   margin-top: 24px;
-}
-
-.notification-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-bottom: 14px;
-}
-
-.notification-directory-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.notification-directory-meta {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .notification-directory-head {
@@ -473,22 +399,6 @@ async function handlePublishSuccess(): Promise<void> {
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.notification-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--journal-ink);
-  cursor: pointer;
-}
-
 .notification-btn-primary {
   border-color: transparent;
   background: var(--journal-accent);
@@ -515,9 +425,4 @@ async function handlePublishSuccess(): Promise<void> {
   }
 }
 
-@media (max-width: 960px) {
-  .notification-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

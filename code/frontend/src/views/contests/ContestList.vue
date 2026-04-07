@@ -243,24 +243,8 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   flex-direction: column;
 }
 
-.contest-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .contest-subtitle {
   max-width: 680px;
-}
-
-.contest-summary {
-  display: grid;
-  gap: 18px;
-  padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .contest-summary-title {
@@ -272,41 +256,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.contest-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.contest-summary-item {
-  min-width: 0;
-  padding-left: 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.contest-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.contest-summary-value {
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.contest-summary-helper {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .contest-divider {
@@ -340,28 +289,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-directory {
   margin-top: 24px;
-}
-
-.contest-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-bottom: 14px;
-}
-
-.contest-directory-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.contest-directory-meta {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .contest-directory-head {
@@ -481,22 +408,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   color: var(--contest-row-accent, var(--journal-accent));
 }
 
-.contest-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--journal-ink);
-  cursor: pointer;
-}
-
 @keyframes contestSpin {
   from {
     transform: rotate(0deg);
@@ -517,9 +428,4 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   }
 }
 
-@media (max-width: 960px) {
-  .contest-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

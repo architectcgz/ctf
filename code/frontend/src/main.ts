@@ -16,6 +16,7 @@ import './assets/styles/journal-notes.css'
 import './assets/styles/journal-soft-surfaces.css'
 import './assets/styles/journal-admin-shell.css'
 import './assets/styles/journal-user-shell.css'
+import './assets/styles/journal-user-directory.css'
 
 const app = createApp(App)
 const pinia = createPinia()
