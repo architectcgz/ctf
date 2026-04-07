@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
+import adminDashboardPageSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import AdminDashboard from '../AdminDashboard.vue'
 
 const pushMock = vi.fn()
@@ -88,5 +89,12 @@ describe('AdminDashboard', () => {
     expect(wrapper.find('#admin-dashboard-tab-hotspots').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#admin-dashboard-panel-hotspots').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#admin-dashboard-panel-hotspots').text()).toContain('web-01')
+  })
+
+  it('应该将标签栏放在页面顶部标题之前，与其他工作台页面保持一致', () => {
+    expect(adminDashboardPageSource).toContain('role="tablist"')
+    expect(adminDashboardPageSource.indexOf('role="tablist"')).toBeLessThan(
+      adminDashboardPageSource.indexOf('系统值守台'),
+    )
   })
 })
