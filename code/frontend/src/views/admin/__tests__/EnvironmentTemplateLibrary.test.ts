@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
+import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/admin/topology/ChallengeTopologyStudioPage.vue'
 
 vi.mock('@/api/admin', () => ({
@@ -42,7 +43,21 @@ vi.mock('@/api/admin', () => ({
   deleteEnvironmentTemplate: vi.fn(),
 }))
 
-describe('EnvironmentTemplateLibraryPage', () => {
+describe('EnvironmentTemplateLibrary', () => {
+  it('页面应该直接挂载拓扑工作台，而不是再经过中间包装组件', () => {
+    const wrapper = mount(EnvironmentTemplateLibrary, {
+      global: {
+        stubs: {
+          ChallengeTopologyStudioPage: {
+            template: '<div data-testid="topology-studio-page" />',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.find('[data-testid="topology-studio-page"]').exists()).toBe(true)
+  })
+
   it('应该渲染独立模板库入口和编辑动作', async () => {
     const wrapper = mount(ChallengeTopologyStudioPage, {
       props: {

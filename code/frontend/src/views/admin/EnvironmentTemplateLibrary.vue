@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import EnvironmentTemplateLibraryPage from '@/components/admin/topology/EnvironmentTemplateLibraryPage.vue'
+import ChallengeTopologyStudioPage from '@/components/admin/topology/ChallengeTopologyStudioPage.vue'
 </script>
 
 <template>
-  <EnvironmentTemplateLibraryPage />
+  <ChallengeTopologyStudioPage mode="template-library" />
 </template>

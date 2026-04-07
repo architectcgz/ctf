@@ -163,7 +163,7 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toMatch(/\.queue-row__meta-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   })
 
-  it('应该根据 query 切到待确认导入，并支持切换到导入标签后直接看到题目包示例', async () => {
+  it('应该根据 query 切到待确认导入，并在导入标签中只保留独立示例页入口', async () => {
     routeState.query = { panel: 'queue' }
 
     const wrapper = mount(ChallengeManage)
@@ -186,10 +186,14 @@ describe('ChallengeManage', () => {
     const importWrapper = mount(ChallengeManage)
     await flushPromises()
 
-    expect(importWrapper.text()).toContain('题目包示例')
-    expect(importWrapper.text()).toContain('challenge-package.zip')
-    expect(importWrapper.text()).toContain('api_version: v1')
+    expect(importWrapper.text()).toContain('查看题目包示例')
+    expect(importWrapper.text()).not.toContain('challenge-package.zip')
+    expect(importWrapper.text()).not.toContain('api_version: v1')
     expect(wrapper.find('.queue-row__title').attributes('title')).toBe('Web Demo')
     expect(wrapper.find('.queue-row__meta-text').attributes('title')).toBe('demo-import.zip')
+
+    await importWrapper.get('[data-testid="challenge-package-format-link"]').trigger('click')
+
+    expect(pushMock).toHaveBeenLastCalledWith({ name: 'AdminChallengePackageFormat' })
   })
 })
