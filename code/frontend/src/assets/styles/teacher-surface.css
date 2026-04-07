@@ -42,50 +42,14 @@
   --teacher-workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
 }
 
-.teacher-management-shell.teacher-surface-workspace-bg.report-hero {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--teacher-workspace-brand) 6%, transparent),
-      transparent 26rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--teacher-workspace-bg) 96%, var(--teacher-workspace-page)),
-      var(--teacher-workspace-bg)
-    );
-}
-
 .teacher-management-shell .teacher-hero,
 .teacher-management-shell .report-hero {
   border-color: var(--teacher-management-hero-border, var(--journal-border));
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 7%, transparent),
-      transparent 22rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      var(--journal-surface)
-    );
   box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .teacher-surface-hero {
   border: 1px solid var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 14%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
-    );
   border-radius: 16px;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }

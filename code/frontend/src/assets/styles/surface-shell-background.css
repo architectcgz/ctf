@@ -1,0 +1,156 @@
+.workspace-shell {
+  --surface-shell-brand: var(--workspace-brand, var(--color-primary));
+  --surface-shell-radial-strength: var(--workspace-shell-radial-strength, 6%);
+  --surface-shell-radial-size: var(--workspace-shell-radial-size, 26rem);
+  --surface-shell-top: color-mix(
+    in srgb,
+    var(--workspace-shell-background) var(--workspace-shell-top-strength, 96%),
+    var(--workspace-shell-page)
+  );
+  --surface-shell-end: var(--workspace-shell-background);
+}
+
+.journal-shell.journal-shell-user.journal-hero {
+  --surface-shell-brand: var(--journal-accent);
+  --surface-shell-radial-strength: var(--journal-shell-hero-radial-strength, 7%);
+  --surface-shell-radial-size: var(--journal-shell-hero-radial-size, 22rem);
+  --surface-shell-top: color-mix(
+    in srgb,
+    var(--journal-surface) var(--journal-shell-hero-top-strength, 96%),
+    var(--color-bg-base)
+  );
+  --surface-shell-end: var(--journal-shell-hero-end, var(--journal-surface));
+}
+
+[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero {
+  --surface-shell-radial-strength: var(
+    --journal-shell-dark-hero-radial-strength,
+    var(--journal-shell-hero-radial-strength, 16%)
+  );
+  --surface-shell-radial-size: var(
+    --journal-shell-dark-hero-radial-size,
+    var(--journal-shell-hero-radial-size, 20rem)
+  );
+  --surface-shell-top: var(
+    --journal-shell-dark-hero-top,
+    color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base))
+  );
+  --surface-shell-end: var(
+    --journal-shell-dark-hero-end,
+    color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+  );
+}
+
+.journal-shell.journal-shell-admin.journal-hero,
+.journal-shell.journal-shell-admin .journal-panel {
+  --surface-shell-brand: var(--journal-accent);
+  --surface-shell-radial-strength: var(--journal-shell-hero-radial-strength, 12%);
+  --surface-shell-radial-size: var(--journal-shell-hero-radial-size, 18rem);
+  --surface-shell-top: var(
+    --journal-shell-hero-top,
+    color-mix(
+      in srgb,
+      var(--journal-surface) var(--journal-shell-hero-top-strength, 96%),
+      var(--color-bg-base)
+    )
+  );
+  --surface-shell-end: var(
+    --journal-shell-hero-end,
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle) var(--journal-shell-hero-end-strength, 94%),
+      var(--color-bg-base)
+    )
+  );
+}
+
+[data-theme='dark'] .journal-shell.journal-shell-admin.journal-hero,
+[data-theme='dark'] .journal-shell.journal-shell-admin .journal-panel {
+  --surface-shell-radial-strength: var(
+    --journal-shell-dark-hero-radial-strength,
+    var(--journal-shell-hero-radial-strength, 16%)
+  );
+  --surface-shell-radial-size: var(
+    --journal-shell-dark-hero-radial-size,
+    var(--journal-shell-hero-radial-size, 18rem)
+  );
+  --surface-shell-top: var(
+    --journal-shell-dark-hero-top,
+    color-mix(
+      in srgb,
+      var(--journal-surface) var(--journal-shell-dark-hero-top-strength, 97%),
+      var(--color-bg-base)
+    )
+  );
+  --surface-shell-end: var(
+    --journal-shell-dark-hero-end,
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle) var(--journal-shell-dark-hero-end-strength, 95%),
+      var(--color-bg-base)
+    )
+  );
+}
+
+.journal-soft-surface .journal-shell.journal-hero {
+  --surface-shell-brand: var(--journal-accent);
+  --surface-shell-radial-strength: 12%;
+  --surface-shell-radial-size: 18rem;
+  --surface-shell-top: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --surface-shell-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+}
+
+[data-theme='dark'] .journal-soft-surface .journal-shell.journal-hero {
+  --surface-shell-radial-strength: 16%;
+  --surface-shell-top: color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base));
+  --surface-shell-end: color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base));
+}
+
+.teacher-management-shell .teacher-hero,
+.teacher-management-shell .report-hero,
+.teacher-management-shell.report-hero {
+  --surface-shell-brand: var(--journal-accent);
+  --surface-shell-radial-strength: 7%;
+  --surface-shell-radial-size: 22rem;
+  --surface-shell-top: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --surface-shell-end: var(--journal-surface);
+}
+
+.teacher-management-shell.teacher-surface-workspace-bg.report-hero {
+  --surface-shell-brand: var(--teacher-workspace-brand);
+  --surface-shell-radial-strength: 6%;
+  --surface-shell-radial-size: 26rem;
+  --surface-shell-top: color-mix(in srgb, var(--teacher-workspace-bg) 96%, var(--teacher-workspace-page));
+  --surface-shell-end: var(--teacher-workspace-bg);
+}
+
+.teacher-surface-hero {
+  --surface-shell-brand: var(--journal-accent);
+  --surface-shell-radial-strength: 14%;
+  --surface-shell-radial-size: 18rem;
+  --surface-shell-top: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
+  --surface-shell-end: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base));
+}
+
+.workspace-shell,
+.journal-shell.journal-shell-user.journal-hero,
+.journal-shell.journal-shell-admin.journal-hero,
+.journal-shell.journal-shell-admin .journal-panel,
+.journal-soft-surface .journal-shell.journal-hero,
+.teacher-management-shell .teacher-hero,
+.teacher-management-shell .report-hero,
+.teacher-management-shell.report-hero,
+.teacher-surface-hero {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(
+        in srgb,
+        var(--surface-shell-brand, var(--color-primary))
+          var(--surface-shell-radial-strength, 6%),
+        transparent
+      ),
+      transparent var(--surface-shell-radial-size, 26rem)
+    ),
+    linear-gradient(180deg, var(--surface-shell-top), var(--surface-shell-end));
+}

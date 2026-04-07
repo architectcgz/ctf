@@ -28,35 +28,6 @@
 .journal-shell.journal-shell-admin.journal-hero,
 .journal-shell.journal-shell-admin .journal-panel {
   border-color: var(--journal-shell-hero-border, var(--journal-border));
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(
-        in srgb,
-        var(--journal-accent) var(--journal-shell-hero-radial-strength, 12%),
-        transparent
-      ),
-      transparent var(--journal-shell-hero-radial-size, 18rem)
-    ),
-    linear-gradient(
-      180deg,
-      var(
-        --journal-shell-hero-top,
-        color-mix(
-          in srgb,
-          var(--journal-surface) var(--journal-shell-hero-top-strength, 96%),
-          var(--color-bg-base)
-        )
-      ),
-      var(
-        --journal-shell-hero-end,
-        color-mix(
-          in srgb,
-          var(--journal-surface-subtle) var(--journal-shell-hero-end-strength, 94%),
-          var(--color-bg-base)
-        )
-      )
-    );
   border-radius: var(--journal-shell-hero-radius, 16px) !important;
   box-shadow: var(--journal-shell-hero-shadow, 0 18px 40px var(--color-shadow-soft));
 }
@@ -80,46 +51,4 @@
     --journal-shell-dark-surface-subtle,
     color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base))
   );
-}
-
-[data-theme='dark'] .journal-shell.journal-shell-admin.journal-hero,
-[data-theme='dark'] .journal-shell.journal-shell-admin .journal-panel {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(
-        in srgb,
-        var(--journal-accent)
-          var(
-            --journal-shell-dark-hero-radial-strength,
-            var(--journal-shell-hero-radial-strength, 16%)
-          ),
-        transparent
-      ),
-      transparent
-        var(
-          --journal-shell-dark-hero-radial-size,
-          var(--journal-shell-hero-radial-size, 18rem)
-        )
-    ),
-    linear-gradient(
-      180deg,
-      var(
-        --journal-shell-dark-hero-top,
-        color-mix(
-          in srgb,
-          var(--journal-surface) var(--journal-shell-dark-hero-top-strength, 97%),
-          var(--color-bg-base)
-        )
-      ),
-      var(
-        --journal-shell-dark-hero-end,
-        color-mix(
-          in srgb,
-          var(--journal-surface-subtle)
-            var(--journal-shell-dark-hero-end-strength, 95%),
-          var(--color-bg-base)
-        )
-      )
-    );
 }

@@ -14,6 +14,11 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeDetailSource).not.toMatch(
       /\.workspace-shell\s*\{[\s\S]*box-shadow:\s*var\(--journal-shadow\);/s
     )
+    expect(challengeDetailSource).not.toMatch(
+      /:global\(\[data-theme='dark'\]\) \.workspace-shell\s*\{[^}]*background:/s
+    )
+    expect(challengeDetailSource).toContain('--workspace-shell-radial-strength: 14%;')
+    expect(challengeDetailSource).toContain('--workspace-shell-radial-size: 24rem;')
   })
 
   it('主标签轨道应通过 page-tabs 变量接入共享规则，而不是继续本地声明 top-tabs/top-tab', () => {

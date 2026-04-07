@@ -19,17 +19,6 @@
   min-height: 100%;
   border: 1px solid var(--workspace-shell-border);
   border-radius: var(--workspace-shell-radius);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 6%, transparent),
-      transparent 26rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--workspace-shell-background) 96%, var(--workspace-shell-page)),
-      var(--workspace-shell-background)
-    );
   box-shadow: var(--workspace-shell-shadow);
   overflow: clip;
   font-family: var(
