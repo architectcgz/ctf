@@ -178,6 +178,7 @@ describe('UserManage', () => {
     await flushPromises()
 
     expect(wrapper.find('#user-tab-directory').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#user-overview-summary').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('#user-directory-filters').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('.user-table-shell').exists()).toBe(true)
     expect(wrapper.text()).not.toContain('用户治理台')
@@ -325,5 +326,63 @@ describe('UserManage', () => {
     expect(userDirectoryPanelSnippet).toContain('<div class="admin-section-head">')
     expect(userDirectoryPanelSnippet).not.toContain('admin-section-head-intro')
     expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
+  })
+
+  it('用户总览头部不应再渲染快捷操作按钮组', () => {
+    expect(userGovernanceSource).not.toContain('class="mt-6 flex flex-wrap gap-3"')
+    expect(userGovernanceSource).not.toMatch(/刷新列表[\s\S]*用户列表[\s\S]*导入用户[\s\S]*创建用户/s)
+  })
+
+  it('用户总览摘要应内嵌在 overview 区并呈现四个指标卡片', async () => {
+    adminApiMocks.getUsers.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          username: 'alice',
+          email: 'alice@example.com',
+          class_name: 'Class A',
+          status: 'active',
+          roles: ['teacher'],
+          created_at: '2026-03-01T00:00:00.000Z',
+        },
+        {
+          id: '2',
+          username: 'bob',
+          email: 'bob@example.com',
+          class_name: 'Class B',
+          status: 'inactive',
+          roles: ['student'],
+          created_at: '2026-03-02T00:00:00.000Z',
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(UserManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const summary = wrapper.get('#user-overview-summary')
+    const summaryCards = summary.findAll('.user-overview-stat')
+
+    expect(summaryCards).toHaveLength(4)
+    expect(summary.find('.user-overview-grid').exists()).toBe(true)
+    expect(userGovernanceSource).not.toContain('<div v-if="activePanel === \'overview\'" class="journal-divider mt-6" />')
+    expect(summaryCards.map((item) => item.find('.journal-note-label').text())).toEqual([
+      '用户总量',
+      '活跃账号',
+      '教师角色',
+      '导入回执',
+    ])
   })
 })

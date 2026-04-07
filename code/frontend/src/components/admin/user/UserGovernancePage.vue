@@ -202,71 +202,51 @@ function handleImportChange(event: Event): void {
       </button>
     </nav>
 
-    <div v-if="activePanel === 'overview'">
-      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-        用户治理台
-      </h1>
-      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-        在这里筛选账号、批量导入并处理用户状态。
-      </p>
-
-      <div class="mt-6 flex flex-wrap gap-3">
-        <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-          <RefreshCw class="h-4 w-4" />
-          刷新列表
-        </button>
-        <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
-          <UsersRound class="h-4 w-4" />
-          用户列表
-        </button>
-        <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('import')">
-          <FileUp class="h-4 w-4" />
-          导入用户
-        </button>
-        <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-          <UserPlus class="h-4 w-4" />
-          创建用户
-        </button>
-      </div>
-    </div>
-
-    <div v-if="activePanel === 'overview'" class="journal-divider mt-6" />
-
-    <article
+    <section
       id="user-overview-summary"
-      class="tab-panel journal-brief rounded-[24px] border px-5 py-5"
+      class="tab-panel"
       role="tabpanel"
       aria-labelledby="user-tab-overview"
       :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
-      v-show="activePanel === 'overview'"
     >
-      <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-        <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
-        当前用户概况
-      </div>
-      <div class="mt-5 grid gap-3 sm:grid-cols-2">
-        <div class="journal-note">
-          <div class="journal-note-label">用户总量</div>
-          <div class="journal-note-value">{{ total }}</div>
-          <div class="journal-note-helper">当前筛选条件下的用户总数</div>
-        </div>
-        <div class="journal-note">
-          <div class="journal-note-label">活跃账号</div>
-          <div class="journal-note-value">{{ activeCount }}</div>
-          <div class="journal-note-helper">当前页处于 active 的账号</div>
-        </div>
-        <div class="journal-note">
-          <div class="journal-note-label">教师角色</div>
-          <div class="journal-note-value">{{ teacherCount }}</div>
-          <div class="journal-note-helper">当前页教师账号数量</div>
-        </div>
-        <div class="journal-note">
-          <div class="journal-note-label">导入回执</div>
-          <div class="journal-note-value">{{ importSummary }}</div>
-          <div class="journal-note-helper">最近一次导入结果</div>
-        </div>
-      </div>
-    </article>
+      <template v-if="activePanel === 'overview'">
+        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+          用户治理台
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          在这里筛选账号、批量导入并处理用户状态。
+        </p>
+
+        <article class="journal-brief user-overview-summary rounded-[24px] border px-5 py-5">
+          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+            <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
+            当前用户概况
+          </div>
+          <div class="user-overview-grid mt-5">
+            <div class="journal-note user-overview-stat">
+              <div class="journal-note-label">用户总量</div>
+              <div class="journal-note-value">{{ total }}</div>
+              <div class="journal-note-helper">当前筛选条件下的用户总数</div>
+            </div>
+            <div class="journal-note user-overview-stat">
+              <div class="journal-note-label">活跃账号</div>
+              <div class="journal-note-value">{{ activeCount }}</div>
+              <div class="journal-note-helper">当前页处于 active 的账号</div>
+            </div>
+            <div class="journal-note user-overview-stat">
+              <div class="journal-note-label">教师角色</div>
+              <div class="journal-note-value">{{ teacherCount }}</div>
+              <div class="journal-note-helper">当前页教师账号数量</div>
+            </div>
+            <div class="journal-note user-overview-stat">
+              <div class="journal-note-label">导入回执</div>
+              <div class="journal-note-value">{{ importSummary }}</div>
+              <div class="journal-note-helper">最近一次导入结果</div>
+            </div>
+          </div>
+        </article>
+      </template>
+    </section>
 
     <section
       id="user-directory-filters"
@@ -577,6 +557,11 @@ function handleImportChange(event: Event): void {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
+.user-overview-summary {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+}
+
 .journal-eyebrow {
   font-size: 0.7rem;
   font-weight: 700;
@@ -639,11 +624,24 @@ function handleImportChange(event: Event): void {
   padding-top: 0.5rem;
 }
 
+.user-overview-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .journal-note {
   border-radius: 14px;
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.75rem 0.875rem;
+}
+
+.user-overview-stat {
+  display: flex;
+  min-height: 140px;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .journal-note-label {
@@ -659,6 +657,12 @@ function handleImportChange(event: Event): void {
   font-size: 1rem;
   font-weight: 600;
   color: var(--journal-ink);
+}
+
+.user-overview-stat .journal-note-value {
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
 }
 
 .journal-note-helper {
@@ -899,6 +903,16 @@ function handleImportChange(event: Event): void {
 
   .user-table-shell {
     overflow-x: auto;
+  }
+
+  .user-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .user-overview-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
