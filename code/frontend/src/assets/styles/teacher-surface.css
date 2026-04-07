@@ -36,6 +36,26 @@
   );
 }
 
+.teacher-management-shell.teacher-surface-workspace-bg {
+  --teacher-workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --teacher-workspace-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --teacher-workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+}
+
+.teacher-management-shell.teacher-surface-workspace-bg.report-hero {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--teacher-workspace-brand) 6%, transparent),
+      transparent 26rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--teacher-workspace-bg) 96%, var(--teacher-workspace-page)),
+      var(--teacher-workspace-bg)
+    );
+}
+
 .teacher-management-shell .teacher-hero,
 .teacher-management-shell .report-hero {
   border-color: var(--teacher-management-hero-border, var(--journal-border));
