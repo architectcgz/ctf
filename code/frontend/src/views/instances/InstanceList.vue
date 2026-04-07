@@ -399,12 +399,6 @@ const {
   gap: 8px;
 }
 
-.instance-btn-primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
 .instance-btn-danger {
   color: var(--color-danger);
 }
