@@ -2,12 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getClasses } from '@/api/teacher'
-import type { TeacherClassItem } from '@/api/contracts'
+import { getClasses, getClassStudents } from '@/api/teacher'
+import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
 import { useAuthStore } from '@/stores/auth'
+
+const ALL_CLASSES_KEY = '__all_classes__'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -20,11 +22,57 @@ const studentListQuery = useStudentListQuery({
   debounceMs: 250,
   errorMessage: '加载学生列表失败，请稍后重试',
   getParams: () => filters.studentQueryParams.value,
+  request: loadStudentsByClassFilter,
 })
 
 const { selectedClassName, searchQuery, studentNoQuery } = filters
 const { students, loading: loadingStudents } = studentListQuery
 const error = computed(() => pageError.value ?? studentListQuery.error.value)
+const totalStudents = computed(() => {
+  if (selectedClassName.value) {
+    return classes.value.find((item) => item.name === selectedClassName.value)?.student_count ?? students.value.length
+  }
+
+  return classes.value.reduce((total, item) => total + (item.student_count || 0), 0)
+})
+
+function resolveClassFilterKey(className: string): string {
+  return className || ALL_CLASSES_KEY
+}
+
+function resolvePreferredClass(): string {
+  const teacherClassName = authStore.user?.class_name
+  if (teacherClassName && classes.value.some((item) => item.name === teacherClassName)) {
+    return teacherClassName
+  }
+
+  return ''
+}
+
+async function loadStudentsByClassFilter(
+  classFilterKey: string,
+  params?: { keyword?: string; student_no?: string }
+): Promise<TeacherStudentItem[]> {
+  if (classFilterKey !== ALL_CLASSES_KEY) {
+    return getClassStudents(classFilterKey, params)
+  }
+
+  if (classes.value.length === 0) {
+    return []
+  }
+
+  const studentGroups = await Promise.all(
+    classes.value.map(async (item) => {
+      const classStudents = await getClassStudents(item.name, params)
+      return classStudents.map((student) => ({
+        ...student,
+        class_name: item.name,
+      }))
+    })
+  )
+
+  return studentGroups.flat()
+}
 
 async function loadClasses(): Promise<void> {
   loadingClasses.value = true
@@ -38,7 +86,7 @@ async function loadClasses(): Promise<void> {
 async function selectClass(className: string): Promise<void> {
   studentListQuery.cancelScheduledLoad()
   filters.updateSelectedClassName(className)
-  await studentListQuery.loadStudents(className)
+  await studentListQuery.loadStudents(resolveClassFilterKey(className))
 }
 
 async function initialize(): Promise<void> {
@@ -46,7 +94,7 @@ async function initialize(): Promise<void> {
 
   try {
     await loadClasses()
-    const preferredClass = authStore.user?.class_name || classes.value[0]?.name || ''
+    const preferredClass = resolvePreferredClass()
     await selectClass(preferredClass)
   } catch (err) {
     console.error('初始化学生管理失败:', err)
@@ -55,10 +103,11 @@ async function initialize(): Promise<void> {
 }
 
 function openStudent(studentId: string): void {
+  const student = students.value.find((item) => item.id === studentId)
   router.push({
     name: 'TeacherStudentAnalysis',
     params: {
-      className: selectedClassName.value,
+      className: selectedClassName.value || student?.class_name || '',
       studentId,
     },
   })
@@ -73,8 +122,7 @@ function updateStudentNoQuery(value: string): void {
 }
 
 watch([searchQuery, studentNoQuery], () => {
-  if (!selectedClassName.value) return
-  studentListQuery.scheduleLoadStudents(selectedClassName.value)
+  studentListQuery.scheduleLoadStudents(resolveClassFilterKey(selectedClassName.value))
 })
 
 onMounted(() => {
@@ -89,9 +137,7 @@ onMounted(() => {
     :search-query="searchQuery"
     :student-no-query="studentNoQuery"
     :filtered-students="students"
-    :total-students="
-      classes.find((item) => item.name === selectedClassName)?.student_count || students.length
-    "
+    :total-students="totalStudents"
     :loading-classes="loadingClasses"
     :loading-students="loadingStudents"
     :error="error"

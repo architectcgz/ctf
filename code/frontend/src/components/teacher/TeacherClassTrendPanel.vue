@@ -3,7 +3,6 @@ import { computed } from 'vue'
 
 import type { TeacherClassTrendData } from '@/api/contracts'
 import LineChart from '@/components/charts/LineChart.vue'
-import AppEmpty from '@/components/common/AppEmpty.vue'
 
 const props = defineProps<{
   trend: TeacherClassTrendData | null
@@ -38,12 +37,9 @@ const series = computed(() => [
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
     </header>
 
-    <AppEmpty
-      v-if="!trend || trend.points.length === 0"
-      icon="FileChartColumnIncreasing"
-      title="暂无趋势数据"
-      description="当前班级近 7 天还没有可用训练趋势。"
-    />
+    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy">
+      暂无趋势数据
+    </p>
 
     <div v-else class="teacher-panel__chart">
       <LineChart :categories="categories" :series="series" />
@@ -96,6 +92,13 @@ const series = computed(() => [
   margin-top: 0.45rem;
   font-size: 0.84rem;
   line-height: 1.65;
+  color: var(--panel-muted);
+}
+
+.teacher-panel__empty-copy {
+  margin-top: 0.25rem;
+  font-size: 0.84rem;
+  line-height: 1.7;
   color: var(--panel-muted);
 }
 

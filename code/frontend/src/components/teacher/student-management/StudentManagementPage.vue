@@ -90,6 +90,7 @@ const emit = defineEmits<{
                 :disabled="loadingClasses"
                 @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
               >
+                <option value="">全部班级</option>
                 <option v-for="item in classes" :key="item.name" :value="item.name">
                   {{ item.name }} · {{ item.student_count || 0 }}
                 </option>

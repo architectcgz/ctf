@@ -239,6 +239,189 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).not.toContain('bob')
   })
 
+  it('班级筛选为空时应该显示全部学生并保留学生所属班级跳转', async () => {
+    teacherApiMocks.getClasses.mockResolvedValue([
+      { name: 'Class A', student_count: 1 },
+      { name: 'Class B', student_count: 2 },
+    ])
+    teacherApiMocks.getClassStudents.mockImplementation(async (className, params) => {
+      if (className === 'Class A') {
+        if (params?.keyword === 'Carol') {
+          return []
+        }
+        return [
+          {
+            id: 'stu-1',
+            username: 'alice',
+            name: 'Alice Zhang',
+            student_no: '2024001',
+            recent_event_count: 0,
+          },
+        ]
+      }
+
+      if (params?.keyword === 'Carol') {
+        return [
+          {
+            id: 'stu-3',
+            username: 'carol',
+            name: 'Carol Chen',
+            student_no: '2024003',
+            recent_event_count: 1,
+          },
+        ]
+      }
+
+      return [
+        {
+          id: 'stu-2',
+          username: 'bob',
+          name: 'Bob Li',
+          student_no: '2024002',
+          recent_event_count: 2,
+        },
+        {
+          id: 'stu-3',
+          username: 'carol',
+          name: 'Carol Chen',
+          student_no: '2024003',
+          recent_event_count: 1,
+        },
+      ]
+    })
+
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const classSelect = wrapper.find('select')
+    const options = classSelect.findAll('option').map((option) => ({
+      value: option.element.getAttribute('value'),
+      text: option.text(),
+    }))
+
+    expect(options).toEqual([
+      { value: '', text: '全部班级' },
+      { value: 'Class A', text: 'Class A · 1' },
+      { value: 'Class B', text: 'Class B · 2' },
+    ])
+
+    await classSelect.setValue('')
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(2, 'Class A', {
+      keyword: undefined,
+      student_no: undefined,
+    })
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(3, 'Class B', {
+      keyword: undefined,
+      student_no: undefined,
+    })
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(3)
+    expect(wrapper.text()).toContain('Alice Zhang')
+    expect(wrapper.text()).toContain('Bob Li')
+    expect(wrapper.text()).toContain('Carol Chen')
+
+    const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
+    await searchInput.setValue('Carol')
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(4, 'Class A', {
+      keyword: 'Carol',
+      student_no: undefined,
+    })
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(5, 'Class B', {
+      keyword: 'Carol',
+      student_no: undefined,
+    })
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Carol Chen')
+    expect(wrapper.text()).not.toContain('Alice Zhang')
+
+    const carolRow = wrapper
+      .findAll('.teacher-directory-row')
+      .find((row) => row.text().includes('Carol Chen'))
+    expect(carolRow).toBeDefined()
+    await carolRow!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'TeacherStudentAnalysis',
+      params: { className: 'Class B', studentId: 'stu-3' },
+    })
+  })
+
+  it('默认班级不是可访问班级时应该回退为全部班级并显示全部学生', async () => {
+    teacherApiMocks.getClasses.mockResolvedValue([
+      { name: 'Class A', student_count: 1 },
+      { name: 'Class B', student_count: 1 },
+    ])
+    teacherApiMocks.getClassStudents.mockImplementation(async (className) => {
+      if (className === 'Class A') {
+        return [
+          {
+            id: 'stu-1',
+            username: 'alice',
+            name: 'Alice Zhang',
+            student_no: '2024001',
+          },
+        ]
+      }
+
+      return [
+        {
+          id: 'stu-2',
+          username: 'bob',
+          name: 'Bob Li',
+          student_no: '2024002',
+        },
+      ]
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Missing Class',
+      },
+      'token'
+    )
+
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('select').element.value).toBe('')
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(1, 'Class A', {
+      keyword: undefined,
+      student_no: undefined,
+    })
+    expect(teacherApiMocks.getClassStudents).toHaveBeenNthCalledWith(2, 'Class B', {
+      keyword: undefined,
+      student_no: undefined,
+    })
+    expect(wrapper.text()).toContain('Alice Zhang')
+    expect(wrapper.text()).toContain('Bob Li')
+  })
+
   it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
     expect(studentManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s

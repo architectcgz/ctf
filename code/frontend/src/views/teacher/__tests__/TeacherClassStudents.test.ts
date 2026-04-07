@@ -59,6 +59,7 @@ describe('TeacherClassStudents', () => {
       {
         id: 'stu-1',
         username: 'alice',
+        name: 'Alice Zhang',
         solved_count: 3,
         total_score: 280,
         recent_event_count: 0,
@@ -180,6 +181,8 @@ describe('TeacherClassStudents', () => {
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
+    expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
+    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('@alice')
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
     expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
 
@@ -199,6 +202,10 @@ describe('TeacherClassStudents', () => {
     expect(classStudentsPageSource).toMatch(
       /<div class="workspace-shell">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
+    expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s)
+    expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s)
+    expect(classStudentsPageSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(classStudentsPageSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   })
 
   it('应该保留已解码的班级名并使用原值请求学生列表', async () => {

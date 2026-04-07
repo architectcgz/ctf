@@ -619,6 +619,7 @@ export interface TeacherStudentItem {
   username: string
   student_no?: string
   name?: string
+  class_name?: string
   solved_count?: number
   total_score?: number
   recent_event_count?: number
