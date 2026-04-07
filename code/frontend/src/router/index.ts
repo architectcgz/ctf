@@ -123,14 +123,14 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/profile'),
       },
       {
-        path: 'student/settings/security',
+        path: 'settings/security',
         name: 'SecuritySettings',
         component: () => import('@/views/profile/SecuritySettings.vue'),
         meta: { requiresAuth: true, title: '安全设置', icon: 'Settings', contentLayout: 'bleed' },
       },
       {
-        path: 'settings/security',
-        redirect: redirectWithQuery('/student/settings/security'),
+        path: 'student/settings/security',
+        redirect: redirectWithQuery('/settings/security'),
       },
       {
         path: 'notifications',
