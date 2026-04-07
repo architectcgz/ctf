@@ -194,45 +194,18 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 </template>
 
 <style scoped>
+.journal-soft-surface {
+  --journal-soft-button-height: 34px;
+  --journal-soft-button-padding: 0.4rem 1rem;
+  --journal-soft-button-size: 0.8rem;
+  --journal-soft-button-primary-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+}
+
 .journal-brief {
   border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);
 }
 
-.journal-btn-primary,
-.journal-btn-outline {
-  min-height: 34px;
-  border-radius: 10px;
-  padding: 0.4rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  transition: all 0.15s;
-}
-
-.journal-btn-outline {
-  border: 1px solid var(--journal-control-border);
-  border-radius: 10px;
-  background: var(--journal-surface);
-  color: var(--journal-muted);
-}
-
-.journal-btn-outline:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn-primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn-primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.journal-btn-primary:focus-visible,
-.journal-btn-outline:focus-visible,
 .recommend-item:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
   outline-offset: 2px;
@@ -330,9 +303,8 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 }
 
 @media (max-width: 767px) {
-  .journal-btn-primary,
-  .journal-btn-outline {
-    min-height: 36px;
+  .journal-soft-surface {
+    --journal-soft-button-height: 36px;
   }
 }
 </style>

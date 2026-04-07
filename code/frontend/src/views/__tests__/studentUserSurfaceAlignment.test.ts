@@ -38,8 +38,11 @@ describe('student and user surface alignment', () => {
     expect(studentTimelineSource).toMatch(/\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s)
     expect(studentTimelineSource).not.toContain('rgba(226, 232, 240, 0.72)')
 
+    expect(journalSoftSurfacesSource).toMatch(
+      /\.journal-soft-surface \.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s
+    )
     expect(studentRecommendationSource).toContain('journal-soft-surface')
-    expect(studentRecommendationSource).toMatch(/\.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s)
+    expect(studentRecommendationSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
     expect(studentRecommendationSource).not.toContain('border-slate-200')
     expect(studentRecommendationSource).not.toContain('bg-slate-50')
     expect(studentRecommendationSource).not.toContain('border-emerald-200')
@@ -47,7 +50,7 @@ describe('student and user surface alignment', () => {
 
     expect(studentCategoryProgressSource).toContain('journal-soft-surface')
     expect(studentCategoryProgressSource).toMatch(/\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s)
-    expect(studentCategoryProgressSource).toMatch(/\.journal-btn-outline\s*\{[\s\S]*border:\s*1px solid var\(--journal-control-border\);/s)
+    expect(studentCategoryProgressSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
     expect(studentCategoryProgressSource).not.toContain('rgba(226, 232, 240, 0.65)')
   })
 

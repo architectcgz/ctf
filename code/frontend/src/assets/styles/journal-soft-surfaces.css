@@ -92,6 +92,83 @@
   background: color-mix(in srgb, var(--journal-track) 82%, transparent);
 }
 
+.journal-soft-surface .journal-btn-primary,
+.journal-soft-surface .journal-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: var(--journal-soft-button-justify, center);
+  gap: var(--journal-soft-button-gap, 0.375rem);
+  min-height: var(--journal-soft-button-height, 34px);
+  border-radius: var(--journal-soft-button-radius, 10px);
+  padding: var(--journal-soft-button-padding, 0.45rem 1rem);
+  font-size: var(--journal-soft-button-size, 0.82rem);
+  font-weight: var(--journal-soft-button-weight, 600);
+  transition: var(
+    --journal-soft-button-transition,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease
+  );
+}
+
+.journal-soft-surface .journal-btn-primary:hover,
+.journal-soft-surface .journal-btn-outline:hover {
+  transform: var(--journal-soft-button-hover-transform, none);
+}
+
+.journal-soft-surface .journal-btn-primary {
+  border: 1px solid
+    var(
+      --journal-soft-button-primary-border,
+      color-mix(in srgb, var(--journal-accent) 50%, transparent)
+    );
+  background: var(
+    --journal-soft-button-primary-background,
+    color-mix(in srgb, var(--journal-accent) 10%, transparent)
+  );
+  color: var(--journal-soft-button-primary-color, var(--journal-accent-strong));
+}
+
+.journal-soft-surface .journal-btn-primary:hover {
+  border-color: var(
+    --journal-soft-button-primary-hover-border,
+    var(
+      --journal-soft-button-primary-border,
+      color-mix(in srgb, var(--journal-accent) 66%, transparent)
+    )
+  );
+  background: var(
+    --journal-soft-button-primary-hover-background,
+    color-mix(in srgb, var(--journal-accent) 16%, transparent)
+  );
+  color: var(
+    --journal-soft-button-primary-hover-color,
+    var(--journal-soft-button-primary-color, var(--journal-accent-strong))
+  );
+}
+
+.journal-soft-surface .journal-btn-outline {
+  border: 1px solid var(--journal-control-border);
+  background: var(--journal-soft-button-outline-background, var(--journal-surface));
+  color: var(--journal-soft-button-outline-color, var(--journal-muted));
+}
+
+.journal-soft-surface .journal-btn-outline:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
+  background: var(
+    --journal-soft-button-outline-hover-background,
+    var(--journal-soft-button-outline-background, var(--journal-surface))
+  );
+  color: var(--journal-soft-button-outline-hover-color, var(--journal-accent-strong));
+}
+
+.journal-soft-surface .journal-btn-primary:focus-visible,
+.journal-soft-surface .journal-btn-outline:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline-offset: 2px;
+}
+
 [data-theme='dark'] .journal-soft-surface .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);

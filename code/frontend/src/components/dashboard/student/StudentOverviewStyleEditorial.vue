@@ -192,6 +192,9 @@ const operationsSummary = computed(() => [
   --journal-soft-eyebrow-size: 11px;
   --journal-soft-eyebrow-spacing: 0.12em;
   --journal-soft-eyebrow-color: var(--journal-accent-strong);
+  --journal-soft-button-height: 36px;
+  --journal-soft-button-padding: 0.5rem 1rem;
+  --journal-soft-button-hover-transform: translateY(-1px);
 }
 
 .journal-board {
@@ -229,56 +232,6 @@ const operationsSummary = computed(() => [
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-}
-
-.journal-btn-primary,
-.journal-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    color 0.18s ease,
-    transform 0.18s ease;
-}
-
-.journal-btn-primary:hover,
-.journal-btn-outline:hover {
-  transform: translateY(-1px);
-}
-
-.journal-btn-primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn-primary:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 66%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
-.journal-btn-outline {
-  border: 1px solid var(--journal-control-border);
-  background: var(--journal-surface);
-  color: var(--journal-muted);
-}
-
-.journal-btn-outline:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn-primary:focus-visible,
-.journal-btn-outline:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
 }
 
 @media (min-width: 1280px) {
@@ -374,10 +327,9 @@ const operationsSummary = computed(() => [
 }
 
 @media (max-width: 767px) {
-  .journal-btn-primary,
-  .journal-btn-outline {
-    min-height: 38px;
-    padding-inline: 0.95rem;
+  .journal-soft-surface {
+    --journal-soft-button-height: 38px;
+    --journal-soft-button-padding: 0.5rem 0.95rem;
   }
 }
 </style>

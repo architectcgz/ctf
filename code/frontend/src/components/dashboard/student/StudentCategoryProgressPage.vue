@@ -204,6 +204,16 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 <style scoped>
 .journal-soft-surface {
   --category-cols: minmax(130px, 1fr) minmax(88px, 120px) minmax(110px, 150px);
+  --journal-soft-button-height: 34px;
+  --journal-soft-button-padding: 0.45rem 1rem;
+  --journal-soft-button-size: 0.82rem;
+  --journal-soft-button-primary-background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  --journal-soft-button-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 14%,
+    transparent
+  );
+  --journal-soft-button-primary-color: var(--journal-accent);
 }
 
 .journal-brief {
@@ -314,60 +324,23 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   color: #d97706;
 }
 
-.journal-btn-primary,
-.journal-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  min-height: 34px;
-  border-radius: 10px;
-  padding: 0.45rem 1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  transition: all 0.15s;
-}
-
-.journal-btn-primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  color: var(--journal-accent);
-}
-
-.journal-btn-primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
-}
-
-.journal-btn-outline {
-  border: 1px solid var(--journal-control-border);
-  background: var(--journal-surface);
-  color: var(--journal-muted);
-}
-
-.journal-btn-outline:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn-primary:focus-visible,
-.journal-btn-outline:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
-}
-
 :global([data-theme='dark']) .category-highlight,
-:global([data-theme='dark']) .category-list,
-:global([data-theme='dark']) .journal-btn-outline {
+:global([data-theme='dark']) .category-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}
+
+:global([data-theme='dark']) .journal-soft-surface {
+  --journal-soft-button-outline-background: color-mix(
+    in srgb,
+    var(--journal-surface) 94%,
+    transparent
+  );
 }
 
 @media (max-width: 767px) {
   .journal-soft-surface {
     --category-cols: minmax(100px, 1fr) minmax(68px, 84px) minmax(92px, 116px);
-  }
-
-  .journal-btn-primary,
-  .journal-btn-outline {
-    min-height: 36px;
+    --journal-soft-button-height: 36px;
   }
 }
 </style>
