@@ -94,7 +94,7 @@ describe('UserManage', () => {
     })
   })
 
-  it('应该将用户治理拆成概览、用户列表、导入用户三个标签页', async () => {
+  it('应该将用户治理拆成总览、用户列表、导入用户三个标签页', async () => {
     adminApiMocks.getUsers.mockResolvedValue({
       list: [
         {
@@ -125,14 +125,14 @@ describe('UserManage', () => {
     await flushPromises()
 
     expect(wrapper.find('#user-tab-overview').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#user-overview-section').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#user-overview-summary').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#user-directory-filters').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('#user-import-start').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.text()).toContain('概览')
+    expect(wrapper.text()).toContain('总览')
     expect(wrapper.text()).toContain('用户列表')
     expect(wrapper.text()).toContain('导入用户')
-    expect(wrapper.find('#user-overview-section').text()).toContain('当前治理概况')
-    expect(wrapper.find('.user-table-shell').exists()).toBe(true)
+    expect(wrapper.find('#user-overview-summary').text()).toContain('当前用户概况')
+    expect(wrapper.find('#user-overview-summary').text()).toContain('用户总量')
     expect(wrapper.text()).toContain('导入回执')
 
     await wrapper.get('#user-tab-import').trigger('click')
@@ -180,6 +180,9 @@ describe('UserManage', () => {
     expect(wrapper.find('#user-tab-directory').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#user-directory-filters').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('.user-table-shell').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('用户治理台')
+    expect(wrapper.find('#user-directory-filters').text()).not.toContain('学生学号')
+    expect(wrapper.find('#user-directory-filters').text()).not.toContain('教师工号')
     expect(wrapper.find('#user-directory-filters').text()).toContain('筛选条件')
     expect(wrapper.text()).toContain('用户列表')
   })
@@ -274,9 +277,8 @@ describe('UserManage', () => {
     adminApiMocks.getUsers.mockClear()
 
     const inputs = wrapper.findAll('input.admin-input')
+    expect(inputs).toHaveLength(1)
     await inputs[0].setValue('alice')
-    await inputs[1].setValue('S001')
-    await inputs[2].setValue('T001')
 
     expect(adminApiMocks.getUsers).not.toHaveBeenCalled()
 
@@ -288,18 +290,24 @@ describe('UserManage', () => {
       page: 1,
       page_size: 20,
       keyword: 'alice',
-      student_no: 'S001',
-      teacher_no: 'T001',
+      student_no: undefined,
+      teacher_no: undefined,
       role: undefined,
       status: undefined,
     })
   })
 
-  it('用户治理页应使用顶层 tabs 分隔概览、列表和导入区域', () => {
+  it('用户治理页应使用顶层 tabs 分隔列表和导入区域', () => {
+    const userDirectoryPanelStart = userGovernanceSource.indexOf('id="user-directory-filters"')
+    const userDirectoryPanelSnippet = userGovernanceSource.slice(
+      userDirectoryPanelStart,
+      userDirectoryPanelStart + 320
+    )
+
     expect(userGovernanceSource).toContain('user-tab-overview')
     expect(userGovernanceSource).toContain('user-tab-directory')
     expect(userGovernanceSource).toContain('user-tab-import')
-    expect(userGovernanceSource).toContain('user-overview-section')
+    expect(userGovernanceSource).toContain('user-overview-summary')
     expect(userGovernanceSource).toContain('user-directory-filters')
     expect(userGovernanceSource).toContain('user-import-start')
     expect(userGovernanceSource).toMatch(/role="tablist"/s)
@@ -309,10 +317,13 @@ describe('UserManage', () => {
     expect(userGovernanceSource.indexOf('role="tablist"')).toBeLessThan(
       userGovernanceSource.indexOf('用户治理台')
     )
-    expect(userGovernanceSource).not.toContain('user-panel-overview')
+    expect(userGovernanceSource).not.toContain('user-overview-entry')
     expect(userGovernanceSource).not.toContain('user-panel-directory')
     expect(userGovernanceSource).not.toContain('user-panel-import')
     expect(userGovernanceSource).not.toContain('<main class="content-pane">')
+    expect(userDirectoryPanelStart).toBeGreaterThan(-1)
+    expect(userDirectoryPanelSnippet).toContain('<div class="admin-section-head">')
+    expect(userDirectoryPanelSnippet).not.toContain('admin-section-head-intro')
     expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
   })
 })

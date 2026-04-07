@@ -51,7 +51,12 @@ const router = useRouter()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 
 const panelTabs: Array<{ key: UserPanelKey; label: string; panelId: string; tabId: string }> = [
-  { key: 'overview', label: '概览', panelId: 'user-overview-section', tabId: 'user-tab-overview' },
+  {
+    key: 'overview',
+    label: '总览',
+    panelId: 'user-overview-summary',
+    tabId: 'user-tab-overview',
+  },
   {
     key: 'directory',
     label: '用户列表',
@@ -197,112 +202,71 @@ function handleImportChange(event: Event): void {
       </button>
     </nav>
 
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <div>
-        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-          用户治理台
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          在这里筛选账号、批量导入并处理用户状态。
-        </p>
+    <div v-if="activePanel === 'overview'">
+      <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+        用户治理台
+      </h1>
+      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        在这里筛选账号、批量导入并处理用户状态。
+      </p>
 
-        <div class="mt-6 flex flex-wrap gap-3">
-          <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-            <RefreshCw class="h-4 w-4" />
-            刷新列表
-          </button>
-          <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
-            <UsersRound class="h-4 w-4" />
-            用户列表
-          </button>
-          <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('import')">
-            <FileUp class="h-4 w-4" />
-            导入用户
-          </button>
-          <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-            <UserPlus class="h-4 w-4" />
-            创建用户
-          </button>
-        </div>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+          <RefreshCw class="h-4 w-4" />
+          刷新列表
+        </button>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
+          <UsersRound class="h-4 w-4" />
+          用户列表
+        </button>
+        <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('import')">
+          <FileUp class="h-4 w-4" />
+          导入用户
+        </button>
+        <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+          <UserPlus class="h-4 w-4" />
+          创建用户
+        </button>
       </div>
-
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-          <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
-          当前治理概况
-        </div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
-            <div class="journal-note-label">用户总量</div>
-            <div class="journal-note-value">{{ total }}</div>
-            <div class="journal-note-helper">当前筛选条件下的用户总数</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">活跃账号</div>
-            <div class="journal-note-value">{{ activeCount }}</div>
-            <div class="journal-note-helper">当前页处于 active 的账号</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">教师角色</div>
-            <div class="journal-note-value">{{ teacherCount }}</div>
-            <div class="journal-note-helper">当前页教师账号数量</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">导入回执</div>
-            <div class="journal-note-value">{{ importSummary }}</div>
-            <div class="journal-note-helper">最近一次导入结果</div>
-          </div>
-        </div>
-      </article>
     </div>
 
-    <div class="journal-divider mt-6" />
+    <div v-if="activePanel === 'overview'" class="journal-divider mt-6" />
 
-    <section
-      id="user-overview-section"
-      class="tab-panel space-y-4"
+    <article
+      id="user-overview-summary"
+      class="tab-panel journal-brief rounded-[24px] border px-5 py-5"
       role="tabpanel"
       aria-labelledby="user-tab-overview"
       :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       v-show="activePanel === 'overview'"
     >
-      <div class="admin-section-head admin-section-head-intro">
-        <div>
-          <div class="journal-note-label">Overview</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">主界面</h2>
-        </div>
-
-        <div class="flex flex-wrap gap-3">
-          <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
-            <UsersRound class="h-4 w-4" />
-            进入用户列表
-          </button>
-          <button type="button" class="admin-btn admin-btn-primary" @click="switchPanel('import')">
-            <FileUp class="h-4 w-4" />
-            前往导入用户
-          </button>
-        </div>
+      <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+        <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
+        当前用户概况
       </div>
-
-      <div class="grid gap-4 lg:grid-cols-2">
+      <div class="mt-5 grid gap-3 sm:grid-cols-2">
         <div class="journal-note">
-          <div class="journal-note-label">当前治理概况</div>
-          <div class="journal-note-value">用户列表</div>
-          <div class="journal-note-helper">集中查看账号、筛选条件、分页以及编辑删除操作。</div>
+          <div class="journal-note-label">用户总量</div>
+          <div class="journal-note-value">{{ total }}</div>
+          <div class="journal-note-helper">当前筛选条件下的用户总数</div>
         </div>
         <div class="journal-note">
-          <div class="journal-note-label">Import</div>
-          <div class="journal-note-value">导入用户</div>
-          <div class="journal-note-helper">上传 CSV 批量导入，并在回执区查看创建、更新和失败结果。</div>
+          <div class="journal-note-label">活跃账号</div>
+          <div class="journal-note-value">{{ activeCount }}</div>
+          <div class="journal-note-helper">当前页处于 active 的账号</div>
+        </div>
+        <div class="journal-note">
+          <div class="journal-note-label">教师角色</div>
+          <div class="journal-note-value">{{ teacherCount }}</div>
+          <div class="journal-note-helper">当前页教师账号数量</div>
+        </div>
+        <div class="journal-note">
+          <div class="journal-note-label">导入回执</div>
+          <div class="journal-note-value">{{ importSummary }}</div>
+          <div class="journal-note-helper">最近一次导入结果</div>
         </div>
       </div>
-
-      <div class="journal-note">
-        <div class="journal-note-label">最近导入状态</div>
-        <div class="journal-note-value">{{ importSummary }}</div>
-        <div class="journal-note-helper">如果需要查看详细错误，请切换到导入用户标签页。</div>
-      </div>
-    </section>
+    </article>
 
     <section
       id="user-directory-filters"
@@ -312,7 +276,7 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
       v-show="activePanel === 'directory'"
     >
-      <div class="admin-section-head admin-section-head-intro">
+      <div class="admin-section-head">
         <div>
           <div class="journal-note-label">Filters</div>
           <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选条件</h2>
@@ -341,30 +305,6 @@ function handleImportChange(event: Event): void {
             @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
           />
         </label>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--journal-muted)]">学生学号</span>
-            <input
-              :value="studentNo"
-              type="text"
-              class="admin-input"
-              placeholder="按学号筛选"
-              @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-            />
-          </label>
-
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--journal-muted)]">教师工号</span>
-            <input
-              :value="teacherNo"
-              type="text"
-              class="admin-input"
-              placeholder="按工号筛选"
-              @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
-            />
-          </label>
-        </div>
 
         <div class="grid gap-4 md:grid-cols-2">
           <label class="space-y-2">
@@ -692,6 +632,10 @@ function handleImportChange(event: Event): void {
 .tab-panel {
   min-width: 0;
   padding-top: 1.5rem;
+}
+
+#user-directory-filters {
+  padding-top: 0.5rem;
 }
 
 .journal-note {
