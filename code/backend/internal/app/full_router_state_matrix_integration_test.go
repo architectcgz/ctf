@@ -540,19 +540,29 @@ func TestFullRouter_TeacherAccessAndRecommendationStateMatrix(t *testing.T) {
 	resp := performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/classes", nil, teacherHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var teacherClasses []dto.TeacherClassItem
+	var teacherClasses struct {
+		List     []dto.TeacherClassItem `json:"list"`
+		Total    int64                  `json:"total"`
+		Page     int                    `json:"page"`
+		PageSize int                    `json:"page_size"`
+	}
 	decodeFullRouterData(t, resp, &teacherClasses)
-	if len(teacherClasses) != 1 || teacherClasses[0].Name != env.className {
-		t.Fatalf("expected only teacher class, got %+v", teacherClasses)
+	if teacherClasses.Total != 1 || len(teacherClasses.List) != 1 || teacherClasses.List[0].Name != env.className {
+		t.Fatalf("expected only teacher class page, got %+v", teacherClasses)
 	}
 
-	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/classes", nil, adminHeaders)
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, "/api/v1/teacher/classes?page=1&page_size=1", nil, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusOK)
 
-	var adminClasses []dto.TeacherClassItem
+	var adminClasses struct {
+		List     []dto.TeacherClassItem `json:"list"`
+		Total    int64                  `json:"total"`
+		Page     int                    `json:"page"`
+		PageSize int                    `json:"page_size"`
+	}
 	decodeFullRouterData(t, resp, &adminClasses)
-	if len(adminClasses) < 2 {
-		t.Fatalf("expected admin to see all classes, got %+v", adminClasses)
+	if adminClasses.Page != 1 || adminClasses.PageSize != 1 || len(adminClasses.List) != 1 || adminClasses.Total < 2 {
+		t.Fatalf("expected admin class pagination, got %+v", adminClasses)
 	}
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/teacher/classes/%s/summary", env.className), nil, teacherHeaders)

@@ -7,6 +7,11 @@ type TeacherClassItem struct {
 	StudentCount int64  `json:"student_count"`
 }
 
+type TeacherClassQuery struct {
+	Page int `form:"page" binding:"omitempty,min=1"`
+	Size int `form:"page_size" binding:"omitempty,min=1,max=100"`
+}
+
 type TeacherClassSummaryResp struct {
 	ClassName          string  `json:"class_name"`
 	StudentCount       int64   `json:"student_count"`

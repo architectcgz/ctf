@@ -7,12 +7,16 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
+  total: number
+  page: number
+  pageSize: number
   loading: boolean
   error: string | null
 }>()
 
 const emit = defineEmits<{
   retry: []
+  changePage: [page: number]
   openDashboard: []
   openReportExport: []
   openClass: [className: string]
@@ -30,8 +34,18 @@ interface WorkspaceTabItem {
 }
 
 const workspaceTabs: WorkspaceTabItem[] = [
-  { key: 'overview', label: '总览', buttonId: 'class-manage-tab-overview', panelId: 'class-manage-overview' },
-  { key: 'directory', label: '班级列表', buttonId: 'class-manage-tab-directory', panelId: 'class-manage-directory' },
+  {
+    key: 'overview',
+    label: '总览',
+    buttonId: 'class-manage-tab-overview',
+    panelId: 'class-manage-overview',
+  },
+  {
+    key: 'directory',
+    label: '班级列表',
+    buttonId: 'class-manage-tab-directory',
+    panelId: 'class-manage-directory',
+  },
 ]
 
 const activeTab = ref<WorkspaceTab>('overview')
@@ -96,6 +110,11 @@ const filteredClassEntries = computed(() => {
     return code.toLowerCase().includes(keyword) || item.name.toLowerCase().includes(keyword)
   })
 })
+
+const totalPages = computed(() => Math.max(1, Math.ceil(props.total / Math.max(props.pageSize, 1))))
+const currentPageStudentCount = computed(() =>
+  props.classes.reduce((sum, item) => sum + (item.student_count || 0), 0)
+)
 </script>
 
 <template>
@@ -140,10 +159,18 @@ const filteredClassEntries = computed(() => {
             </div>
 
             <div class="teacher-actions">
-              <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--primary"
+                @click="emit('openDashboard')"
+              >
                 教学概览
               </button>
-              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReportExport')">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--ghost"
+                @click="emit('openReportExport')"
+              >
                 导出报告
               </button>
             </div>
@@ -157,15 +184,13 @@ const filteredClassEntries = computed(() => {
             <div class="teacher-summary-grid">
               <div class="teacher-summary-item">
                 <div class="teacher-summary-label">班级数量</div>
-                <div class="teacher-summary-value">{{ classes.length }}</div>
+                <div class="teacher-summary-value">{{ total }}</div>
                 <div class="teacher-summary-helper">当前可管理班级总数</div>
               </div>
               <div class="teacher-summary-item">
-                <div class="teacher-summary-label">学生总量</div>
-                <div class="teacher-summary-value">
-                  {{ classes.reduce((sum, item) => sum + (item.student_count || 0), 0) }}
-                </div>
-                <div class="teacher-summary-helper">各班级学生数汇总</div>
+                <div class="teacher-summary-label">当前页学生数</div>
+                <div class="teacher-summary-value">{{ currentPageStudentCount }}</div>
+                <div class="teacher-summary-helper">当前分页已加载班级的学生数汇总</div>
               </div>
               <div class="teacher-summary-item">
                 <div class="teacher-summary-label">当前状态</div>
@@ -211,7 +236,7 @@ const filteredClassEntries = computed(() => {
 
           <div class="teacher-hero-divider" />
 
-          <div v-if="loading" class="teacher-skeleton-list">
+          <div v-if="loading" class="teacher-skeleton-list workspace-directory-loading">
             <div
               v-for="index in 5"
               :key="index"
@@ -221,74 +246,115 @@ const filteredClassEntries = computed(() => {
 
           <AppEmpty
             v-else-if="classes.length === 0"
-            class="teacher-empty-state"
+            class="teacher-empty-state workspace-directory-empty"
             icon="Users"
             title="暂无班级"
             description="当前教师账号下还没有可访问的班级。"
           />
 
-          <section v-else class="teacher-directory" aria-label="班级目录">
+          <section
+            v-else
+            class="teacher-directory workspace-directory-section"
+            aria-label="班级目录"
+          >
             <div class="teacher-directory-top">
               <div>
                 <h3 class="teacher-directory-title">班级目录</h3>
-                <div class="teacher-directory-meta">共 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级</div>
+                <div class="teacher-directory-meta">
+                  本页 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级，共
+                  {{ total }} 个班级
+                </div>
               </div>
             </div>
 
             <div v-if="filteredClassEntries.length > 0" class="teacher-directory-head">
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code">班级编号</span>
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name">班级名称</span>
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-count">学生数</span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code"
+                >班级编号</span
+              >
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name"
+                >班级名称</span
+              >
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-count"
+                >学生数</span
+              >
               <span>状态</span>
               <span>操作</span>
             </div>
 
             <AppEmpty
               v-if="filteredClassEntries.length === 0"
-              class="teacher-empty-state"
+              class="teacher-empty-state workspace-directory-empty"
               icon="Search"
               title="没有匹配班级"
               description="调整搜索关键词后再试。"
             />
 
-            <button
-              v-for="{ item, code } in filteredClassEntries"
-              :key="item.name"
-              type="button"
-              class="teacher-directory-row"
-              :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
-              @click="emit('openClass', item.name)"
+            <div v-if="filteredClassEntries.length > 0" class="workspace-directory-list">
+              <button
+                v-for="{ item, code } in filteredClassEntries"
+                :key="item.name"
+                type="button"
+                class="teacher-directory-row"
+                :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
+                @click="emit('openClass', item.name)"
+              >
+                <div class="teacher-directory-cell teacher-directory-cell-class-code">
+                  {{ code }}
+                </div>
+
+                <div class="teacher-directory-cell teacher-directory-cell-class-name">
+                  <h4 class="teacher-directory-row-title" :title="item.name">{{ item.name }}</h4>
+                </div>
+
+                <div class="teacher-directory-cell teacher-directory-cell-student-count">
+                  <div class="teacher-directory-row-points">{{ item.student_count || 0 }}</div>
+                </div>
+
+                <div class="teacher-directory-row-status">
+                  <span
+                    class="teacher-directory-state-chip"
+                    :class="
+                      (item.student_count || 0) > 0
+                        ? 'teacher-directory-state-chip-ready'
+                        : 'teacher-directory-state-chip-empty'
+                    "
+                  >
+                    {{ (item.student_count || 0) > 0 ? '可查看' : '待入班' }}
+                  </span>
+                </div>
+
+                <div class="teacher-directory-row-cta">
+                  <span>进入班级</span>
+                  <ArrowRight class="h-4 w-4" />
+                </div>
+              </button>
+            </div>
+
+            <div
+              v-if="total > 0"
+              class="teacher-directory-pagination workspace-directory-pagination"
             >
-              <div class="teacher-directory-cell teacher-directory-cell-class-code">
-                {{ code }}
-              </div>
-
-              <div class="teacher-directory-cell teacher-directory-cell-class-name">
-                <h4 class="teacher-directory-row-title" :title="item.name">{{ item.name }}</h4>
-              </div>
-
-              <div class="teacher-directory-cell teacher-directory-cell-student-count">
-                <div class="teacher-directory-row-points">{{ item.student_count || 0 }}</div>
-              </div>
-
-              <div class="teacher-directory-row-status">
-                <span
-                  class="teacher-directory-state-chip"
-                  :class="
-                    (item.student_count || 0) > 0
-                      ? 'teacher-directory-state-chip-ready'
-                      : 'teacher-directory-state-chip-empty'
-                  "
+              <span>共 {{ total }} 个班级</span>
+              <div class="teacher-directory-pagination-actions">
+                <button
+                  type="button"
+                  class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
+                  :disabled="page === 1"
+                  @click="emit('changePage', page - 1)"
                 >
-                  {{ (item.student_count || 0) > 0 ? '可查看' : '待入班' }}
-                </span>
+                  上一页
+                </button>
+                <span>{{ page }} / {{ totalPages }}</span>
+                <button
+                  type="button"
+                  class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
+                  :disabled="page >= totalPages"
+                  @click="emit('changePage', page + 1)"
+                >
+                  下一页
+                </button>
               </div>
-
-              <div class="teacher-directory-row-cta">
-                <span>进入班级</span>
-                <ArrowRight class="h-4 w-4" />
-              </div>
-            </button>
+            </div>
           </section>
         </section>
       </div>
@@ -313,12 +379,8 @@ const filteredClassEntries = computed(() => {
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --teacher-class-directory-columns:
-    minmax(7rem, 0.7fr)
-    minmax(11rem, 1.15fr)
-    minmax(7rem, 0.7fr)
-    minmax(7rem, 0.7fr)
-    minmax(7rem, 0.75fr);
+  --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
+    minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -327,7 +389,11 @@ const filteredClassEntries = computed(() => {
 .teacher-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -823,6 +889,22 @@ const filteredClassEntries = computed(() => {
   color: var(--journal-accent-strong);
 }
 
+.teacher-directory-pagination-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teacher-directory-pagination-button {
+  min-height: 2.2rem;
+  padding: 0 0.85rem;
+}
+
+.teacher-directory-pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (max-width: 960px) {
   .top-tabs {
     margin-left: -1rem;
@@ -847,6 +929,11 @@ const filteredClassEntries = computed(() => {
     grid-template-columns: 1fr;
     gap: 0.85rem;
     padding: 1rem 0;
+  }
+
+  .teacher-directory-pagination-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 </style>

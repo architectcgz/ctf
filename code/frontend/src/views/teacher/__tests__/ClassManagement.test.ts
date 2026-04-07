@@ -28,10 +28,15 @@ describe('ClassManagement', () => {
     localStorage.clear()
     pushMock.mockReset()
     teacherApiMocks.getClasses.mockReset()
-    teacherApiMocks.getClasses.mockResolvedValue([
-      { name: 'Class A', student_count: 2 },
-      { name: 'Class B', student_count: 3 },
-    ])
+    teacherApiMocks.getClasses.mockResolvedValue({
+      list: [
+        { name: 'Class A', student_count: 2 },
+        { name: 'Class B', student_count: 3 },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
   })
 
   it('应该展示班级列表并支持进入班级学生页', async () => {
@@ -47,6 +52,7 @@ describe('ClassManagement', () => {
 
     await flushPromises()
 
+    expect(teacherApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
     expect(wrapper.text()).toContain('班级管理')
     expect(wrapper.find('#class-manage-tab-overview').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#class-manage-overview').attributes('aria-hidden')).toBe('false')
@@ -60,14 +66,15 @@ describe('ClassManagement', () => {
     expect(wrapper.find('#class-manage-directory').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
+    expect(wrapper.find('.teacher-directory-pagination').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-head').text()).toContain('班级编号')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('班级名称')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学生数')
     expect(wrapper.find('.teacher-directory-head').text()).not.toContain('标签')
     expect(wrapper.find('.teacher-directory-head').text()).not.toContain('数据')
 
-    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map((element) =>
-      element.className.toString()
+    const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map(
+      (element) => element.className.toString()
     )
     expect(headChildren[0]).toContain('teacher-directory-head-cell-class-code')
     expect(headChildren[1]).toContain('teacher-directory-head-cell-class-name')
@@ -92,7 +99,10 @@ describe('ClassManagement', () => {
     expect(wrapper.text()).toContain('Class A')
     expect(wrapper.text()).toContain('Class B')
 
-    await wrapper.findAll('button').find((node) => node.text().includes('进入'))?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('进入'))
+      ?.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({
       name: 'TeacherClassStudents',
@@ -136,13 +146,63 @@ describe('ClassManagement', () => {
     expect(wrapper.text()).toContain('没有匹配班级')
   })
 
+  it('应该支持切换班级目录分页', async () => {
+    teacherApiMocks.getClasses.mockReset()
+    teacherApiMocks.getClasses
+      .mockResolvedValueOnce({
+        list: Array.from({ length: 20 }, (_, index) => ({
+          name: `Class ${index + 1}`,
+          student_count: index + 1,
+        })),
+        total: 21,
+        page: 1,
+        page_size: 20,
+      })
+      .mockResolvedValueOnce({
+        list: [{ name: 'Class 21', student_count: 21 }],
+        total: 21,
+        page: 2,
+        page_size: 20,
+      })
+
+    const wrapper = mount(ClassManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#class-manage-tab-directory').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('共 21 个班级')
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
+
+    await wrapper.get('button.teacher-directory-pagination-button:last-of-type').trigger('click')
+    await flushPromises()
+
+    expect(teacherApiMocks.getClasses).toHaveBeenNthCalledWith(2, { page: 2, page_size: 20 })
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Class 21')
+    expect(wrapper.text()).not.toContain('Class 20')
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
+  })
+
   it('应该为班级名称保留单行省略和完整悬浮提示', () => {
     expect(classManagementSource).toContain('role="tablist"')
     expect(classManagementSource).toContain('class-manage-tab-overview')
     expect(classManagementSource).toContain('class-manage-tab-directory')
     expect(classManagementSource).toContain('class-manage-overview')
     expect(classManagementSource).toContain('class-manage-directory')
-    expect(classManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="item\.name"/s)
-    expect(classManagementSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(classManagementSource).toMatch(
+      /class="teacher-directory-row-title"[\s\S]*:title="item\.name"/s
+    )
+    expect(classManagementSource).toMatch(
+      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
   })
 })

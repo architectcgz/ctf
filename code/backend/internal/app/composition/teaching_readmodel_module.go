@@ -20,7 +20,12 @@ func BuildTeachingReadmodelModule(root *Root, assessment *AssessmentModule) *Tea
 	log := root.Logger()
 
 	deps := buildTeachingReadmodelModuleDeps(root)
-	service := readmodelqueries.NewQueryService(deps.repo, assessment.Recommendations, log.Named("teaching_readmodel_query_service"))
+	service := readmodelqueries.NewQueryService(
+		deps.repo,
+		assessment.Recommendations,
+		root.Config().Pagination,
+		log.Named("teaching_readmodel_query_service"),
+	)
 
 	return &TeachingReadmodelModule{
 		Handler: teachinghttp.NewHandler(service),

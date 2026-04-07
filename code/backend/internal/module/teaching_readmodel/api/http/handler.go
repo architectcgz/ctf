@@ -21,14 +21,19 @@ func NewHandler(service teachingreadmodelqueries.Service) *Handler {
 
 func (h *Handler) ListClasses(c *gin.Context) {
 	currentUser := authctx.MustCurrentUser(c)
+	var query dto.TeacherClassQuery
+	if err := c.ShouldBindQuery(&query); err != nil {
+		response.ValidationError(c, err)
+		return
+	}
 
-	items, err := h.service.ListClasses(c.Request.Context(), currentUser.UserID, currentUser.Role)
+	items, total, page, pageSize, err := h.service.ListClasses(c.Request.Context(), currentUser.UserID, currentUser.Role, &query)
 	if err != nil {
 		response.FromError(c, err)
 		return
 	}
 
-	response.Success(c, items)
+	response.Page(c, items, total, page, pageSize)
 }
 
 func (h *Handler) ListClassStudents(c *gin.Context) {

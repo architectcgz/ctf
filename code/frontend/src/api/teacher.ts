@@ -107,13 +107,19 @@ interface RawTeacherEvidenceResponse {
   }>
 }
 
-interface RawTeacherSubmissionWriteupItem extends Omit<TeacherSubmissionWriteupItemData, 'id' | 'user_id' | 'challenge_id'> {
+interface RawTeacherSubmissionWriteupItem extends Omit<
+  TeacherSubmissionWriteupItemData,
+  'id' | 'user_id' | 'challenge_id'
+> {
   id: string | number
   user_id: string | number
   challenge_id: string | number
 }
 
-interface RawTeacherManualReviewSubmissionItem extends Omit<TeacherManualReviewSubmissionItemData, 'id' | 'user_id' | 'challenge_id'> {
+interface RawTeacherManualReviewSubmissionItem extends Omit<
+  TeacherManualReviewSubmissionItemData,
+  'id' | 'user_id' | 'challenge_id'
+> {
   id: string | number
   user_id: string | number
   challenge_id: string | number
@@ -129,8 +135,25 @@ interface RawTeacherManualReviewSubmissionDetail extends Omit<
   reviewed_by?: string | number
 }
 
-export async function getClasses(): Promise<TeacherClassItem[]> {
-  return request<TeacherClassItem[]>({ method: 'GET', url: '/teacher/classes' })
+export async function getClasses(): Promise<TeacherClassItem[]>
+export async function getClasses(params: {
+  page?: number
+  page_size?: number
+}): Promise<PageResult<TeacherClassItem>>
+export async function getClasses(params?: {
+  page?: number
+  page_size?: number
+}): Promise<PageResult<TeacherClassItem> | TeacherClassItem[]> {
+  const payload = await request<PageResult<TeacherClassItem>>({
+    method: 'GET',
+    url: '/teacher/classes',
+    params: {
+      page: params?.page,
+      page_size: params?.page_size,
+    },
+  })
+
+  return params ? payload : payload.list
 }
 
 export async function getClassStudents(
@@ -349,7 +372,9 @@ export async function recommendTeacherCommunityWriteup(id: string): Promise<Subm
   return normalizeSubmissionWriteupData(payload)
 }
 
-export async function unrecommendTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
+export async function unrecommendTeacherCommunityWriteup(
+  id: string
+): Promise<SubmissionWriteupData> {
   const payload = await request<
     SubmissionWriteupData & {
       id: string | number
