@@ -28,7 +28,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   retry: []
   openClassManagement: []
-  openReportExport: []
 }>()
 
 type WorkspaceTab = 'overview' | 'portrait' | 'trend' | 'insight' | 'advice' | 'action'

@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherDashboard from '../TeacherDashboard.vue'
+import teacherDashboardSource from '../TeacherDashboard.vue?raw'
 import teacherDashboardPageSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import teacherClassReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
 import teacherInterventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
@@ -276,5 +277,11 @@ describe('TeacherDashboard', () => {
     expect(wrapper.text()).not.toContain('导出报告')
     expect(wrapper.text()).not.toContain('展开能力画像')
     expect(wrapper.text()).not.toContain('查看介入建议')
+  })
+
+  it('教师概览页不应保留导出报告事件链', () => {
+    expect(teacherDashboardPageSource).not.toContain('openReportExport')
+    expect(teacherDashboardSource).not.toContain('@open-report-export')
+    expect(teacherDashboardSource).not.toContain("router.push({ name: 'ReportExport' })")
   })
 })
