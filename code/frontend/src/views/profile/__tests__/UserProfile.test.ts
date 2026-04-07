@@ -121,4 +121,40 @@ describe('UserProfile', () => {
 
     createElementSpy.mockRestore()
   })
+
+  it('管理员不应该展示个人报告区块', async () => {
+    authApiMocks.getProfile.mockResolvedValue({
+      id: 'admin-1',
+      username: 'admin',
+      role: 'admin',
+      name: 'Admin',
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        name: 'Admin',
+      },
+      'token'
+    )
+
+    const wrapper = mount(UserProfile)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('个人资料')
+    expect(wrapper.text()).toContain('查看账号信息与当前账号状态。')
+    expect(wrapper.text()).toContain('Admin')
+    expect(wrapper.text()).not.toContain('报告状态')
+    expect(wrapper.text()).not.toContain('最近生成')
+    expect(wrapper.text()).not.toContain('个人报告')
+    expect(wrapper.text()).not.toContain('导出格式')
+    expect(wrapper.text()).not.toContain('生成个人报告')
+    expect(wrapper.find('.profile-section--report').exists()).toBe(false)
+    expect(wrapper.find('.profile-summary-grid').exists()).toBe(false)
+    expect(wrapper.find('.profile-layout').classes()).toContain('profile-layout--single')
+    expect(assessmentApiMocks.exportPersonalReport).not.toHaveBeenCalled()
+  })
 })
