@@ -83,6 +83,5 @@ onMounted(() => {
     :error="error"
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
-    @open-report-export="router.push({ name: 'ReportExport' })"
   />
 </template>
