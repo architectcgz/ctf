@@ -515,92 +515,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --workspace-radius-lg: 18px;
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-  min-height: 100%;
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: var(--workspace-radius-xl);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--workspace-brand) 6%, transparent),
-      transparent 26rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--workspace-shell-bg) 96%, var(--workspace-page)),
-      var(--workspace-shell-bg)
-    );
-  box-shadow: var(--workspace-shadow-shell);
-  overflow: clip;
-  color: var(--journal-ink);
-}
-
-.workspace-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 22px 28px 0;
-}
-
-.topbar-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-}
-
-.workspace-overline {
-  display: inline-block;
-  border: 0 !important;
-  box-shadow: none !important;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 66%, var(--workspace-faint));
-}
-
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 22%, transparent);
-  border-radius: 8px;
-  background: var(--workspace-brand-soft);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--workspace-brand-ink);
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.content-pane {
-  min-width: 0;
-  padding: 28px;
 }
 
 .journal-eyebrow {
   letter-spacing: 0.08em;
-}
-
-.teacher-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
-}
-
-.teacher-heading {
-  min-width: 0;
 }
 
 .teacher-eyebrow-row {
@@ -621,59 +539,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--journal-muted);
-}
-
-.teacher-copy {
-  max-width: 42.5rem;
-}
-
-.teacher-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.teacher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.teacher-btn:hover,
-.teacher-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--primary:hover,
-.teacher-btn--primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
 .teacher-summary {
@@ -834,52 +699,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border-top: 1px dashed var(--teacher-divider);
 }
 
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  padding: 0 28px;
-  margin-top: 10px;
-  border-bottom: 1px solid var(--workspace-line-soft);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--workspace-faint);
-  font:
-    600 15px/1 'IBM Plex Sans',
-    'Noto Sans SC',
-    'PingFang SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: var(--workspace-brand-ink);
-  border-bottom-color: var(--workspace-brand);
-  outline: none;
-}
-
 .workspace-alert {
   margin-bottom: 1.5rem;
   border: 1px solid var(--workspace-line-soft);
@@ -944,15 +763,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;
-}
-
-.tab-panel {
-  display: none;
-}
-
-.tab-panel.active {
-  display: block;
-  animation: tabPanelIn 180ms ease both;
 }
 
 .tab-panel.section {
@@ -1289,18 +1099,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
-}
-
-@keyframes tabPanelIn {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 1080px) {

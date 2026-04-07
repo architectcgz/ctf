@@ -381,6 +381,15 @@ const currentPageStudentCount = computed(() =>
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
+  --page-top-tabs-gap: 1.2rem;
+  --page-top-tabs-margin: 0 -1.5rem 1.25rem;
+  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  --page-top-tab-min-height: 3rem;
+  --page-top-tab-padding: 0.4rem 0 0.75rem;
+  --page-top-tab-font-size: 0.92rem;
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -413,115 +422,8 @@ const currentPageStudentCount = computed(() =>
   flex-direction: column;
 }
 
-.top-tabs {
-  display: flex;
-  gap: 1.2rem;
-  margin: 0 -1.5rem 1.25rem;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 3rem;
-  padding: 0.4rem 0 0.75rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.16s ease,
-    color 0.16s ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
-  outline: none;
-}
-
-.tab-panel {
-  min-width: 0;
-}
-
 .teacher-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-heading {
-  min-width: 0;
-}
-
-.teacher-copy {
-  max-width: 42.5rem;
-}
-
-.teacher-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.teacher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.teacher-btn:hover,
-.teacher-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--primary:hover,
-.teacher-btn--primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
 .teacher-summary {

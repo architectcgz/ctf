@@ -107,7 +107,11 @@ function remainingExtends(item: TeacherInstanceItem): number {
           </div>
 
           <div class="teacher-actions">
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              @click="emit('openDashboard')"
+            >
               返回教学概览
             </button>
           </div>
@@ -234,9 +238,14 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
           <div v-for="item in instances" :key="item.id" class="teacher-directory-row">
             <div class="teacher-directory-row-main">
-              <div class="teacher-directory-row-index">{{ item.student_no || `@${item.student_username}` }}</div>
+              <div class="teacher-directory-row-index">
+                {{ item.student_no || `@${item.student_username}` }}
+              </div>
               <div class="teacher-directory-row-title-group">
-                <h4 class="teacher-directory-row-title" :title="item.student_name || item.student_username">
+                <h4
+                  class="teacher-directory-row-title"
+                  :title="item.student_name || item.student_username"
+                >
                   {{ item.student_name || item.student_username }}
                 </h4>
                 <div class="teacher-directory-row-points" :title="item.challenge_title">
@@ -248,7 +257,9 @@ function remainingExtends(item: TeacherInstanceItem): number {
                 :title="`@${item.student_username} · ${item.class_name} · ${item.access_url || '暂未分配访问地址'}`"
               >
                 @{{ item.student_username }} · {{ item.class_name }} ·
-                <span class="teacher-directory-url">{{ item.access_url || '暂未分配访问地址' }}</span>
+                <span class="teacher-directory-url">{{
+                  item.access_url || '暂未分配访问地址'
+                }}</span>
               </div>
             </div>
 
@@ -260,7 +271,10 @@ function remainingExtends(item: TeacherInstanceItem): number {
             </div>
 
             <div class="teacher-directory-row-status">
-              <span class="teacher-directory-state-chip border" :class="statusMeta(item.status).chipClass">
+              <span
+                class="teacher-directory-state-chip border"
+                :class="statusMeta(item.status).chipClass"
+              >
                 {{ statusMeta(item.status).label }}
               </span>
             </div>
@@ -315,7 +329,11 @@ function remainingExtends(item: TeacherInstanceItem): number {
 .teacher-hero {
   border-color: var(--teacher-card-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -336,69 +354,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-heading {
-  min-width: 0;
-}
-
-.teacher-copy {
-  max-width: 42.5rem;
-}
-
-.teacher-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.teacher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  padding: 0 0.95rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.teacher-btn:hover,
-.teacher-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--primary:hover,
-.teacher-btn--primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
 .teacher-summary {

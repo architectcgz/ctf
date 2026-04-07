@@ -644,6 +644,16 @@ onMounted(() => {
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --journal-topbar-padding-bottom: 0.85rem;
+  --page-top-tabs-gap: 28px;
+  --page-top-tabs-margin: 10px -1.5rem 0;
+  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-font-size: 15px;
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
 }
 
 .journal-hero {
@@ -662,22 +672,6 @@ onMounted(() => {
   box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
-.workspace-topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-  padding-bottom: 0.85rem;
-}
-
-.topbar-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
-}
-
 .workspace-overline,
 .journal-note-label,
 .journal-eyebrow {
@@ -688,79 +682,10 @@ onMounted(() => {
   color: var(--journal-accent);
 }
 
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 26%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.25rem 0.7rem;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: var(--journal-accent);
-}
-
-.top-note {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem 1rem;
-  font-size: 0.82rem;
-  color: var(--journal-muted);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  margin-top: 10px;
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1;
-  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.16s ease,
-    color 0.16s ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  outline: none;
-}
-
 .content-pane {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-}
-
-.tab-panel {
-  min-width: 0;
 }
 
 .journal-note {

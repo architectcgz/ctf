@@ -60,7 +60,11 @@ extensions:
         <span class="workspace-overline">Challenge Package</span>
         <span class="class-chip">上传示例</span>
       </div>
-      <button class="nav-back" type="button" @click="router.push({ name: 'ChallengeManage', query: { panel: 'import' } })">
+      <button
+        class="nav-back"
+        type="button"
+        @click="router.push({ name: 'ChallengeManage', query: { panel: 'import' } })"
+      >
         返回导入题目包
       </button>
     </header>
@@ -69,7 +73,8 @@ extensions:
       <div class="journal-eyebrow">Uploader Guide</div>
       <h1 class="hero-title">题目包示例</h1>
       <p class="hero-summary">
-        上传 zip 之前，先核对目录结构、`challenge.yml` 字段和题面文件路径。这里的示例与当前导入解析规则保持一致。
+        上传 zip 之前，先核对目录结构、`challenge.yml`
+        字段和题面文件路径。这里的示例与当前导入解析规则保持一致。
       </p>
     </div>
 
@@ -118,28 +123,17 @@ extensions:
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
       var(--journal-surface)
     );
   box-shadow: 0 22px 50px var(--color-shadow-soft);
-}
-
-.workspace-topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem 1rem;
-}
-
-.topbar-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.65rem;
 }
 
 .workspace-overline,
@@ -149,19 +143,6 @@ extensions:
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 26%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.25rem 0.7rem;
-  font-size: 0.76rem;
-  font-weight: 600;
   color: var(--journal-accent);
 }
 

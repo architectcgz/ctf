@@ -45,10 +45,18 @@ const emit = defineEmits<{
           </div>
 
           <div class="teacher-actions">
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openClassManagement')">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--primary"
+              @click="emit('openClassManagement')"
+            >
               班级管理
             </button>
-            <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReportExport')">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
+              @click="emit('openReportExport')"
+            >
               导出报告
             </button>
           </div>
@@ -156,8 +164,12 @@ const emit = defineEmits<{
           </div>
 
           <div class="teacher-directory-head">
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">学号</span>
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-name">学生名称</span>
+            <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no"
+              >学号</span
+            >
+            <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
+              >学生名称</span
+            >
             <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
             <span>薄弱项</span>
             <span>数据</span>
@@ -253,20 +265,19 @@ const emit = defineEmits<{
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --teacher-student-directory-columns:
-    minmax(7.5rem, 0.7fr)
-    minmax(10rem, 1fr)
-    minmax(10rem, 0.9fr)
-    minmax(12rem, 0.95fr)
-    minmax(8rem, 0.8fr)
-    minmax(8.5rem, 0.85fr);
+  --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
+    minmax(12rem, 0.95fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
   font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
 }
 
 .teacher-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 7%, transparent),
+      transparent 22rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -287,69 +298,7 @@ const emit = defineEmits<{
 }
 
 .teacher-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-heading {
-  min-width: 0;
-}
-
-.teacher-copy {
-  max-width: 42.5rem;
-}
-
-.teacher-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.teacher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.5rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  padding: 0 0.95rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.teacher-btn:hover,
-.teacher-btn:focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  outline: none;
-}
-
-.teacher-btn--primary {
-  border-color: transparent;
-  background: var(--journal-accent);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--primary:hover,
-.teacher-btn--primary:focus-visible {
-  border-color: transparent;
-  background: var(--journal-accent-strong);
-  color: var(--color-bg-base);
-}
-
-.teacher-btn--ghost {
-  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
 .teacher-summary {
@@ -602,7 +551,9 @@ const emit = defineEmits<{
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--journal-muted);
-  font-family: 'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
   font-variant-numeric: tabular-nums;
 }
 

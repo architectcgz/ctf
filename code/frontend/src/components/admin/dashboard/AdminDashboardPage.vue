@@ -46,16 +46,37 @@ const alertCount = computed(() => props.dashboard?.alerts.length ?? 0)
 const healthSummary = computed(() => {
   const cpu = props.dashboard?.cpu_usage ?? 0
   const memory = props.dashboard?.memory_usage ?? 0
-  if (alertCount.value > 0 || cpu >= 90 || memory >= 90) return { label: '高风险', accent: 'danger' as const }
+  if (alertCount.value > 0 || cpu >= 90 || memory >= 90)
+    return { label: '高风险', accent: 'danger' as const }
   if (cpu >= 75 || memory >= 75) return { label: '需要关注', accent: 'warning' as const }
   return { label: '运行稳定', accent: 'success' as const }
 })
 
 const quickSignals = computed(() => [
-  { label: '在线用户', value: props.dashboard?.online_users ?? 0, helper: '当前在线账号', accent: 'primary' as const },
-  { label: '活跃容器', value: props.dashboard?.active_containers ?? 0, helper: '正在运行的实例', accent: 'success' as const },
-  { label: '平均 CPU', value: formatPercent(props.dashboard?.cpu_usage), helper: '当前资源水位', accent: healthSummary.value.accent },
-  { label: '平均内存', value: formatPercent(props.dashboard?.memory_usage), helper: '结合阈值判断回收', accent: healthSummary.value.accent },
+  {
+    label: '在线用户',
+    value: props.dashboard?.online_users ?? 0,
+    helper: '当前在线账号',
+    accent: 'primary' as const,
+  },
+  {
+    label: '活跃容器',
+    value: props.dashboard?.active_containers ?? 0,
+    helper: '正在运行的实例',
+    accent: 'success' as const,
+  },
+  {
+    label: '平均 CPU',
+    value: formatPercent(props.dashboard?.cpu_usage),
+    helper: '当前资源水位',
+    accent: healthSummary.value.accent,
+  },
+  {
+    label: '平均内存',
+    value: formatPercent(props.dashboard?.memory_usage),
+    helper: '结合阈值判断回收',
+    accent: healthSummary.value.accent,
+  },
 ])
 
 const sortedContainers = computed(() =>
@@ -63,7 +84,7 @@ const sortedContainers = computed(() =>
     const leftPeak = Math.max(left.cpu_percent ?? 0, left.memory_percent ?? 0)
     const rightPeak = Math.max(right.cpu_percent ?? 0, right.memory_percent ?? 0)
     return rightPeak - leftPeak
-  }),
+  })
 )
 
 const metaPills = computed(() => [
@@ -79,15 +100,13 @@ const overviewMetrics = computed(() =>
     label: item.label,
     value: String(item.value),
     hint: item.helper,
-  })),
+  }))
 )
 
 const peakContainer = computed(() => sortedContainers.value[0] ?? null)
 
 const railScore = computed(() =>
-  String(
-    Math.round(Math.max(props.dashboard?.cpu_usage ?? 0, props.dashboard?.memory_usage ?? 0)),
-  ),
+  String(Math.round(Math.max(props.dashboard?.cpu_usage ?? 0, props.dashboard?.memory_usage ?? 0)))
 )
 
 const railCopy = computed(() => {
@@ -177,11 +196,7 @@ function usageTone(value: number | undefined): string {
       </div>
     </header>
 
-    <nav
-      class="top-tabs"
-      role="tablist"
-      aria-label="系统值守视图切换"
-    >
+    <nav class="top-tabs" role="tablist" aria-label="系统值守视图切换">
       <button
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
@@ -213,15 +228,9 @@ function usageTone(value: number | undefined): string {
           :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
         >
           <div>
-            <div class="workspace-overline">
-              Operations Workspace
-            </div>
-            <h1 class="hero-title">
-              系统值守台
-            </h1>
-            <p class="hero-summary">
-              在这里查看平台状态、异常和当前资源热点。
-            </p>
+            <div class="workspace-overline">Operations Workspace</div>
+            <h1 class="hero-title">系统值守台</h1>
+            <p class="hero-summary">在这里查看平台状态、异常和当前资源热点。</p>
 
             <div class="meta-strip">
               <span
@@ -235,11 +244,7 @@ function usageTone(value: number | undefined): string {
             </div>
 
             <div class="progress-strip">
-              <article
-                v-for="item in overviewMetrics"
-                :key="item.key"
-                class="progress-card"
-              >
+              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card">
                 <div class="progress-card-label">
                   {{ item.label }}
                 </div>
@@ -253,9 +258,7 @@ function usageTone(value: number | undefined): string {
             </div>
 
             <div class="overview-quick-actions">
-              <div class="workspace-overline">
-                Quick Actions
-              </div>
+              <div class="workspace-overline">Quick Actions</div>
               <div class="quick-actions">
                 <button
                   type="button"
@@ -271,34 +274,19 @@ function usageTone(value: number | undefined): string {
                 >
                   <span>风险研判</span><span>→</span>
                 </button>
-                <button
-                  type="button"
-                  class="quick-action"
-                  @click="selectPanel('alerts')"
-                >
+                <button type="button" class="quick-action" @click="selectPanel('alerts')">
                   <span>查看当前告警</span><span>→</span>
                 </button>
-                <button
-                  type="button"
-                  class="quick-action"
-                  @click="selectPanel('hotspots')"
-                >
+                <button type="button" class="quick-action" @click="selectPanel('hotspots')">
                   <span>查看资源热点</span><span>→</span>
                 </button>
               </div>
             </div>
 
-            <div
-              v-if="error"
-              class="workspace-alert"
-              role="alert"
-              aria-live="polite"
-            >
+            <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
               <div class="workspace-alert-title-row">
                 <AlertTriangle class="workspace-alert-icon" />
-                <div class="workspace-alert-title">
-                  管理端概览加载失败
-                </div>
+                <div class="workspace-alert-title">管理端概览加载失败</div>
               </div>
               <div class="workspace-alert-copy">
                 {{ error }}
@@ -324,22 +312,13 @@ function usageTone(value: number | undefined): string {
               </div>
             </div>
 
-            <div
-              v-else-if="loading"
-              class="progress-strip"
-            >
-              <div
-                v-for="index in 4"
-                :key="index"
-                class="progress-card progress-card--skeleton"
-              />
+            <div v-else-if="loading" class="progress-strip">
+              <div v-for="index in 4" :key="index" class="progress-card progress-card--skeleton" />
             </div>
           </div>
 
           <aside class="hero-rail">
-            <div class="rail-label">
-              System Pulse
-            </div>
+            <div class="rail-label">System Pulse</div>
             <div class="rail-score">
               {{ railScore }}
               <small>% peak</small>
@@ -361,38 +340,18 @@ function usageTone(value: number | undefined): string {
         >
           <div class="section-head">
             <div>
-              <div class="section-kicker">
-                Alert Stack
-              </div>
-              <h2 class="section-title">
-                当前告警
-              </h2>
+              <div class="section-kicker">Alert Stack</div>
+              <h2 class="section-title">当前告警</h2>
             </div>
-            <div
-              class="status-pill"
-              :class="alertCount > 0 ? 'danger' : 'ready'"
-            >
+            <div class="status-pill" :class="alertCount > 0 ? 'danger' : 'ready'">
               {{ alertCount }} 条
             </div>
           </div>
 
           <article class="panel panel-pad">
-            <div
-              v-if="loading"
-              class="empty-inline"
-            >
-              正在同步告警数据...
-            </div>
-            <div
-              v-else-if="alertCount === 0"
-              class="empty-inline"
-            >
-              当前没有资源告警。
-            </div>
-            <div
-              v-else
-              class="insight-list"
-            >
+            <div v-if="loading" class="empty-inline">正在同步告警数据...</div>
+            <div v-else-if="alertCount === 0" class="empty-inline">当前没有资源告警。</div>
+            <div v-else class="insight-list">
               <div
                 v-for="alert in dashboard?.alerts"
                 :key="`${alert.container_id}-${alert.type}`"
@@ -405,12 +364,11 @@ function usageTone(value: number | undefined): string {
                     <span class="chip">{{ alert.container_id }}</span>
                   </div>
                   <div class="item-copy">
-                    当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%，建议优先核查该容器最近任务与资源分配情况。
+                    当前 {{ Math.round(alert.value) }}% / 阈值
+                    {{ Math.round(alert.threshold) }}%，建议优先核查该容器最近任务与资源分配情况。
                   </div>
                 </div>
-                <div class="status-pill danger">
-                  {{ Math.round(alert.value) }}%
-                </div>
+                <div class="status-pill danger">{{ Math.round(alert.value) }}%</div>
               </div>
             </div>
           </article>
@@ -427,32 +385,17 @@ function usageTone(value: number | undefined): string {
         >
           <div class="section-head">
             <div>
-              <div class="section-kicker">
-                Resource Hotspots
-              </div>
-              <h2 class="section-title">
-                资源热点
-              </h2>
+              <div class="section-kicker">Resource Hotspots</div>
+              <h2 class="section-title">资源热点</h2>
             </div>
           </div>
 
           <article class="panel panel-pad">
-            <div
-              v-if="loading"
-              class="empty-inline"
-            >
-              正在同步容器资源数据...
-            </div>
-            <div
-              v-else-if="sortedContainers.length === 0"
-              class="empty-inline"
-            >
+            <div v-if="loading" class="empty-inline">正在同步容器资源数据...</div>
+            <div v-else-if="sortedContainers.length === 0" class="empty-inline">
               暂无容器运行数据。
             </div>
-            <div
-              v-else
-              class="hotspot-list"
-            >
+            <div v-else class="hotspot-list">
               <article
                 v-for="item in sortedContainers"
                 :key="item.container_id"
@@ -463,9 +406,14 @@ function usageTone(value: number | undefined): string {
                     <strong>{{ item.container_name || item.container_id }}</strong>
                     <span
                       class="chip"
-                      :class="Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0) >= 90 ? 'danger' : 'warning'"
+                      :class="
+                        Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0) >= 90
+                          ? 'danger'
+                          : 'warning'
+                      "
                     >
-                      峰值 {{ formatPercent(Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0)) }}
+                      峰值
+                      {{ formatPercent(Math.max(item.cpu_percent ?? 0, item.memory_percent ?? 0)) }}
                     </span>
                   </div>
                   <div class="item-copy hotspot-copy">
@@ -534,136 +482,17 @@ function usageTone(value: number | undefined): string {
   --workspace-success: var(--color-success);
   --workspace-warning: var(--color-warning);
   --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
-  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-shadow-shell: 0 24px 84px
+    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-panel: 0 14px 34px
+    color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
   --workspace-radius-md: 14px;
   --workspace-font-sans:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
-  --workspace-font-mono:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  min-height: 100%;
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: var(--workspace-radius-xl);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--workspace-shell-bg) 96%, var(--workspace-page)), var(--workspace-shell-bg));
-  box-shadow: var(--workspace-shadow-shell);
-  overflow: clip;
-  font-family: var(--workspace-font-sans);
-  color: var(--journal-ink);
-}
-
-.workspace-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 22px 28px 0;
-}
-
-.topbar-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-}
-
-.workspace-overline {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 66%, var(--workspace-faint));
-}
-
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 22%, transparent);
-  border-radius: 8px;
-  background: var(--workspace-brand-soft);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--workspace-brand-ink);
-}
-
-.top-note {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px 18px;
-  font-size: 13px;
-  color: var(--workspace-faint);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  padding: 0 28px;
-  margin-top: 10px;
-  border-bottom: 1px solid var(--workspace-line-soft);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--workspace-faint);
-  font: 600 15px/1 var(--workspace-font-sans);
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
-}
-
-.top-tab:hover,
-.top-tab.active {
-  color: var(--workspace-brand-ink);
-  border-bottom-color: var(--workspace-brand);
-}
-
-.top-tab:focus-visible {
-  color: var(--workspace-brand-ink);
-  border-bottom-color: var(--workspace-brand);
-  outline: none;
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.content-pane {
-  min-width: 0;
-  padding: 28px;
-}
-
-.tab-panel {
-  display: none;
-}
-
-.tab-panel.active {
-  display: block;
-  animation: tabPanelIn 180ms ease both;
+  --workspace-font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .workspace-hero {
@@ -1109,7 +938,9 @@ function usageTone(value: number | undefined): string {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 0.95rem 1rem;
   text-align: left;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
 
 .admin-action-row:hover {
@@ -1120,18 +951,6 @@ function usageTone(value: number | undefined): string {
 .admin-action-row:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-@keyframes tabPanelIn {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @media (max-width: 1180px) {

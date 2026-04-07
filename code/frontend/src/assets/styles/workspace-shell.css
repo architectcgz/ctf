@@ -1,0 +1,184 @@
+.workspace-shell {
+  --workspace-shell-border: var(
+    --workspace-line-soft,
+    color-mix(in srgb, var(--color-text-primary) 10%, transparent)
+  );
+  --workspace-shell-page: var(
+    --workspace-page,
+    color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface))
+  );
+  --workspace-shell-background: var(
+    --workspace-shell-bg,
+    var(--workspace-shell, color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)))
+  );
+  --workspace-shell-radius: var(--workspace-radius-xl, 28px);
+  --workspace-shell-shadow: var(
+    --workspace-shadow-shell,
+    0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent)
+  );
+  min-height: 100%;
+  border: 1px solid var(--workspace-shell-border);
+  border-radius: var(--workspace-shell-radius);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 6%, transparent),
+      transparent 26rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--workspace-shell-background) 96%, var(--workspace-shell-page)),
+      var(--workspace-shell-background)
+    );
+  box-shadow: var(--workspace-shell-shadow);
+  overflow: clip;
+  font-family: var(
+    --workspace-font-sans,
+    'IBM Plex Sans',
+    'Noto Sans SC',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif
+  );
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.workspace-shell > .workspace-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 28px 0;
+}
+
+.workspace-shell .topbar-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.workspace-shell .workspace-overline {
+  display: inline-block;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+  text-transform: uppercase;
+  color: color-mix(
+    in srgb,
+    var(--workspace-brand, var(--color-primary)) 66%,
+    var(--workspace-faint, var(--color-text-secondary))
+  );
+}
+
+.workspace-shell .class-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid
+    color-mix(in srgb, var(--workspace-brand, var(--color-primary)) 22%, transparent);
+  border-radius: 8px;
+  background: var(
+    --workspace-brand-soft,
+    color-mix(in srgb, var(--color-primary) 10%, transparent)
+  );
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--workspace-brand-ink, var(--color-primary));
+}
+
+.workspace-shell .top-note {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px 18px;
+  font-size: 13px;
+  color: var(--workspace-faint, var(--color-text-secondary));
+}
+
+.workspace-shell > .top-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 0 28px;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--workspace-shell-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.workspace-shell > .top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.workspace-shell .top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--workspace-faint, var(--color-text-secondary));
+  font: 600 15px/1
+    var(
+      --workspace-font-sans,
+      'IBM Plex Sans',
+      'Noto Sans SC',
+      'PingFang SC',
+      'Hiragino Sans GB',
+      'Microsoft YaHei',
+      sans-serif
+    );
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.workspace-shell .top-tab:hover,
+.workspace-shell .top-tab.active,
+.workspace-shell .top-tab:focus-visible {
+  color: var(--workspace-brand-ink, var(--color-primary));
+  border-bottom-color: var(--workspace-brand, var(--color-primary));
+  outline: none;
+}
+
+.workspace-shell > .workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.workspace-shell .content-pane {
+  min-width: 0;
+  padding: 28px;
+}
+
+.workspace-shell .tab-panel {
+  display: none;
+}
+
+.workspace-shell .tab-panel.active {
+  display: block;
+  animation: workspaceTabPanelIn 180ms ease both;
+}
+
+@keyframes workspaceTabPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
