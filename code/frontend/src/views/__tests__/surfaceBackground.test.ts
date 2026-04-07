@@ -6,6 +6,7 @@ import difficultyPageSource from '../../components/dashboard/student/StudentDiff
 import overviewPageSource from '../../components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import recommendationPageSource from '../../components/dashboard/student/StudentRecommendationPage.vue?raw'
 import timelinePageSource from '../../components/dashboard/student/StudentTimelinePage.vue?raw'
+import dashboardViewSource from '../dashboard/DashboardView.vue?raw'
 import notificationListSource from '../notifications/NotificationList.vue?raw'
 import securitySettingsSource from '../profile/SecuritySettings.vue?raw'
 import userProfileSource from '../profile/UserProfile.vue?raw'
@@ -31,7 +32,12 @@ describe('member-facing page surfaces', () => {
   })
 
   it('member pages should consume shared hero shell classes instead of duplicating formula', () => {
-    const userShellSources = [userProfileSource, securitySettingsSource, notificationListSource]
+    const userShellSources = [
+      dashboardViewSource,
+      userProfileSource,
+      securitySettingsSource,
+      notificationListSource,
+    ]
     const softSurfaceSources = [
       recommendationPageSource,
       categoryProgressSource,

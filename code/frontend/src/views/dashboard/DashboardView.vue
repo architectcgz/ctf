@@ -219,7 +219,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 </script>
 
 <template>
-  <section class="workspace-shell">
+  <section
+    class="workspace-shell journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col"
+  >
     <nav class="top-tabs" role="tablist" aria-label="学生仪表盘视图切换">
       <button
         v-for="(tab, index) in panelTabs"
@@ -336,20 +338,20 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 <style scoped>
 .workspace-shell {
-  --journal-ink: var(--color-text-primary);
-  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
-  --workspace-faint: color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base));
-  --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
-  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
-  --workspace-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-line-soft: var(--journal-border);
+  --workspace-faint: var(--journal-muted);
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: var(--journal-accent-strong);
+  --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  --workspace-page: var(--color-bg-base);
+  --workspace-shell-bg: var(--journal-surface);
   --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px
-    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-shell: var(--journal-shell-hero-shadow, 0 22px 50px var(--color-shadow-soft));
   --workspace-font-sans:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
   flex: 1 1 auto;
 }
 
