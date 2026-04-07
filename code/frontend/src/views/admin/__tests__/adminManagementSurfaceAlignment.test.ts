@@ -66,6 +66,15 @@ describe('admin management surface alignment', () => {
     )
   })
 
+  it('contest orchestration should place the tab rail under the workspace topbar before the page title', () => {
+    expect(contestOrchestrationSource).toContain('class="workspace-topbar"')
+    expect(contestOrchestrationSource).toContain('class="top-tabs"')
+    expect(contestOrchestrationSource).toContain('class="content-pane"')
+    expect(contestOrchestrationSource.indexOf('class="top-tabs"')).toBeLessThan(
+      contestOrchestrationSource.indexOf('赛事编排台')
+    )
+  })
+
   it('admin list pages should use shared directory spacing utilities', () => {
     expect(styleSource).toContain('--workspace-directory-gap-top: 0.75rem;')
     expect(styleSource).toContain('--workspace-directory-gap-pagination: 0.5rem;')
@@ -92,6 +101,11 @@ describe('admin management surface alignment', () => {
     expect(challengeManageSource).toContain('class="challenge-list workspace-directory-list"')
     expect(challengeManageSource).toContain(
       'class="admin-pagination workspace-directory-pagination"'
+    )
+
+    expect(adminContestTableSource).toContain('class="contest-directory workspace-directory-list"')
+    expect(adminContestTableSource).toContain(
+      'class="admin-pagination workspace-directory-pagination'
     )
   })
 
