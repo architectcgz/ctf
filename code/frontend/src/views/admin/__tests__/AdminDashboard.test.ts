@@ -62,4 +62,31 @@ describe('AdminDashboard', () => {
     expect(wrapper.text()).toContain('CPU 持续高于阈值')
     expect(wrapper.text()).toContain('web-01')
   })
+
+  it('应该将总览、当前告警与资源热点拆分为独立 tab', async () => {
+    const wrapper = mount(AdminDashboard)
+
+    await flushPromises()
+
+    expect(wrapper.find('#admin-dashboard-tab-overview').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#admin-dashboard-tab-alerts').attributes('aria-selected')).toBe('false')
+    expect(wrapper.find('#admin-dashboard-tab-hotspots').attributes('aria-selected')).toBe('false')
+
+    expect(wrapper.find('#admin-dashboard-panel-overview').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#admin-dashboard-panel-alerts').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#admin-dashboard-panel-hotspots').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#admin-dashboard-panel-overview').text()).toContain('审计日志')
+
+    await wrapper.get('#admin-dashboard-tab-alerts').trigger('click')
+
+    expect(wrapper.find('#admin-dashboard-tab-alerts').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#admin-dashboard-panel-alerts').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#admin-dashboard-panel-alerts').text()).toContain('CPU 持续高于阈值')
+
+    await wrapper.get('#admin-dashboard-tab-hotspots').trigger('click')
+
+    expect(wrapper.find('#admin-dashboard-tab-hotspots').attributes('aria-selected')).toBe('true')
+    expect(wrapper.find('#admin-dashboard-panel-hotspots').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('#admin-dashboard-panel-hotspots').text()).toContain('web-01')
+  })
 })

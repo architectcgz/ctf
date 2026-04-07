@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { AlertTriangle, ArrowRight, ShieldAlert, SquareStack } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
@@ -16,6 +16,32 @@ const emit = defineEmits<{
   openAuditLog: []
   openCheatDetection: []
 }>()
+
+const panelTabs = [
+  {
+    key: 'overview',
+    label: '总览',
+    tabId: 'admin-dashboard-tab-overview',
+    panelId: 'admin-dashboard-panel-overview',
+  },
+  {
+    key: 'alerts',
+    label: '当前告警',
+    tabId: 'admin-dashboard-tab-alerts',
+    panelId: 'admin-dashboard-panel-alerts',
+  },
+  {
+    key: 'hotspots',
+    label: '资源热点',
+    tabId: 'admin-dashboard-tab-hotspots',
+    panelId: 'admin-dashboard-panel-hotspots',
+  },
+] as const
+
+type DashboardPanelKey = (typeof panelTabs)[number]['key']
+
+const activePanel = ref<DashboardPanelKey>('overview')
+const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 const alertCount = computed(() => props.dashboard?.alerts.length ?? 0)
 const healthSummary = computed(() => {
@@ -40,6 +66,44 @@ const sortedContainers = computed(() =>
     return rightPeak - leftPeak
   }),
 )
+
+function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
+  tabButtonRefs.value[index] = element
+}
+
+function selectPanel(panelKey: DashboardPanelKey): void {
+  activePanel.value = panelKey
+}
+
+function focusTabByIndex(index: number): void {
+  nextTick(() => {
+    tabButtonRefs.value[index]?.focus()
+  })
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    selectPanel(panelTabs[0].key)
+    focusTabByIndex(0)
+    return
+  }
+
+  if (event.key === 'End') {
+    const endIndex = panelTabs.length - 1
+    selectPanel(panelTabs[endIndex].key)
+    focusTabByIndex(endIndex)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
+  selectPanel(panelTabs[nextIndex].key)
+  focusTabByIndex(nextIndex)
+}
 
 function formatPercent(value: number | undefined): string {
   return `${Math.round(value ?? 0)}%`
@@ -67,63 +131,150 @@ function usageTone(value: number | undefined): string {
 
 <template>
   <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <div class="journal-eyebrow">Admin Console</div>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-            系统值守台
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            在这里查看平台状态、异常和当前资源热点。
-          </p>
+    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <div>
+        <div class="journal-eyebrow">
+          Admin Console
+        </div>
+        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+          系统值守台
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          在这里查看平台状态、异常和当前资源热点。
+        </p>
 
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openAuditLog')">
-              审计日志
-            </button>
-            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('openCheatDetection')">
-              风险研判
-            </button>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            class="admin-btn admin-btn-primary"
+            @click="emit('openAuditLog')"
+          >
+            审计日志
+          </button>
+          <button
+            type="button"
+            class="admin-btn admin-btn-ghost"
+            @click="emit('openCheatDetection')"
+          >
+            风险研判
+          </button>
+        </div>
+      </div>
+
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="journal-note-label">
+              当前状态
+            </div>
+            <div class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">
+              {{ healthSummary.label }}
+            </div>
+            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+              当前共有 {{ alertCount }} 条需要处理的资源告警。
+            </p>
+          </div>
+          <div class="journal-brief-icon">
+            <ShieldAlert class="h-5 w-5" />
           </div>
         </div>
 
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="journal-note-label">当前状态</div>
-              <div class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">
-                {{ healthSummary.label }}
-              </div>
-              <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                当前共有 {{ alertCount }} 条需要处理的资源告警。
-              </p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div
+            v-for="item in quickSignals"
+            :key="item.label"
+            class="journal-note"
+          >
+            <div class="journal-note-label">
+              {{ item.label }}
             </div>
-            <div class="journal-brief-icon">
-              <ShieldAlert class="h-5 w-5" />
+            <div class="journal-note-value">
+              {{ item.value }}
+            </div>
+            <div class="journal-note-helper">
+              {{ item.helper }}
             </div>
           </div>
+        </div>
+      </article>
+    </div>
+    <div class="journal-divider mt-6" />
 
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div v-for="item in quickSignals" :key="item.label" class="journal-note">
-              <div class="journal-note-label">{{ item.label }}</div>
-              <div class="journal-note-value">{{ item.value }}</div>
-              <div class="journal-note-helper">{{ item.helper }}</div>
-            </div>
-          </div>
-        </article>
-      </div>
+    <div
+      v-if="error"
+      class="admin-feedback admin-feedback-danger"
+    >
+      {{ error }}
+      <button
+        type="button"
+        class="ml-3 font-medium underline"
+        @click="emit('retry')"
+      >
+        重试
+      </button>
+    </div>
+
+    <div
+      v-if="loading"
+      class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+    >
+      <div
+        v-for="index in 4"
+        :key="index"
+        class="h-28 animate-pulse rounded-[18px] bg-[var(--journal-surface)]"
+      />
+    </div>
+
+    <template v-else-if="dashboard">
+      <nav
+        class="admin-tabs"
+        role="tablist"
+        aria-label="系统值守视图切换"
+      >
+        <button
+          v-for="(tab, index) in panelTabs"
+          :id="tab.tabId"
+          :key="tab.key"
+          :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+          type="button"
+          role="tab"
+          class="admin-tab"
+          :class="{ active: activePanel === tab.key }"
+          :tabindex="activePanel === tab.key ? 0 : -1"
+          :aria-selected="activePanel === tab.key ? 'true' : 'false'"
+          :aria-controls="tab.panelId"
+          @click="selectPanel(tab.key)"
+          @keydown="handleTabKeydown($event, index)"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
       <div class="journal-divider mt-6" />
 
-      <div v-if="error" class="admin-feedback admin-feedback-danger">
-        {{ error }}
-        <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-      </div>
+      <section
+        v-show="activePanel === 'overview'"
+        id="admin-dashboard-panel-overview"
+        class="space-y-4"
+        role="tabpanel"
+        aria-labelledby="admin-dashboard-tab-overview"
+        :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
+      >
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">
+              Overview
+            </div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">
+              总览
+            </h2>
+          </div>
+          <div class="admin-pill">
+            <ShieldAlert class="h-4 w-4" />
+            {{ healthSummary.label }}
+          </div>
+        </div>
 
-      <div v-if="loading" class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div v-for="index in 4" :key="index" class="h-28 animate-pulse rounded-[18px] bg-[var(--journal-surface)]" />
-      </div>
-
-      <template v-else-if="dashboard">
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <AppCard
             v-for="item in quickSignals"
@@ -136,127 +287,188 @@ function usageTone(value: number | undefined): string {
           />
         </div>
 
-        <div class="journal-divider mt-6" />
-
-        <section class="space-y-4">
-          <div class="admin-section-head">
+        <div class="grid gap-3 lg:grid-cols-2">
+          <button
+            type="button"
+            class="admin-action-row"
+            @click="emit('openCheatDetection')"
+          >
             <div>
-              <div class="journal-note-label">Alert Stack</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">当前告警</h2>
+              <div class="text-sm font-medium text-text-primary">
+                进入风险研判
+              </div>
+              <div class="mt-1 text-sm text-text-secondary">
+                先看异常行为，再判断是否需要深挖容器与账号。
+              </div>
             </div>
-            <div class="admin-pill">
-              <AlertTriangle class="h-4 w-4" />
-              {{ alertCount }} 条
-            </div>
-          </div>
-
-          <div v-if="alertCount === 0" class="admin-empty">
-            当前没有资源告警。
-          </div>
-
-          <div v-else class="space-y-3">
-            <AppCard
-              v-for="alert in dashboard.alerts"
-              :key="`${alert.container_id}-${alert.type}`"
-              variant="action"
-              accent="danger"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
-                    <AlertTriangle class="h-4 w-4 text-[var(--color-danger)]" />
-                    {{ alert.container_id }}
-                  </div>
-                  <p class="mt-2 text-sm leading-6 text-text-secondary">{{ alert.message }}</p>
-                </div>
-                <span class="admin-tag admin-tag-danger">
-                  {{ alert.type.toUpperCase() }}
-                </span>
-              </div>
-              <div class="mt-4 text-xs text-text-secondary">
-                当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%
-              </div>
-            </AppCard>
-          </div>
-
-          <div class="grid gap-3 lg:grid-cols-2">
-            <button type="button" class="admin-action-row" @click="emit('openCheatDetection')">
-              <div>
-                <div class="text-sm font-medium text-text-primary">进入风险研判</div>
-                <div class="mt-1 text-sm text-text-secondary">先看异常行为，再判断是否需要深挖容器与账号。</div>
-              </div>
-              <ArrowRight class="h-4 w-4 text-primary" />
-            </button>
-            <button type="button" class="admin-action-row" @click="emit('openAuditLog')">
-              <div>
-                <div class="text-sm font-medium text-text-primary">查看审计日志</div>
-                <div class="mt-1 text-sm text-text-secondary">结合操作记录，快速定位异常来源。</div>
-              </div>
-              <ArrowRight class="h-4 w-4 text-primary" />
-            </button>
-          </div>
-        </section>
-
-        <div class="journal-divider mt-6" />
-
-        <section class="space-y-4">
-          <div class="admin-section-head">
+            <ArrowRight class="h-4 w-4 text-primary" />
+          </button>
+          <button
+            type="button"
+            class="admin-action-row"
+            @click="emit('openAuditLog')"
+          >
             <div>
-              <div class="journal-note-label">Resource Hotspots</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">资源热点</h2>
+              <div class="text-sm font-medium text-text-primary">
+                查看审计日志
+              </div>
+              <div class="mt-1 text-sm text-text-secondary">
+                结合操作记录，快速定位异常来源。
+              </div>
             </div>
-          </div>
+            <ArrowRight class="h-4 w-4 text-primary" />
+          </button>
+        </div>
+      </section>
 
-          <div v-if="sortedContainers.length === 0" class="admin-empty">
-            暂无容器运行数据。
+      <section
+        v-show="activePanel === 'alerts'"
+        id="admin-dashboard-panel-alerts"
+        class="space-y-4"
+        role="tabpanel"
+        aria-labelledby="admin-dashboard-tab-alerts"
+        :aria-hidden="activePanel === 'alerts' ? 'false' : 'true'"
+      >
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">
+              Alert Stack
+            </div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">
+              当前告警
+            </h2>
           </div>
+          <div class="admin-pill">
+            <AlertTriangle class="h-4 w-4" />
+            {{ alertCount }} 条
+          </div>
+        </div>
 
-          <div v-else class="grid gap-4">
-            <AppCard
-              v-for="item in sortedContainers"
-              :key="item.container_id"
-              variant="action"
-              accent="neutral"
-            >
-              <div class="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div class="flex items-center gap-2 text-base font-semibold text-text-primary">
-                    <SquareStack class="h-4 w-4 text-primary" />
-                    {{ item.container_name || item.container_id }}
-                  </div>
-                  <div class="mt-2 font-mono text-xs text-text-secondary">{{ item.container_id }}</div>
+        <div
+          v-if="alertCount === 0"
+          class="admin-empty"
+        >
+          当前没有资源告警。
+        </div>
+
+        <div
+          v-else
+          class="space-y-3"
+        >
+          <AppCard
+            v-for="alert in dashboard.alerts"
+            :key="`${alert.container_id}-${alert.type}`"
+            variant="action"
+            accent="danger"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2 text-sm font-medium text-text-primary">
+                  <AlertTriangle class="h-4 w-4 text-[var(--color-danger)]" />
+                  {{ alert.container_id }}
                 </div>
-                <div class="text-right text-sm text-text-secondary">
-                  <div>{{ formatBytes(item.memory_usage) }} / {{ formatBytes(item.memory_limit) }}</div>
-                  <div class="mt-1 text-xs uppercase tracking-[0.16em] text-text-muted">内存用量</div>
+                <p class="mt-2 text-sm leading-6 text-text-secondary">
+                  {{ alert.message }}
+                </p>
+              </div>
+              <span class="admin-tag admin-tag-danger">
+                {{ alert.type.toUpperCase() }}
+              </span>
+            </div>
+            <div class="mt-4 text-xs text-text-secondary">
+              当前 {{ Math.round(alert.value) }}% / 阈值 {{ Math.round(alert.threshold) }}%
+            </div>
+          </AppCard>
+        </div>
+      </section>
+
+      <section
+        v-show="activePanel === 'hotspots'"
+        id="admin-dashboard-panel-hotspots"
+        class="space-y-4"
+        role="tabpanel"
+        aria-labelledby="admin-dashboard-tab-hotspots"
+        :aria-hidden="activePanel === 'hotspots' ? 'false' : 'true'"
+      >
+        <div class="admin-section-head">
+          <div>
+            <div class="journal-note-label">
+              Resource Hotspots
+            </div>
+            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">
+              资源热点
+            </h2>
+          </div>
+        </div>
+
+        <div
+          v-if="sortedContainers.length === 0"
+          class="admin-empty"
+        >
+          暂无容器运行数据。
+        </div>
+
+        <div
+          v-else
+          class="grid gap-4"
+        >
+          <AppCard
+            v-for="item in sortedContainers"
+            :key="item.container_id"
+            variant="action"
+            accent="neutral"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div class="flex items-center gap-2 text-base font-semibold text-text-primary">
+                  <SquareStack class="h-4 w-4 text-primary" />
+                  {{ item.container_name || item.container_id }}
+                </div>
+                <div class="mt-2 font-mono text-xs text-text-secondary">
+                  {{ item.container_id }}
                 </div>
               </div>
-
-              <div class="mt-5 grid gap-4 md:grid-cols-2">
-                <div>
-                  <div class="flex items-center justify-between gap-3 text-sm">
-                    <span class="text-text-secondary">CPU</span>
-                    <span class="font-medium text-text-primary">{{ formatPercent(item.cpu_percent) }}</span>
-                  </div>
-                  <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--color-bg-base)]">
-                    <div class="h-full rounded-full" :class="usageTone(item.cpu_percent)" :style="{ width: `${Math.round(item.cpu_percent ?? 0)}%` }" />
-                  </div>
-                </div>
-                <div>
-                  <div class="flex items-center justify-between gap-3 text-sm">
-                    <span class="text-text-secondary">内存</span>
-                    <span class="font-medium text-text-primary">{{ formatPercent(item.memory_percent) }}</span>
-                  </div>
-                  <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--color-bg-base)]">
-                    <div class="h-full rounded-full" :class="usageTone(item.memory_percent)" :style="{ width: `${Math.round(item.memory_percent ?? 0)}%` }" />
-                  </div>
+              <div class="text-right text-sm text-text-secondary">
+                <div>{{ formatBytes(item.memory_usage) }} / {{ formatBytes(item.memory_limit) }}</div>
+                <div class="mt-1 text-xs uppercase tracking-[0.16em] text-text-muted">
+                  内存用量
                 </div>
               </div>
-            </AppCard>
-          </div>
-        </section>
-      </template>
-    </section>
+            </div>
+
+            <div class="mt-5 grid gap-4 md:grid-cols-2">
+              <div>
+                <div class="flex items-center justify-between gap-3 text-sm">
+                  <span class="text-text-secondary">CPU</span>
+                  <span class="font-medium text-text-primary">{{ formatPercent(item.cpu_percent) }}</span>
+                </div>
+                <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--color-bg-base)]">
+                  <div
+                    class="h-full rounded-full"
+                    :class="usageTone(item.cpu_percent)"
+                    :style="{ width: `${Math.round(item.cpu_percent ?? 0)}%` }"
+                  />
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between gap-3 text-sm">
+                  <span class="text-text-secondary">内存</span>
+                  <span class="font-medium text-text-primary">{{ formatPercent(item.memory_percent) }}</span>
+                </div>
+                <div class="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--color-bg-base)]">
+                  <div
+                    class="h-full rounded-full"
+                    :class="usageTone(item.memory_percent)"
+                    :style="{ width: `${Math.round(item.memory_percent ?? 0)}%` }"
+                  />
+                </div>
+              </div>
+            </div>
+          </AppCard>
+        </div>
+      </section>
+    </template>
+  </section>
 </template>
 
 <style scoped>
@@ -341,19 +553,67 @@ function usageTone(value: number | undefined): string {
   border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+
+.admin-tab:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 26%, var(--journal-border));
+  color: var(--journal-ink);
+}
+
+.admin-tab.active {
+  border-color: color-mix(in srgb, var(--journal-accent) 40%, var(--journal-border));
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+  color: var(--journal-ink);
+}
+
+.admin-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
+}
+
 .admin-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 2.75rem;
+  border: 1px solid transparent;
   border-radius: 1rem;
   padding: 0.65rem 1rem;
   font-size: 0.875rem;
   font-weight: 600;
+  box-shadow: var(--admin-btn-shadow, none);
   transition: all 150ms ease;
 }
 
+.admin-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--admin-btn-shadow, none),
+    0 0 0 3px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
 .admin-btn-primary {
+  --admin-btn-shadow: 0 12px 24px color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--journal-border));
   background: var(--journal-accent);
   color: #fff;
 }
@@ -363,7 +623,7 @@ function usageTone(value: number | undefined): string {
 }
 
 .admin-btn-ghost {
-  border: 1px solid var(--journal-border);
+  border-color: var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   color: var(--journal-ink);
 }
@@ -429,11 +689,12 @@ function usageTone(value: number | undefined): string {
 }
 
 .admin-action-row {
+  --admin-action-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 1px solid var(--journal-border);
+  border: 1px solid var(--admin-action-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: 0.95rem 1rem;
@@ -444,6 +705,11 @@ function usageTone(value: number | undefined): string {
 .admin-action-row:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--journal-border));
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--journal-surface));
+}
+
+.admin-action-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 :global([data-theme='dark']) .journal-shell {
