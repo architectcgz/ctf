@@ -40,7 +40,7 @@ const emptyDescription = computed(() =>
     : '管理员还没有发布训练题目，稍后再来查看即可。'
 )
 
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
+const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
 const solvedCount = computed(() => list.value.filter((challenge) => challenge.is_solved).length)
 const unsolvedCount = computed(() => list.value.filter((challenge) => !challenge.is_solved).length)
 const activeFilterCount = computed(
@@ -371,7 +371,7 @@ onMounted(() => {
           </button>
         </section>
 
-        <div v-if="totalPages > 1" class="challenge-pagination">
+        <div v-if="total > 0" class="challenge-pagination">
           <div>
             <div class="challenge-summary-label">Page Control</div>
             <div class="challenge-pagination-copy">共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页</div>

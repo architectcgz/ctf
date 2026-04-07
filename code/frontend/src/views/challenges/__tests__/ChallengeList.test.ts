@@ -312,4 +312,31 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('Training Range')
     expect(challengeListSource).not.toContain('Challenge Filters')
   })
+
+  it('单页结果时也应显式显示分页状态', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: 'Single Page Challenge',
+          category: 'web',
+          difficulty: 'easy',
+          tags: ['test'],
+          solved_count: 1,
+          total_attempts: 2,
+          is_solved: false,
+          points: 100,
+          created_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage()
+
+    expect(wrapper.find('.challenge-pagination').exists()).toBe(true)
+    expect(wrapper.find('.challenge-pagination').text()).toContain('1 / 1')
+  })
 })
