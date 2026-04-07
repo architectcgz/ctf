@@ -53,6 +53,7 @@ declare module 'vue' {
     MetricCard: typeof import('./components/common/MetricCard.vue')['default']
     NotificationDropdown: typeof import('./components/layout/NotificationDropdown.vue')['default']
     PageHeader: typeof import('./components/common/PageHeader.vue')['default']
+    PagePaginationControls: typeof import('./components/common/PagePaginationControls.vue')['default']
     RadarChart: typeof import('./components/charts/RadarChart.vue')['default']
     ReviewArchiveEvidencePanel: typeof import('./components/teacher/review-archive/ReviewArchiveEvidencePanel.vue')['default']
     ReviewArchiveHero: typeof import('./components/teacher/review-archive/ReviewArchiveHero.vue')['default']

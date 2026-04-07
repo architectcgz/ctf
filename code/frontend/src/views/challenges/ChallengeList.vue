@@ -7,6 +7,7 @@ import { getChallenges } from '@/api/challenge'
 import { ApiError } from '@/api/request'
 import type { ChallengeCategory, ChallengeDifficulty } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { usePagination } from '@/composables/usePagination'
 
 const router = useRouter()
@@ -141,7 +142,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="challenge-page">
       <header class="challenge-topbar">
@@ -343,7 +344,11 @@ onMounted(() => {
             </div>
 
             <div class="challenge-row-tags">
-              <span v-for="tag in challenge.tags.slice(0, 2)" :key="tag" class="challenge-chip challenge-chip-muted">
+              <span
+                v-for="tag in challenge.tags.slice(0, 2)"
+                :key="tag"
+                class="challenge-chip challenge-chip-muted"
+              >
                 {{ tag }}
               </span>
             </div>
@@ -369,30 +374,17 @@ onMounted(() => {
               <ArrowRight class="h-4 w-4" />
             </div>
           </button>
-        </section>
 
-        <div v-if="total > 0" class="challenge-pagination">
-          <div>
-            <div class="challenge-summary-label">Page Control</div>
-            <div class="challenge-pagination-copy">共 {{ total }} 题 · 第 {{ page }} / {{ totalPages }} 页</div>
+          <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">
+            <PagePaginationControls
+              :page="page"
+              :total-pages="totalPages"
+              :total="total"
+              :total-label="`共 ${total} 题`"
+              @change-page="changePage"
+            />
           </div>
-          <div class="challenge-pagination-actions">
-            <button
-              :disabled="page === 1"
-              class="challenge-btn disabled:cursor-not-allowed disabled:opacity-40"
-              @click="changePage(page - 1)"
-            >
-              上一页
-            </button>
-            <button
-              :disabled="page >= totalPages"
-              class="challenge-btn disabled:cursor-not-allowed disabled:opacity-40"
-              @click="changePage(page + 1)"
-            >
-              下一页
-            </button>
-          </div>
-        </div>
+        </section>
       </template>
     </div>
   </section>
@@ -400,13 +392,9 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
   --challenge-tone-web: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
   --challenge-tone-pwn: color-mix(in srgb, var(--color-danger) 72%, var(--journal-ink));
   --challenge-tone-reverse: color-mix(in srgb, var(--color-success) 74%, var(--journal-ink));
@@ -418,17 +406,6 @@ onMounted(() => {
   --challenge-diff-medium: color-mix(in srgb, #2563eb 80%, var(--journal-ink));
   --challenge-diff-hard: color-mix(in srgb, #d97706 80%, var(--journal-ink));
   --challenge-diff-insane: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), var(--journal-surface));
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .challenge-page {
@@ -449,14 +426,6 @@ onMounted(() => {
 
 .challenge-heading {
   min-width: 0;
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .challenge-title {
@@ -669,15 +638,8 @@ onMounted(() => {
 }
 
 .challenge-directory {
-  --challenge-directory-columns:
-    minmax(0, 1.25fr)
-    minmax(88px, 0.32fr)
-    minmax(96px, 0.38fr)
-    minmax(96px, 0.38fr)
-    minmax(160px, 0.82fr)
-    120px
-    180px
-    120px;
+  --challenge-directory-columns: minmax(0, 1.25fr) minmax(88px, 0.32fr) minmax(96px, 0.38fr)
+    minmax(96px, 0.38fr) minmax(160px, 0.82fr) 120px 180px 120px;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -738,8 +700,13 @@ onMounted(() => {
 
 .challenge-row:hover,
 .challenge-row:focus-visible {
-  background: color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 5%, transparent);
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 64%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--challenge-row-accent, var(--journal-accent)) 5%,
+    transparent
+  );
+  box-shadow: inset 2px 0 0
+    color-mix(in srgb, var(--challenge-row-accent, var(--journal-accent)) 64%, transparent);
   outline: none;
 }
 
@@ -756,8 +723,7 @@ onMounted(() => {
 
 .challenge-row-title {
   min-width: 0;
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -770,8 +736,7 @@ onMounted(() => {
 .challenge-row-points {
   display: flex;
   align-items: center;
-  font-family:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 13px;
   font-weight: 700;
   color: var(--challenge-row-accent, var(--journal-accent));
@@ -857,26 +822,9 @@ onMounted(() => {
 }
 
 .challenge-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 24px;
   margin-top: 24px;
+  padding-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-pagination-copy {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--journal-muted);
-}
-
-.challenge-pagination-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .challenge-btn {

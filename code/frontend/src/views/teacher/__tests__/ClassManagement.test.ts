@@ -182,7 +182,8 @@ describe('ClassManagement', () => {
     expect(wrapper.text()).toContain('共 21 个班级')
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
 
-    await wrapper.get('button.teacher-directory-pagination-button:last-of-type').trigger('click')
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
     await flushPromises()
 
     expect(teacherApiMocks.getClasses).toHaveBeenNthCalledWith(2, { page: 2, page_size: 20 })

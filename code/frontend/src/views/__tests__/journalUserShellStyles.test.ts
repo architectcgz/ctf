@@ -28,6 +28,10 @@ describe('journal user shell shared styles', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user.journal-hero')
     expect(journalUserShellSource).toContain('--journal-shell-accent')
+    expect(journalUserShellSource).toContain("[data-theme='dark'] .journal-shell.journal-shell-user")
+    expect(journalUserShellSource).toContain(
+      "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
+    )
   })
 
   it('列表页和 profile 页应通过 journal-shell-user 接入共享 shell', () => {
@@ -60,6 +64,12 @@ describe('journal user shell shared styles', () => {
       userProfileSource,
     ]) {
       expect(extractScopedStyle(source)).not.toMatch(/^\.journal-hero\s*\{/m)
+      expect(extractScopedStyle(source)).not.toMatch(
+        /^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m
+      )
+      expect(extractScopedStyle(source)).not.toMatch(
+        /^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m
+      )
     }
 
     const skillProfileStyle = extractScopedStyle(skillProfileSource)
@@ -69,5 +79,7 @@ describe('journal user shell shared styles', () => {
     expect(localHeroRule?.[1]).toContain('border-radius: 16px !important;')
     expect(localHeroRule?.[1]).toContain('overflow: hidden;')
     expect(localHeroRule?.[1]).not.toContain('background:')
+    expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
+    expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
   })
 })
