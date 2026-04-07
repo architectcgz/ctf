@@ -9,6 +9,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
@@ -19,53 +20,102 @@ import (
 type QueryService struct {
 	repo                  readmodelports.Repository
 	recommendationService assessmentcontracts.RecommendationProvider
+	pagination            config.PaginationConfig
 	logger                *zap.Logger
 }
 
 var _ Service = (*QueryService)(nil)
 
-func NewQueryService(repo readmodelports.Repository, recommendationService assessmentcontracts.RecommendationProvider, logger *zap.Logger) *QueryService {
+func NewQueryService(
+	repo readmodelports.Repository,
+	recommendationService assessmentcontracts.RecommendationProvider,
+	pagination config.PaginationConfig,
+	logger *zap.Logger,
+) *QueryService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &QueryService{
 		repo:                  repo,
 		recommendationService: recommendationService,
+		pagination:            pagination,
 		logger:                logger,
 	}
 }
 
-func (s *QueryService) ListClasses(ctx context.Context, requesterID int64, requesterRole string) ([]dto.TeacherClassItem, error) {
+func (s *QueryService) ListClasses(
+	ctx context.Context,
+	requesterID int64,
+	requesterRole string,
+	query *dto.TeacherClassQuery,
+) ([]dto.TeacherClassItem, int64, int, int, error) {
+	page, size := s.normalizeClassPagination(query)
+
 	requester, err := s.repo.FindUserByID(ctx, requesterID)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 	}
 	if requester == nil {
-		return nil, errcode.ErrUnauthorized
+		return nil, 0, 0, 0, errcode.ErrUnauthorized
 	}
 
 	if requesterRole == model.RoleAdmin {
-		items, err := s.repo.ListClasses(ctx)
+		total, err := s.repo.CountClasses(ctx)
 		if err != nil {
-			return nil, errcode.ErrInternal.WithCause(err)
+			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
 		}
-		return toClassItems(items), nil
+		if total == 0 {
+			return []dto.TeacherClassItem{}, 0, page, size, nil
+		}
+
+		items, err := s.repo.ListClasses(ctx, (page-1)*size, size)
+		if err != nil {
+			return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+		}
+		return toClassItems(items), total, page, size, nil
 	}
 
 	className := strings.TrimSpace(requester.ClassName)
 	if className == "" {
-		return []dto.TeacherClassItem{}, nil
+		return []dto.TeacherClassItem{}, 0, page, size, nil
 	}
 
 	count, err := s.repo.CountStudentsByClass(ctx, className)
 	if err != nil {
-		return nil, errcode.ErrInternal.WithCause(err)
+		return nil, 0, 0, 0, errcode.ErrInternal.WithCause(err)
+	}
+
+	if (page-1)*size >= 1 {
+		return []dto.TeacherClassItem{}, 1, page, size, nil
 	}
 
 	return []dto.TeacherClassItem{{
 		Name:         className,
 		StudentCount: count,
-	}}, nil
+	}}, 1, page, size, nil
+}
+
+func (s *QueryService) normalizeClassPagination(query *dto.TeacherClassQuery) (int, int) {
+	page := 1
+	size := s.pagination.DefaultPageSize
+
+	if query != nil {
+		if query.Page > 0 {
+			page = query.Page
+		}
+		if query.Size > 0 {
+			size = query.Size
+		}
+	}
+
+	if size < 1 {
+		size = 20
+	}
+	if s.pagination.MaxPageSize > 0 && size > s.pagination.MaxPageSize {
+		size = s.pagination.MaxPageSize
+	}
+
+	return page, size
 }
 
 func (s *QueryService) ListClassStudents(ctx context.Context, requesterID int64, requesterRole, className string, query *dto.TeacherStudentQuery) ([]dto.TeacherStudentItem, error) {

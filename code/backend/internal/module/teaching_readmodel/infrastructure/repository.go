@@ -44,14 +44,31 @@ func (r *Repository) CountStudentsByClass(ctx context.Context, className string)
 	return count, nil
 }
 
-func (r *Repository) ListClasses(ctx context.Context) ([]readmodelports.ClassItem, error) {
-	items := make([]readmodelports.ClassItem, 0)
+func (r *Repository) CountClasses(ctx context.Context) (int64, error) {
+	var count int64
 	if err := r.db.WithContext(ctx).Model(&model.User{}).
+		Distinct("class_name").
+		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
+		Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("count classes: %w", err)
+	}
+	return count, nil
+}
+
+func (r *Repository) ListClasses(ctx context.Context, offset, limit int) ([]readmodelports.ClassItem, error) {
+	items := make([]readmodelports.ClassItem, 0)
+	query := r.db.WithContext(ctx).Model(&model.User{}).
 		Select("class_name AS name, COUNT(*) AS student_count").
 		Where("role = ? AND class_name <> '' AND deleted_at IS NULL", model.RoleStudent).
 		Group("class_name").
-		Order("class_name ASC").
-		Scan(&items).Error; err != nil {
+		Order("class_name ASC")
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if err := query.Scan(&items).Error; err != nil {
 		return nil, fmt.Errorf("list classes: %w", err)
 	}
 	return items, nil

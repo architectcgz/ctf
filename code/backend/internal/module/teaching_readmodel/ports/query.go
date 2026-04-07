@@ -72,7 +72,8 @@ type ClassTrend struct {
 type Repository interface {
 	FindUserByID(ctx context.Context, userID int64) (*model.User, error)
 	CountStudentsByClass(ctx context.Context, className string) (int64, error)
-	ListClasses(ctx context.Context) ([]ClassItem, error)
+	CountClasses(ctx context.Context) (int64, error)
+	ListClasses(ctx context.Context, offset, limit int) ([]ClassItem, error)
 	ListStudentsByClass(ctx context.Context, className, keyword, studentNo string, since time.Time) ([]StudentItem, error)
 	CountPublishedChallenges(ctx context.Context) (int64, error)
 	CountSolvedChallenges(ctx context.Context, userID int64) (int64, error)

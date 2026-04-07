@@ -815,7 +815,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
 	teachingReadmodelRepo := teachingreadmodelinfra.NewRepository(db)
-	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, nil, logger)
+	teachingReadmodelService := teachingreadmodelqueries.NewQueryService(teachingReadmodelRepo, nil, cfg.Pagination, logger)
 	teachingReadmodelHandler := teachingreadmodelhttp.NewHandler(teachingReadmodelService)
 	runtimeHandler := runtimehttp.NewHandler(runtimeService, auditCommandService, runtimehttp.CookieConfig{}, nil)
 
