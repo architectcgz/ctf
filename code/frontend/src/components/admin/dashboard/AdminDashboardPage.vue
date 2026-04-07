@@ -131,75 +131,6 @@ function usageTone(value: number | undefined): string {
 
 <template>
   <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <div>
-        <div class="journal-eyebrow">
-          Admin Console
-        </div>
-        <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-          系统值守台
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          在这里查看平台状态、异常和当前资源热点。
-        </p>
-
-        <div class="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            class="admin-btn admin-btn-primary"
-            @click="emit('openAuditLog')"
-          >
-            审计日志
-          </button>
-          <button
-            type="button"
-            class="admin-btn admin-btn-ghost"
-            @click="emit('openCheatDetection')"
-          >
-            风险研判
-          </button>
-        </div>
-      </div>
-
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="journal-note-label">
-              当前状态
-            </div>
-            <div class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">
-              {{ healthSummary.label }}
-            </div>
-            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              当前共有 {{ alertCount }} 条需要处理的资源告警。
-            </p>
-          </div>
-          <div class="journal-brief-icon">
-            <ShieldAlert class="h-5 w-5" />
-          </div>
-        </div>
-
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div
-            v-for="item in quickSignals"
-            :key="item.label"
-            class="journal-note"
-          >
-            <div class="journal-note-label">
-              {{ item.label }}
-            </div>
-            <div class="journal-note-value">
-              {{ item.value }}
-            </div>
-            <div class="journal-note-helper">
-              {{ item.helper }}
-            </div>
-          </div>
-        </div>
-      </article>
-    </div>
-    <div class="journal-divider mt-6" />
-
     <div
       v-if="error"
       class="admin-feedback admin-feedback-danger"
@@ -227,7 +158,7 @@ function usageTone(value: number | undefined): string {
 
     <template v-else-if="dashboard">
       <nav
-        class="admin-tabs"
+        class="top-tabs"
         role="tablist"
         aria-label="系统值守视图切换"
       >
@@ -238,7 +169,7 @@ function usageTone(value: number | undefined): string {
           :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
           type="button"
           role="tab"
-          class="admin-tab"
+          class="top-tab"
           :class="{ active: activePanel === tab.key }"
           :tabindex="activePanel === tab.key ? 0 : -1"
           :aria-selected="activePanel === tab.key ? 'true' : 'false'"
@@ -260,6 +191,76 @@ function usageTone(value: number | undefined): string {
         aria-labelledby="admin-dashboard-tab-overview"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
+        <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <div class="journal-eyebrow">
+              Admin Console
+            </div>
+            <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
+              系统值守台
+            </h1>
+            <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+              在这里查看平台状态、异常和当前资源热点。
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                class="admin-btn admin-btn-primary"
+                @click="emit('openAuditLog')"
+              >
+                审计日志
+              </button>
+              <button
+                type="button"
+                class="admin-btn admin-btn-ghost"
+                @click="emit('openCheatDetection')"
+              >
+                风险研判
+              </button>
+            </div>
+          </div>
+
+          <article class="journal-brief rounded-[24px] border px-5 py-5">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <div class="journal-note-label">
+                  当前状态
+                </div>
+                <div class="mt-2 text-2xl font-semibold text-[var(--journal-ink)]">
+                  {{ healthSummary.label }}
+                </div>
+                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                  当前共有 {{ alertCount }} 条需要处理的资源告警。
+                </p>
+              </div>
+              <div class="journal-brief-icon">
+                <ShieldAlert class="h-5 w-5" />
+              </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              <div
+                v-for="item in quickSignals"
+                :key="item.label"
+                class="journal-note"
+              >
+                <div class="journal-note-label">
+                  {{ item.label }}
+                </div>
+                <div class="journal-note-value">
+                  {{ item.value }}
+                </div>
+                <div class="journal-note-helper">
+                  {{ item.helper }}
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="journal-divider" />
+
         <div class="admin-section-head">
           <div>
             <div class="journal-note-label">
@@ -553,13 +554,14 @@ function usageTone(value: number | undefined): string {
   border-top: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
-.admin-tabs {
+.top-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.admin-tab {
+.top-tab {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -574,18 +576,18 @@ function usageTone(value: number | undefined): string {
   transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease;
 }
 
-.admin-tab:hover {
+.top-tab:hover {
   border-color: color-mix(in srgb, var(--journal-accent) 26%, var(--journal-border));
   color: var(--journal-ink);
 }
 
-.admin-tab.active {
+.top-tab.active {
   border-color: color-mix(in srgb, var(--journal-accent) 40%, var(--journal-border));
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
   color: var(--journal-ink);
 }
 
-.admin-tab:focus-visible {
+.top-tab:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
