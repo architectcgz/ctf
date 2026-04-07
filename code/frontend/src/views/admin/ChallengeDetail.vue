@@ -18,14 +18,14 @@
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-primary"
-          @click="router.push(`/admin/challenges/${String(route.params.id)}/writeup`)"
+          @click="router.push(`/platform/challenges/${String(route.params.id)}/writeup`)"
         >
           题解管理
         </button>
         <button
           v-if="route.params.id"
           class="admin-btn admin-btn-ghost"
-          @click="router.push(`/admin/challenges/${String(route.params.id)}/topology`)"
+          @click="router.push(`/platform/challenges/${String(route.params.id)}/topology`)"
         >
           拓扑编排
         </button>

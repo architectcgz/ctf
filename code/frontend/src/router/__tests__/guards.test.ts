@@ -166,7 +166,7 @@ describe('router guards', () => {
       })
     )
 
-    expect(next).toHaveBeenCalledWith('/teacher/dashboard')
+    expect(next).toHaveBeenCalledWith('/academy/overview')
   })
 
 })
