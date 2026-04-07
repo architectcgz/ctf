@@ -422,6 +422,44 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.text()).toContain('Bob Li')
   })
 
+  it('应该支持学生目录分页切换', async () => {
+    teacherApiMocks.getClasses.mockResolvedValue([{ name: 'Class A', student_count: 21 }])
+    teacherApiMocks.getClassStudents.mockResolvedValue(
+      Array.from({ length: 21 }, (_, index) => ({
+        id: `stu-${index + 1}`,
+        username: `student-${index + 1}`,
+        name: `Student ${index + 1}`,
+        student_no: `2024${String(index + 1).padStart(3, '0')}`,
+      }))
+    )
+
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(20)
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 名学生')
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
+    expect(wrapper.text()).toContain('Student 20')
+    expect(wrapper.text()).not.toContain('Student 21')
+
+    await wrapper.get('button.teacher-directory-pagination-button:last-of-type').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
+    expect(wrapper.text()).toContain('Student 21')
+    expect(wrapper.text()).not.toContain('Student 20')
+  })
+
   it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
     expect(studentManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s

@@ -8,6 +8,7 @@ import StudentManagementPage from '@/components/teacher/student-management/Stude
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
 import { useAuthStore } from '@/stores/auth'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const ALL_CLASSES_KEY = '__all_classes__'
 
@@ -17,6 +18,8 @@ const authStore = useAuthStore()
 const classes = ref<TeacherClassItem[]>([])
 const loadingClasses = ref(false)
 const pageError = ref<string | null>(null)
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
 const filters = useStudentFilters()
 const studentListQuery = useStudentListQuery({
   debounceMs: 250,
@@ -28,6 +31,12 @@ const studentListQuery = useStudentListQuery({
 const { selectedClassName, searchQuery, studentNoQuery } = filters
 const { students, loading: loadingStudents } = studentListQuery
 const error = computed(() => pageError.value ?? studentListQuery.error.value)
+const filteredTotal = computed(() => students.value.length)
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1))))
+const paginatedStudents = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return students.value.slice(start, start + pageSize.value)
+})
 const totalStudents = computed(() => {
   if (selectedClassName.value) {
     return classes.value.find((item) => item.name === selectedClassName.value)?.student_count ?? students.value.length
@@ -121,8 +130,27 @@ function updateStudentNoQuery(value: string): void {
   filters.updateStudentNoQuery(value)
 }
 
+function handlePageChange(nextPage: number): void {
+  const normalizedPage = Math.max(1, Math.floor(nextPage))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+  page.value = normalizedPage
+}
+
 watch([searchQuery, studentNoQuery], () => {
+  page.value = 1
   studentListQuery.scheduleLoadStudents(resolveClassFilterKey(selectedClassName.value))
+})
+
+watch(selectedClassName, () => {
+  page.value = 1
+})
+
+watch(filteredTotal, () => {
+  if (page.value > totalPages.value) {
+    page.value = totalPages.value
+  }
 })
 
 onMounted(() => {
@@ -136,8 +164,11 @@ onMounted(() => {
     :selected-class-name="selectedClassName"
     :search-query="searchQuery"
     :student-no-query="studentNoQuery"
-    :filtered-students="students"
+    :filtered-students="paginatedStudents"
+    :filtered-total="filteredTotal"
     :total-students="totalStudents"
+    :page="page"
+    :total-pages="totalPages"
     :loading-classes="loadingClasses"
     :loading-students="loadingStudents"
     :error="error"
@@ -147,6 +178,7 @@ onMounted(() => {
     @update-search-query="updateSearchQuery"
     @update-student-no-query="updateStudentNoQuery"
     @select-class="selectClass"
+    @change-page="handlePageChange"
     @open-student="openStudent"
   />
 </template>
