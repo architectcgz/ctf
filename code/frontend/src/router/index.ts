@@ -147,7 +147,7 @@ const routes: RouteRecordRaw[] = [
 
       // Teaching Operations
       {
-        path: 'teacher/dashboard',
+        path: 'academy/overview',
         name: 'TeacherDashboard',
         component: () => import('@/views/teacher/TeacherDashboard.vue'),
         meta: {
@@ -159,11 +159,11 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/overview',
-        redirect: redirectWithQuery('/teacher/dashboard'),
+        path: 'teacher/dashboard',
+        redirect: redirectWithQuery('/academy/overview'),
       },
       {
-        path: 'teacher/classes',
+        path: 'academy/classes',
         name: 'ClassManagement',
         component: () => import('@/views/teacher/ClassManagement.vue'),
         meta: {
@@ -175,11 +175,11 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/classes',
-        redirect: redirectWithQuery('/teacher/classes'),
+        path: 'teacher/classes',
+        redirect: redirectWithQuery('/academy/classes'),
       },
       {
-        path: 'teacher/students',
+        path: 'academy/students',
         name: 'TeacherStudentManagement',
         component: () => import('@/views/teacher/TeacherStudentManagement.vue'),
         meta: {
@@ -191,11 +191,11 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/students',
-        redirect: redirectWithQuery('/teacher/students'),
+        path: 'teacher/students',
+        redirect: redirectWithQuery('/academy/students'),
       },
       {
-        path: 'teacher/classes/:className',
+        path: 'academy/classes/:className',
         name: 'TeacherClassStudents',
         component: () => import('@/views/teacher/TeacherClassStudents.vue'),
         meta: {
@@ -206,15 +206,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/classes/:className',
+        path: 'teacher/classes/:className',
         redirect: (to) => ({
-          path: `/teacher/classes/${encodeURIComponent(String(to.params.className || ''))}`,
+          path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}`,
           query: to.query,
           hash: to.hash,
         }),
       },
       {
-        path: 'teacher/classes/:className/students/:studentId',
+        path: 'academy/classes/:className/students/:studentId',
         name: 'TeacherStudentAnalysis',
         component: () => import('@/views/teacher/TeacherStudentAnalysis.vue'),
         meta: {
@@ -225,15 +225,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/classes/:className/students/:studentId',
+        path: 'teacher/classes/:className/students/:studentId',
         redirect: (to) => ({
-          path: `/teacher/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}`,
+          path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}`,
           query: to.query,
           hash: to.hash,
         }),
       },
       {
-        path: 'teacher/classes/:className/students/:studentId/review-archive',
+        path: 'academy/classes/:className/students/:studentId/review-archive',
         name: 'TeacherStudentReviewArchive',
         component: () => import('@/views/teacher/TeacherStudentReviewArchive.vue'),
         meta: {
@@ -244,15 +244,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/classes/:className/students/:studentId/review-archive',
+        path: 'teacher/classes/:className/students/:studentId/review-archive',
         redirect: (to) => ({
-          path: `/teacher/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}/review-archive`,
+          path: `/academy/classes/${encodeURIComponent(String(to.params.className || ''))}/students/${encodeURIComponent(String(to.params.studentId || ''))}/review-archive`,
           query: to.query,
           hash: to.hash,
         }),
       },
       {
-        path: 'teacher/instances',
+        path: 'academy/instances',
         name: 'TeacherInstanceManagement',
         component: () => import('@/views/teacher/InstanceManagement.vue'),
         meta: {
@@ -264,11 +264,11 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/instances',
-        redirect: redirectWithQuery('/teacher/instances'),
+        path: 'teacher/instances',
+        redirect: redirectWithQuery('/academy/instances'),
       },
       {
-        path: 'teacher/reports',
+        path: 'academy/reports',
         name: 'ReportExport',
         component: () => import('@/views/teacher/ReportExport.vue'),
         meta: {
@@ -280,8 +280,8 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'academy/reports',
-        redirect: redirectWithQuery('/teacher/reports'),
+        path: 'teacher/reports',
+        redirect: redirectWithQuery('/academy/reports'),
       },
 
       // Platform Governance
@@ -302,7 +302,7 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/admin/dashboard'),
       },
       {
-        path: 'admin/challenges',
+        path: 'platform/challenges',
         name: 'ChallengeManage',
         component: () => import('@/views/admin/ChallengeManage.vue'),
         meta: {
@@ -314,7 +314,7 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'admin/challenges/package-format',
+        path: 'platform/challenges/package-format',
         name: 'AdminChallengePackageFormat',
         component: () => import('@/views/admin/ChallengePackageFormat.vue'),
         meta: {
@@ -325,15 +325,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/challenges',
-        redirect: redirectWithQuery('/admin/challenges'),
+        path: 'admin/challenges',
+        redirect: redirectWithQuery('/platform/challenges'),
       },
       {
-        path: 'platform/challenges/package-format',
-        redirect: redirectWithQuery('/admin/challenges/package-format'),
+        path: 'admin/challenges/package-format',
+        redirect: redirectWithQuery('/platform/challenges/package-format'),
       },
       {
-        path: 'admin/challenges/:id',
+        path: 'platform/challenges/:id',
         name: 'AdminChallengeDetail',
         component: () => import('@/views/admin/ChallengeDetail.vue'),
         meta: {
@@ -344,15 +344,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/challenges/:id',
+        path: 'admin/challenges/:id',
         redirect: (to) => ({
-          path: `/admin/challenges/${encodeURIComponent(String(to.params.id || ''))}`,
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}`,
           query: to.query,
           hash: to.hash,
         }),
       },
       {
-        path: 'admin/challenges/:id/topology',
+        path: 'platform/challenges/:id/topology',
         name: 'AdminChallengeTopologyStudio',
         component: () => import('@/views/admin/ChallengeTopologyStudio.vue'),
         meta: {
@@ -363,15 +363,15 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/challenges/:id/topology',
+        path: 'admin/challenges/:id/topology',
         redirect: (to) => ({
-          path: `/admin/challenges/${encodeURIComponent(String(to.params.id || ''))}/topology`,
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/topology`,
           query: to.query,
           hash: to.hash,
         }),
       },
       {
-        path: 'admin/environment-templates',
+        path: 'platform/environment-templates',
         name: 'AdminEnvironmentTemplateLibrary',
         component: () => import('@/views/admin/EnvironmentTemplateLibrary.vue'),
         meta: {
@@ -383,11 +383,11 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/environment-templates',
-        redirect: redirectWithQuery('/admin/environment-templates'),
+        path: 'admin/environment-templates',
+        redirect: redirectWithQuery('/platform/environment-templates'),
       },
       {
-        path: 'admin/challenges/:id/writeup',
+        path: 'platform/challenges/:id/writeup',
         name: 'AdminChallengeWriteup',
         component: () => import('@/views/admin/ChallengeWriteup.vue'),
         meta: {
@@ -398,9 +398,9 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/challenges/:id/writeup',
+        path: 'admin/challenges/:id/writeup',
         redirect: (to) => ({
-          path: `/admin/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup`,
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup`,
           query: to.query,
           hash: to.hash,
         }),
@@ -438,7 +438,7 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/admin/users'),
       },
       {
-        path: 'admin/images',
+        path: 'platform/images',
         name: 'ImageManage',
         component: () => import('@/views/admin/ImageManage.vue'),
         meta: {
@@ -450,8 +450,8 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: 'platform/images',
-        redirect: redirectWithQuery('/admin/images'),
+        path: 'admin/images',
+        redirect: redirectWithQuery('/platform/images'),
       },
       {
         path: 'admin/integrity',
