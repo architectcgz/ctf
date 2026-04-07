@@ -415,15 +415,6 @@ onMounted(() => {
   flex-direction: column;
 }
 
-.challenge-topbar {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .challenge-heading {
   min-width: 0;
 }
@@ -451,13 +442,6 @@ onMounted(() => {
   gap: 12px;
 }
 
-.challenge-summary {
-  display: grid;
-  gap: 18px;
-  padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .challenge-summary-title {
   display: inline-flex;
   align-items: center;
@@ -467,41 +451,6 @@ onMounted(() => {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-}
-
-.challenge-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.challenge-summary-item {
-  min-width: 0;
-  padding: 0 0 0 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.challenge-summary-value {
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.challenge-summary-helper {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .challenge-controls {
@@ -644,28 +593,6 @@ onMounted(() => {
   flex: 1 1 auto;
   flex-direction: column;
   margin-top: 24px;
-}
-
-.challenge-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-bottom: 14px;
-}
-
-.challenge-directory-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.challenge-directory-meta {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .challenge-directory-head {
@@ -827,26 +754,6 @@ onMounted(() => {
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.challenge-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--journal-ink);
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    color 160ms ease;
-}
-
 .challenge-btn:hover,
 .challenge-btn:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
@@ -917,7 +824,6 @@ onMounted(() => {
     flex-direction: column;
   }
 
-  .challenge-summary-grid,
   .challenge-filter-grid {
     grid-template-columns: 1fr;
   }
@@ -926,14 +832,6 @@ onMounted(() => {
 @media (max-width: 640px) {
   .challenge-title {
     font-size: 34px;
-  }
-
-  .challenge-summary-grid {
-    gap: 16px;
-  }
-
-  .challenge-summary-item {
-    padding-left: 12px;
   }
 
   .challenge-directory-top {

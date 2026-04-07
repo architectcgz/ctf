@@ -1,0 +1,96 @@
+import { readFileSync } from 'node:fs'
+
+import { describe, expect, it } from 'vitest'
+
+import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
+import contestListSource from '@/views/contests/ContestList.vue?raw'
+import instanceListSource from '@/views/instances/InstanceList.vue?raw'
+import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
+import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+
+const journalUserDirectorySource = readFileSync(
+  `${process.cwd()}/src/assets/styles/journal-user-directory.css`,
+  'utf-8'
+)
+
+function extractScopedStyle(source: string): string {
+  const match = source.match(/<style scoped>([\s\S]*?)<\/style>/)
+  return match?.[1] ?? ''
+}
+
+describe('journal user directory shared styles', () => {
+  it('应该在共享样式文件中声明学生侧目录页复用的骨架与按钮规则', () => {
+    expect(journalUserDirectorySource).toContain('.challenge-topbar')
+    expect(journalUserDirectorySource).toContain('.contest-topbar')
+    expect(journalUserDirectorySource).toContain('.notification-topbar')
+    expect(journalUserDirectorySource).toContain('.scoreboard-topbar')
+    expect(journalUserDirectorySource).toContain('.instance-topbar')
+    expect(journalUserDirectorySource).toContain('.challenge-btn')
+    expect(journalUserDirectorySource).toContain('.contest-btn')
+    expect(journalUserDirectorySource).toContain('.notification-btn')
+    expect(journalUserDirectorySource).toContain('.scoreboard-btn')
+    expect(journalUserDirectorySource).toContain('.instance-btn')
+  })
+
+  it('目标页面不应继续在 scoped style 中重复声明公共目录骨架与按钮基础样式', () => {
+    const challengeStyle = extractScopedStyle(challengeListSource)
+    expect(challengeStyle).not.toMatch(/^\.challenge-topbar\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary-grid\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary-item\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary-label\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary-value\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-summary-helper\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-directory-top\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-directory-title\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-directory-meta\s*\{/m)
+    expect(challengeStyle).not.toMatch(/^\.challenge-btn\s*\{/m)
+
+    const contestStyle = extractScopedStyle(contestListSource)
+    expect(contestStyle).not.toMatch(/^\.contest-topbar\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary-grid\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary-item\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary-label\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary-value\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-summary-helper\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-directory-top\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-directory-title\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-directory-meta\s*\{/m)
+    expect(contestStyle).not.toMatch(/^\.contest-btn\s*\{/m)
+
+    const notificationStyle = extractScopedStyle(notificationListSource)
+    expect(notificationStyle).not.toMatch(/^\.notification-topbar\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary-grid\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary-item\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary-label\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary-value\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-summary-helper\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-directory-top\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-directory-title\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-directory-meta\s*\{/m)
+    expect(notificationStyle).not.toMatch(/^\.notification-btn\s*\{/m)
+
+    const scoreboardStyle = extractScopedStyle(scoreboardSource)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-topbar\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-summary\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-summary-grid\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-summary-item\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-summary-label\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-directory-top\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-directory-title\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-directory-meta\s*\{/m)
+    expect(scoreboardStyle).not.toMatch(/^\.scoreboard-btn\s*\{/m)
+
+    const instanceStyle = extractScopedStyle(instanceListSource)
+    expect(instanceStyle).not.toMatch(/^\.instance-topbar\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-summary\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-summary-grid\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-summary-item\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-directory-top\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-directory-title\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-directory-meta\s*\{/m)
+    expect(instanceStyle).not.toMatch(/^\.instance-btn\s*\{/m)
+  })
+})

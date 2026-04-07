@@ -218,20 +218,8 @@ function supportsRealtime(status: ContestStatus): boolean {
   flex-direction: column;
 }
 
-.scoreboard-topbar {
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .scoreboard-subtitle {
   max-width: 760px;
-}
-
-.scoreboard-summary {
-  display: grid;
-  gap: 18px;
-  padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .scoreboard-summary-title {
@@ -243,34 +231,6 @@ function supportsRealtime(status: ContestStatus): boolean {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.scoreboard-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.scoreboard-summary-item {
-  min-width: 0;
-  padding-left: 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.scoreboard-summary-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.scoreboard-summary-value {
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
 }
 
 .scoreboard-inline-note {
@@ -322,28 +282,6 @@ function supportsRealtime(status: ContestStatus): boolean {
 
 .scoreboard-directory {
   margin-top: 24px;
-}
-
-.scoreboard-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-bottom: 14px;
-}
-
-.scoreboard-directory-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.scoreboard-directory-meta {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .scoreboard-sections {
@@ -482,21 +420,6 @@ function supportsRealtime(status: ContestStatus): boolean {
   color: var(--journal-muted);
 }
 
-.scoreboard-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--journal-ink);
-  cursor: pointer;
-}
-
 @keyframes scoreboardSpin {
   from {
     transform: rotate(0deg);
@@ -507,9 +430,4 @@ function supportsRealtime(status: ContestStatus): boolean {
   }
 }
 
-@media (max-width: 960px) {
-  .scoreboard-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

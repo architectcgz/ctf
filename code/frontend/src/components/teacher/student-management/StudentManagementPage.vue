@@ -249,6 +249,7 @@ const emit = defineEmits<{
     var(--color-primary-hover) 82%,
     var(--journal-ink)
   );
+  --teacher-directory-columns: var(--teacher-student-directory-columns);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(12rem, 0.95fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
   --teacher-management-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
@@ -261,12 +262,6 @@ const emit = defineEmits<{
   flex-direction: column;
 }
 
-.teacher-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
 .teacher-badge-card {
   border: 1px solid var(--teacher-card-border);
 }
@@ -276,77 +271,10 @@ const emit = defineEmits<{
   border-top: 1px dashed var(--teacher-divider);
 }
 
-.teacher-controls {
-  display: grid;
-  gap: 1rem;
-  padding: 1.5rem 0 0;
-}
-
-.teacher-controls-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 0.85rem;
-}
-
-.teacher-controls-title {
-  margin-top: 0.35rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
 .teacher-filter-grid {
   display: grid;
   gap: 1rem;
   grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
-}
-
-.teacher-field {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.teacher-field-label {
-  font-size: 0.84rem;
-  color: var(--journal-muted);
-}
-
-.teacher-field-control {
-  width: 100%;
-  min-height: 2.9rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.72rem 0.95rem;
-  color: var(--journal-ink);
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease;
-}
-
-.teacher-field-control:focus-within,
-.teacher-field-control:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
-}
-
-.teacher-filter-control {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-
-.teacher-input {
-  width: 100%;
-  background: transparent;
-  color: var(--journal-ink);
-  outline: none;
-}
-
-.teacher-input::placeholder {
-  color: color-mix(in srgb, var(--journal-muted) 76%, transparent);
 }
 
 .teacher-skeleton-list {
@@ -363,47 +291,6 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
   margin-top: 1.5rem;
-}
-
-.teacher-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 0.5rem 1rem;
-  padding-bottom: 0.9rem;
-}
-
-.teacher-directory-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.teacher-directory-meta {
-  font-size: 0.82rem;
-  line-height: 1.6;
-  color: var(--journal-muted);
-}
-
-.teacher-directory-head {
-  display: grid;
-  grid-template-columns: var(--teacher-student-directory-columns);
-  gap: 1rem;
-  padding: 0 0 0.75rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.teacher-directory-head-cell {
-  min-width: 0;
-  justify-self: stretch;
-  text-align: left;
 }
 
 .teacher-directory-row {

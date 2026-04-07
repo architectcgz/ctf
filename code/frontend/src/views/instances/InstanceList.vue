@@ -209,18 +209,8 @@ const {
   flex-direction: column;
 }
 
-.instance-topbar {
-  padding-bottom: 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .instance-subtitle {
   max-width: 720px;
-}
-
-.instance-summary {
-  padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .instance-summary-title,
@@ -231,18 +221,6 @@ const {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
-}
-
-.instance-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.instance-summary-item {
-  padding-left: 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .instance-summary-value {
@@ -297,28 +275,6 @@ const {
 
 .instance-directory {
   margin-top: 24px;
-}
-
-.instance-directory-top {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding-bottom: 14px;
-}
-
-.instance-directory-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--journal-ink);
-}
-
-.instance-directory-meta {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .instance-directory-head {
@@ -443,21 +399,6 @@ const {
   gap: 8px;
 }
 
-.instance-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--journal-ink);
-  cursor: pointer;
-}
-
 .instance-btn-primary {
   border-color: transparent;
   background: var(--journal-accent);
@@ -493,9 +434,4 @@ const {
   }
 }
 
-@media (max-width: 960px) {
-  .instance-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
 </style>

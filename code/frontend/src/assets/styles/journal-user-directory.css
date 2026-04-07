@@ -1,0 +1,190 @@
+:is(
+  .challenge-topbar,
+  .contest-topbar,
+  .notification-topbar,
+  .scoreboard-topbar,
+  .instance-topbar
+) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+:is(
+  .challenge-heading,
+  .contest-heading,
+  .notification-heading,
+  .scoreboard-heading,
+  .instance-heading
+) {
+  min-width: 0;
+}
+
+:is(
+  .challenge-summary,
+  .contest-summary,
+  .notification-summary,
+  .scoreboard-summary,
+  .instance-summary
+) {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+:is(
+  .challenge-summary-grid,
+  .contest-summary-grid,
+  .notification-summary-grid,
+  .scoreboard-summary-grid,
+  .instance-summary-grid
+) {
+  display: grid;
+  grid-template-columns: var(
+    --journal-user-directory-summary-columns,
+    repeat(4, minmax(0, 1fr))
+  );
+  gap: 12px;
+  margin-top: var(--journal-user-directory-summary-grid-margin-top, 0);
+}
+
+.instance-summary-grid {
+  --journal-user-directory-summary-columns: repeat(3, minmax(0, 1fr));
+  --journal-user-directory-summary-grid-margin-top: 16px;
+}
+
+:is(
+  .challenge-summary-item,
+  .contest-summary-item,
+  .notification-summary-item,
+  .scoreboard-summary-item,
+  .instance-summary-item
+) {
+  min-width: 0;
+  padding-left: 16px;
+  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+:is(
+  .challenge-summary-label,
+  .contest-summary-label,
+  .notification-summary-label,
+  .scoreboard-summary-label
+) {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+:is(
+  .challenge-summary-value,
+  .contest-summary-value,
+  .notification-summary-value,
+  .scoreboard-summary-value,
+  .instance-summary-value
+) {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+:is(
+  .challenge-summary-helper,
+  .contest-summary-helper,
+  .notification-summary-helper,
+  .scoreboard-summary-helper
+) {
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+:is(
+  .challenge-directory-top,
+  .contest-directory-top,
+  .notification-directory-top,
+  .scoreboard-directory-top,
+  .instance-directory-top
+) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 14px;
+}
+
+:is(
+  .challenge-directory-title,
+  .contest-directory-title,
+  .notification-directory-title,
+  .scoreboard-directory-title,
+  .instance-directory-title
+) {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--journal-ink);
+}
+
+:is(
+  .challenge-directory-meta,
+  .contest-directory-meta,
+  .notification-directory-meta,
+  .scoreboard-directory-meta,
+  .instance-directory-meta
+) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+:is(.challenge-btn, .contest-btn, .notification-btn, .scoreboard-btn, .instance-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--journal-ink);
+  cursor: pointer;
+}
+
+@media (max-width: 960px) {
+  :is(
+    .challenge-summary-grid,
+    .contest-summary-grid,
+    .notification-summary-grid,
+    .scoreboard-summary-grid,
+    .instance-summary-grid
+  ) {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  :is(
+    .challenge-summary-item,
+    .contest-summary-item,
+    .notification-summary-item,
+    .scoreboard-summary-item,
+    .instance-summary-item
+  ) {
+    padding-left: 12px;
+  }
+}
