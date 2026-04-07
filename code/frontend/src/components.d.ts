@@ -45,7 +45,6 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
-    EnvironmentTemplateLibraryPage: typeof import('./components/admin/topology/EnvironmentTemplateLibraryPage.vue')['default']
     ErrorStatusShell: typeof import('./components/errors/ErrorStatusShell.vue')['default']
     GaugeChart: typeof import('./components/charts/GaugeChart.vue')['default']
     InstancePanel: typeof import('./components/common/InstancePanel.vue')['default']

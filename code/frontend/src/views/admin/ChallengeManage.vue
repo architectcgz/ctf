@@ -64,40 +64,6 @@ const activePanel = computed<ChallengePanelKey>(() => {
 const queueCount = computed(() => queue.value.length)
 const openActionMenuId = ref<string | null>(null)
 
-const packageTree = `challenge-package.zip
-  challenge.yml
-  statement.md
-  attachments/
-    web-demo.zip
-  docker/
-    topology.yml`
-
-const challengeManifest = `api_version: v1
-kind: challenge
-
-meta:
-  slug: web-demo
-  title: Web Demo
-  category: web
-  difficulty: easy
-  points: 100
-
-content:
-  statement: statement.md
-  attachments:
-    - path: attachments/web-demo.zip
-      name: web-demo.zip
-
-flag:
-  type: static
-  value: flag{example}
-  prefix: flag
-
-runtime:
-  type: container
-  image:
-    ref: ctf/web-demo:latest`
-
 function getCategoryLabel(category: ChallengeCategory): string {
   const labels: Record<ChallengeCategory, string> = {
     web: 'Web',
@@ -182,6 +148,10 @@ async function handleSelectPackage(file: File) {
 
 async function handleCommitPreview() {
   await commitPreview()
+}
+
+async function openPackageFormatGuide(): Promise<void> {
+  await router.push({ name: 'AdminChallengePackageFormat' })
 }
 
 async function switchPanel(panelKey: ChallengePanelKey): Promise<void> {
@@ -543,20 +513,19 @@ onMounted(() => {
               <h2 class="sample-guide__title">题目包示例</h2>
             </div>
             <p class="sample-guide__copy">
-              上传前先核对目录结构和最小 `challenge.yml`，避免进入预览后才发现格式问题。
+              导入页只保留上传和预览流程，目录结构与 `challenge.yml` 示例统一放到独立说明页，避免同一份规则重复维护。
             </p>
           </div>
 
-          <div class="sample-guide__grid">
-            <article class="sample-card">
-              <div class="sample-card__label">目录结构</div>
-              <pre class="sample-card__code"><code>{{ packageTree }}</code></pre>
-            </article>
-
-            <article class="sample-card">
-              <div class="sample-card__label">challenge.yml</div>
-              <pre class="sample-card__code"><code>{{ challengeManifest }}</code></pre>
-            </article>
+          <div class="sample-guide__actions">
+            <button
+              type="button"
+              class="sample-guide__link"
+              data-testid="challenge-package-format-link"
+              @click="void openPackageFormatGuide()"
+            >
+              查看题目包示例
+            </button>
           </div>
         </section>
 
@@ -1086,9 +1055,12 @@ onMounted(() => {
 }
 
 .sample-guide__eyebrow,
-.sample-card__label {
+.sample-guide__link {
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.sample-guide__eyebrow {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-accent);
@@ -1107,28 +1079,31 @@ onMounted(() => {
   line-height: 1.65;
 }
 
-.sample-guide__grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.sample-guide__actions {
+  display: flex;
+  align-items: center;
 }
 
-.sample-card {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.sample-card__code {
-  overflow-x: auto;
-  margin: 0;
+.sample-guide__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.72rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 40%, var(--journal-border));
   border-radius: 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
-  background: color-mix(in srgb, var(--color-bg-base) 80%, #0f172a 20%);
-  padding: 1rem;
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
   color: var(--journal-ink);
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  font-size: 0.82rem;
-  line-height: 1.7;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sample-guide__link:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 64%, var(--journal-border));
+  background: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  transform: translateY(-1px);
 }
 
 .queue-list {
@@ -1218,10 +1193,6 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
-  .sample-guide__grid {
-    grid-template-columns: 1fr;
-  }
-
   .top-tabs {
     gap: 18px;
     margin-left: -1rem;
