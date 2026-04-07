@@ -253,6 +253,24 @@ async function submitPasswordChange(): Promise<void> {
   --journal-note-label-weight: 700;
   --journal-note-label-spacing: 0.16em;
   --journal-note-helper-line-height: 1.45;
+  --journal-user-button-height: 2.7rem;
+  --journal-user-button-radius: 999px;
+  --journal-user-button-padding: 0.62rem 1rem;
+  --journal-user-button-size: 0.875rem;
+  --journal-user-button-weight: 600;
+  --journal-user-button-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 4%,
+    var(--journal-surface)
+  );
+  --journal-user-button-primary-border: color-mix(in srgb, var(--journal-accent) 32%, transparent);
+  --journal-user-button-primary-background: color-mix(
+    in srgb,
+    var(--journal-accent) 12%,
+    var(--journal-surface)
+  );
+  --journal-user-button-primary-color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  --journal-user-tech-font: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .security-header {
@@ -355,46 +373,6 @@ async function submitPasswordChange(): Promise<void> {
   color: var(--color-danger);
 }
 
-.journal-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  min-height: 2.7rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.62rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  transition:
-    border-color 0.2s,
-    color 0.2s,
-    background 0.2s;
-  cursor: pointer;
-}
-
-.journal-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
-}
-
-.journal-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
-}
-
-.journal-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
 .security-pill {
   display: inline-flex;
   align-items: center;
@@ -440,10 +418,6 @@ async function submitPasswordChange(): Promise<void> {
   padding: 0.75rem 0.9rem;
   font-size: 0.84rem;
   color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.tech-font {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .status-dot {
