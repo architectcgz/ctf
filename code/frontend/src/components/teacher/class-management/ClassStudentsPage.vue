@@ -215,11 +215,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                 </div>
                 <div class="teacher-summary-grid">
                   <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">可访问班级</div>
-                    <div class="teacher-summary-value">{{ classes.length }}</div>
-                    <div class="teacher-summary-helper">当前教师可切换的班级数量</div>
-                  </div>
-                  <div class="teacher-summary-item">
                     <div class="teacher-summary-label">班级人数</div>
                     <div class="teacher-summary-value">
                       {{ props.summary?.student_count ?? students.length }}
@@ -602,7 +597,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   justify-content: space-between;
   gap: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .teacher-heading {
@@ -698,7 +692,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: grid;
   gap: 1.1rem;
   padding: 1.5rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .teacher-summary-title {
@@ -982,8 +975,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .teacher-tip-block {
   display: grid;
   gap: 0.35rem;
-  border-top: 1px dashed var(--teacher-divider);
-  padding-top: 1rem;
 }
 
 .teacher-tip-label {
@@ -1008,8 +999,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .teacher-summary-card {
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 96%, transparent);
-  padding-top: 0.95rem;
+  padding-top: 0.25rem;
 }
 
 .teacher-badge-card {
@@ -1079,6 +1069,12 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .workspace-subpanel--flat :deep(.teacher-panel__chart) {
   margin-top: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .workspace-subpanel :deep(.review-item) {
@@ -1140,6 +1136,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.teacher-student-filter {
+  min-width: min(100%, 20rem);
 }
 
 .teacher-skeleton-list {
@@ -1233,6 +1233,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.98rem;
   font-weight: 700;
   line-height: 1.35;
@@ -1253,6 +1256,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-row-status {
