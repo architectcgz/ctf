@@ -61,10 +61,10 @@ const {
       <div>
         <div class="journal-eyebrow">Skill Profile</div>
         <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
-          靶场训练
+          能力画像
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          按关键词、分类与难度筛选题目，直接进入训练。
+          查看当前能力维度表现，并根据薄弱项获取推荐靶场。
         </p>
 
         <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="能力画像快捷操作">

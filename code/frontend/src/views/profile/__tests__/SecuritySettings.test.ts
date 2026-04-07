@@ -23,8 +23,8 @@ describe('SecuritySettings', () => {
     const wrapper = mount(SecuritySettings)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('靶场训练')
-    expect(wrapper.text()).toContain('按关键词、分类与难度筛选题目，直接进入训练。')
+    expect(wrapper.text()).toContain('安全设置')
+    expect(wrapper.text()).toContain('更新账号密码并检查当前安全策略。')
     expect(wrapper.text()).toContain('密码修改')
 
     const passwordInputs = wrapper.findAll('input[type="password"]')

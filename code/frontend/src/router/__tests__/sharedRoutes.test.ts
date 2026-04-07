@@ -12,6 +12,14 @@ function findChild(path: string) {
 }
 
 describe('shared route canonical paths', () => {
+  it('uses role-neutral paths as the canonical location for shared profile pages', () => {
+    expect(findChild('profile')?.name).toBe('Profile')
+    expect(findChild('settings/security')?.name).toBe('SecuritySettings')
+
+    expect(findChild('student/profile')?.redirect).toBeTruthy()
+    expect(findChild('student/settings/security')?.redirect).toBeTruthy()
+  })
+
   it('uses academy paths as the canonical location for shared teaching pages', () => {
     expect(findChild('academy/overview')?.name).toBe('TeacherDashboard')
     expect(findChild('academy/classes')?.name).toBe('ClassManagement')
