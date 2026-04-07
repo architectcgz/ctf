@@ -184,7 +184,8 @@ describe('UserManage', () => {
     expect(wrapper.text()).not.toContain('用户治理台')
     expect(wrapper.find('#user-directory-filters').text()).not.toContain('学生学号')
     expect(wrapper.find('#user-directory-filters').text()).not.toContain('教师工号')
-    expect(wrapper.find('#user-directory-filters').text()).toContain('筛选条件')
+    expect(wrapper.find('#user-directory-filters').text()).toContain('用户列表')
+    expect(wrapper.find('#user-directory-filters').text()).not.toContain('筛选条件')
     expect(wrapper.text()).toContain('用户列表')
   })
 

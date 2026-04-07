@@ -757,7 +757,7 @@ onMounted(() => {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  padding-top: 1.5rem;
+  padding-top: var(--workspace-tab-panel-gap-top-tight);
 }
 
 .tab-panel {

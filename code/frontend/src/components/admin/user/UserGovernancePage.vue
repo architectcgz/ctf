@@ -208,7 +208,7 @@ function handleImportChange(event: Event): void {
     >
       <template v-if="activePanel === 'overview'">
         <h1
-          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
+          class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
         >
           用户治理台
         </h1>
@@ -258,7 +258,7 @@ function handleImportChange(event: Event): void {
       <div class="admin-section-head">
         <div>
           <div class="journal-note-label">Filters</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选条件</h2>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
         </div>
 
         <div class="flex flex-wrap gap-3">
@@ -335,13 +335,6 @@ function handleImportChange(event: Event): void {
     <div v-show="activePanel === 'directory'" class="journal-divider mt-6" aria-hidden="true" />
 
     <section v-show="activePanel === 'directory'" class="workspace-directory-section">
-      <div class="admin-section-head">
-        <div>
-          <div class="journal-note-label">Users</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
-        </div>
-      </div>
-
       <div
         v-if="loading && list.length === 0"
         class="workspace-directory-loading flex justify-center py-10"
@@ -630,11 +623,7 @@ function handleImportChange(event: Event): void {
 
 .tab-panel {
   min-width: 0;
-  padding-top: 1.5rem;
-}
-
-#user-directory-filters {
-  padding-top: 0.5rem;
+  padding-top: var(--workspace-tab-panel-gap-top-tight);
 }
 
 .user-overview-grid {
