@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowRight, FolderKanban } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { ArrowRight, FolderKanban, Search } from 'lucide-vue-next'
 
 import type { TeacherClassItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
@@ -16,6 +17,85 @@ const emit = defineEmits<{
   openReportExport: []
   openClass: [className: string]
 }>()
+
+const filterQuery = ref('')
+
+type WorkspaceTab = 'overview' | 'directory'
+
+interface WorkspaceTabItem {
+  key: WorkspaceTab
+  label: string
+  buttonId: string
+  panelId: string
+}
+
+const workspaceTabs: WorkspaceTabItem[] = [
+  { key: 'overview', label: '总览', buttonId: 'class-manage-tab-overview', panelId: 'class-manage-overview' },
+  { key: 'directory', label: '班级列表', buttonId: 'class-manage-tab-directory', panelId: 'class-manage-directory' },
+]
+
+const activeTab = ref<WorkspaceTab>('overview')
+const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
+
+function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
+  tabButtonRefs[tab] = element
+}
+
+function selectTab(tab: WorkspaceTab): void {
+  activeTab.value = tab
+}
+
+function focusTab(tab: WorkspaceTab): void {
+  tabButtonRefs[tab]?.focus()
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
+    return
+  }
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    selectTab(workspaceTabs[0].key)
+    focusTab(workspaceTabs[0].key)
+    return
+  }
+
+  if (event.key === 'End') {
+    const lastTab = workspaceTabs[workspaceTabs.length - 1]
+    selectTab(lastTab.key)
+    focusTab(lastTab.key)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + workspaceTabs.length) % workspaceTabs.length
+  const nextTab = workspaceTabs[nextIndex]
+  selectTab(nextTab.key)
+  focusTab(nextTab.key)
+}
+
+const classEntries = computed(() =>
+  props.classes.map((item, index) => ({
+    item,
+    code: `CL-${String(index + 1).padStart(2, '0')}`,
+  }))
+)
+
+const filteredClassEntries = computed(() => {
+  const keyword = filterQuery.value.trim().toLowerCase()
+  if (!keyword) return classEntries.value
+
+  return classEntries.value.filter(({ item, code }) => {
+    return code.toLowerCase().includes(keyword) || item.name.toLowerCase().includes(keyword)
+  })
+})
 </script>
 
 <template>
@@ -24,134 +104,192 @@ const emit = defineEmits<{
       class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
     >
       <div class="teacher-page">
-        <header class="teacher-topbar">
-          <div class="teacher-heading">
-            <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-            <h1 class="teacher-title">班级管理</h1>
-            <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
-          </div>
+        <nav class="top-tabs" role="tablist" aria-label="班级管理标签页">
+          <button
+            v-for="(tab, index) in workspaceTabs"
+            :id="tab.buttonId"
+            :key="tab.key"
+            :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+            class="top-tab"
+            :class="{ active: activeTab === tab.key }"
+            type="button"
+            role="tab"
+            :tabindex="activeTab === tab.key ? 0 : -1"
+            :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+            :aria-controls="tab.panelId"
+            @click="selectTab(tab.key)"
+            @keydown="handleTabKeydown($event, index)"
+          >
+            {{ tab.label }}
+          </button>
+        </nav>
 
-          <div class="teacher-actions">
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
-              教学概览
-            </button>
-            <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReportExport')">
-              导出报告
-            </button>
-          </div>
-        </header>
-
-        <section class="teacher-summary">
-          <div class="teacher-summary-title">
-            <FolderKanban class="h-4 w-4" />
-            <span>Directory Snapshot</span>
-          </div>
-          <div class="teacher-summary-grid">
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">班级数量</div>
-              <div class="teacher-summary-value">{{ classes.length }}</div>
-              <div class="teacher-summary-helper">当前可管理班级总数</div>
+        <section
+          id="class-manage-overview"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="class-manage-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+          v-show="activeTab === 'overview'"
+        >
+          <header class="teacher-topbar">
+            <div class="teacher-heading">
+              <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
+              <h1 class="teacher-title">班级管理</h1>
+              <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
             </div>
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">学生总量</div>
-              <div class="teacher-summary-value">
-                {{ classes.reduce((sum, item) => sum + (item.student_count || 0), 0) }}
+
+            <div class="teacher-actions">
+              <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
+                教学概览
+              </button>
+              <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReportExport')">
+                导出报告
+              </button>
+            </div>
+          </header>
+
+          <section class="teacher-summary">
+            <div class="teacher-summary-title">
+              <FolderKanban class="h-4 w-4" />
+              <span>Directory Snapshot</span>
+            </div>
+            <div class="teacher-summary-grid">
+              <div class="teacher-summary-item">
+                <div class="teacher-summary-label">班级数量</div>
+                <div class="teacher-summary-value">{{ classes.length }}</div>
+                <div class="teacher-summary-helper">当前可管理班级总数</div>
               </div>
-              <div class="teacher-summary-helper">各班级学生数汇总</div>
+              <div class="teacher-summary-item">
+                <div class="teacher-summary-label">学生总量</div>
+                <div class="teacher-summary-value">
+                  {{ classes.reduce((sum, item) => sum + (item.student_count || 0), 0) }}
+                </div>
+                <div class="teacher-summary-helper">各班级学生数汇总</div>
+              </div>
+              <div class="teacher-summary-item">
+                <div class="teacher-summary-label">当前状态</div>
+                <div class="teacher-summary-value">{{ loading ? '同步中' : '已就绪' }}</div>
+                <div class="teacher-summary-helper">班级目录与入口操作已同步</div>
+              </div>
             </div>
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">当前状态</div>
-              <div class="teacher-summary-value">{{ loading ? '同步中' : '已就绪' }}</div>
-              <div class="teacher-summary-helper">班级目录与入口操作已同步</div>
-            </div>
-          </div>
+          </section>
         </section>
 
-        <div class="teacher-divider" />
-
-        <div v-if="loading" class="teacher-skeleton-list">
-          <div
-            v-for="index in 5"
-            :key="index"
-            class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-          />
-        </div>
-
-        <AppEmpty
-          v-else-if="classes.length === 0"
-          class="teacher-empty-state"
-          icon="Users"
-          title="暂无班级"
-          description="当前教师账号下还没有可访问的班级。"
-        />
-
-        <section v-else class="teacher-directory" aria-label="班级目录">
-          <div class="teacher-directory-top">
-            <h3 class="teacher-directory-title">班级目录</h3>
-            <div class="teacher-directory-meta">共 {{ classes.length }} 个班级</div>
-          </div>
-
-          <div class="teacher-directory-head">
-            <span>班级</span>
-            <span>标签</span>
-            <span>状态</span>
-            <span>数据</span>
-            <span>操作</span>
-          </div>
-
-          <button
-            v-for="(item, index) in classes"
-            :key="item.name"
-            type="button"
-            class="teacher-directory-row"
-            :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
-            @click="emit('openClass', item.name)"
-          >
-            <div class="teacher-directory-row-main">
-              <div class="teacher-directory-row-index">CL-{{ String(index + 1).padStart(2, '0') }}</div>
-              <div class="teacher-directory-row-title-group">
-                <h4 class="teacher-directory-row-title">{{ item.name }}</h4>
-                <div class="teacher-directory-row-points">{{ item.student_count || 0 }} Students</div>
+        <section
+          id="class-manage-directory"
+          class="tab-panel"
+          role="tabpanel"
+          aria-labelledby="class-manage-tab-directory"
+          :aria-hidden="activeTab === 'directory' ? 'false' : 'true'"
+          v-show="activeTab === 'directory'"
+        >
+          <section class="teacher-controls">
+            <div class="teacher-controls-bar">
+              <div class="teacher-controls-heading">
+                <div class="teacher-surface-eyebrow journal-eyebrow">Class Filters</div>
+                <h3 class="teacher-controls-title">班级筛选</h3>
+                <p class="teacher-controls-copy">支持按班级编号或班级名称快速定位班级入口。</p>
               </div>
-              <div class="teacher-directory-row-copy">查看班级学生名单与训练表现。</div>
             </div>
 
-            <div class="teacher-directory-row-tags">
-              <span class="teacher-directory-chip">Teaching Class</span>
-              <span class="teacher-directory-chip teacher-directory-chip-muted">
-                {{
-                  (item.student_count || 0) >= 40
-                    ? 'Large'
-                    : (item.student_count || 0) >= 20
-                      ? 'Standard'
-                      : 'Compact'
-                }}
-              </span>
+            <div class="teacher-filter-grid teacher-filter-grid--single">
+              <label class="teacher-field">
+                <span class="teacher-field-label">搜索班级</span>
+                <div class="teacher-field-control teacher-filter-control">
+                  <Search class="h-4 w-4 text-text-muted" />
+                  <input
+                    v-model="filterQuery"
+                    type="text"
+                    placeholder="搜索班级编号或名称"
+                    class="teacher-input"
+                  />
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <div class="teacher-hero-divider" />
+
+          <div v-if="loading" class="teacher-skeleton-list">
+            <div
+              v-for="index in 5"
+              :key="index"
+              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
+            />
+          </div>
+
+          <AppEmpty
+            v-else-if="classes.length === 0"
+            class="teacher-empty-state"
+            icon="Users"
+            title="暂无班级"
+            description="当前教师账号下还没有可访问的班级。"
+          />
+
+          <section v-else class="teacher-directory" aria-label="班级目录">
+            <div class="teacher-directory-top">
+              <div>
+                <h3 class="teacher-directory-title">班级目录</h3>
+                <div class="teacher-directory-meta">共 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级</div>
+              </div>
             </div>
 
-            <div class="teacher-directory-row-status">
-              <span
-                class="teacher-directory-state-chip"
-                :class="
-                  (item.student_count || 0) > 0
-                    ? 'teacher-directory-state-chip-ready'
-                    : 'teacher-directory-state-chip-empty'
-                "
-              >
-                {{ (item.student_count || 0) > 0 ? '可查看' : '待入班' }}
-              </span>
+            <div v-if="filteredClassEntries.length > 0" class="teacher-directory-head">
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code">班级编号</span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name">班级名称</span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-count">学生数</span>
+              <span>状态</span>
+              <span>操作</span>
             </div>
 
-            <div class="teacher-directory-row-metrics">
-              <span>{{ item.student_count || 0 }} 名学生</span>
-              <span>{{ (item.student_count || 0) > 0 ? '可继续查看训练趋势' : '当前还没有学生加入' }}</span>
-            </div>
+            <AppEmpty
+              v-if="filteredClassEntries.length === 0"
+              class="teacher-empty-state"
+              icon="Search"
+              title="没有匹配班级"
+              description="调整搜索关键词后再试。"
+            />
 
-            <div class="teacher-directory-row-cta">
-              <span>进入班级</span>
-              <ArrowRight class="h-4 w-4" />
-            </div>
-          </button>
+            <button
+              v-for="{ item, code } in filteredClassEntries"
+              :key="item.name"
+              type="button"
+              class="teacher-directory-row"
+              :aria-label="`${item.name}，${item.student_count || 0} 名学生，进入班级`"
+              @click="emit('openClass', item.name)"
+            >
+              <div class="teacher-directory-cell teacher-directory-cell-class-code">
+                {{ code }}
+              </div>
+
+              <div class="teacher-directory-cell teacher-directory-cell-class-name">
+                <h4 class="teacher-directory-row-title" :title="item.name">{{ item.name }}</h4>
+              </div>
+
+              <div class="teacher-directory-cell teacher-directory-cell-student-count">
+                <div class="teacher-directory-row-points">{{ item.student_count || 0 }}</div>
+              </div>
+
+              <div class="teacher-directory-row-status">
+                <span
+                  class="teacher-directory-state-chip"
+                  :class="
+                    (item.student_count || 0) > 0
+                      ? 'teacher-directory-state-chip-ready'
+                      : 'teacher-directory-state-chip-empty'
+                  "
+                >
+                  {{ (item.student_count || 0) > 0 ? '可查看' : '待入班' }}
+                </span>
+              </div>
+
+              <div class="teacher-directory-row-cta">
+                <span>进入班级</span>
+                <ArrowRight class="h-4 w-4" />
+              </div>
+            </button>
+          </section>
         </section>
       </div>
     </section>
@@ -175,6 +313,12 @@ const emit = defineEmits<{
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --teacher-class-directory-columns:
+    minmax(7rem, 0.7fr)
+    minmax(11rem, 1.15fr)
+    minmax(7rem, 0.7fr)
+    minmax(7rem, 0.7fr)
+    minmax(7rem, 0.75fr);
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -201,6 +345,51 @@ const emit = defineEmits<{
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
+}
+
+.top-tabs {
+  display: flex;
+  gap: 1.2rem;
+  margin: 0 -1.5rem 1.25rem;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.4rem 0 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
+  outline: none;
+}
+
+.tab-panel {
+  min-width: 0;
 }
 
 .teacher-topbar {
@@ -334,11 +523,6 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 
-.teacher-divider {
-  margin-top: 1.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
 .teacher-skeleton-list {
   margin-top: 1.5rem;
   display: grid;
@@ -385,9 +569,99 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 
+.teacher-controls {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem 0 0;
+}
+
+.teacher-controls-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.teacher-controls-title {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-controls-copy {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.teacher-hero-divider {
+  margin-top: 1.5rem;
+  border-top: 1px dashed var(--teacher-divider);
+}
+
+.teacher-filter-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 22rem);
+}
+
+.teacher-filter-grid--single {
+  justify-content: start;
+}
+
+.teacher-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.teacher-field-label {
+  font-size: 0.84rem;
+  color: var(--journal-muted);
+}
+
+.teacher-field-control {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  padding: 0.72rem 0.95rem;
+  color: var(--journal-ink);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+.teacher-field-control:focus-within,
+.teacher-field-control:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 5%, var(--journal-surface));
+  outline: none;
+}
+
+.teacher-filter-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.teacher-input {
+  width: 100%;
+  background: transparent;
+  color: var(--journal-ink);
+  outline: none;
+}
+
+.teacher-input::placeholder {
+  color: color-mix(in srgb, var(--journal-muted) 76%, transparent);
+}
+
 .teacher-directory-head {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 7rem 10rem 7rem;
+  grid-template-columns: var(--teacher-class-directory-columns);
   gap: 1rem;
   padding: 0 0 0.75rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -398,9 +672,15 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 
+.teacher-directory-head-cell {
+  min-width: 0;
+  justify-self: stretch;
+  text-align: left;
+}
+
 .teacher-directory-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr) 7rem 10rem 7rem;
+  grid-template-columns: var(--teacher-class-directory-columns);
   gap: 1rem;
   align-items: center;
   width: 100%;
@@ -422,44 +702,54 @@ const emit = defineEmits<{
   outline: none;
 }
 
-.teacher-directory-row-main {
+.teacher-directory-cell {
   display: grid;
   gap: 0.5rem;
   min-width: 0;
+  align-content: center;
+  justify-self: stretch;
+  text-align: left;
 }
 
-.teacher-directory-row-index,
+.teacher-directory-cell-class-code,
 .teacher-directory-row-points {
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
-.teacher-directory-row-index {
+.teacher-directory-cell-class-code {
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--journal-muted);
 }
 
-.teacher-directory-row-title-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem 0.85rem;
-}
-
 .teacher-directory-row-title {
+  margin: 0;
   min-width: 0;
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 1.08rem;
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .teacher-directory-row-points {
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
+}
+
+.teacher-directory-head-cell-class-code,
+.teacher-directory-head-cell-class-name,
+.teacher-directory-head-cell-student-count,
+.teacher-directory-cell-class-code,
+.teacher-directory-cell-class-name,
+.teacher-directory-cell-student-count {
+  justify-self: start;
+  width: 100%;
 }
 
 .teacher-directory-row-copy {
@@ -534,6 +824,12 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 960px) {
+  .top-tabs {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding: 0 1rem;
+  }
+
   .teacher-topbar {
     align-items: flex-start;
     flex-direction: column;
