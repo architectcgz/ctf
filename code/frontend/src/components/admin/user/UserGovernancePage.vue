@@ -217,7 +217,7 @@ function handleImportChange(event: Event): void {
           在这里筛选账号、批量导入并处理用户状态。
         </p>
 
-        <article class="journal-brief user-overview-summary rounded-[24px] border px-5 py-5">
+        <div class="user-overview-summary">
           <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
             <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
             当前用户概况
@@ -244,7 +244,7 @@ function handleImportChange(event: Event): void {
               <div class="journal-note-helper">最近一次导入结果</div>
             </div>
           </div>
-        </article>
+        </div>
       </template>
     </section>
 
@@ -550,16 +550,10 @@ function handleImportChange(event: Event): void {
   box-shadow: 0 18px 40px var(--color-shadow-soft);
 }
 
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
-}
-
 .user-overview-summary {
   margin-top: 1.5rem;
-  padding-top: 1.25rem;
+  display: grid;
+  gap: 1rem;
 }
 
 .journal-eyebrow {

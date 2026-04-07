@@ -375,6 +375,8 @@ describe('UserManage', () => {
     const summary = wrapper.get('#user-overview-summary')
     const summaryCards = summary.findAll('.user-overview-stat')
 
+    expect(userGovernanceSource).not.toContain('<article class="journal-brief user-overview-summary')
+    expect(summary.find('article').exists()).toBe(false)
     expect(summaryCards).toHaveLength(4)
     expect(summary.find('.user-overview-grid').exists()).toBe(true)
     expect(userGovernanceSource).not.toContain('<div v-if="activePanel === \'overview\'" class="journal-divider mt-6" />')
