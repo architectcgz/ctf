@@ -1,12 +1,10 @@
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <div class="journal-eyebrow">
-          Challenge Detail
-        </div>
+        <div class="journal-eyebrow">Challenge Detail</div>
         <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">
           靶场详情
         </h1>
@@ -29,29 +27,18 @@
         >
           拓扑编排
         </button>
-        <button
-          class="admin-btn admin-btn-ghost"
-          @click="$router.back()"
-        >
-          返回
-        </button>
+        <button class="admin-btn admin-btn-ghost" @click="$router.back()">返回</button>
       </div>
     </div>
     <div class="journal-divider" />
 
-    <div
-      v-if="loading"
-      class="flex items-center justify-center py-12"
-    >
+    <div v-if="loading" class="flex items-center justify-center py-12">
       <div
         class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
       />
     </div>
 
-    <div
-      v-else-if="challenge"
-      class="space-y-3"
-    >
+    <div v-else-if="challenge" class="space-y-3">
       <div class="space-y-3">
         <h2 class="mb-4 text-xl font-semibold text-[var(--color-text-primary)]">
           {{ challenge.title }}
@@ -73,26 +60,19 @@
             <span class="text-[var(--color-text-secondary)]">状态：</span>
             <span class="text-[var(--color-text-primary)]">{{ challenge.status }}</span>
           </div>
-          <div
-            v-if="challenge.image_id"
-            class="col-span-2"
-          >
+          <div v-if="challenge.image_id" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">镜像：</span>
-            <span class="font-mono text-[var(--color-text-primary)]">ID #{{ challenge.image_id }}</span>
+            <span class="font-mono text-[var(--color-text-primary)]"
+              >ID #{{ challenge.image_id }}</span
+            >
           </div>
-          <div
-            v-if="challenge.flag_config"
-            class="col-span-2"
-          >
+          <div v-if="challenge.flag_config" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">Flag 配置：</span>
             <span class="font-mono text-[var(--color-text-primary)]">
               {{ flagConfigSummary }}
             </span>
           </div>
-          <div
-            v-if="challenge.attachment_url"
-            class="col-span-2"
-          >
+          <div v-if="challenge.attachment_url" class="col-span-2">
             <span class="text-[var(--color-text-secondary)]">附件：</span>
             <a
               :href="challenge.attachment_url"
@@ -104,24 +84,14 @@
             </a>
           </div>
         </div>
-        <div
-          v-if="challenge.description"
-          class="mt-4"
-        >
-          <div class="text-sm text-[var(--color-text-secondary)]">
-            描述：
-          </div>
+        <div v-if="challenge.description" class="mt-4">
+          <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
           <div class="mt-2 text-sm text-[var(--color-text-primary)]">
             {{ challenge.description }}
           </div>
         </div>
-        <div
-          v-if="challenge.hints?.length"
-          class="mt-4"
-        >
-          <div class="text-sm text-[var(--color-text-secondary)]">
-            提示：
-          </div>
+        <div v-if="challenge.hints?.length" class="mt-4">
+          <div class="text-sm text-[var(--color-text-secondary)]">提示：</div>
           <div class="mt-2 space-y-3">
             <div
               v-for="hint in challenge.hints"
@@ -141,12 +111,8 @@
         <div class="journal-panel mt-6 space-y-5 p-5 md:p-6">
           <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
-              <div class="journal-eyebrow">
-                Judge Mode
-              </div>
-              <h3 class="mt-3 text-lg font-semibold text-[var(--journal-ink)]">
-                判题模式配置
-              </h3>
+              <div class="journal-eyebrow">Judge Mode</div>
+              <h3 class="mt-3 text-lg font-semibold text-[var(--journal-ink)]">判题模式配置</h3>
               <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
                 支持静态 Flag、动态前缀、正则判题和人工审核四种模式。保存后即时刷新当前题目配置。
               </p>
@@ -159,10 +125,7 @@
           <div class="grid gap-4 md:grid-cols-2">
             <label class="flag-field">
               <span class="flag-field-label">判题模式</span>
-              <select
-                v-model="flagType"
-                class="flag-field-input"
-              >
+              <select v-model="flagType" class="flag-field-input">
                 <option value="static">静态 Flag</option>
                 <option value="dynamic">动态前缀</option>
                 <option value="regex">正则匹配</option>
@@ -170,43 +133,34 @@
               </select>
             </label>
 
-            <label
-              v-if="flagType === 'dynamic' || flagType === 'regex'"
-              class="flag-field"
-            >
+            <label v-if="flagType === 'dynamic' || flagType === 'regex'" class="flag-field">
               <span class="flag-field-label">Flag 前缀</span>
               <input
                 v-model="flagPrefix"
                 type="text"
                 placeholder="例如：flag"
                 class="flag-field-input"
-              >
+              />
             </label>
 
-            <label
-              v-if="flagType === 'static'"
-              class="flag-field md:col-span-2"
-            >
+            <label v-if="flagType === 'static'" class="flag-field md:col-span-2">
               <span class="flag-field-label">静态 Flag</span>
               <input
                 v-model="flagValue"
                 type="text"
                 placeholder="例如：flag{demo}"
                 class="flag-field-input font-mono"
-              >
+              />
             </label>
 
-            <label
-              v-if="flagType === 'regex'"
-              class="flag-field md:col-span-2"
-            >
+            <label v-if="flagType === 'regex'" class="flag-field md:col-span-2">
               <span class="flag-field-label">正则表达式</span>
               <input
                 v-model="flagRegex"
                 type="text"
                 placeholder="例如：^flag\\{demo-[0-9]+\\}$"
                 class="flag-field-input font-mono"
-              >
+              />
             </label>
           </div>
 
@@ -218,14 +172,8 @@
           </div>
 
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="text-sm text-[var(--journal-muted)]">
-              当前配置：{{ flagConfigSummary }}
-            </div>
-            <button
-              :disabled="saving"
-              class="admin-btn admin-btn-primary"
-              @click="saveFlagConfig"
-            >
+            <div class="text-sm text-[var(--journal-muted)]">当前配置：{{ flagConfigSummary }}</div>
+            <button :disabled="saving" class="admin-btn admin-btn-primary" @click="saveFlagConfig">
               {{ saving ? '保存中...' : '保存配置' }}
             </button>
           </div>
@@ -359,13 +307,18 @@ onMounted(() => {
   --journal-accent: var(--color-primary);
   --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .journal-hero,
 .journal-panel {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -373,14 +326,6 @@ onMounted(() => {
     );
   border-radius: 16px !important;
   box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
-.journal-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .admin-btn {
@@ -451,7 +396,11 @@ onMounted(() => {
 :global([data-theme='dark']) .journal-hero,
 :global([data-theme='dark']) .journal-panel {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
@@ -459,10 +408,6 @@ onMounted(() => {
     );
 }
 
-.journal-divider {
-  margin-block: 1rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
-}
 :global([data-theme='dark']) .journal-shell {
   --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
   --journal-muted: var(--color-text-secondary);

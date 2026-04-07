@@ -11,6 +11,7 @@ import './assets/styles/element-override.css'
 import './assets/styles/teacher-surface.css'
 import './assets/styles/page-tabs.css'
 import './assets/styles/workspace-shell.css'
+import './assets/styles/journal-notes.css'
 
 const app = createApp(App)
 const pinia = createPinia()

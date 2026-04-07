@@ -117,7 +117,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <header class="admin-overview">
       <div class="admin-overview__intro">
@@ -294,6 +294,19 @@ onMounted(() => {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
+  --journal-eyebrow-spacing: 0.18em;
+  --journal-note-label-spacing: 0.18em;
+  --journal-note-card-radius: 18px;
+  --journal-note-card-background: color-mix(
+    in srgb,
+    var(--journal-surface) 94%,
+    var(--color-bg-base)
+  );
+  --journal-note-card-padding: 0.95rem 1rem;
+  --journal-note-value-size: 1.15rem;
+  --journal-note-value-weight: 700;
+  --journal-note-helper-margin-top: 0.45rem;
+  --journal-note-helper-line-height: 1.55;
 }
 
 .journal-hero {
@@ -310,40 +323,6 @@ onMounted(() => {
       color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
     );
   box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
-.journal-eyebrow,
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-note {
-  border: 1px solid var(--journal-border);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.journal-note-helper {
-  margin-top: 0.45rem;
-  font-size: 0.78rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
-}
-
-.journal-divider {
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .admin-overview {

@@ -1,6 +1,6 @@
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <header class="image-header">
       <div class="image-header__intro">
@@ -271,6 +271,7 @@ onUnmounted(() => {
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --journal-divider-border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -290,40 +291,6 @@ onUnmounted(() => {
       var(--journal-surface)
     );
   box-shadow: 0 22px 50px var(--color-shadow-soft);
-}
-
-.journal-eyebrow,
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-note {
-  padding: 0 0 0 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: transparent;
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
-.journal-divider {
-  margin-block: 1rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .admin-btn {

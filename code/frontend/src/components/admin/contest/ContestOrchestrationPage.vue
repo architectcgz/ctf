@@ -8,7 +8,9 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
 import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 
-type StatusFilter = 'all' | Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
+type StatusFilter =
+  | 'all'
+  | Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
 
 const props = defineProps<{
   list: ContestDetailData[]
@@ -31,167 +33,183 @@ const emit = defineEmits<{
   'update:selectedAwdContestId': [value: string]
 }>()
 
-const registeringCount = computed(() => props.list.filter((item) => item.status === 'registering').length)
+const registeringCount = computed(
+  () => props.list.filter((item) => item.status === 'registering').length
+)
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
 const awdCount = computed(() => props.awdContests.length)
 </script>
 
 <template>
-  <section class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8">
-      <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-        <div>
-          <div class="journal-eyebrow">Contest Orchestration</div>
-          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]">
-            赛事编排台
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            在这里查看赛事窗口、状态流转和 AWD 运维入口。
-          </p>
-
-          <div class="mt-6 flex flex-wrap gap-3">
-            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-              <RefreshCw class="h-4 w-4" />
-              刷新列表
-            </button>
-            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-              <UserPlus class="h-4 w-4" />
-              创建竞赛
-            </button>
-          </div>
-        </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
-            当前赛事概况
-          </div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">赛事总量</div>
-              <div class="journal-note-value">{{ total }}</div>
-              <div class="journal-note-helper">当前筛选条件下的赛事总数</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">报名中</div>
-              <div class="journal-note-value">{{ registeringCount }}</div>
-              <div class="journal-note-helper">当前页开放报名的赛事</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">进行中</div>
-              <div class="journal-note-value">{{ runningCount }}</div>
-              <div class="journal-note-helper">当前页正在进行的赛事</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">AWD</div>
-              <div class="journal-note-value">{{ awdCount }}</div>
-              <div class="journal-note-helper">当前页可直接进入运维视图</div>
-            </div>
-          </div>
-        </article>
-      </div>
-      <div class="journal-divider mt-6" />
-
-      <div class="admin-section-head admin-section-head-intro">
-        <div>
-          <div class="journal-note-label">Status Window</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">状态窗口</h2>
-        </div>
-        <div class="admin-pill">
-          <CalendarClock class="h-4 w-4" />
-          {{ statusFilter === 'all' ? '全部状态' : statusFilter }}
-        </div>
-      </div>
-
-      <div class="mt-5 grid gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
-        <label class="space-y-2">
-          <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
-          <select
-            :value="statusFilter"
-            class="admin-input"
-            @change="emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)"
-          >
-            <option value="all">全部状态</option>
-            <option value="draft">草稿</option>
-            <option value="registering">报名中</option>
-            <option value="running">进行中</option>
-            <option value="frozen">已冻结</option>
-            <option value="ended">已结束</option>
-          </select>
-        </label>
-
-        <div class="grid gap-3 md:grid-cols-3">
-          <div class="journal-note">
-            <div class="journal-note-label">列表状态</div>
-            <div class="journal-note-helper">创建、编辑和分页都在当前主卡片内完成。</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">时间窗口</div>
-            <div class="journal-note-helper">筛选后直接判断哪些比赛需要调整。</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">AWD 入口</div>
-            <div class="journal-note-helper">有 AWD 赛事时会在下方直接展开运维视图。</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="journal-divider mt-6" />
-
-      <section class="space-y-4">
-        <div class="admin-section-head">
-          <div>
-            <div class="journal-note-label">Contests</div>
-            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">赛事列表</h2>
-          </div>
-        </div>
-
-        <div v-if="loading && list.length === 0" class="flex justify-center py-10">
-          <AppLoading>正在同步竞赛列表...</AppLoading>
-        </div>
-
-        <AppEmpty
-          v-else-if="list.length === 0"
-          class="contest-empty-state"
-          title="暂无竞赛"
-          description="当前筛选条件下没有竞赛数据。"
-          icon="Trophy"
+  <section
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+  >
+    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+      <div>
+        <div class="journal-eyebrow">Contest Orchestration</div>
+        <h1
+          class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
         >
-          <template #action>
-            <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-              创建第一场竞赛
-            </button>
-          </template>
-        </AppEmpty>
+          赛事编排台
+        </h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          在这里查看赛事窗口、状态流转和 AWD 运维入口。
+        </p>
 
-        <AdminContestTable
-          v-else
-          :contests="list"
-          :page="page"
-          :page-size="pageSize"
-          :total="total"
-          @edit="emit('openEditDialog', $event)"
-          @export="emit('exportContest', $event)"
-          @change-page="emit('changePage', $event)"
-        />
-      </section>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+            <RefreshCw class="h-4 w-4" />
+            刷新列表
+          </button>
+          <button
+            type="button"
+            class="admin-btn admin-btn-primary"
+            @click="emit('openCreateDialog')"
+          >
+            <UserPlus class="h-4 w-4" />
+            创建竞赛
+          </button>
+        </div>
+      </div>
 
-      <div class="journal-divider mt-6" />
-
-      <section class="space-y-4">
-        <div class="admin-section-head">
-          <div>
-            <div class="journal-note-label">AWD Operations</div>
-            <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">AWD 运维视图</h2>
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+          <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
+          当前赛事概况
+        </div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="journal-note">
+            <div class="journal-note-label">赛事总量</div>
+            <div class="journal-note-value">{{ total }}</div>
+            <div class="journal-note-helper">当前筛选条件下的赛事总数</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">报名中</div>
+            <div class="journal-note-value">{{ registeringCount }}</div>
+            <div class="journal-note-helper">当前页开放报名的赛事</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">进行中</div>
+            <div class="journal-note-value">{{ runningCount }}</div>
+            <div class="journal-note-helper">当前页正在进行的赛事</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">AWD</div>
+            <div class="journal-note-value">{{ awdCount }}</div>
+            <div class="journal-note-helper">当前页可直接进入运维视图</div>
           </div>
         </div>
+      </article>
+    </div>
+    <div class="journal-divider mt-6" />
 
-        <AWDOperationsPanel
-          :contests="awdContests"
-          :selected-contest-id="selectedAwdContestId"
-          @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
-        />
-      </section>
+    <div class="admin-section-head admin-section-head-intro">
+      <div>
+        <div class="journal-note-label">Status Window</div>
+        <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">状态窗口</h2>
+      </div>
+      <div class="admin-pill">
+        <CalendarClock class="h-4 w-4" />
+        {{ statusFilter === 'all' ? '全部状态' : statusFilter }}
+      </div>
+    </div>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-[minmax(0,320px)_1fr]">
+      <label class="space-y-2">
+        <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
+        <select
+          :value="statusFilter"
+          class="admin-input"
+          @change="
+            emit('updateStatusFilter', ($event.target as HTMLSelectElement).value as StatusFilter)
+          "
+        >
+          <option value="all">全部状态</option>
+          <option value="draft">草稿</option>
+          <option value="registering">报名中</option>
+          <option value="running">进行中</option>
+          <option value="frozen">已冻结</option>
+          <option value="ended">已结束</option>
+        </select>
+      </label>
+
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="journal-note">
+          <div class="journal-note-label">列表状态</div>
+          <div class="journal-note-helper">创建、编辑和分页都在当前主卡片内完成。</div>
+        </div>
+        <div class="journal-note">
+          <div class="journal-note-label">时间窗口</div>
+          <div class="journal-note-helper">筛选后直接判断哪些比赛需要调整。</div>
+        </div>
+        <div class="journal-note">
+          <div class="journal-note-label">AWD 入口</div>
+          <div class="journal-note-helper">有 AWD 赛事时会在下方直接展开运维视图。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="journal-divider mt-6" />
+
+    <section class="space-y-4">
+      <div class="admin-section-head">
+        <div>
+          <div class="journal-note-label">Contests</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">赛事列表</h2>
+        </div>
+      </div>
+
+      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+        <AppLoading>正在同步竞赛列表...</AppLoading>
+      </div>
+
+      <AppEmpty
+        v-else-if="list.length === 0"
+        class="contest-empty-state"
+        title="暂无竞赛"
+        description="当前筛选条件下没有竞赛数据。"
+        icon="Trophy"
+      >
+        <template #action>
+          <button
+            type="button"
+            class="admin-btn admin-btn-primary"
+            @click="emit('openCreateDialog')"
+          >
+            创建第一场竞赛
+          </button>
+        </template>
+      </AppEmpty>
+
+      <AdminContestTable
+        v-else
+        :contests="list"
+        :page="page"
+        :page-size="pageSize"
+        :total="total"
+        @edit="emit('openEditDialog', $event)"
+        @export="emit('exportContest', $event)"
+        @change-page="emit('changePage', $event)"
+      />
     </section>
+
+    <div class="journal-divider mt-6" />
+
+    <section class="space-y-4">
+      <div class="admin-section-head">
+        <div>
+          <div class="journal-note-label">AWD Operations</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">AWD 运维视图</h2>
+        </div>
+      </div>
+
+      <AWDOperationsPanel
+        :contests="awdContests"
+        :selected-contest-id="selectedAwdContestId"
+        @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
+      />
+    </section>
+  </section>
 </template>
 
 <style scoped>
@@ -203,12 +221,20 @@ const awdCount = computed(() => props.awdContests.length)
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --journal-note-label-weight: 600;
+  --journal-note-label-spacing: 0.15em;
+  --journal-note-label-color: var(--journal-muted);
+  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
 }
 
 .journal-hero {
   border-color: var(--journal-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
@@ -225,47 +251,6 @@ const awdCount = computed(() => props.awdContests.length)
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
 }
 
-.journal-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-note {
-  border-radius: 14px;
-  border: 1px solid var(--journal-border);
-  background: var(--journal-surface);
-  padding: 0.75rem 0.875rem;
-}
-
-.journal-note-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-note-value {
-  margin-top: 0.35rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  color: var(--journal-muted);
-}
-
-.journal-divider {
-  border-top: 1px dashed rgba(148, 163, 184, 0.7);
-}
-
 .admin-section-head {
   display: flex;
   flex-wrap: wrap;
@@ -279,7 +264,11 @@ const awdCount = computed(() => props.awdContests.length)
   padding: 1rem 1.1rem 1rem 1.35rem;
   border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
   border-radius: 18px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 72%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-accent) 10%, transparent),
+    transparent 72%
+  );
 }
 
 .admin-section-head-intro::before {
@@ -290,7 +279,11 @@ const awdCount = computed(() => props.awdContests.length)
   bottom: 0.95rem;
   width: 3px;
   border-radius: 999px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink)), color-mix(in srgb, var(--journal-accent) 20%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink)),
+    color-mix(in srgb, var(--journal-accent) 20%, transparent)
+  );
 }
 
 .admin-section-head-intro .journal-note-label {
@@ -378,7 +371,11 @@ const awdCount = computed(() => props.awdContests.length)
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 18rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
@@ -388,7 +385,11 @@ const awdCount = computed(() => props.awdContests.length)
 
 :global([data-theme='dark']) .admin-section-head-intro {
   border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
-  background: linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 72%);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-accent) 14%, transparent),
+    transparent 72%
+  );
 }
 
 @media (max-width: 767px) {

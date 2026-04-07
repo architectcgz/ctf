@@ -1,0 +1,53 @@
+.journal-shell-admin .journal-eyebrow {
+  font-size: var(--journal-eyebrow-size, 0.7rem);
+  font-weight: var(--journal-eyebrow-weight, 700);
+  letter-spacing: var(--journal-eyebrow-spacing, 0.2em);
+  text-transform: uppercase;
+  color: var(--journal-eyebrow-color, var(--journal-accent));
+}
+
+.journal-shell-admin .journal-note-label {
+  font-size: var(--journal-note-label-size, 0.7rem);
+  font-weight: var(--journal-note-label-weight, 700);
+  letter-spacing: var(--journal-note-label-spacing, 0.2em);
+  text-transform: uppercase;
+  color: var(--journal-note-label-color, var(--journal-accent));
+}
+
+.journal-shell-admin .journal-note-value {
+  margin-top: var(--journal-note-value-margin-top, 0.35rem);
+  font-size: var(--journal-note-value-size, 1rem);
+  font-weight: var(--journal-note-value-weight, 600);
+  color: var(--journal-note-value-color, var(--journal-ink));
+}
+
+.journal-shell-admin .journal-note-helper {
+  margin-top: var(--journal-note-helper-margin-top, 0.55rem);
+  font-size: var(--journal-note-helper-size, 0.78rem);
+  line-height: var(--journal-note-helper-line-height, 1.5);
+  color: var(--journal-note-helper-color, var(--journal-muted));
+}
+
+.journal-shell-admin .journal-divider {
+  margin-block: var(--journal-divider-margin-block, 1rem);
+  border-top: var(
+    --journal-divider-border,
+    1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent)
+  );
+}
+
+.journal-shell-admin.journal-notes-card .journal-note {
+  border: var(--journal-note-card-border, 1px solid var(--journal-border));
+  border-radius: var(--journal-note-card-radius, 14px);
+  background: var(--journal-note-card-background, var(--journal-surface));
+  padding: var(--journal-note-card-padding, 0.75rem 0.875rem);
+}
+
+.journal-shell-admin.journal-notes-rail .journal-note {
+  padding: var(--journal-note-rail-padding, 0 0 0 1rem);
+  border-left: var(
+    --journal-note-rail-border,
+    2px solid color-mix(in srgb, var(--journal-border) 88%, transparent)
+  );
+  background: transparent;
+}
