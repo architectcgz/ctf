@@ -136,7 +136,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   let roundDetailRequestToken = 0
   let trafficEventsRequestToken = 0
   let syncingSelectedRound = false
-  let autoRefreshTimer: ReturnType<typeof window.setInterval> | null = null
+  let autoRefreshTimer: number | null = null
 
   function clearRoundDetail() {
     services.value = []
