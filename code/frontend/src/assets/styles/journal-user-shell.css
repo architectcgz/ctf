@@ -50,6 +50,97 @@
   box-shadow: var(--journal-shell-hero-shadow, 0 22px 50px var(--color-shadow-soft));
 }
 
+.journal-shell.journal-shell-user .journal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: var(--journal-user-button-justify, center);
+  gap: var(--journal-user-button-gap, 0.375rem);
+  min-height: var(--journal-user-button-height, 2.7rem);
+  border-radius: var(--journal-user-button-radius, 999px);
+  border: 1px solid
+    var(
+      --journal-user-button-border,
+      color-mix(in srgb, var(--journal-border) 84%, transparent)
+    );
+  background: var(
+    --journal-user-button-background,
+    color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base))
+  );
+  padding: var(--journal-user-button-padding, 0.62rem 1rem);
+  font-size: var(--journal-user-button-size, 0.875rem);
+  font-weight: var(--journal-user-button-weight, 600);
+  color: var(--journal-user-button-color, var(--journal-ink));
+  transition: var(
+    --journal-user-button-transition,
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s
+  );
+  cursor: pointer;
+}
+
+.journal-shell.journal-shell-user .journal-btn:hover {
+  border-color: var(
+    --journal-user-button-hover-border,
+    color-mix(in srgb, var(--journal-accent) 42%, transparent)
+  );
+  background: var(
+    --journal-user-button-hover-background,
+    var(--journal-user-button-background, color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)))
+  );
+  color: var(--journal-user-button-hover-color, var(--journal-accent));
+}
+
+.journal-shell.journal-shell-user .journal-btn:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
+  outline-offset: 2px;
+}
+
+.journal-shell.journal-shell-user .journal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.journal-shell.journal-shell-user .journal-btn--primary {
+  border-color: var(
+    --journal-user-button-primary-border,
+    color-mix(in srgb, var(--journal-accent) 32%, transparent)
+  );
+  background: var(
+    --journal-user-button-primary-background,
+    color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface))
+  );
+  color: var(
+    --journal-user-button-primary-color,
+    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink))
+  );
+}
+
+.journal-shell.journal-shell-user .journal-btn--primary:hover:not(:disabled) {
+  background: var(
+    --journal-user-button-primary-hover-background,
+    color-mix(in srgb, var(--journal-accent) 16%, transparent)
+  );
+  color: var(
+    --journal-user-button-primary-hover-color,
+    var(
+      --journal-user-button-primary-color,
+      color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink))
+    )
+  );
+}
+
+.journal-shell.journal-shell-user .tech-font {
+  font-family: var(
+    --journal-user-tech-font,
+    'IBM Plex Mono',
+    'JetBrains Mono',
+    'SFMono-Regular',
+    'Consolas',
+    monospace
+  );
+}
+
 [data-theme='dark'] .journal-shell.journal-shell-user {
   --journal-ink: var(--journal-shell-dark-ink, var(--color-text-primary));
   --journal-muted: var(--journal-shell-dark-muted, var(--color-text-secondary));

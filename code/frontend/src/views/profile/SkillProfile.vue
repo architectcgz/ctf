@@ -384,6 +384,35 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --page-top-tab-font-size: 0.92rem;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
+  --journal-user-button-height: 34px;
+  --journal-user-button-radius: 12px;
+  --journal-user-button-border: var(--journal-control-border);
+  --journal-user-button-background: transparent;
+  --journal-user-button-padding: 0.5rem 1rem;
+  --journal-user-button-size: 0.875rem;
+  --journal-user-button-weight: 500;
+  --journal-user-button-color: var(--color-text-primary);
+  --journal-user-button-hover-border: color-mix(
+    in srgb,
+    var(--journal-accent) 52%,
+    var(--journal-control-border)
+  );
+  --journal-user-button-hover-background: transparent;
+  --journal-user-button-hover-color: var(--journal-accent-strong);
+  --journal-user-button-primary-border: color-mix(in srgb, var(--journal-accent) 50%, transparent);
+  --journal-user-button-primary-background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  --journal-user-button-primary-color: var(--journal-accent-strong);
+  --journal-user-button-primary-hover-background: color-mix(
+    in srgb,
+    var(--journal-accent) 14%,
+    transparent
+  );
+  --journal-user-tech-font:
+    'IBM Plex Mono',
+    'JetBrains Mono',
+    'SFMono-Regular',
+    'Consolas',
+    monospace;
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -393,44 +422,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border-color: var(--journal-shell-border);
   border-radius: 16px !important;
   overflow: hidden;
-}
-
-.journal-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  min-height: 34px;
-  border-radius: 12px;
-  border: 1px solid var(--journal-control-border);
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  background: transparent;
-  transition:
-    border-color 0.2s,
-    color 0.2s;
-  cursor: pointer;
-}
-
-.journal-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 52%, var(--journal-control-border));
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 58%, white);
-  outline-offset: 2px;
-}
-
-.journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 50%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  color: var(--journal-accent-strong);
-}
-
-.journal-btn--primary:hover {
-  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
 }
 
 .skill-teacher-panel {
@@ -666,10 +657,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   outline-offset: 2px;
 }
 
-.tech-font {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-}
-
 :global([data-theme='dark']) .skill-dimension-chart__frame::before {
   background:
     linear-gradient(
@@ -686,8 +673,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 @media (max-width: 767px) {
-  .journal-btn {
-    min-height: 36px;
+  .journal-shell {
+    --journal-user-button-height: 36px;
   }
 }
 </style>

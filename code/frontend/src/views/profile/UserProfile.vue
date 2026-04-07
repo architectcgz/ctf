@@ -331,6 +331,20 @@ onUnmounted(() => {
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
   --journal-shell-hero-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  --journal-user-button-height: 2.7rem;
+  --journal-user-button-radius: 999px;
+  --journal-user-button-padding: 0.62rem 1rem;
+  --journal-user-button-size: 0.875rem;
+  --journal-user-button-weight: 600;
+  --journal-user-button-hover-color: var(--journal-accent);
+  --journal-user-button-primary-border: color-mix(in srgb, var(--journal-accent) 32%, transparent);
+  --journal-user-button-primary-background: color-mix(
+    in srgb,
+    var(--journal-accent) 12%,
+    var(--journal-surface)
+  );
+  --journal-user-button-primary-color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  --journal-user-tech-font: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .profile-loading {
@@ -516,46 +530,6 @@ onUnmounted(() => {
   background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
 }
 
-.journal-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  min-height: 2.7rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
-  padding: 0.62rem 1rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  transition:
-    border-color 0.2s,
-    color 0.2s,
-    background 0.2s;
-  cursor: pointer;
-}
-
-.journal-btn:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  color: var(--journal-accent);
-}
-
-.journal-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.journal-btn--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
-}
-
-.journal-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
-}
-
 .journal-btn--download {
   border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
@@ -616,10 +590,6 @@ onUnmounted(() => {
   padding: 0.8rem 0.95rem;
   font-size: 0.875rem;
   color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
-}
-
-.tech-font {
-  font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
 }
 
 .status-dot {
