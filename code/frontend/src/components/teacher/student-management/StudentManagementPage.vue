@@ -10,7 +10,10 @@ const props = defineProps<{
   searchQuery: string
   studentNoQuery: string
   filteredStudents: TeacherStudentItem[]
+  filteredTotal: number
   totalStudents: number
+  page: number
+  totalPages: number
   loadingClasses: boolean
   loadingStudents: boolean
   error: string | null
@@ -23,6 +26,7 @@ const emit = defineEmits<{
   updateSearchQuery: [value: string]
   updateStudentNoQuery: [value: string]
   selectClass: [className: string]
+  changePage: [page: number]
   openStudent: [studentId: string]
 }>()
 </script>
@@ -148,7 +152,7 @@ const emit = defineEmits<{
         <section v-else class="teacher-directory" aria-label="学生目录">
           <div class="teacher-directory-top">
             <h3 class="teacher-directory-title">学生目录</h3>
-            <div class="teacher-directory-meta">共 {{ filteredStudents.length }} 名学生</div>
+            <div class="teacher-directory-meta">共 {{ filteredTotal }} 名学生</div>
           </div>
 
           <div class="teacher-directory-head">
@@ -200,6 +204,32 @@ const emit = defineEmits<{
               <ArrowRight class="h-4 w-4" />
             </div>
           </button>
+
+          <div
+            v-if="filteredTotal > 0"
+            class="teacher-directory-pagination workspace-directory-pagination"
+          >
+            <span>共 {{ filteredTotal }} 名学生</span>
+            <div class="teacher-directory-pagination-actions">
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
+                :disabled="page === 1"
+                @click="emit('changePage', page - 1)"
+              >
+                上一页
+              </button>
+              <span>{{ page }} / {{ totalPages }}</span>
+              <button
+                type="button"
+                class="teacher-btn teacher-btn--ghost teacher-directory-pagination-button"
+                :disabled="page >= totalPages"
+                @click="emit('changePage', page + 1)"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
         </section>
       </div>
     </section>
@@ -483,6 +513,21 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: column;
   margin-top: 1.5rem;
+}
+
+.teacher-directory-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teacher-directory-pagination-button {
+  min-width: 5.5rem;
+}
+
+.teacher-directory-pagination-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .teacher-directory-top {
