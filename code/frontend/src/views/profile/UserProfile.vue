@@ -22,6 +22,11 @@ const latestReport = ref<ReportExportData | null>(null)
 const latestReportFormat = ref<'pdf' | 'excel'>('pdf')
 const latestReportCreatedAt = ref<string | null>(null)
 const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
+const currentRole = computed(() => profile.value?.role ?? authStore.user?.role)
+const canManagePersonalReport = computed(() => currentRole.value !== 'admin')
+const pageCopy = computed(() =>
+  canManagePersonalReport.value ? '查看账号信息、个人报告与最近导出状态。' : '查看账号信息与当前账号状态。'
+)
 
 const profileFields = computed(() => {
   const current = profile.value
@@ -131,7 +136,7 @@ onUnmounted(() => {
         <div class="profile-header__intro">
           <div class="journal-eyebrow">Profile</div>
           <h1 class="profile-page-title">个人资料</h1>
-          <p class="profile-page-copy">查看账号信息、个人报告与最近导出状态。</p>
+          <p class="profile-page-copy">{{ pageCopy }}</p>
 
           <div class="profile-header__actions">
             <div class="profile-pill">
@@ -145,7 +150,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="profile-summary-grid">
+        <div v-if="canManagePersonalReport" class="profile-summary-grid">
           <article class="profile-summary-item">
             <div class="profile-summary-icon">
               <ShieldCheck class="h-4 w-4" />
@@ -171,7 +176,7 @@ onUnmounted(() => {
 
       <div class="journal-divider profile-divider" />
 
-      <div class="profile-layout">
+      <div class="profile-layout" :class="{ 'profile-layout--single': !canManagePersonalReport }">
         <section class="profile-section">
           <div class="profile-section-head">
             <div>
@@ -198,7 +203,7 @@ onUnmounted(() => {
           />
         </section>
 
-        <section class="profile-section profile-section--report">
+        <section v-if="canManagePersonalReport" class="profile-section profile-section--report">
           <div class="profile-section-head">
             <div>
               <div class="journal-eyebrow journal-eyebrow-soft">Report</div>
@@ -432,6 +437,10 @@ onUnmounted(() => {
   gap: 1.5rem;
   padding-top: 1.25rem;
   grid-template-columns: minmax(0, 1fr) minmax(320px, 0.98fr);
+}
+
+.profile-layout--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .profile-section {
