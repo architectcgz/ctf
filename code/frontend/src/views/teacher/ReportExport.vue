@@ -234,7 +234,7 @@ async function handleDownload(): Promise<void> {
 
 <template>
   <section
-    class="report-shell report-hero journal-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="report-shell report-hero journal-shell teacher-management-shell teacher-surface flex min-h-full flex-1 flex-col rounded-[30px] px-6 py-6 md:px-8"
   >
     <div class="report-page">
       <header class="report-topbar">
@@ -558,8 +558,9 @@ async function handleDownload(): Promise<void> {
 
 <style scoped>
 .teacher-management-shell {
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
+  --report-shell-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --report-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --report-shell-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
@@ -568,8 +569,19 @@ async function handleDownload(): Promise<void> {
   --report-divider: var(--teacher-divider);
 }
 
-.report-shell {
+.teacher-management-shell.report-shell {
   gap: 0;
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--report-shell-brand) 6%, transparent),
+      transparent 26rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--report-shell-bg) 96%, var(--report-shell-page)),
+      var(--report-shell-bg)
+    );
 }
 
 .journal-brief,
