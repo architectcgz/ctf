@@ -51,14 +51,14 @@ const router = useRouter()
 const importInput = useTemplateRef<HTMLInputElement>('importInput')
 
 const panelTabs: Array<{ key: UserPanelKey; label: string; panelId: string; tabId: string }> = [
-  { key: 'overview', label: '概览', panelId: 'user-panel-overview', tabId: 'user-tab-overview' },
+  { key: 'overview', label: '概览', panelId: 'user-overview-section', tabId: 'user-tab-overview' },
   {
     key: 'directory',
     label: '用户列表',
-    panelId: 'user-panel-directory',
+    panelId: 'user-directory-filters',
     tabId: 'user-tab-directory',
   },
-  { key: 'import', label: '导入用户', panelId: 'user-panel-import', tabId: 'user-tab-import' },
+  { key: 'import', label: '导入用户', panelId: 'user-import-start', tabId: 'user-tab-import' },
 ]
 const validPanelKeys = new Set<UserPanelKey>(panelTabs.map((item) => item.key))
 
@@ -258,344 +258,340 @@ function handleImportChange(event: Event): void {
 
     <div class="journal-divider mt-6" />
 
-    <main class="content-pane">
-      <section
-        id="user-panel-overview"
-        class="tab-panel space-y-5"
-        role="tabpanel"
-        aria-labelledby="user-tab-overview"
-        :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
-        v-show="activePanel === 'overview'"
+    <section
+      id="user-overview-section"
+      class="tab-panel space-y-4"
+      role="tabpanel"
+      aria-labelledby="user-tab-overview"
+      :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
+      v-show="activePanel === 'overview'"
+    >
+      <div class="admin-section-head admin-section-head-intro">
+        <div>
+          <div class="journal-note-label">Overview</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">主界面</h2>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
+            <UsersRound class="h-4 w-4" />
+            进入用户列表
+          </button>
+          <button type="button" class="admin-btn admin-btn-primary" @click="switchPanel('import')">
+            <FileUp class="h-4 w-4" />
+            前往导入用户
+          </button>
+        </div>
+      </div>
+
+      <div class="grid gap-4 lg:grid-cols-2">
+        <div class="journal-note">
+          <div class="journal-note-label">当前治理概况</div>
+          <div class="journal-note-value">用户列表</div>
+          <div class="journal-note-helper">集中查看账号、筛选条件、分页以及编辑删除操作。</div>
+        </div>
+        <div class="journal-note">
+          <div class="journal-note-label">Import</div>
+          <div class="journal-note-value">导入用户</div>
+          <div class="journal-note-helper">上传 CSV 批量导入，并在回执区查看创建、更新和失败结果。</div>
+        </div>
+      </div>
+
+      <div class="journal-note">
+        <div class="journal-note-label">最近导入状态</div>
+        <div class="journal-note-value">{{ importSummary }}</div>
+        <div class="journal-note-helper">如果需要查看详细错误，请切换到导入用户标签页。</div>
+      </div>
+    </section>
+
+    <section
+      id="user-directory-filters"
+      class="tab-panel space-y-4"
+      role="tabpanel"
+      aria-labelledby="user-tab-directory"
+      :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
+      v-show="activePanel === 'directory'"
+    >
+      <div class="admin-section-head admin-section-head-intro">
+        <div>
+          <div class="journal-note-label">Filters</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选条件</h2>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+            <RefreshCw class="h-4 w-4" />
+            刷新列表
+          </button>
+          <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+            <UserPlus class="h-4 w-4" />
+            创建用户
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-4">
+        <label class="space-y-2">
+          <span class="text-sm text-[var(--journal-muted)]">关键词</span>
+          <input
+            :value="keyword"
+            type="text"
+            class="admin-input"
+            placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
+            @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
+          />
+        </label>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">学生学号</span>
+            <input
+              :value="studentNo"
+              type="text"
+              class="admin-input"
+              placeholder="按学号筛选"
+              @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
+            />
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">教师工号</span>
+            <input
+              :value="teacherNo"
+              type="text"
+              class="admin-input"
+              placeholder="按工号筛选"
+              @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
+            />
+          </label>
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">角色</span>
+            <select
+              :value="roleFilter"
+              class="admin-input"
+              @change="
+                emit('updateRoleFilter', ($event.target as HTMLSelectElement).value as UserFilterRole)
+              "
+            >
+              <option value="all">全部角色</option>
+              <option value="student">student</option>
+              <option value="teacher">teacher</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+
+          <label class="space-y-2">
+            <span class="text-sm text-[var(--journal-muted)]">状态</span>
+            <select
+              :value="statusFilter"
+              class="admin-input"
+              @change="
+                emit(
+                  'updateStatusFilter',
+                  ($event.target as HTMLSelectElement).value as UserFilterStatus
+                )
+              "
+            >
+              <option value="all">全部状态</option>
+              <option value="active">active</option>
+              <option value="inactive">inactive</option>
+              <option value="locked">locked</option>
+              <option value="banned">banned</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <div
+      v-show="activePanel === 'directory'"
+      class="journal-divider mt-6"
+      aria-hidden="true"
+    />
+
+    <section v-show="activePanel === 'directory'" class="space-y-4">
+      <div class="admin-section-head">
+        <div>
+          <div class="journal-note-label">Users</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
+        </div>
+      </div>
+
+      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+        <AppLoading>正在同步用户列表...</AppLoading>
+      </div>
+
+      <AppEmpty
+        v-else-if="list.length === 0"
+        title="暂无用户"
+        description="当前筛选条件下没有匹配用户。"
+        icon="UsersRound"
       >
-        <section class="space-y-4">
-          <div class="admin-section-head admin-section-head-intro">
-            <div>
-              <div class="journal-note-label">Overview</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">主界面</h2>
-            </div>
+        <template #action>
+          <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
+            创建第一个用户
+          </button>
+        </template>
+      </AppEmpty>
 
-            <div class="flex flex-wrap gap-3">
-              <button type="button" class="admin-btn admin-btn-ghost" @click="switchPanel('directory')">
-                <UsersRound class="h-4 w-4" />
-                进入用户列表
-              </button>
-              <button type="button" class="admin-btn admin-btn-primary" @click="switchPanel('import')">
-                <FileUp class="h-4 w-4" />
-                前往导入用户
-              </button>
-            </div>
-          </div>
+      <template v-else>
+        <div class="user-table-shell">
+          <table class="user-table min-w-full text-sm">
+            <thead class="user-table-head">
+              <tr>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">用户</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">姓名</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">邮箱</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">角色</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">状态</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">班级</th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
+                  学号 / 工号
+                </th>
+                <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">创建时间</th>
+                <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">操作</th>
+              </tr>
+            </thead>
+            <tbody class="user-table-body">
+              <tr v-for="user in list" :key="user.id" class="user-table-row">
+                <td class="px-4 py-3 align-top">
+                  <div class="min-w-0">
+                    <span class="text-sm text-[var(--journal-muted)]">@{{ user.username }}</span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 align-top text-[var(--journal-ink)]">
+                  {{ user.name || user.username }}
+                </td>
+                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                  {{ user.email || '未填写邮箱' }}
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <div class="flex flex-wrap gap-2">
+                    <span v-for="role in user.roles" :key="`${user.id}-${role}`" class="admin-role-chip">
+                      <UserRoundCheck class="h-3.5 w-3.5" />
+                      {{ role }}
+                    </span>
+                  </div>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <span class="admin-status-chip" :style="getUserStatusStyle(user.status)">
+                    {{ user.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                  {{ user.class_name || '未分配班级' }}
+                </td>
+                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                  <div class="text-sm">
+                    {{ getUserIdentity(user) }}
+                  </div>
+                </td>
+                <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
+                  {{ new Date(user.created_at).toLocaleString('zh-CN') }}
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <div class="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
+                      @click="emit('openEditDialog', user)"
+                    >
+                      编辑
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
+                      @click="emit('deleteUser', user.id)"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          <div class="grid gap-4 lg:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">当前治理概况</div>
-              <div class="journal-note-value">用户列表</div>
-              <div class="journal-note-helper">集中查看账号、筛选条件、分页以及编辑删除操作。</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">Import</div>
-              <div class="journal-note-value">导入用户</div>
-              <div class="journal-note-helper">上传 CSV 批量导入，并在回执区查看创建、更新和失败结果。</div>
-            </div>
-          </div>
-
-          <div class="journal-note">
-            <div class="journal-note-label">最近导入状态</div>
-            <div class="journal-note-value">{{ importSummary }}</div>
-            <div class="journal-note-helper">如果需要查看详细错误，请切换到导入用户标签页。</div>
-          </div>
-        </section>
-      </section>
-
-      <section
-        id="user-panel-directory"
-        class="tab-panel space-y-5"
-        role="tabpanel"
-        aria-labelledby="user-tab-directory"
-        :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
-        v-show="activePanel === 'directory'"
-      >
-        <section class="space-y-4">
-          <div class="admin-section-head admin-section-head-intro">
-            <div>
-              <div class="journal-note-label">Filters</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">筛选条件</h2>
-            </div>
-
-            <div class="flex flex-wrap gap-3">
-              <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
-                <RefreshCw class="h-4 w-4" />
-                刷新列表
-              </button>
-              <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-                <UserPlus class="h-4 w-4" />
-                创建用户
-              </button>
-            </div>
-          </div>
-
-          <div class="mt-5 grid gap-4">
-            <label class="space-y-2">
-              <span class="text-sm text-[var(--journal-muted)]">关键词</span>
-              <input
-                :value="keyword"
-                type="text"
-                class="admin-input"
-                placeholder="用户名 / 邮箱 / 班级 / 学号 / 工号"
-                @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
-              />
-            </label>
-
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--journal-muted)]">学生学号</span>
-                <input
-                  :value="studentNo"
-                  type="text"
-                  class="admin-input"
-                  placeholder="按学号筛选"
-                  @input="emit('updateStudentNo', ($event.target as HTMLInputElement).value)"
-                />
-              </label>
-
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--journal-muted)]">教师工号</span>
-                <input
-                  :value="teacherNo"
-                  type="text"
-                  class="admin-input"
-                  placeholder="按工号筛选"
-                  @input="emit('updateTeacherNo', ($event.target as HTMLInputElement).value)"
-                />
-              </label>
-            </div>
-
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--journal-muted)]">角色</span>
-                <select
-                  :value="roleFilter"
-                  class="admin-input"
-                  @change="
-                    emit('updateRoleFilter', ($event.target as HTMLSelectElement).value as UserFilterRole)
-                  "
-                >
-                  <option value="all">全部角色</option>
-                  <option value="student">student</option>
-                  <option value="teacher">teacher</option>
-                  <option value="admin">admin</option>
-                </select>
-              </label>
-
-              <label class="space-y-2">
-                <span class="text-sm text-[var(--journal-muted)]">状态</span>
-                <select
-                  :value="statusFilter"
-                  class="admin-input"
-                  @change="
-                    emit(
-                      'updateStatusFilter',
-                      ($event.target as HTMLSelectElement).value as UserFilterStatus
-                    )
-                  "
-                >
-                  <option value="all">全部状态</option>
-                  <option value="active">active</option>
-                  <option value="inactive">inactive</option>
-                  <option value="locked">locked</option>
-                  <option value="banned">banned</option>
-                </select>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <div class="journal-divider mt-6" />
-
-        <section class="space-y-4">
-          <div class="admin-section-head">
-            <div>
-              <div class="journal-note-label">Users</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
-            </div>
-          </div>
-
-          <div v-if="loading && list.length === 0" class="flex justify-center py-10">
-            <AppLoading>正在同步用户列表...</AppLoading>
-          </div>
-
-          <AppEmpty
-            v-else-if="list.length === 0"
-            title="暂无用户"
-            description="当前筛选条件下没有匹配用户。"
-            icon="UsersRound"
-          >
-            <template #action>
-              <button type="button" class="admin-btn admin-btn-primary" @click="emit('openCreateDialog')">
-                创建第一个用户
-              </button>
-            </template>
-          </AppEmpty>
-
-          <template v-else>
-            <div class="user-table-shell">
-              <table class="user-table min-w-full text-sm">
-                <thead class="user-table-head">
-                  <tr>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">用户</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">姓名</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">邮箱</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">角色</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">状态</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">班级</th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">
-                      学号 / 工号
-                    </th>
-                    <th class="px-4 py-3 text-left font-medium text-[var(--color-text-secondary)]">创建时间</th>
-                    <th class="px-4 py-3 text-right font-medium text-[var(--color-text-secondary)]">操作</th>
-                  </tr>
-                </thead>
-                <tbody class="user-table-body">
-                  <tr v-for="user in list" :key="user.id" class="user-table-row">
-                    <td class="px-4 py-3 align-top">
-                      <div class="min-w-0">
-                        <span class="text-sm text-[var(--journal-muted)]">@{{ user.username }}</span>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 align-top text-[var(--journal-ink)]">
-                      {{ user.name || user.username }}
-                    </td>
-                    <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                      {{ user.email || '未填写邮箱' }}
-                    </td>
-                    <td class="px-4 py-3 align-top">
-                      <div class="flex flex-wrap gap-2">
-                        <span
-                          v-for="role in user.roles"
-                          :key="`${user.id}-${role}`"
-                          class="admin-role-chip"
-                        >
-                          <UserRoundCheck class="h-3.5 w-3.5" />
-                          {{ role }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 align-top">
-                      <span class="admin-status-chip" :style="getUserStatusStyle(user.status)">
-                        {{ user.status }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                      {{ user.class_name || '未分配班级' }}
-                    </td>
-                    <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                      <div class="text-sm">
-                        {{ getUserIdentity(user) }}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 align-top text-[var(--journal-muted)]">
-                      {{ new Date(user.created_at).toLocaleString('zh-CN') }}
-                    </td>
-                    <td class="px-4 py-3 align-top">
-                      <div class="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          class="admin-btn admin-btn-ghost admin-btn-compact user-action-btn"
-                          @click="emit('openEditDialog', user)"
-                        >
-                          编辑
-                        </button>
-                        <button
-                          type="button"
-                          class="admin-btn admin-btn-danger admin-btn-compact user-action-btn"
-                          @click="emit('deleteUser', user.id)"
-                        >
-                          删除
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="admin-pagination">
-              <span>共 {{ total }} 个用户</span>
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="page <= 1"
-                  @click="emit('changePage', page - 1)"
-                >
-                  上一页
-                </button>
-                <span>{{ page }} / {{ totalPages }}</span>
-                <button
-                  type="button"
-                  class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="page >= totalPages"
-                  @click="emit('changePage', page + 1)"
-                >
-                  下一页
-                </button>
-              </div>
-            </div>
-          </template>
-        </section>
-      </section>
-
-      <section
-        id="user-panel-import"
-        class="tab-panel space-y-5"
-        role="tabpanel"
-        aria-labelledby="user-tab-import"
-        :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
-        v-show="activePanel === 'import'"
-      >
-        <section class="space-y-4">
-          <div class="admin-section-head admin-section-head-intro">
-            <div>
-              <div class="journal-note-label">User Import</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入用户</h2>
-            </div>
-
-            <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
-              <FileUp class="h-4 w-4" />
-              批量导入
+        <div class="admin-pagination">
+          <span>共 {{ total }} 个用户</span>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="page <= 1"
+              @click="emit('changePage', page - 1)"
+            >
+              上一页
+            </button>
+            <span>{{ page }} / {{ totalPages }}</span>
+            <button
+              type="button"
+              class="admin-btn admin-btn-ghost admin-btn-compact disabled:cursor-not-allowed disabled:opacity-40"
+              :disabled="page >= totalPages"
+              @click="emit('changePage', page + 1)"
+            >
+              下一页
             </button>
           </div>
+        </div>
+      </template>
+    </section>
 
-          <div class="journal-note">
-            <div class="journal-note-label">CSV 格式</div>
-            <div class="journal-note-helper">
-              列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
-            </div>
-          </div>
-        </section>
+    <section
+      id="user-import-start"
+      class="tab-panel space-y-4"
+      role="tabpanel"
+      aria-labelledby="user-tab-import"
+      :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
+      v-show="activePanel === 'import'"
+    >
+      <div class="admin-section-head admin-section-head-intro">
+        <div>
+          <div class="journal-note-label">User Import</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入用户</h2>
+        </div>
 
-        <div class="journal-divider mt-6" />
+        <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
+          <FileUp class="h-4 w-4" />
+          批量导入
+        </button>
+      </div>
 
-        <section class="space-y-4">
-          <div class="admin-section-head">
-            <div>
-              <div class="journal-note-label">Import Receipt</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入回执</h2>
-            </div>
-          </div>
+      <div class="journal-note">
+        <div class="journal-note-label">CSV 格式</div>
+        <div class="journal-note-helper">
+          列顺序：`username,password,email,class_name,role,status,student_no,teacher_no,name`
+        </div>
+      </div>
+    </section>
 
-          <div v-if="importResult" class="admin-receipt">
-            <p>创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败 {{ importResult.failed }}</p>
-            <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
-              <li v-for="item in importResult.errors.slice(0, 5)" :key="`${item.row}-${item.message}`">
-                第 {{ item.row }} 行：{{ item.message }}
-              </li>
-            </ul>
-          </div>
-          <div v-else class="admin-empty">还没有导入记录。</div>
-        </section>
-      </section>
-    </main>
+    <div
+      v-show="activePanel === 'import'"
+      class="journal-divider mt-6"
+      aria-hidden="true"
+    />
+
+    <section v-show="activePanel === 'import'" class="space-y-4">
+      <div class="admin-section-head">
+        <div>
+          <div class="journal-note-label">Import Receipt</div>
+          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入回执</h2>
+        </div>
+      </div>
+
+      <div v-if="importResult" class="admin-receipt">
+        <p>创建 {{ importResult.created }}，更新 {{ importResult.updated }}，失败 {{ importResult.failed }}</p>
+        <ul v-if="importResult.errors?.length" class="mt-3 space-y-2 text-[var(--color-danger)]">
+          <li v-for="item in importResult.errors.slice(0, 5)" :key="`${item.row}-${item.message}`">
+            第 {{ item.row }} 行：{{ item.message }}
+          </li>
+        </ul>
+      </div>
+      <div v-else class="admin-empty">还没有导入记录。</div>
+    </section>
 
     <input
       ref="importInput"
@@ -693,15 +689,9 @@ function handleImportChange(event: Event): void {
   outline: none;
 }
 
-.content-pane {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  padding-top: 1.5rem;
-}
-
 .tab-panel {
   min-width: 0;
+  padding-top: 1.5rem;
 }
 
 .journal-note {
