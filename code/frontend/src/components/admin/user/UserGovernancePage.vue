@@ -623,7 +623,6 @@ function handleImportChange(event: Event): void {
 
 .tab-panel {
   min-width: 0;
-  padding-top: var(--workspace-tab-panel-gap-top-tight);
 }
 
 .user-overview-grid {
