@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeftRight, ChevronLeft, FileDown, GraduationCap, Users } from 'lucide-vue-next'
+import { ArrowLeftRight, FileDown, GraduationCap, Users } from 'lucide-vue-next'
+import { ref } from 'vue'
 
 import type {
   MyProgressData,
@@ -13,8 +14,6 @@ import type {
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
-import AppCard from '@/components/common/AppCard.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
 
@@ -56,316 +55,973 @@ const emit = defineEmits<{
   moderateWriteup: [payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' }]
   reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
 }>()
+
+type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'manual-review' | 'evidence'
+
+interface WorkspaceTabItem {
+  key: WorkspaceTab
+  label: string
+  buttonId: string
+  panelId: string
+}
+
+const workspaceTabs: WorkspaceTabItem[] = [
+  { key: 'overview', label: '学员画像', buttonId: 'student-tab-overview', panelId: 'student-overview' },
+  {
+    key: 'recommendations',
+    label: '推荐任务',
+    buttonId: 'student-tab-recommendations',
+    panelId: 'student-recommendations',
+  },
+  { key: 'writeups', label: '社区题解', buttonId: 'student-tab-writeups', panelId: 'student-writeups' },
+  {
+    key: 'manual-review',
+    label: '人工审核',
+    buttonId: 'student-tab-manual-review',
+    panelId: 'student-manual-review',
+  },
+  { key: 'evidence', label: '证据链', buttonId: 'student-tab-evidence', panelId: 'student-evidence' },
+]
+
+const activeTab = ref<WorkspaceTab>('overview')
+const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
+
+function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
+  tabButtonRefs[tab] = element
+}
+
+function selectTab(tab: WorkspaceTab): void {
+  activeTab.value = tab
+}
+
+function focusTab(tab: WorkspaceTab): void {
+  tabButtonRefs[tab]?.focus()
+}
+
+function handleTabKeydown(event: KeyboardEvent, index: number): void {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
+    return
+  }
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    selectTab(workspaceTabs[0].key)
+    focusTab(workspaceTabs[0].key)
+    return
+  }
+
+  if (event.key === 'End') {
+    const lastTab = workspaceTabs[workspaceTabs.length - 1]
+    selectTab(lastTab.key)
+    focusTab(lastTab.key)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + workspaceTabs.length) % workspaceTabs.length
+  const nextTab = workspaceTabs[nextIndex]
+  selectTab(nextTab.key)
+  focusTab(nextTab.key)
+}
 </script>
 
 <template>
-  <div class="teacher-analysis-shell teacher-surface space-y-6">
-    <PageHeader
-      eyebrow="Student Analysis"
-      :title="selectedStudent?.name || selectedStudent?.username || '学员分析'"
-      description="查看学员的能力画像、进度和推荐任务。"
-    >
-      <ElButton plain @click="emit('openClassManagement')">班级管理</ElButton>
-      <ElButton plain @click="emit('openClassStudents')">返回学生列表</ElButton>
-      <ElButton plain @click="emit('openReportExport')">导出班级报告</ElButton>
-      <ElButton plain @click="emit('openReviewArchive')">完整复盘页</ElButton>
-      <ElButton type="primary" @click="emit('exportReviewArchive')">导出复盘归档</ElButton>
-    </PageHeader>
+  <div class="workspace-shell">
+    <header class="workspace-topbar">
+      <div class="topbar-leading">
+        <span class="workspace-overline">Student Workspace</span>
+        <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
+      </div>
+    </header>
 
-    <section class="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-      <article class="analysis-hero-card teacher-surface-hero px-6 py-6 md:px-8">
-        <div class="analysis-hero-head">
-          <div>
-            <div class="analysis-eyebrow">Focused Student</div>
-            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">
-              {{ selectedStudent?.name || selectedStudent?.username || '未选择学员' }}
-            </h2>
-            <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-              当前学员训练概览。
+    <nav class="top-tabs" role="tablist" aria-label="学员分析标签页">
+      <button
+        v-for="(tab, index) in workspaceTabs"
+        :id="tab.buttonId"
+        :key="tab.key"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
+        class="top-tab"
+        :class="{ active: activeTab === tab.key }"
+        type="button"
+        role="tab"
+        :tabindex="activeTab === tab.key ? 0 : -1"
+        :aria-selected="activeTab === tab.key ? 'true' : 'false'"
+        :aria-controls="tab.panelId"
+        @click="selectTab(tab.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+
+    <div class="workspace-grid">
+      <main class="content-pane">
+        <header class="teacher-topbar">
+          <div class="teacher-heading">
+            <div class="teacher-eyebrow-row">
+              <div class="journal-eyebrow">Student Analysis</div>
+              <span class="teacher-student-chip">@{{ selectedStudent?.username || '未选择' }}</span>
+            </div>
+            <h1 class="teacher-title">
+              {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
+            </h1>
+            <p class="teacher-copy">
+              用顶部 tabs 切换学员画像、推荐任务、题解状态、人工审核和证据链，不再把所有内容堆在同一屏。
             </p>
           </div>
-          <span class="analysis-class-chip teacher-surface-chip">{{ selectedClassName || '未选择班级' }}</span>
+
+          <div class="teacher-actions" role="group" aria-label="学员分析快捷操作">
+            <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openClassStudents')">
+              返回学生列表
+            </button>
+            <button type="button" class="teacher-btn teacher-btn--ghost" @click="emit('openReviewArchive')">
+              完整复盘页
+            </button>
+            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('exportReviewArchive')">
+              导出复盘归档
+            </button>
+          </div>
+        </header>
+
+        <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
+          <div class="workspace-alert-title">学员分析加载失败</div>
+          <div class="workspace-alert-copy">{{ error }}</div>
+          <div class="workspace-alert-actions">
+            <button type="button" class="quick-action quick-action--compact" @click="emit('retry')">
+              <span>重试加载</span>
+              <span>→</span>
+            </button>
+          </div>
         </div>
 
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="analysis-note">
-            <div class="analysis-note-label">当前学员</div>
-            <div class="analysis-note-value">{{ selectedStudent?.username || '未选择' }}</div>
-            <div class="analysis-note-helper">当前聚焦的学生对象</div>
-          </div>
-          <div class="analysis-note">
-            <div class="analysis-note-label">完成率</div>
-            <div class="analysis-note-value">{{ solvedRate }}%</div>
-            <div class="analysis-note-helper">基于当前学员训练数据计算</div>
-          </div>
-          <div class="analysis-note">
-            <div class="analysis-note-label">薄弱维度</div>
-            <div class="analysis-note-value">{{ weakDimensions[0] || '暂无' }}</div>
-            <div class="analysis-note-helper">当前最需要补强的方向</div>
-          </div>
-        </div>
-      </article>
+        <section class="summary-strip">
+          <article class="summary-card">
+            <div class="summary-card__label">当前学员</div>
+            <div class="summary-card__value">{{ selectedStudent?.username || '未选择' }}</div>
+            <div class="summary-card__hint">当前聚焦的学生对象</div>
+          </article>
+          <article class="summary-card">
+            <div class="summary-card__label">完成率</div>
+            <div class="summary-card__value">{{ solvedRate }}%</div>
+            <div class="summary-card__hint">基于当前学员训练数据计算</div>
+          </article>
+          <article class="summary-card">
+            <div class="summary-card__label">薄弱维度</div>
+            <div class="summary-card__value">{{ weakDimensions[0] || '暂无' }}</div>
+            <div class="summary-card__hint">当前最需要补强的方向</div>
+          </article>
+          <article class="summary-card">
+            <div class="summary-card__label">可切换学生</div>
+            <div class="summary-card__value">{{ students.length }}</div>
+            <div class="summary-card__hint">当前班级可切换的学生数量</div>
+          </article>
+        </section>
 
-      <div class="teacher-kpi-grid grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--primary">
-          <div class="teacher-kpi-label">同班学生</div>
-          <div class="teacher-kpi-value">{{ students.length }}</div>
-          <div class="teacher-kpi-hint">当前班级可切换的学生数量</div>
-        </article>
-        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--success">
-          <div class="teacher-kpi-label">推荐任务</div>
-          <div class="teacher-kpi-value">{{ recommendations.length }}</div>
-          <div class="teacher-kpi-hint">当前可布置的补强题目数</div>
-        </article>
-        <article class="teacher-surface-metric teacher-kpi-card teacher-kpi-card--warning">
-          <div class="teacher-kpi-label">查看方式</div>
-          <div class="teacher-kpi-value">学生画像</div>
-          <div class="teacher-kpi-hint">当前学员分析视图</div>
-        </article>
-      </div>
-    </section>
+        <section
+          id="student-overview"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'overview' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-overview"
+          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
+          v-show="activeTab === 'overview'"
+        >
+          <StudentInsightPanel
+            active-section="overview"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先从右侧目录选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+          />
+        </section>
 
-    <div
-      v-if="error"
-      class="rounded-2xl border border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 px-5 py-4 text-sm text-[var(--color-danger)]"
-    >
-      {{ error }}
-      <button type="button" class="ml-3 font-medium underline" @click="emit('retry')">重试</button>
-    </div>
+        <section
+          id="student-recommendations"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'recommendations' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-recommendations"
+          :aria-hidden="activeTab === 'recommendations' ? 'false' : 'true'"
+          v-show="activeTab === 'recommendations'"
+        >
+          <StudentInsightPanel
+            active-section="recommendations"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先从右侧目录选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+          />
+        </section>
 
-    <section class="grid gap-6 xl:grid-cols-[0.84fr_1.16fr]">
-      <div class="space-y-6">
+        <section
+          id="student-writeups"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'writeups' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-writeups"
+          :aria-hidden="activeTab === 'writeups' ? 'false' : 'true'"
+          v-show="activeTab === 'writeups'"
+        >
+          <StudentInsightPanel
+            active-section="writeups"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先从右侧目录选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+          />
+        </section>
+
+        <section
+          id="student-manual-review"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'manual-review' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-manual-review"
+          :aria-hidden="activeTab === 'manual-review' ? 'false' : 'true'"
+          v-show="activeTab === 'manual-review'"
+        >
+          <StudentInsightPanel
+            active-section="manual-review"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先从右侧目录选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+          />
+        </section>
+
+        <section
+          id="student-evidence"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'evidence' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-evidence"
+          :aria-hidden="activeTab === 'evidence' ? 'false' : 'true'"
+          v-show="activeTab === 'evidence'"
+        >
+          <StudentInsightPanel
+            active-section="evidence"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先从右侧目录选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+          />
+        </section>
+      </main>
+
+      <aside class="context-rail">
         <SectionCard title="班级与学生切换" subtitle="先定班级，再切换当前分析的学生。">
-          <div class="space-y-4">
-            <div class="flex flex-wrap gap-3">
+          <div class="rail-stack">
+            <div class="class-switch-list" role="group" aria-label="班级切换">
               <button
                 v-for="item in classes"
                 :key="item.name"
                 type="button"
-                class="rounded-full px-4 py-2 text-sm font-medium transition"
-                :class="
-                  item.name === selectedClassName
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'border border-[var(--color-border-default)] bg-[var(--color-bg-base)] text-[var(--color-text-primary)] hover:border-[var(--color-primary)]/60'
-                "
+                class="class-switch"
+                :class="{ active: item.name === selectedClassName }"
                 @click="emit('selectClass', item.name)"
               >
-                {{ item.name }} · {{ item.student_count || 0 }}
+                <span>{{ item.name }}</span>
+                <span>{{ item.student_count || 0 }} 人</span>
               </button>
             </div>
 
-            <div v-if="loadingClasses || loadingStudents" class="space-y-3">
-              <div
-                v-for="index in 4"
-                :key="index"
-                class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]"
-              />
+            <div v-if="loadingClasses || loadingStudents" class="student-directory-skeleton">
+              <div v-for="index in 4" :key="index" class="student-directory-skeleton__item" />
             </div>
 
-            <div v-else class="grid gap-3">
-              <AppCard
+            <div v-else class="student-directory" role="list" aria-label="学生目录">
+              <div class="student-directory-head" aria-hidden="true">
+                <span>学生</span>
+                <span>状态</span>
+              </div>
+
+              <button
                 v-for="student in students"
                 :key="student.id"
-                as="button"
-                variant="action"
-                :accent="student.id === selectedStudentId ? 'primary' : 'neutral'"
-                interactive
-                class="text-left"
+                type="button"
+                class="student-directory-row"
+                :class="{ active: student.id === selectedStudentId }"
+                role="listitem"
                 @click="emit('selectStudent', student.id)"
               >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <div
-                      class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
-                    >
-                      <GraduationCap class="h-4 w-4" />
-                    </div>
-                    <div>
-                      <div class="font-medium text-text-primary">
-                        {{ student.name || student.username }}
-                      </div>
-                      <div class="mt-1 text-sm text-text-secondary">@{{ student.username }}</div>
-                    </div>
+                <div class="student-directory-main">
+                  <div class="student-directory-avatar">
+                    <GraduationCap class="h-4 w-4" />
                   </div>
-                  <span
-                    v-if="student.id === selectedStudentId"
-                    class="rounded-full bg-primary/12 px-3 py-1 text-xs font-medium text-primary"
-                  >
-                    当前
-                  </span>
+                  <div class="student-directory-copy">
+                    <div class="student-directory-name">{{ student.name || student.username }}</div>
+                    <div class="student-directory-meta">@{{ student.username }}</div>
+                  </div>
                 </div>
-              </AppCard>
+                <span class="student-directory-state">
+                  {{ student.id === selectedStudentId ? '当前' : '切换' }}
+                </span>
+              </button>
             </div>
           </div>
         </SectionCard>
 
-        <SectionCard title="操作入口" subtitle="从分析页返回上一层，或者直接导出班级报告与学生归档。">
-          <div class="grid gap-3">
-            <AppCard
-              as="button"
-              variant="action"
-              accent="neutral"
-              interactive
-              class="text-left"
-              @click="emit('openReviewArchive')"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-primary)]/14 bg-[var(--color-primary)]/8 text-[var(--color-primary)]"
-                  >
-                    <FileDown class="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div class="font-medium text-text-primary">打开完整复盘页</div>
-                    <div class="mt-1 text-sm text-text-secondary">
-                      进入教学复盘视图，查看摘要、证据链和评阅记录。
-                    </div>
-                  </div>
-                </div>
-                <ArrowLeftRight class="h-4 w-4 text-[var(--color-primary)]" />
-              </div>
-            </AppCard>
+        <SectionCard title="快捷操作" subtitle="保留导航与导出入口，复盘页继续走独立路由。">
+          <div class="rail-stack" role="group" aria-label="学员分析辅助操作">
+            <button type="button" class="quick-action" @click="emit('openClassManagement')">
+              <span class="quick-action__main">
+                <span class="quick-action__icon quick-action__icon--neutral">
+                  <Users class="h-4 w-4" />
+                </span>
+                <span>
+                  <strong>班级管理</strong>
+                  <small>返回教师班级管理入口。</small>
+                </span>
+              </span>
+              <span>→</span>
+            </button>
 
-            <AppCard
-              as="button"
-              variant="action"
-              accent="primary"
-              interactive
-              class="text-left"
-              @click="emit('openClassStudents')"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
-                  >
-                    <Users class="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div class="font-medium text-text-primary">返回学生列表</div>
-                    <div class="mt-1 text-sm text-text-secondary">回到当前班级，查看全部学生。</div>
-                  </div>
-                </div>
-                <ChevronLeft class="h-4 w-4 text-primary" />
-              </div>
-            </AppCard>
+            <button type="button" class="quick-action" @click="emit('openReportExport')">
+              <span class="quick-action__main">
+                <span class="quick-action__icon quick-action__icon--warning">
+                  <FileDown class="h-4 w-4" />
+                </span>
+                <span>
+                  <strong>导出班级报告</strong>
+                  <small>从当前教师路径继续进入报告导出。</small>
+                </span>
+              </span>
+              <span>→</span>
+            </button>
 
-            <AppCard
-              as="button"
-              variant="action"
-              accent="warning"
-              interactive
-              class="text-left"
-              @click="emit('openReportExport')"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--color-warning)]/16 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
-                  >
-                    <FileDown class="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div class="font-medium text-text-primary">导出班级报告</div>
-                    <div class="mt-1 text-sm text-text-secondary">
-                      从当前教师路径直接进入报告导出。
-                    </div>
-                  </div>
-                </div>
-                <ArrowLeftRight class="h-4 w-4 text-[var(--color-warning)]" />
-              </div>
-            </AppCard>
-
-            <AppCard
-              as="button"
-              variant="action"
-              accent="primary"
-              interactive
-              class="text-left"
-              @click="emit('exportReviewArchive')"
-            >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                  <div
-                    class="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/16 bg-primary/10 text-primary"
-                  >
-                    <FileDown class="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div class="font-medium text-text-primary">导出学生复盘归档</div>
-                    <div class="mt-1 text-sm text-text-secondary">
-                      直接导出当前学生的时间线、证据和评阅记录。
-                    </div>
-                  </div>
-                </div>
-                <ArrowLeftRight class="h-4 w-4 text-primary" />
-              </div>
-            </AppCard>
+            <button type="button" class="quick-action quick-action--primary" @click="emit('openReviewArchive')">
+              <span class="quick-action__main">
+                <span class="quick-action__icon quick-action__icon--primary">
+                  <ArrowLeftRight class="h-4 w-4" />
+                </span>
+                <span>
+                  <strong>打开完整复盘页</strong>
+                  <small>查看摘要、证据链和评阅记录。</small>
+                </span>
+              </span>
+              <span>→</span>
+            </button>
           </div>
         </SectionCard>
-      </div>
-
-      <StudentInsightPanel
-        :student="selectedStudent"
-        :progress="progress"
-        :profile="skillProfile"
-        :recommendations="recommendations"
-        :timeline="timeline"
-        :evidence="evidence"
-        :writeup-submissions="writeupSubmissions"
-        :manual-review-submissions="manualReviewSubmissions"
-        :active-manual-review="activeManualReview"
-        :manual-review-loading="manualReviewLoading"
-        :manual-review-saving="manualReviewSaving"
-        :loading="loadingDetails"
-        empty-text="请先从左侧选择一名学生。"
-        @open-challenge="emit('openChallenge', $event)"
-        @open-manual-review="emit('openManualReview', $event)"
-        @moderate-writeup="emit('moderateWriteup', $event)"
-        @review-manual-review="emit('reviewManualReview', $event)"
-      />
-    </section>
+      </aside>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.teacher-analysis-shell {
+.workspace-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-accent-strong: #1d4ed8;
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-}
-
-:deep(.page-header) {
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
+  --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --workspace-shell-bg: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --workspace-faint: color-mix(in srgb, var(--color-text-secondary) 88%, var(--color-bg-base));
+  --workspace-brand: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --workspace-brand-ink: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
+  --workspace-brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-radius-xl: 28px;
+  --workspace-radius-lg: 18px;
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+  min-height: 100%;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: var(--workspace-radius-xl);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
+      color-mix(in srgb, var(--workspace-shell-bg) 96%, var(--workspace-page)),
+      var(--workspace-shell-bg)
     );
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  box-shadow: var(--workspace-shadow-shell);
+  overflow: clip;
+  color: var(--journal-ink);
 }
 
-:deep(.page-header__eyebrow) {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  border-left: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent) !important;
+.workspace-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 28px 0;
+}
+
+.topbar-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.workspace-overline {
+  display: inline-block;
+  border: 0 !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--workspace-brand) 66%, var(--workspace-faint));
+}
+
+.class-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--workspace-brand) 22%, transparent);
+  border-radius: 8px;
+  background: var(--workspace-brand-soft);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--workspace-brand-ink);
+}
+
+.top-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 0 28px;
+  margin-top: 10px;
+  border-bottom: 1px solid var(--workspace-line-soft);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 0 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--workspace-faint);
+  font:
+    600 15px/1 'IBM Plex Sans',
+    'Noto Sans SC',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: var(--workspace-brand-ink);
+  border-bottom-color: var(--workspace-brand);
+  outline: none;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
+}
+
+.content-pane {
+  min-width: 0;
+  padding: 28px;
+}
+
+.context-rail {
+  min-width: 0;
+  padding: 28px 28px 28px 0;
+}
+
+.teacher-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.teacher-heading {
+  min-width: 0;
+}
+
+.teacher-eyebrow-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.journal-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-accent-strong);
+}
+
+.teacher-student-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.85rem;
+  padding: 0 0.75rem;
   border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--journal-muted);
+}
+
+.teacher-title {
+  margin-top: 0.75rem;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--journal-ink);
+}
+
+.teacher-copy {
+  margin-top: 0.75rem;
+  max-width: 42rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.teacher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.teacher-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.teacher-btn:hover,
+.teacher-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  outline: none;
+}
+
+.teacher-btn--primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
+}
+
+.teacher-btn--primary:hover,
+.teacher-btn--primary:focus-visible {
+  border-color: transparent;
+  background: var(--journal-accent-strong);
+  color: var(--color-bg-base);
+}
+
+.teacher-btn--ghost {
+  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
+}
+
+.workspace-alert {
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: var(--workspace-radius-lg);
+  background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  box-shadow: var(--workspace-shadow-panel);
+  padding: 1rem 1.1rem;
+}
+
+.workspace-alert-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.workspace-alert-copy {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.workspace-alert-actions {
+  margin-top: 0.85rem;
+}
+
+.summary-strip {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  min-width: 0;
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  padding: 0.95rem 1rem;
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
+}
+
+.summary-card__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.summary-card__value {
+  margin-top: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--journal-ink);
+}
+
+.summary-card__hint {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+  animation: tabPanelIn 180ms ease both;
+}
+
+.rail-stack {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.class-switch-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.class-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.class-switch:hover,
+.class-switch:focus-visible,
+.class-switch.active {
+  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  color: var(--journal-accent-strong);
+  outline: none;
+}
+
+.student-directory {
+  display: grid;
+}
+
+.student-directory-head,
+.student-directory-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.student-directory-head {
+  padding: 0 0.15rem 0.55rem;
+  border-bottom: 1px solid var(--teacher-divider);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.student-directory-row {
+  padding: 0.9rem 0.1rem;
+  border-bottom: 1px solid var(--teacher-divider);
+  background: transparent;
+  text-align: left;
+  transition: background 160ms ease;
+}
+
+.student-directory-row:hover,
+.student-directory-row:focus-visible,
+.student-directory-row.active {
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+  outline: none;
+}
+
+.student-directory-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.student-directory-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 16%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.2rem 0.72rem;
-  padding-left: 0.72rem !important;
-  letter-spacing: 0.08em;
+  color: var(--journal-accent);
+  flex-shrink: 0;
+}
+
+.student-directory-copy {
+  min-width: 0;
+}
+
+.student-directory-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.student-directory-meta {
+  margin-top: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--journal-muted);
+}
+
+.student-directory-state {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--workspace-brand-ink);
+}
+
+.student-directory-skeleton {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.student-directory-skeleton__item {
+  height: 3.5rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-border) 80%, transparent),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
+  animation: pulse 1.35s ease-in-out infinite;
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--workspace-line-soft);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
+  color: var(--journal-ink);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.quick-action:hover,
+.quick-action:focus-visible {
+  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel));
+  color: var(--workspace-brand-ink);
+  outline: none;
+}
+
+.quick-action--compact {
+  min-height: 42px;
+}
+
+.quick-action--primary {
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+.quick-action__main {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.quick-action__main span:last-child {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.quick-action__main strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.quick-action__main small {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--journal-muted);
+}
+
+.quick-action__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.85rem;
+  flex-shrink: 0;
+}
+
+.quick-action__icon--neutral {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+}
+
+.quick-action__icon--warning {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 18%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 82%, var(--journal-ink));
+}
+
+.quick-action__icon--primary {
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent-strong);
 }
 
@@ -387,125 +1043,73 @@ const emit = defineEmits<{
   padding-left: 0;
 }
 
-:deep(.page-header__actions .el-button) {
-  min-height: 2.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--teacher-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  box-shadow: none;
-  color: var(--journal-ink);
+@keyframes tabPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-:deep(.page-header__actions .el-button:hover),
-:deep(.page-header__actions .el-button:focus-visible) {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
-  color: var(--journal-accent-strong);
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.58;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
-:deep(.page-header__actions .el-button--primary) {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+@media (max-width: 1279px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .context-rail {
+    padding: 0 28px 28px;
+  }
 }
 
-.analysis-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
+@media (max-width: 1023px) {
+  .summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teacher-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
-.analysis-hero-card {
-  border-color: var(--teacher-card-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 14%, transparent), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-base))
-    );
-  overflow: hidden;
-}
+@media (max-width: 767px) {
+  .workspace-topbar,
+  .top-tabs,
+  .content-pane,
+  .context-rail {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 
-.analysis-hero-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
+  .top-tabs {
+    gap: 18px;
+  }
 
-.analysis-note {
-  border-radius: 16px;
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface);
-  padding: 0.85rem 0.95rem;
-}
+  .summary-strip {
+    grid-template-columns: 1fr;
+  }
 
-.analysis-note-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
+  .teacher-actions {
+    width: 100%;
+  }
 
-.analysis-note-value {
-  margin-top: 0.45rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.analysis-note-helper {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
-}
-
-.teacher-kpi-grid {
-  align-items: stretch;
-}
-
-.teacher-kpi-card {
-  border: 1px solid var(--teacher-card-border);
-  padding: 0.95rem 1rem;
-}
-
-.teacher-kpi-card--primary {
-  border-top: 3px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
-}
-
-.teacher-kpi-card--success {
-  border-top: 3px solid color-mix(in srgb, var(--color-success) 34%, transparent);
-}
-
-.teacher-kpi-card--warning {
-  border-top: 3px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
-}
-
-.teacher-kpi-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.teacher-kpi-value {
-  margin-top: 0.45rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.teacher-kpi-hint {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
+  .teacher-btn {
+    flex: 1 1 100%;
+  }
 }
 </style>
