@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import { createPinia, setActivePinia } from 'pinia'
 
 import TopNav from '../TopNav.vue'
+import topNavSource from '../TopNav.vue?raw'
 import { useAuthStore } from '@/stores/auth'
 
 const authMocks = vi.hoisted(() => ({
@@ -136,5 +137,11 @@ describe('TopNav', () => {
     expect(wrapper.find('#topnav-brand-picker-panel').exists()).toBe(false)
 
     wrapper.unmount()
+  })
+
+  it('通知按钮应当显式保留和相邻工具按钮一致的外边框', () => {
+    expect(topNavSource).toMatch(
+      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid color-mix\(in srgb,\s*var\(--color-border-default\)\s*74%,\s*transparent\);/s
+    )
   })
 })

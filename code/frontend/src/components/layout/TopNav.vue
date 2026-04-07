@@ -283,9 +283,15 @@ onUnmounted(() => {
   height: 2.5rem;
   width: 2.5rem;
   border-radius: 12px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 58%, var(--color-bg-base));
+  color: var(--color-text-secondary);
   box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .topnav-actions :deep(.notification-trigger:hover) {
