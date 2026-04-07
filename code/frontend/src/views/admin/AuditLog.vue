@@ -190,7 +190,7 @@ onMounted(() => {
 
     <div class="journal-divider admin-divider" />
 
-    <section class="admin-board">
+    <section class="admin-board workspace-directory-section">
       <div class="admin-section-head">
         <div>
           <div class="journal-note-label">Results</div>
@@ -204,7 +204,7 @@ onMounted(() => {
         <button type="button" class="ml-3 font-medium underline" @click="loadLogs">重试</button>
       </div>
 
-      <div v-else-if="loading" class="space-y-3">
+      <div v-else-if="loading" class="space-y-3 workspace-directory-loading">
         <div
           v-for="index in 6"
           :key="index"
@@ -212,7 +212,7 @@ onMounted(() => {
         />
       </div>
 
-      <div v-else-if="list.length === 0" class="audit-empty-state">
+      <div v-else-if="list.length === 0" class="audit-empty-state workspace-directory-empty">
         <AppEmpty
           icon="Inbox"
           title="当前筛选条件下没有日志记录"
@@ -222,7 +222,7 @@ onMounted(() => {
 
       <div
         v-else
-        class="audit-table-shell overflow-hidden rounded-[20px] border border-[var(--audit-table-border)]"
+        class="audit-table-shell workspace-directory-list overflow-hidden rounded-[20px] border border-[var(--audit-table-border)]"
       >
         <table class="min-w-full text-sm">
           <thead class="bg-[var(--journal-surface-subtle)]">
@@ -269,7 +269,7 @@ onMounted(() => {
         </table>
       </div>
 
-      <div v-if="!loading && total > 0" class="admin-pagination">
+      <div v-if="!loading && total > 0" class="admin-pagination workspace-directory-pagination">
         <span>共 {{ total }} 条记录</span>
         <div class="flex items-center gap-2">
           <button
@@ -498,7 +498,6 @@ onMounted(() => {
 }
 
 .audit-table-shell {
-  margin-top: 1rem;
   background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
 }
 
@@ -512,19 +511,6 @@ onMounted(() => {
   font-size: 0.72rem;
   font-weight: 700;
   color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
-}
-
-.admin-pagination {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 84%, transparent);
-  padding-top: 1rem;
-  font-size: 0.875rem;
-  color: var(--journal-muted);
 }
 
 @media (max-width: 1080px) {

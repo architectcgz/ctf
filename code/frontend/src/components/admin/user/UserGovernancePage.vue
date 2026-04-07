@@ -352,7 +352,7 @@ function handleImportChange(event: Event): void {
       aria-hidden="true"
     />
 
-    <section v-show="activePanel === 'directory'" class="space-y-4">
+    <section v-show="activePanel === 'directory'" class="workspace-directory-section">
       <div class="admin-section-head">
         <div>
           <div class="journal-note-label">Users</div>
@@ -360,12 +360,13 @@ function handleImportChange(event: Event): void {
         </div>
       </div>
 
-      <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+      <div v-if="loading && list.length === 0" class="workspace-directory-loading flex justify-center py-10">
         <AppLoading>正在同步用户列表...</AppLoading>
       </div>
 
       <AppEmpty
         v-else-if="list.length === 0"
+        class="workspace-directory-empty"
         title="暂无用户"
         description="当前筛选条件下没有匹配用户。"
         icon="UsersRound"
@@ -378,7 +379,7 @@ function handleImportChange(event: Event): void {
       </AppEmpty>
 
       <template v-else>
-        <div class="user-table-shell">
+        <div class="user-table-shell workspace-directory-list">
           <table class="user-table min-w-full text-sm">
             <thead class="user-table-head">
               <tr>
@@ -455,7 +456,7 @@ function handleImportChange(event: Event): void {
           </table>
         </div>
 
-        <div class="admin-pagination">
+        <div class="admin-pagination workspace-directory-pagination">
           <span>共 {{ total }} 个用户</span>
           <div class="flex items-center gap-2">
             <button
@@ -853,18 +854,6 @@ function handleImportChange(event: Event): void {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 16%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   color: var(--journal-accent);
-}
-
-.admin-pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-top: 1px dashed rgba(148, 163, 184, 0.72);
-  padding: 1rem 1.1rem 1.05rem;
-  font-size: 0.875rem;
-  color: var(--journal-muted);
 }
 
 :global([data-theme='dark']) .journal-shell {
