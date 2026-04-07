@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import classStudentsSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
@@ -8,39 +10,74 @@ import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
+const teacherSurfaceSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/teacher-surface.css`,
+  'utf-8'
+)
+
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
+    expect(teacherSurfaceSource).toMatch(
+      /\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s
+    )
+
     expect(classStudentsSource).toContain('--teacher-card-border:')
     expect(classStudentsSource).toContain('--teacher-control-border:')
     expect(classStudentsSource).toContain('--teacher-divider:')
-    expect(classStudentsSource).toMatch(/\.teacher-btn\s*\{[\s\S]*border:\s*1px solid var\(--teacher-control-border\);/s)
-    expect(classStudentsSource).toMatch(/\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(classStudentsSource).toMatch(/\.teacher-table-shell\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(classStudentsSource).not.toContain('.teacher-btn {')
+    expect(classStudentsSource).toMatch(
+      /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
+    expect(classStudentsSource).toMatch(
+      /\.teacher-table-shell\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
 
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
     expect(studentAnalysisSource).toContain('class="workspace-shell"')
     expect(studentAnalysisSource).toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="top-tabs"')
-    expect(studentAnalysisSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(studentAnalysisSource).toMatch(/\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(studentAnalysisSource).toMatch(/:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s)
+    expect(studentAnalysisSource).toMatch(
+      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
+    expect(studentAnalysisSource).toMatch(
+      /\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
+    expect(studentAnalysisSource).toMatch(
+      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
+    )
 
     expect(reviewArchiveSource).toContain('--teacher-card-border:')
     expect(reviewArchiveSource).toContain('--teacher-divider:')
-    expect(reviewArchiveSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(reviewArchiveSource).toMatch(/:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s)
-    expect(reviewArchiveSource).toMatch(/\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(reviewArchiveSource).toMatch(
+      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
+    expect(reviewArchiveSource).toMatch(
+      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
+    )
+    expect(reviewArchiveSource).toMatch(
+      /\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
-    expect(classTrendPanelSource).toMatch(/--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/)
-    expect(classInsightsPanelSource).toMatch(/--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/)
-    expect(classReviewPanelSource).toMatch(/--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/)
+    expect(classTrendPanelSource).toMatch(
+      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+    )
+    expect(classInsightsPanelSource).toMatch(
+      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+    )
+    expect(classReviewPanelSource).toMatch(
+      /--panel-border:\s*color-mix\(in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%, transparent\);/
+    )
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
-    expect(studentInsightPanelSource).toMatch(/:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
-    expect(studentInsightPanelSource).toMatch(/\.insight-kpi-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s)
+    expect(studentInsightPanelSource).toMatch(
+      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
+    expect(studentInsightPanelSource).toMatch(
+      /\.insight-kpi-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+    )
 
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classInsightsPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')

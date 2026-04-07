@@ -168,3 +168,68 @@
   border-radius: 20px;
   box-shadow: 0 24px 60px var(--color-shadow-soft);
 }
+
+.teacher-topbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.teacher-heading {
+  min-width: 0;
+}
+
+.teacher-copy {
+  max-width: 42.5rem;
+}
+
+.teacher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.teacher-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--teacher-control-border);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.teacher-btn:hover,
+.teacher-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  outline: none;
+}
+
+.teacher-btn--primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
+}
+
+.teacher-btn--primary:hover,
+.teacher-btn--primary:focus-visible {
+  border-color: transparent;
+  background: var(--journal-accent-strong);
+  color: var(--color-bg-base);
+}
+
+.teacher-btn--ghost {
+  background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
+}

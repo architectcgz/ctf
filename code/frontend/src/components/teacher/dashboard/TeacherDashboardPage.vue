@@ -91,7 +91,12 @@ function focusTab(tab: WorkspaceTab): void {
 }
 
 function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
     return
   }
 
@@ -168,16 +173,17 @@ const activeStudentValue = computed(() => {
   return `${props.students.filter((student) => (student.recent_event_count ?? 0) > 0).length}`
 })
 
-const topStudent = computed(() =>
-  [...props.students]
-    .sort((left, right) => {
-      const solvedGap = (right.solved_count ?? 0) - (left.solved_count ?? 0)
-      if (solvedGap !== 0) return solvedGap
-      const scoreGap = (right.total_score ?? 0) - (left.total_score ?? 0)
-      if (scoreGap !== 0) return scoreGap
-      return (left.username || '').localeCompare(right.username || '')
-    })
-    .at(0) ?? null
+const topStudent = computed(
+  () =>
+    [...props.students]
+      .sort((left, right) => {
+        const solvedGap = (right.solved_count ?? 0) - (left.solved_count ?? 0)
+        if (solvedGap !== 0) return solvedGap
+        const scoreGap = (right.total_score ?? 0) - (left.total_score ?? 0)
+        if (scoreGap !== 0) return scoreGap
+        return (left.username || '').localeCompare(right.username || '')
+      })
+      .at(0) ?? null
 )
 
 const strongestDimensionCount = computed(() => weakDimensionStats.value[0]?.count ?? 0)
@@ -192,7 +198,9 @@ const metaPills = computed(() => {
   const pills = [
     '学习进度主导',
     props.review?.items.length ? `${props.review.items.length} 条复盘结论` : '复盘结论待生成',
-    weakDimensionStats.value.length ? `${weakDimensionStats.value.length} 个薄弱方向` : '能力画像待补全',
+    weakDimensionStats.value.length
+      ? `${weakDimensionStats.value.length} 个薄弱方向`
+      : '能力画像待补全',
     riskStudentCount.value > 0 ? `${riskStudentCount.value} 名风险学生` : '班级趋势稳定',
   ]
   return pills
@@ -242,7 +250,10 @@ const overviewPulseCards = computed(() => [
     key: 'weak',
     label: '薄弱方向',
     value: dominantWeakDimension.value,
-    copy: strongestDimensionCount.value > 0 ? `${strongestDimensionCount.value} 名学生集中暴露该薄弱项` : '等待能力画像形成',
+    copy:
+      strongestDimensionCount.value > 0
+        ? `${strongestDimensionCount.value} 名学生集中暴露该薄弱项`
+        : '等待能力画像形成',
   },
   {
     key: 'review',
@@ -353,7 +364,10 @@ const portraitSummaryNotes = computed(() => [
     key: 'impact',
     label: '影响学生',
     value: `${strongestDimensionCount.value} 人`,
-    copy: dominantWeakDimension.value === '待观察' ? '等待能力画像形成' : `当前最集中暴露在 ${dominantWeakDimension.value} 方向`,
+    copy:
+      dominantWeakDimension.value === '待观察'
+        ? '等待能力画像形成'
+        : `当前最集中暴露在 ${dominantWeakDimension.value} 方向`,
   },
   {
     key: 'action',
@@ -374,33 +388,41 @@ const trendSignals = computed(() => {
   const totalEvents = points.reduce((sum, point) => sum + point.event_count, 0)
   const totalSolves = points.reduce((sum, point) => sum + point.solve_count, 0)
   const peakActive = points.reduce((max, point) => Math.max(max, point.active_student_count), 0)
-  const peakDay = points.reduce<TeacherClassTrendData['points'][number] | null>((current, point) => {
-    if (!current || point.event_count > current.event_count) return point
-    return current
-  }, null)
+  const peakDay = points.reduce<TeacherClassTrendData['points'][number] | null>(
+    (current, point) => {
+      if (!current || point.event_count > current.event_count) return point
+      return current
+    },
+    null
+  )
 
   return [
     {
       key: 'events',
       label: '事件总量',
       value: totalEvents ? `${totalEvents}` : '--',
-      copy: peakDay ? `峰值出现在 ${peakDay.date.slice(5)}，训练事件达到 ${peakDay.event_count}。` : '当前还没有趋势数据。',
+      copy: peakDay
+        ? `峰值出现在 ${peakDay.date.slice(5)}，训练事件达到 ${peakDay.event_count}。`
+        : '当前还没有趋势数据。',
     },
     {
       key: 'solves',
       label: '成功解题',
       value: totalSolves ? `${totalSolves}` : '--',
-      copy: totalSolves ? '把训练事件和解题转化放在同一条时间轴上观察更容易定位断层。' : '等待成功解题数据形成趋势。',
+      copy: totalSolves
+        ? '把训练事件和解题转化放在同一条时间轴上观察更容易定位断层。'
+        : '等待成功解题数据形成趋势。',
     },
     {
       key: 'active',
       label: '活跃波动',
       value: peakActive ? `${peakActive} 人` : '--',
-      copy: peakActive ? '班级没有明显断崖，但尾部学生的参与深度仍然偏弱。' : '当前还无法判断活跃波动。',
+      copy: peakActive
+        ? '班级没有明显断崖，但尾部学生的参与深度仍然偏弱。'
+        : '当前还无法判断活跃波动。',
     },
   ]
 })
-
 </script>
 
 <template>
@@ -477,7 +499,11 @@ const trendSignals = computed(() => {
                 可先重试刷新数据，再继续查看趋势与复盘信息；若持续失败，可先进入班级管理确认当前班级与权限状态。
               </div>
               <div class="workspace-alert-actions">
-                <button type="button" class="quick-action quick-action--compact" @click="emit('retry')">
+                <button
+                  type="button"
+                  class="quick-action quick-action--compact"
+                  @click="emit('retry')"
+                >
                   <span>重试加载</span><span>→</span>
                 </button>
                 <button
@@ -540,12 +566,19 @@ const trendSignals = computed(() => {
               <h3 class="panel-title">优先补强方向</h3>
 
               <div v-if="weakDimensionStats.length > 0" class="weak-list">
-                <article v-for="(item, index) in weakDimensionStats.slice(0, 3)" :key="item.dimension" class="weak-item">
+                <article
+                  v-for="(item, index) in weakDimensionStats.slice(0, 3)"
+                  :key="item.dimension"
+                  class="weak-item"
+                >
                   <div class="weak-rank">{{ `${index + 1}`.padStart(2, '0') }}</div>
                   <div>
                     <div class="weak-name">{{ item.dimension }}</div>
                     <div class="weak-copy">
-                      {{ item.count }} 名学生当前在该方向暴露弱项，建议优先投放基础题并安排一次路径梳理。
+                      {{
+                        item.count
+                      }}
+                      名学生当前在该方向暴露弱项，建议优先投放基础题并安排一次路径梳理。
                     </div>
                   </div>
                   <div class="weak-score">{{ item.count }} 人</div>
@@ -586,11 +619,7 @@ const trendSignals = computed(() => {
 
           <div class="trend-layout">
             <div class="workspace-subpanel">
-              <TeacherClassTrendPanel
-                :trend="trend"
-                title="班级近 7 天训练趋势"
-                subtitle=""
-              />
+              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" subtitle="" />
             </div>
 
             <aside class="trend-side">
@@ -718,136 +747,17 @@ const trendSignals = computed(() => {
   --workspace-success: var(--color-success);
   --workspace-warning: var(--color-warning);
   --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
-  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-shadow-shell: 0 24px 84px
+    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-panel: 0 14px 34px
+    color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
   --workspace-radius-md: 14px;
   --workspace-font-sans:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
-  --workspace-font-mono:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  min-height: 100%;
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: var(--workspace-radius-xl);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--workspace-shell) 96%, var(--workspace-page)), var(--workspace-shell));
-  box-shadow: var(--workspace-shadow-shell);
-  overflow: clip;
-  font-family: var(--workspace-font-sans);
-  color: var(--journal-ink);
-}
-
-.workspace-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 22px 28px 0;
-}
-
-.topbar-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-}
-
-.workspace-overline {
-  display: inline-block;
-  border: 0 !important;
-  box-shadow: none !important;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-decoration: none !important;
-  text-decoration-line: none !important;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 66%, var(--workspace-faint));
-}
-
-.class-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--workspace-brand) 22%, transparent);
-  border-radius: 8px;
-  background: var(--workspace-brand-soft);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--workspace-brand-ink);
-}
-
-.top-note {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px 18px;
-  font-size: 13px;
-  color: var(--workspace-faint);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  padding: 0 28px;
-  margin-top: 10px;
-  border-bottom: 1px solid var(--workspace-line-soft);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--workspace-faint);
-  font: 600 15px/1 var(--workspace-font-sans);
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: var(--workspace-brand-ink);
-  border-bottom-color: var(--workspace-brand);
-  outline: none;
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.content-pane {
-  min-width: 0;
-  padding: 28px;
-}
-
-.tab-panel {
-  display: none;
-}
-
-.tab-panel.active {
-  display: block;
-  animation: tabPanelIn 180ms ease both;
+  --workspace-font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .tab-panel.section {
@@ -1418,18 +1328,6 @@ const trendSignals = computed(() => {
   color: var(--workspace-faint);
 }
 
-@keyframes tabPanelIn {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 1180px) {
   .workspace-hero,
   .portrait-grid,
@@ -1455,7 +1353,6 @@ const trendSignals = computed(() => {
   .section-head {
     display: block;
   }
-
 }
 
 @media (max-width: 640px) {

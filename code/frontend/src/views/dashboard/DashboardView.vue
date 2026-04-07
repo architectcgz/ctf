@@ -82,19 +82,43 @@ const activePanel = computed<DashboardPanelKey | null>(() => {
   return null
 })
 const isOverview = computed(() => activePanel.value === null)
-const panelTabs: Array<{ key: DashboardPanelKey | null; label: string; panelId: string; tabId: string }> =
-  [
-    { key: null, label: '总览', panelId: 'dashboard-panel-overview', tabId: 'dashboard-tab-overview' },
-    {
-      key: 'recommendation',
-      label: '训练建议',
-      panelId: 'dashboard-panel-recommendation',
-      tabId: 'dashboard-tab-recommendation',
-    },
-    { key: 'category', label: '分类进度', panelId: 'dashboard-panel-category', tabId: 'dashboard-tab-category' },
-    { key: 'timeline', label: '近期动态', panelId: 'dashboard-panel-timeline', tabId: 'dashboard-tab-timeline' },
-    { key: 'difficulty', label: '难度分布', panelId: 'dashboard-panel-difficulty', tabId: 'dashboard-tab-difficulty' },
-  ]
+const panelTabs: Array<{
+  key: DashboardPanelKey | null
+  label: string
+  panelId: string
+  tabId: string
+}> = [
+  {
+    key: null,
+    label: '总览',
+    panelId: 'dashboard-panel-overview',
+    tabId: 'dashboard-tab-overview',
+  },
+  {
+    key: 'recommendation',
+    label: '训练建议',
+    panelId: 'dashboard-panel-recommendation',
+    tabId: 'dashboard-tab-recommendation',
+  },
+  {
+    key: 'category',
+    label: '分类进度',
+    panelId: 'dashboard-panel-category',
+    tabId: 'dashboard-tab-category',
+  },
+  {
+    key: 'timeline',
+    label: '近期动态',
+    panelId: 'dashboard-panel-timeline',
+    tabId: 'dashboard-tab-timeline',
+  },
+  {
+    key: 'difficulty',
+    label: '难度分布',
+    panelId: 'dashboard-panel-difficulty',
+    tabId: 'dashboard-tab-difficulty',
+  },
+]
 
 async function loadDashboard(): Promise<void> {
   const role = authStore.user?.role
@@ -163,7 +187,12 @@ function focusTabByIndex(index: number): void {
 }
 
 function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'Home' && event.key !== 'End') {
+  if (
+    event.key !== 'ArrowRight' &&
+    event.key !== 'ArrowLeft' &&
+    event.key !== 'Home' &&
+    event.key !== 'End'
+  ) {
     return
   }
 
@@ -212,22 +241,13 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
     <div class="workspace-grid">
       <main class="content-pane">
-        <div
-          v-if="error"
-          class="workspace-alert"
-          role="alert"
-          aria-live="polite"
-        >
+        <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
           {{ error }}
           <button type="button" class="workspace-alert-action" @click="loadDashboard">重试</button>
         </div>
 
         <div v-if="loading" class="dashboard-loading-grid">
-          <div
-            v-for="index in 4"
-            :key="index"
-            class="dashboard-loading-item"
-          />
+          <div v-for="index in 4" :key="index" class="dashboard-loading-item" />
         </div>
 
         <template v-else-if="progress">
@@ -324,83 +344,21 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --workspace-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
   --workspace-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --workspace-danger: var(--color-danger);
-  --workspace-shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
+  --workspace-shadow-shell: 0 24px 84px
+    color-mix(in srgb, var(--color-shadow-soft) 58%, transparent);
   --workspace-font-sans:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  min-height: 100%;
   flex: 1 1 auto;
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--workspace-brand) 6%, transparent), transparent 26rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--workspace-shell) 96%, var(--workspace-page)), var(--workspace-shell));
-  box-shadow: var(--workspace-shadow-shell);
-  overflow: clip;
-  font-family: var(--workspace-font-sans);
-  color: var(--journal-ink);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  padding: 0 28px;
-  margin-top: 10px;
-  border-bottom: 1px solid var(--workspace-line-soft);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--workspace-faint);
-  font: 600 15px/1 var(--workspace-font-sans);
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    color 160ms ease,
-    border-color 160ms ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: var(--workspace-brand-ink);
-  border-bottom-color: var(--workspace-brand);
-  outline: none;
-}
-
-.workspace-grid {
-  display: grid;
-  grid-template-columns: 1fr;
 }
 
 .content-pane {
-  min-width: 0;
   min-height: 0;
-  padding: 28px;
 }
 
 .tab-panel {
-  display: none;
   min-height: 0;
-}
-
-.tab-panel.active {
-  display: block;
-  animation: tabPanelIn 180ms ease both;
 }
 
 .workspace-alert {
@@ -435,18 +393,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border-radius: 18px;
   background: var(--journal-track);
   animation: dashboardPulse 1.1s ease-in-out infinite;
-}
-
-@keyframes tabPanelIn {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 @keyframes dashboardPulse {

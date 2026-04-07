@@ -182,12 +182,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           <div class="skill-analysis-stack">
             <div>
               <div class="skill-overview-head">
-                <h1 class="journal-page-title text-[var(--journal-ink)]">
-                  能力画像
-                </h1>
-                <p class="skill-overview-copy">
-                  查看当前能力维度表现，并根据薄弱项获取推荐靶场。
-                </p>
+                <h1 class="journal-page-title text-[var(--journal-ink)]">能力画像</h1>
+                <p class="skill-overview-copy">查看当前能力维度表现，并根据薄弱项获取推荐靶场。</p>
                 <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
                   <button type="button" class="journal-btn" @click="loadCurrentData">刷新</button>
                   <button
@@ -229,11 +225,19 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                       class="skill-dimension-legend__item"
                     >
                       <div class="min-w-0">
-                        <div class="text-base font-semibold text-[var(--journal-ink)] md:text-[1.05rem]">{{ dim.name }}</div>
-                        <div class="mt-1 text-[0.8rem] text-[var(--journal-muted)]">当前维度表现</div>
+                        <div
+                          class="text-base font-semibold text-[var(--journal-ink)] md:text-[1.05rem]"
+                        >
+                          {{ dim.name }}
+                        </div>
+                        <div class="mt-1 text-[0.8rem] text-[var(--journal-muted)]">
+                          当前维度表现
+                        </div>
                       </div>
                       <div class="text-right">
-                        <div class="text-[1.9rem] font-semibold tracking-tight text-[var(--journal-ink)] tech-font md:text-[2.1rem]">
+                        <div
+                          class="text-[1.9rem] font-semibold tracking-tight text-[var(--journal-ink)] tech-font md:text-[2.1rem]"
+                        >
                           {{ dim.value }}
                         </div>
                         <div class="text-xs text-[var(--journal-muted)]">/ 100</div>
@@ -256,7 +260,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         >
           <div class="skill-weak-wrap">
             <div class="journal-eyebrow journal-eyebrow-soft">Weak Points</div>
-            <div class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]">
+            <div
+              class="mt-3 flex items-center gap-3 text-base font-semibold text-[var(--journal-ink)]"
+            >
               <Flame class="h-5 w-5 text-[var(--journal-accent)]" />
               薄弱项提示
             </div>
@@ -269,7 +275,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             <div v-else class="skill-weak-list mt-5">
               <div class="skill-weak-item">
                 <div class="journal-note-label">当前状态</div>
-                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">暂时没有明显短板</div>
+                <div class="mt-2 text-sm font-semibold text-[var(--journal-ink)]">
+                  暂时没有明显短板
+                </div>
               </div>
             </div>
           </div>
@@ -297,7 +305,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             加载推荐中…
           </div>
 
-          <div v-else-if="recommendations.length === 0" class="mt-6 text-sm text-[var(--journal-muted)]">
+          <div
+            v-else-if="recommendations.length === 0"
+            class="mt-6 text-sm text-[var(--journal-muted)]"
+          >
             暂无推荐靶场，完成更多题目后会自动生成。
           </div>
 
@@ -322,7 +333,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                       {{ difficultyLabel(item.difficulty) }}
                     </span>
                   </div>
-                  <p class="mt-1 text-xs leading-5 text-[var(--journal-muted)]">{{ item.reason }}</p>
+                  <p class="mt-1 text-xs leading-5 text-[var(--journal-muted)]">
+                    {{ item.reason }}
+                  </p>
                 </div>
                 <ChevronRight class="h-4 w-4 shrink-0 text-[var(--journal-accent-strong)]" />
               </div>
@@ -347,6 +360,15 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --page-top-tabs-gap: 1.2rem;
+  --page-top-tabs-margin: 0 -0.5rem 1.5rem;
+  --page-top-tabs-padding: 0 0.5rem;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-soft-border) 92%, transparent);
+  --page-top-tab-min-height: 3rem;
+  --page-top-tab-padding: 0.4rem 0 0.75rem;
+  --page-top-tab-font-size: 0.92rem;
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
   font-family:
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     sans-serif;
@@ -355,8 +377,20 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .journal-hero {
   border-color: var(--journal-shell-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 20rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 94%, var(--color-bg-base)));
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 20rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+        var(--color-bg-base)
+      )
+    );
   border-radius: 16px !important;
   overflow: hidden;
 }
@@ -371,51 +405,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .journal-eyebrow-soft {
   color: var(--journal-muted);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 1.2rem;
-  margin: 0 -0.5rem 1.5rem;
-  padding: 0 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-soft-border) 92%, transparent);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 3rem;
-  padding: 0.4rem 0 0.75rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.16s ease,
-    color 0.16s ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
-  outline: none;
-}
-
-.tab-panel {
-  min-width: 0;
 }
 
 .journal-note-label {
@@ -468,7 +457,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   margin-top: var(--workspace-tab-panel-gap-top-tight);
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
   padding: 1rem 1.1rem;
 }
 
@@ -483,7 +476,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .skill-student-select {
   border-radius: 14px;
   border: 1px solid var(--journal-control-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
   padding: 0.7rem 0.95rem;
   font-size: 0.875rem;
   color: var(--journal-ink);
@@ -532,7 +529,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .skill-weak-list {
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
 }
 
 .skill-weak-item,
@@ -572,7 +573,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 96%, var(--color-bg-base))
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 96%,
+        var(--color-bg-base)
+      )
     ),
     linear-gradient(135deg, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent);
   border: 1px solid var(--journal-shell-border);
@@ -581,9 +586,14 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .skill-dimension-chart__frame::after {
   inset: 18px;
   clip-path: polygon(25% 6%, 75% 6%, 100% 50%, 75% 94%, 25% 94%, 0 50%);
-  border: 1px solid color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 78%, transparent);
   background:
-    radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 60%),
+    radial-gradient(
+      circle at 50% 45%,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 60%
+    ),
     color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 76%, var(--color-bg-base));
 }
 
@@ -670,7 +680,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 20rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 20rem
+    ),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
@@ -722,5 +736,4 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     min-height: 36px;
   }
 }
-
 </style>

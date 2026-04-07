@@ -9,6 +9,8 @@ import './style.css'
 import './assets/styles/theme.css'
 import './assets/styles/element-override.css'
 import './assets/styles/teacher-surface.css'
+import './assets/styles/page-tabs.css'
+import './assets/styles/workspace-shell.css'
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -543,6 +543,15 @@ function handleImportChange(event: Event): void {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
+  --page-top-tabs-gap: 28px;
+  --page-top-tabs-margin: 0 -1.5rem 1.5rem;
+  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
+  --page-top-tab-min-height: 52px;
+  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-font-size: 15px;
+  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
 }
 
 .journal-hero {
@@ -574,55 +583,6 @@ function handleImportChange(event: Event): void {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--journal-accent);
-}
-
-.top-tabs {
-  display: flex;
-  gap: 28px;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  margin-left: -1.5rem;
-  margin-right: -1.5rem;
-  padding: 0 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.top-tabs::-webkit-scrollbar {
-  display: none;
-}
-
-.top-tab {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 10px 0 13px;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1;
-  color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    border-color 0.16s ease,
-    color 0.16s ease;
-}
-
-.top-tab:hover,
-.top-tab.active,
-.top-tab:focus-visible {
-  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  border-bottom-color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  outline: none;
-}
-
-.tab-panel {
-  min-width: 0;
 }
 
 .user-overview-grid {

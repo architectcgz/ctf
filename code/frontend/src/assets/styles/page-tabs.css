@@ -1,0 +1,111 @@
+.journal-shell .workspace-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--journal-topbar-gap, 0.75rem 1rem);
+  padding-bottom: var(--journal-topbar-padding-bottom, 0);
+}
+
+.journal-shell .topbar-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--journal-topbar-leading-gap, 0.65rem);
+}
+
+.journal-shell .workspace-overline {
+  font-size: var(--journal-overline-font-size, 0.7rem);
+  font-weight: 700;
+  letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
+  text-transform: uppercase;
+  color: var(--journal-accent, var(--color-primary));
+}
+
+.journal-shell .class-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent, var(--color-primary)) 26%, transparent);
+  background: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 10%, transparent);
+  padding: 0.25rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--journal-accent, var(--color-primary));
+}
+
+.journal-shell .top-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  font-size: 0.82rem;
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
+.top-tabs {
+  display: flex;
+  gap: var(--page-top-tabs-gap, 1.2rem);
+  margin: var(--page-top-tabs-margin, 0);
+  padding: var(--page-top-tabs-padding, 0);
+  border-bottom: 1px solid
+    var(
+      --page-top-tabs-border,
+      color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent)
+    );
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.top-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--page-top-tab-min-height, 3rem);
+  padding: var(--page-top-tab-padding, 0.4rem 0 0.75rem);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: var(--page-top-tab-font-size, 0.92rem);
+  font-weight: var(--page-top-tab-font-weight, 600);
+  line-height: 1;
+  color: var(
+    --page-top-tab-color,
+    color-mix(in srgb, var(--journal-muted, var(--color-text-secondary)) 88%, var(--color-bg-base))
+  );
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.top-tab:hover,
+.top-tab.active,
+.top-tab:focus-visible {
+  color: var(
+    --page-top-tab-active-color,
+    color-mix(
+      in srgb,
+      var(--journal-accent, var(--color-primary)) 78%,
+      var(--journal-ink, var(--color-text-primary))
+    )
+  );
+  border-bottom-color: var(
+    --page-top-tab-active-border,
+    color-mix(
+      in srgb,
+      var(--journal-accent, var(--color-primary)) 84%,
+      var(--journal-ink, var(--color-text-primary))
+    )
+  );
+  outline: none;
+}
+
+.tab-panel {
+  min-width: 0;
+}
