@@ -638,12 +638,6 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   --journal-topbar-padding-bottom: 0.85rem;
   --page-top-tabs-gap: 28px;
   --page-top-tabs-margin: 10px -1.5rem 0;
@@ -655,22 +649,10 @@ onMounted(() => {
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-note-value-weight: 700;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 7%, transparent),
-      transparent 22rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      var(--journal-surface)
-    );
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
+  --journal-shell-hero-radial-strength: 7%;
+  --journal-shell-hero-radial-size: 22rem;
+  --journal-shell-hero-end: var(--journal-surface);
+  --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
 }
 
 .workspace-overline {

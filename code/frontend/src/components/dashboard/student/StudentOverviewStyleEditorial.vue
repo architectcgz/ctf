@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import {
-  Activity,
-  BellRing,
-  MapPinned,
-  Trophy,
-} from 'lucide-vue-next'
+import { Activity, BellRing, MapPinned, Trophy } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 
@@ -71,7 +66,7 @@ const operationsSummary = computed(() => [
 
 <template>
   <section
-    class="space-y-6 flex min-h-full flex-1 flex-col"
+    class="journal-soft-surface space-y-6 flex min-h-full flex-1 flex-col"
     :class="
       embedded
         ? 'journal-shell-embedded'
@@ -79,157 +74,124 @@ const operationsSummary = computed(() => [
     "
   >
     <div>
-        <div class="journal-eyebrow">Training Journal</div>
-        <h1 class="journal-page-title mt-3 max-w-3xl text-[var(--journal-ink)]">
-          {{ displayName }} 的训练总览
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          这里汇总了训练进度、能力分布和近期状态。
-        </p>
+      <div class="journal-eyebrow">Training Journal</div>
+      <h1 class="journal-page-title mt-3 max-w-3xl text-[var(--journal-ink)]">
+        {{ displayName }} 的训练总览
+      </h1>
+      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        这里汇总了训练进度、能力分布和近期状态。
+      </p>
 
-        <div class="journal-actions mt-6">
-          <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
-            继续训练
-          </button>
-          <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
-            查看能力画像
-          </button>
-        </div>
+      <div class="journal-actions mt-6">
+        <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
+          继续训练
+        </button>
+        <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
+          查看能力画像
+        </button>
+      </div>
     </div>
     <div class="journal-board" :class="{ 'journal-board--embedded': embedded }">
       <section class="journal-bento">
-          <article class="journal-panel journal-radar-card px-6 py-6">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow">Skill Matrix</div>
-                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
-              </div>
-              <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+        <article class="journal-panel journal-radar-card px-6 py-6">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="journal-eyebrow">Skill Matrix</div>
+              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
             </div>
-            <div v-if="skillDimensions.length > 0" class="mt-4">
-              <RadarChart :indicators="radarIndicators" :values="radarValues" name="能力值" />
+            <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+          </div>
+          <div v-if="skillDimensions.length > 0" class="mt-4">
+            <RadarChart :indicators="radarIndicators" :values="radarValues" name="能力值" />
+          </div>
+          <div
+            v-else
+            class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+          >
+            当前能力数据不足，完成更多题目后将生成雷达图。
+          </div>
+        </article>
+
+        <article class="journal-panel journal-rank-card px-6 py-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="journal-eyebrow">Leaderboard</div>
+              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
             </div>
-            <div
-              v-else
-              class="mt-6 rounded-[18px] border border-dashed border-[var(--journal-shell-border)] px-4 py-10 text-center text-sm text-[var(--journal-muted)]"
+            <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+          </div>
+          <div class="mt-6 grid gap-3 md:grid-cols-2">
+            <article
+              v-for="item in storyMetrics"
+              :key="item.label"
+              class="journal-metric px-4 py-4"
+              :class="item.tone === 'accent' ? 'journal-metric-accent' : ''"
             >
-              当前能力数据不足，完成更多题目后将生成雷达图。
-            </div>
-          </article>
-
-          <article class="journal-panel journal-rank-card px-6 py-6">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow">Leaderboard</div>
-                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
-              </div>
-              <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
-            </div>
-            <div class="mt-6 grid gap-3 md:grid-cols-2">
-              <article
-                v-for="item in storyMetrics"
-                :key="item.label"
-                class="journal-metric px-4 py-4"
-                :class="item.tone === 'accent' ? 'journal-metric-accent' : ''"
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-muted)]"
               >
-                <div
-                  class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-muted)]"
-                >
-                  {{ item.label }}
-                </div>
-                <div
-                  class="mt-3 text-[30px] font-semibold tracking-tight text-[var(--journal-ink)]"
-                >
-                  {{ item.value }}
-                </div>
-              </article>
-            </div>
-            <div class="journal-rank-summary mt-5 px-4 py-4">
-              <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
-                <span class="status-dot status-dot-solved" />
-                当前排名
+                {{ item.label }}
               </div>
-              <div class="mt-2 tech-font text-2xl font-semibold text-[var(--journal-ink)]">
-                #{{ rankSummary }}
+              <div class="mt-3 text-[30px] font-semibold tracking-tight text-[var(--journal-ink)]">
+                {{ item.value }}
               </div>
+            </article>
+          </div>
+          <div class="journal-rank-summary mt-5 px-4 py-4">
+            <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
+              <span class="status-dot status-dot-solved" />
+              当前排名
             </div>
-          </article>
+            <div class="mt-2 tech-font text-2xl font-semibold text-[var(--journal-ink)]">
+              #{{ rankSummary }}
+            </div>
+          </div>
+        </article>
 
-          <article class="journal-panel journal-ops-card px-6 py-6">
-            <div class="flex items-center justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow">Operations</div>
-                <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
-              </div>
-              <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+        <article class="journal-panel journal-ops-card px-6 py-6">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="journal-eyebrow">Operations</div>
+              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
             </div>
-            <div class="mt-5 space-y-3">
-              <article
-                v-for="item in operationsSummary"
-                :key="item.label"
-                class="journal-inline-item px-4 py-4"
-              >
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3">
-                    <component
-                      :is="item.icon"
-                      class="h-4 w-4 text-[var(--journal-accent-strong)]"
-                    />
-                    <div class="text-sm font-medium text-[var(--journal-ink)]">
-                      {{ item.label }}
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="status-dot" :class="`status-dot-${item.status}`" />
-                    <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
-                      item.value
-                    }}</span>
+            <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
+          </div>
+          <div class="mt-5 space-y-3">
+            <article
+              v-for="item in operationsSummary"
+              :key="item.label"
+              class="journal-inline-item px-4 py-4"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <component :is="item.icon" class="h-4 w-4 text-[var(--journal-accent-strong)]" />
+                  <div class="text-sm font-medium text-[var(--journal-ink)]">
+                    {{ item.label }}
                   </div>
                 </div>
-                <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  {{ item.description }}
+                <div class="flex items-center gap-2">
+                  <span class="status-dot" :class="`status-dot-${item.status}`" />
+                  <span class="tech-font text-sm font-medium text-[var(--journal-ink)]">{{
+                    item.value
+                  }}</span>
                 </div>
-              </article>
-            </div>
-          </article>
+              </div>
+              <div class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                {{ item.description }}
+              </div>
+            </article>
+          </div>
+        </article>
       </section>
     </div>
   </section>
 </template>
 
 <style scoped>
-.journal-shell-embedded,
-.journal-shell {
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-shell-embedded {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.journal-hero {
-  border-color: var(--journal-shell-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+.journal-soft-surface {
+  --journal-soft-eyebrow-size: 11px;
+  --journal-soft-eyebrow-spacing: 0.12em;
+  --journal-soft-eyebrow-color: var(--journal-accent-strong);
 }
 
 .journal-board {
@@ -256,20 +218,6 @@ const operationsSummary = computed(() => [
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   box-shadow: none;
-}
-
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.2rem 0.75rem;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
 }
 
 .journal-bento {
@@ -411,28 +359,6 @@ const operationsSummary = computed(() => [
 
 .status-dot-solved {
   background: #22c55e;
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
-  --journal-muted: var(--color-text-secondary);
-  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
 }
 
 @keyframes dot-pulse {

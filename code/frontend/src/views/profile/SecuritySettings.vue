@@ -100,7 +100,7 @@ async function submitPasswordChange(): Promise<void> {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <header class="security-header">
       <div class="security-header__intro">
@@ -236,49 +236,19 @@ async function submitPasswordChange(): Promise<void> {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-eyebrow-soft {
-  color: var(--journal-muted);
-}
-
-.journal-note-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-note-helper {
-  margin-top: 0.55rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--journal-muted);
+  --journal-shell-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-shell-accent: var(--color-primary);
+  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-hero-radial-strength: 8%;
+  --journal-shell-hero-radial-size: 18rem;
+  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
+  --journal-note-label-size: 0.72rem;
+  --journal-note-label-weight: 700;
+  --journal-note-label-spacing: 0.16em;
+  --journal-note-helper-line-height: 1.45;
 }
 
 .security-header {
@@ -498,7 +468,11 @@ async function submitPasswordChange(): Promise<void> {
 
 :global([data-theme='dark']) .journal-hero {
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 18%, transparent), transparent 20rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 18%, transparent),
+      transparent 20rem
+    ),
     linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98));
 }
 

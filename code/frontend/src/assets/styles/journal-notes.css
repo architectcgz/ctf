@@ -6,6 +6,25 @@
   color: var(--journal-eyebrow-color, var(--journal-accent));
 }
 
+.journal-shell .journal-eyebrow-soft {
+  color: var(--journal-eyebrow-soft-color, var(--journal-muted));
+}
+
+.journal-shell .journal-note-label {
+  font-size: var(--journal-note-label-size, 0.68rem);
+  font-weight: var(--journal-note-label-weight, 600);
+  letter-spacing: var(--journal-note-label-spacing, 0.12em);
+  text-transform: uppercase;
+  color: var(--journal-note-label-color, var(--journal-muted));
+}
+
+.journal-shell .journal-note-helper {
+  margin-top: var(--journal-note-helper-margin-top, 0.55rem);
+  font-size: var(--journal-note-helper-size, 0.78rem);
+  line-height: var(--journal-note-helper-line-height, 1.5);
+  color: var(--journal-note-helper-color, var(--journal-muted));
+}
+
 .journal-shell-admin .journal-note-label {
   font-size: var(--journal-note-label-size, 0.7rem);
   font-weight: var(--journal-note-label-weight, 700);

@@ -28,7 +28,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 
 <template>
   <section
-    class="space-y-6 flex min-h-full flex-1 flex-col"
+    class="journal-soft-surface space-y-6 flex min-h-full flex-1 flex-col"
     :class="
       embedded
         ? 'journal-shell-embedded'
@@ -36,253 +36,167 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
     "
   >
     <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <div class="journal-eyebrow">Priority Focus</div>
-          <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">
-            补短板计划
-          </h1>
-          <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-            优先看最适合当前阶段的题目。
-          </p>
-          <div class="mt-5 flex flex-wrap gap-2">
-            <template v-if="weakDimensions.length > 0">
-              <span
-                v-for="dim in weakDimensions.slice(0, 4)"
-                :key="dim"
-                class="inline-flex items-center gap-1.5 rounded-full border border-[var(--journal-accent)]/20 bg-[var(--journal-accent)]/8 px-3 py-1 text-xs font-semibold text-[var(--journal-accent-strong)]"
-              >
-                <ShieldAlert class="h-3 w-3" />
-                {{ dim }}
-              </span>
-            </template>
+      <div>
+        <div class="journal-eyebrow">Priority Focus</div>
+        <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">补短板计划</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+          优先看最适合当前阶段的题目。
+        </p>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <template v-if="weakDimensions.length > 0">
             <span
-              v-else
-              class="journal-weak-tag journal-weak-tag--stable"
+              v-for="dim in weakDimensions.slice(0, 4)"
+              :key="dim"
+              class="inline-flex items-center gap-1.5 rounded-full border border-[var(--journal-accent)]/20 bg-[var(--journal-accent)]/8 px-3 py-1 text-xs font-semibold text-[var(--journal-accent-strong)]"
             >
-              暂无明显短板
+              <ShieldAlert class="h-3 w-3" />
+              {{ dim }}
             </span>
+          </template>
+          <span v-else class="journal-weak-tag journal-weak-tag--stable"> 暂无明显短板 </span>
+        </div>
+      </div>
+
+      <article class="journal-brief rounded-[24px] border px-5 py-5">
+        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
+          <Sparkles class="h-5 w-5 text-[var(--journal-accent)]" />
+          推荐摘要
+        </div>
+        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+          <div class="journal-note">
+            <div class="journal-note-label">当前首要关注</div>
+            <div class="journal-note-value">{{ headline }}</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">推荐队列</div>
+            <div class="journal-note-value">{{ recommendations.length }} 项</div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">薄弱维度</div>
+            <div class="journal-note-value">
+              {{ weakDimensions.length > 0 ? weakDimensions.length + ' 项' : '暂无' }}
+            </div>
+          </div>
+          <div class="journal-note">
+            <div class="journal-note-label">即将可做</div>
+            <div class="journal-note-value">{{ topRecs.length }} 道</div>
           </div>
         </div>
-
-        <article class="journal-brief rounded-[24px] border px-5 py-5">
-          <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-            <Sparkles class="h-5 w-5 text-[var(--journal-accent)]" />
-            推荐摘要
-          </div>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <div class="journal-note">
-              <div class="journal-note-label">当前首要关注</div>
-              <div class="journal-note-value">{{ headline }}</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">推荐队列</div>
-              <div class="journal-note-value">{{ recommendations.length }} 项</div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">薄弱维度</div>
-              <div class="journal-note-value">
-                {{ weakDimensions.length > 0 ? weakDimensions.length + ' 项' : '暂无' }}
-              </div>
-            </div>
-            <div class="journal-note">
-              <div class="journal-note-label">即将可做</div>
-              <div class="journal-note-value">{{ topRecs.length }} 道</div>
-            </div>
-          </div>
-        </article>
+      </article>
     </div>
 
-    <div class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6" :class="{ 'recommend-board--embedded': embedded }">
+    <div
+      class="recommend-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
+      :class="{ 'recommend-board--embedded': embedded }"
+    >
       <section v-if="topRecs.length > 0" class="recommend-section">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Top Queue</div>
-              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">优先推荐</h3>
-            </div>
-            <button class="journal-btn-outline" @click="emit('openSkillProfile')">看画像</button>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="journal-eyebrow journal-eyebrow-soft">Top Queue</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">优先推荐</h3>
           </div>
+          <button class="journal-btn-outline" @click="emit('openSkillProfile')">看画像</button>
+        </div>
 
-          <div class="recommend-list mt-5">
-            <button
-              v-for="(item, index) in topRecs"
-              :key="item.challenge_id"
-              class="recommend-item group w-full cursor-pointer text-left"
-              @click="emit('openChallenge', item.challenge_id)"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="rec-index shrink-0"
-                  :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
-                >
-                  {{ index + 1 }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
-                      item.title
-                    }}</span>
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      :class="difficultyClass(item.difficulty)"
-                    >
-                      {{ difficultyLabel(item.difficulty) }}
-                    </span>
-                    <span
-                      class="journal-category-chip"
-                    >
-                      {{ item.category }}
-                    </span>
-                  </div>
-                  <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
-                </div>
-                <Crosshair class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent)]" />
+        <div class="recommend-list mt-5">
+          <button
+            v-for="(item, index) in topRecs"
+            :key="item.challenge_id"
+            class="recommend-item group w-full cursor-pointer text-left"
+            @click="emit('openChallenge', item.challenge_id)"
+          >
+            <div class="flex items-start gap-4">
+              <div
+                class="rec-index shrink-0"
+                :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
+              >
+                {{ index + 1 }}
               </div>
-            </button>
-          </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
+                    item.title
+                  }}</span>
+                  <span
+                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    :class="difficultyClass(item.difficulty)"
+                  >
+                    {{ difficultyLabel(item.difficulty) }}
+                  </span>
+                  <span class="journal-category-chip">
+                    {{ item.category }}
+                  </span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
+              </div>
+              <Crosshair class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent)]" />
+            </div>
+          </button>
+        </div>
       </section>
 
       <section class="recommend-section">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <div class="journal-eyebrow journal-eyebrow-soft">Full List</div>
-              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">推荐列表</h3>
-            </div>
-            <button class="journal-btn-primary" @click="emit('openChallenges')">浏览全部</button>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <div class="journal-eyebrow journal-eyebrow-soft">Full List</div>
+            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">推荐列表</h3>
           </div>
+          <button class="journal-btn-primary" @click="emit('openChallenges')">浏览全部</button>
+        </div>
 
-          <div
-            v-if="recommendations.length === 0"
-            class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+        <div
+          v-if="recommendations.length === 0"
+          class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
+        >
+          当前没有推荐题目，可以先去挑战列表探索新的方向。
+        </div>
+
+        <div v-else class="recommend-list mt-5">
+          <button
+            v-for="(item, index) in recommendations"
+            :key="item.challenge_id"
+            class="recommend-item group w-full cursor-pointer text-left"
+            @click="emit('openChallenge', item.challenge_id)"
           >
-            当前没有推荐题目，可以先去挑战列表探索新的方向。
-          </div>
-
-          <div v-else class="recommend-list mt-5">
-            <button
-              v-for="(item, index) in recommendations"
-              :key="item.challenge_id"
-              class="recommend-item group w-full cursor-pointer text-left"
-              @click="emit('openChallenge', item.challenge_id)"
-            >
-              <div class="flex items-start gap-4">
-                <div
-                  class="rec-index shrink-0"
-                  :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
-                >
-                  {{ index + 1 }}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
-                      item.title
-                    }}</span>
-                    <span
-                      class="rounded-full px-2 py-0.5 text-xs font-medium"
-                      :class="difficultyClass(item.difficulty)"
-                    >
-                      {{ difficultyLabel(item.difficulty) }}
-                    </span>
-                    <span
-                      class="journal-category-chip"
-                    >
-                      {{ item.category }}
-                    </span>
-                  </div>
-                  <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
-                </div>
-                <ArrowRight
-                  class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)] opacity-0 transition group-hover:opacity-100"
-                />
+            <div class="flex items-start gap-4">
+              <div
+                class="rec-index shrink-0"
+                :class="index === 0 ? 'rec-index--top' : 'rec-index--rest'"
+              >
+                {{ index + 1 }}
               </div>
-            </button>
-          </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold text-[var(--journal-ink)]">{{
+                    item.title
+                  }}</span>
+                  <span
+                    class="rounded-full px-2 py-0.5 text-xs font-medium"
+                    :class="difficultyClass(item.difficulty)"
+                  >
+                    {{ difficultyLabel(item.difficulty) }}
+                  </span>
+                  <span class="journal-category-chip">
+                    {{ item.category }}
+                  </span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">{{ item.reason }}</p>
+              </div>
+              <ArrowRight
+                class="mt-1 h-4 w-4 shrink-0 text-[var(--journal-accent-strong)] opacity-0 transition group-hover:opacity-100"
+              />
+            </div>
+          </button>
+        </div>
       </section>
     </div>
   </section>
 </template>
 
 <style scoped>
-.journal-shell-embedded,
-.journal-shell {
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-shell-embedded {
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.journal-hero {
-  border-color: var(--journal-shell-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 18rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
-}
-
 .journal-brief {
   border-color: var(--journal-shell-border);
   background: var(--journal-surface-subtle);
-}
-
-.journal-note {
-  border-radius: 16px;
-  border: 1px solid var(--journal-soft-border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, transparent), color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent));
-  padding: 0.875rem 1rem;
-}
-
-.journal-note-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.2rem 0.75rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-eyebrow-soft {
-  color: var(--journal-muted);
-  border-color: var(--journal-soft-border);
-  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
-}
-
-.journal-note-value {
-  margin-top: 0.65rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--journal-ink);
 }
 
 .journal-btn-primary,
@@ -411,29 +325,6 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   color: #15803d;
 }
 
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
-  --journal-muted: var(--color-text-secondary);
-  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
-  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
-  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
-  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
-}
-
-:global([data-theme='dark']) .journal-hero {
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 18rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-    );
-}
-
-:global([data-theme='dark']) .journal-note,
 :global([data-theme='dark']) .recommend-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }

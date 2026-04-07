@@ -101,7 +101,7 @@ async function handlePublishSuccess(): Promise<void> {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="notification-page">
       <header class="notification-topbar">
@@ -120,7 +120,9 @@ async function handlePublishSuccess(): Promise<void> {
           >
             发布通知
           </button>
-          <button type="button" class="notification-btn" @click="markCurrentPageRead">本页已读</button>
+          <button type="button" class="notification-btn" @click="markCurrentPageRead">
+            本页已读
+          </button>
           <button type="button" class="notification-btn" @click="refresh">
             <RefreshCw class="h-4 w-4" />
             刷新
@@ -199,7 +201,10 @@ async function handlePublishSuccess(): Promise<void> {
             </div>
             <div class="notification-row-time">{{ formatDate(item.created_at) }}</div>
             <div class="notification-row-state">
-              <span class="notification-state-chip" :class="{ 'notification-state-chip-unread': item.unread }">
+              <span
+                class="notification-state-chip"
+                :class="{ 'notification-state-chip-unread': item.unread }"
+              >
                 {{ item.unread ? '未读' : '已读' }}
               </span>
             </div>
@@ -209,10 +214,17 @@ async function handlePublishSuccess(): Promise<void> {
         <div v-if="total > 0" class="notification-pagination">
           <div>
             <div class="notification-summary-label">Page Control</div>
-            <div class="notification-pagination-copy">共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页</div>
+            <div class="notification-pagination-copy">
+              共 {{ total }} 条，第 {{ page }} / {{ totalPages }} 页
+            </div>
           </div>
           <div class="notification-pagination-actions">
-            <button type="button" class="notification-btn" :disabled="page === 1" @click="changePage(page - 1)">
+            <button
+              type="button"
+              class="notification-btn"
+              :disabled="page === 1"
+              @click="changePage(page - 1)"
+            >
               上一页
             </button>
             <button
@@ -238,23 +250,9 @@ async function handlePublishSuccess(): Promise<void> {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 74%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-}
-
-.journal-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base)));
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 74%, var(--color-bg-base));
+  --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
 }
 
 .notification-page {
@@ -272,14 +270,6 @@ async function handlePublishSuccess(): Promise<void> {
   gap: 24px;
   padding-bottom: 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
 .notification-subtitle {
@@ -558,5 +548,4 @@ async function handlePublishSuccess(): Promise<void> {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

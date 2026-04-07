@@ -1,0 +1,123 @@
+.journal-soft-surface .journal-shell,
+.journal-soft-surface .journal-shell-embedded {
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
+  font-family:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    sans-serif;
+}
+
+.journal-soft-surface .journal-shell-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.journal-soft-surface .journal-shell.journal-hero {
+  border-color: var(--journal-shell-border);
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 18rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
+}
+
+.journal-soft-surface .journal-note {
+  border-radius: var(--journal-soft-note-radius, 16px);
+  border: 1px solid var(--journal-soft-note-border, var(--journal-soft-border));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 96%, transparent),
+    color-mix(in srgb, var(--journal-surface-subtle) 94%, transparent)
+  );
+  padding: var(--journal-soft-note-padding, 0.875rem 1rem);
+}
+
+.journal-soft-surface .journal-note-label {
+  font-size: var(--journal-soft-note-label-size, 0.68rem);
+  font-weight: var(--journal-soft-note-label-weight, 600);
+  letter-spacing: var(--journal-soft-note-label-spacing, 0.12em);
+  text-transform: uppercase;
+  color: var(--journal-soft-note-label-color, var(--journal-muted));
+}
+
+.journal-soft-surface .journal-note-value {
+  margin-top: var(--journal-soft-note-value-margin-top, 0.65rem);
+  font-size: var(--journal-soft-note-value-size, 1.05rem);
+  font-weight: var(--journal-soft-note-value-weight, 600);
+  color: var(--journal-soft-note-value-color, var(--journal-ink));
+}
+
+.journal-soft-surface .journal-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid
+    var(--journal-soft-eyebrow-border, color-mix(in srgb, var(--journal-accent) 22%, transparent));
+  background: var(
+    --journal-soft-eyebrow-background,
+    color-mix(in srgb, var(--journal-accent) 8%, transparent)
+  );
+  padding: var(--journal-soft-eyebrow-padding, 0.2rem 0.75rem);
+  font-size: var(--journal-soft-eyebrow-size, 0.72rem);
+  font-weight: var(--journal-soft-eyebrow-weight, 700);
+  letter-spacing: var(--journal-soft-eyebrow-spacing, 0.08em);
+  text-transform: uppercase;
+  color: var(--journal-soft-eyebrow-color, var(--journal-accent));
+}
+
+.journal-soft-surface .journal-eyebrow-soft {
+  color: var(--journal-muted);
+  border-color: var(--journal-soft-border);
+  background: color-mix(in srgb, var(--journal-track) 82%, transparent);
+}
+
+[data-theme='dark'] .journal-soft-surface .journal-shell {
+  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
+  --journal-muted: var(--color-text-secondary);
+  --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
+  --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
+  --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+}
+
+[data-theme='dark'] .journal-soft-surface .journal-shell.journal-hero {
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 16%, transparent),
+      transparent 18rem
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+    );
+}
+
+[data-theme='dark'] .journal-soft-surface .journal-note {
+  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+}

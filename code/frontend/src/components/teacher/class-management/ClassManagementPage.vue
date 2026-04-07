@@ -369,16 +369,8 @@ const currentPageStudentCount = computed(() =>
 
 <style scoped>
 .teacher-management-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --journal-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
-  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
-  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --teacher-management-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
+  --teacher-management-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
   --page-top-tabs-gap: 1.2rem;
@@ -395,26 +387,6 @@ const currentPageStudentCount = computed(() =>
     sans-serif;
 }
 
-.teacher-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 7%, transparent),
-      transparent 22rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      var(--journal-surface)
-    );
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
-}
-
-.journal-eyebrow {
-  letter-spacing: 0.08em;
-}
-
 .teacher-page {
   display: flex;
   min-height: 100%;
@@ -422,61 +394,10 @@ const currentPageStudentCount = computed(() =>
   flex-direction: column;
 }
 
-.teacher-topbar {
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-summary {
-  display: grid;
-  gap: 1.1rem;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
 .teacher-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
-}
-
-.teacher-summary-item {
-  min-width: 0;
-  padding-left: 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-summary-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.teacher-summary-value {
-  margin-top: 0.55rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.teacher-summary-helper {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .teacher-skeleton-list {

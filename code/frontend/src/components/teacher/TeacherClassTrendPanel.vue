@@ -37,9 +37,7 @@ const series = computed(() => [
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
     </header>
 
-    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy">
-      暂无趋势数据
-    </p>
+    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy">暂无趋势数据</p>
 
     <div v-else class="teacher-panel__chart">
       <LineChart :categories="categories" :series="series" />
@@ -51,7 +49,11 @@ const series = computed(() => [
 .teacher-panel {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
-  --panel-border: color-mix(in srgb, var(--journal-border, var(--color-border-default)) 74%, transparent);
+  --panel-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 74%,
+    transparent
+  );
   --panel-surface: var(--journal-surface, var(--color-bg-surface));
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
@@ -65,20 +67,6 @@ const series = computed(() => [
 
 .teacher-panel__header {
   margin-bottom: 1rem;
-}
-
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid rgba(99, 102, 241, 0.18);
-  background: rgba(99, 102, 241, 0.06);
-  padding: 0.2rem 0.72rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--panel-accent-strong);
 }
 
 .teacher-panel__title {

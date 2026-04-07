@@ -155,7 +155,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell journal-eyebrow-text">
     <header class="workspace-topbar">
       <div class="topbar-leading">
         <span class="workspace-overline">Student Workspace</span>
@@ -528,6 +528,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
   --journal-accent: var(--color-primary);
   --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-eyebrow-spacing: 0.15em;
+  --journal-eyebrow-color: var(--journal-accent-strong);
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
@@ -561,14 +563,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.65rem;
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
 }
 
 .teacher-student-chip {

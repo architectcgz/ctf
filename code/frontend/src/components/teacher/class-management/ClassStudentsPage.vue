@@ -517,10 +517,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
 }
 
-.journal-eyebrow {
-  letter-spacing: 0.08em;
-}
-
 .teacher-eyebrow-row {
   display: flex;
   flex-wrap: wrap;
@@ -541,56 +537,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   color: var(--journal-muted);
 }
 
-.teacher-summary {
-  display: grid;
-  gap: 1.1rem;
-  padding: 1.5rem 0;
-}
-
-.teacher-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
 .teacher-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-}
-
-.teacher-summary-item {
-  min-width: 0;
-  padding-left: 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.teacher-summary-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.teacher-summary-value {
-  margin-top: 0.55rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.teacher-summary-helper {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .teacher-controls {
@@ -757,12 +707,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .quick-action--compact {
   min-height: 42px;
-}
-
-.teacher-surface-board {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
 }
 
 .tab-panel.section {

@@ -302,30 +302,14 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
-}
-
-.journal-hero,
-.journal-panel {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base))
-    );
-  border-radius: 16px !important;
-  box-shadow: 0 18px 40px var(--color-shadow-soft);
+  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base));
+  --journal-shell-dark-accent: #60a5fa;
+  --journal-shell-dark-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface) 92%,
+    var(--color-bg-base)
+  );
 }
 
 .admin-btn {
@@ -393,26 +377,4 @@ onMounted(() => {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-:global([data-theme='dark']) .journal-hero,
-:global([data-theme='dark']) .journal-panel {
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 16%, transparent),
-      transparent 18rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
-    );
-}
-
-:global([data-theme='dark']) .journal-shell {
-  --journal-ink: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary));
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: #60a5fa;
-  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-}
 </style>

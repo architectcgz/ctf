@@ -99,7 +99,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 <template>
   <section
-    class="journal-shell journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col space-y-6 rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div v-if="loading" class="space-y-6">
       <div class="space-y-6">
@@ -349,17 +349,22 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 <style scoped>
 .journal-shell {
-  --journal-ink: var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-soft-border: color-mix(in srgb, var(--color-border-default) 70%, transparent);
   --journal-control-border: color-mix(in srgb, var(--color-border-default) 86%, transparent);
   --journal-divider: color-mix(in srgb, var(--color-border-default) 64%, transparent);
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-accent: var(--color-primary);
+  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-hero-radial-strength: 12%;
+  --journal-shell-hero-radial-size: 20rem;
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+    var(--color-bg-base)
+  );
   --page-top-tabs-gap: 1.2rem;
   --page-top-tabs-margin: 0 -0.5rem 1.5rem;
   --page-top-tabs-padding: 0 0.5rem;
@@ -376,43 +381,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .journal-hero {
   border-color: var(--journal-shell-border);
-  background:
-    radial-gradient(
-      circle at top right,
-      color-mix(in srgb, var(--journal-accent) 12%, transparent),
-      transparent 20rem
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)),
-      color-mix(
-        in srgb,
-        var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
-        var(--color-bg-base)
-      )
-    );
   border-radius: 16px !important;
   overflow: hidden;
-}
-
-.journal-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.journal-eyebrow-soft {
-  color: var(--journal-muted);
-}
-
-.journal-note-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
 }
 
 .journal-btn {

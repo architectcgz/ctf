@@ -241,9 +241,7 @@ async function handleDownload(): Promise<void> {
         <div class="report-header__intro">
           <div class="teacher-surface-eyebrow journal-eyebrow">Teacher Export</div>
           <h1 class="report-title">报告导出</h1>
-          <p class="report-copy">
-            选择班级并创建导出任务，生成完成后下载报告文件。
-          </p>
+          <p class="report-copy">选择班级并创建导出任务，生成完成后下载报告文件。</p>
         </div>
       </header>
 
@@ -269,7 +267,9 @@ async function handleDownload(): Promise<void> {
             <div class="report-summary-label">最近状态</div>
             <div class="report-summary-value">{{ latestStatusMeta.label }}</div>
             <div class="report-summary-helper">
-              {{ latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。' }}
+              {{
+                latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。'
+              }}
             </div>
           </div>
         </div>
@@ -441,7 +441,9 @@ async function handleDownload(): Promise<void> {
                           : '等待生成完成'
                   }}
                 </button>
-                <p class="text-sm leading-6 text-[var(--journal-muted)]">{{ derivedDownloadHint }}</p>
+                <p class="text-sm leading-6 text-[var(--journal-muted)]">
+                  {{ derivedDownloadHint }}
+                </p>
               </div>
             </div>
           </section>
@@ -556,46 +558,16 @@ async function handleDownload(): Promise<void> {
 
 <style scoped>
 .teacher-management-shell {
-  --journal-ink:var(--color-text-primary);
-  --journal-muted: var(--color-text-secondary);
-  --journal-accent: var(--color-primary);
-  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
-  --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
-  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
-  --report-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  --report-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
-  --report-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
+  --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --report-card-border: var(--teacher-card-border);
+  --report-control-border: var(--teacher-control-border);
+  --report-divider: var(--teacher-divider);
 }
 
 .report-shell {
   gap: 0;
-}
-
-.report-hero {
-  border-color: var(--journal-border);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 7%, transparent), transparent 22rem),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-      var(--journal-surface)
-    );
-  box-shadow: 0 22px 50px var(--color-shadow-soft);
-}
-
-.journal-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.2rem 0.72rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
 }
 
 .journal-brief,
@@ -616,64 +588,16 @@ async function handleDownload(): Promise<void> {
   justify-content: space-between;
   gap: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .report-copy {
   max-width: 52rem;
 }
 
-.report-summary {
-  display: grid;
-  gap: 1.1rem;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.report-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
 .report-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
-}
-
-.report-summary-item {
-  min-width: 0;
-  padding-left: 1rem;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.report-summary-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.report-summary-value {
-  margin-top: 0.55rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.report-summary-helper {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .report-hero-divider {

@@ -1,0 +1,7 @@
+:is(.journal-shell, .workspace-shell).journal-eyebrow-text .journal-eyebrow {
+  font-size: var(--journal-eyebrow-size, 0.72rem);
+  font-weight: var(--journal-eyebrow-weight, 700);
+  letter-spacing: var(--journal-eyebrow-spacing, 0.18em);
+  text-transform: uppercase;
+  color: var(--journal-eyebrow-color, var(--journal-accent));
+}
