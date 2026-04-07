@@ -468,24 +468,6 @@ const trendSignals = computed(() => {
               </article>
             </div>
 
-            <div class="overview-quick-actions">
-              <div class="workspace-overline">Quick Actions</div>
-              <div class="quick-actions">
-                <button type="button" class="quick-action" @click="emit('openClassManagement')">
-                  <span>班级管理</span><span>→</span>
-                </button>
-                <button type="button" class="quick-action" @click="emit('openReportExport')">
-                  <span>导出报告</span><span>→</span>
-                </button>
-                <button type="button" class="quick-action" @click="selectTab('portrait')">
-                  <span>展开能力画像</span><span>→</span>
-                </button>
-                <button type="button" class="quick-action" @click="selectTab('action')">
-                  <span>查看介入建议</span><span>→</span>
-                </button>
-              </div>
-            </div>
-
             <div v-if="error" class="workspace-alert" role="alert" aria-live="polite">
               <div class="workspace-alert-title-row">
                 <AlertTriangle class="workspace-alert-icon" />
@@ -978,22 +960,6 @@ const trendSignals = computed(() => {
   font-size: 13px;
   line-height: 1.7;
   color: var(--journal-muted);
-}
-
-.overview-quick-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-top: 18px;
-}
-
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 0;
-  max-width: none;
 }
 
 .quick-action {
