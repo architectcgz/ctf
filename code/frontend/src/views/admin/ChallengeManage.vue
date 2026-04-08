@@ -304,9 +304,9 @@ onMounted(() => {
         v-show="activePanel === 'manage'"
       >
         <header class="manage-header">
-          <div class="manage-header__intro">
-            <div class="journal-eyebrow">Challenge Library</div>
-            <h1 class="manage-title">靶场管理</h1>
+          <div class="manage-header__intro workspace-tab-heading__main">
+            <div class="journal-note-label">Challenge Library</div>
+            <h1 class="workspace-tab-heading__title">靶场管理</h1>
           </div>
 
           <div class="manage-summary-grid">
@@ -518,35 +518,45 @@ onMounted(() => {
         :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
         v-show="activePanel === 'import'"
       >
+        <div class="workspace-tab-heading">
+          <div class="workspace-tab-heading__main">
+            <div class="journal-note-label">Challenge Package</div>
+            <h1 class="workspace-tab-heading__title">导入题目包</h1>
+          </div>
+        </div>
+
         <ChallengePackageImportEntry
+          :hide-header="true"
           :uploading="uploading"
           :selected-file-name="selectedFileName"
           @select="handleSelectPackage"
-        />
+        >
+          <template #before-dropzone>
+            <section class="sample-guide">
+              <div class="sample-guide__header">
+                <div>
+                  <div class="sample-guide__eyebrow">Uploader Guide</div>
+                  <h2 class="sample-guide__title">题目包示例</h2>
+                </div>
+                <p class="sample-guide__copy">
+                  导入页只保留上传和预览流程，目录结构与 `challenge.yml`
+                  示例统一放到独立说明页，避免同一份规则重复维护。
+                </p>
+              </div>
 
-        <section class="sample-guide">
-          <div class="sample-guide__header">
-            <div>
-              <div class="sample-guide__eyebrow">Uploader Guide</div>
-              <h2 class="sample-guide__title">题目包示例</h2>
-            </div>
-            <p class="sample-guide__copy">
-              导入页只保留上传和预览流程，目录结构与 `challenge.yml`
-              示例统一放到独立说明页，避免同一份规则重复维护。
-            </p>
-          </div>
-
-          <div class="sample-guide__actions">
-            <button
-              type="button"
-              class="sample-guide__link"
-              data-testid="challenge-package-format-link"
-              @click="void openPackageFormatGuide()"
-            >
-              查看题目包示例
-            </button>
-          </div>
-        </section>
+              <div class="sample-guide__actions">
+                <button
+                  type="button"
+                  class="sample-guide__link"
+                  data-testid="challenge-package-format-link"
+                  @click="void openPackageFormatGuide()"
+                >
+                  查看题目包示例
+                </button>
+              </div>
+            </section>
+          </template>
+        </ChallengePackageImportEntry>
 
         <ChallengePackageImportReview
           v-if="hasPreview && preview"
@@ -565,14 +575,14 @@ onMounted(() => {
         :aria-hidden="activePanel === 'queue' ? 'false' : 'true'"
         v-show="activePanel === 'queue'"
       >
-        <div class="admin-section-head">
-          <div>
+        <div class="workspace-tab-heading">
+          <div class="workspace-tab-heading__main">
             <div class="journal-note-label">Import Review</div>
-            <h1 class="manage-title manage-title--compact">待确认导入</h1>
+            <h1 class="workspace-tab-heading__title">待确认导入</h1>
           </div>
         </div>
 
-        <p class="panel-copy">
+        <p class="workspace-tab-copy">
           这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
         </p>
 
@@ -676,19 +686,13 @@ onMounted(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
-.manage-title--compact {
-  margin-top: 0.35rem;
-  font-size: clamp(24px, 3vw, 34px);
-}
-
 .manage-summary-grid {
   display: grid;
   gap: 0.85rem;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.list-heading,
-.admin-section-head {
+.list-heading {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
@@ -916,13 +920,6 @@ onMounted(() => {
 .admin-empty {
   padding: 1rem 0;
   color: var(--journal-muted);
-}
-
-.panel-copy {
-  margin: 0.5rem 0 0;
-  max-width: 54rem;
-  color: var(--journal-muted);
-  line-height: 1.7;
 }
 
 .sample-guide {

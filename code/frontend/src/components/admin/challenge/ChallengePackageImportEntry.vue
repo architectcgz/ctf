@@ -4,6 +4,7 @@ import { useTemplateRef } from 'vue'
 const props = defineProps<{
   uploading: boolean
   selectedFileName?: string
+  hideHeader?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -30,12 +31,14 @@ function handleFileChange(event: Event) {
 
 <template>
   <section class="import-entry">
-    <div class="import-entry__lead">
+    <div v-if="!props.hideHeader" class="import-entry__lead">
       <div class="import-entry__eyebrow">Challenge Package</div>
       <h2 class="import-entry__title">导入题目包</h2>
     </div>
 
     <div class="import-entry__panel import-entry__panel--single">
+      <slot name="before-dropzone" />
+
       <button
         class="import-entry__dropzone"
         type="button"
