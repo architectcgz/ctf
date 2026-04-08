@@ -433,8 +433,8 @@ const {
 .workspace-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 244px;
-  gap: 28px;
-  padding-bottom: 26px;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
@@ -448,7 +448,7 @@ const {
 
 .hero-summary {
   max-width: 760px;
-  margin-top: 14px;
+  margin-top: var(--space-3-5);
   font-size: 15px;
   line-height: 1.9;
   color: var(--journal-muted);
@@ -457,15 +457,15 @@ const {
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-4-5);
 }
 
 .meta-pill {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 9px;
+  padding: 0 var(--space-2-5);
   border: 1px solid var(--workspace-line-soft);
   border-radius: 8px;
   background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
@@ -482,8 +482,8 @@ const {
 .progress-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 22px;
+  gap: var(--space-3);
+  margin-top: var(--space-5-5);
 }
 
 .progress-card,
@@ -498,7 +498,7 @@ const {
 }
 
 .progress-card {
-  padding: 14px 16px 15px;
+  padding: var(--space-3-5) var(--space-4) var(--space-4);
 }
 
 .progress-card-label,
@@ -514,7 +514,7 @@ const {
 
 .progress-card-value,
 .pulse-value {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -525,7 +525,7 @@ const {
 .pulse-copy,
 .trend-signal-copy,
 .summary-note-copy {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: 13px;
   line-height: 1.7;
   color: var(--journal-muted);
@@ -535,9 +535,9 @@ const {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-2-5);
   min-height: 52px;
-  padding: 0 14px;
+  padding: 0 var(--space-3-5);
   border: 1px solid var(--workspace-line-soft);
   border-radius: 14px;
   background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
@@ -579,7 +579,7 @@ const {
 }
 
 .hero-rail {
-  padding-left: 24px;
+  padding-left: var(--space-6);
   border-left: 1px solid var(--workspace-line-soft);
 }
 
@@ -591,20 +591,20 @@ const {
 }
 
 .rail-score {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font: 700 38px/1 var(--workspace-font-mono);
   color: var(--journal-ink);
 }
 
 .rail-score small {
-  margin-left: 4px;
+  margin-left: var(--space-1);
   font-size: 15px;
   color: var(--workspace-faint);
 }
 
 .rail-copy {
-  margin-top: 14px;
-  padding-top: 14px;
+  margin-top: var(--space-3-5);
+  padding-top: var(--space-3-5);
   border-top: 1px solid var(--workspace-line-soft);
   font-size: 14px;
   line-height: 1.78;
@@ -612,7 +612,7 @@ const {
 }
 
 .panel-pad {
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .panel-title {
@@ -623,7 +623,7 @@ const {
 }
 
 .panel-title--spaced {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
 }
 
 .overview-pulse-panel {
@@ -633,16 +633,16 @@ const {
 .pulse-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 18px;
+  gap: var(--space-3);
+  margin-top: var(--space-4-5);
 }
 
 .pulse-card {
-  padding: 14px;
+  padding: var(--space-3-5);
 }
 
 .section {
-  padding-top: 26px;
+  padding-top: var(--space-6);
   border-top: 1px solid var(--workspace-line-soft);
 }
 
@@ -650,8 +650,8 @@ const {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .section-kicker {
@@ -663,7 +663,7 @@ const {
 }
 
 .section-title {
-  margin: 10px 0 0;
+  margin: var(--space-2-5) 0 0;
   font-size: 22px;
   line-height: 1.12;
   color: var(--journal-ink);
@@ -672,21 +672,21 @@ const {
 .portrait-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.02fr) minmax(280px, 0.98fr);
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .weak-list {
   display: grid;
-  gap: 12px;
-  margin-top: 18px;
+  gap: var(--space-3);
+  margin-top: var(--space-4-5);
 }
 
 .weak-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: var(--space-3-5);
   align-items: start;
-  padding: 14px 0;
+  padding: var(--space-3-5) 0;
   border-top: 1px dashed var(--workspace-line-soft);
 }
 
@@ -715,7 +715,7 @@ const {
 }
 
 .weak-copy {
-  margin-top: 6px;
+  margin-top: var(--space-1-5);
   font-size: 14px;
   line-height: 1.75;
   color: var(--journal-muted);
@@ -729,17 +729,17 @@ const {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 18px;
+  gap: var(--space-3);
+  margin-top: var(--space-4-5);
 }
 
 .summary-note {
-  padding: 14px 15px;
+  padding: var(--space-3-5) var(--space-4);
   background: color-mix(in srgb, var(--workspace-panel-soft) 92%, transparent);
 }
 
 .summary-note-value {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: 16px;
   font-weight: 700;
   color: var(--journal-ink);
@@ -748,20 +748,20 @@ const {
 .trend-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 220px;
-  gap: 18px;
+  gap: var(--space-4-5);
 }
 
 .trend-side {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .trend-signal {
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .trend-signal-value {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font-size: 24px;
   letter-spacing: -0.03em;
   color: var(--journal-ink);
@@ -777,8 +777,8 @@ const {
 .action-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
-  padding: 16px 0;
+  gap: var(--space-4-5);
+  padding: var(--space-4) 0;
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
@@ -793,8 +793,8 @@ const {
 .action-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .chip,
@@ -803,7 +803,7 @@ const {
   align-items: center;
   justify-content: center;
   min-height: 24px;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
   border-radius: 7px;
   border: 1px solid var(--workspace-line-soft);
   font-size: 11.5px;
@@ -834,7 +834,7 @@ const {
 }
 
 .item-copy {
-  margin-top: 9px;
+  margin-top: var(--space-2-5);
   font-size: 14px;
   line-height: 1.8;
   color: var(--journal-muted);
@@ -847,14 +847,14 @@ const {
 }
 
 .advice-lines {
-  margin-top: 2px;
+  margin-top: var(--space-0-5);
 }
 
 .hint-line {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  padding: 14px 0;
+  gap: var(--space-3);
+  padding: var(--space-3-5) 0;
   border-top: 1px dashed var(--workspace-line-soft);
 }
 
@@ -877,19 +877,19 @@ const {
 }
 
 .hint-copy {
-  margin-top: 6px;
+  margin-top: var(--space-1-5);
   font-size: 14px;
   line-height: 1.75;
   color: var(--journal-muted);
 }
 
 .section-stack {
-  margin-top: 18px;
+  margin-top: var(--space-4-5);
 }
 
 .workspace-alert {
-  margin-top: 18px;
-  padding: 16px 18px;
+  margin-top: var(--space-4-5);
+  padding: var(--space-4) var(--space-4-5);
   border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
   border-radius: 18px;
   background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
@@ -898,7 +898,7 @@ const {
 .workspace-alert-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .workspace-alert-icon {
@@ -914,7 +914,7 @@ const {
 }
 
 .workspace-alert-copy {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: 13px;
   line-height: 1.7;
   color: var(--journal-muted);
@@ -923,8 +923,8 @@ const {
 .workspace-alert-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-3-5);
 }
 
 .workspace-subpanel :deep(.teacher-panel) {
@@ -932,12 +932,12 @@ const {
   border-radius: 22px;
   background: color-mix(in srgb, var(--workspace-panel) 90%, transparent);
   box-shadow: var(--workspace-shadow-panel);
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .workspace-subpanel :deep(.teacher-panel__header),
 .workspace-subpanel :deep(.teacher-subsection__header) {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .workspace-subpanel :deep(.journal-eyebrow) {
@@ -953,7 +953,7 @@ const {
 }
 
 .workspace-subpanel :deep(.teacher-panel__title) {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font-size: 22px;
   line-height: 1.15;
   color: var(--journal-ink);
@@ -987,7 +987,7 @@ const {
 }
 
 .empty-inline {
-  margin-top: 18px;
+  margin-top: var(--space-4-5);
   font-size: 14px;
   line-height: 1.75;
   color: var(--workspace-faint);
@@ -1001,7 +1001,7 @@ const {
   }
 
   .hero-rail {
-    padding-top: 20px;
+    padding-top: var(--space-5);
     padding-left: 0;
     border-top: 1px solid var(--workspace-line-soft);
     border-left: 0;
@@ -1024,8 +1024,8 @@ const {
   .workspace-topbar,
   .top-tabs,
   .content-pane {
-    padding-left: 18px;
-    padding-right: 18px;
+    padding-left: var(--space-4-5);
+    padding-right: var(--space-4-5);
   }
 
   .workspace-topbar {
@@ -1034,7 +1034,7 @@ const {
 
   .top-note {
     justify-content: flex-start;
-    margin-top: 12px;
+    margin-top: var(--space-3);
   }
 
   .progress-strip,
