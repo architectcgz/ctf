@@ -81,14 +81,14 @@ extensions:
     <div class="journal-divider" />
 
     <div class="guide-grid">
-      <article class="guide-section">
+      <article class="guide-section guide-section--plain">
         <div class="guide-section__label">目录结构</div>
         <h2 class="guide-section__title">建议保留最小目录</h2>
         <pre class="guide-code"><code>{{ packageTree }}</code></pre>
       </article>
     </div>
 
-    <article class="guide-section guide-section--full">
+    <article class="guide-section guide-section--full guide-section--plain">
       <div class="guide-section__label">challenge.yml</div>
       <h2 class="guide-section__title">最小可用示例</h2>
       <pre class="guide-code"><code>{{ challengeManifest }}</code></pre>
@@ -156,6 +156,13 @@ extensions:
     color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
     color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
   );
+}
+
+.guide-section--plain {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .guide-section--full {
