@@ -143,14 +143,14 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
     <template v-else>
       <div v-if="loading" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <AppCard variant="panel" accent="neutral">
-          <div class="h-6 w-36 animate-pulse rounded bg-[var(--color-bg-base)]" />
+          <div class="insight-skeleton-line h-6 w-36 animate-pulse rounded" />
           <div class="mt-6 space-y-3">
-            <div class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]" />
-            <div class="h-16 animate-pulse rounded-xl bg-[var(--color-bg-base)]" />
+            <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
+            <div class="insight-skeleton-block h-16 animate-pulse rounded-xl" />
           </div>
         </AppCard>
         <AppCard variant="panel" accent="neutral">
-          <div class="h-[280px] animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
+          <div class="insight-skeleton-block h-[280px] animate-pulse rounded-2xl" />
         </AppCard>
       </div>
 
@@ -208,7 +208,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
             </AppCard>
 
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div class="rounded-2xl bg-[var(--color-bg-base)] px-5 py-4 text-center">
+              <div class="insight-rate-panel rounded-2xl px-5 py-4 text-center">
                 <p class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
                   Solved Rate
                 </p>
@@ -235,7 +235,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   <div
                     v-for="(value, key) in progress?.by_category || {}"
                     :key="key"
-                    class="rounded-lg bg-[var(--color-bg-surface)] px-3 py-3"
+                    class="insight-progress-item rounded-lg px-3 py-3"
                   >
                     <div class="flex items-center justify-between text-sm">
                       <span class="font-medium text-[var(--color-text-primary)]">{{ key }}</span>
@@ -244,7 +244,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                       >
                     </div>
                     <div
-                      class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--color-border-default)]"
+                      class="insight-progress-track mt-2 h-2 overflow-hidden rounded-full"
                     >
                       <div
                         class="h-full rounded-full bg-[var(--color-primary)]"
@@ -267,7 +267,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   <div
                     v-for="(value, key) in progress?.by_difficulty || {}"
                     :key="key"
-                    class="flex items-center justify-between rounded-lg bg-[var(--color-bg-surface)] px-3 py-3 text-sm"
+                    class="insight-progress-item flex items-center justify-between rounded-lg px-3 py-3 text-sm"
                   >
                     <span class="font-medium text-[var(--color-text-primary)]">{{
                       difficultyLabel(key)
@@ -396,7 +396,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   </div>
                 </div>
 
-                <div class="mt-4 rounded-2xl bg-[var(--color-bg-base)] px-4 py-3 text-sm leading-7 text-[var(--color-text-secondary)]">
+                <div class="insight-preview mt-4 rounded-2xl px-4 py-3 text-sm leading-7 text-[var(--color-text-secondary)]">
                   {{ item.content_preview || '暂无摘要' }}
                 </div>
 
@@ -502,9 +502,9 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
               <AppCard variant="panel" accent="neutral">
                 <div v-if="manualReviewLoading" class="space-y-3">
-                  <div class="h-5 w-32 animate-pulse rounded bg-[var(--color-bg-base)]" />
-                  <div class="h-24 animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
-                  <div class="h-24 animate-pulse rounded-2xl bg-[var(--color-bg-base)]" />
+                  <div class="insight-skeleton-line h-5 w-32 animate-pulse rounded" />
+                  <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
+                  <div class="insight-skeleton-block h-24 animate-pulse rounded-2xl" />
                 </div>
 
                 <AppEmpty
@@ -530,7 +530,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     </span>
                   </div>
 
-                  <div class="mt-5 rounded-2xl bg-[var(--color-bg-base)] px-4 py-4">
+                  <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
                       提交答案
                     </div>
@@ -544,7 +544,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     <textarea
                       v-model="manualReviewComment"
                       rows="5"
-                      class="challenge-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
+                      class="challenge-input insight-manual-input mt-3 w-full rounded-2xl border px-4 py-3 text-sm leading-7 transition-colors focus:outline-none"
                       placeholder="记录你的判定依据、补充建议或要求学员修改的点。"
                     />
                   </label>
@@ -556,7 +556,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     <div class="flex flex-wrap gap-3">
                       <button
                         type="button"
-                        class="challenge-btn-outline"
+                        class="challenge-btn-outline insight-outline-action"
                         :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
                         @click="submitManualReview('rejected')"
                       >
@@ -627,13 +627,13 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ event.detail }}</div>
                     <div class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
                       <span
-                        class="rounded-full border border-[var(--color-border-default)] px-2.5 py-1"
+                        class="insight-meta-pill rounded-full border px-2.5 py-1"
                       >
                         {{ String(event.meta?.event_stage || 'trace') }}
                       </span>
                       <span
                         v-if="typeof event.meta?.method === 'string'"
-                        class="rounded-full border border-[var(--color-border-default)] px-2.5 py-1"
+                        class="insight-meta-pill rounded-full border px-2.5 py-1"
                       >
                         {{ String(event.meta?.method) }}
                       </span>
@@ -667,6 +667,73 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   --color-primary-soft: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+}
+
+.insight-skeleton-line,
+.insight-skeleton-block {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-border) 78%, transparent),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
+}
+
+.insight-rate-panel {
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  box-shadow: 0 8px 18px var(--color-shadow-soft);
+}
+
+.insight-progress-item {
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 84%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--journal-surface-subtle));
+}
+
+.insight-progress-track {
+  background: color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.insight-preview,
+.insight-answer-panel {
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+}
+
+.insight-meta-pill {
+  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+}
+
+.insight-manual-input {
+  border-color: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+.insight-manual-input::placeholder {
+  color: color-mix(in srgb, var(--journal-muted) 84%, transparent);
+}
+
+.insight-manual-input:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 34%, transparent);
+}
+
+.insight-outline-action {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  color: var(--journal-ink);
+}
+
+.insight-outline-action:hover,
+.insight-outline-action:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  color: var(--journal-accent-strong);
+}
+
+.insight-outline-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
 }
 
 .writeup-chip {
