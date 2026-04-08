@@ -159,21 +159,21 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           class="insight-overview-layout grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
         >
           <SectionCard>
-            <div class="insight-rate-row flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div class="insight-rate-panel rounded-2xl px-5 py-4">
-                <p class="insight-rate-panel__label text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
-                  Solved Rate
-                </p>
-                <p class="insight-rate-panel__value mt-2 text-3xl font-semibold text-[var(--color-primary)]">
-                  {{
-                    progress?.total_challenges
-                      ? Math.round(
-                          ((progress.solved_challenges ?? 0) / progress.total_challenges) * 100
-                        )
-                      : 0
-                  }}%
-                </p>
-              </div>
+            <div
+              class="insight-rate-row insight-rate-panel rounded-2xl px-5 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <p class="insight-rate-panel__label text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+                Solved Rate
+              </p>
+              <p class="insight-rate-panel__value mt-2 text-3xl font-semibold text-[var(--color-primary)]">
+                {{
+                  progress?.total_challenges
+                    ? Math.round(
+                        ((progress.solved_challenges ?? 0) / progress.total_challenges) * 100
+                      )
+                    : 0
+                }}%
+              </p>
             </div>
           </SectionCard>
 
