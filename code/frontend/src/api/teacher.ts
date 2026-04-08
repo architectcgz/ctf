@@ -372,9 +372,7 @@ export async function recommendTeacherCommunityWriteup(id: string): Promise<Subm
   return normalizeSubmissionWriteupData(payload)
 }
 
-export async function unrecommendTeacherCommunityWriteup(
-  id: string
-): Promise<SubmissionWriteupData> {
+export async function unrecommendTeacherCommunityWriteup(id: string): Promise<SubmissionWriteupData> {
   const payload = await request<
     SubmissionWriteupData & {
       id: string | number

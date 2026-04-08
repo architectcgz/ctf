@@ -43,6 +43,7 @@ interface RawSubmissionWriteupData extends Omit<
   user_id: string | number
   challenge_id: string | number
   contest_id?: string | number
+  reviewed_by?: string | number
   recommended_by?: string | number
 }
 
@@ -91,6 +92,7 @@ function normalizeSubmissionWriteup(item: RawSubmissionWriteupData): SubmissionW
     user_id: String(item.user_id),
     challenge_id: String(item.challenge_id),
     contest_id: item.contest_id !== undefined ? String(item.contest_id) : undefined,
+    reviewed_by: item.reviewed_by !== undefined ? String(item.reviewed_by) : undefined,
     recommended_by: item.recommended_by !== undefined ? String(item.recommended_by) : undefined,
   }
 }
