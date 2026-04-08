@@ -54,8 +54,10 @@ const groupedTimeline = computed(() => {
     <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
       <div>
         <div class="journal-eyebrow">Training Timeline</div>
-        <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">训练节奏总览</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+          训练节奏总览
+        </h1>
+        <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           看最近训练记录和节奏变化。
         </p>
       </div>
