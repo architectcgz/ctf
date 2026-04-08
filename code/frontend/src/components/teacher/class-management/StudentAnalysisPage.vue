@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ArrowLeftRight, FileDown, GraduationCap, Users } from 'lucide-vue-next'
-
 import type {
   MyProgressData,
   RecommendationItem,
@@ -13,7 +11,6 @@ import type {
   TeacherStudentItem,
   TimelineEvent,
 } from '@/api/contracts'
-import SectionCard from '@/components/common/SectionCard.vue'
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
@@ -146,7 +143,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
     <div class="workspace-grid">
       <main class="content-pane">
-        <header class="teacher-topbar">
+        <header v-if="activeTab === 'overview'" class="teacher-topbar">
           <div class="teacher-heading workspace-tab-heading__main">
             <div class="teacher-eyebrow-row">
               <div class="journal-eyebrow">Student Analysis</div>
@@ -156,8 +153,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
             <p class="teacher-copy">
-              用顶部 tabs
-              切换学员画像、推荐任务、题解状态、人工审核和证据链，不再把所有内容堆在同一屏。
+              查看当前学员的学习进度、推荐任务、题解与审核信息。
             </p>
           </div>
 
@@ -197,11 +193,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           </div>
         </div>
 
-        <section class="summary-strip">
+        <section v-if="activeTab === 'overview'" class="summary-strip">
           <article class="summary-card">
-            <div class="summary-card__label">当前学员</div>
-            <div class="summary-card__value">{{ selectedStudent?.username || '未选择' }}</div>
-            <div class="summary-card__hint">当前聚焦的学生对象</div>
+            <div class="summary-card__label">已做题目数</div>
+            <div class="summary-card__value">{{ progress?.solved_challenges ?? 0 }}</div>
+            <div class="summary-card__hint">已成功完成的挑战数量</div>
           </article>
           <article class="summary-card">
             <div class="summary-card__label">完成率</div>
@@ -210,13 +206,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           </article>
           <article class="summary-card">
             <div class="summary-card__label">薄弱维度</div>
-            <div class="summary-card__value">{{ weakDimensions[0] || '暂无' }}</div>
-            <div class="summary-card__hint">当前最需要补强的方向</div>
-          </article>
-          <article class="summary-card">
-            <div class="summary-card__label">可切换学生</div>
-            <div class="summary-card__value">{{ students.length }}</div>
-            <div class="summary-card__hint">当前班级可切换的学生数量</div>
+            <div class="summary-card__value">
+              {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
+            </div>
+            <div class="summary-card__hint">基于能力画像提炼的风险点</div>
           </article>
         </section>
 
@@ -243,7 +236,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :manual-review-loading="manualReviewLoading"
             :manual-review-saving="manualReviewSaving"
             :loading="loadingDetails"
-            empty-text="请先从右侧目录选择一名学生。"
+            empty-text="请先选择一名学生。"
             @open-challenge="emit('openChallenge', $event)"
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
@@ -274,7 +267,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :manual-review-loading="manualReviewLoading"
             :manual-review-saving="manualReviewSaving"
             :loading="loadingDetails"
-            empty-text="请先从右侧目录选择一名学生。"
+            empty-text="请先选择一名学生。"
             @open-challenge="emit('openChallenge', $event)"
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
@@ -305,7 +298,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :manual-review-loading="manualReviewLoading"
             :manual-review-saving="manualReviewSaving"
             :loading="loadingDetails"
-            empty-text="请先从右侧目录选择一名学生。"
+            empty-text="请先选择一名学生。"
             @open-challenge="emit('openChallenge', $event)"
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
@@ -336,7 +329,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :manual-review-loading="manualReviewLoading"
             :manual-review-saving="manualReviewSaving"
             :loading="loadingDetails"
-            empty-text="请先从右侧目录选择一名学生。"
+            empty-text="请先选择一名学生。"
             @open-challenge="emit('openChallenge', $event)"
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
@@ -367,7 +360,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :manual-review-loading="manualReviewLoading"
             :manual-review-saving="manualReviewSaving"
             :loading="loadingDetails"
-            empty-text="请先从右侧目录选择一名学生。"
+            empty-text="请先选择一名学生。"
             @open-challenge="emit('openChallenge', $event)"
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
@@ -376,106 +369,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         </section>
       </main>
 
-      <aside class="context-rail">
-        <SectionCard title="班级与学生切换" subtitle="先定班级，再切换当前分析的学生。">
-          <div class="rail-stack">
-            <div class="class-switch-list" role="group" aria-label="班级切换">
-              <button
-                v-for="item in classes"
-                :key="item.name"
-                type="button"
-                class="class-switch"
-                :class="{ active: item.name === selectedClassName }"
-                @click="emit('selectClass', item.name)"
-              >
-                <span>{{ item.name }}</span>
-                <span>{{ item.student_count || 0 }} 人</span>
-              </button>
-            </div>
-
-            <div v-if="loadingClasses || loadingStudents" class="student-directory-skeleton">
-              <div v-for="index in 4" :key="index" class="student-directory-skeleton__item" />
-            </div>
-
-            <div v-else class="student-directory" role="list" aria-label="学生目录">
-              <div class="student-directory-head" aria-hidden="true">
-                <span>学生</span>
-                <span>状态</span>
-              </div>
-
-              <button
-                v-for="student in students"
-                :key="student.id"
-                type="button"
-                class="student-directory-row"
-                :class="{ active: student.id === selectedStudentId }"
-                role="listitem"
-                @click="emit('selectStudent', student.id)"
-              >
-                <div class="student-directory-main">
-                  <div class="student-directory-avatar">
-                    <GraduationCap class="h-4 w-4" />
-                  </div>
-                  <div class="student-directory-copy">
-                    <div class="student-directory-name">{{ student.name || student.username }}</div>
-                    <div class="student-directory-meta">@{{ student.username }}</div>
-                  </div>
-                </div>
-                <span class="student-directory-state">
-                  {{ student.id === selectedStudentId ? '当前' : '切换' }}
-                </span>
-              </button>
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="快捷操作" subtitle="保留导航与导出入口，复盘页继续走独立路由。">
-          <div class="rail-stack" role="group" aria-label="学员分析辅助操作">
-            <button type="button" class="quick-action" @click="emit('openClassManagement')">
-              <span class="quick-action__main">
-                <span class="quick-action__icon quick-action__icon--neutral">
-                  <Users class="h-4 w-4" />
-                </span>
-                <span>
-                  <strong>班级管理</strong>
-                  <small>返回教师班级管理入口。</small>
-                </span>
-              </span>
-              <span>→</span>
-            </button>
-
-            <button type="button" class="quick-action" @click="emit('openReportExport')">
-              <span class="quick-action__main">
-                <span class="quick-action__icon quick-action__icon--warning">
-                  <FileDown class="h-4 w-4" />
-                </span>
-                <span>
-                  <strong>导出班级报告</strong>
-                  <small>从当前教师路径继续进入报告导出。</small>
-                </span>
-              </span>
-              <span>→</span>
-            </button>
-
-            <button
-              type="button"
-              class="quick-action quick-action--primary"
-              @click="emit('openReviewArchive')"
-            >
-              <span class="quick-action__main">
-                <span class="quick-action__icon quick-action__icon--primary">
-                  <ArrowLeftRight class="h-4 w-4" />
-                </span>
-                <span>
-                  <strong>打开完整复盘页</strong>
-                  <small>查看摘要、证据链和评阅记录。</small>
-                </span>
-              </span>
-              <span>→</span>
-            </button>
-          </div>
-        </SectionCard>
-      </aside>
     </div>
   </div>
 </template>
@@ -511,12 +404,18 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(19rem, 24rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.content-pane {
+  display: grid;
+  gap: 1rem;
 }
 
 .context-rail {
   min-width: 0;
   padding: 28px 28px 28px 0;
+  border-left: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
 }
 
 .teacher-eyebrow-row {
@@ -567,18 +466,21 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .summary-strip {
   display: grid;
-  gap: 0.9rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 1.5rem;
+  gap: 0.65rem 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 1rem;
+  padding: 0.25rem 0 0.65rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 82%, transparent);
 }
 
 .summary-card {
   min-width: 0;
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.8rem 0.15rem 0.7rem;
+  box-shadow: none;
 }
 
 .summary-card__label {
@@ -614,16 +516,24 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   gap: 0.6rem;
 }
 
+.class-switch-list--scroll,
+.student-directory--scroll {
+  max-height: min(34vh, 21rem);
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
 .class-switch {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   min-height: 2.75rem;
-  padding: 0.72rem 0.9rem;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  padding: 0.72rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  border-radius: 0;
+  background: transparent;
   font-size: 0.86rem;
   font-weight: 600;
   color: var(--journal-ink);
@@ -636,8 +546,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .class-switch:hover,
 .class-switch:focus-visible,
 .class-switch.active {
-  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 5%, transparent);
   color: var(--journal-accent-strong);
   outline: none;
 }
@@ -749,10 +659,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   justify-content: space-between;
   gap: 10px;
   min-height: 52px;
-  padding: 0.95rem 1rem;
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
+  padding: 0.85rem 0.2rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  border-radius: 0;
+  background: transparent;
   color: var(--journal-ink);
   cursor: pointer;
   transition:
@@ -763,8 +674,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .quick-action:hover,
 .quick-action:focus-visible {
-  border-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
-  background: color-mix(in srgb, var(--workspace-brand) 8%, var(--workspace-panel));
+  border-bottom-color: color-mix(in srgb, var(--workspace-brand) 34%, transparent);
+  background: color-mix(in srgb, var(--workspace-brand) 6%, transparent);
   color: var(--workspace-brand-ink);
   outline: none;
 }
@@ -774,7 +685,19 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .quick-action--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+}
+
+.context-block {
+  position: relative;
+}
+
+.context-block + .context-block {
+  margin-top: 0.6rem;
+}
+
+.context-block--actions {
+  margin-top: auto;
 }
 
 .quick-action__main {
@@ -830,16 +753,17 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 :deep(.section-card) {
-  padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: var(--journal-surface-subtle);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  padding: 0.9rem 0.2rem 0.7rem;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 90%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed var(--teacher-divider);
+  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   padding-bottom: 0.75rem;
 }
 
@@ -865,6 +789,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
   .context-rail {
     padding: 0 28px 28px;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
   }
 }
 

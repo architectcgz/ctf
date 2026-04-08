@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { toRef } from 'vue'
 import { AlertTriangle, ArrowRight, ShieldAlert, SquareStack } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
+import { useAdminDashboardWorkspace } from '@/composables/useAdminDashboardWorkspace'
 
 const props = defineProps<{
   dashboard: AdminDashboardData | null
@@ -16,192 +17,23 @@ const emit = defineEmits<{
   openCheatDetection: []
 }>()
 
-const panelTabs = [
-  {
-    key: 'overview',
-    label: '总览',
-    tabId: 'admin-dashboard-tab-overview',
-    panelId: 'admin-dashboard-panel-overview',
-  },
-  {
-    key: 'alerts',
-    label: '当前告警',
-    tabId: 'admin-dashboard-tab-alerts',
-    panelId: 'admin-dashboard-panel-alerts',
-  },
-  {
-    key: 'hotspots',
-    label: '资源热点',
-    tabId: 'admin-dashboard-tab-hotspots',
-    panelId: 'admin-dashboard-panel-hotspots',
-  },
-] as const
-
-type DashboardPanelKey = (typeof panelTabs)[number]['key']
-
-const dashboardPanelSet = new Set<DashboardPanelKey>(panelTabs.map((tab) => tab.key))
-
-function resolvePanelFromLocation(): DashboardPanelKey {
-  if (typeof window === 'undefined') return 'overview'
-  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && dashboardPanelSet.has(panel as DashboardPanelKey)) {
-    return panel as DashboardPanelKey
-  }
-  return 'overview'
-}
-
-function syncPanelToLocation(panelKey: DashboardPanelKey): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', panelKey)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activePanel = ref<DashboardPanelKey>(resolvePanelFromLocation())
-const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
-
-const alertCount = computed(() => props.dashboard?.alerts.length ?? 0)
-const healthSummary = computed(() => {
-  const cpu = props.dashboard?.cpu_usage ?? 0
-  const memory = props.dashboard?.memory_usage ?? 0
-  if (alertCount.value > 0 || cpu >= 90 || memory >= 90)
-    return { label: '高风险', accent: 'danger' as const }
-  if (cpu >= 75 || memory >= 75) return { label: '需要关注', accent: 'warning' as const }
-  return { label: '运行稳定', accent: 'success' as const }
-})
-
-const quickSignals = computed(() => [
-  {
-    label: '在线用户',
-    value: props.dashboard?.online_users ?? 0,
-    helper: '当前在线账号',
-    accent: 'primary' as const,
-  },
-  {
-    label: '活跃容器',
-    value: props.dashboard?.active_containers ?? 0,
-    helper: '正在运行的实例',
-    accent: 'success' as const,
-  },
-  {
-    label: '平均 CPU',
-    value: formatPercent(props.dashboard?.cpu_usage),
-    helper: '当前资源水位',
-    accent: healthSummary.value.accent,
-  },
-  {
-    label: '平均内存',
-    value: formatPercent(props.dashboard?.memory_usage),
-    helper: '结合阈值判断回收',
-    accent: healthSummary.value.accent,
-  },
-])
-
-const sortedContainers = computed(() =>
-  [...(props.dashboard?.container_stats ?? [])].sort((left, right) => {
-    const leftPeak = Math.max(left.cpu_percent ?? 0, left.memory_percent ?? 0)
-    const rightPeak = Math.max(right.cpu_percent ?? 0, right.memory_percent ?? 0)
-    return rightPeak - leftPeak
-  })
-)
-
-const metaPills = computed(() => [
-  'Admin Workspace',
-  healthSummary.value.label,
-  alertCount.value > 0 ? `${alertCount.value} 条资源告警` : '暂无资源告警',
-  `活跃容器 ${props.dashboard?.active_containers ?? 0} 个`,
-])
-
-const overviewMetrics = computed(() =>
-  quickSignals.value.map((item) => ({
-    key: item.label,
-    label: item.label,
-    value: String(item.value),
-    hint: item.helper,
-  }))
-)
-
-const peakContainer = computed(() => sortedContainers.value[0] ?? null)
-
-const railScore = computed(() =>
-  String(Math.round(Math.max(props.dashboard?.cpu_usage ?? 0, props.dashboard?.memory_usage ?? 0)))
-)
-
-const railCopy = computed(() => {
-  if (alertCount.value > 0) {
-    return `当前共有 ${alertCount.value} 条资源告警，建议先处理高阈值容器，再结合审计日志确认是否存在持续异常。`
-  }
-
-  if (peakContainer.value) {
-    return `当前最需要关注的是 ${peakContainer.value.container_name || peakContainer.value.container_id}，可以继续查看资源热点判断是否需要回收或扩容。`
-  }
-
-  return '当前没有明显异常，可以继续保持对容器负载和审计记录的例行巡检。'
-})
-
-function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
-  tabButtonRefs.value[index] = element
-}
-
-function selectPanel(panelKey: DashboardPanelKey): void {
-  if (activePanel.value === panelKey) return
-  activePanel.value = panelKey
-  syncPanelToLocation(panelKey)
-}
-
-function focusTabByIndex(index: number): void {
-  nextTick(() => {
-    tabButtonRefs.value[index]?.focus()
-  })
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    selectPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    selectPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  selectPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
-}
-
-function formatPercent(value: number | undefined): string {
-  return `${Math.round(value ?? 0)}%`
-}
-
-function formatBytes(value: number | undefined): string {
-  if (!value) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let size = value
-  let unitIndex = 0
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024
-    unitIndex += 1
-  }
-  return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`
-}
-
-function usageTone(value: number | undefined): string {
-  const normalized = Math.round(value ?? 0)
-  if (normalized >= 90) return 'bg-[var(--color-danger)]'
-  if (normalized >= 75) return 'bg-[var(--color-warning)]'
-  return 'bg-[var(--color-primary)]'
-}
+const {
+  panelTabs,
+  activePanel,
+  setTabButtonRef,
+  selectPanel,
+  handleTabKeydown,
+  alertCount,
+  healthSummary,
+  sortedContainers,
+  metaPills,
+  overviewMetrics,
+  railScore,
+  railCopy,
+  formatPercent,
+  formatBytes,
+  usageTone,
+} = useAdminDashboardWorkspace(toRef(props, 'dashboard'))
 </script>
 
 <template>
@@ -222,7 +54,7 @@ function usageTone(value: number | undefined): string {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.key"
-        :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         class="top-tab"
         type="button"
         role="tab"
