@@ -187,10 +187,17 @@ describe('ChallengeManage', () => {
     await flushPromises()
 
     expect(importWrapper.text()).toContain('查看题目包示例')
+    expect(importWrapper.text()).toContain('下载示例题目包')
     expect(importWrapper.text()).not.toContain('challenge-package.zip')
     expect(importWrapper.text()).not.toContain('api_version: v1')
     expect(wrapper.find('.queue-row__title').attributes('title')).toBe('Web Demo')
     expect(wrapper.find('.queue-row__meta-text').attributes('title')).toBe('demo-import.zip')
+    expect(importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('href')).toBe(
+      '/downloads/challenge-package-sample-v1.zip'
+    )
+    expect(importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('download')).toBe(
+      'challenge-package-sample-v1.zip'
+    )
 
     await importWrapper.get('[data-testid="challenge-package-format-link"]').trigger('click')
 
