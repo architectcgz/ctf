@@ -221,7 +221,7 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('训练时间线')
+    expect(wrapper.text()).toContain('训练记录')
     expect(wrapper.text()).toContain('查看题目详情')
     expect(wrapper.text()).toContain('访问攻击目标')
     expect(wrapper.text()).toContain('解锁第 1 级提示')
