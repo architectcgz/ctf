@@ -9,9 +9,10 @@
     <div v-else-if="challenge" class="detail-content">
       <div class="workspace-tabbar top-tabs" role="tablist" aria-label="题目页面主切换">
         <button
-          v-for="tab in workspaceTabs"
+          v-for="(tab, index) in workspaceTabs"
           :id="`challenge-workspace-tab-${tab.id}`"
           :key="tab.id"
+          :ref="(element) => setTabButtonRef(tab.id, element as HTMLButtonElement | null)"
           type="button"
           role="tab"
           class="workspace-tab top-tab"
@@ -20,7 +21,7 @@
           :aria-controls="`challenge-workspace-panel-${tab.id}`"
           :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
           @click="selectWorkspaceTab(tab.id)"
-          @keydown="handleWorkspaceTabKeydown($event, tab.id)"
+          @keydown="handleWorkspaceTabKeydown($event, index)"
         >
           {{ tab.label }}
         </button>
@@ -514,6 +515,7 @@ import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.
 import { useChallengeInstance } from '@/composables/useChallengeInstance'
 import { useSanitize } from '@/composables/useSanitize'
 import { useToast } from '@/composables/useToast'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 type WorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
 type SolutionTab = 'recommended' | 'community'
@@ -584,33 +586,17 @@ const workspaceTabs: Array<{ id: WorkspaceTab; label: string }> = [
   { id: 'records', label: '提交记录' },
   { id: 'writeup', label: '我的复盘' },
 ]
-const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.id))
-
-function resolveWorkspaceTabFromLocation(): WorkspaceTab {
-  if (typeof window === 'undefined') return 'question'
-  if (!window.location.pathname || window.location.pathname === '/') return 'question'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
-    return panel as WorkspaceTab
-  }
-  return 'question'
-}
-
-function syncWorkspacePanelToLocation(tab: WorkspaceTab): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', tab)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activeWorkspaceTab = ref<WorkspaceTab>(resolveWorkspaceTabFromLocation())
+const workspaceTabOrder = workspaceTabs.map((tab) => tab.id) as WorkspaceTab[]
+const {
+  activeTab: activeWorkspaceTab,
+  setTabButtonRef,
+  selectTab: selectWorkspaceTab,
+  handleTabKeydown: handleWorkspaceTabKeydown,
+} = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'question',
+})
 const solutionTabs: SolutionTab[] = ['recommended', 'community']
-
-function selectWorkspaceTab(tab: WorkspaceTab): void {
-  if (activeWorkspaceTab.value === tab) return
-  activeWorkspaceTab.value = tab
-  syncWorkspacePanelToLocation(tab)
-}
 
 function renderRichContent(source?: string): string {
   if (!source) return ''
@@ -792,32 +778,6 @@ function focusTab(id: string): void {
   requestAnimationFrame(() => {
     document.getElementById(id)?.focus()
   })
-}
-
-function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: WorkspaceTab): void {
-  const currentIndex = workspaceTabs.findIndex((item) => item.id === currentTab)
-  if (currentIndex < 0) return
-
-  if (event.key === 'ArrowRight') {
-    const nextTab = workspaceTabs[(currentIndex + 1) % workspaceTabs.length]
-    selectWorkspaceTab(nextTab.id)
-    focusTab(`challenge-workspace-tab-${nextTab.id}`)
-  } else if (event.key === 'ArrowLeft') {
-    const nextTab = workspaceTabs[(currentIndex - 1 + workspaceTabs.length) % workspaceTabs.length]
-    selectWorkspaceTab(nextTab.id)
-    focusTab(`challenge-workspace-tab-${nextTab.id}`)
-  } else if (event.key === 'Home') {
-    selectWorkspaceTab(workspaceTabs[0].id)
-    focusTab(`challenge-workspace-tab-${workspaceTabs[0].id}`)
-  } else if (event.key === 'End') {
-    const lastTab = workspaceTabs[workspaceTabs.length - 1]
-    selectWorkspaceTab(lastTab.id)
-    focusTab(`challenge-workspace-tab-${lastTab.id}`)
-  } else {
-    return
-  }
-
-  event.preventDefault()
 }
 
 function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: SolutionTab): void {
@@ -1096,7 +1056,7 @@ watch(
     writeupContent.value = ''
     flagInput.value = ''
     expandedHintLevels.value = []
-    activeWorkspaceTab.value = 'question'
+    selectWorkspaceTab('question')
     submitResult.value = null
     submissionRecords.value = []
     void Promise.all([loadChallenge(), loadMyWriteupSubmission()])
