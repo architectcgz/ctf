@@ -63,19 +63,19 @@ defineProps<{
 <style scoped>
 .archive-grid {
   display: grid;
-  gap: 1.2rem;
+  gap: var(--space-5);
   grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
 }
 
 .archive-panel {
-  padding: 1.1rem 1.1rem 1.15rem;
+  padding: var(--space-4-5) var(--space-4-5) var(--space-5);
 }
 
 .archive-panel__header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding-bottom: 0.9rem;
+  padding-bottom: var(--space-3-5);
   border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -88,31 +88,31 @@ defineProps<{
 }
 
 .archive-panel__title {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 1.18rem;
   color: var(--journal-ink);
 }
 
 .archive-panel__empty {
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   color: var(--color-text-secondary);
 }
 
 .timeline-list {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .timeline-item {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
-  gap: 0.9rem;
-  padding-bottom: 1rem;
+  gap: var(--space-3-5);
+  padding-bottom: var(--space-4);
 }
 
 .timeline-item__dot {
   width: 10px;
   height: 10px;
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   border-radius: 999px;
   background: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--journal-accent) 8%, transparent);
@@ -122,7 +122,7 @@ defineProps<{
 .evidence-item__head,
 .evidence-item__meta {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-3);
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
@@ -138,26 +138,26 @@ defineProps<{
 
 .timeline-item__body p,
 .evidence-item__detail {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   line-height: 1.75;
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
 .evidence-list {
   display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  gap: var(--space-3-5);
+  margin-top: var(--space-4);
 }
 
 .evidence-item {
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 18px;
   background: var(--journal-surface);
 }
 
 .evidence-item__meta {
-  margin-top: 0.65rem;
+  margin-top: var(--space-2-5);
 }
 
 @media (max-width: 1023px) {

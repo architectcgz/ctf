@@ -43,15 +43,15 @@ function levelClass(level: string): string {
 
 <style scoped>
 .observation-strip {
-  padding: 1.1rem 1.1rem 1.15rem;
+  padding: var(--space-4-5) var(--space-4-5) var(--space-5);
 }
 
 .observation-strip__header {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   justify-content: space-between;
   align-items: flex-end;
-  padding-bottom: 0.85rem;
+  padding-bottom: var(--space-3);
   border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -64,7 +64,7 @@ function levelClass(level: string): string {
 }
 
 .observation-strip__title {
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   font-size: 1.35rem;
   color: var(--journal-ink);
 }
@@ -78,13 +78,13 @@ function levelClass(level: string): string {
 
 .observation-strip__grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .observation {
-  padding: 1rem 1.05rem;
+  padding: var(--space-4) var(--space-4);
   border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
@@ -100,7 +100,7 @@ function levelClass(level: string): string {
 
 .observation__head {
   display: flex;
-  gap: 0.8rem;
+  gap: var(--space-3);
   justify-content: space-between;
   align-items: center;
 }
@@ -119,13 +119,13 @@ function levelClass(level: string): string {
 }
 
 .observation__summary {
-  margin-top: 0.8rem;
+  margin-top: var(--space-3);
   line-height: 1.75;
   color: color-mix(in srgb, var(--journal-muted) 80%, var(--journal-ink));
 }
 
 .observation__evidence {
-  margin-top: 0.65rem;
+  margin-top: var(--space-2-5);
   color: var(--journal-muted);
   font-size: 0.93rem;
   line-height: 1.7;
