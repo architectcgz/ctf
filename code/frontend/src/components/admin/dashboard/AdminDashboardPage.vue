@@ -39,7 +39,26 @@ const panelTabs = [
 
 type DashboardPanelKey = (typeof panelTabs)[number]['key']
 
-const activePanel = ref<DashboardPanelKey>('overview')
+const dashboardPanelSet = new Set<DashboardPanelKey>(panelTabs.map((tab) => tab.key))
+
+function resolvePanelFromLocation(): DashboardPanelKey {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && dashboardPanelSet.has(panel as DashboardPanelKey)) {
+    return panel as DashboardPanelKey
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(panelKey: DashboardPanelKey): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', panelKey)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activePanel = ref<DashboardPanelKey>(resolvePanelFromLocation())
 const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 const alertCount = computed(() => props.dashboard?.alerts.length ?? 0)
@@ -126,7 +145,9 @@ function setTabButtonRef(index: number, element: HTMLButtonElement | null): void
 }
 
 function selectPanel(panelKey: DashboardPanelKey): void {
+  if (activePanel.value === panelKey) return
   activePanel.value = panelKey
+  syncPanelToLocation(panelKey)
 }
 
 function focusTabByIndex(index: number): void {
@@ -227,9 +248,9 @@ function usageTone(value: number | undefined): string {
           aria-labelledby="admin-dashboard-tab-overview"
           :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
         >
-          <div>
+          <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Operations Workspace</div>
-            <h1 class="hero-title">系统值守台</h1>
+            <h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>
             <p class="hero-summary">在这里查看平台状态、异常和当前资源热点。</p>
 
             <div class="meta-strip">
@@ -338,10 +359,10 @@ function usageTone(value: number | undefined): string {
           aria-labelledby="admin-dashboard-tab-alerts"
           :aria-hidden="activePanel === 'alerts' ? 'false' : 'true'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Alert Stack</div>
-              <h2 class="section-title">当前告警</h2>
+              <h2 class="section-title workspace-tab-heading__title">当前告警</h2>
             </div>
             <div class="status-pill" :class="alertCount > 0 ? 'danger' : 'ready'">
               {{ alertCount }} 条
@@ -383,10 +404,10 @@ function usageTone(value: number | undefined): string {
           aria-labelledby="admin-dashboard-tab-hotspots"
           :aria-hidden="activePanel === 'hotspots' ? 'false' : 'true'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Resource Hotspots</div>
-              <h2 class="section-title">资源热点</h2>
+              <h2 class="section-title workspace-tab-heading__title">资源热点</h2>
             </div>
           </div>
 
@@ -697,7 +718,7 @@ function usageTone(value: number | undefined): string {
   margin-bottom: 16px;
 }
 
-.section-title {
+.section-title:not(.workspace-tab-heading__title) {
   margin: 10px 0 0;
   font-size: 22px;
   line-height: 1.12;

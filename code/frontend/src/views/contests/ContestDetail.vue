@@ -23,7 +23,26 @@ const route = useRoute()
 const authStore = useAuthStore()
 const contestId = computed(() => String(route.params.id ?? ''))
 const currentUserId = computed(() => authStore.user?.id)
-const activeWorkspaceTab = ref<ContestWorkspaceTab>('overview')
+const contestWorkspaceTabSet = new Set<ContestWorkspaceTab>(workspaceTabs.map((tab) => tab.id))
+
+function resolveWorkspaceTabFromLocation(): ContestWorkspaceTab {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && contestWorkspaceTabSet.has(panel as ContestWorkspaceTab)) {
+    return panel as ContestWorkspaceTab
+  }
+  return 'overview'
+}
+
+function syncWorkspacePanelToLocation(tab: ContestWorkspaceTab): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeWorkspaceTab = ref<ContestWorkspaceTab>(resolveWorkspaceTabFromLocation())
 
 const {
   contest,
@@ -92,24 +111,30 @@ function focusWorkspaceTab(id: string): void {
   })
 }
 
+function selectWorkspaceTab(tab: ContestWorkspaceTab): void {
+  if (activeWorkspaceTab.value === tab) return
+  activeWorkspaceTab.value = tab
+  syncWorkspacePanelToLocation(tab)
+}
+
 function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWorkspaceTab): void {
   const currentIndex = workspaceTabs.findIndex((item) => item.id === currentTab)
   if (currentIndex < 0) return
 
   if (event.key === 'ArrowRight') {
     const nextTab = workspaceTabs[(currentIndex + 1) % workspaceTabs.length]
-    activeWorkspaceTab.value = nextTab.id
+    selectWorkspaceTab(nextTab.id)
     focusWorkspaceTab(`contest-workspace-tab-${nextTab.id}`)
   } else if (event.key === 'ArrowLeft') {
     const nextTab = workspaceTabs[(currentIndex - 1 + workspaceTabs.length) % workspaceTabs.length]
-    activeWorkspaceTab.value = nextTab.id
+    selectWorkspaceTab(nextTab.id)
     focusWorkspaceTab(`contest-workspace-tab-${nextTab.id}`)
   } else if (event.key === 'Home') {
-    activeWorkspaceTab.value = workspaceTabs[0].id
+    selectWorkspaceTab(workspaceTabs[0].id)
     focusWorkspaceTab(`contest-workspace-tab-${workspaceTabs[0].id}`)
   } else if (event.key === 'End') {
     const lastTab = workspaceTabs[workspaceTabs.length - 1]
-    activeWorkspaceTab.value = lastTab.id
+    selectWorkspaceTab(lastTab.id)
     focusWorkspaceTab(`contest-workspace-tab-${lastTab.id}`)
   } else {
     return
@@ -144,7 +169,7 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
             :aria-selected="activeWorkspaceTab === tab.id"
             :aria-controls="`contest-workspace-panel-${tab.id}`"
             :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
-            @click="activeWorkspaceTab = tab.id"
+            @click="selectWorkspaceTab(tab.id)"
             @keydown="handleWorkspaceTabKeydown($event, tab.id)"
           >
             {{ tab.label }}
@@ -220,20 +245,20 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
 
           <div class="contest-overview-grid">
             <section class="contest-section contest-section--flat">
-              <div class="contest-section__head">
-                <div>
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="contest-overline">Rules</div>
-                  <h2 class="contest-section__title">竞赛规则</h2>
+                  <h2 class="contest-section__title workspace-tab-heading__title">竞赛规则</h2>
                 </div>
               </div>
               <div class="contest-copy">{{ contest.rules || '当前竞赛暂无额外规则说明。' }}</div>
             </section>
 
             <section class="contest-section contest-section--flat">
-              <div class="contest-section__head">
-                <div>
+              <div class="contest-section__head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="contest-overline">Schedule</div>
-                  <h2 class="contest-section__title">赛程信息</h2>
+                  <h2 class="contest-section__title workspace-tab-heading__title">赛程信息</h2>
                 </div>
               </div>
               <div class="contest-copy-list">
@@ -260,10 +285,10 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
           <div class="contest-divider" />
 
           <section class="contest-section contest-section--flat">
-            <div class="contest-section__head">
-              <div>
+            <div class="contest-section__head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
                 <div class="contest-overline">Announcements</div>
-                <h2 class="contest-section__title">公告预览</h2>
+                <h2 class="contest-section__title workspace-tab-heading__title">公告预览</h2>
               </div>
               <div class="contest-section__hint">{{ announcements.length }} 条</div>
             </div>
@@ -304,10 +329,10 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
           aria-labelledby="contest-workspace-tab-announcements"
         >
           <section class="contest-section">
-            <div class="contest-section__head">
-              <div>
+            <div class="contest-section__head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
                 <div class="contest-overline">Announcements</div>
-                <h2 class="contest-section__title">公告</h2>
+                <h2 class="contest-section__title workspace-tab-heading__title">公告</h2>
               </div>
               <div class="contest-section__hint">{{ announcements.length }} 条</div>
             </div>
@@ -348,10 +373,10 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
           aria-labelledby="contest-workspace-tab-challenges"
         >
           <section class="contest-section">
-            <div class="contest-section__head">
-              <div>
+            <div class="contest-section__head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
                 <div class="contest-overline">Challenges</div>
-                <h2 class="contest-section__title">题目</h2>
+                <h2 class="contest-section__title workspace-tab-heading__title">题目</h2>
               </div>
               <div class="contest-section__hint">{{ solvedCount }} / {{ challenges.length }} 已解</div>
             </div>
@@ -456,10 +481,10 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
           aria-labelledby="contest-workspace-tab-team"
         >
           <section class="contest-section">
-            <div class="contest-section__head">
-              <div>
+            <div class="contest-section__head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
                 <div class="contest-overline">Team</div>
-                <h2 class="contest-section__title">队伍</h2>
+                <h2 class="contest-section__title workspace-tab-heading__title">队伍</h2>
               </div>
               <div class="contest-section__hint">{{ memberCount }} 人</div>
             </div>
@@ -826,7 +851,7 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
   gap: 0.8rem;
 }
 
-.contest-section__title {
+.contest-section__title:not(.workspace-tab-heading__title) {
   margin-top: 0.35rem;
   font-size: 1.1rem;
   font-weight: 700;

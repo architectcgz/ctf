@@ -49,7 +49,26 @@ const workspaceTabs: WorkspaceTabItem[] = [
   },
 ]
 
-const activeTab = ref<WorkspaceTab>('overview')
+const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.key))
+
+function resolveTabFromLocation(): WorkspaceTab {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
+    return panel as WorkspaceTab
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(tab: WorkspaceTab): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeTab = ref<WorkspaceTab>(resolveTabFromLocation())
 const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
 
 function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
@@ -57,7 +76,9 @@ function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): 
 }
 
 function selectTab(tab: WorkspaceTab): void {
+  if (activeTab.value === tab) return
   activeTab.value = tab
+  syncPanelToLocation(tab)
 }
 
 function focusTab(tab: WorkspaceTab): void {
@@ -153,9 +174,9 @@ const currentPageStudentCount = computed(() =>
           v-show="activeTab === 'overview'"
         >
           <header class="teacher-topbar">
-            <div class="teacher-heading">
+            <div class="teacher-heading workspace-tab-heading__main">
               <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-              <h1 class="teacher-title">班级管理</h1>
+              <h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>
               <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
             </div>
 
@@ -212,9 +233,9 @@ const currentPageStudentCount = computed(() =>
         >
           <section class="teacher-controls">
             <div class="teacher-controls-bar">
-              <div class="teacher-controls-heading">
+              <div class="teacher-controls-heading workspace-tab-heading__main">
                 <div class="teacher-surface-eyebrow journal-eyebrow">Class Filters</div>
-                <h3 class="teacher-controls-title">班级筛选</h3>
+                <h3 class="teacher-controls-title workspace-tab-heading__title">班级筛选</h3>
                 <p class="teacher-controls-copy">支持按班级编号或班级名称快速定位班级入口。</p>
               </div>
             </div>

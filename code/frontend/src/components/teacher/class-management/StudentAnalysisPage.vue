@@ -106,7 +106,26 @@ const workspaceTabs: WorkspaceTabItem[] = [
   },
 ]
 
-const activeTab = ref<WorkspaceTab>('overview')
+const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.key))
+
+function resolveTabFromLocation(): WorkspaceTab {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
+    return panel as WorkspaceTab
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(tab: WorkspaceTab): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeTab = ref<WorkspaceTab>(resolveTabFromLocation())
 const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
 
 function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
@@ -114,7 +133,9 @@ function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): 
 }
 
 function selectTab(tab: WorkspaceTab): void {
+  if (activeTab.value === tab) return
   activeTab.value = tab
+  syncPanelToLocation(tab)
 }
 
 function focusTab(tab: WorkspaceTab): void {
@@ -186,12 +207,12 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     <div class="workspace-grid">
       <main class="content-pane">
         <header class="teacher-topbar">
-          <div class="teacher-heading">
+          <div class="teacher-heading workspace-tab-heading__main">
             <div class="teacher-eyebrow-row">
               <div class="journal-eyebrow">Student Analysis</div>
               <span class="teacher-student-chip">@{{ selectedStudent?.username || '未选择' }}</span>
             </div>
-            <h1 class="teacher-title">
+            <h1 class="teacher-title workspace-tab-heading__title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
             <p class="teacher-copy">
