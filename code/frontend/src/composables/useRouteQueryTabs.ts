@@ -1,44 +1,40 @@
-import { ref, type Ref } from 'vue'
+import { computed, type ComputedRef } from 'vue'
+import type { RouteLocationNormalizedLoaded, Router } from 'vue-router'
 
-interface UseUrlSyncedTabsOptions<T extends string> {
+interface UseRouteQueryTabsOptions<T extends string> {
+  route: RouteLocationNormalizedLoaded
+  router: Router
   orderedTabs: readonly T[]
   defaultTab: T
+  routeName?: string
   queryKey?: string
 }
 
-interface UseUrlSyncedTabsResult<T extends string> {
-  activeTab: Ref<T>
+interface UseRouteQueryTabsResult<T extends string> {
+  activeTab: ComputedRef<T>
   setTabButtonRef: (tab: T, element: HTMLButtonElement | null) => void
-  selectTab: (tab: T) => void
+  selectTab: (tab: T) => Promise<void>
   handleTabKeydown: (event: KeyboardEvent, index: number) => void
 }
 
-export function useUrlSyncedTabs<T extends string>({
+export function useRouteQueryTabs<T extends string>({
+  route,
+  router,
   orderedTabs,
   defaultTab,
+  routeName,
   queryKey = 'panel',
-}: UseUrlSyncedTabsOptions<T>): UseUrlSyncedTabsResult<T> {
+}: UseRouteQueryTabsOptions<T>): UseRouteQueryTabsResult<T> {
   const tabSet = new Set<T>(orderedTabs)
+  const tabButtonRefs: Partial<Record<T, HTMLButtonElement | null>> = {}
 
-  function resolveTabFromLocation(): T {
-    if (typeof window === 'undefined') return defaultTab
-    if (!window.location.pathname || window.location.pathname === '/') return defaultTab
-    const panel = new URLSearchParams(window.location.search).get(queryKey)
-    if (panel && tabSet.has(panel as T)) {
+  const activeTab = computed<T>(() => {
+    const panel = route.query[queryKey]
+    if (typeof panel === 'string' && tabSet.has(panel as T)) {
       return panel as T
     }
     return defaultTab
-  }
-
-  function syncPanelToLocation(tab: T): void {
-    if (typeof window === 'undefined') return
-    const url = new URL(window.location.href)
-    url.searchParams.set(queryKey, tab)
-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-  }
-
-  const activeTab = ref(resolveTabFromLocation()) as Ref<T>
-  const tabButtonRefs: Partial<Record<T, HTMLButtonElement | null>> = {}
+  })
 
   function setTabButtonRef(tab: T, element: HTMLButtonElement | null): void {
     tabButtonRefs[tab] = element
@@ -48,10 +44,22 @@ export function useUrlSyncedTabs<T extends string>({
     tabButtonRefs[tab]?.focus()
   }
 
-  function selectTab(tab: T): void {
+  async function selectTab(tab: T): Promise<void> {
     if (activeTab.value === tab) return
-    activeTab.value = tab
-    syncPanelToLocation(tab)
+
+    const nextQuery = { ...route.query }
+    if (tab === defaultTab) {
+      delete nextQuery[queryKey]
+    } else {
+      nextQuery[queryKey] = tab
+    }
+
+    if (routeName) {
+      await router.replace({ name: routeName, query: nextQuery })
+      return
+    }
+
+    await router.replace({ query: nextQuery })
   }
 
   function handleTabKeydown(event: KeyboardEvent, index: number): void {
@@ -69,7 +77,7 @@ export function useUrlSyncedTabs<T extends string>({
     if (event.key === 'Home') {
       const firstTab = orderedTabs[0]
       if (!firstTab) return
-      selectTab(firstTab)
+      void selectTab(firstTab)
       focusTab(firstTab)
       return
     }
@@ -77,7 +85,7 @@ export function useUrlSyncedTabs<T extends string>({
     if (event.key === 'End') {
       const lastTab = orderedTabs[orderedTabs.length - 1]
       if (!lastTab) return
-      selectTab(lastTab)
+      void selectTab(lastTab)
       focusTab(lastTab)
       return
     }
@@ -86,7 +94,7 @@ export function useUrlSyncedTabs<T extends string>({
     const nextIndex = (index + direction + orderedTabs.length) % orderedTabs.length
     const nextTab = orderedTabs[nextIndex]
     if (!nextTab) return
-    selectTab(nextTab)
+    void selectTab(nextTab)
     focusTab(nextTab)
   }
 

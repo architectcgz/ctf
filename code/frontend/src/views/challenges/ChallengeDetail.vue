@@ -489,57 +489,30 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { marked } from 'marked'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
-  downloadAttachment as downloadChallengeAttachment,
   getChallengeDetail,
   getCommunityChallengeSolutions,
-  getMyChallengeWriteupSubmission,
   getRecommendedChallengeSolutions,
-  submitFlag,
-  upsertChallengeWriteupSubmission,
 } from '@/api/challenge'
 import type {
-  ChallengeCategory,
   ChallengeDetailData,
-  ChallengeDifficulty,
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
-  SubmissionWriteupData,
-  SubmissionWriteupStatus,
-  SubmissionWriteupVisibilityStatus,
 } from '@/api/contracts'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
+import { useChallengeDetailInteractions } from '@/composables/useChallengeDetailInteractions'
+import {
+  useChallengeDetailPresentation,
+  type ChallengeSolutionTab,
+} from '@/composables/useChallengeDetailPresentation'
 import { useChallengeInstance } from '@/composables/useChallengeInstance'
 import { useSanitize } from '@/composables/useSanitize'
 import { useToast } from '@/composables/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 type WorkspaceTab = 'question' | 'solution' | 'records' | 'writeup'
-type SolutionTab = 'recommended' | 'community'
-type EditableWriteupStatus = 'draft' | 'published'
-
-interface SolutionCard {
-  id: string
-  title: string
-  content: string
-  preview: string
-  authorName: string
-  sourceLabel: string
-  badge: string
-  badgeClass: string
-  updatedAt?: string
-}
-
-interface SubmissionRecordItem {
-  id: string
-  answer: string
-  status: 'correct' | 'incorrect' | 'pending_review' | 'error'
-  message: string
-  submittedAt?: string
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -549,24 +522,9 @@ const { sanitizeHtml } = useSanitize()
 const challengeId = computed(() => String(route.params.id ?? ''))
 const challenge = ref<ChallengeDetailData | null>(null)
 const loading = ref(false)
-const submitting = ref(false)
 const recommendedSolutions = ref<RecommendedChallengeSolutionData[]>([])
 const communitySolutions = ref<CommunityChallengeSolutionData[]>([])
-const myWriteup = ref<SubmissionWriteupData | null>(null)
-const submissionLoading = ref(false)
-const submissionSaving = ref<EditableWriteupStatus | null>(null)
-const writeupTitle = ref('')
-const writeupContent = ref('')
-const flagInput = ref('')
-const expandedHintLevels = ref<number[]>([])
-const submitResult = ref<{
-  variant: 'success' | 'error' | 'pending'
-  className: string
-  message: string
-} | null>(null)
-const activeSolutionTab = ref<SolutionTab>('recommended')
 const selectedSolutionId = ref<string | null>(null)
-const submissionRecords = ref<SubmissionRecordItem[]>([])
 const {
   instance,
   loading: instanceLoading,
@@ -596,122 +554,60 @@ const {
   orderedTabs: workspaceTabOrder,
   defaultTab: 'question',
 })
-const solutionTabs: SolutionTab[] = ['recommended', 'community']
 
-function renderRichContent(source?: string): string {
-  if (!source) return ''
-  const html = marked.parse(source, {
-    gfm: true,
-    breaks: true,
-  })
-  return sanitizeHtml(typeof html === 'string' ? html : source)
-}
+const {
+  myWriteup,
+  submitting,
+  submissionLoading,
+  submissionSaving,
+  writeupTitle,
+  writeupContent,
+  flagInput,
+  submitResult,
+  submissionRecords,
+  resetChallengeInteractions,
+  loadMyWriteupSubmission,
+  isHintExpanded,
+  toggleHint,
+  submitFlagHandler,
+  downloadAttachment,
+  saveWriteup,
+} = useChallengeDetailInteractions({
+  challengeId,
+  challenge,
+  loadSolutions,
+})
 
-function buildMetaPillStyle(color: string): Record<string, string> {
-  return {
-    borderColor: `color-mix(in srgb, ${color} 18%, transparent)`,
-    backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`,
-    color,
-  }
-}
-
-function buildPreview(source?: string): string {
-  if (!source) return ''
-  return source
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 120)
-}
-
-const sanitizedDescription = computed(() => renderRichContent(challenge.value?.description))
 const needTarget = computed(() => challenge.value?.need_target ?? true)
-
-const recommendedSolutionCards = computed<SolutionCard[]>(() =>
-  recommendedSolutions.value.map((item) => ({
-    id: item.id,
-    title: item.title,
-    content: item.content,
-    preview: buildPreview(item.content),
-    authorName: item.author_name,
-    sourceLabel: item.source_type === 'official' ? '官方题解' : '社区推荐',
-    badge: '推荐题解',
-    badgeClass: 'writeup-status-pill--primary',
-    updatedAt: item.updated_at,
-  }))
-)
-
-const communitySolutionCards = computed<SolutionCard[]>(() =>
-  communitySolutions.value.map((item) => ({
-    id: item.id,
-    title: item.title,
-    content: item.content,
-    preview: item.content_preview || buildPreview(item.content),
-    authorName: item.author_name,
-    sourceLabel: '社区题解',
-    badge: item.is_recommended ? '推荐' : '',
-    badgeClass: item.is_recommended ? 'writeup-status-pill--primary' : 'writeup-status-pill--muted',
-    updatedAt: item.updated_at,
-  }))
-)
-
-const displayedSolutionCards = computed(() =>
-  activeSolutionTab.value === 'recommended'
-    ? recommendedSolutionCards.value
-    : communitySolutionCards.value
-)
-
-const activeSolution = computed(() => {
-  if (displayedSolutionCards.value.length === 0) return null
-  return (
-    displayedSolutionCards.value.find((item) => item.id === selectedSolutionId.value) ??
-    displayedSolutionCards.value[0]
-  )
+const {
+  activeSolutionTab,
+  sanitizedDescription,
+  displayedSolutionCards,
+  activeSolution,
+  sanitizedActiveSolutionContent,
+  submitPlaceholder,
+  submitInputClass,
+  clearSolutions,
+  handleSolutionTabKeydown: handleSolutionTabKeydownWithFocus,
+  buildMetaPillStyle,
+  submissionStatusLabel,
+  submissionStatusText,
+  visibilityStatusLabel,
+  formatWriteupTime,
+  formatSubmissionTime,
+  getCategoryLabel,
+  getCategoryColor,
+  getDifficultyLabel,
+  getDifficultyColor,
+} = useChallengeDetailPresentation({
+  challenge,
+  recommendedSolutions,
+  communitySolutions,
+  myWriteup,
+  selectedSolutionId,
+  submitResult,
+  sanitizeHtml,
 })
-
-const sanitizedActiveSolutionContent = computed(() =>
-  renderRichContent(activeSolution.value?.content)
-)
-
-const submitPlaceholder = computed(() => {
-  if (challenge.value?.is_solved) return '该题已通过'
-
-  switch (submitResult.value?.variant) {
-    case 'success':
-      return '答案已通过'
-    case 'pending':
-      return '已提交，等待教师审核'
-    case 'error':
-      return '答案不正确，请继续尝试'
-    default:
-      return 'flag{...}'
-  }
-})
-
-const submitInputClass = computed(() => {
-  switch (submitResult.value?.variant) {
-    case 'success':
-      return 'border-[var(--color-success)] bg-[var(--color-success)]/5'
-    case 'pending':
-      return 'border-[var(--color-warning)] bg-[var(--color-warning)]/8'
-    case 'error':
-      return 'border-[var(--color-danger)] bg-[var(--color-danger)]/5'
-    default:
-      return 'border-[var(--journal-accent)]'
-  }
-})
-
-function clearSolutions(): void {
-  recommendedSolutions.value = []
-  communitySolutions.value = []
-  activeSolutionTab.value = 'recommended'
-  selectedSolutionId.value = null
-}
-
-function hydrateSubmissionForm(item: SubmissionWriteupData | null): void {
-  writeupTitle.value = item?.title ?? ''
-  writeupContent.value = item?.content ?? ''
-}
 
 async function loadSolutions(id: string): Promise<void> {
   try {
@@ -748,317 +644,23 @@ async function loadChallenge(): Promise<void> {
   }
 }
 
-async function loadMyWriteupSubmission(): Promise<void> {
-  if (!challengeId.value) return
-
-  submissionLoading.value = true
-  try {
-    myWriteup.value = await getMyChallengeWriteupSubmission(challengeId.value)
-    hydrateSubmissionForm(myWriteup.value)
-  } catch {
-    toast.error('加载个人题解失败')
-  } finally {
-    submissionLoading.value = false
-  }
-}
-
-function isHintExpanded(level: number): boolean {
-  return expandedHintLevels.value.includes(level)
-}
-
-function toggleHint(level: number): void {
-  if (isHintExpanded(level)) {
-    expandedHintLevels.value = expandedHintLevels.value.filter((item) => item !== level)
-    return
-  }
-  expandedHintLevels.value = [...expandedHintLevels.value, level]
-}
-
 function focusTab(id: string): void {
   requestAnimationFrame(() => {
     document.getElementById(id)?.focus()
   })
 }
 
-function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: SolutionTab): void {
-  const currentIndex = solutionTabs.findIndex((item) => item === currentTab)
-  if (currentIndex < 0) return
-
-  if (event.key === 'ArrowRight') {
-    activeSolutionTab.value = solutionTabs[(currentIndex + 1) % solutionTabs.length]
-  } else if (event.key === 'ArrowLeft') {
-    activeSolutionTab.value =
-      solutionTabs[(currentIndex - 1 + solutionTabs.length) % solutionTabs.length]
-  } else if (event.key === 'Home') {
-    activeSolutionTab.value = solutionTabs[0]
-  } else if (event.key === 'End') {
-    activeSolutionTab.value = solutionTabs[solutionTabs.length - 1]
-  } else {
-    return
-  }
-
-  focusTab(`challenge-solutions-tab-${activeSolutionTab.value}`)
-  event.preventDefault()
+function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: ChallengeSolutionTab): void {
+  handleSolutionTabKeydownWithFocus(event, currentTab, focusTab)
 }
-
-async function submitFlagHandler(): Promise<void> {
-  if (!challenge.value || !flagInput.value.trim()) return
-
-  const answer = flagInput.value.trim()
-  submitting.value = true
-  submitResult.value = null
-  try {
-    const result = await submitFlag(challenge.value.id, answer)
-    submissionRecords.value = [
-      {
-        id: `${result.submitted_at}-${submissionRecords.value.length}`,
-        answer,
-        status: result.status,
-        message: result.message,
-        submittedAt: result.submitted_at,
-      },
-      ...submissionRecords.value,
-    ]
-    switch (result.status) {
-      case 'correct':
-        submitResult.value = {
-          variant: 'success',
-          className: 'text-[var(--color-success)]',
-          message: result.message,
-        }
-        toast.success('Flag 正确！')
-        challenge.value.is_solved = true
-        await loadSolutions(challenge.value.id)
-        break
-      case 'pending_review':
-        submitResult.value = {
-          variant: 'pending',
-          className: 'text-[var(--color-warning)]',
-          message: result.message,
-        }
-        toast.info('答案已提交，等待教师审核')
-        break
-      default:
-        submitResult.value = {
-          variant: 'error',
-          className: 'text-[var(--color-danger)]',
-          message: result.message,
-        }
-        break
-    }
-  } catch {
-    submissionRecords.value = [
-      {
-        id: `error-${Date.now()}`,
-        answer,
-        status: 'error',
-        message: '提交失败，请重试',
-        submittedAt: new Date().toISOString(),
-      },
-      ...submissionRecords.value,
-    ]
-    submitResult.value = {
-      variant: 'error',
-      className: 'text-[var(--color-danger)]',
-      message: '提交失败，请重试',
-    }
-  } finally {
-    submitting.value = false
-  }
-}
-
-async function downloadAttachment(): Promise<void> {
-  if (!challenge.value?.attachment_url) return
-
-  const attachmentURL = challenge.value.attachment_url
-  try {
-    const parsed = new URL(attachmentURL, window.location.origin)
-    if (parsed.origin !== window.location.origin) {
-      window.open(attachmentURL, '_blank', 'noopener')
-      return
-    }
-  } catch {
-    // keep axios fallback for relative urls
-  }
-
-  try {
-    const { blob, filename } = await downloadChallengeAttachment(attachmentURL)
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
-  } catch {
-    toast.error('下载附件失败')
-  }
-}
-
-async function saveWriteup(status: EditableWriteupStatus): Promise<void> {
-  if (!challenge.value) return
-  if (!writeupTitle.value.trim() || !writeupContent.value.trim()) {
-    toast.error('请先补全题解标题和正文')
-    return
-  }
-  if (status === 'published' && !challenge.value.is_solved) {
-    toast.error('解题后才能发布到社区')
-    return
-  }
-
-  submissionSaving.value = status
-  try {
-    const saved = await upsertChallengeWriteupSubmission(challenge.value.id, {
-      title: writeupTitle.value.trim(),
-      content: writeupContent.value.trim(),
-      submission_status: status,
-    })
-    myWriteup.value = saved
-    hydrateSubmissionForm(saved)
-    toast.success(status === 'published' ? '题解已发布到社区' : '草稿已保存')
-  } catch {
-    toast.error(status === 'published' ? '发布题解失败' : '保存草稿失败')
-  } finally {
-    submissionSaving.value = null
-  }
-}
-
-function submissionStatusLabel(status?: SubmissionWriteupStatus): string {
-  if (status === 'draft') return '草稿'
-  if (status === 'published' || status === 'submitted') return '已发布'
-  return '未开始'
-}
-
-function submissionStatusText(status: SubmissionRecordItem['status']): string {
-  if (status === 'correct') return '正确'
-  if (status === 'incorrect') return '错误答案'
-  if (status === 'pending_review') return '待审核'
-  if (status === 'error') return '提交失败'
-  return '未知'
-}
-
-function visibilityStatusLabel(status?: SubmissionWriteupVisibilityStatus): string {
-  if (status === 'hidden') return '已隐藏'
-  if (
-    myWriteup.value?.submission_status === 'published' ||
-    myWriteup.value?.submission_status === 'submitted'
-  ) {
-    return '已公开'
-  }
-  return '未发布'
-}
-
-function formatWriteupTime(value?: string): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatSubmissionTime(value?: string): string {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })
-}
-
-function getCategoryLabel(category: ChallengeCategory): string {
-  const labels: Record<ChallengeCategory, string> = {
-    web: 'Web',
-    pwn: 'Pwn',
-    reverse: '逆向',
-    crypto: '密码',
-    misc: '杂项',
-    forensics: '取证',
-  }
-  return labels[category]
-}
-
-function getCategoryColor(category: ChallengeCategory): string {
-  const colors: Record<ChallengeCategory, string> = {
-    web: 'var(--challenge-tone-web)',
-    pwn: 'var(--challenge-tone-pwn)',
-    reverse: 'var(--challenge-tone-reverse)',
-    crypto: 'var(--challenge-tone-crypto)',
-    misc: 'var(--challenge-tone-misc)',
-    forensics: 'var(--challenge-tone-forensics)',
-  }
-  return colors[category]
-}
-
-function getDifficultyLabel(difficulty: ChallengeDifficulty): string {
-  const labels: Record<ChallengeDifficulty, string> = {
-    beginner: '入门',
-    easy: '简单',
-    medium: '中等',
-    hard: '困难',
-    insane: '地狱',
-  }
-  return labels[difficulty]
-}
-
-function getDifficultyColor(difficulty: ChallengeDifficulty): string {
-  const colors: Record<ChallengeDifficulty, string> = {
-    beginner: 'var(--challenge-tone-beginner)',
-    easy: 'var(--challenge-tone-easy)',
-    medium: 'var(--challenge-tone-medium)',
-    hard: 'var(--challenge-tone-hard)',
-    insane: 'var(--challenge-tone-insane)',
-  }
-  return colors[difficulty]
-}
-
-watch(
-  displayedSolutionCards,
-  (items) => {
-    if (!items.some((item) => item.id === selectedSolutionId.value)) {
-      selectedSolutionId.value = items[0]?.id ?? null
-    }
-  },
-  { immediate: true }
-)
-
-watch(
-  [recommendedSolutionCards, communitySolutionCards],
-  ([recommended, community]) => {
-    if (
-      activeSolutionTab.value === 'recommended' &&
-      recommended.length === 0 &&
-      community.length > 0
-    ) {
-      activeSolutionTab.value = 'community'
-    } else if (
-      activeSolutionTab.value === 'community' &&
-      community.length === 0 &&
-      recommended.length > 0
-    ) {
-      activeSolutionTab.value = 'recommended'
-    }
-  },
-  { immediate: true }
-)
 
 watch(
   challengeId,
   () => {
     challenge.value = null
-    myWriteup.value = null
+    resetChallengeInteractions()
     clearSolutions()
-    writeupTitle.value = ''
-    writeupContent.value = ''
-    flagInput.value = ''
-    expandedHintLevels.value = []
     selectWorkspaceTab('question')
-    submitResult.value = null
-    submissionRecords.value = []
     void Promise.all([loadChallenge(), loadMyWriteupSubmission()])
   },
   { immediate: true }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, toRef, watch } from 'vue'
 import { RefreshCw, Search, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
 
 import type {
@@ -7,7 +7,6 @@ import type {
   AWDRoundData,
   AWDRoundSummaryData,
   AWDTrafficEventData,
-  AWDTrafficStatusGroup,
   AWDTrafficSummaryData,
   AWDTeamServiceData,
   AdminContestChallengeData,
@@ -19,117 +18,12 @@ import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
+import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerivedData'
+import { useAwdInspectorFilters } from '@/composables/useAwdInspectorFilters'
+import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
+import { useAwdTrafficPanel, type AWDTrafficFilters } from '@/composables/useAwdTrafficPanel'
 import { downloadCSVFile, downloadJSONFile } from '@/utils/csv'
-
-interface AWDRoundInspectorFilterState {
-  service_team_id: string
-  service_status: 'all' | AWDTeamServiceData['service_status']
-  service_check_source: string
-  service_alert_reason: string
-  attack_team_id: string
-  attack_result: 'all' | 'success' | 'failed'
-  attack_source: 'all' | AWDAttackLogData['source']
-}
-
-interface AWDProbeAttemptView {
-  probe: string
-  healthy: boolean
-  latency_ms?: number
-  error_code?: string
-  error?: string
-}
-
-interface AWDProbeTargetView {
-  access_url?: string
-  healthy: boolean
-  probe?: string
-  latency_ms?: number
-  error_code?: string
-  error?: string
-  attempts: AWDProbeAttemptView[]
-}
-
-interface AWDServiceAlertView {
-  key: string
-  label: string
-  count: number
-  affected_teams: string[]
-  samples: Array<{
-    service_id: string
-    team_name: string
-    challenge_title: string
-  }>
-}
-
-interface AWDTrafficFilters {
-  attacker_team_id: string
-  victim_team_id: string
-  challenge_id: string
-  status_group: 'all' | AWDTrafficStatusGroup
-  path_keyword: string
-  page: number
-  page_size: number
-}
-
-function getInspectorFilterStorageKey(contestId: string, roundId: string): string {
-  return `ctf_admin_awd_filters:${contestId}:${roundId}`
-}
-
-function loadInspectorFilterState(
-  contestId: string,
-  roundId: string
-): AWDRoundInspectorFilterState | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  const raw = window.sessionStorage.getItem(getInspectorFilterStorageKey(contestId, roundId))
-  if (!raw) {
-    return null
-  }
-  try {
-    const parsed = JSON.parse(raw) as Partial<AWDRoundInspectorFilterState>
-    return {
-      service_team_id: typeof parsed.service_team_id === 'string' ? parsed.service_team_id : '',
-      service_status:
-        parsed.service_status === 'up' ||
-        parsed.service_status === 'down' ||
-        parsed.service_status === 'compromised'
-          ? parsed.service_status
-          : 'all',
-      service_check_source:
-        typeof parsed.service_check_source === 'string' ? parsed.service_check_source : '',
-      service_alert_reason:
-        typeof parsed.service_alert_reason === 'string' ? parsed.service_alert_reason : '',
-      attack_team_id: typeof parsed.attack_team_id === 'string' ? parsed.attack_team_id : '',
-      attack_result:
-        parsed.attack_result === 'success' || parsed.attack_result === 'failed'
-          ? parsed.attack_result
-          : 'all',
-      attack_source:
-        parsed.attack_source === 'manual_attack_log' ||
-        parsed.attack_source === 'submission' ||
-        parsed.attack_source === 'legacy'
-          ? parsed.attack_source
-          : 'all',
-    }
-  } catch {
-    return null
-  }
-}
-
-function persistInspectorFilterState(
-  contestId: string,
-  roundId: string,
-  state: AWDRoundInspectorFilterState
-): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-  window.sessionStorage.setItem(
-    getInspectorFilterStorageKey(contestId, roundId),
-    JSON.stringify(state)
-  )
-}
 
 const props = defineProps<{
   contest: ContestDetailData
@@ -231,240 +125,80 @@ const manualCheckCount = computed(() => {
     )
   }).length
 })
-const serviceTeamFilter = ref('')
-const serviceStatusFilter = ref<'all' | AWDTeamServiceData['service_status']>('all')
-const serviceCheckSourceFilter = ref('')
-const serviceAlertReasonFilter = ref('')
-const attackTeamFilter = ref('')
-const attackResultFilter = ref<'all' | 'success' | 'failed'>('all')
-const attackSourceFilter = ref<'all' | AWDAttackLogData['source']>('all')
-const trafficPathKeywordInput = ref('')
-
-const trafficErrorRate = computed(() => {
-  if (!props.trafficSummary || props.trafficSummary.total_request_count <= 0) {
-    return 0
-  }
-  return (props.trafficSummary.error_request_count / props.trafficSummary.total_request_count) * 100
+const contestId = computed(() => props.contest.id)
+const selectedRoundIdRef = computed(() => props.selectedRoundId)
+const {
+  serviceTeamFilter,
+  serviceStatusFilter,
+  serviceCheckSourceFilter,
+  serviceAlertReasonFilter,
+  attackTeamFilter,
+  attackResultFilter,
+  attackSourceFilter,
+  resetFilters,
+} = useAwdInspectorFilters({
+  contestId,
+  selectedRoundId: selectedRoundIdRef,
 })
 
-const trafficTotalPages = computed(() =>
-  Math.max(1, Math.ceil(props.trafficEventsTotal / Math.max(props.trafficFilters.page_size, 1)))
-)
+const {
+  formatDateTime,
+  getRoundStatusLabel,
+  getRoundStatusClass,
+  getServiceStatusLabel,
+  getServiceStatusClass,
+  getAttackTypeLabel,
+  getAttackSourceLabel,
+  formatPercent,
+  getTrafficStatusGroupLabel,
+  getTrafficStatusGroupClass,
+  getChallengeTitle,
+  buildExportFilename,
+  getSelectedRoundLabel,
+  formatScore,
+  getSourceOverviewLabel,
+  getSourceOverviewDescription,
+} = useAwdInspectorFormatting({
+  contest: toRef(props, 'contest'),
+  challengeLinks: toRef(props, 'challengeLinks'),
+  selectedRound,
+  summaryMetrics,
+  manualCheckCount,
+})
+const {
+  trafficPathKeywordInput,
+  trafficTotalPages,
+  trafficTrendRows,
+  trafficSummaryStats,
+  trafficTrendNarrative,
+  trafficStatusGroupOptions,
+  applyTrafficKeywordFilter,
+  onTrafficStatusGroupChange,
+  clearTrafficKeywordFilter,
+  applyTrafficFilterPatch,
+  handleTrafficPageChange,
+} = useAwdTrafficPanel({
+  trafficSummary: toRef(props, 'trafficSummary'),
+  trafficEventsTotal: toRef(props, 'trafficEventsTotal'),
+  trafficFilters: toRef(props, 'trafficFilters'),
+  loadingTrafficEvents: toRef(props, 'loadingTrafficEvents'),
+  formatDateTime,
+  formatPercent,
+  applyTrafficFilters: (patch) => emit('applyTrafficFilters', patch),
+  changeTrafficPage: (page) => emit('changeTrafficPage', page),
+})
 
-function formatDateTime(value?: string): string {
-  if (!value) {
-    return '未记录'
-  }
-  return new Date(value).toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function getRoundStatusLabel(status: AWDRoundData['status']): string {
-  const labels: Record<AWDRoundData['status'], string> = {
-    pending: '待开始',
-    running: '进行中',
-    finished: '已结束',
-  }
-  return labels[status]
-}
-
-function getRoundStatusClass(status: AWDRoundData['status']): string {
-  const classes: Record<AWDRoundData['status'], string> = {
-    pending:
-      'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-    running:
-      'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-    finished:
-      'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20',
-  }
-  return classes[status]
-}
-
-function getServiceStatusLabel(status: AWDTeamServiceData['service_status']): string {
-  const labels: Record<AWDTeamServiceData['service_status'], string> = {
-    up: '正常',
-    down: '下线',
-    compromised: '已失陷',
-  }
-  return labels[status]
-}
-
-function getServiceStatusClass(status: AWDTeamServiceData['service_status']): string {
-  const classes: Record<AWDTeamServiceData['service_status'], string> = {
-    up: 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20',
-    down: 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20',
-    compromised:
-      'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20',
-  }
-  return classes[status]
-}
-
-function getAttackTypeLabel(type: AWDAttackLogData['attack_type']): string {
-  return type === 'service_exploit' ? '服务利用' : 'Flag 获取'
-}
-
-function getAttackSourceLabel(source: AWDAttackLogData['source']): string {
-  const labels: Record<AWDAttackLogData['source'], string> = {
-    legacy: '历史记录',
-    manual_attack_log: '人工补录',
-    submission: '学员提交',
-  }
-  return labels[source]
-}
-
-function formatPercent(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) {
-    return '0%'
-  }
-  return `${value.toFixed(1)}%`
-}
-
-function getTrafficStatusGroupLabel(statusGroup: AWDTrafficStatusGroup): string {
-  const labels: Record<AWDTrafficStatusGroup, string> = {
-    success: '成功',
-    redirect: '重定向',
-    client_error: '客户端错误',
-    server_error: '服务端错误',
-  }
-  return labels[statusGroup]
-}
-
-function getTrafficStatusGroupClass(statusGroup: AWDTrafficStatusGroup): string {
-  switch (statusGroup) {
-    case 'success':
-      return 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/20'
-    case 'redirect':
-      return 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20'
-    case 'client_error':
-      return 'bg-[var(--color-warning)]/10 text-[var(--color-warning)] border border-[var(--color-warning)]/20'
-    case 'server_error':
-      return 'bg-[var(--color-danger)]/10 text-[var(--color-danger)] border border-[var(--color-danger)]/20'
-  }
-  return 'bg-[var(--color-text-muted)]/10 text-[var(--color-text-secondary)] border border-[var(--color-text-muted)]/20'
-}
-
-function getCheckSourceLabel(value: unknown): string {
-  switch (value) {
-    case 'manual_current_round':
-      return '当前轮手动巡检'
-    case 'manual_selected_round':
-      return '指定轮次重跑'
-    case 'manual_service_check':
-      return '人工补录'
-    case 'scheduler':
-      return '调度巡检'
-    default:
-      return ''
-  }
-}
-
-function getCheckStatusLabel(value: unknown): string {
-  if (typeof value !== 'string' || value.trim() === '') {
-    return ''
-  }
-  const labels: Record<string, string> = {
-    healthy: '全部正常',
-    partial_available: '部分可用',
-    no_running_instances: '无运行实例',
-    unexpected_http_status: 'HTTP 状态异常',
-    http_request_failed: 'HTTP 请求失败',
-    invalid_access_url: '访问地址无效',
-    all_probes_failed: '巡检失败',
-  }
-  return labels[value] || value
-}
-
-function summarizeCheckResult(result: Record<string, unknown>): string {
-  const sourceLabel = getCheckSourceLabel(result.check_source)
-  const statusLabel = getCheckStatusLabel(result.status_reason)
-  const checkedAt =
-    typeof result.checked_at === 'string' && result.checked_at.trim() !== ''
-      ? formatDateTime(result.checked_at)
-      : ''
-
-  const entries = [
-    sourceLabel ? `来源: ${sourceLabel}` : '',
-    statusLabel ? `状态: ${statusLabel}` : '',
-    checkedAt ? `时间: ${checkedAt}` : '',
-  ].filter(Boolean)
-
-  if (entries.length > 0) {
-    return entries.join(' | ')
-  }
-
-  const fallbackEntries = Object.entries(result)
-    .filter(([, value]) => value !== null && value !== undefined && value !== '')
-    .slice(0, 3)
-    .map(([key, value]) => `${key}: ${String(value)}`)
-
-  return fallbackEntries.length > 0 ? fallbackEntries.join(' | ') : '未返回检查明细'
-}
-
-function readProbeAttempts(value: unknown): AWDProbeAttemptView[] {
-  if (!Array.isArray(value)) {
-    return []
-  }
-  return value
-    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
-    .map((item) => ({
-      probe: typeof item.probe === 'string' ? item.probe : '',
-      healthy: item.healthy === true,
-      latency_ms: typeof item.latency_ms === 'number' ? item.latency_ms : undefined,
-      error_code: typeof item.error_code === 'string' ? item.error_code : undefined,
-      error: typeof item.error === 'string' ? item.error : undefined,
-    }))
-}
-
-function getCheckTargets(result: Record<string, unknown>): AWDProbeTargetView[] {
-  if (!Array.isArray(result.targets)) {
-    return []
-  }
-  return result.targets
-    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
-    .map((item) => ({
-      access_url: typeof item.access_url === 'string' ? item.access_url : undefined,
-      healthy: item.healthy === true,
-      probe: typeof item.probe === 'string' ? item.probe : undefined,
-      latency_ms: typeof item.latency_ms === 'number' ? item.latency_ms : undefined,
-      error_code: typeof item.error_code === 'string' ? item.error_code : undefined,
-      error: typeof item.error === 'string' ? item.error : undefined,
-      attempts: readProbeAttempts(item.attempts),
-    }))
-}
-
-function getTargetProbeSummary(result: Record<string, unknown>): string {
-  const targets = getCheckTargets(result)
-  if (targets.length === 0) {
-    return ''
-  }
-  const healthyTargets = targets.filter((item) => item.healthy).length
-  return `探测目标 ${healthyTargets}/${targets.length} 正常`
-}
-
-function getProbeStatusText(healthy: boolean, errorCode?: string, error?: string): string {
-  if (healthy) {
-    return '探测成功'
-  }
-  return getCheckStatusLabel(errorCode) || error || '探测失败'
-}
-
-function formatLatency(value?: number): string {
-  if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
-    return ''
-  }
-  return `${Math.round(value)} ms`
-}
-
-function getChallengeTitle(challengeId: string): string {
-  const matched = props.challengeLinks.find((item) => item.challenge_id === challengeId)
-  return matched?.title?.trim() || `Challenge #${challengeId}`
-}
+const {
+  getCheckSourceLabel,
+  getCheckStatusLabel,
+  summarizeCheckResult,
+  getCheckTargets,
+  getTargetProbeSummary,
+  getProbeStatusText,
+  formatLatency,
+} = useAwdCheckResultPresentation({
+  formatDateTime,
+})
 
 function getTrafficTeamName(teamId: string, teamName?: string): string {
   if (teamName && teamName.trim() !== '') {
@@ -487,396 +221,36 @@ function getTrafficSourceLabel(source: string): string {
   return source || '未标记'
 }
 
-function buildExportFilename(suffix: string): string {
-  const title = props.contest.title
-    .trim()
-    .replace(/[^a-zA-Z0-9_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  const contestPart = title || `contest-${props.contest.id}`
-  const roundPart = selectedRound.value?.round_number || 'unknown'
-  return `${contestPart}-round-${roundPart}-${suffix}.csv`
-}
-
-function getSelectedRoundLabel(): string {
-  if (!selectedRound.value) {
-    return '未知轮次'
-  }
-  return `第 ${selectedRound.value.round_number} 轮`
-}
-
-function formatScore(value: number): string {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2)
-}
-
-function getSourceOverviewLabel(): string {
-  const metrics = summaryMetrics.value
-  if (!metrics) {
-    return '等待轮次汇总'
-  }
-  return `巡检 调度 ${metrics.scheduler_check_count} / 手动 ${manualCheckCount.value}`
-}
-
-function getSourceOverviewDescription(): string {
-  const metrics = summaryMetrics.value
-  if (!metrics) {
-    return '攻击日志来源将在轮次汇总返回后展示。'
-  }
-  return `日志 提交 ${metrics.submission_attack_count} / 人工 ${metrics.manual_attack_log_count} / 历史 ${metrics.legacy_attack_log_count}`
-}
-
-function getServiceCheckSourceValue(result: Record<string, unknown>): string {
-  return typeof result.check_source === 'string' ? result.check_source : ''
-}
-
-const serviceTeamOptions = computed(() => {
-  const seen = new Set<string>()
-  return props.services.filter((item) => {
-    if (seen.has(item.team_id)) {
-      return false
-    }
-    seen.add(item.team_id)
-    return true
-  })
+const {
+  getServiceCheckSourceValue,
+  serviceTeamOptions,
+  serviceCheckSourceOptions,
+  serviceAlerts,
+  filteredServices,
+  attackTeamOptions,
+  attackSourceOptions,
+  trafficTeamOptions,
+  filteredAttacks,
+  getServiceAlertReason,
+  getServiceAlertSubtitle,
+  getServiceAlertClass,
+  getServiceAlertLabel,
+  applyServiceAlertFilter,
+} = useAwdInspectorDerivedData({
+  services: toRef(props, 'services'),
+  attacks: toRef(props, 'attacks'),
+  trafficSummary: toRef(props, 'trafficSummary'),
+  trafficEvents: toRef(props, 'trafficEvents'),
+  serviceTeamFilter,
+  serviceStatusFilter,
+  serviceCheckSourceFilter,
+  serviceAlertReasonFilter,
+  attackTeamFilter,
+  attackResultFilter,
+  attackSourceFilter,
+  getChallengeTitle,
+  getCheckStatusLabel,
 })
-
-const serviceCheckSourceOptions = computed(() => {
-  const seen = new Set<string>()
-  return props.services
-    .map((item) => getServiceCheckSourceValue(item.check_result))
-    .filter((item) => {
-      if (!item || seen.has(item)) {
-        return false
-      }
-      seen.add(item)
-      return true
-    })
-})
-
-const baseFilteredServices = computed(() =>
-  props.services.filter((item) => {
-    if (serviceTeamFilter.value && item.team_id !== serviceTeamFilter.value) {
-      return false
-    }
-    if (serviceStatusFilter.value !== 'all' && item.service_status !== serviceStatusFilter.value) {
-      return false
-    }
-    if (
-      serviceCheckSourceFilter.value &&
-      getServiceCheckSourceValue(item.check_result) !== serviceCheckSourceFilter.value
-    ) {
-      return false
-    }
-    return true
-  })
-)
-
-const serviceAlerts = computed<AWDServiceAlertView[]>(() => {
-  const grouped = new Map<string, AWDServiceAlertView>()
-  for (const service of baseFilteredServices.value) {
-    const reason = getServiceAlertReason(service)
-    if (!reason) {
-      continue
-    }
-    const existing = grouped.get(reason) || {
-      key: reason,
-      label: getCheckStatusLabel(reason) || reason,
-      count: 0,
-      affected_teams: [],
-      samples: [],
-    }
-    existing.count += 1
-    if (!existing.affected_teams.includes(service.team_name)) {
-      existing.affected_teams.push(service.team_name)
-    }
-    if (existing.samples.length < 3) {
-      existing.samples.push({
-        service_id: service.id,
-        team_name: service.team_name,
-        challenge_title: getChallengeTitle(service.challenge_id),
-      })
-    }
-    grouped.set(reason, existing)
-  }
-
-  return [...grouped.values()].sort((left, right) => {
-    if (left.count !== right.count) {
-      return right.count - left.count
-    }
-    return left.label.localeCompare(right.label, 'zh-CN')
-  })
-})
-
-const filteredServices = computed(() =>
-  baseFilteredServices.value.filter((item) => {
-    if (!serviceAlertReasonFilter.value) {
-      return true
-    }
-    return getServiceAlertReason(item) === serviceAlertReasonFilter.value
-  })
-)
-
-const attackTeamOptions = computed(() => {
-  const seen = new Set<string>()
-  return props.attacks.flatMap((item) => {
-    const entries = [
-      { id: item.attacker_team_id, name: item.attacker_team },
-      { id: item.victim_team_id, name: item.victim_team },
-    ]
-    return entries.filter((entry) => {
-      if (seen.has(entry.id)) {
-        return false
-      }
-      seen.add(entry.id)
-      return true
-    })
-  })
-})
-
-const attackSourceOptions = computed(() => {
-  const seen = new Set<AWDAttackLogData['source']>()
-  return props.attacks
-    .map((item) => item.source)
-    .filter((item) => {
-      if (seen.has(item)) {
-        return false
-      }
-      seen.add(item)
-      return true
-    })
-})
-
-const trafficTeamOptions = computed(() => {
-  const entries = new Map<string, string>()
-
-  for (const service of props.services) {
-    entries.set(service.team_id, service.team_name)
-  }
-  for (const attackTeam of attackTeamOptions.value) {
-    entries.set(attackTeam.id, attackTeam.name)
-  }
-  for (const item of props.trafficSummary?.top_attackers || []) {
-    entries.set(item.team_id, item.team_name)
-  }
-  for (const item of props.trafficSummary?.top_victims || []) {
-    entries.set(item.team_id, item.team_name)
-  }
-  for (const item of props.trafficEvents) {
-    if (item.attacker_team_name?.trim()) {
-      entries.set(item.attacker_team_id, item.attacker_team_name)
-    }
-    if (item.victim_team_name?.trim()) {
-      entries.set(item.victim_team_id, item.victim_team_name)
-    }
-  }
-
-  return [...entries.entries()]
-    .map(([id, name]) => ({ id, name }))
-    .sort((left, right) => left.name.localeCompare(right.name, 'zh-CN'))
-})
-
-const trafficTrendRows = computed(() => {
-  const buckets = props.trafficSummary?.trend_buckets || []
-  const peak = Math.max(1, ...buckets.map((item) => item.request_count))
-  return buckets.map((item) => ({
-    ...item,
-    ratio: Math.max(6, Math.round((item.request_count / peak) * 100)),
-    label: new Date(item.bucket_start_at).toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    }),
-  }))
-})
-
-const trafficSummaryStats = computed(() => {
-  const summary = props.trafficSummary
-  if (!summary) {
-    return []
-  }
-
-  return [
-    {
-      key: 'requests',
-      label: '代理请求总量',
-      value: String(summary.total_request_count),
-      hint: summary.latest_event_at
-        ? `最近请求 ${formatDateTime(summary.latest_event_at)}`
-        : '当前轮尚未记录最近请求时间',
-    },
-    {
-      key: 'attackers',
-      label: '活跃攻击队',
-      value: String(summary.active_attacker_team_count),
-      hint: `热点攻击队 ${summary.top_attackers[0]?.team_name || '暂无'}`,
-    },
-    {
-      key: 'victims',
-      label: '被攻击目标队',
-      value: String(summary.victim_team_count),
-      hint: `热点目标队 ${summary.top_victims[0]?.team_name || '暂无'}`,
-    },
-    {
-      key: 'paths',
-      label: '唯一路径数',
-      value: String(summary.unique_path_count),
-      hint: `异常路径 ${summary.top_error_paths[0]?.path || '暂无'}`,
-    },
-    {
-      key: 'errors',
-      label: '错误请求率',
-      value: formatPercent(trafficErrorRate.value),
-      hint: `错误请求 ${summary.error_request_count}`,
-    },
-  ]
-})
-
-const trafficTrendNarrative = computed(() => {
-  if (trafficTrendRows.value.length === 0) {
-    return '当前轮尚未形成趋势桶。'
-  }
-  const peakBucket = [...trafficTrendRows.value].sort((left, right) => {
-    if (left.request_count !== right.request_count) {
-      return right.request_count - left.request_count
-    }
-    return right.error_count - left.error_count
-  })[0]
-  return `${peakBucket.label} 请求最高，共 ${peakBucket.request_count}，错误 ${peakBucket.error_count}。`
-})
-
-const trafficStatusGroupOptions: Array<{ value: 'all' | AWDTrafficStatusGroup; label: string }> = [
-  { value: 'all', label: '全部状态' },
-  { value: 'success', label: '成功' },
-  { value: 'redirect', label: '重定向' },
-  { value: 'client_error', label: '客户端错误' },
-  { value: 'server_error', label: '服务端错误' },
-]
-
-function applyTrafficKeywordFilter(): void {
-  applyTrafficFilterPatch({ path_keyword: trafficPathKeywordInput.value.trim() })
-}
-
-function onTrafficStatusGroupChange(value: string): void {
-  if (
-    value !== 'all' &&
-    value !== 'success' &&
-    value !== 'redirect' &&
-    value !== 'client_error' &&
-    value !== 'server_error'
-  ) {
-    return
-  }
-  applyTrafficFilterPatch({ status_group: value })
-}
-
-function clearTrafficKeywordFilter(): void {
-  trafficPathKeywordInput.value = ''
-  applyTrafficFilterPatch({ path_keyword: '' })
-}
-
-function applyTrafficFilterPatch(patch: Partial<AWDTrafficFilters>): void {
-  emit('applyTrafficFilters', patch)
-}
-
-function handleTrafficPageChange(targetPage: number): void {
-  if (
-    props.loadingTrafficEvents ||
-    targetPage < 1 ||
-    targetPage > trafficTotalPages.value ||
-    targetPage === props.trafficFilters.page
-  ) {
-    return
-  }
-  emit('changeTrafficPage', targetPage)
-}
-
-const filteredAttacks = computed(() =>
-  props.attacks.filter((item) => {
-    if (
-      attackTeamFilter.value &&
-      item.attacker_team_id !== attackTeamFilter.value &&
-      item.victim_team_id !== attackTeamFilter.value
-    ) {
-      return false
-    }
-    if (attackResultFilter.value === 'success' && !item.is_success) {
-      return false
-    }
-    if (attackResultFilter.value === 'failed' && item.is_success) {
-      return false
-    }
-    if (attackSourceFilter.value !== 'all' && item.source !== attackSourceFilter.value) {
-      return false
-    }
-    return true
-  })
-)
-let syncingPersistedFilters = false
-
-function resetFilters() {
-  serviceTeamFilter.value = ''
-  serviceStatusFilter.value = 'all'
-  serviceCheckSourceFilter.value = ''
-  serviceAlertReasonFilter.value = ''
-  attackTeamFilter.value = ''
-  attackResultFilter.value = 'all'
-  attackSourceFilter.value = 'all'
-}
-
-function getServiceAlertReason(service: AWDTeamServiceData): string {
-  if (service.service_status === 'up') {
-    return ''
-  }
-  const errorCode =
-    typeof service.check_result.error_code === 'string'
-      ? service.check_result.error_code.trim()
-      : ''
-  if (errorCode) {
-    return errorCode
-  }
-  const statusReason =
-    typeof service.check_result.status_reason === 'string'
-      ? service.check_result.status_reason.trim()
-      : ''
-  if (statusReason && statusReason !== 'healthy') {
-    return statusReason
-  }
-  if (service.service_status === 'compromised') {
-    return 'service_compromised'
-  }
-  if (service.service_status === 'down') {
-    return 'service_down'
-  }
-  return ''
-}
-
-function getServiceAlertSubtitle(alert: AWDServiceAlertView): string {
-  const teamLabel =
-    alert.affected_teams.length === 0
-      ? '无受影响队伍'
-      : `影响队伍 ${alert.affected_teams.slice(0, 3).join(' / ')}`
-  return `${teamLabel}${alert.affected_teams.length > 3 ? ' 等' : ''}`
-}
-
-function getServiceAlertClass(alertKey: string): string {
-  switch (alertKey) {
-    case 'invalid_access_url':
-    case 'service_compromised':
-      return 'border-[var(--color-danger)]/20 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
-    case 'unexpected_http_status':
-    case 'http_request_failed':
-    case 'all_probes_failed':
-      return 'border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-    default:
-      return 'border-[var(--color-text-muted)]/20 bg-[var(--color-text-muted)]/10 text-[var(--color-text-primary)]'
-  }
-}
-
-function getServiceAlertLabel(alertKey: string): string {
-  return getCheckStatusLabel(alertKey) || alertKey
-}
-
-function applyServiceAlertFilter(alertKey: string): void {
-  serviceAlertReasonFilter.value = serviceAlertReasonFilter.value === alertKey ? '' : alertKey
-}
 
 function exportFilteredServices() {
   if (filteredServices.value.length === 0) {
@@ -1056,62 +430,6 @@ watch(
   () => props.trafficFilters.path_keyword,
   (keyword) => {
     trafficPathKeywordInput.value = keyword
-  },
-  { immediate: true }
-)
-
-watch(
-  () => [props.contest.id, props.selectedRoundId] as const,
-  ([contestId, roundId]) => {
-    syncingPersistedFilters = true
-    if (!roundId) {
-      resetFilters()
-      syncingPersistedFilters = false
-      return
-    }
-    const storedState = loadInspectorFilterState(contestId, roundId)
-    if (!storedState) {
-      resetFilters()
-      syncingPersistedFilters = false
-      return
-    }
-    serviceTeamFilter.value = storedState.service_team_id
-    serviceStatusFilter.value = storedState.service_status
-    serviceCheckSourceFilter.value = storedState.service_check_source
-    serviceAlertReasonFilter.value = storedState.service_alert_reason
-    attackTeamFilter.value = storedState.attack_team_id
-    attackResultFilter.value = storedState.attack_result
-    attackSourceFilter.value = storedState.attack_source
-    syncingPersistedFilters = false
-  },
-  { immediate: true }
-)
-
-watch(
-  [
-    () => props.contest.id,
-    () => props.selectedRoundId,
-    serviceTeamFilter,
-    serviceStatusFilter,
-    serviceCheckSourceFilter,
-    serviceAlertReasonFilter,
-    attackTeamFilter,
-    attackResultFilter,
-    attackSourceFilter,
-  ],
-  ([contestId, roundId]) => {
-    if (syncingPersistedFilters || !roundId) {
-      return
-    }
-    persistInspectorFilterState(contestId, roundId, {
-      service_team_id: serviceTeamFilter.value,
-      service_status: serviceStatusFilter.value,
-      service_check_source: serviceCheckSourceFilter.value,
-      service_alert_reason: serviceAlertReasonFilter.value,
-      attack_team_id: attackTeamFilter.value,
-      attack_result: attackResultFilter.value,
-      attack_source: attackSourceFilter.value,
-    })
   },
   { immediate: true }
 )

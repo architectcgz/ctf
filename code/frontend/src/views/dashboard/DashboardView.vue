@@ -15,6 +15,7 @@ import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficu
 import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'
 import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 
@@ -31,13 +32,7 @@ const timeline = ref<TimelineEvent[]>([])
 const recommendations = ref<RecommendationItem[]>([])
 const skillProfile = ref<SkillProfileData | null>(null)
 
-type DashboardPanelKey = 'category' | 'recommendation' | 'timeline' | 'difficulty'
-const validPanelKeys = new Set<DashboardPanelKey>([
-  'category',
-  'recommendation',
-  'timeline',
-  'difficulty',
-])
+type DashboardPanelKey = 'overview' | 'category' | 'recommendation' | 'timeline' | 'difficulty'
 
 const displayName = computed(() => authStore.user?.name || authStore.user?.username || '选手')
 const weakDimensions = computed(() => getWeakDimensions(skillProfile.value).slice(0, 3))
@@ -74,22 +69,14 @@ const highlightItems = computed<DashboardHighlightItem[]>(() => [
     icon: FileChartColumnIncreasing,
   },
 ])
-const activePanel = computed<DashboardPanelKey | null>(() => {
-  const panel = route.query.panel
-  if (typeof panel === 'string' && validPanelKeys.has(panel as DashboardPanelKey)) {
-    return panel as DashboardPanelKey
-  }
-  return null
-})
-const isOverview = computed(() => activePanel.value === null)
 const panelTabs: Array<{
-  key: DashboardPanelKey | null
+  key: DashboardPanelKey
   label: string
   panelId: string
   tabId: string
 }> = [
   {
-    key: null,
+    key: 'overview',
     label: '总览',
     panelId: 'dashboard-panel-overview',
     tabId: 'dashboard-tab-overview',
@@ -119,6 +106,19 @@ const panelTabs: Array<{
     tabId: 'dashboard-tab-difficulty',
   },
 ]
+
+const panelTabOrder = panelTabs.map((tab) => tab.key) as DashboardPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<DashboardPanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'overview',
+})
 
 async function loadDashboard(): Promise<void> {
   const role = authStore.user?.role
@@ -164,58 +164,6 @@ function openSkillProfile(): void {
 function openChallenge(challengeId: string): void {
   router.push(`/challenges/${challengeId}`)
 }
-
-function isPanelActive(panelKey: DashboardPanelKey | null): boolean {
-  return panelKey === null ? isOverview.value : activePanel.value === panelKey
-}
-
-function switchPanel(panelKey: DashboardPanelKey | null): void {
-  const nextQuery = { ...route.query }
-  if (panelKey === null) {
-    delete nextQuery.panel
-  } else {
-    nextQuery.panel = panelKey
-  }
-  void router.replace({ query: nextQuery })
-}
-
-function focusTabByIndex(index: number): void {
-  const safeIndex = Math.max(0, Math.min(index, panelTabs.length - 1))
-  const targetTab = panelTabs[safeIndex]
-  if (!targetTab) return
-  document.getElementById(targetTab.tabId)?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (
-    event.key !== 'ArrowRight' &&
-    event.key !== 'ArrowLeft' &&
-    event.key !== 'Home' &&
-    event.key !== 'End'
-  ) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    switchPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    switchPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  switchPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
-}
 </script>
 
 <template>
@@ -227,13 +175,14 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.tabId"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"
-        :class="{ active: isPanelActive(tab.key) }"
-        :aria-selected="isPanelActive(tab.key) ? 'true' : 'false'"
+        :class="{ active: activePanel === tab.key }"
+        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
         :aria-controls="tab.panelId"
-        :tabindex="isPanelActive(tab.key) ? 0 : -1"
+        :tabindex="activePanel === tab.key ? 0 : -1"
         @click="switchPanel(tab.key)"
         @keydown="handleTabKeydown($event, index)"
       >
@@ -256,11 +205,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           <StudentOverviewStyleEditorial
             id="dashboard-panel-overview"
             class="tab-panel"
-            :class="{ active: isOverview }"
+            :class="{ active: activePanel === 'overview' }"
             role="tabpanel"
             aria-labelledby="dashboard-tab-overview"
-            :aria-hidden="isOverview ? 'false' : 'true'"
-            v-show="isOverview"
+            :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
+            v-show="activePanel === 'overview'"
             embedded
             :display-name="displayName"
             :class-name="authStore.user?.class_name"
