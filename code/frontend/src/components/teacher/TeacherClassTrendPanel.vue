@@ -61,30 +61,30 @@ const series = computed(() => [
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
-  padding: 1.25rem 1.25rem 1.35rem;
+  padding: var(--space-5) var(--space-5) var(--space-5-5);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-panel__header {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .teacher-panel__title {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.84rem;
   line-height: 1.65;
   color: var(--panel-muted);
 }
 
 .teacher-panel__empty-copy {
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   font-size: 0.84rem;
   line-height: 1.7;
   color: var(--panel-muted);
@@ -92,10 +92,10 @@ const series = computed(() => [
 
 .teacher-panel__chart {
   overflow-x: auto;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   border-radius: 14px;
   border: 1px solid var(--panel-border);
   background: var(--panel-surface);
-  padding: 0.75rem;
+  padding: var(--space-3);
 }
 </style>
