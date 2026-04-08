@@ -85,7 +85,7 @@ const workspaceTabs: WorkspaceTabItem[] = [
   },
   {
     key: 'writeups',
-    label: '社区题解',
+    label: '发布的题解',
     buttonId: 'student-tab-writeups',
     panelId: 'student-writeups',
   },

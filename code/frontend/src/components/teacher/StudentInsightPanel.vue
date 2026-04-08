@@ -48,12 +48,43 @@ const emit = defineEmits<{
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
-const visibleWriteupCount = computed(() =>
-  props.writeupSubmissions.filter((item) => item.visibility_status === 'visible').length
+const publishedWriteupSubmissions = computed(() =>
+  props.writeupSubmissions.filter(
+    (item) => item.submission_status === 'published' || item.submission_status === 'submitted'
+  )
 )
-const recommendedWriteupCount = computed(() =>
-  props.writeupSubmissions.filter((item) => item.is_recommended).length
+const publishedRecommendedWriteupCount = computed(() =>
+  publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
 )
+const publishedWriteupChallenges = computed(() => {
+  const map = new Map<
+    string,
+    { challengeId: string; challengeTitle: string; writeupCount: number; lastPublishedAt?: string }
+  >()
+  for (const item of publishedWriteupSubmissions.value) {
+    const challengeId = String(item.challenge_id)
+    const lastPublishedAt = item.published_at || item.updated_at
+    const previous = map.get(challengeId)
+    if (!previous) {
+      map.set(challengeId, {
+        challengeId,
+        challengeTitle: item.challenge_title,
+        writeupCount: 1,
+        lastPublishedAt,
+      })
+      continue
+    }
+    map.set(challengeId, {
+      ...previous,
+      writeupCount: previous.writeupCount + 1,
+      lastPublishedAt:
+        !previous.lastPublishedAt || new Date(lastPublishedAt) > new Date(previous.lastPublishedAt)
+          ? lastPublishedAt
+          : previous.lastPublishedAt,
+    })
+  }
+  return Array.from(map.values())
+})
 const approvedManualReviewCount = computed(() =>
   props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
 )
@@ -75,23 +106,12 @@ function openManualReview(submissionId: string): void {
   emit('openManualReview', submissionId)
 }
 
-function submissionStatusLabel(status: TeacherSubmissionWriteupItemData['submission_status']): string {
-  return status === 'published' || status === 'submitted' ? '已发布' : '草稿'
-}
-
 function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
 
 function visibilityStatusClass(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
   return status === 'hidden' ? 'writeup-chip writeup-chip--warning' : 'writeup-chip writeup-chip--success'
-}
-
-function emitWriteupModeration(
-  submissionId: string,
-  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
-): void {
-  emit('moderateWriteup', { submissionId, action })
 }
 
 function manualReviewStatusLabel(status: TeacherManualReviewSubmissionItemData['review_status']): string {
@@ -231,38 +251,38 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('writeups')"
-          title="社区题解状态"
-          subtitle="查看当前学员最近的社区题解发布、隐藏与推荐状态。"
+          title="发布的题解"
+          subtitle="展示当前学员已发布题解及对应题目。"
         >
           <AppEmpty
-            v-if="writeupSubmissions.length === 0"
-            title="暂无社区题解"
-            description="当前学员还没有保存或发布题解。"
+            v-if="publishedWriteupSubmissions.length === 0"
+            title="暂无已发布题解"
+            description="当前学员还没有发布到题解区的内容。"
             icon="FileText"
           />
 
           <template v-else>
             <div class="grid gap-3 md:grid-cols-3">
               <article class="insight-kpi-card insight-kpi-card--primary">
-                <div class="insight-kpi-label">最近题解</div>
-                <div class="insight-kpi-value">{{ writeupSubmissions.length }}</div>
-                <div class="insight-kpi-hint">当前分析页展示的题解数量</div>
+                <div class="insight-kpi-label">已发布题解</div>
+                <div class="insight-kpi-value">{{ publishedWriteupSubmissions.length }}</div>
+                <div class="insight-kpi-hint">当前学员已发布的题解数量</div>
               </article>
               <article class="insight-kpi-card insight-kpi-card--success">
-                <div class="insight-kpi-label">公开中</div>
-                <div class="insight-kpi-value">{{ visibleWriteupCount }}</div>
-                <div class="insight-kpi-hint">当前仍对已解题学生可见的题解</div>
+                <div class="insight-kpi-label">对应题目</div>
+                <div class="insight-kpi-value">{{ publishedWriteupChallenges.length }}</div>
+                <div class="insight-kpi-hint">覆盖到的题目总数</div>
               </article>
               <article class="insight-kpi-card insight-kpi-card--warning">
                 <div class="insight-kpi-label">推荐中</div>
-                <div class="insight-kpi-value">{{ recommendedWriteupCount }}</div>
-                <div class="insight-kpi-hint">会进入学生端推荐题解区的内容</div>
+                <div class="insight-kpi-value">{{ publishedRecommendedWriteupCount }}</div>
+                <div class="insight-kpi-hint">发布题解中被标记为推荐的数量</div>
               </article>
             </div>
 
             <div class="mt-5 grid gap-3">
               <AppCard
-                v-for="item in writeupSubmissions"
+                v-for="item in publishedWriteupSubmissions"
                 :key="item.id"
                 variant="panel"
                 accent="neutral"
@@ -277,9 +297,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     </div>
                   </div>
                   <div class="flex flex-wrap gap-2">
-                    <span class="writeup-chip writeup-chip--muted">
-                      {{ submissionStatusLabel(item.submission_status) }}
-                    </span>
+                    <span class="writeup-chip writeup-chip--muted">已发布</span>
                     <span :class="visibilityStatusClass(item.visibility_status)">
                       {{ visibilityStatusLabel(item.visibility_status) }}
                     </span>
@@ -297,23 +315,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                 </div>
 
                 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
-                  <span>最近更新：{{ new Date(item.updated_at).toLocaleString('zh-CN') }}</span>
+                  <span
+                    >发布时间：{{ new Date(item.published_at || item.updated_at).toLocaleString('zh-CN') }}</span
+                  >
                   <div class="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
-                      @click="emitWriteupModeration(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
-                    >
-                      {{ item.is_recommended ? '取消推荐' : '设为推荐' }}
-                    </button>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 font-medium"
-                      :class="item.visibility_status === 'hidden' ? 'text-[var(--color-success)]' : 'text-[var(--color-warning)]'"
-                      @click="emitWriteupModeration(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')"
-                    >
-                      {{ item.visibility_status === 'hidden' ? '恢复可见' : '隐藏题解' }}
-                    </button>
                     <button
                       type="button"
                       class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
@@ -326,6 +331,44 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                 </div>
               </AppCard>
             </div>
+
+            <section class="mt-6">
+              <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">对应题目列表</h4>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <AppCard
+                  v-for="item in publishedWriteupChallenges"
+                  :key="item.challengeId"
+                  variant="panel"
+                  accent="neutral"
+                >
+                  <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div class="text-sm font-semibold text-[var(--color-text-primary)]">
+                        {{ item.challengeTitle }}
+                      </div>
+                      <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        已发布 {{ item.writeupCount }} 篇题解
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
+                      @click="openChallenge(item.challengeId)"
+                    >
+                      打开挑战
+                      <ArrowRight class="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div class="mt-3 text-xs text-[var(--color-text-secondary)]">
+                    最近发布时间：{{
+                      item.lastPublishedAt
+                        ? new Date(item.lastPublishedAt).toLocaleString('zh-CN')
+                        : '暂无时间'
+                    }}
+                  </div>
+                </AppCard>
+              </div>
+            </section>
           </template>
         </SectionCard>
 
