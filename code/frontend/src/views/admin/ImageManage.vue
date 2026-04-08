@@ -287,10 +287,10 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.45rem;
   border-radius: 0.75rem;
-  padding: 0.55rem 0.95rem;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   transition:
@@ -301,7 +301,7 @@ onUnmounted(() => {
 
 .admin-btn-compact {
   min-height: 2.35rem;
-  padding: 0.5rem 0.85rem;
+  padding: var(--space-2) var(--space-3);
 }
 
 .admin-btn-primary {
@@ -326,13 +326,13 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   border-radius: 0.5rem;
-  padding: 0.32rem 0.65rem;
+  padding: var(--space-1) var(--space-2-5);
   font-size: 0.72rem;
   font-weight: 600;
 }
 
 .admin-empty {
-  padding: 1rem 0 0;
+  padding: var(--space-4) 0 0;
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -388,8 +388,8 @@ onUnmounted(() => {
 
 .image-header {
   display: grid;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -399,28 +399,28 @@ onUnmounted(() => {
 
 .image-header__side {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   justify-items: start;
 }
 
 .image-header__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .image-summary-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .image-divider {
-  margin: 1.2rem 0;
+  margin: var(--space-5) 0;
 }
 
 .image-board {
-  padding-top: 0.2rem;
+  padding-top: var(--space-1);
 }
 
 .image-board__head {
@@ -428,11 +428,11 @@ onUnmounted(() => {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .image-section-title {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -455,8 +455,8 @@ onUnmounted(() => {
 .image-directory-head {
   display: grid;
   grid-template-columns: var(--image-list-columns);
-  gap: 1rem;
-  padding: 1rem 0 0.8rem;
+  gap: var(--space-4);
+  padding: var(--space-4) 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -471,10 +471,10 @@ onUnmounted(() => {
 
 .image-row {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: var(--image-list-columns);
   align-items: start;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -501,7 +501,7 @@ onUnmounted(() => {
 }
 
 .image-row__tag {
-  padding-top: 0.1rem;
+  padding-top: var(--space-0-5);
   color: var(--journal-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -524,7 +524,7 @@ onUnmounted(() => {
 }
 
 .image-row__time {
-  padding-top: 0.15rem;
+  padding-top: var(--space-0-5);
   font-size: 0.82rem;
   line-height: 1.6;
   color: var(--journal-muted);
