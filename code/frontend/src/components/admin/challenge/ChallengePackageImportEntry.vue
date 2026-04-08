@@ -8,7 +8,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  select: [file: File]
+  select: [files: File[]]
 }>()
 
 const fileInput = useTemplateRef<HTMLInputElement>('fileInput')
@@ -19,12 +19,16 @@ function openPicker() {
 
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement | null
-  const file = target?.files?.[0]
-  if (!file) {
+  if (!target) {
     return
   }
 
-  emit('select', file)
+  const files = target?.files ? Array.from(target.files) : []
+  if (files.length === 0) {
+    return
+  }
+
+  emit('select', files)
   target.value = ''
 }
 </script>
@@ -47,10 +51,10 @@ function handleFileChange(event: Event) {
       >
         <span class="import-entry__drop-kicker">{{ uploading ? '解析中' : 'ZIP Package' }}</span>
         <strong class="import-entry__drop-title">
-          {{ uploading ? '正在解析 challenge.yml 与题目内容' : '点击选择或重新上传题目包' }}
+          {{ uploading ? '正在解析 challenge.yml 与题目内容' : '点击选择或重新上传题目包（支持多选）' }}
         </strong>
         <span class="import-entry__drop-copy">
-          支持单目录 Zip 或根目录直接包含 `challenge.yml`
+          支持一次选择多个 Zip；每个包都需要单目录 Zip 或根目录直接包含 `challenge.yml`
         </span>
         <span v-if="selectedFileName" class="import-entry__file">{{ selectedFileName }}</span>
       </button>
@@ -59,6 +63,7 @@ function handleFileChange(event: Event) {
         ref="fileInput"
         class="sr-only"
         type="file"
+        multiple
         accept=".zip,application/zip"
         @change="handleFileChange"
       >

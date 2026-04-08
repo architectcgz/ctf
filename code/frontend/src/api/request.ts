@@ -17,24 +17,34 @@ export interface ApiEnvelope<T> {
   message: string
   data: T
   request_id: string
-  errors?: Array<{ field: string; message: string }>
+  errors?: ApiValidationIssue[]
 }
 
 export interface RequestConfig extends AxiosRequestConfig {
   suppressErrorToast?: boolean
 }
 
+export interface ApiValidationIssue {
+  field: string
+  message: string
+}
+
 export class ApiError extends Error {
   readonly code?: number
   readonly requestId?: string
   readonly status?: number
+  readonly errors?: ApiValidationIssue[]
 
-  constructor(message: string, opts?: { code?: number; requestId?: string; status?: number }) {
+  constructor(
+    message: string,
+    opts?: { code?: number; requestId?: string; status?: number; errors?: ApiValidationIssue[] }
+  ) {
     super(message)
     this.name = 'ApiError'
     this.code = opts?.code
     this.requestId = opts?.requestId
     this.status = opts?.status
+    this.errors = opts?.errors
   }
 }
 
@@ -122,12 +132,14 @@ function toApiError(
   requestId: string | undefined,
   status: number | undefined,
   fallbackMessage: string,
-  message?: string
+  message?: string,
+  errors?: ApiValidationIssue[]
 ): ApiError {
   return new ApiError(resolveApiMessage(code, message, fallbackMessage), {
     code,
     requestId,
     status,
+    errors,
   })
 }
 
@@ -151,7 +163,8 @@ instance.interceptors.response.use(
         envelope.request_id,
         response.status,
         '请求失败',
-        envelope.message
+        envelope.message,
+        envelope.errors
       )
       if (shouldToast(response.config)) {
         toast.error(apiError.message)
@@ -223,7 +236,8 @@ instance.interceptors.response.use(
         error.response?.data?.request_id,
         status,
         '登录状态已失效，请重新登录',
-        error.response?.data?.message
+        error.response?.data?.message,
+        error.response?.data?.errors
       )
       if (shouldToast(error.config)) {
         toast.error(unauthorizedError.message)
@@ -242,7 +256,8 @@ instance.interceptors.response.use(
         error.response?.data?.request_id,
         status,
         mapped,
-        error.response?.data?.message
+        error.response?.data?.message,
+        error.response?.data?.errors
       )
       if (shouldToast(error.config)) {
         toast.error(apiError.message)
@@ -264,7 +279,8 @@ instance.interceptors.response.use(
       error.response?.data?.request_id,
       status,
       fallbackMessage,
-      error.response?.data?.message
+      error.response?.data?.message,
+      error.response?.data?.errors
     )
     if (shouldToast(error.config)) {
       toast.error(apiError.message)

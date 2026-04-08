@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import { ApiError } from '@/api/request'
 
 const pushMock = vi.fn()
 const replaceMock = vi.fn()
@@ -108,7 +109,7 @@ describe('ChallengeManage', () => {
     const wrapper = mount(ChallengeManage)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('靶场管理')
+    expect(wrapper.text()).toContain('题库管理')
     expect(wrapper.text()).toContain('题目管理')
     expect(wrapper.text()).toContain('导入题目包')
     expect(wrapper.text()).toContain('待确认导入')
@@ -202,5 +203,61 @@ describe('ChallengeManage', () => {
     await importWrapper.get('[data-testid="challenge-package-format-link"]').trigger('click')
 
     expect(pushMock).toHaveBeenLastCalledWith({ name: 'AdminChallengePackageFormat' })
+  })
+
+  it('支持多选上传，并在上传区域下方显示每个文件的结果', async () => {
+    adminApiMocks.previewChallengeImport
+      .mockResolvedValueOnce({
+        id: 'import-ok',
+        file_name: 'ok.zip',
+        slug: 'ok-challenge',
+        title: 'OK Challenge',
+        description: 'ok',
+        category: 'web',
+        difficulty: 'easy',
+        points: 100,
+        attachments: [],
+        hints: [],
+        flag: { type: 'static', prefix: 'flag' },
+        runtime: { type: 'container', image_ref: 'ctf/ok:latest' },
+        extensions: { topology: { source: '', enabled: false } },
+        warnings: [],
+        created_at: '2026-04-06T09:10:00.000Z',
+      })
+      .mockRejectedValueOnce(
+        new ApiError('请求参数错误', {
+          code: 10001,
+          requestId: 'req_18056986c1123ac6',
+        })
+      )
+
+    const wrapper = mount(ChallengeManage)
+    await flushPromises()
+    await wrapper.get('#challenge-tab-import').trigger('click')
+    await flushPromises()
+
+    const fileInput = wrapper.get('input[type="file"]')
+    expect(fileInput.attributes('multiple')).toBeDefined()
+
+    Object.defineProperty(fileInput.element, 'files', {
+      configurable: true,
+      value: [
+        new File(['ok'], 'ok.zip', { type: 'application/zip' }),
+        new File(['bad'], 'bad.zip', { type: 'application/zip' }),
+      ],
+    })
+    await fileInput.trigger('change')
+    await flushPromises()
+    expect(adminApiMocks.previewChallengeImport).toHaveBeenCalledTimes(2)
+
+    const text = wrapper.text()
+    expect(text).toContain('最近上传结果')
+    expect(text).toContain('ok.zip')
+    expect(text).toContain('bad.zip')
+    expect(text).toContain('成功')
+    expect(text).toContain('失败')
+    expect(text).toContain('题目包格式校验失败')
+    expect(text).toContain('错误码 10001')
+    expect(text).toContain('请求ID req_18056986c1123ac6')
   })
 })
