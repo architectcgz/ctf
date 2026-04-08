@@ -267,39 +267,39 @@ const emit = defineEmits<{
 }
 
 .teacher-hero-divider {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   border-top: 1px dashed var(--teacher-divider);
 }
 
 .teacher-filter-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .teacher-skeleton-list {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .teacher-empty-state {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .teacher-directory {
   display: flex;
   flex-direction: column;
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .teacher-directory-row {
   display: grid;
   grid-template-columns: var(--teacher-student-directory-columns);
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
   width: 100%;
-  padding: 1.1rem 0;
+  padding: var(--space-4-5) 0;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   background: transparent;
@@ -319,7 +319,7 @@ const emit = defineEmits<{
 
 .teacher-directory-cell {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
   align-content: center;
   justify-self: stretch;
@@ -382,14 +382,14 @@ const emit = defineEmits<{
 .teacher-directory-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .teacher-directory-chip {
   display: inline-flex;
   align-items: center;
   min-height: 1.65rem;
-  padding: 0 0.62rem;
+  padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   font-size: 0.75rem;
@@ -404,7 +404,7 @@ const emit = defineEmits<{
 
 .teacher-directory-row-metrics {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   font-size: 0.81rem;
   line-height: 1.5;
   color: var(--journal-muted);
@@ -413,7 +413,7 @@ const emit = defineEmits<{
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.38rem;
+  gap: var(--space-1-5);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
@@ -436,8 +436,8 @@ const emit = defineEmits<{
 
   .teacher-directory-row {
     grid-template-columns: 1fr;
-    gap: 0.85rem;
-    padding: 1rem 0;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
   }
 }
 </style>
