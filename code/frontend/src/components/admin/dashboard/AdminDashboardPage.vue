@@ -351,8 +351,8 @@ const {
 .workspace-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 244px;
-  gap: 28px;
-  padding-bottom: 26px;
+  gap: var(--space-7);
+  padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
@@ -366,7 +366,7 @@ const {
 
 .hero-summary {
   max-width: 760px;
-  margin-top: 14px;
+  margin-top: var(--space-3-5);
   font-size: 15px;
   line-height: 1.9;
   color: var(--journal-muted);
@@ -375,15 +375,15 @@ const {
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 18px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-4-5);
 }
 
 .meta-pill {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 9px;
+  padding: 0 var(--space-2-5);
   border: 1px solid var(--workspace-line-soft);
   border-radius: 8px;
   background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
@@ -400,8 +400,8 @@ const {
 .progress-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 22px;
+  gap: var(--space-3);
+  margin-top: var(--space-5-5);
 }
 
 .progress-card,
@@ -413,7 +413,7 @@ const {
 }
 
 .progress-card {
-  padding: 14px 16px 15px;
+  padding: var(--space-3-5) var(--space-4) var(--space-4);
 }
 
 .progress-card--skeleton {
@@ -430,7 +430,7 @@ const {
 }
 
 .progress-card-value {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font-size: 26px;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -442,7 +442,7 @@ const {
 .rail-copy,
 .workspace-alert-copy,
 .hotspot-memory {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: 13px;
   line-height: 1.7;
   color: var(--journal-muted);
@@ -452,23 +452,23 @@ const {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-top: 18px;
+  gap: var(--space-2-5) var(--space-4);
+  margin-top: var(--space-4-5);
 }
 
 .quick-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .quick-action {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-2-5);
   min-height: 52px;
-  padding: 0 14px;
+  padding: 0 var(--space-3-5);
   border: 1px solid var(--workspace-line-soft);
   border-radius: 14px;
   background: color-mix(in srgb, var(--workspace-panel) 82%, transparent);
@@ -498,7 +498,7 @@ const {
 }
 
 .hero-rail {
-  padding-left: 24px;
+  padding-left: var(--space-6);
   border-left: 1px solid var(--workspace-line-soft);
 }
 
@@ -510,24 +510,24 @@ const {
 }
 
 .rail-score {
-  margin-top: 10px;
+  margin-top: var(--space-2-5);
   font: 700 38px/1 var(--workspace-font-mono);
   color: var(--journal-ink);
 }
 
 .rail-score small {
-  margin-left: 4px;
+  margin-left: var(--space-1);
   font-size: 15px;
   color: var(--workspace-faint);
 }
 
 .rail-copy {
-  padding-top: 14px;
+  padding-top: var(--space-3-5);
   border-top: 1px solid var(--workspace-line-soft);
 }
 
 .panel-pad {
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .panel-title {
@@ -538,7 +538,7 @@ const {
 }
 
 .section {
-  padding-top: 26px;
+  padding-top: var(--space-6);
   border-top: 1px solid var(--workspace-line-soft);
 }
 
@@ -546,12 +546,12 @@ const {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .section-title:not(.workspace-tab-heading__title) {
-  margin: 10px 0 0;
+  margin: var(--space-2-5) 0 0;
   font-size: 22px;
   line-height: 1.12;
   color: var(--journal-ink);
@@ -565,8 +565,8 @@ const {
 .insight-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px;
-  padding: 16px 0;
+  gap: var(--space-4-5);
+  padding: var(--space-4) 0;
   border-bottom: 1px solid var(--workspace-line-soft);
 }
 
@@ -579,8 +579,8 @@ const {
 .insight-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .chip,
@@ -589,7 +589,7 @@ const {
   align-items: center;
   justify-content: center;
   min-height: 24px;
-  padding: 0 8px;
+  padding: 0 var(--space-2);
   border-radius: 7px;
   border: 1px solid var(--workspace-line-soft);
   font-size: 11.5px;
@@ -626,8 +626,8 @@ const {
 }
 
 .workspace-alert {
-  margin-top: 18px;
-  padding: 16px 18px;
+  margin-top: var(--space-4-5);
+  padding: var(--space-4) var(--space-4-5);
   border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
   border-radius: 18px;
   background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
@@ -636,7 +636,7 @@ const {
 .workspace-alert-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
 }
 
 .workspace-alert-icon {
@@ -654,8 +654,8 @@ const {
 .workspace-alert-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-3-5);
 }
 
 .empty-inline {
@@ -666,14 +666,14 @@ const {
 
 .hotspot-list {
   display: grid;
-  gap: 14px;
+  gap: var(--space-3-5);
 }
 
 .hotspot-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-  gap: 18px;
-  padding: 18px 0;
+  gap: var(--space-4-5);
+  padding: var(--space-4-5) 0;
   border-top: 1px solid var(--workspace-line-soft);
 }
 
@@ -686,7 +686,7 @@ const {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  gap: var(--space-2) var(--space-2-5);
 }
 
 .hotspot-title-row strong {
@@ -700,20 +700,20 @@ const {
 
 .hotspot-stats {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .hotspot-stat-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   font-size: 13px;
   color: var(--journal-muted);
 }
 
 .usage-track {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
@@ -740,11 +740,11 @@ const {
 .admin-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
   border: 1px solid transparent;
   border-radius: 1rem;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   box-shadow: var(--admin-btn-shadow, none);
@@ -785,11 +785,11 @@ const {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   border: 1px solid var(--admin-action-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   text-align: left;
   transition:
     border-color 150ms ease,
@@ -813,7 +813,7 @@ const {
   }
 
   .hero-rail {
-    padding-top: 20px;
+    padding-top: var(--space-5);
     padding-left: 0;
     border-top: 1px solid var(--workspace-line-soft);
     border-left: 0;
@@ -834,8 +834,8 @@ const {
   .workspace-topbar,
   .top-tabs,
   .content-pane {
-    padding-left: 18px;
-    padding-right: 18px;
+    padding-left: var(--space-4-5);
+    padding-right: var(--space-4-5);
   }
 
   .workspace-topbar {
@@ -844,7 +844,7 @@ const {
 
   .top-note {
     justify-content: flex-start;
-    margin-top: 12px;
+    margin-top: var(--space-3);
   }
 
   .progress-strip {
