@@ -246,18 +246,18 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           />
 
           <template v-else>
-            <div class="grid gap-3 md:grid-cols-3">
-              <article class="insight-kpi-card insight-kpi-card--primary">
+            <div class="writeup-kpi-grid">
+              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--primary">
                 <div class="insight-kpi-label">已发布题解</div>
                 <div class="insight-kpi-value">{{ publishedWriteupSubmissions.length }}</div>
                 <div class="insight-kpi-hint">当前学员已发布的题解数量</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--success">
+              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--success">
                 <div class="insight-kpi-label">对应题目</div>
                 <div class="insight-kpi-value">{{ publishedChallengeCount }}</div>
                 <div class="insight-kpi-hint">覆盖到的题目总数</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--warning">
+              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--warning">
                 <div class="insight-kpi-label">推荐中</div>
                 <div class="insight-kpi-value">{{ publishedRecommendedWriteupCount }}</div>
                 <div class="insight-kpi-hint">发布题解中被标记为推荐的数量</div>
@@ -692,6 +692,24 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
 }
 
+.writeup-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.writeup-kpi-card {
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  border-radius: 16px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+  );
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
+  padding: 0.85rem 0.95rem 0.8rem;
+}
+
 .writeup-directory-head,
 .writeup-directory-row {
   display: grid;
@@ -786,6 +804,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 @media (max-width: 1023px) {
+  .writeup-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .writeup-directory-head {
     display: none;
   }
@@ -797,6 +819,12 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
   .writeup-directory-action {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 767px) {
+  .writeup-kpi-grid {
+    grid-template-columns: 1fr;
   }
 }
 
