@@ -190,6 +190,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('recommendations')"
+          class="insight-tab-section-card"
           title="推荐训练任务"
           subtitle="根据当前能力薄弱维度筛出的优先训练题目。"
         >
@@ -235,7 +236,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('writeups')"
-          class="writeup-section-card"
+          class="writeup-section-card insight-tab-section-card"
           title="发布的题解"
           subtitle="按发布时间查看当前学员已发布题解。"
         >
@@ -336,6 +337,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('manual-review')"
+          class="insight-tab-section-card"
           title="审核题解"
           subtitle="查看该学员待教师评阅的题解内容。"
         >
@@ -481,6 +483,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('evidence')"
+          class="insight-tab-section-card"
           title="攻防证据链"
           subtitle="教师按关键动作查看该学员的利用过程。"
         >
@@ -848,11 +851,11 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   padding-left: 0;
 }
 
-.writeup-section-card :deep(.section-card__header) {
+.insight-tab-section-card :deep(.section-card__header) {
   border-bottom: 0;
 }
 
-.writeup-section-card :deep(.section-card) {
+.insight-tab-section-card :deep(.section-card) {
   border-top: 0;
 }
 
