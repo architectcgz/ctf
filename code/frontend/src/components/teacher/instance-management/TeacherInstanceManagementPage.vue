@@ -333,7 +333,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-hero-divider {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   border-top: 1px dashed var(--teacher-divider);
 }
 
@@ -343,7 +343,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 .teacher-filter-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
 }
 
@@ -351,32 +351,32 @@ function remainingExtends(item: TeacherInstanceItem): number {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-column: 1 / -1;
 }
 
 .teacher-skeleton-list {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .teacher-empty-state {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .teacher-directory-row {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.9fr) 8rem 11rem 9rem;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
-  padding: 1.1rem 0;
+  padding: var(--space-4-5) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .teacher-directory-row-main {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -397,7 +397,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem 0.85rem;
+  gap: var(--space-2-5) var(--space-3);
 }
 
 .teacher-directory-row-title {
@@ -438,14 +438,14 @@ function remainingExtends(item: TeacherInstanceItem): number {
 .teacher-directory-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .teacher-directory-chip {
   display: inline-flex;
   align-items: center;
   min-height: 1.65rem;
-  padding: 0 0.62rem;
+  padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   font-size: 0.75rem;
@@ -467,7 +467,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0 0.62rem;
+  padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -475,7 +475,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 .teacher-directory-row-metrics {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   font-size: 0.81rem;
   line-height: 1.5;
   color: var(--journal-muted);
@@ -490,11 +490,11 @@ function remainingExtends(item: TeacherInstanceItem): number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.42rem;
+  gap: var(--space-1-5);
   border-radius: 0.75rem;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  padding: 0.58rem 0.95rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.84rem;
   font-weight: 600;
   color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
@@ -541,8 +541,8 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
   .teacher-directory-row {
     grid-template-columns: 1fr;
-    gap: 0.85rem;
-    padding: 1rem 0;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
   }
 }
 </style>
