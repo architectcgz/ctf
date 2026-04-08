@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ArrowLeftRight, FileDown, GraduationCap, Users } from 'lucide-vue-next'
-import { ref } from 'vue'
 
 import type {
   MyProgressData,
@@ -16,6 +15,7 @@ import type {
 } from '@/api/contracts'
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentInsightPanel from '@/components/teacher/StudentInsightPanel.vue'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -106,73 +106,13 @@ const workspaceTabs: WorkspaceTabItem[] = [
   },
 ]
 
-const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.key))
-
-function resolveTabFromLocation(): WorkspaceTab {
-  if (typeof window === 'undefined') return 'overview'
-  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
-    return panel as WorkspaceTab
+const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
+  {
+    orderedTabs: workspaceTabOrder,
+    defaultTab: 'overview',
   }
-  return 'overview'
-}
-
-function syncPanelToLocation(tab: WorkspaceTab): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', tab)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activeTab = ref<WorkspaceTab>(resolveTabFromLocation())
-const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
-
-function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
-  tabButtonRefs[tab] = element
-}
-
-function selectTab(tab: WorkspaceTab): void {
-  if (activeTab.value === tab) return
-  activeTab.value = tab
-  syncPanelToLocation(tab)
-}
-
-function focusTab(tab: WorkspaceTab): void {
-  tabButtonRefs[tab]?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (
-    event.key !== 'ArrowRight' &&
-    event.key !== 'ArrowLeft' &&
-    event.key !== 'Home' &&
-    event.key !== 'End'
-  ) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    selectTab(workspaceTabs[0].key)
-    focusTab(workspaceTabs[0].key)
-    return
-  }
-
-  if (event.key === 'End') {
-    const lastTab = workspaceTabs[workspaceTabs.length - 1]
-    selectTab(lastTab.key)
-    focusTab(lastTab.key)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + workspaceTabs.length) % workspaceTabs.length
-  const nextTab = workspaceTabs[nextIndex]
-  selectTab(nextTab.key)
-  focusTab(nextTab.key)
-}
+)
 </script>
 
 <template>

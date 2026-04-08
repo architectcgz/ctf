@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useAuthStore } from '@/stores/auth'
 import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
 import { formatTime } from '@/utils/format'
@@ -23,26 +24,16 @@ const route = useRoute()
 const authStore = useAuthStore()
 const contestId = computed(() => String(route.params.id ?? ''))
 const currentUserId = computed(() => authStore.user?.id)
-const contestWorkspaceTabSet = new Set<ContestWorkspaceTab>(workspaceTabs.map((tab) => tab.id))
-
-function resolveWorkspaceTabFromLocation(): ContestWorkspaceTab {
-  if (typeof window === 'undefined') return 'overview'
-  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && contestWorkspaceTabSet.has(panel as ContestWorkspaceTab)) {
-    return panel as ContestWorkspaceTab
-  }
-  return 'overview'
-}
-
-function syncWorkspacePanelToLocation(tab: ContestWorkspaceTab): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', tab)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activeWorkspaceTab = ref<ContestWorkspaceTab>(resolveWorkspaceTabFromLocation())
+const workspaceTabOrder = workspaceTabs.map((tab) => tab.id) as ContestWorkspaceTab[]
+const {
+  activeTab: activeWorkspaceTab,
+  setTabButtonRef,
+  selectTab: selectWorkspaceTab,
+  handleTabKeydown: handleWorkspaceTabKeydown,
+} = useUrlSyncedTabs<ContestWorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'overview',
+})
 
 const {
   contest,
@@ -105,43 +96,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   ]
 }
 
-function focusWorkspaceTab(id: string): void {
-  requestAnimationFrame(() => {
-    document.getElementById(id)?.focus()
-  })
-}
-
-function selectWorkspaceTab(tab: ContestWorkspaceTab): void {
-  if (activeWorkspaceTab.value === tab) return
-  activeWorkspaceTab.value = tab
-  syncWorkspacePanelToLocation(tab)
-}
-
-function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWorkspaceTab): void {
-  const currentIndex = workspaceTabs.findIndex((item) => item.id === currentTab)
-  if (currentIndex < 0) return
-
-  if (event.key === 'ArrowRight') {
-    const nextTab = workspaceTabs[(currentIndex + 1) % workspaceTabs.length]
-    selectWorkspaceTab(nextTab.id)
-    focusWorkspaceTab(`contest-workspace-tab-${nextTab.id}`)
-  } else if (event.key === 'ArrowLeft') {
-    const nextTab = workspaceTabs[(currentIndex - 1 + workspaceTabs.length) % workspaceTabs.length]
-    selectWorkspaceTab(nextTab.id)
-    focusWorkspaceTab(`contest-workspace-tab-${nextTab.id}`)
-  } else if (event.key === 'Home') {
-    selectWorkspaceTab(workspaceTabs[0].id)
-    focusWorkspaceTab(`contest-workspace-tab-${workspaceTabs[0].id}`)
-  } else if (event.key === 'End') {
-    const lastTab = workspaceTabs[workspaceTabs.length - 1]
-    selectWorkspaceTab(lastTab.id)
-    focusWorkspaceTab(`contest-workspace-tab-${lastTab.id}`)
-  } else {
-    return
-  }
-
-  event.preventDefault()
-}
 </script>
 
 <template>
@@ -159,9 +113,10 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
 
         <div class="workspace-tabbar" role="tablist" aria-label="竞赛页面主切换">
           <button
-            v-for="tab in workspaceTabs"
+            v-for="(tab, index) in workspaceTabs"
             :id="`contest-workspace-tab-${tab.id}`"
             :key="tab.id"
+            :ref="(element) => setTabButtonRef(tab.id, element as HTMLButtonElement | null)"
             type="button"
             role="tab"
             class="workspace-tab"
@@ -170,7 +125,7 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: ContestWork
             :aria-controls="`contest-workspace-panel-${tab.id}`"
             :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
             @click="selectWorkspaceTab(tab.id)"
-            @keydown="handleWorkspaceTabKeydown($event, tab.id)"
+            @keydown="handleWorkspaceTabKeydown($event, index)"
           >
             {{ tab.label }}
           </button>
