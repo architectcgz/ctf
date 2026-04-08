@@ -322,11 +322,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .contest-panel {
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .workspace-shell .tab-panel.contest-panel {
@@ -335,17 +335,17 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .workspace-shell .tab-panel.contest-panel.active {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .contest-list-panel {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .panel-head {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .panel-head--overview {
@@ -360,7 +360,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .panel-title {
-  margin: 0.35rem 0 0;
+  margin: var(--space-1-5) 0 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -371,7 +371,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .panel-copy > p {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -379,7 +379,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 .contest-list-filters {
   display: grid;
   max-width: 20rem;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .journal-brief {
@@ -394,12 +394,12 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .admin-section-head-intro {
   position: relative;
-  padding: 1rem 1.1rem 1rem 1.35rem;
+  padding: var(--space-4) var(--space-4-5) var(--space-4) var(--space-5-5);
   border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
   border-radius: 18px;
   background: linear-gradient(
@@ -432,11 +432,11 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.8rem;
+  gap: var(--space-3);
 }
 
 .list-heading__title:not(.workspace-tab-heading__title) {
-  margin: 0.3rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -446,10 +446,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
   border-radius: 1rem;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   transition: all 150ms ease;
@@ -481,7 +481,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border-radius: 1rem;
   border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
-  padding: 0.7rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
@@ -510,8 +510,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 @media (max-width: 767px) {
   .content-pane {
-    gap: 1.25rem;
-    padding: 1.25rem 1rem 1.5rem;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) var(--space-6);
   }
 
   .panel-head--overview {
