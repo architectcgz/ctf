@@ -51,8 +51,10 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
     <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
       <div>
         <div class="journal-eyebrow">Coverage Overview</div>
-        <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">分类覆盖概况</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+          分类覆盖概况
+        </h1>
+        <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           看各分类的完成情况和当前强弱项。
         </p>
         <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">

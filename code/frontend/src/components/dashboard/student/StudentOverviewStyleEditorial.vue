@@ -94,10 +94,10 @@ const operationsSummary = computed(() => [
   >
     <div>
       <div class="journal-eyebrow">Training Journal</div>
-      <h1 class="journal-page-title mt-3 max-w-3xl text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-tab-heading__title max-w-3xl text-[var(--journal-ink)]">
         {{ displayName }} 的训练总览
       </h1>
-      <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
         这里汇总了训练进度、能力分布和近期状态。
       </p>
 

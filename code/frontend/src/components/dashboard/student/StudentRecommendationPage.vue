@@ -38,8 +38,10 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
     <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <div>
         <div class="journal-eyebrow">Priority Focus</div>
-        <h1 class="journal-page-title mt-3 text-[var(--journal-ink)]">补短板计划</h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+          补短板计划
+        </h1>
+        <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           优先看最适合当前阶段的题目。
         </p>
         <div class="mt-5 flex flex-wrap gap-2">
