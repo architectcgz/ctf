@@ -58,6 +58,10 @@ export function useTeacherStudentAnalysisPage() {
   const timeline = ref<TimelineEvent[]>([])
   const evidence = ref<TeacherEvidenceData | null>(null)
   const writeupSubmissions = ref<TeacherSubmissionWriteupItemData[]>([])
+  const writeupPage = ref(1)
+  const writeupPageSize = ref(6)
+  const writeupTotal = ref(0)
+  const writeupPaginationLoading = ref(false)
   const manualReviewSubmissions = ref<TeacherManualReviewSubmissionItemData[]>([])
   const activeManualReview = ref<TeacherManualReviewSubmissionDetailData | null>(null)
   const manualReviewLoading = ref(false)
@@ -76,6 +80,9 @@ export function useTeacherStudentAnalysisPage() {
     )
   })
   const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
+  const writeupTotalPages = computed(() =>
+    Math.max(1, Math.ceil(writeupTotal.value / Math.max(1, writeupPageSize.value)))
+  )
 
   function classNameFromRoute(): string {
     return String(route.params.className || '')
@@ -119,6 +126,8 @@ export function useTeacherStudentAnalysisPage() {
       timeline.value = []
       evidence.value = null
       writeupSubmissions.value = []
+      writeupPage.value = 1
+      writeupTotal.value = 0
       manualReviewSubmissions.value = []
       activeManualReview.value = null
       selectedStudentId.value = ''
@@ -143,7 +152,12 @@ export function useTeacherStudentAnalysisPage() {
         getStudentRecommendations(studentId),
         getStudentTimeline(studentId),
         getStudentEvidence(studentId),
-        getTeacherWriteupSubmissions({ student_id: studentId, page_size: 6 }),
+        getTeacherWriteupSubmissions({
+          student_id: studentId,
+          submission_status: 'published',
+          page: 1,
+          page_size: writeupPageSize.value,
+        }),
         getTeacherManualReviewSubmissions({ student_id: studentId, page_size: 6 }),
       ])
 
@@ -153,6 +167,9 @@ export function useTeacherStudentAnalysisPage() {
       timeline.value = nextTimeline
       evidence.value = nextEvidence
       writeupSubmissions.value = nextWriteups.list
+      writeupPage.value = nextWriteups.page
+      writeupPageSize.value = nextWriteups.page_size
+      writeupTotal.value = nextWriteups.total
       manualReviewSubmissions.value = nextManualReviews.list
       activeManualReview.value = null
     } finally {
@@ -160,13 +177,42 @@ export function useTeacherStudentAnalysisPage() {
     }
   }
 
-  async function refreshWriteupSubmissions(studentId = studentIdFromRoute()): Promise<void> {
+  async function refreshWriteupSubmissions(
+    studentId = studentIdFromRoute(),
+    targetPage = writeupPage.value
+  ): Promise<void> {
     if (!studentId) {
       writeupSubmissions.value = []
+      writeupPage.value = 1
+      writeupTotal.value = 0
       return
     }
-    const nextWriteups = await getTeacherWriteupSubmissions({ student_id: studentId, page_size: 6 })
-    writeupSubmissions.value = nextWriteups.list
+    writeupPaginationLoading.value = true
+    try {
+      const nextWriteups = await getTeacherWriteupSubmissions({
+        student_id: studentId,
+        submission_status: 'published',
+        page: targetPage,
+        page_size: writeupPageSize.value,
+      })
+      const totalPages = Math.max(1, Math.ceil(nextWriteups.total / Math.max(1, nextWriteups.page_size)))
+      if (targetPage > totalPages) {
+        writeupPaginationLoading.value = false
+        await refreshWriteupSubmissions(studentId, totalPages)
+        return
+      }
+      writeupSubmissions.value = nextWriteups.list
+      writeupPage.value = nextWriteups.page
+      writeupPageSize.value = nextWriteups.page_size
+      writeupTotal.value = nextWriteups.total
+    } finally {
+      writeupPaginationLoading.value = false
+    }
+  }
+
+  async function changeWriteupPage(page: number): Promise<void> {
+    if (page < 1 || page === writeupPage.value || writeupPaginationLoading.value) return
+    await refreshWriteupSubmissions(studentIdFromRoute(), page)
   }
 
   async function openManualReview(submissionId: string): Promise<void> {
@@ -360,6 +406,11 @@ export function useTeacherStudentAnalysisPage() {
     timeline,
     evidence,
     writeupSubmissions,
+    writeupPage,
+    writeupPageSize,
+    writeupTotal,
+    writeupTotalPages,
+    writeupPaginationLoading,
     manualReviewSubmissions,
     activeManualReview,
     manualReviewLoading,
@@ -375,5 +426,6 @@ export function useTeacherStudentAnalysisPage() {
     openManualReview,
     moderateWriteup,
     reviewManualReview,
+    changeWriteupPage,
   }
 }

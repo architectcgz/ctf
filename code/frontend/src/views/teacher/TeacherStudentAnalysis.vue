@@ -19,6 +19,10 @@ const {
   timeline,
   evidence,
   writeupSubmissions,
+  writeupPage,
+  writeupTotal,
+  writeupTotalPages,
+  writeupPaginationLoading,
   manualReviewSubmissions,
   activeManualReview,
   manualReviewLoading,
@@ -34,6 +38,7 @@ const {
   openManualReview,
   moderateWriteup,
   reviewManualReview,
+  changeWriteupPage,
 } = useTeacherStudentAnalysisPage()
 </script>
 
@@ -54,6 +59,10 @@ const {
     :timeline="timeline"
     :evidence="evidence"
     :writeup-submissions="writeupSubmissions"
+    :writeup-page="writeupPage"
+    :writeup-total="writeupTotal"
+    :writeup-total-pages="writeupTotalPages"
+    :writeup-pagination-loading="writeupPaginationLoading"
     :manual-review-submissions="manualReviewSubmissions"
     :active-manual-review="activeManualReview"
     :manual-review-loading="manualReviewLoading"
@@ -72,5 +81,6 @@ const {
     @open-manual-review="openManualReview"
     @moderate-writeup="moderateWriteup"
     @review-manual-review="reviewManualReview"
+    @change-writeup-page="changeWriteupPage"
   />
 </template>

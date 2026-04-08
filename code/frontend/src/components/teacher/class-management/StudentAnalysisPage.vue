@@ -30,6 +30,10 @@ const props = defineProps<{
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  writeupPage: number
+  writeupTotal: number
+  writeupTotalPages: number
+  writeupPaginationLoading: boolean
   manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
   activeManualReview: TeacherManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
@@ -59,6 +63,7 @@ const emit = defineEmits<{
       reviewComment?: string
     },
   ]
+  changeWriteupPage: [page: number]
 }>()
 
 type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'evidence'
@@ -225,6 +230,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :timeline="timeline"
             :evidence="evidence"
             :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
             :manual-review-submissions="manualReviewSubmissions"
             :active-manual-review="activeManualReview"
             :manual-review-loading="manualReviewLoading"
@@ -235,6 +244,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
             @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
           />
         </section>
 
@@ -256,6 +266,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :timeline="timeline"
             :evidence="evidence"
             :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
             :manual-review-submissions="manualReviewSubmissions"
             :active-manual-review="activeManualReview"
             :manual-review-loading="manualReviewLoading"
@@ -266,6 +280,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
             @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
           />
         </section>
 
@@ -287,6 +302,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :timeline="timeline"
             :evidence="evidence"
             :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
             :manual-review-submissions="manualReviewSubmissions"
             :active-manual-review="activeManualReview"
             :manual-review-loading="manualReviewLoading"
@@ -297,6 +316,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
             @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
           />
         </section>
 
@@ -318,6 +338,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             :timeline="timeline"
             :evidence="evidence"
             :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
             :manual-review-submissions="manualReviewSubmissions"
             :active-manual-review="activeManualReview"
             :manual-review-loading="manualReviewLoading"
@@ -328,6 +352,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             @open-manual-review="emit('openManualReview', $event)"
             @moderate-writeup="emit('moderateWriteup', $event)"
             @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
           />
         </section>
       </main>
