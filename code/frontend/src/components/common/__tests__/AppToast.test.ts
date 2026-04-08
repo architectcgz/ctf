@@ -4,7 +4,6 @@ import { nextTick } from 'vue'
 
 import AppToast from '../AppToast.vue'
 import { useToast, useToastState } from '@/composables/useToast'
-import { useTheme } from '@/composables/useTheme'
 
 function resetToastState() {
   const toast = useToast()
@@ -15,15 +14,9 @@ function resetToastState() {
   }
 }
 
-async function mountToastWithTheme(themeName: 'light' | 'dark') {
-  const { theme } = useTheme()
-  theme.value = themeName
-  document.documentElement.setAttribute('data-theme', themeName)
-
+async function mountToast() {
   const wrapper = mount(AppToast)
-  useToast().success('操作成功')
   await nextTick()
-
   return wrapper
 }
 
@@ -40,19 +33,27 @@ describe('AppToast', () => {
     vi.useRealTimers()
   })
 
-  it('uses a white solid background in light theme', async () => {
-    const wrapper = await mountToastWithTheme('light')
+  it('uses tokenized surface class instead of hardcoded light/dark background utilities', async () => {
+    const wrapper = await mountToast()
+    useToast().success('操作成功')
+    await nextTick()
+
     const toastItem = wrapper.get('.app-toast-item')
 
-    expect(toastItem.classes()).toContain('bg-white')
+    expect(toastItem.classes()).toContain('app-toast-item')
+    expect(toastItem.classes()).not.toContain('bg-white')
     expect(toastItem.classes()).not.toContain('bg-surface')
   })
 
-  it('keeps the dark surface background in dark theme', async () => {
-    const wrapper = await mountToastWithTheme('dark')
-    const toastItem = wrapper.get('.app-toast-item')
+  it('uses primary token in info toast close button style', async () => {
+    const wrapper = await mountToast()
+    useToast().info('主题适配检查')
+    await nextTick()
 
-    expect(toastItem.classes()).toContain('bg-surface')
-    expect(toastItem.classes()).not.toContain('bg-white')
+    const closeButton = wrapper.get('.app-toast-close')
+    const style = closeButton.attributes('style') ?? ''
+
+    expect(style).toContain('var(--color-primary)')
+    expect(style).not.toContain('8, 145, 178')
   })
 })

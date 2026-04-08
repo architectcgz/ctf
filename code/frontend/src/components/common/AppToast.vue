@@ -4,8 +4,7 @@
       v-for="item in toasts"
       :key="item.id"
       :class="[
-        'app-toast-item group relative overflow-hidden rounded-[22px] border border-border px-4 py-3.5 shadow-[0_18px_40px_var(--color-shadow-soft)]',
-        theme === 'light' ? 'bg-white' : 'bg-surface',
+        'app-toast-item group relative overflow-hidden rounded-[22px] border px-4 py-3.5',
       ]"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
@@ -41,7 +40,7 @@
 
         <button
           type="button"
-          class="shrink-0 rounded-xl border border-border bg-base/70 px-2.5 py-1.5 text-xs font-medium text-text-secondary transition-colors hover:text-text-primary"
+          class="app-toast-close shrink-0 rounded-xl border px-2.5 py-1.5 text-xs font-medium transition-colors hover:text-text-primary"
           :style="toneMeta(item.type).closeStyle"
           @click="toast.dismiss(item.id)"
         >
@@ -56,12 +55,10 @@
 import type { Component } from 'vue'
 import { AlertTriangle, CheckCircle2, Info, OctagonX } from 'lucide-vue-next'
 
-import { useTheme } from '@/composables/useTheme'
 import { provideToast, type ToastType, useToast, useToastState } from '@/composables/useToast'
 
 provideToast()
 
-const { theme } = useTheme()
 const toast = useToast()
 const { toasts } = useToastState()
 
@@ -78,64 +75,60 @@ const toneMap: Record<ToastType, ToastToneMeta> = {
     icon: CheckCircle2,
     accentColor: 'var(--color-success)',
     containerStyle: {
-      boxShadow: '0 18px 40px var(--color-shadow-soft)',
       borderColor: 'color-mix(in srgb, var(--color-success) 24%, var(--color-border-default))',
     },
     iconWrapStyle: {
-      backgroundColor: 'rgba(63, 185, 80, 0.12)',
-      borderColor: 'rgba(63, 185, 80, 0.28)',
+      backgroundColor: 'color-mix(in srgb, var(--color-success) 12%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-success) 30%, var(--color-border-default))',
     },
     closeStyle: {
-      borderColor: 'rgba(63, 185, 80, 0.18)',
-      backgroundColor: 'rgba(63, 185, 80, 0.08)',
+      borderColor: 'color-mix(in srgb, var(--color-success) 22%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-success) 8%, var(--color-bg-surface))',
     },
   },
   warning: {
     icon: AlertTriangle,
     accentColor: 'var(--color-warning)',
     containerStyle: {
-      boxShadow: '0 18px 40px var(--color-shadow-soft)',
       borderColor: 'color-mix(in srgb, var(--color-warning) 24%, var(--color-border-default))',
     },
     iconWrapStyle: {
-      backgroundColor: 'rgba(210, 153, 34, 0.12)',
-      borderColor: 'rgba(210, 153, 34, 0.28)',
+      backgroundColor: 'color-mix(in srgb, var(--color-warning) 12%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-warning) 30%, var(--color-border-default))',
     },
     closeStyle: {
-      borderColor: 'rgba(210, 153, 34, 0.18)',
-      backgroundColor: 'rgba(210, 153, 34, 0.08)',
+      borderColor: 'color-mix(in srgb, var(--color-warning) 22%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-warning) 8%, var(--color-bg-surface))',
     },
   },
   info: {
     icon: Info,
     accentColor: 'var(--color-primary)',
     containerStyle: {
-      boxShadow: '0 18px 40px var(--color-shadow-soft)',
       borderColor: 'color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default))',
     },
     iconWrapStyle: {
-      backgroundColor: 'var(--color-primary-soft)',
-      borderColor: 'color-mix(in srgb, var(--color-primary) 28%, transparent)',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 30%, var(--color-border-default))',
     },
     closeStyle: {
-      borderColor: 'color-mix(in srgb, var(--color-primary) 18%, transparent)',
-      backgroundColor: 'rgba(8, 145, 178, 0.08)',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 22%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface))',
     },
   },
   error: {
     icon: OctagonX,
     accentColor: 'var(--color-danger)',
     containerStyle: {
-      boxShadow: '0 18px 40px var(--color-shadow-soft)',
       borderColor: 'color-mix(in srgb, var(--color-danger) 24%, var(--color-border-default))',
     },
     iconWrapStyle: {
-      backgroundColor: 'rgba(248, 81, 73, 0.12)',
-      borderColor: 'rgba(248, 81, 73, 0.28)',
+      backgroundColor: 'color-mix(in srgb, var(--color-danger) 12%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-danger) 30%, var(--color-border-default))',
     },
     closeStyle: {
-      borderColor: 'rgba(248, 81, 73, 0.18)',
-      backgroundColor: 'rgba(248, 81, 73, 0.08)',
+      borderColor: 'color-mix(in srgb, var(--color-danger) 22%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-danger) 8%, var(--color-bg-surface))',
     },
   },
 }
@@ -157,3 +150,20 @@ function toneMeta(type: ToastType): ToastToneMeta {
   return toneMap[type]
 }
 </script>
+
+<style scoped>
+.app-toast-item {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))
+  );
+  box-shadow: 0 18px 40px var(--color-shadow-soft);
+}
+
+.app-toast-close {
+  border-color: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  background: color-mix(in srgb, var(--color-bg-base) 76%, var(--color-bg-surface));
+  color: var(--color-text-secondary);
+}
+</style>
