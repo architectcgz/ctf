@@ -637,7 +637,7 @@ async function loadChallenge(): Promise<void> {
       clearSolutions()
     }
   } catch {
-    toast.error('加载挑战详情失败')
+    toast.error('加载题目详情失败')
     void router.push('/challenges')
   } finally {
     loading.value = false

@@ -87,7 +87,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
     title: isTemplateLibraryMode.value ? '环境模板库' : '拓扑编排台',
     description: isTemplateLibraryMode.value
       ? '独立管理环境模板，支持列表检索、图形编辑、新建、覆盖和删除。'
-      : '按挑战维度管理网络分段、节点编排、模板复用和当前已生效的链路策略。',
+      : '按题目维度管理网络分段、节点编排、模板复用和当前已生效的链路策略。',
   }))
   const loadingText = computed(() =>
     isTemplateLibraryMode.value ? '正在同步模板库...' : '正在同步拓扑与模板...'
@@ -98,7 +98,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   const heroTitle = computed(() =>
     isTemplateLibraryMode.value
       ? selectedTemplate.value?.name || '环境模板库'
-      : challenge.value?.title || `挑战 #${options.challengeId}`
+      : challenge.value?.title || `题目 #${options.challengeId}`
   )
   const heroDescription = computed(() =>
     isTemplateLibraryMode.value
@@ -137,7 +137,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       eyebrow: '模板绑定',
       title: topology.value?.template_id || '无',
       subtitle: topology.value?.template_id
-        ? '当前挑战最近一次是按模板保存的。'
+        ? '当前题目最近一次是按模板保存的。'
         : '当前拓扑为手工编排或尚未保存。',
     }
   })
@@ -644,14 +644,14 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
   async function handleApplyTemplate(template: EnvironmentTemplateData) {
     if (
       typeof window !== 'undefined' &&
-      !window.confirm(`确认将模板“${template.name}”应用到当前挑战吗？已保存拓扑会被模板覆盖。`)
+      !window.confirm(`确认将模板“${template.name}”应用到当前题目吗？已保存拓扑会被模板覆盖。`)
     ) {
       return
     }
     templateBusy.value = true
     try {
       await saveChallengeTopology(options.challengeId, { template_id: Number(template.id) })
-      toast.success('模板已应用到挑战')
+      toast.success('模板已应用到题目')
       await reloadAll()
     } finally {
       templateBusy.value = false
@@ -667,7 +667,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       )
       topology.value = saved
       applyTopologyDraft(createDraftFromTopology(saved))
-      toast.success('挑战拓扑已保存')
+      toast.success('题目拓扑已保存')
       await loadTemplates()
     } finally {
       saving.value = false
@@ -676,12 +676,12 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
 
   async function handleDeleteTopology() {
     if (!topology.value) {
-      toast.warning('当前挑战还没有已保存的拓扑')
+      toast.warning('当前题目还没有已保存的拓扑')
       return
     }
     if (
       typeof window !== 'undefined' &&
-      !window.confirm('确认删除当前挑战已保存的拓扑吗？删除后需要重新保存才能恢复。')
+      !window.confirm('确认删除当前题目已保存的拓扑吗？删除后需要重新保存才能恢复。')
     ) {
       return
     }
@@ -690,7 +690,7 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       await deleteChallengeTopology(options.challengeId)
       topology.value = null
       applyTopologyDraft(createEmptyTopologyDraft())
-      toast.success('挑战拓扑已删除')
+      toast.success('题目拓扑已删除')
     } finally {
       saving.value = false
     }

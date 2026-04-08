@@ -226,7 +226,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               <div
                 class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
               >
-                打开挑战
+                查看题目
                 <ArrowRight class="h-4 w-4" />
               </div>
             </AppCard>
@@ -312,7 +312,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                     class="writeup-open-link inline-flex items-center gap-1 font-medium"
                     @click="openChallenge(item.challenge_id)"
                   >
-                    打开挑战
+                    查看题目
                     <ArrowRight class="h-4 w-4" />
                   </button>
                 </div>

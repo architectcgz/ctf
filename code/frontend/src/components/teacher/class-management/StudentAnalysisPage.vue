@@ -196,7 +196,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           <article class="summary-card">
             <div class="summary-card__label">已做题目数</div>
             <div class="summary-card__value">{{ progress?.solved_challenges ?? 0 }}</div>
-            <div class="summary-card__hint">已成功完成的挑战数量</div>
+            <div class="summary-card__hint">已成功完成的题目数量</div>
           </article>
           <article class="summary-card">
             <div class="summary-card__label">完成率</div>

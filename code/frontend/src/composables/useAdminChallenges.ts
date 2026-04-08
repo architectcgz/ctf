@@ -114,7 +114,7 @@ export function useAdminChallenges() {
 
   async function remove(id: string) {
     try {
-      await ElMessageBox.confirm('确定要删除此挑战吗？', '确认', { type: 'warning' })
+      await ElMessageBox.confirm('确定要删除这道题目吗？', '确认', { type: 'warning' })
       await deleteChallenge(id)
       toast.success('删除成功')
       await refresh()

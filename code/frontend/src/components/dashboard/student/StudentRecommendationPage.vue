@@ -150,7 +150,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
           v-if="recommendations.length === 0"
           class="mt-5 rounded-[22px] border border-dashed border-[var(--journal-shell-border)] px-4 py-12 text-center text-sm text-[var(--journal-muted)]"
         >
-          当前没有推荐题目，可以先去挑战列表探索新的方向。
+          当前没有推荐题目，可以先去题目列表探索新的方向。
         </div>
 
         <div v-else class="recommend-list mt-5">
