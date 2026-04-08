@@ -111,8 +111,8 @@ const metadata = computed(() => [
 <style scoped>
 .import-review {
   display: grid;
-  gap: 1rem;
-  padding-block: 0.5rem 1rem;
+  gap: var(--space-4);
+  padding-block: var(--space-2) var(--space-4);
 }
 
 .import-review__header {
@@ -120,7 +120,7 @@ const metadata = computed(() => [
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .import-review__eyebrow {
@@ -132,7 +132,7 @@ const metadata = computed(() => [
 }
 
 .import-review__title {
-  margin: 0.3rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: clamp(1.35rem, 1.8vw, 1.7rem);
   font-weight: 700;
   color: var(--journal-ink);
@@ -141,7 +141,7 @@ const metadata = computed(() => [
 .import-review__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .import-review__primary,
@@ -150,7 +150,7 @@ const metadata = computed(() => [
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 700;
@@ -176,15 +176,15 @@ const metadata = computed(() => [
 
 .import-review__grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .import-review__section,
 .import-review__warning {
   display: grid;
-  gap: 0.85rem;
-  padding: 1rem 0;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
   border-top: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
@@ -198,13 +198,13 @@ const metadata = computed(() => [
 
 .import-review__meta {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .import-review__meta-item {
   display: grid;
-  gap: 0.2rem;
+  gap: var(--space-1);
 }
 
 .import-review__meta-label {
@@ -226,7 +226,7 @@ const metadata = computed(() => [
 
 .import-review__definition {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   margin: 0;
 }
 
@@ -236,20 +236,20 @@ const metadata = computed(() => [
 }
 
 .import-review__definition dd {
-  margin: 0.22rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--journal-ink);
   line-height: 1.65;
 }
 
 .import-review__list {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
 }
 
 .import-review__list-item {
   display: grid;
-  gap: 0.2rem;
-  padding-bottom: 0.65rem;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2-5);
   border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
@@ -267,9 +267,9 @@ const metadata = computed(() => [
 
 .import-review__warnings {
   margin: 0;
-  padding-left: 1rem;
+  padding-left: var(--space-4);
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
   color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
   font-size: 0.88rem;
   line-height: 1.7;
