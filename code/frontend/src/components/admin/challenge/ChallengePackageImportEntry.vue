@@ -74,13 +74,13 @@ function handleFileChange(event: Event) {
 <style scoped>
 .import-entry {
   display: grid;
-  gap: 1.25rem;
-  padding-block: 0.35rem 0.75rem;
+  gap: var(--space-5);
+  padding-block: var(--space-1-5) var(--space-3);
 }
 
 .import-entry__lead {
   display: grid;
-  gap: 0.55rem;
+  gap: var(--space-2);
   max-width: 44rem;
 }
 
@@ -101,7 +101,7 @@ function handleFileChange(event: Event) {
 
 .import-entry__panel {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
   align-items: stretch;
 }
@@ -112,10 +112,10 @@ function handleFileChange(event: Event) {
 
 .import-entry__dropzone {
   display: grid;
-  gap: 0.55rem;
+  gap: var(--space-2);
   min-height: 15rem;
   width: 100%;
-  padding: 1.25rem;
+  padding: var(--space-5);
   text-align: left;
   border: 1px dashed color-mix(in srgb, var(--journal-accent) 36%, transparent);
   border-radius: 1.25rem;
@@ -166,7 +166,7 @@ function handleFileChange(event: Event) {
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  padding: 0.38rem 0.72rem;
+  padding: var(--space-1-5) var(--space-3);
   border-radius: 999px;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
