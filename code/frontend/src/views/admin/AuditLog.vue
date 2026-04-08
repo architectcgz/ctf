@@ -297,10 +297,10 @@ onMounted(() => {
     var(--journal-surface) 94%,
     var(--color-bg-base)
   );
-  --journal-note-card-padding: 0.95rem 1rem;
+  --journal-note-card-padding: var(--space-4) var(--space-4);
   --journal-note-value-size: 1.15rem;
   --journal-note-value-weight: 700;
-  --journal-note-helper-margin-top: 0.45rem;
+  --journal-note-helper-margin-top: var(--space-2);
   --journal-note-helper-line-height: 1.55;
   --journal-shell-hero-radial-strength: 10%;
   --journal-shell-hero-radial-size: 16rem;
@@ -310,7 +310,7 @@ onMounted(() => {
 
 .admin-overview {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .admin-page-copy {
@@ -319,7 +319,7 @@ onMounted(() => {
 
 .admin-summary-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -329,7 +329,7 @@ onMounted(() => {
 }
 
 .admin-divider {
-  margin: 1.2rem 0;
+  margin: var(--space-5) 0;
 }
 
 .admin-section-head {
@@ -337,11 +337,11 @@ onMounted(() => {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .admin-section-title {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -355,9 +355,9 @@ onMounted(() => {
 }
 
 .admin-filter-grid {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto;
 }
 
@@ -367,7 +367,7 @@ onMounted(() => {
   border-radius: 1rem;
   border: 1px solid var(--admin-control-border);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.7rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
@@ -389,7 +389,7 @@ onMounted(() => {
   border: 1px solid transparent;
   min-height: 2.75rem;
   border-radius: 999px;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   transition:
@@ -400,7 +400,7 @@ onMounted(() => {
 
 .admin-btn-compact {
   min-height: 2.3rem;
-  padding: 0.48rem 0.82rem;
+  padding: var(--space-2) var(--space-3);
 }
 
 .admin-btn-primary {
@@ -416,21 +416,21 @@ onMounted(() => {
 }
 
 .admin-error {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   border: 1px solid color-mix(in srgb, var(--color-danger) 20%, var(--journal-border));
   border-radius: 18px;
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   font-size: 0.875rem;
   color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .audit-empty-state {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   border: 1px solid var(--audit-table-border);
   border-radius: 20px;
   background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
-  padding: 0.4rem;
+  padding: var(--space-1-5);
 }
 
 .audit-table-shell {
@@ -443,7 +443,7 @@ onMounted(() => {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  padding: 0.34rem 0.72rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: 0.72rem;
   font-weight: 700;
   color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
@@ -463,7 +463,7 @@ onMounted(() => {
   }
 
   .journal-shell {
-    padding-inline: 1rem;
+    padding-inline: var(--space-4);
   }
 }
 </style>
