@@ -110,8 +110,8 @@ function formatTime(value: string): string {
 .contest-directory-head {
   display: grid;
   grid-template-columns: var(--contest-directory-columns);
-  gap: 1rem;
-  padding: 0 0 0.8rem;
+  gap: var(--space-4);
+  padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -131,9 +131,9 @@ function formatTime(value: string): string {
 .contest-row {
   display: grid;
   grid-template-columns: var(--contest-directory-columns);
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: start;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -143,7 +143,7 @@ function formatTime(value: string): string {
 
 .contest-row__identity {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1-5);
 }
 
 .contest-row__title {
@@ -176,7 +176,7 @@ function formatTime(value: string): string {
 
 .contest-row__window {
   display: grid;
-  gap: 0.22rem;
+  gap: var(--space-1);
 }
 
 .contest-row__window p {
@@ -191,7 +191,7 @@ function formatTime(value: string): string {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .contest-action {
@@ -201,7 +201,7 @@ function formatTime(value: string): string {
   min-height: 34px;
   border-radius: 10px;
   border: 1px solid transparent;
-  padding: 0.42rem 0.78rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: 0.84rem;
   font-weight: 600;
   line-height: 1;
@@ -245,8 +245,8 @@ function formatTime(value: string): string {
 
   .contest-row {
     grid-template-columns: 1fr;
-    gap: 0.62rem;
-    padding: 0.95rem 0;
+    gap: var(--space-2-5);
+    padding: var(--space-4) 0;
   }
 
   .contest-row__actions {
