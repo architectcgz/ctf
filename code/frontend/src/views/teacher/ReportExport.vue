@@ -390,8 +390,8 @@ const {
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
 }
 
 .report-copy {
@@ -401,37 +401,37 @@ const {
 .report-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .report-hero-divider {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   border-top: 1px dashed var(--report-divider);
 }
 
 .report-workspace {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
   grid-template-columns: minmax(0, 1.28fr) minmax(280px, 0.72fr);
-  padding-top: 1.5rem;
+  padding-top: var(--space-6);
 }
 
 .report-main,
 .report-aside {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .report-flat-section {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .report-flat-section--aside {
   align-content: start;
-  gap: 1rem;
+  gap: var(--space-4);
   border-left: 1px solid var(--report-divider);
-  padding-left: 1rem;
+  padding-left: var(--space-4);
 }
 
 .report-section-head {
@@ -439,11 +439,11 @@ const {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .report-section-title {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -457,18 +457,18 @@ const {
 }
 
 .report-command-grid {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 1.08fr) minmax(260px, 0.92fr);
 }
 
 .report-side-notes {
   display: grid;
   align-content: start;
-  gap: 0.85rem;
+  gap: var(--space-3);
   border-left: 1px solid var(--report-divider);
-  padding-left: 1rem;
+  padding-left: var(--space-4);
 }
 
 .report-field {
@@ -489,18 +489,18 @@ const {
 
 .report-format-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .report-format-option {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: var(--space-3);
   border-radius: 1rem;
   border: 1px solid var(--report-control-border);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   transition:
     border-color 0.18s ease,
     background 0.18s ease,
@@ -517,7 +517,7 @@ const {
   border: 1px solid var(--report-card-border);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
 }
 
 .report-note-label {
@@ -529,32 +529,32 @@ const {
 }
 
 .report-note-value {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 1.02rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .report-note-helper {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.82rem;
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
 .report-guide-list {
-  margin-top: 0.6rem;
+  margin-top: var(--space-2-5);
   display: grid;
-  gap: 0.55rem;
+  gap: var(--space-2);
   list-style: none;
   padding-left: 0;
   color: var(--journal-muted);
 }
 
 .report-guide-stack {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .report-side-notes .report-note,
@@ -563,7 +563,7 @@ const {
   border-radius: 0;
   background: transparent;
   border-bottom: 1px solid var(--report-divider);
-  padding: 0 0 0.85rem;
+  padding: 0 0 var(--space-3);
 }
 
 .report-side-notes .report-note:last-child,
@@ -574,7 +574,7 @@ const {
 
 .report-kpi-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -590,7 +590,7 @@ const {
 .report-kpi-card {
   border: 1px solid var(--report-card-border);
   background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
@@ -603,14 +603,14 @@ const {
 }
 
 .report-kpi-value {
-  margin-top: 0.42rem;
+  margin-top: var(--space-1-5);
   font-size: 1.08rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .report-kpi-hint {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.8rem;
   line-height: 1.55;
   color: var(--journal-muted);
@@ -621,11 +621,11 @@ const {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   border: 1px solid var(--report-card-border);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .report-status-chip {
@@ -633,7 +633,7 @@ const {
   align-items: center;
   border-radius: 999px;
   border: 1px solid transparent;
-  padding: 0.35rem 0.8rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -666,12 +666,12 @@ const {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-height: 2.6rem;
   border-radius: 999px;
   border: 1px solid var(--report-control-border);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.58rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--journal-ink);
@@ -703,12 +703,12 @@ const {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding-right: 2rem;
+  gap: var(--space-4);
+  padding-right: var(--space-8);
 }
 
 .report-preview-error {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .report-preview-skeleton {
@@ -753,11 +753,11 @@ const {
 
 :deep(.report-preview-dialog .el-dialog__header) {
   margin-right: 0;
-  padding: 1.25rem 1.25rem 0;
+  padding: var(--space-5) var(--space-5) 0;
 }
 
 :deep(.report-preview-dialog .el-dialog__body) {
-  padding: 1rem 1.25rem 1.25rem;
+  padding: var(--space-4) var(--space-5) var(--space-5);
 }
 
 @media (max-width: 1180px) {
@@ -775,7 +775,7 @@ const {
     border-left: 0;
     border-top: 1px solid var(--report-divider);
     padding-left: 0;
-    padding-top: 1rem;
+    padding-top: var(--space-4);
   }
 
   .report-kpi-grid,
@@ -794,7 +794,7 @@ const {
   }
 
   .report-shell {
-    padding-inline: 1rem;
+    padding-inline: var(--space-4);
   }
 
   .report-dialog-header {
