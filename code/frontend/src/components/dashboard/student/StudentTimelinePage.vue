@@ -92,30 +92,31 @@ function changeTimelinePage(page: number): void {
           看最近训练记录和节奏变化。
         </p>
         <div class="timeline-metric-grid mt-5">
-          <article class="timeline-metric-card">
-            <div class="timeline-metric-card__label">成功解题</div>
-            <div class="timeline-metric-card__value">{{ solveCount }} 次</div>
+          <article class="timeline-metric-card teacher-surface-section">
+            <div class="journal-note-label">成功解题</div>
+            <div class="journal-note-value">{{ solveCount }} 次</div>
           </article>
-          <article class="timeline-metric-card">
-            <div class="timeline-metric-card__label">提交次数</div>
-            <div class="timeline-metric-card__value">{{ submitCount }} 次</div>
+          <article class="timeline-metric-card teacher-surface-section">
+            <div class="journal-note-label">提交次数</div>
+            <div class="journal-note-value">{{ submitCount }} 次</div>
           </article>
-          <article class="timeline-metric-card">
-            <div class="timeline-metric-card__label">实例操作</div>
-            <div class="timeline-metric-card__value">{{ instanceCount }} 次</div>
+          <article class="timeline-metric-card teacher-surface-section">
+            <div class="journal-note-label">实例操作</div>
+            <div class="journal-note-value">{{ instanceCount }} 次</div>
           </article>
-          <article class="timeline-metric-card">
-            <div class="timeline-metric-card__label">总记录</div>
-            <div class="timeline-metric-card__value">{{ totalTimelineCount }} 条</div>
+          <article class="timeline-metric-card teacher-surface-section">
+            <div class="journal-note-label">总记录</div>
+            <div class="journal-note-value">{{ totalTimelineCount }} 条</div>
           </article>
         </div>
       </div>
     </div>
 
     <div
-      class="timeline-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
+      class="timeline-board mt-0 px-0 pt-0 md:px-0 md:pt-0"
       :class="{ 'timeline-board--embedded': embedded }"
     >
+      <div class="journal-divider timeline-board-divider" aria-hidden="true" />
       <section class="timeline-section">
         <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
         <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
@@ -202,29 +203,35 @@ function changeTimelinePage(page: number): void {
 }
 
 .timeline-metric-card {
-  border: 1px solid color-mix(in srgb, var(--journal-shell-border) 92%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  padding: 0.75rem 0.85rem;
+  min-height: 100%;
+  padding: 0.82rem 0.95rem 0.78rem;
 }
 
-.timeline-metric-card__label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+.timeline-metric-card.teacher-surface-section {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
+  );
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
 }
 
-.timeline-metric-card__value {
-  margin-top: 0.48rem;
-  font-size: 1rem;
+.timeline-metric-card .journal-note-value {
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--journal-ink);
 }
 
 .timeline-board {
-  border-top: 1px solid var(--journal-divider);
+  border-top: 0;
+}
+
+.timeline-header + .timeline-board {
+  margin-top: var(--space-1) !important;
+}
+
+.timeline-board-divider {
+  --journal-divider-margin-block: 0 var(--space-1-5);
 }
 
 .timeline-board--embedded {

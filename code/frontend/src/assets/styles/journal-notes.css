@@ -1,3 +1,18 @@
+.journal-shell .journal-divider,
+.workspace-shell .journal-divider,
+.teacher-surface .journal-divider,
+.teacher-panel .journal-divider {
+  margin-block: var(--journal-divider-margin-block, var(--space-divider-gap, var(--space-4)));
+  border-top: var(
+    --journal-divider-border,
+    1px solid color-mix(
+      in srgb,
+      var(--journal-divider, var(--journal-border, var(--color-border-default))) 88%,
+      transparent
+    )
+  );
+}
+
 .journal-shell-admin .journal-eyebrow {
   font-size: var(--journal-eyebrow-size, 0.7rem);
   font-weight: var(--journal-eyebrow-weight, 700);
@@ -19,7 +34,7 @@
 }
 
 .journal-shell .journal-note-helper {
-  margin-top: var(--journal-note-helper-margin-top, 0.55rem);
+  margin-top: var(--journal-note-helper-margin-top, var(--space-2));
   font-size: var(--journal-note-helper-size, 0.78rem);
   line-height: var(--journal-note-helper-line-height, 1.5);
   color: var(--journal-note-helper-color, var(--journal-muted));
@@ -34,21 +49,21 @@
 }
 
 .journal-shell-admin .journal-note-value {
-  margin-top: var(--journal-note-value-margin-top, 0.35rem);
+  margin-top: var(--journal-note-value-margin-top, var(--space-1-5));
   font-size: var(--journal-note-value-size, 1rem);
   font-weight: var(--journal-note-value-weight, 600);
   color: var(--journal-note-value-color, var(--journal-ink));
 }
 
 .journal-shell-admin .journal-note-helper {
-  margin-top: var(--journal-note-helper-margin-top, 0.55rem);
+  margin-top: var(--journal-note-helper-margin-top, var(--space-2));
   font-size: var(--journal-note-helper-size, 0.78rem);
   line-height: var(--journal-note-helper-line-height, 1.5);
   color: var(--journal-note-helper-color, var(--journal-muted));
 }
 
 .journal-shell-admin .journal-divider {
-  margin-block: var(--journal-divider-margin-block, 1rem);
+  margin-block: var(--journal-divider-margin-block, var(--space-divider-gap, var(--space-4)));
   border-top: var(
     --journal-divider-border,
     1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent)
@@ -59,7 +74,7 @@
   border: var(--journal-note-card-border, 1px solid var(--journal-border));
   border-radius: var(--journal-note-card-radius, 14px);
   background: var(--journal-note-card-background, var(--journal-surface));
-  padding: var(--journal-note-card-padding, 0.75rem 0.875rem);
+  padding: var(--journal-note-card-padding, var(--space-3) var(--space-3-5));
 }
 
 .journal-shell-admin.journal-notes-rail .journal-note {
