@@ -852,6 +852,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   border-bottom: 0;
 }
 
+.writeup-section-card :deep(.section-card) {
+  border-top: 0;
+}
+
 .insight-kpi-grid {
   align-items: stretch;
 }
