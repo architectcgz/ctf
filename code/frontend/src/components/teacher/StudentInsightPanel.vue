@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-vue-next'
 
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import SkillRadar from '@/components/common/SkillRadar.vue'
@@ -31,6 +32,10 @@ const props = defineProps<{
   timeline: TimelineEvent[]
   evidence: TeacherEvidenceData | null
   writeupSubmissions: TeacherSubmissionWriteupItemData[]
+  writeupPage: number
+  writeupTotal: number
+  writeupTotalPages: number
+  writeupPaginationLoading: boolean
   manualReviewSubmissions: TeacherManualReviewSubmissionItemData[]
   activeManualReview: TeacherManualReviewSubmissionDetailData | null
   manualReviewLoading: boolean
@@ -45,6 +50,7 @@ const emit = defineEmits<{
   openManualReview: [submissionId: string]
   moderateWriteup: [payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' }]
   reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
+  changeWriteupPage: [page: number]
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
@@ -78,6 +84,10 @@ function openChallenge(challengeId: string): void {
 
 function openManualReview(submissionId: string): void {
   emit('openManualReview', submissionId)
+}
+
+function changeWriteupPage(page: number): void {
+  emit('changeWriteupPage', page)
 }
 
 function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
@@ -254,27 +264,31 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               </article>
             </div>
 
-            <div class="writeup-published-list mt-5 grid gap-3">
-              <AppCard
+            <section class="writeup-directory mt-5">
+              <header class="writeup-directory-head">
+                <span>题目</span>
+                <span>题解</span>
+                <span>状态</span>
+                <span>发布时间</span>
+                <span>操作</span>
+              </header>
+
+              <article
                 v-for="item in publishedWriteupSubmissions"
                 :key="item.id"
-                variant="panel"
-                accent="neutral"
-                class="writeup-published-card"
+                class="writeup-directory-row"
               >
-                <div class="writeup-published-card__head flex flex-wrap items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="writeup-published-card__challenge text-xs">
-                      对应题目
-                    </div>
-                    <div class="writeup-published-card__challenge-title text-sm font-semibold text-[var(--color-text-primary)]">
-                      {{ item.challenge_title }}
-                    </div>
-                    <div class="writeup-published-card__title mt-2 text-sm text-[var(--color-text-secondary)]">
-                      {{ item.title }}
-                    </div>
-                  </div>
-                  <div class="flex flex-wrap gap-2">
+                <div class="writeup-directory-cell">
+                  <div class="writeup-directory-challenge">{{ item.challenge_title }}</div>
+                </div>
+
+                <div class="writeup-directory-cell">
+                  <div class="writeup-directory-title">{{ item.title }}</div>
+                  <div class="writeup-directory-preview">{{ item.content_preview || '暂无摘要' }}</div>
+                </div>
+
+                <div class="writeup-directory-cell">
+                  <div class="writeup-directory-status">
                     <span class="writeup-chip writeup-chip--muted">已发布</span>
                     <span :class="visibilityStatusClass(item.visibility_status)">
                       {{ visibilityStatusLabel(item.visibility_status) }}
@@ -288,26 +302,33 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   </div>
                 </div>
 
-                <div class="insight-preview mt-4 rounded-2xl px-4 py-3 text-sm leading-7 text-[var(--color-text-secondary)]">
-                  {{ item.content_preview || '暂无摘要' }}
+                <div class="writeup-directory-cell writeup-directory-time">
+                  {{ new Date(item.published_at || item.updated_at).toLocaleString('zh-CN') }}
                 </div>
 
-                <div class="writeup-published-card__meta mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
-                  <span
-                    >发布时间：{{ new Date(item.published_at || item.updated_at).toLocaleString('zh-CN') }}</span
+                <div class="writeup-directory-cell writeup-directory-action">
+                  <button
+                    type="button"
+                    class="writeup-open-link inline-flex items-center gap-1 font-medium"
+                    @click="openChallenge(item.challenge_id)"
                   >
-                  <div class="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      class="writeup-open-link inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
-                      @click="openChallenge(item.challenge_id)"
-                    >
-                      打开挑战
-                      <ArrowRight class="h-4 w-4" />
-                    </button>
-                  </div>
+                    打开挑战
+                    <ArrowRight class="h-4 w-4" />
+                  </button>
                 </div>
-              </AppCard>
+              </article>
+            </section>
+
+            <div class="writeup-pagination mt-4">
+              <PagePaginationControls
+                :page="writeupPage"
+                :total-pages="writeupTotalPages"
+                :total="writeupTotal"
+                total-label="发布题解总数"
+                :disabled="writeupPaginationLoading"
+                show-jump
+                @change-page="changeWriteupPage"
+              />
             </div>
           </template>
         </SectionCard>
@@ -667,40 +688,116 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   color: var(--journal-muted);
 }
 
-.writeup-published-list {
+.writeup-directory {
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
+}
+
+.writeup-directory-head,
+.writeup-directory-row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 2fr)
+    minmax(0, 1.2fr)
+    minmax(0, 1.35fr)
+    minmax(108px, 0.9fr);
   gap: 0.9rem;
+  align-items: start;
 }
 
-.writeup-published-card {
-  border-bottom-color: color-mix(in srgb, var(--teacher-divider) 84%, transparent);
-}
-
-.writeup-published-card__head {
-  align-items: flex-start;
-}
-
-.writeup-published-card__challenge {
+.writeup-directory-head {
+  padding: 0.7rem 0.15rem 0.62rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.writeup-published-card__challenge-title {
+.writeup-directory-row {
+  padding: 0.9rem 0.15rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
+}
+
+.writeup-directory-cell {
+  min-width: 0;
+}
+
+.writeup-directory-challenge {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.writeup-directory-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.writeup-directory-preview {
   margin-top: 0.35rem;
-}
-
-.writeup-published-card__title {
   line-height: 1.6;
+  font-size: 0.8rem;
+  color: var(--journal-muted);
 }
 
-.writeup-published-card__meta {
-  padding-top: 0.55rem;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
+.writeup-directory-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.writeup-directory-time {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.writeup-directory-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.writeup-pagination {
+  padding-top: 0.35rem;
 }
 
 .writeup-open-link {
+  min-height: 34px;
+  padding: 0 0.75rem;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, var(--teacher-divider));
   color: var(--journal-accent-strong);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.writeup-open-link:hover,
+.writeup-open-link:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 46%, var(--teacher-divider));
+  background: color-mix(in srgb, var(--journal-accent) 16%, transparent);
+  color: var(--journal-accent);
+  outline: none;
+}
+
+@media (max-width: 1023px) {
+  .writeup-directory-head {
+    display: none;
+  }
+
+  .writeup-directory-row {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .writeup-directory-action {
+    justify-content: flex-start;
+  }
 }
 
 :deep(.section-card) {
