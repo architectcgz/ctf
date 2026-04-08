@@ -11,44 +11,44 @@ const packageTree = `challenge-package.zip
   docker/
     topology.yml`
 
-const challengeManifest = `api_version: v1
-kind: challenge
+const challengeManifest = `api_version: v1 # 固定为 v1
+kind: challenge # 固定为 challenge
 
 meta:
-  slug: web-demo
-  title: Web Demo
-  category: web
-  difficulty: easy
-  points: 100
+  slug: web-demo # 题目标识（全局唯一，建议英文小写+中划线）
+  title: Web Demo # 题目展示名称
+  category: web # 题目分类，如 web/pwn/reverse/crypto/misc
+  difficulty: easy # 难度等级，如 easy/medium/hard
+  points: 100 # 分值，必须大于 0
   tags:
-    - sqli
-    - mysql
+    - sqli # 标签（可选）
+    - mysql # 标签（可选）
 
 content:
-  statement: statement.md
+  statement: statement.md # 题面文件路径（题目包内）
   attachments:
-    - path: attachments/web-demo.zip
-      name: web-demo.zip
+    - path: attachments/web-demo.zip # 附件文件路径（题目包内）
+      name: web-demo.zip # 附件展示名称（可选，默认文件名）
 
 flag:
-  type: static
-  value: flag{example}
-  prefix: flag
+  type: static # 判题类型：static/dynamic/regex/manual_review
+  value: flag{example} # 当 type=static 或 regex 时必填
+  prefix: flag # flag 前缀（可选）
 
 hints:
-  - level: 1
-    title: Hint 1
-    content: 先看登录流程的请求参数
+  - level: 1 # 提示级别（数字越大通常越晚解锁）
+    title: Hint 1 # 提示标题
+    content: 先看登录流程的请求参数 # 提示内容
 
 runtime:
-  type: container
+  type: container # 运行方式，如 container/static
   image:
-    ref: ctf/web-demo:latest
+    ref: ctf/web-demo:latest # 容器镜像地址（type=container 时使用）
 
 extensions:
   topology:
-    source: docker/topology.yml
-    enabled: false`
+    source: docker/topology.yml # 拓扑文件路径（可选）
+    enabled: false # 是否启用拓扑扩展`
 </script>
 
 <template>
@@ -188,11 +188,11 @@ extensions:
   margin: 0;
   border-radius: 0.85rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
-  background: color-mix(in srgb, var(--color-bg-base) 80%, #0f172a 20%);
+  background: var(--color-bg-surface);
   padding: 1rem;
-  color: var(--journal-ink);
+  color: var(--color-text-primary);
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   line-height: 1.7;
 }
 
