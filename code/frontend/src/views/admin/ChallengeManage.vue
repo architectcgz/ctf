@@ -545,6 +545,14 @@ onMounted(() => {
               </div>
 
               <div class="sample-guide__actions">
+                <a
+                  class="sample-guide__link"
+                  data-testid="challenge-package-download-link"
+                  href="/downloads/challenge-package-sample-v1.zip"
+                  download="challenge-package-sample-v1.zip"
+                >
+                  下载示例题目包
+                </a>
                 <button
                   type="button"
                   class="sample-guide__link"
@@ -968,6 +976,8 @@ onMounted(() => {
 .sample-guide__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
 }
 
 .sample-guide__link {
