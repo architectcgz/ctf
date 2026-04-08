@@ -44,6 +44,7 @@ describe('TeacherDashboard', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    window.history.replaceState(window.history.state, '', '/academy/overview')
     pushMock.mockReset()
 
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
@@ -206,6 +207,32 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('top-tab-insight')
     expect(teacherDashboardPageSource).toContain('top-tab-advice')
     expect(teacherDashboardPageSource).toContain('top-tab-action')
+  })
+
+  it('切换工作台 tab 时应同步 panel 查询参数且次级标题使用公共样式类', async () => {
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(window.location.search).toBe('')
+
+    await wrapper.get('#top-tab-trend').trigger('click')
+    expect(window.location.search).toContain('panel=trend')
+    expect(wrapper.find('#trend h2.workspace-tab-heading__title').exists()).toBe(true)
+    expect(wrapper.find('#trend h2.section-title').exists()).toBe(false)
+
+    await wrapper.get('#top-tab-action').trigger('click')
+    expect(window.location.search).toContain('panel=action')
+    expect(wrapper.find('#action h2.workspace-tab-heading__title').exists()).toBe(true)
+    expect(wrapper.find('#action h2.section-title').exists()).toBe(false)
   })
 
   it('教师概览的小标题应隔离 overline 样式以避免继承装饰横线', () => {
