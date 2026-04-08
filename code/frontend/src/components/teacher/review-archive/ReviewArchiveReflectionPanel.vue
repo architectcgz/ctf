@@ -78,16 +78,16 @@ defineProps<{
 <style scoped>
 .archive-grid {
   display: grid;
-  gap: 1.2rem;
+  gap: var(--space-5);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .archive-panel {
-  padding: 1.1rem 1.1rem 1.15rem;
+  padding: var(--space-4-5) var(--space-4-5) var(--space-5);
 }
 
 .archive-panel__header {
-  padding-bottom: 0.9rem;
+  padding-bottom: var(--space-3-5);
   border-bottom: 1px dashed color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -100,24 +100,24 @@ defineProps<{
 }
 
 .archive-panel__title {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 1.18rem;
   color: var(--journal-ink);
 }
 
 .archive-panel__empty {
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   color: var(--color-text-secondary);
 }
 
 .reflection-list {
   display: grid;
-  gap: 0.9rem;
-  margin-top: 1rem;
+  gap: var(--space-3-5);
+  margin-top: var(--space-4);
 }
 
 .reflection-item {
-  padding: 0.95rem 1rem;
+  padding: var(--space-4) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
@@ -126,7 +126,7 @@ defineProps<{
 .reflection-item__head,
 .reflection-item__meta {
   display: flex;
-  gap: 0.7rem;
+  gap: var(--space-3);
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
@@ -140,19 +140,19 @@ defineProps<{
 }
 
 .reflection-item__subhead {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: 0.92rem;
   color: var(--journal-muted);
 }
 
 .reflection-item__body {
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   color: color-mix(in srgb, var(--journal-muted) 80%, var(--journal-ink));
   line-height: 1.72;
 }
 
 .reflection-item__meta {
-  margin-top: 0.7rem;
+  margin-top: var(--space-3);
 }
 
 @media (max-width: 1023px) {

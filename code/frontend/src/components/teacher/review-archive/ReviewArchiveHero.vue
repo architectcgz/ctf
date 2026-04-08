@@ -98,12 +98,12 @@ const statItems = [
 .archive-hero__content {
   position: relative;
   z-index: 1;
-  padding: 1.5rem;
+  padding: var(--space-6);
 }
 
 .archive-hero__meta {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   justify-content: space-between;
   align-items: flex-start;
 }
@@ -118,7 +118,7 @@ const statItems = [
 }
 
 .archive-hero__title {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.05;
   color: var(--journal-ink);
@@ -127,7 +127,7 @@ const statItems = [
 
 .archive-hero__description {
   max-width: 48rem;
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
   color: var(--color-text-secondary);
   line-height: 1.7;
 }
@@ -135,14 +135,14 @@ const statItems = [
 .archive-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
   justify-content: flex-end;
 }
 
 .archive-hero__grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
 }
 
@@ -154,7 +154,7 @@ const statItems = [
 }
 
 .archive-hero__profile {
-  padding: 1.1rem 1.15rem;
+  padding: var(--space-4-5) var(--space-5);
 }
 
 .archive-hero__label,
@@ -167,7 +167,7 @@ const statItems = [
 }
 
 .archive-hero__student {
-  margin-top: 0.8rem;
+  margin-top: var(--space-3);
   font-size: 1.9rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -176,17 +176,17 @@ const statItems = [
 .archive-hero__student-subline {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-top: 0.4rem;
+  gap: var(--space-3);
+  margin-top: var(--space-1-5);
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
 .archive-hero__stamp {
   display: inline-flex;
   flex-direction: column;
-  gap: 0.3rem;
-  margin-top: 1.1rem;
-  padding: 0.8rem 0.9rem;
+  gap: var(--space-1);
+  margin-top: var(--space-4-5);
+  padding: var(--space-3) var(--space-3-5);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
@@ -201,16 +201,16 @@ const statItems = [
 
 .archive-hero__stats {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .archive-hero__stat {
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .archive-hero__stat-value {
-  margin-top: 0.7rem;
+  margin-top: var(--space-3);
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -234,7 +234,7 @@ const statItems = [
   }
 
   .archive-hero__content {
-    padding: 1.1rem;
+    padding: var(--space-4-5);
   }
 
   .archive-hero__stats {
