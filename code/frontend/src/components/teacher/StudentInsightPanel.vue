@@ -19,7 +19,7 @@ import type {
   TimelineEvent,
 } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
-import { getWeakDimensions, toRadarScores } from '@/utils/skillProfile'
+import { toRadarScores } from '@/utils/skillProfile'
 
 type StudentInsightSection = 'all' | 'overview' | 'recommendations' | 'writeups' | 'manual-review' | 'evidence'
 
@@ -48,7 +48,6 @@ const emit = defineEmits<{
 }>()
 
 const radarScores = computed(() => toRadarScores(props.profile))
-const weakDimensions = computed(() => getWeakDimensions(props.profile))
 const visibleWriteupCount = computed(() =>
   props.writeupSubmissions.filter((item) => item.visibility_status === 'visible').length
 )
@@ -155,64 +154,17 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
       </div>
 
       <template v-else-if="student">
-        <div v-if="isSectionVisible('overview')" class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <SectionCard title="当前学员" subtitle="聚合进度、难度完成情况和薄弱维度。">
-            <AppCard
-              variant="hero"
-              accent="primary"
-              eyebrow="Student Snapshot"
-              :title="student.name || student.username"
-              subtitle="查看当前学员的关键指标和推荐方向。"
-            >
-              <template #header>
-                <span
-                  class="rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-                  style="
-                    border-color: color-mix(
-                      in srgb,
-                      var(--color-primary) 18%,
-                      var(--color-border-default)
-                    );
-                    background-color: var(--color-primary-soft);
-                    color: var(--color-primary);
-                  "
-                >
-                  @{{ student.username }}
-                </span>
-              </template>
-
-              <div class="insight-kpi-grid grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <article class="insight-kpi-card insight-kpi-card--primary">
-                  <div class="insight-kpi-label">总题量</div>
-                  <div class="insight-kpi-value">{{ progress?.total_challenges ?? 0 }}</div>
-                  <div class="insight-kpi-hint">该学员当前纳入统计的挑战总数</div>
-                </article>
-                <article class="insight-kpi-card insight-kpi-card--success">
-                  <div class="insight-kpi-label">已完成</div>
-                  <div class="insight-kpi-value">{{ progress?.solved_challenges ?? 0 }}</div>
-                  <div class="insight-kpi-hint">已成功完成的挑战数量</div>
-                </article>
-                <article class="insight-kpi-card insight-kpi-card--warning">
-                  <div class="insight-kpi-label">薄弱维度</div>
-                  <div class="insight-kpi-value">
-                    {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
-                  </div>
-                  <div class="insight-kpi-hint">基于能力画像提炼的风险点</div>
-                </article>
-                <article class="insight-kpi-card insight-kpi-card--primary">
-                  <div class="insight-kpi-label">推荐题目</div>
-                  <div class="insight-kpi-value">{{ recommendations.length }}</div>
-                  <div class="insight-kpi-hint">可立即布置的补强任务数量</div>
-                </article>
-              </div>
-            </AppCard>
-
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div class="insight-rate-panel rounded-2xl px-5 py-4 text-center">
-                <p class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+        <div
+          v-if="isSectionVisible('overview')"
+          class="insight-overview-layout grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
+        >
+          <SectionCard>
+            <div class="insight-rate-row flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="insight-rate-panel rounded-2xl px-5 py-4">
+                <p class="insight-rate-panel__label text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
                   Solved Rate
                 </p>
-                <p class="mt-2 text-3xl font-semibold text-[var(--color-primary)]">
+                <p class="insight-rate-panel__value mt-2 text-3xl font-semibold text-[var(--color-primary)]">
                   {{
                     progress?.total_challenges
                       ? Math.round(
@@ -222,62 +174,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   }}%
                 </p>
               </div>
-            </div>
-
-            <div class="mt-6 grid gap-4 xl:grid-cols-2">
-              <AppCard
-                variant="panel"
-                accent="primary"
-                eyebrow="分类进度"
-                subtitle="按知识方向查看当前完成覆盖率。"
-              >
-                <div class="mt-4 space-y-3">
-                  <div
-                    v-for="(value, key) in progress?.by_category || {}"
-                    :key="key"
-                    class="insight-progress-item rounded-lg px-3 py-3"
-                  >
-                    <div class="flex items-center justify-between text-sm">
-                      <span class="font-medium text-[var(--color-text-primary)]">{{ key }}</span>
-                      <span class="text-[var(--color-text-secondary)]"
-                        >{{ value.solved }} / {{ value.total }}</span
-                      >
-                    </div>
-                    <div
-                      class="insight-progress-track mt-2 h-2 overflow-hidden rounded-full"
-                    >
-                      <div
-                        class="h-full rounded-full bg-[var(--color-primary)]"
-                        :style="{
-                          width: `${value.total ? Math.round((value.solved / value.total) * 100) : 0}%`,
-                        }"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </AppCard>
-
-              <AppCard
-                variant="panel"
-                accent="warning"
-                eyebrow="难度进度"
-                subtitle="按题目难度查看学员当前突破情况。"
-              >
-                <div class="mt-4 space-y-3">
-                  <div
-                    v-for="(value, key) in progress?.by_difficulty || {}"
-                    :key="key"
-                    class="insight-progress-item flex items-center justify-between rounded-lg px-3 py-3 text-sm"
-                  >
-                    <span class="font-medium text-[var(--color-text-primary)]">{{
-                      difficultyLabel(key)
-                    }}</span>
-                    <span class="text-[var(--color-text-secondary)]"
-                      >{{ value.solved }} / {{ value.total }}</span
-                    >
-                  </div>
-                </div>
-              </AppCard>
             </div>
           </SectionCard>
 
@@ -678,15 +574,36 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   );
 }
 
+.insight-overview-layout {
+  align-items: start;
+}
+
+.insight-rate-row {
+  margin-top: 0;
+}
+
 .insight-rate-panel {
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.1rem 0.7rem;
+}
+
+.insight-rate-panel__label,
+.insight-rate-panel__value {
+  margin: 0;
 }
 
 .insight-progress-item {
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--journal-surface-subtle));
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
+  border-radius: 0;
+  background: transparent;
 }
 
 .insight-progress-track {
@@ -695,8 +612,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-preview,
 .insight-answer-panel {
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  border: 0;
+  border-left: 2px solid color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 48%, transparent);
 }
 
 .insight-meta-pill {
@@ -766,16 +685,17 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 :deep(.section-card) {
-  padding: 1.1rem 1.1rem 1.05rem;
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: var(--journal-surface-subtle);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  padding: 0.95rem 0.2rem 0.7rem;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 :deep(.section-card__header) {
   margin-bottom: 1rem;
-  border-bottom: 1px dashed var(--teacher-divider);
+  border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   padding-bottom: 0.75rem;
 }
 
@@ -788,23 +708,24 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .insight-kpi-card {
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 16px;
-  background: var(--journal-surface);
-  padding: 0.9rem 0.95rem;
-  box-shadow: 0 8px 18px var(--color-shadow-soft);
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.75rem 0.1rem 0.65rem;
+  box-shadow: none;
 }
 
 .insight-kpi-card--primary {
-  border-top: 3px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
+  border-top: 2px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
 }
 
 .insight-kpi-card--success {
-  border-top: 3px solid color-mix(in srgb, var(--color-success) 34%, transparent);
+  border-top: 2px solid color-mix(in srgb, var(--color-success) 34%, transparent);
 }
 
 .insight-kpi-card--warning {
-  border-top: 3px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
+  border-top: 2px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
 }
 
 .insight-kpi-label {
