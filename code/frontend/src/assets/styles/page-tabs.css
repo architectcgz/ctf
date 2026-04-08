@@ -3,7 +3,10 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--journal-topbar-gap, 0.75rem 1rem);
+  gap: var(
+    --journal-topbar-gap,
+    var(--space-workspace-topbar-gap-y) var(--space-workspace-topbar-gap-x)
+  );
   padding-bottom: var(--journal-topbar-padding-bottom, 0);
 }
 
@@ -11,7 +14,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--journal-topbar-leading-gap, 0.65rem);
+  gap: var(--journal-topbar-leading-gap, var(--space-workspace-topbar-leading-gap-x));
 }
 
 .journal-shell .workspace-overline {
@@ -38,14 +41,14 @@
 .journal-shell .top-note {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem 1rem;
+  gap: var(--journal-top-note-gap, var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x));
   font-size: 0.82rem;
   color: var(--journal-muted, var(--color-text-secondary));
 }
 
 .top-tabs {
   display: flex;
-  gap: var(--page-top-tabs-gap, 1.2rem);
+  gap: var(--page-top-tabs-gap, var(--space-workspace-tabs-gap));
   margin: var(--page-top-tabs-margin, 0);
   padding: var(--page-top-tabs-padding, 0);
   border-bottom: 1px solid
@@ -66,7 +69,10 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--page-top-tab-min-height, 3rem);
-  padding: var(--page-top-tab-padding, 0.4rem 0 0.75rem);
+  padding: var(
+    --page-top-tab-padding,
+    var(--space-workspace-tab-padding-top) 0 var(--space-workspace-tab-padding-bottom)
+  );
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
@@ -108,4 +114,31 @@
 
 .tab-panel {
   min-width: 0;
+}
+
+.workspace-tab-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--workspace-tab-heading-gap, var(--space-3));
+}
+
+.workspace-tab-heading__main {
+  min-width: 0;
+}
+
+.workspace-tab-heading__title {
+  margin: var(--workspace-tab-title-margin-top, var(--space-1-5)) 0 0;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.workspace-tab-copy {
+  margin: var(--workspace-tab-copy-margin-top, var(--space-2)) 0 0;
+  max-width: 54rem;
+  line-height: 1.7;
+  color: var(--journal-muted, var(--color-text-secondary));
 }

@@ -4,6 +4,7 @@
 > 对应后端架构：../backend/01-system-architecture.md
 > 对应 API 设计：../backend/04-api-design.md
 > 对应设计系统：design-system/ctf-platform/MASTER.md
+> 对应间距体系：./09-spacing-system.md
 
 ---
 
