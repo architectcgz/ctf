@@ -439,12 +439,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .content-pane {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-section-gap-compact, var(--space-4));
 }
 
 .context-rail {
   min-width: 0;
-  padding: 28px 28px 28px 0;
+  padding: var(--space-workspace-content-padding, var(--space-7))
+    var(--space-workspace-content-padding, var(--space-7))
+    var(--space-workspace-content-padding, var(--space-7)) 0;
   border-left: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
 }
 
@@ -452,7 +454,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
 }
 
 .teacher-student-chip {
@@ -469,12 +471,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-alert {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-section-gap, var(--space-6));
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
   background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
   box-shadow: var(--workspace-shadow-panel);
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) var(--space-4-5);
 }
 
 .workspace-alert-title {
@@ -484,22 +486,22 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-alert-copy {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.84rem;
   line-height: 1.65;
   color: var(--journal-muted);
 }
 
 .workspace-alert-actions {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
 }
 
 .summary-strip {
   display: grid;
-  gap: 0.65rem 1rem;
+  gap: var(--space-2-5) var(--space-4);
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 0 0 1rem;
-  padding: 0.25rem 0 0.65rem;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-1) 0 var(--space-2-5);
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 82%, transparent);
 }
 
@@ -509,7 +511,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: 0;
   background: transparent;
-  padding: 0.8rem 0.15rem 0.7rem;
+  padding: var(--space-3) var(--space-1-5) var(--space-2-5);
   box-shadow: none;
 }
 
@@ -522,7 +524,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .summary-card__value {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.4;
@@ -530,7 +532,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .summary-card__hint {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.8rem;
   line-height: 1.55;
   color: var(--journal-muted);
@@ -538,12 +540,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .rail-stack {
   display: grid;
-  gap: 0.95rem;
+  gap: var(--space-4);
 }
 
 .class-switch-list {
   display: grid;
-  gap: 0.6rem;
+  gap: var(--space-2-5);
 }
 
 .class-switch-list--scroll,
@@ -557,9 +559,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-height: 2.75rem;
-  padding: 0.72rem 0.2rem;
+  padding: var(--space-3) var(--space-1);
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: 0;
@@ -590,12 +592,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .student-directory-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: center;
 }
 
 .student-directory-head {
-  padding: 0 0.15rem 0.55rem;
+  padding: 0 var(--space-1-5) var(--space-2);
   border-bottom: 1px solid var(--teacher-divider);
   font-size: 0.72rem;
   font-weight: 700;
@@ -605,7 +607,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .student-directory-row {
-  padding: 0.9rem 0.1rem;
+  padding: var(--space-3-5) var(--space-1);
   border-bottom: 1px solid var(--teacher-divider);
   background: transparent;
   text-align: left;
@@ -622,7 +624,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .student-directory-main {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -653,7 +655,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .student-directory-meta {
-  margin-top: 0.2rem;
+  margin-top: var(--space-1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -669,7 +671,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .student-directory-skeleton {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .student-directory-skeleton__item {
@@ -687,9 +689,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--space-2-5);
   min-height: 52px;
-  padding: 0.85rem 0.2rem;
+  padding: var(--space-3) var(--space-1);
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: 0;
@@ -723,7 +725,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .context-block + .context-block {
-  margin-top: 0.6rem;
+  margin-top: var(--space-2-5);
 }
 
 .context-block--actions {
@@ -733,13 +735,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .quick-action__main {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
 .quick-action__main span:last-child {
   display: grid;
-  gap: 0.2rem;
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -783,7 +785,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 :deep(.section-card) {
-  padding: 0.9rem 0.2rem 0.7rem;
+  padding: var(--space-3-5) var(--space-1) var(--space-3);
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 90%, transparent);
   border-radius: 0;
@@ -792,9 +794,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 :deep(.section-card__header) {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  padding-bottom: 0.75rem;
+  padding-bottom: var(--space-3);
 }
 
 :deep(.section-card__body) {
@@ -818,7 +820,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   }
 
   .context-rail {
-    padding: 0 28px 28px;
+    padding: 0 var(--space-workspace-content-padding, var(--space-7))
+      var(--space-workspace-content-padding, var(--space-7));
     border-left: 0;
     border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
   }
@@ -840,12 +843,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   .top-tabs,
   .content-pane,
   .context-rail {
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
   }
 
   .top-tabs {
-    gap: 18px;
+    gap: var(--space-4-5);
   }
 
   .summary-strip {
