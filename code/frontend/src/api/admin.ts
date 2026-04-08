@@ -1237,6 +1237,7 @@ export async function previewChallengeImport(file: File): Promise<AdminChallenge
     url: '/authoring/challenge-imports',
     data: form,
     headers: { 'Content-Type': 'multipart/form-data' },
+    suppressErrorToast: true,
   })
   return normalizeChallengeImportPreview(response)
 }

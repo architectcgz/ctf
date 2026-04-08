@@ -47,9 +47,10 @@ const {
   queueLoading,
   selectedFileName,
   queue,
+  uploadResults,
   hasPreview,
   refreshQueue,
-  selectPackage,
+  selectPackages,
   loadPreview,
   resetPreview,
   commitPreview,
@@ -106,8 +107,8 @@ const {
   remove,
 })
 
-async function handleSelectPackage(file: File) {
-  await selectPackage(file)
+async function handleSelectPackage(files: File[]) {
+  await selectPackages(files, { parallel: files.length > 1 })
 }
 
 async function handleCommitPreview() {
@@ -138,7 +139,7 @@ onMounted(() => {
       </div>
     </header>
 
-    <nav class="top-tabs" role="tablist" aria-label="靶场管理视图切换">
+    <nav class="top-tabs" role="tablist" aria-label="题目管理视图切换">
       <button
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
@@ -170,7 +171,7 @@ onMounted(() => {
         <header class="manage-header">
           <div class="manage-header__intro workspace-tab-heading__main">
             <div class="journal-note-label">Challenge Library</div>
-            <h1 class="workspace-tab-heading__title">靶场管理</h1>
+            <h1 class="workspace-tab-heading__title">题目管理</h1>
           </div>
 
           <div class="manage-summary-grid">
@@ -429,6 +430,46 @@ onMounted(() => {
             </section>
           </template>
         </ChallengePackageImportEntry>
+
+        <section v-if="uploadResults.length > 0" class="upload-result-panel" aria-live="polite">
+          <div class="upload-result-panel__header">
+            <div class="upload-result-panel__eyebrow">Upload Result</div>
+            <h2 class="upload-result-panel__title">最近上传结果</h2>
+          </div>
+
+          <div class="upload-result-list">
+            <article
+              v-for="result in uploadResults"
+              :key="result.id"
+              class="upload-result-item"
+              :class="{
+                'upload-result-item--success': result.status === 'success',
+                'upload-result-item--error': result.status === 'error',
+              }"
+            >
+              <header class="upload-result-item__head">
+                <span
+                  class="upload-result-item__status"
+                  :class="{
+                    'upload-result-item__status--success': result.status === 'success',
+                    'upload-result-item__status--error': result.status === 'error',
+                  }"
+                >
+                  {{ result.status === 'success' ? '成功' : '失败' }}
+                </span>
+                <strong class="upload-result-item__name" :title="result.fileName">{{ result.fileName }}</strong>
+              </header>
+
+              <p class="upload-result-item__message">{{ result.message }}</p>
+
+              <div class="upload-result-item__meta">
+                <span>{{ formatDateTime(result.createdAt) }}</span>
+                <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
+                <span v-if="result.requestId">请求ID {{ result.requestId }}</span>
+              </div>
+            </article>
+          </div>
+        </section>
 
         <ChallengePackageImportReview
           v-if="hasPreview && preview"
@@ -864,6 +905,108 @@ onMounted(() => {
   border-color: color-mix(in srgb, var(--journal-accent) 64%, var(--journal-border));
   background: color-mix(in srgb, var(--journal-accent) 18%, transparent);
   transform: translateY(-1px);
+}
+
+.upload-result-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.4rem 0 0.3rem;
+}
+
+.upload-result-panel__header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.upload-result-panel__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.upload-result-panel__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.upload-result-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.upload-result-item {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+}
+
+.upload-result-item--success {
+  border-color: color-mix(in srgb, #059669 30%, var(--journal-border));
+}
+
+.upload-result-item--error {
+  border-color: color-mix(in srgb, #dc2626 34%, var(--journal-border));
+}
+
+.upload-result-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-result-item__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.7rem;
+  min-height: 1.5rem;
+  padding: 0.16rem 0.52rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.upload-result-item__status--success {
+  color: #047857;
+  background: color-mix(in srgb, #059669 12%, transparent);
+}
+
+.upload-result-item__status--error {
+  color: #b91c1c;
+  background: color-mix(in srgb, #dc2626 12%, transparent);
+}
+
+.upload-result-item__name {
+  min-width: 0;
+  color: var(--journal-ink);
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-result-item__message {
+  margin: 0;
+  color: var(--journal-ink);
+  line-height: 1.55;
+  font-size: 0.86rem;
+}
+
+.upload-result-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: var(--journal-muted);
+  font-size: 0.78rem;
 }
 
 .queue-list {
