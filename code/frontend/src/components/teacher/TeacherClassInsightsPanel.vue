@@ -128,7 +128,7 @@ const weakDimensionStats = computed(() => {
 <style scoped>
 .teacher-insight-layout {
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .teacher-panel {
@@ -147,28 +147,28 @@ const weakDimensionStats = computed(() => {
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
-  padding: 1.25rem 1.25rem 1.35rem;
+  padding: var(--space-5) var(--space-5) var(--space-5-5);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-subsection + .teacher-subsection {
   border-top: 1px dashed var(--panel-divider);
-  padding-top: 1.25rem;
+  padding-top: var(--space-5);
 }
 
 .teacher-subsection__header {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .teacher-panel__title {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.84rem;
   line-height: 1.65;
   color: var(--panel-muted);
@@ -176,16 +176,16 @@ const weakDimensionStats = computed(() => {
 
 .top-student-list {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .top-student-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.9rem;
+  gap: var(--space-3-5);
   border-bottom: 1px dashed var(--panel-divider);
-  padding: 0.2rem 0 0.95rem;
+  padding: var(--space-1) 0 var(--space-4);
 }
 
 .top-student-item:last-child {
@@ -200,7 +200,7 @@ const weakDimensionStats = computed(() => {
 .top-student-item__name-wrap {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .top-student-item__rank {
@@ -226,7 +226,7 @@ const weakDimensionStats = computed(() => {
 }
 
 .top-student-item__meta {
-  margin-top: 0.2rem;
+  margin-top: var(--space-1);
   font-size: 0.8rem;
   color: var(--panel-muted);
 }
@@ -241,12 +241,12 @@ const weakDimensionStats = computed(() => {
 
 .dimension-list {
   display: grid;
-  gap: 0.82rem;
+  gap: var(--space-3);
 }
 
 .dimension-item {
   border-bottom: 1px dashed var(--panel-divider);
-  padding: 0.2rem 0 0.85rem;
+  padding: var(--space-1) 0 var(--space-3);
 }
 
 .dimension-item:last-child {
@@ -258,7 +258,7 @@ const weakDimensionStats = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.7rem;
+  gap: var(--space-3);
 }
 
 .dimension-item__name {
@@ -273,7 +273,7 @@ const weakDimensionStats = computed(() => {
 }
 
 .dimension-item__bar {
-  margin-top: 0.4rem;
+  margin-top: var(--space-1-5);
   height: 0.35rem;
   overflow: hidden;
   border-radius: 999px;
@@ -289,7 +289,7 @@ const weakDimensionStats = computed(() => {
 @media (min-width: 1280px) {
   .teacher-insight-layout {
     grid-template-columns: 1.05fr 0.95fr;
-    gap: 1rem;
+    gap: var(--space-4);
   }
 }
 </style>

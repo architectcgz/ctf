@@ -245,23 +245,23 @@ watch(
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
-  padding: 1.25rem 1.25rem 1.35rem;
+  padding: var(--space-5) var(--space-5) var(--space-5-5);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .teacher-panel__header {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .teacher-panel__title {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.84rem;
   line-height: 1.65;
   color: var(--panel-muted);
@@ -269,7 +269,7 @@ watch(
 
 .intervention-list {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .intervention-item {
@@ -283,7 +283,7 @@ watch(
     color-mix(in srgb, var(--panel-surface) 94%, var(--color-bg-base)),
     color-mix(in srgb, var(--panel-surface-subtle) 96%, var(--color-bg-base))
   );
-  padding: 1rem 1rem 1.05rem;
+  padding: var(--space-4) var(--space-4) var(--space-4);
 }
 
 .intervention-item--primary {
@@ -301,7 +301,7 @@ watch(
 .intervention-item__layout {
   display: flex;
   justify-content: space-between;
-  gap: 0.9rem;
+  gap: var(--space-3-5);
 }
 
 .intervention-item__main {
@@ -315,22 +315,22 @@ watch(
 }
 
 .intervention-item__username {
-  margin-top: 0.15rem;
+  margin-top: var(--space-0-5);
   font-size: 0.79rem;
   color: var(--panel-muted);
 }
 
 .intervention-item__reason {
-  margin-top: 0.34rem;
+  margin-top: var(--space-1-5);
   font-size: 0.84rem;
   line-height: 1.7;
   color: var(--panel-muted);
 }
 
 .intervention-item__recommendation {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
   border-top: 1px dashed color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));
-  padding-top: 0.85rem;
+  padding-top: var(--space-3);
   font-size: 0.82rem;
   color: var(--panel-muted);
 }
@@ -344,20 +344,20 @@ watch(
 }
 
 .intervention-item__recommendation-title {
-  margin-top: 0.22rem;
+  margin-top: var(--space-1);
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .intervention-item__recommendation-meta {
-  margin-top: 0.1rem;
+  margin-top: var(--space-0-5);
   font-size: 0.76rem;
   color: var(--panel-muted);
 }
 
 .intervention-item__recommendation-reason {
-  margin-top: 0.24rem;
+  margin-top: var(--space-1);
   font-size: 0.82rem;
   line-height: 1.68;
   color: var(--panel-muted);
@@ -374,7 +374,7 @@ watch(
 @media (max-width: 768px) {
   .intervention-item__layout {
     flex-direction: column;
-    gap: 0.4rem;
+    gap: var(--space-1-5);
   }
 
   .intervention-item__stats {
