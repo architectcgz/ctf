@@ -2053,7 +2053,7 @@ const {
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .topology-page--template-library .template-library-main,
@@ -2073,11 +2073,11 @@ const {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .topology-page--template-library .template-library-divider {
-  margin: 1.5rem 0;
+  margin: var(--space-6) 0;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -2089,7 +2089,7 @@ const {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -2101,7 +2101,7 @@ const {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   border-radius: 0.6rem;
   background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
-  padding: 0.26rem 0.55rem;
+  padding: var(--space-1) var(--space-2);
   color: var(--journal-accent);
 }
 
@@ -2110,16 +2110,16 @@ const {
 }
 
 .topology-page--template-library .topology-summary-grid {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .topology-page--template-library .topology-summary-tile,
 .topology-page--template-library .template-focus-card,
 .topology-page--template-library .template-empty-state {
-  padding: 0 0 0 1rem;
+  padding: 0 0 0 var(--space-4);
   border: 0;
   border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 0;
@@ -2136,7 +2136,7 @@ const {
 }
 
 .topology-page--template-library .topology-summary-value {
-  margin-top: 0.42rem;
+  margin-top: var(--space-1-5);
   font-size: 1.65rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -2151,8 +2151,8 @@ const {
 .topology-page--template-library .template-hero-note {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.85rem;
-  padding: 0 0 0 1rem;
+  gap: var(--space-3);
+  padding: 0 0 0 var(--space-4);
   border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -2169,14 +2169,14 @@ const {
 }
 
 .topology-page--template-library .template-hero-note__value {
-  margin-top: 0.42rem;
+  margin-top: var(--space-1-5);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .topology-page--template-library .template-hero-note__copy {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   font-size: 0.86rem;
   line-height: 1.6;
   color: var(--journal-muted);
@@ -2214,11 +2214,11 @@ const {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-height: 2.45rem;
   border-radius: 0.75rem;
   border: 1px solid var(--journal-border);
-  padding: 0.55rem 0.95rem;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.82rem;
   font-weight: 600;
   transition:
@@ -2231,7 +2231,7 @@ const {
   display: flex;
   flex: 1 1 auto;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
   min-height: 2.8rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
@@ -2241,8 +2241,8 @@ const {
   min-height: 2.8rem;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0 0.1rem;
+  gap: var(--space-2);
+  padding: 0 var(--space-0-5);
   border-bottom: 2px solid transparent;
   font-size: 0.88rem;
   font-weight: 700;
@@ -2325,17 +2325,17 @@ const {
 }
 
 .topology-page--template-library :deep(.section-card) {
-  padding: 1.1rem 0 0.2rem;
+  padding: var(--space-4-5) 0 var(--space-1);
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .topology-page--template-library :deep(.section-card__header) {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   align-items: center;
   border: 0;
   border-radius: 0;
   background: transparent;
-  padding: 0 0 0 1rem;
+  padding: 0 0 0 var(--space-4);
   border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -2407,7 +2407,7 @@ const {
 }
 
 .topology-page--template-library .topology-workbench {
-  gap: 1.25rem;
+  gap: var(--space-5);
 }
 
 .topology-page--template-library .topology-side-stack--library {
@@ -2424,7 +2424,7 @@ const {
 
 .topology-page--template-library .template-search-row {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
@@ -2438,8 +2438,8 @@ const {
 .topology-page--template-library .template-directory-head {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
-  gap: 1rem;
-  padding: 0 0 0.8rem;
+  gap: var(--space-4);
+  padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -2459,9 +2459,9 @@ const {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) auto;
   align-items: start;
-  gap: 1rem;
+  gap: var(--space-4);
   border-radius: 0;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   box-shadow: none;
   transition:
@@ -2491,9 +2491,9 @@ const {
 .topology-page--template-library .template-library-item__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem 0.75rem;
+  gap: var(--space-2) var(--space-3);
   align-content: start;
-  padding-top: 0.1rem;
+  padding-top: var(--space-0-5);
   font-size: 0.76rem;
   line-height: 1.6;
   color: var(--journal-muted);
@@ -2503,13 +2503,13 @@ const {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .topology-page--template-library .template-boundary-item {
   display: grid;
-  gap: 0.4rem;
-  padding: 1rem 0 1rem 1rem;
+  gap: var(--space-1-5);
+  padding: var(--space-4) 0 var(--space-4) var(--space-4);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
@@ -2598,7 +2598,7 @@ const {
   }
 
   .topology-page--template-library .template-toolbar-tabs {
-    gap: 0.75rem;
+    gap: var(--space-3);
     overflow-x: auto;
   }
 
