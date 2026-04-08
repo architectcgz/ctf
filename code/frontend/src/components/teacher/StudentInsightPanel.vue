@@ -855,7 +855,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   border-bottom: 0;
 }
 
-.insight-tab-section-card :deep(.section-card) {
+.insight-tab-section-card.section-card {
   border-top: 0;
 }
 
