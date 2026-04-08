@@ -218,7 +218,7 @@ async function handleExportArchive(): Promise<void> {
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
   min-height: 100%;
-  padding: 0.25rem 0 2rem;
+  padding: var(--space-1) 0 var(--space-8);
 }
 
 :deep(.section-card) {
@@ -244,8 +244,8 @@ async function handleExportArchive(): Promise<void> {
 
 .review-archive-loading__grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -255,18 +255,18 @@ async function handleExportArchive(): Promise<void> {
 
 .review-archive-summary-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
 }
 
 .summary-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: var(--space-3-5);
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .summary-card {
-  padding: 1rem;
+  padding: var(--space-4);
   border-radius: 20px;
   border: 1px solid var(--teacher-card-border);
   background: var(--journal-surface);
@@ -297,7 +297,7 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__value {
-  margin-top: 0.7rem;
+  margin-top: var(--space-3);
   font-size: 1.8rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -309,26 +309,26 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__hint {
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
   color: var(--journal-muted);
   line-height: 1.65;
 }
 
 .skill-bars {
   display: grid;
-  gap: 0.9rem;
+  gap: var(--space-3-5);
 }
 
 .skill-bars__item {
-  padding: 0.2rem 0;
+  padding: var(--space-1) 0;
 }
 
 .skill-bars__head {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: center;
-  margin-bottom: 0.45rem;
+  margin-bottom: var(--space-2);
   color: var(--journal-ink);
 }
 
