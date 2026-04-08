@@ -86,7 +86,7 @@ function changeTimelinePage(page: number): void {
     <div class="timeline-header">
       <div>
         <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
-          训练节奏总览
+          训练记录总览
         </h1>
         <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           看最近训练记录和节奏变化。
@@ -118,7 +118,7 @@ function changeTimelinePage(page: number): void {
     >
       <section class="timeline-section">
         <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
-        <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练时间线</h3>
+        <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
         <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
           按日期回看最近的提交、解题和实例操作。
         </p>

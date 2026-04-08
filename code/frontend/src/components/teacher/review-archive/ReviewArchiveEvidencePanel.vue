@@ -13,10 +13,10 @@ defineProps<{
       <header class="archive-panel__header">
         <div>
           <div class="archive-panel__eyebrow">Timeline</div>
-          <h3 class="archive-panel__title">训练时间线</h3>
+          <h3 class="archive-panel__title">训练记录</h3>
         </div>
       </header>
-      <div v-if="timeline.length === 0" class="archive-panel__empty">暂无时间线事件。</div>
+      <div v-if="timeline.length === 0" class="archive-panel__empty">暂无训练记录事件。</div>
       <ol v-else class="timeline-list">
         <li v-for="item in timeline" :key="item.id" class="timeline-item">
           <div class="timeline-item__dot" />
