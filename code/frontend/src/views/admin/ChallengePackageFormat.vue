@@ -3,13 +3,13 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const packageTree = `challenge-package.zip
-  challenge.yml
-  statement.md
-  attachments/
-    web-demo.zip
-  docker/
-    topology.yml`
+const packageTree = `challenge-package.zip    # 上传的题目包压缩文件
+  challenge.yml          # 题目清单配置（必填）
+  statement.md           # 题面 Markdown 文件（必填）
+  attachments/           # 题目附件目录（可选）
+    web-demo.zip         # 题目附件示例
+  docker/                # 运行扩展目录（可选）
+    topology.yml         # 拓扑扩展配置（extensions.topology.source）`
 
 const challengeManifest = `api_version: v1 # 固定为 v1
 kind: challenge # 固定为 challenge
@@ -85,20 +85,6 @@ extensions:
         <div class="guide-section__label">目录结构</div>
         <h2 class="guide-section__title">建议保留最小目录</h2>
         <pre class="guide-code"><code>{{ packageTree }}</code></pre>
-      </article>
-
-      <article class="guide-section">
-        <div class="guide-section__label">关键约束</div>
-        <h2 class="guide-section__title">上传前先自查</h2>
-        <ul class="guide-list">
-          <li>`challenge.yml` 必须位于 zip 根目录，或 zip 根目录下唯一子目录的根部。</li>
-          <li>`api_version` 当前只支持 `v1`，`kind` 必须为 `challenge`。</li>
-          <li>`statement.md` 不能为空；若写了其他路径，必须仍然位于题目包内部。</li>
-          <li>`meta.points` 必须大于 0。</li>
-          <li>`flag.type` 支持 `static`、`dynamic`、`regex`、`manual_review`。</li>
-          <li>若 `flag.type` 为 `static` 或 `regex`，必须提供 `flag.value`。</li>
-          <li>附件路径必须指向包内文件，不能越出题目包目录。</li>
-        </ul>
       </article>
     </div>
 
