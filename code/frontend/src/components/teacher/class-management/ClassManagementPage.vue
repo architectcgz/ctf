@@ -383,12 +383,12 @@ const currentPageStudentCount = computed(() =>
   --teacher-directory-columns: var(--teacher-class-directory-columns);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
-  --page-top-tabs-gap: 1.2rem;
-  --page-top-tabs-margin: 0 -1.5rem 1.25rem;
-  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-gap: var(--space-5);
+  --page-top-tabs-margin: 0 calc(var(--space-6) * -1) var(--space-5);
+  --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-border) 88%, transparent);
   --page-top-tab-min-height: 3rem;
-  --page-top-tab-padding: 0.4rem 0 0.75rem;
+  --page-top-tab-padding: var(--space-1-5) 0 var(--space-3);
   --page-top-tab-font-size: 0.92rem;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
@@ -405,13 +405,13 @@ const currentPageStudentCount = computed(() =>
 }
 
 .teacher-skeleton-list {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .teacher-empty-state {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
 }
 
 .teacher-badge-card {
@@ -423,13 +423,13 @@ const currentPageStudentCount = computed(() =>
 }
 
 .teacher-hero-divider {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   border-top: 1px dashed var(--teacher-divider);
 }
 
 .teacher-filter-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: minmax(0, 22rem);
 }
 
@@ -440,10 +440,10 @@ const currentPageStudentCount = computed(() =>
 .teacher-directory-row {
   display: grid;
   grid-template-columns: var(--teacher-class-directory-columns);
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
   width: 100%;
-  padding: 1.1rem 0;
+  padding: var(--space-4-5) 0;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   background: transparent;
@@ -463,7 +463,7 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-directory-cell {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
   align-content: center;
   justify-self: stretch;
@@ -520,14 +520,14 @@ const currentPageStudentCount = computed(() =>
 .teacher-directory-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .teacher-directory-chip {
   display: inline-flex;
   align-items: center;
   min-height: 1.65rem;
-  padding: 0 0.62rem;
+  padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   font-size: 0.75rem;
@@ -549,7 +549,7 @@ const currentPageStudentCount = computed(() =>
   display: inline-flex;
   align-items: center;
   min-height: 1.75rem;
-  padding: 0 0.62rem;
+  padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -567,7 +567,7 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-directory-row-metrics {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   font-size: 0.81rem;
   line-height: 1.5;
   color: var(--journal-muted);
@@ -576,7 +576,7 @@ const currentPageStudentCount = computed(() =>
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.38rem;
+  gap: var(--space-1-5);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--journal-accent-strong);
@@ -584,9 +584,9 @@ const currentPageStudentCount = computed(() =>
 
 @media (max-width: 960px) {
   .top-tabs {
-    margin-left: -1rem;
-    margin-right: -1rem;
-    padding: 0 1rem;
+    margin-left: calc(var(--space-4) * -1);
+    margin-right: calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
   }
 
   .teacher-topbar {
@@ -604,8 +604,8 @@ const currentPageStudentCount = computed(() =>
 
   .teacher-directory-row {
     grid-template-columns: 1fr;
-    gap: 0.85rem;
-    padding: 1rem 0;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
   }
 }
 </style>
