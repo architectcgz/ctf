@@ -52,11 +52,32 @@ const contentTabs: Array<{
   },
 ]
 
-const activeTab = ref<SkillProfileTabKey>('analysis')
+const skillProfileTabSet = new Set<SkillProfileTabKey>(contentTabs.map((tab) => tab.key))
+
+function resolveTabFromLocation(): SkillProfileTabKey {
+  if (typeof window === 'undefined') return 'analysis'
+  if (!window.location.pathname || window.location.pathname === '/') return 'analysis'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && skillProfileTabSet.has(panel as SkillProfileTabKey)) {
+    return panel as SkillProfileTabKey
+  }
+  return 'analysis'
+}
+
+function syncPanelToLocation(tabKey: SkillProfileTabKey): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tabKey)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeTab = ref<SkillProfileTabKey>(resolveTabFromLocation())
 const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 function selectTab(tabKey: SkillProfileTabKey): void {
+  if (activeTab.value === tabKey) return
   activeTab.value = tabKey
+  syncPanelToLocation(tabKey)
 }
 
 function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
@@ -69,7 +90,7 @@ function focusTab(index: number): void {
   if (!nextTab) {
     return
   }
-  activeTab.value = nextTab.key
+  selectTab(nextTab.key)
   tabButtonRefs.value[normalizedIndex]?.focus()
 }
 
@@ -156,7 +177,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
       <div v-if="isTeacher" class="skill-teacher-panel">
         <div class="journal-eyebrow journal-eyebrow-soft">Teacher View</div>
-        <h3 class="mt-3 text-base font-semibold text-[var(--journal-ink)]">查看学员能力画像</h3>
+        <h3 class="workspace-tab-heading__title">查看学员能力画像</h3>
         <label for="skill-student-select" class="skill-field-label mt-3 block">选择学员</label>
         <select
           id="skill-student-select"
@@ -182,7 +203,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           <div class="skill-analysis-stack">
             <div>
               <div class="skill-overview-head">
-                <h1 class="journal-page-title text-[var(--journal-ink)]">能力画像</h1>
+                <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+                  能力画像
+                </h1>
                 <p class="skill-overview-copy">查看当前能力维度表现，并根据薄弱项获取推荐靶场。</p>
                 <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
                   <button type="button" class="journal-btn" @click="loadCurrentData">刷新</button>
@@ -197,7 +220,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
               </div>
 
               <div class="journal-eyebrow journal-eyebrow-soft">Radar Analysis</div>
-              <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">能力维度分析</h3>
+              <h3 class="workspace-tab-heading__title">能力维度分析</h3>
 
               <div class="skill-dimension-wrap mt-5">
                 <div class="skill-dimension-list mt-2">
@@ -292,7 +315,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           v-show="activeTab === 'recommendations'"
         >
           <div class="journal-eyebrow journal-eyebrow-soft">Recommendations</div>
-          <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">推荐靶场</h3>
+          <h3 class="workspace-tab-heading__title">推荐靶场</h3>
           <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
             优先从当前最匹配的题目开始。
           </p>

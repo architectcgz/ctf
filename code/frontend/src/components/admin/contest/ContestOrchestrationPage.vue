@@ -56,7 +56,26 @@ const panelTabs = [
 
 type ContestPanelKey = (typeof panelTabs)[number]['key']
 
-const activePanel = ref<ContestPanelKey>('overview')
+const contestPanelSet = new Set<ContestPanelKey>(panelTabs.map((tab) => tab.key))
+
+function resolvePanelFromLocation(): ContestPanelKey {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && contestPanelSet.has(panel as ContestPanelKey)) {
+    return panel as ContestPanelKey
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(panelKey: ContestPanelKey): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', panelKey)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activePanel = ref<ContestPanelKey>(resolvePanelFromLocation())
 const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 const registeringCount = computed(
@@ -71,7 +90,9 @@ function setTabButtonRef(index: number, element: HTMLButtonElement | null): void
 }
 
 function selectPanel(panelKey: ContestPanelKey): void {
+  if (activePanel.value === panelKey) return
   activePanel.value = panelKey
+  syncPanelToLocation(panelKey)
 }
 
 function focusTabByIndex(index: number): void {
@@ -151,9 +172,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
         <header class="panel-head panel-head--overview">
-          <div class="panel-copy">
+          <div class="panel-copy workspace-tab-heading__main">
             <div class="journal-eyebrow">Contest Orchestration</div>
-            <h1 class="hero-title">赛事编排台</h1>
+            <h1 class="hero-title workspace-tab-heading__title">赛事编排台</h1>
             <p class="admin-page-copy">在这里查看赛事窗口、状态筛选和 AWD 运维入口。</p>
           </div>
 
@@ -221,10 +242,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         </section>
 
         <section class="workspace-directory-section contest-list-panel">
-          <header class="list-heading">
-            <div>
+          <header class="list-heading workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="journal-note-label">Contests</div>
-              <h3 class="list-heading__title">当前筛选结果</h3>
+              <h3 class="list-heading__title workspace-tab-heading__title">当前筛选结果</h3>
             </div>
           </header>
 
@@ -414,7 +435,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   gap: 0.8rem;
 }
 
-.list-heading__title {
+.list-heading__title:not(.workspace-tab-heading__title) {
   margin: 0.3rem 0 0;
   font-size: 1.2rem;
   font-weight: 700;

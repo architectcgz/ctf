@@ -81,6 +81,9 @@ function resolveTabFromLocation(): WorkspaceTab {
   if (typeof window === 'undefined') {
     return 'overview'
   }
+  if (!window.location.pathname || window.location.pathname === '/') {
+    return 'overview'
+  }
   const panel = new URLSearchParams(window.location.search).get('panel')
   if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
     return panel as WorkspaceTab

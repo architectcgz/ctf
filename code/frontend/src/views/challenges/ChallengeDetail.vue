@@ -19,7 +19,7 @@
           :aria-selected="activeWorkspaceTab === tab.id"
           :aria-controls="`challenge-workspace-panel-${tab.id}`"
           :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
-          @click="activeWorkspaceTab = tab.id"
+          @click="selectWorkspaceTab(tab.id)"
           @keydown="handleWorkspaceTabKeydown($event, tab.id)"
         >
           {{ tab.label }}
@@ -75,10 +75,10 @@
             </div>
 
             <section class="section">
-              <div class="section-head">
-                <div>
+              <div class="section-head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="overline">Statement</div>
-                  <h2 class="section-title">题目描述</h2>
+                  <h2 class="section-title workspace-tab-heading__title">题目描述</h2>
                 </div>
                 <button
                   v-if="challenge.attachment_url"
@@ -97,10 +97,10 @@
             </section>
 
             <section v-if="challenge.hints.length > 0" class="section">
-              <div class="section-head">
-                <div>
+              <div class="section-head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="overline">Hints</div>
-                  <h2 class="section-title">提示</h2>
+                  <h2 class="section-title workspace-tab-heading__title">提示</h2>
                 </div>
                 <div class="section-hint">共 {{ challenge.hints.length }} 条</div>
               </div>
@@ -140,10 +140,10 @@
             aria-labelledby="challenge-workspace-tab-solution"
           >
             <section class="section section--flat">
-              <div class="section-head">
-                <div>
+              <div class="section-head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="overline">Solutions</div>
-                  <h2 class="section-title">题解区</h2>
+                  <h2 class="section-title workspace-tab-heading__title">题解区</h2>
                 </div>
                 <div class="section-hint">
                   推荐 {{ recommendedSolutions.length }} · 社区 {{ communitySolutions.length }}
@@ -264,10 +264,10 @@
             aria-labelledby="challenge-workspace-tab-records"
           >
             <section class="section section--flat">
-              <div class="section-head">
-                <div>
+              <div class="section-head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="overline">Submissions</div>
-                  <h2 class="section-title">提交记录</h2>
+                  <h2 class="section-title workspace-tab-heading__title">提交记录</h2>
                 </div>
                 <div class="section-hint">最近提交</div>
               </div>
@@ -307,10 +307,10 @@
             aria-labelledby="challenge-workspace-tab-writeup"
           >
             <section class="section section--flat">
-              <div class="section-head">
-                <div>
+              <div class="section-head workspace-tab-heading">
+                <div class="workspace-tab-heading__main">
                   <div class="overline">My Writeup</div>
-                  <h2 class="section-title">我的复盘</h2>
+                  <h2 class="section-title workspace-tab-heading__title">我的复盘</h2>
                 </div>
                 <div class="section-hint">
                   解题过程复盘 · {{ challenge?.is_solved ? '可发布到社区' : '仅可保存草稿' }}
@@ -557,7 +557,6 @@ const writeupTitle = ref('')
 const writeupContent = ref('')
 const flagInput = ref('')
 const expandedHintLevels = ref<number[]>([])
-const activeWorkspaceTab = ref<WorkspaceTab>('question')
 const submitResult = ref<{
   variant: 'success' | 'error' | 'pending'
   className: string
@@ -585,7 +584,33 @@ const workspaceTabs: Array<{ id: WorkspaceTab; label: string }> = [
   { id: 'records', label: '提交记录' },
   { id: 'writeup', label: '我的复盘' },
 ]
+const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.id))
+
+function resolveWorkspaceTabFromLocation(): WorkspaceTab {
+  if (typeof window === 'undefined') return 'question'
+  if (!window.location.pathname || window.location.pathname === '/') return 'question'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
+    return panel as WorkspaceTab
+  }
+  return 'question'
+}
+
+function syncWorkspacePanelToLocation(tab: WorkspaceTab): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeWorkspaceTab = ref<WorkspaceTab>(resolveWorkspaceTabFromLocation())
 const solutionTabs: SolutionTab[] = ['recommended', 'community']
+
+function selectWorkspaceTab(tab: WorkspaceTab): void {
+  if (activeWorkspaceTab.value === tab) return
+  activeWorkspaceTab.value = tab
+  syncWorkspacePanelToLocation(tab)
+}
 
 function renderRichContent(source?: string): string {
   if (!source) return ''
@@ -775,18 +800,18 @@ function handleWorkspaceTabKeydown(event: KeyboardEvent, currentTab: WorkspaceTa
 
   if (event.key === 'ArrowRight') {
     const nextTab = workspaceTabs[(currentIndex + 1) % workspaceTabs.length]
-    activeWorkspaceTab.value = nextTab.id
+    selectWorkspaceTab(nextTab.id)
     focusTab(`challenge-workspace-tab-${nextTab.id}`)
   } else if (event.key === 'ArrowLeft') {
     const nextTab = workspaceTabs[(currentIndex - 1 + workspaceTabs.length) % workspaceTabs.length]
-    activeWorkspaceTab.value = nextTab.id
+    selectWorkspaceTab(nextTab.id)
     focusTab(`challenge-workspace-tab-${nextTab.id}`)
   } else if (event.key === 'Home') {
-    activeWorkspaceTab.value = workspaceTabs[0].id
+    selectWorkspaceTab(workspaceTabs[0].id)
     focusTab(`challenge-workspace-tab-${workspaceTabs[0].id}`)
   } else if (event.key === 'End') {
     const lastTab = workspaceTabs[workspaceTabs.length - 1]
-    activeWorkspaceTab.value = lastTab.id
+    selectWorkspaceTab(lastTab.id)
     focusTab(`challenge-workspace-tab-${lastTab.id}`)
   } else {
     return
@@ -1433,7 +1458,7 @@ watch(
   margin-bottom: 16px;
 }
 
-.section-title {
+.section-title:not(.workspace-tab-heading__title) {
   margin: 10px 0 0;
   font-size: 20px;
   line-height: 1.2;

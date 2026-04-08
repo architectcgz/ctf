@@ -64,7 +64,26 @@ const workspaceTabs: WorkspaceTabItem[] = [
   { key: 'action', label: '介入建议', buttonId: 'class-tab-action', panelId: 'class-action' },
 ]
 
-const activeTab = ref<WorkspaceTab>('overview')
+const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.key))
+
+function resolveTabFromLocation(): WorkspaceTab {
+  if (typeof window === 'undefined') return 'overview'
+  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
+    return panel as WorkspaceTab
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(tab: WorkspaceTab): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeTab = ref<WorkspaceTab>(resolveTabFromLocation())
 const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
 
 function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
@@ -72,7 +91,9 @@ function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): 
 }
 
 function selectTab(tab: WorkspaceTab): void {
+  if (activeTab.value === tab) return
   activeTab.value = tab
+  syncPanelToLocation(tab)
 }
 
 function focusTab(tab: WorkspaceTab): void {
@@ -153,7 +174,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           v-show="activeTab === 'overview'"
         >
           <header class="teacher-topbar">
-            <div class="teacher-heading">
+            <div class="teacher-heading workspace-tab-heading__main">
               <div class="teacher-eyebrow-row">
                 <div class="teacher-surface-eyebrow journal-eyebrow">Class Students</div>
                 <span class="teacher-class-chip teacher-surface-chip">{{
@@ -161,7 +182,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
                 }}</span>
               </div>
 
-              <h1 class="teacher-title">
+              <h1 class="teacher-title workspace-tab-heading__title">
                 {{ selectedClassName ? `${selectedClassName} · 学生列表` : '班级学生' }}
               </h1>
               <p class="teacher-copy">查看当前班级学生名单，并继续进入学员分析。</p>
@@ -236,9 +257,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
               <section class="teacher-controls">
                 <div class="teacher-controls-bar">
-                  <div class="teacher-controls-heading">
+                  <div class="teacher-controls-heading workspace-tab-heading__main">
                     <div class="teacher-surface-eyebrow journal-eyebrow">Class Workspace</div>
-                    <h3 class="teacher-controls-title">班级详情</h3>
+                    <h3 class="teacher-controls-title workspace-tab-heading__title">班级详情</h3>
                     <p class="teacher-controls-copy">
                       {{
                         selectedClassName || '当前未选择班级'
@@ -307,10 +328,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           v-show="activeTab === 'students'"
         >
           <section class="teacher-student-list-section">
-            <div class="teacher-section-head">
-              <div>
+            <div class="teacher-section-head workspace-tab-heading">
+              <div class="workspace-tab-heading__main">
                 <div class="teacher-surface-eyebrow journal-eyebrow">Students</div>
-                <h3 class="teacher-section-title">学生列表</h3>
+                <h3 class="teacher-section-title workspace-tab-heading__title">学生列表</h3>
                 <p class="teacher-section-copy">选择学生后进入学员分析。</p>
               </div>
               <button
@@ -325,9 +346,9 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
             <section class="teacher-controls teacher-student-controls">
               <div class="teacher-controls-bar">
-                <div>
+                <div class="workspace-tab-heading__main">
                   <div class="teacher-surface-eyebrow journal-eyebrow">Student Filters</div>
-                  <h3 class="teacher-controls-title">学生筛选</h3>
+                  <h3 class="teacher-controls-title workspace-tab-heading__title">学生筛选</h3>
                   <p class="teacher-controls-copy">按学号快速定位学生，并继续进入学员分析。</p>
                 </div>
                 <div class="teacher-section-meta">共 {{ students.length }} 名学生</div>
@@ -765,7 +786,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   gap: 1rem;
 }
 
-.teacher-section-title {
+.teacher-section-title:not(.workspace-tab-heading__title) {
   margin-top: 0.35rem;
   font-size: 1.15rem;
   font-weight: 700;
