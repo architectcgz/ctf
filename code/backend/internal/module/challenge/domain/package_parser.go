@@ -229,7 +229,7 @@ func normalizePackageDifficulty(raw string) string {
 		return model.ChallengeDifficultyMedium
 	case model.ChallengeDifficultyHard:
 		return model.ChallengeDifficultyHard
-	case model.ChallengeDifficultyInsane, "hell":
+	case model.ChallengeDifficultyInsane:
 		return model.ChallengeDifficultyInsane
 	default:
 		return model.ChallengeDifficultyEasy

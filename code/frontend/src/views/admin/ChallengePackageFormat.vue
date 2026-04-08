@@ -17,8 +17,8 @@ kind: challenge # 固定为 challenge
 meta:
   slug: web-demo # 题目标识（全局唯一，建议英文小写+中划线）
   title: Web Demo # 题目展示名称
-  category: web # 题目分类，如 web/pwn/reverse/crypto/misc
-  difficulty: easy # 难度等级，如 easy/medium/hard
+  category: web # 题目分类，允许值：web/pwn/reverse/crypto/misc/forensics（非法值会回退为 misc）
+  difficulty: easy # 难度等级，允许值：beginner/easy/medium/hard/insane（非法值会回退为 easy）
   points: 100 # 分值，必须大于 0
   tags:
     - sqli # 标签（可选）
