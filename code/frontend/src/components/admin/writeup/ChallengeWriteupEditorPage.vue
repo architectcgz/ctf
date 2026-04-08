@@ -41,14 +41,14 @@ const {
       :description="
         challenge
           ? `为《${challenge.title}》维护管理员题解，控制公开范围与发布时间。`
-          : '为挑战维护管理员题解，控制公开范围与发布时间。'
+          : '为题目维护管理员题解，控制公开范围与发布时间。'
       "
     >
       <button
         class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
         @click="emit('back')"
       >
-        返回挑战
+        返回题目
       </button>
       <button
         class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
@@ -69,7 +69,7 @@ const {
     >
       <AppCard
         accent="neutral"
-        title="挑战信息"
+        title="题目信息"
         subtitle="当前编辑对象"
         eyebrow="Challenge"
       >

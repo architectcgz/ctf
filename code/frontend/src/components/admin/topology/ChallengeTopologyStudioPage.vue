@@ -130,7 +130,7 @@ const {
         "
         @click="emit('back')"
       >
-        返回挑战详情
+        返回题目详情
       </button>
       <button
         v-else
@@ -856,7 +856,7 @@ const {
               :subtitle="
                 isTemplateLibraryMode
                   ? '从模板库载入后可直接编辑并覆盖模板，或另存为新模板。'
-                  : '可按模板快速回填编辑器，或直接应用到挑战。'
+                  : '可按模板快速回填编辑器，或直接应用到题目。'
               "
             >
               <div class="space-y-3">
@@ -1346,7 +1346,7 @@ const {
                         v-model="selectedNodeDraft.image_id"
                         class="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
                       >
-                        <option value="">复用挑战主镜像</option>
+                        <option value="">复用题目主镜像</option>
                         <option
                           v-for="image in images"
                           :key="image.id"
@@ -1809,7 +1809,7 @@ const {
             :subtitle="
               isTemplateLibraryMode
                 ? '从模板库载入后可直接编辑并覆盖模板，或另存为新模板。'
-                : '可按模板快速回填编辑器，或直接应用到挑战。'
+                : '可按模板快速回填编辑器，或直接应用到题目。'
             "
           >
             <div class="space-y-3">
@@ -1924,7 +1924,7 @@ const {
                       :disabled="templateBusy"
                       @click="void handleApplyTemplate(template)"
                     >
-                      应用到挑战
+                      应用到题目
                     </button>
                     <button
                       type="button"
@@ -2036,8 +2036,8 @@ const {
 
       <AppEmpty
         v-if="!challenge && !isTemplateLibraryMode"
-        title="挑战不存在"
-        description="无法读取当前挑战的基础信息，请返回挑战列表后重试。"
+        title="题目不存在"
+        description="无法读取当前题目的基础信息，请返回题目列表后重试。"
         icon="Blocks"
       />
     </template>

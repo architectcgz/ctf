@@ -53,7 +53,7 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
   const visibilityLabel = computed(() => {
     switch (form.visibility) {
       case 'public':
-        return '公开后，所有已发布挑战的学员都可查看'
+        return '公开后，所有已发布题目的学员都可查看'
       case 'scheduled':
         return '到达发布时间后自动公开'
       default:

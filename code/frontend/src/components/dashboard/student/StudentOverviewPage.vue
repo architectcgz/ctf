@@ -101,7 +101,7 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
     <section class="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
       <SectionCard title="优先训练队列" subtitle="主页保留最值得立刻动手的题目，完整列表请从左侧“训练建议”进入。">
         <div v-if="quickRecommendations.length === 0" class="border border-dashed border-border px-4 py-10 text-center text-sm text-text-secondary">
-          当前没有推荐题目，直接去挑战列表挑一道新题即可。
+          当前没有推荐题目，直接去题目列表挑一道新题即可。
         </div>
 
         <div v-else class="space-y-3">

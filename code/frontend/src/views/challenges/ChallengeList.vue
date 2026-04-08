@@ -32,7 +32,7 @@ const hasLoadError = computed(() => Boolean(error.value) && list.value.length ==
 const errorMessage = computed(() => {
   if (error.value instanceof ApiError) return error.value.message
   if (error.value instanceof Error) return error.value.message
-  return '挑战列表暂时无法加载，请稍后重试。'
+  return '题目列表暂时无法加载，请稍后重试。'
 })
 const emptyTitle = computed(() => (hasActiveFilters.value ? '没有匹配的题目' : '目前还没有题目'))
 const emptyDescription = computed(() =>
@@ -205,7 +205,7 @@ onMounted(() => {
               id="challenge-search-input"
               v-model="searchQuery"
               type="text"
-              placeholder="搜索挑战标题或描述..."
+              placeholder="搜索题目标题或描述..."
               class="challenge-input"
               aria-describedby="challenge-directory-meta"
               @input="onSearch"
@@ -259,7 +259,7 @@ onMounted(() => {
         v-else-if="hasLoadError"
         class="challenge-empty-state"
         icon="AlertTriangle"
-        title="挑战列表加载失败"
+        title="题目列表加载失败"
         :description="errorMessage"
       >
         <template #action>
@@ -370,7 +370,7 @@ onMounted(() => {
             </div>
 
             <div class="challenge-row-cta">
-              <span>{{ challenge.is_solved ? '继续查看' : '开始挑战' }}</span>
+              <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
               <ArrowRight class="h-4 w-4" />
             </div>
           </button>

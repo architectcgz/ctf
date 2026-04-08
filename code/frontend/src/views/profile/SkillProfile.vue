@@ -146,7 +146,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     <AppEmpty
       v-else-if="!skillProfile"
       title="暂无能力画像数据"
-      description="完成更多靶场挑战后，系统将为你生成能力画像。"
+      description="完成更多靶场题目后，系统将为你生成能力画像。"
       icon="Radar"
     />
 

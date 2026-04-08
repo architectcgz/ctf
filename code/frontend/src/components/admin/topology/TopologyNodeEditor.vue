@@ -107,7 +107,7 @@ function removeEnvEntry(uid: string) {
           v-model="node.image_id"
           class="w-full rounded-xl border border-border bg-elevated px-3 py-2.5 text-sm text-text-primary outline-none transition focus:border-primary"
         >
-          <option value="">复用挑战主镜像</option>
+          <option value="">复用题目主镜像</option>
           <option v-for="image in images" :key="image.id" :value="image.id">
             {{ image.name }}:{{ image.tag }}
           </option>
