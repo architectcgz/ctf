@@ -56,35 +56,9 @@ const publishedWriteupSubmissions = computed(() =>
 const publishedRecommendedWriteupCount = computed(() =>
   publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
 )
-const publishedWriteupChallenges = computed(() => {
-  const map = new Map<
-    string,
-    { challengeId: string; challengeTitle: string; writeupCount: number; lastPublishedAt?: string }
-  >()
-  for (const item of publishedWriteupSubmissions.value) {
-    const challengeId = String(item.challenge_id)
-    const lastPublishedAt = item.published_at || item.updated_at
-    const previous = map.get(challengeId)
-    if (!previous) {
-      map.set(challengeId, {
-        challengeId,
-        challengeTitle: item.challenge_title,
-        writeupCount: 1,
-        lastPublishedAt,
-      })
-      continue
-    }
-    map.set(challengeId, {
-      ...previous,
-      writeupCount: previous.writeupCount + 1,
-      lastPublishedAt:
-        !previous.lastPublishedAt || new Date(lastPublishedAt) > new Date(previous.lastPublishedAt)
-          ? lastPublishedAt
-          : previous.lastPublishedAt,
-    })
-  }
-  return Array.from(map.values())
-})
+const publishedChallengeCount = computed(
+  () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
+)
 const approvedManualReviewCount = computed(() =>
   props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
 )
@@ -252,7 +226,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
         <SectionCard
           v-if="isSectionVisible('writeups')"
           title="发布的题解"
-          subtitle="展示当前学员已发布题解及对应题目。"
+          subtitle="按发布时间查看当前学员已发布题解。"
         >
           <AppEmpty
             v-if="publishedWriteupSubmissions.length === 0"
@@ -270,7 +244,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               </article>
               <article class="insight-kpi-card insight-kpi-card--success">
                 <div class="insight-kpi-label">对应题目</div>
-                <div class="insight-kpi-value">{{ publishedWriteupChallenges.length }}</div>
+                <div class="insight-kpi-value">{{ publishedChallengeCount }}</div>
                 <div class="insight-kpi-hint">覆盖到的题目总数</div>
               </article>
               <article class="insight-kpi-card insight-kpi-card--warning">
@@ -280,19 +254,23 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               </article>
             </div>
 
-            <div class="mt-5 grid gap-3">
+            <div class="writeup-published-list mt-5 grid gap-3">
               <AppCard
                 v-for="item in publishedWriteupSubmissions"
                 :key="item.id"
                 variant="panel"
                 accent="neutral"
+                class="writeup-published-card"
               >
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">
+                <div class="writeup-published-card__head flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="writeup-published-card__challenge text-xs">
+                      对应题目
+                    </div>
+                    <div class="writeup-published-card__challenge-title text-sm font-semibold text-[var(--color-text-primary)]">
                       {{ item.challenge_title }}
                     </div>
-                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    <div class="writeup-published-card__title mt-2 text-sm text-[var(--color-text-secondary)]">
                       {{ item.title }}
                     </div>
                   </div>
@@ -314,14 +292,14 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                   {{ item.content_preview || '暂无摘要' }}
                 </div>
 
-                <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
+                <div class="writeup-published-card__meta mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
                   <span
                     >发布时间：{{ new Date(item.published_at || item.updated_at).toLocaleString('zh-CN') }}</span
                   >
                   <div class="flex flex-wrap items-center gap-3">
                     <button
                       type="button"
-                      class="inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
+                      class="writeup-open-link inline-flex items-center gap-1 font-medium text-[var(--color-primary)]"
                       @click="openChallenge(item.challenge_id)"
                     >
                       打开挑战
@@ -331,44 +309,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                 </div>
               </AppCard>
             </div>
-
-            <section class="mt-6">
-              <h4 class="text-sm font-semibold text-[var(--color-text-primary)]">对应题目列表</h4>
-              <div class="mt-3 grid gap-3 md:grid-cols-2">
-                <AppCard
-                  v-for="item in publishedWriteupChallenges"
-                  :key="item.challengeId"
-                  variant="panel"
-                  accent="neutral"
-                >
-                  <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div class="text-sm font-semibold text-[var(--color-text-primary)]">
-                        {{ item.challengeTitle }}
-                      </div>
-                      <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                        已发布 {{ item.writeupCount }} 篇题解
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      class="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-primary)]"
-                      @click="openChallenge(item.challengeId)"
-                    >
-                      打开挑战
-                      <ArrowRight class="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div class="mt-3 text-xs text-[var(--color-text-secondary)]">
-                    最近发布时间：{{
-                      item.lastPublishedAt
-                        ? new Date(item.lastPublishedAt).toLocaleString('zh-CN')
-                        : '暂无时间'
-                    }}
-                  </div>
-                </AppCard>
-              </div>
-            </section>
           </template>
         </SectionCard>
 
@@ -725,6 +665,42 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .writeup-chip--muted {
   background: color-mix(in srgb, var(--journal-border) 36%, transparent);
   color: var(--journal-muted);
+}
+
+.writeup-published-list {
+  gap: 0.9rem;
+}
+
+.writeup-published-card {
+  border-bottom-color: color-mix(in srgb, var(--teacher-divider) 84%, transparent);
+}
+
+.writeup-published-card__head {
+  align-items: flex-start;
+}
+
+.writeup-published-card__challenge {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.writeup-published-card__challenge-title {
+  margin-top: 0.35rem;
+}
+
+.writeup-published-card__title {
+  line-height: 1.6;
+}
+
+.writeup-published-card__meta {
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 80%, transparent);
+}
+
+.writeup-open-link {
+  color: var(--journal-accent-strong);
 }
 
 :deep(.section-card) {
