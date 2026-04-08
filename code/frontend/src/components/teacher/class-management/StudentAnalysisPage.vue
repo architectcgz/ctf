@@ -66,7 +66,7 @@ const emit = defineEmits<{
   changeWriteupPage: [page: number]
 }>()
 
-type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'evidence'
+type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'timeline'
 
 interface WorkspaceTabItem {
   key: WorkspaceTab
@@ -99,6 +99,12 @@ const workspaceTabs: WorkspaceTabItem[] = [
     label: '证据链',
     buttonId: 'student-tab-evidence',
     panelId: 'student-evidence',
+  },
+  {
+    key: 'timeline',
+    label: '训练记录',
+    buttonId: 'student-tab-timeline',
+    panelId: 'student-timeline',
   },
 ]
 
@@ -331,6 +337,42 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         >
           <StudentInsightPanel
             active-section="evidence"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
+          />
+        </section>
+
+        <section
+          id="student-timeline"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'timeline' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-timeline"
+          :aria-hidden="activeTab === 'timeline' ? 'false' : 'true'"
+          v-show="activeTab === 'timeline'"
+        >
+          <StudentInsightPanel
+            active-section="timeline"
             :student="selectedStudent"
             :progress="progress"
             :profile="skillProfile"

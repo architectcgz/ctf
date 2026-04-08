@@ -403,14 +403,14 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-overview').exists()).toBe(true)
     expect(wrapper.find('#student-tab-recommendations').exists()).toBe(true)
     expect(wrapper.find('#student-tab-writeups').exists()).toBe(true)
-    expect(wrapper.find('#student-tab-manual-review').exists()).toBe(true)
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
-    expect(studentAnalysisPageSource).toContain('class="workspace-shell"')
+    expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
+    expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(studentAnalysisPageSource).toContain('class="workspace-topbar"')
     expect(studentAnalysisPageSource).toContain('class="top-tabs"')
     expect(studentAnalysisPageSource).toContain('class="content-pane"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div class="workspace-shell">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
   })
 })

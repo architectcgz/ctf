@@ -22,7 +22,14 @@ import type {
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 import { toRadarScores } from '@/utils/skillProfile'
 
-type StudentInsightSection = 'all' | 'overview' | 'recommendations' | 'writeups' | 'manual-review' | 'evidence'
+type StudentInsightSection =
+  | 'all'
+  | 'overview'
+  | 'recommendations'
+  | 'writeups'
+  | 'manual-review'
+  | 'evidence'
+  | 'timeline'
 
 const props = defineProps<{
   student: TeacherStudentItem | null
@@ -553,7 +560,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           </template>
         </SectionCard>
 
-        <StudentTimelinePage v-if="isSectionVisible('evidence')" :timeline="timeline" />
+        <StudentTimelinePage v-if="isSectionVisible('timeline')" :timeline="timeline" />
       </template>
     </template>
   </div>
