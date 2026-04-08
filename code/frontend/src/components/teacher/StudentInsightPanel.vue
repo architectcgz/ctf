@@ -605,8 +605,8 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 0.1rem 0.7rem;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-1) var(--space-2-5);
 }
 
 .insight-rate-panel__label,
@@ -674,7 +674,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.35rem 0.75rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -706,7 +706,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .writeup-kpi-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .writeup-kpi-card {
@@ -718,7 +718,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
     color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
   );
   box-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-  padding: 0.85rem 0.95rem 0.8rem;
+  padding: var(--space-3) var(--space-4) var(--space-3);
 }
 
 .writeup-directory-head,
@@ -730,12 +730,12 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
     minmax(0, 1.2fr)
     minmax(0, 1.35fr)
     minmax(108px, 0.9fr);
-  gap: 0.9rem;
+  gap: var(--space-3-5);
   align-items: start;
 }
 
 .writeup-directory-head {
-  padding: 0.7rem 0.15rem 0.62rem;
+  padding: var(--space-3) var(--space-1-5) var(--space-2-5);
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -745,7 +745,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .writeup-directory-row {
-  padding: 0.9rem 0.15rem;
+  padding: var(--space-3-5) var(--space-1-5);
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 84%, transparent);
 }
 
@@ -766,7 +766,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .writeup-directory-preview {
-  margin-top: 0.35rem;
+  margin-top: var(--space-1-5);
   line-height: 1.6;
   font-size: 0.8rem;
   color: var(--journal-muted);
@@ -775,7 +775,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .writeup-directory-status {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .writeup-directory-time {
@@ -790,12 +790,12 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .writeup-pagination {
-  padding-top: 0.35rem;
+  padding-top: var(--space-1-5);
 }
 
 .writeup-open-link {
   min-height: 34px;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-3);
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 28%, var(--teacher-divider));
   color: var(--journal-accent-strong);
@@ -825,7 +825,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
   .writeup-directory-row {
     grid-template-columns: 1fr;
-    gap: 0.7rem;
+    gap: var(--space-3);
   }
 
   .writeup-directory-action {
@@ -840,7 +840,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 :deep(.section-card) {
-  padding: 0.95rem 0.2rem 0.7rem;
+  padding: var(--space-4) var(--space-1) var(--space-3);
   border: 0;
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: 0;
@@ -849,9 +849,9 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 :deep(.section-card__header) {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   border-bottom: 1px dashed color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  padding-bottom: 0.75rem;
+  padding-bottom: var(--space-3);
 }
 
 :deep(.section-card__body) {
@@ -875,7 +875,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   border-radius: 0;
   background: transparent;
-  padding: 0.75rem 0.1rem 0.65rem;
+  padding: var(--space-3) var(--space-1) var(--space-2-5);
   box-shadow: none;
 }
 
@@ -900,7 +900,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .insight-kpi-value {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 1rem;
   font-weight: 700;
   line-height: 1.5;
@@ -908,7 +908,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .insight-kpi-hint {
-  margin-top: 0.45rem;
+  margin-top: var(--space-2);
   font-size: 0.8rem;
   line-height: 1.55;
   color: var(--journal-muted);
@@ -923,7 +923,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
     color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
   );
   box-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-  padding: 0.85rem 0.95rem 0.8rem;
+  padding: var(--space-3) var(--space-4) var(--space-3);
 }
 
 .writeup-kpi-grid .insight-kpi-card.writeup-kpi-card.insight-kpi-card--primary {
