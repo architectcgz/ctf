@@ -235,6 +235,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('writeups')"
+          class="writeup-section-card"
           title="发布的题解"
           subtitle="按发布时间查看当前学员已发布题解。"
         >
@@ -845,6 +846,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 :deep(.section-card__body) {
   padding-left: 0;
+}
+
+.writeup-section-card :deep(.section-card__header) {
+  border-bottom: 0;
 }
 
 .insight-kpi-grid {
