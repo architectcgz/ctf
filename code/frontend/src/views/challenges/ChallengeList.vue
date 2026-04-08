@@ -420,7 +420,7 @@ onMounted(() => {
 }
 
 .challenge-title {
-  margin-top: 0.85rem;
+  margin-top: var(--space-3);
   font-size: clamp(32px, 4vw, 46px);
   line-height: 1.02;
   letter-spacing: -0.04em;
@@ -428,7 +428,7 @@ onMounted(() => {
 }
 
 .challenge-subtitle {
-  margin-top: 12px;
+  margin-top: var(--space-3);
   max-width: 680px;
   font-size: 14px;
   line-height: 1.7;
@@ -439,13 +439,13 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .challenge-summary-title {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2-5);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -454,7 +454,7 @@ onMounted(() => {
 }
 
 .challenge-controls {
-  padding: 24px 0 0;
+  padding: var(--space-6) 0 0;
 }
 
 .challenge-controls-bar {
@@ -462,7 +462,7 @@ onMounted(() => {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px 16px;
+  gap: var(--space-3) var(--space-4);
 }
 
 .challenge-controls-heading {
@@ -477,7 +477,7 @@ onMounted(() => {
 }
 
 .challenge-controls-copy {
-  margin-top: 6px;
+  margin-top: var(--space-1-5);
   font-size: 13px;
   line-height: 1.6;
   color: var(--journal-muted);
@@ -486,9 +486,9 @@ onMounted(() => {
 .challenge-filter-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 var(--space-2-5);
   border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
   border-radius: 8px;
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
@@ -500,8 +500,8 @@ onMounted(() => {
 .challenge-filter-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 220px));
-  gap: 12px;
-  margin-top: 18px;
+  gap: var(--space-3);
+  margin-top: var(--space-4-5);
 }
 
 .challenge-input-wrap {
@@ -516,7 +516,7 @@ onMounted(() => {
 .challenge-search-icon {
   position: absolute;
   top: 50%;
-  left: 14px;
+  left: var(--space-3-5);
   transform: translateY(-50%);
   color: var(--journal-muted);
   pointer-events: none;
@@ -539,11 +539,11 @@ onMounted(() => {
 }
 
 .challenge-input {
-  padding: 0 14px 0 42px;
+  padding: 0 var(--space-3-5) 0 calc(var(--space-10) + var(--space-0-5));
 }
 
 .challenge-select {
-  padding: 0 14px;
+  padding: 0 var(--space-3-5);
   cursor: pointer;
 }
 
@@ -558,7 +558,7 @@ onMounted(() => {
 }
 
 .challenge-divider {
-  margin-top: 24px;
+  margin-top: var(--space-6);
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -566,7 +566,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
+  padding: calc(var(--space-10) * 2) 0;
 }
 
 .challenge-loading-spinner {
@@ -579,7 +579,7 @@ onMounted(() => {
 }
 
 :deep(.challenge-empty-state) {
-  margin-top: 24px;
+  margin-top: var(--space-6);
   border-top-style: solid;
   border-bottom-style: solid;
   border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
@@ -592,14 +592,14 @@ onMounted(() => {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  margin-top: 24px;
+  margin-top: var(--space-6);
 }
 
 .challenge-directory-head {
   display: grid;
   grid-template-columns: var(--challenge-directory-columns);
-  gap: 16px;
-  padding: 0 0 12px;
+  gap: var(--space-4);
+  padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 11px;
   font-weight: 700;
@@ -611,10 +611,10 @@ onMounted(() => {
 .challenge-row {
   display: grid;
   grid-template-columns: var(--challenge-directory-columns);
-  gap: 16px;
+  gap: var(--space-4);
   align-items: center;
   width: 100%;
-  padding: 18px 0;
+  padding: var(--space-4-5) 0;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   background: transparent;
@@ -639,7 +639,7 @@ onMounted(() => {
 
 .challenge-row-main {
   display: grid;
-  gap: 10px;
+  gap: var(--space-2-5);
   min-width: 0;
 }
 
@@ -679,7 +679,7 @@ onMounted(() => {
 .challenge-row-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -687,7 +687,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   min-height: 26px;
-  padding: 0 9px;
+  padding: 0 var(--space-2-5);
   border-radius: 8px;
   background: var(--challenge-chip-bg, color-mix(in srgb, var(--journal-accent) 10%, transparent));
   color: var(--challenge-chip-color, var(--journal-accent-strong));
@@ -714,7 +714,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 0 var(--space-2-5);
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
@@ -732,7 +732,7 @@ onMounted(() => {
 
 .challenge-row-metrics {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   font-size: 13px;
   line-height: 1.5;
   color: var(--journal-muted);
@@ -742,15 +742,15 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 6px;
+  gap: var(--space-1-5);
   font-size: 13px;
   font-weight: 700;
   color: var(--journal-accent-strong);
 }
 
 .challenge-pagination {
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -787,8 +787,8 @@ onMounted(() => {
 
   .challenge-row {
     grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 18px 0;
+    gap: var(--space-3-5);
+    padding: var(--space-4-5) 0;
   }
 
   .challenge-row-status,
