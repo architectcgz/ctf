@@ -331,13 +331,13 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
         <SectionCard
           v-if="isSectionVisible('manual-review')"
-          title="人工审核题"
-          subtitle="查看该学员待教师评阅的非标准答案题目。"
+          title="审核题解"
+          subtitle="查看该学员待教师评阅的题解内容。"
         >
           <AppEmpty
             v-if="manualReviewSubmissions.length === 0"
-            title="暂无人工审核提交"
-            description="当前学员还没有需要教师处理的人工审核题。"
+            title="暂无题解审核提交"
+            description="当前学员还没有需要教师处理的题解审核内容。"
             icon="ClipboardCheck"
           />
 
@@ -346,7 +346,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               <article class="insight-kpi-card insight-kpi-card--primary">
                 <div class="insight-kpi-label">待处理</div>
                 <div class="insight-kpi-value">{{ manualReviewSubmissions.length }}</div>
-                <div class="insight-kpi-hint">当前分析页展示的人工审核提交数</div>
+                <div class="insight-kpi-hint">当前分析页展示的题解审核提交数</div>
               </article>
               <article class="insight-kpi-card insight-kpi-card--warning">
                 <div class="insight-kpi-label">待审核</div>
@@ -356,7 +356,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               <article class="insight-kpi-card insight-kpi-card--success">
                 <div class="insight-kpi-label">已通过</div>
                 <div class="insight-kpi-value">{{ approvedManualReviewCount }}</div>
-                <div class="insight-kpi-hint">已经转为得分的人工审核提交</div>
+                <div class="insight-kpi-hint">已经通过审核的题解提交</div>
               </article>
             </div>
 
@@ -405,15 +405,15 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
                 <AppEmpty
                   v-else-if="!activeManualReview"
-                  title="选择一条人工审核提交"
-                  description="点击左侧卡片查看完整答案并进行审核。"
+                  title="选择一条题解审核提交"
+                  description="点击左侧卡片查看完整内容并进行审核。"
                   icon="ClipboardList"
                 />
 
                 <template v-else>
                   <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div class="journal-eyebrow">Manual Review</div>
+                      <div class="journal-eyebrow">Writeup Review</div>
                       <h4 class="mt-2 text-lg font-semibold text-[var(--color-text-primary)]">
                         {{ activeManualReview.challenge_title }}
                       </h4>
@@ -428,7 +428,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
                   <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
                     <div class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
-                      提交答案
+                      题解内容
                     </div>
                     <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
                       {{ activeManualReview.answer }}
