@@ -75,7 +75,29 @@ const workspaceTabs: WorkspaceTabItem[] = [
   { key: 'action', label: '介入建议', buttonId: 'top-tab-action', panelId: 'action' },
 ]
 
-const activeTab = ref<WorkspaceTab>('overview')
+const workspaceTabSet = new Set<WorkspaceTab>(workspaceTabs.map((tab) => tab.key))
+
+function resolveTabFromLocation(): WorkspaceTab {
+  if (typeof window === 'undefined') {
+    return 'overview'
+  }
+  const panel = new URLSearchParams(window.location.search).get('panel')
+  if (panel && workspaceTabSet.has(panel as WorkspaceTab)) {
+    return panel as WorkspaceTab
+  }
+  return 'overview'
+}
+
+function syncPanelToLocation(tab: WorkspaceTab): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+  const url = new URL(window.location.href)
+  url.searchParams.set('panel', tab)
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const activeTab = ref<WorkspaceTab>(resolveTabFromLocation())
 const tabButtonRefs: Partial<Record<WorkspaceTab, HTMLButtonElement | null>> = {}
 
 function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): void {
@@ -83,7 +105,9 @@ function setTabButtonRef(tab: WorkspaceTab, element: HTMLButtonElement | null): 
 }
 
 function selectTab(tab: WorkspaceTab): void {
+  if (activeTab.value === tab) return
   activeTab.value = tab
+  syncPanelToLocation(tab)
 }
 
 function focusTab(tab: WorkspaceTab): void {
@@ -465,9 +489,9 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
           v-show="activeTab === 'overview'"
         >
-          <div>
+          <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Progress Signal</div>
-            <h1 class="hero-title">教学介入台</h1>
+            <h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>
             <p class="hero-summary">{{ overviewDescription }}</p>
 
             <div class="meta-strip">
@@ -554,10 +578,10 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'portrait' ? 'false' : 'true'"
           v-show="activeTab === 'portrait'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Skill Portrait</div>
-              <h2 class="section-title">能力画像与薄弱维度</h2>
+              <h2 class="workspace-tab-heading__title">能力画像与薄弱维度</h2>
             </div>
           </div>
 
@@ -610,10 +634,10 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
           v-show="activeTab === 'trend'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Trend Review</div>
-              <h2 class="section-title">近 7 天训练趋势</h2>
+              <h2 class="workspace-tab-heading__title">近 7 天训练趋势</h2>
             </div>
           </div>
 
@@ -641,10 +665,10 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
           v-show="activeTab === 'insight'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Student Insight</div>
-              <h2 class="section-title">学生洞察</h2>
+              <h2 class="workspace-tab-heading__title">学生洞察</h2>
             </div>
           </div>
 
@@ -675,10 +699,10 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'advice' ? 'false' : 'true'"
           v-show="activeTab === 'advice'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Today Focus</div>
-              <h2 class="section-title">今日教学建议</h2>
+              <h2 class="workspace-tab-heading__title">今日教学建议</h2>
             </div>
           </div>
 
@@ -708,10 +732,10 @@ const trendSignals = computed(() => {
           :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
           v-show="activeTab === 'action'"
         >
-          <div class="section-head">
-            <div>
+          <div class="section-head workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="section-kicker">Intervention Board</div>
-              <h2 class="section-title">介入建议</h2>
+              <h2 class="workspace-tab-heading__title">介入建议</h2>
             </div>
           </div>
 
