@@ -894,4 +894,28 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   line-height: 1.55;
   color: var(--journal-muted);
 }
+
+.writeup-kpi-grid .insight-kpi-card.writeup-kpi-card {
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  border-radius: 16px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
+  );
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
+  padding: 0.85rem 0.95rem 0.8rem;
+}
+
+.writeup-kpi-grid .insight-kpi-card.writeup-kpi-card.insight-kpi-card--primary {
+  border-top: 2px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
+}
+
+.writeup-kpi-grid .insight-kpi-card.writeup-kpi-card.insight-kpi-card--success {
+  border-top: 2px solid color-mix(in srgb, var(--color-success) 34%, transparent);
+}
+
+.writeup-kpi-grid .insight-kpi-card.writeup-kpi-card.insight-kpi-card--warning {
+  border-top: 2px solid color-mix(in srgb, var(--color-warning) 34%, transparent);
+}
 </style>
