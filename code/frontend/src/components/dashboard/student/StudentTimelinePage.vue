@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { CalendarClock, CircleCheckBig, Play, Send } from 'lucide-vue-next'
 
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { TimelineEvent } from '@/api/contracts'
@@ -84,108 +83,39 @@ function changeTimelinePage(page: number): void {
         : 'journal-shell journal-hero timeline-shell-flat px-6 py-6 md:px-8'
     "
   >
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+    <div class="timeline-header">
       <div>
-        <div class="journal-eyebrow">Training Timeline</div>
         <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
           训练节奏总览
         </h1>
         <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           看最近训练记录和节奏变化。
         </p>
+        <div class="timeline-metric-grid mt-5">
+          <article class="timeline-metric-card">
+            <div class="timeline-metric-card__label">成功解题</div>
+            <div class="timeline-metric-card__value">{{ solveCount }} 次</div>
+          </article>
+          <article class="timeline-metric-card">
+            <div class="timeline-metric-card__label">提交次数</div>
+            <div class="timeline-metric-card__value">{{ submitCount }} 次</div>
+          </article>
+          <article class="timeline-metric-card">
+            <div class="timeline-metric-card__label">实例操作</div>
+            <div class="timeline-metric-card__value">{{ instanceCount }} 次</div>
+          </article>
+          <article class="timeline-metric-card">
+            <div class="timeline-metric-card__label">总记录</div>
+            <div class="timeline-metric-card__value">{{ totalTimelineCount }} 条</div>
+          </article>
+        </div>
       </div>
-
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-          <CalendarClock class="h-5 w-5 text-[var(--journal-accent)]" />
-          节奏快照
-        </div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
-            <div class="journal-note-label">成功解题</div>
-            <div class="journal-note-value">{{ solveCount }} 次</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">提交次数</div>
-            <div class="journal-note-value">{{ submitCount }} 次</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">实例操作</div>
-            <div class="journal-note-value">{{ instanceCount }} 次</div>
-          </div>
-          <div class="journal-note">
-            <div class="journal-note-label">总记录</div>
-            <div class="journal-note-value">{{ totalTimelineCount }} 条</div>
-          </div>
-        </div>
-      </article>
     </div>
 
     <div
       class="timeline-board mt-6 px-1 pt-5 md:px-2 md:pt-6"
       :class="{ 'timeline-board--embedded': embedded }"
     >
-      <section class="timeline-section">
-        <div class="journal-eyebrow journal-eyebrow-soft">Rhythm Signals</div>
-        <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">节奏信号</h3>
-        <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-          先看整体节奏，再回到下方时间线定位具体动作。
-        </p>
-
-        <div class="timeline-signal-list mt-5">
-          <article class="timeline-signal-item">
-            <div class="flex items-start gap-3">
-              <div class="stat-icon stat-icon--success">
-                <CircleCheckBig class="h-5 w-5" />
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">成功信号</div>
-                <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
-                  {{ solveCount }}
-                </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  成功解题偏少时，适合先回到推荐页选更贴近当前阶段的题目。
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article class="timeline-signal-item">
-            <div class="flex items-start gap-3">
-              <div class="stat-icon stat-icon--warning">
-                <Send class="h-5 w-5" />
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">提交密度</div>
-                <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
-                  {{ submitCount }}
-                </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  提交多但成功少，通常说明方向跑偏，需要回看能力画像或题目切入点。
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article class="timeline-signal-item">
-            <div class="flex items-start gap-3">
-              <div class="stat-icon stat-icon--primary">
-                <Play class="h-5 w-5" />
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">实例节奏</div>
-                <div class="mt-2 text-2xl font-semibold tracking-tight text-[var(--journal-ink)]">
-                  {{ instanceCount }}
-                </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  实例操作多但提交少，通常代表分析阶段过长，适合更快进入验证。
-                </p>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
       <section class="timeline-section">
         <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
         <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练时间线</h3>
@@ -260,11 +190,37 @@ function changeTimelinePage(page: number): void {
   overflow: visible;
 }
 
-.journal-brief {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
+.timeline-header {
+  display: grid;
+  gap: 1rem;
+}
+
+.timeline-metric-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.timeline-metric-card {
+  border: 1px solid color-mix(in srgb, var(--journal-shell-border) 92%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  padding: 0.75rem 0.85rem;
+}
+
+.timeline-metric-card__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.timeline-metric-card__value {
+  margin-top: 0.48rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .timeline-board {
@@ -281,19 +237,10 @@ function changeTimelinePage(page: number): void {
   border-top: 1px solid var(--journal-divider);
 }
 
-.timeline-signal-list,
 .timeline-group-list {
   border-radius: 0;
   border: 0;
   background: transparent;
-}
-
-.timeline-signal-item {
-  padding: 1rem 0;
-}
-
-.timeline-signal-item + .timeline-signal-item {
-  border-top: 1px solid var(--journal-divider);
 }
 
 .timeline-group {
@@ -426,20 +373,18 @@ function changeTimelinePage(page: number): void {
   }
 }
 
-@media (min-width: 1280px) {
-  .timeline-signal-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .timeline-signal-item + .timeline-signal-item {
-    border-top: 0;
-    border-left: 1px solid var(--journal-divider);
+@media (max-width: 1023px) {
+  .timeline-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+@media (max-width: 767px) {
+  .timeline-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-:global([data-theme='dark']) .timeline-signal-list,
 :global([data-theme='dark']) .timeline-group-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
