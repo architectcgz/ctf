@@ -561,13 +561,13 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-topbar-padding-bottom: 0.85rem;
-  --page-top-tabs-gap: 28px;
-  --page-top-tabs-margin: 10px -1.5rem 0;
-  --page-top-tabs-padding: 0 1.5rem;
+  --journal-topbar-padding-bottom: var(--space-3);
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
+  --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
   --page-top-tab-font-size: 15px;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
@@ -594,26 +594,26 @@ onMounted(() => {
 
 .manage-header {
   display: grid;
-  gap: 1.5rem;
-  padding-bottom: 1.5rem;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .manage-summary-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .list-heading {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: var(--space-3);
   align-items: flex-end;
 }
 
 .list-heading__title {
-  margin: 0.3rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--journal-ink);
@@ -629,8 +629,8 @@ onMounted(() => {
 .manage-directory-head {
   display: grid;
   grid-template-columns: var(--challenge-list-columns);
-  gap: 1rem;
-  padding: 0 0 0.8rem;
+  gap: var(--space-4);
+  padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   font-size: 0.72rem;
   font-weight: 700;
@@ -651,8 +651,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: var(--challenge-list-columns);
   align-items: start;
-  gap: 1rem;
-  padding: 1rem 0;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -664,7 +664,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
-  gap: 0.85rem;
+  gap: var(--space-3);
   min-width: 0;
 }
 
@@ -686,7 +686,7 @@ onMounted(() => {
 .queue-row__summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-content: start;
 }
 
@@ -705,7 +705,7 @@ onMounted(() => {
 
 .challenge-row__review {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1-5);
   min-width: 0;
 }
 
@@ -716,7 +716,7 @@ onMounted(() => {
 }
 
 .challenge-row__failure {
-  margin-top: 0.7rem;
+  margin-top: var(--space-3);
   display: -webkit-box;
   font-size: 0.82rem;
   line-height: 1.6;
@@ -731,7 +731,7 @@ onMounted(() => {
   flex-wrap: nowrap;
   justify-content: flex-end;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--space-2);
   position: relative;
   justify-self: end;
 }
@@ -741,19 +741,19 @@ onMounted(() => {
   flex-wrap: wrap;
   justify-content: flex-end;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: var(--space-2);
   position: relative;
 }
 
 .challenge-row__actions-menu {
   position: absolute;
-  top: calc(100% + 0.4rem);
+  top: calc(100% + var(--space-1-5));
   right: 0;
   z-index: 10;
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
   min-width: 10rem;
-  padding: 0.6rem;
+  padding: var(--space-2-5);
   border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
   border-radius: 0.9rem;
   background: linear-gradient(
@@ -773,10 +773,10 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.45rem;
   border-radius: 0.75rem;
-  padding: 0.55rem 0.95rem;
+  padding: var(--space-2) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   transition:
@@ -787,7 +787,7 @@ onMounted(() => {
 
 .admin-btn-compact {
   min-height: 2.25rem;
-  padding: 0.48rem 0.82rem;
+  padding: var(--space-2) var(--space-3);
 }
 
 .admin-btn-ghost {
@@ -818,9 +818,9 @@ onMounted(() => {
 .admin-status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1-5);
   border-radius: 999px;
-  padding: 0.28rem 0.7rem;
+  padding: var(--space-1) var(--space-3);
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -831,14 +831,14 @@ onMounted(() => {
 }
 
 .admin-empty {
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   color: var(--journal-muted);
 }
 
 .sample-guide {
   display: grid;
-  gap: 1rem;
-  padding: 1rem 1.1rem 1.1rem;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4-5) var(--space-4-5);
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 1rem;
   background: linear-gradient(
@@ -850,7 +850,7 @@ onMounted(() => {
 
 .sample-guide__header {
   display: grid;
-  gap: 0.7rem;
+  gap: var(--space-3);
 }
 
 .sample-guide__eyebrow,
@@ -882,7 +882,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
 }
 
 .sample-guide__link {
@@ -890,7 +890,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0.72rem 1rem;
+  padding: var(--space-3) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--journal-accent) 40%, var(--journal-border));
   border-radius: 0.85rem;
   background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
@@ -909,13 +909,13 @@ onMounted(() => {
 
 .upload-result-panel {
   display: grid;
-  gap: 0.85rem;
-  padding: 0.4rem 0 0.3rem;
+  gap: var(--space-3);
+  padding: var(--space-1-5) 0 var(--space-1);
 }
 
 .upload-result-panel__header {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-2);
 }
 
 .upload-result-panel__eyebrow {
@@ -935,13 +935,13 @@ onMounted(() => {
 
 .upload-result-list {
   display: grid;
-  gap: 0.6rem;
+  gap: var(--space-2-5);
 }
 
 .upload-result-item {
   display: grid;
-  gap: 0.55rem;
-  padding: 0.8rem 0.9rem;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3-5);
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 0.85rem;
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
@@ -959,7 +959,7 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .upload-result-item__status {
@@ -968,7 +968,7 @@ onMounted(() => {
   justify-content: center;
   min-width: 2.7rem;
   min-height: 1.5rem;
-  padding: 0.16rem 0.52rem;
+  padding: var(--space-0-5) var(--space-2);
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -1004,22 +1004,22 @@ onMounted(() => {
 .upload-result-item__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--journal-muted);
   font-size: 0.78rem;
 }
 
 .queue-list {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .queue-row {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: start;
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
@@ -1035,7 +1035,7 @@ onMounted(() => {
 
 .queue-row__meta-text,
 .queue-row__detail-label {
-  margin: 0.3rem 0 0;
+  margin: var(--space-1) 0 0;
   font-size: 0.82rem;
   color: var(--journal-muted);
 }
@@ -1048,7 +1048,7 @@ onMounted(() => {
 
 .queue-row__details {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1-5);
 }
 
 .queue-row__detail-value {
@@ -1091,10 +1091,10 @@ onMounted(() => {
 
 @media (max-width: 720px) {
   .top-tabs {
-    gap: 18px;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    padding: 0 1rem;
+    gap: var(--space-4-5);
+    margin-left: calc(var(--space-4) * -1);
+    margin-right: calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
   }
 
   .manage-summary-grid {
