@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { CalendarClock, CircleCheckBig, Play, Send } from 'lucide-vue-next'
 
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import type { TimelineEvent } from '@/api/contracts'
 import { formatTime } from '@/utils/format'
 
@@ -11,9 +12,11 @@ const props = withDefaults(
   defineProps<{
     timeline: TimelineEvent[]
     embedded?: boolean
+    pageSize?: number
   }>(),
   {
     embedded: false,
+    pageSize: 10,
   }
 )
 
@@ -32,14 +35,44 @@ const instanceCount = computed(
         (item.meta?.raw_type as string | undefined) === 'instance_extend'
     ).length
 )
+const sortedTimeline = computed(() =>
+  [...props.timeline].sort(
+    (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  )
+)
+const totalTimelineCount = computed(() => sortedTimeline.value.length)
+const totalTimelinePages = computed(() =>
+  Math.max(1, Math.ceil(totalTimelineCount.value / Math.max(1, props.pageSize)))
+)
+const timelinePage = ref(1)
+
+watch(
+  () => totalTimelinePages.value,
+  (nextTotalPages) => {
+    timelinePage.value = Math.min(timelinePage.value, nextTotalPages)
+  },
+  { immediate: true }
+)
+
+const pagedTimeline = computed(() => {
+  const safePage = Math.max(1, Math.floor(timelinePage.value || 1))
+  const safePageSize = Math.max(1, Math.floor(props.pageSize || 10))
+  const start = (safePage - 1) * safePageSize
+  return sortedTimeline.value.slice(start, start + safePageSize)
+})
+
 const groupedTimeline = computed(() => {
   const groups = new Map<string, TimelineEvent[]>()
-  props.timeline.forEach((event) => {
+  pagedTimeline.value.forEach((event) => {
     const key = new Date(event.created_at).toLocaleDateString('zh-CN')
     groups.set(key, [...(groups.get(key) || []), event])
   })
   return Array.from(groups.entries()).map(([date, events]) => ({ date, events }))
 })
+
+function changeTimelinePage(page: number): void {
+  timelinePage.value = page
+}
 </script>
 
 <template>
@@ -48,7 +81,7 @@ const groupedTimeline = computed(() => {
     :class="
       embedded
         ? 'journal-shell-embedded'
-        : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
+        : 'journal-shell journal-hero timeline-shell-flat px-6 py-6 md:px-8'
     "
   >
     <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
@@ -82,7 +115,7 @@ const groupedTimeline = computed(() => {
           </div>
           <div class="journal-note">
             <div class="journal-note-label">总记录</div>
-            <div class="journal-note-value">{{ timeline.length }} 条</div>
+            <div class="journal-note-value">{{ totalTimelineCount }} 条</div>
           </div>
         </div>
       </article>
@@ -203,15 +236,35 @@ const groupedTimeline = computed(() => {
             </div>
           </section>
         </div>
+
+        <div v-if="totalTimelineCount > 0" class="timeline-pagination mt-5">
+          <PagePaginationControls
+            :page="timelinePage"
+            :total-pages="totalTimelinePages"
+            :total="totalTimelineCount"
+            total-label="训练记录总数"
+            show-jump
+            @change-page="changeTimelinePage"
+          />
+        </div>
       </section>
     </div>
   </section>
 </template>
 
 <style scoped>
+.timeline-shell-flat.journal-shell.journal-hero {
+  border: 0;
+  border-radius: 0 !important;
+  box-shadow: none;
+  overflow: visible;
+}
+
 .journal-brief {
-  border-color: var(--journal-shell-border);
-  background: var(--journal-surface-subtle);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
 }
 
 .timeline-board {
@@ -230,13 +283,13 @@ const groupedTimeline = computed(() => {
 
 .timeline-signal-list,
 .timeline-group-list {
-  border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
+  border-radius: 0;
+  border: 0;
+  background: transparent;
 }
 
 .timeline-signal-item {
-  padding: 1rem 1.1rem;
+  padding: 1rem 0;
 }
 
 .timeline-signal-item + .timeline-signal-item {
@@ -244,7 +297,7 @@ const groupedTimeline = computed(() => {
 }
 
 .timeline-group {
-  padding: 1rem 1.1rem;
+  padding: 1rem 0;
 }
 
 .timeline-group + .timeline-group {
@@ -301,6 +354,11 @@ const groupedTimeline = computed(() => {
 
 .timeline-event-item + .timeline-event-item {
   border-top: 1px solid var(--journal-divider);
+}
+
+.timeline-pagination {
+  border-top: 1px solid var(--journal-divider);
+  padding-top: 0.35rem;
 }
 
 .stat-icon {
