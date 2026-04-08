@@ -771,12 +771,12 @@ watch(
   --challenge-tone-medium: var(--challenge-tone-crypto);
   --challenge-tone-hard: var(--challenge-tone-pwn);
   --challenge-tone-insane: var(--challenge-tone-reverse);
-  --page-top-tabs-gap: 28px;
-  --page-top-tabs-margin: 10px 0 0;
-  --page-top-tabs-padding: 0 28px;
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: var(--space-2-5) 0 0;
+  --page-top-tabs-padding: 0 var(--space-7);
   --page-top-tabs-border: var(--line-soft);
   --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
   --page-top-tab-font-size: 15px;
   --page-top-tab-font-weight: 600;
   --page-top-tab-color: var(--text-faint);
@@ -884,14 +884,14 @@ watch(
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 28px;
+  padding: var(--space-7);
 }
 
 .tool-pane {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 28px;
+  padding: var(--space-7);
   border-left: 1px solid var(--line-soft);
   background: linear-gradient(
     180deg,
@@ -906,7 +906,7 @@ watch(
   flex-direction: column;
   min-height: 100%;
   position: sticky;
-  top: 28px;
+  top: var(--space-7);
 }
 
 .workspace-panel,
@@ -919,13 +919,13 @@ watch(
 .question-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 200px;
-  gap: 26px;
-  padding-bottom: 24px;
+  gap: var(--space-6);
+  padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--line-soft);
 }
 
 .question-title {
-  margin: 12px 0 0;
+  margin: var(--space-3) 0 0;
   font-size: clamp(30px, 4vw, 46px);
   line-height: 1.04;
   letter-spacing: -0.03em;
@@ -935,13 +935,13 @@ watch(
 .meta-strip {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 16px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-4);
 }
 
 .meta-strip--compact {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .meta-pill,
@@ -950,7 +950,7 @@ watch(
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  padding: 0 14px;
+  padding: 0 var(--space-3-5);
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
@@ -966,7 +966,7 @@ watch(
 }
 
 .score-rail {
-  padding-left: 22px;
+  padding-left: var(--space-5-5);
   border-left: 1px solid var(--line-soft);
 }
 
@@ -978,7 +978,7 @@ watch(
 }
 
 .score-value {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   color: var(--text-main);
   font: 700 34px/1 var(--font-mono);
 }
@@ -989,8 +989,8 @@ watch(
 }
 
 .score-note {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--line-soft);
   font-size: 14px;
   line-height: 1.75;
@@ -998,7 +998,7 @@ watch(
 }
 
 .section {
-  padding-top: 24px;
+  padding-top: var(--space-6);
   border-top: 1px solid var(--line-soft);
 }
 
@@ -1016,12 +1016,12 @@ watch(
   display: flex;
   align-items: end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .section-title:not(.workspace-tab-heading__title) {
-  margin: 10px 0 0;
+  margin: var(--space-2-5) 0 0;
   font-size: 20px;
   line-height: 1.2;
   color: var(--text-main);
@@ -1042,13 +1042,13 @@ watch(
 .challenge-prose :deep(p),
 .challenge-prose :deep(ul),
 .challenge-prose :deep(ol) {
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .challenge-prose :deep(pre) {
   overflow: auto;
-  margin: 20px 0;
-  padding: 18px 20px;
+  margin: var(--space-5) 0;
+  padding: var(--space-4-5) var(--space-5);
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   background: color-mix(in srgb, var(--bg-panel) 72%, white);
@@ -1072,8 +1072,8 @@ watch(
 .hint-line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  padding: 16px 0;
+  gap: var(--space-3-5);
+  padding: var(--space-4) 0;
   border-top: 1px dashed var(--line-soft);
 }
 
@@ -1089,7 +1089,7 @@ watch(
 }
 
 .hint-copy {
-  margin-top: 7px;
+  margin-top: var(--space-2-5);
   font-size: 14px;
   line-height: 1.8;
   color: var(--text-subtle);
@@ -1098,19 +1098,19 @@ watch(
 .solution-layout {
   display: grid;
   grid-template-columns: minmax(240px, 0.54fr) minmax(0, 1fr);
-  gap: 24px;
+  gap: var(--space-6);
 }
 
 .solution-nav {
-  padding-right: 20px;
+  padding-right: var(--space-5);
   border-right: 1px solid var(--line-soft);
 }
 
 .sub-tabs,
 .solution-tabbar {
   display: flex;
-  gap: 18px;
-  padding-bottom: 10px;
+  gap: var(--space-4-5);
+  padding-bottom: var(--space-2-5);
   overflow-x: auto;
   border-bottom: 1px solid var(--line-soft);
   scrollbar-width: none;
@@ -1122,7 +1122,7 @@ watch(
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  padding: 0 0 8px;
+  padding: 0 0 var(--space-2);
   font-weight: 600;
   color: var(--text-faint);
 }
@@ -1137,7 +1137,7 @@ watch(
 .solution-list-item {
   width: 100%;
   text-align: left;
-  padding: 15px 0 16px 14px;
+  padding: var(--space-3-5) 0 var(--space-4) var(--space-3-5);
   border: 0;
   border-left: 2px solid transparent;
   border-bottom: 1px solid var(--line-soft);
@@ -1154,7 +1154,7 @@ watch(
 .solution-item span,
 .solution-list-item span {
   display: block;
-  margin-top: 6px;
+  margin-top: var(--space-1-5);
   font-size: 12px;
   color: var(--text-faint);
 }
@@ -1180,11 +1180,11 @@ watch(
 .solution-preview__content :deep(h1),
 .solution-preview__content :deep(h2),
 .solution-preview__content :deep(h3) {
-  margin-top: 1.2rem;
+  margin-top: var(--space-5);
 }
 
 .inline-note {
-  padding-left: 1rem;
+  padding-left: var(--space-4);
   border-left: 2px solid var(--line-soft);
   font-size: 0.9rem;
   line-height: 1.8;
@@ -1207,9 +1207,9 @@ watch(
 .submission-record-item {
   display: grid;
   grid-template-columns: 120px minmax(0, 1fr) auto;
-  gap: 18px;
+  gap: var(--space-4-5);
   align-items: center;
-  padding: 18px 0;
+  padding: var(--space-4-5) 0;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -1246,13 +1246,13 @@ watch(
 
 .writeup-form {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .field label,
 .flag-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -1274,12 +1274,12 @@ watch(
 .field input,
 .flag-input {
   min-height: 50px;
-  padding: 0 14px;
+  padding: 0 var(--space-3-5);
 }
 
 .field textarea {
   min-height: 260px;
-  padding: 14px;
+  padding: var(--space-3-5);
   resize: vertical;
 }
 
@@ -1300,41 +1300,41 @@ watch(
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .writeup-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-3);
   justify-content: flex-end;
 }
 
 .flag-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .tool-group + .tool-group,
 :deep(.instance-shell) {
-  margin-top: 1.6rem;
+  margin-top: var(--space-6);
 }
 
 .tool-group + .tool-group {
-  margin-top: 26px;
-  padding-top: 26px;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--line-soft);
 }
 
 .tool-title {
-  margin: 10px 0 0;
+  margin: var(--space-2-5) 0 0;
   font-size: 18px;
   line-height: 1.25;
   color: var(--text-main);
 }
 
 .tool-copy {
-  margin-top: 8px;
+  margin-top: var(--space-2);
   font-size: 14px;
   line-height: 1.75;
   color: var(--text-subtle);
@@ -1347,7 +1347,7 @@ watch(
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border-radius: 14px;
   font: 600 14px/1 var(--font-sans);
 }
@@ -1368,8 +1368,8 @@ watch(
 .status-inline {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
   font-size: 14px;
   color: var(--text-subtle);
 }
@@ -1485,7 +1485,7 @@ watch(
 
   .score-rail {
     padding-left: 0;
-    padding-top: 18px;
+    padding-top: var(--space-4-5);
     border-left: 0;
     border-top: 1px solid var(--line-soft);
   }
@@ -1497,13 +1497,13 @@ watch(
   .workspace-tabbar,
   .content-pane,
   .tool-pane {
-    padding-left: 1.1rem;
-    padding-right: 1.1rem;
+    padding-left: var(--space-4-5);
+    padding-right: var(--space-4-5);
   }
 
   .top-tabs,
   .workspace-tabbar {
-    gap: 22px;
+    gap: var(--space-5-5);
   }
 
   .solution-layout,
@@ -1521,7 +1521,7 @@ watch(
 
   .record-item,
   .submission-record-item {
-    gap: 0.6rem;
+    gap: var(--space-2-5);
   }
 
   .writeup-actions {
