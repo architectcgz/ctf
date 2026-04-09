@@ -8,6 +8,7 @@ const props = defineProps<{
   trend: TeacherClassTrendData | null
   title?: string
   subtitle?: string
+  bare?: boolean
 }>()
 
 const panelTitle = computed(() => props.title || '近 7 天训练趋势')
@@ -31,7 +32,7 @@ const series = computed(() => [
 </script>
 
 <template>
-  <section class="teacher-panel">
+  <section v-if="!bare" class="teacher-panel">
     <header class="teacher-panel__header">
       <div class="journal-eyebrow">Trend</div>
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
@@ -43,6 +44,16 @@ const series = computed(() => [
       <LineChart :categories="categories" :series="series" />
     </div>
   </section>
+
+  <template v-else>
+    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy teacher-panel__empty-copy--bare">
+      暂无趋势数据
+    </p>
+
+    <div v-else class="teacher-panel__chart teacher-panel__chart--bare">
+      <LineChart :categories="categories" :series="series" />
+    </div>
+  </template>
 </template>
 
 <style scoped>
@@ -90,6 +101,10 @@ const series = computed(() => [
   color: var(--panel-muted);
 }
 
+.teacher-panel__empty-copy--bare {
+  margin-top: 0;
+}
+
 .teacher-panel__chart {
   overflow-x: auto;
   margin-top: var(--space-1);
@@ -97,5 +112,9 @@ const series = computed(() => [
   border: 1px solid var(--panel-border);
   background: var(--panel-surface);
   padding: var(--space-3);
+}
+
+.teacher-panel__chart--bare {
+  margin-top: 0;
 }
 </style>
