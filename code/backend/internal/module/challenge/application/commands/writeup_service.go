@@ -29,9 +29,6 @@ func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertC
 		}
 		return nil, err
 	}
-	if req.Visibility == model.WriteupVisibilityScheduled && req.ReleaseAt == nil {
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("定时公开必须提供 release_at"))
-	}
 
 	existing, err := s.repo.FindWriteupByChallengeID(challengeID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -43,7 +40,6 @@ func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertC
 		Title:       strings.TrimSpace(req.Title),
 		Content:     strings.TrimSpace(req.Content),
 		Visibility:  req.Visibility,
-		ReleaseAt:   req.ReleaseAt,
 		CreatedBy:   &actorUserID,
 		UpdatedAt:   time.Now(),
 	}
@@ -53,9 +49,6 @@ func (s *WriteupService) Upsert(challengeID, actorUserID int64, req *dto.UpsertC
 		writeup.IsRecommended = existing.IsRecommended
 		writeup.RecommendedAt = existing.RecommendedAt
 		writeup.RecommendedBy = existing.RecommendedBy
-	}
-	if writeup.Visibility != model.WriteupVisibilityScheduled {
-		writeup.ReleaseAt = nil
 	}
 	if err := s.repo.UpsertWriteup(writeup); err != nil {
 		return nil, err

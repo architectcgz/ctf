@@ -18,8 +18,7 @@ const adminApiMocks = vi.hoisted(() => ({
     challenge_id: '11',
     title: '官方题解',
     content: '## Step 1',
-    visibility: 'scheduled',
-    release_at: '2026-03-12T08:00:00.000Z',
+    visibility: 'public',
     is_recommended: true,
     recommended_at: '2026-03-10T03:00:00.000Z',
     created_at: '2026-03-10T00:00:00.000Z',
@@ -32,8 +31,7 @@ const adminApiMocks = vi.hoisted(() => ({
     challenge_id: '11',
     title: '官方题解',
     content: '## Step 1',
-    visibility: 'scheduled',
-    release_at: '2026-03-12T08:00:00.000Z',
+    visibility: 'public',
     is_recommended: true,
     recommended_at: '2026-03-10T03:00:00.000Z',
     created_at: '2026-03-10T00:00:00.000Z',
@@ -44,8 +42,7 @@ const adminApiMocks = vi.hoisted(() => ({
     challenge_id: '11',
     title: '官方题解',
     content: '## Step 1',
-    visibility: 'scheduled',
-    release_at: '2026-03-12T08:00:00.000Z',
+    visibility: 'public',
     is_recommended: false,
     created_at: '2026-03-10T00:00:00.000Z',
     updated_at: '2026-03-10T04:00:00.000Z',
@@ -74,7 +71,8 @@ describe('ChallengeWriteupEditorPage', () => {
 
     expect(wrapper.text()).toContain('双节点演练')
     expect(wrapper.text()).toContain('官方题解')
-    expect(wrapper.text()).toContain('scheduled')
+    expect(wrapper.text()).toContain('public')
+    expect(wrapper.text()).not.toContain('scheduled')
     expect(wrapper.text()).toContain('推荐题解')
     expect(wrapper.text()).toContain('取消推荐')
     expect(wrapper.text()).toContain('恢复已保存版本')

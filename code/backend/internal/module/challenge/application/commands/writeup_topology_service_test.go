@@ -52,7 +52,7 @@ func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetPublished() error = %v", err)
 	}
-	if !published.IsReleased || !published.RequiresSpoilerWarning {
+	if !published.RequiresSpoilerWarning {
 		t.Fatalf("unexpected published writeup: %+v", published)
 	}
 }

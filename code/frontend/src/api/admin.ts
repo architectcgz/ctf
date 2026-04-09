@@ -478,7 +478,6 @@ interface RawAdminChallengeWriteupData {
   title: string
   content: string
   visibility: WriteupVisibility
-  release_at?: string | null
   created_by?: string | number | null
   is_recommended?: boolean
   recommended_at?: string | null
@@ -604,7 +603,6 @@ function normalizeAdminChallengeWriteup(
     title: item.title,
     content: item.content,
     visibility: item.visibility,
-    release_at: item.release_at || undefined,
     created_by: item.created_by == null ? undefined : String(item.created_by),
     is_recommended: item.is_recommended ?? false,
     recommended_at: item.recommended_at || undefined,
@@ -1423,7 +1421,6 @@ export interface AdminChallengeWriteupPayload {
   title: string
   content: string
   visibility: WriteupVisibility
-  release_at?: string
 }
 
 export async function getChallengeWriteup(id: string): Promise<AdminChallengeWriteupData | null> {
