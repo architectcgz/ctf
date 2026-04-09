@@ -51,7 +51,7 @@ const weakDimensionStats = computed(() => {
         'teacher-insight-layout--split-cards': splitCards,
       }"
     >
-      <section class="teacher-subsection teacher-subsection--plain">
+      <section class="teacher-subsection">
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Students</div>
           <h2 class="teacher-panel__title">班级 Top 学生</h2>
@@ -173,13 +173,6 @@ const weakDimensionStats = computed(() => {
   border-radius: 14px;
   background: color-mix(in srgb, var(--panel-surface) 96%, transparent);
   padding: var(--space-4) var(--space-4-5);
-}
-
-.teacher-insight-layout--split-cards .teacher-subsection--plain {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
 }
 
 .teacher-insight-layout--split-cards .teacher-subsection + .teacher-subsection {
