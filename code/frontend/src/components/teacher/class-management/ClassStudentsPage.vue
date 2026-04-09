@@ -287,11 +287,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
             <section class="teacher-controls teacher-student-controls">
               <div class="teacher-controls-bar">
-                <div class="workspace-tab-heading__main">
-                  <div class="teacher-surface-eyebrow journal-eyebrow">Student Filters</div>
-                  <h3 class="teacher-controls-title workspace-tab-heading__title">学生筛选</h3>
-                  <p class="teacher-controls-copy">按学号快速定位学生，并继续进入学员分析。</p>
-                </div>
                 <div class="teacher-controls-meta">
                   <div class="teacher-section-meta" aria-live="polite">
                     {{
