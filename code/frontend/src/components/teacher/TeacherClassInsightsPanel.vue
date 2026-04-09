@@ -7,6 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 const props = defineProps<{
   students: TeacherStudentItem[]
   className?: string
+  stacked?: boolean
 }>()
 
 const topStudents = computed(() =>
@@ -42,7 +43,7 @@ const weakDimensionStats = computed(() => {
 
 <template>
   <section class="teacher-panel">
-    <div class="teacher-insight-layout">
+    <div class="teacher-insight-layout" :class="{ 'teacher-insight-layout--stacked': stacked }">
       <section class="teacher-subsection">
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Students</div>
@@ -285,7 +286,7 @@ const weakDimensionStats = computed(() => {
 }
 
 @media (min-width: 1280px) {
-  .teacher-insight-layout {
+  .teacher-insight-layout:not(.teacher-insight-layout--stacked) {
     grid-template-columns: 1.05fr 0.95fr;
     gap: var(--space-4);
   }
