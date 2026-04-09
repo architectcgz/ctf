@@ -153,9 +153,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
-import { ElMessageBox } from 'element-plus'
 import { getImages, createImage, deleteImage } from '@/api/admin'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 import type { ImageStatus } from '@/api/contracts'
@@ -215,15 +215,19 @@ async function handleCreate() {
 }
 
 async function handleDelete(id: string) {
+  const confirmed = await confirmDestructiveAction({
+    message: '确定要删除此镜像吗？',
+  })
+  if (!confirmed) {
+    return
+  }
+
   try {
-    await ElMessageBox.confirm('确定要删除此镜像吗？', '确认', { type: 'warning' })
     await deleteImage(id)
     toast.success('删除成功')
     refresh()
-  } catch (error) {
-    if (error !== 'cancel') {
-      toast.error('删除失败')
-    }
+  } catch {
+    toast.error('删除失败')
   }
 }
 

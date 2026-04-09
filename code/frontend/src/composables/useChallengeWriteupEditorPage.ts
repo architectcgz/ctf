@@ -1,5 +1,4 @@
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessageBox } from 'element-plus'
 
 import {
   deleteChallengeWriteup,
@@ -14,6 +13,7 @@ import type {
   AdminChallengeWriteupData,
   WriteupVisibility,
 } from '@/api/contracts'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
 export function toLocalDateTimeInputValue(value?: string) {
@@ -130,11 +130,10 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
       return
     }
 
-    try {
-      await ElMessageBox.confirm('确定删除当前题解吗？删除后学员将无法继续查看。', '确认删除', {
-        type: 'warning',
-      })
-    } catch {
+    const confirmed = await confirmDestructiveAction({
+      message: '确定删除当前题解吗？删除后学员将无法继续查看。',
+    })
+    if (!confirmed) {
       return
     }
 
