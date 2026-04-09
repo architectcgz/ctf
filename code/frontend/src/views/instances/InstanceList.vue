@@ -59,8 +59,6 @@ const {
         </div>
       </section>
 
-      <div class="instance-divider" />
-
       <div v-if="loading" class="instance-loading">
         <div class="instance-loading-spinner" />
       </div>
@@ -219,11 +217,6 @@ const {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
-}
-
-.instance-divider {
-  margin-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .instance-loading {

@@ -145,8 +145,6 @@ async function handlePublishSuccess(): Promise<void> {
         </div>
       </section>
 
-      <div class="notification-divider" />
-
       <div v-if="loading" class="notification-loading">
         <div class="notification-loading-spinner" />
       </div>
@@ -254,11 +252,6 @@ async function handlePublishSuccess(): Promise<void> {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-.notification-divider {
-  margin-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .notification-loading {

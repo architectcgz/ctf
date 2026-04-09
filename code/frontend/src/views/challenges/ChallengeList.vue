@@ -249,8 +249,6 @@ onMounted(() => {
         </div>
       </section>
 
-      <div class="challenge-divider" />
-
       <div v-if="loading" class="challenge-loading">
         <div class="challenge-loading-spinner" />
       </div>
@@ -544,11 +542,6 @@ onMounted(() => {
 .challenge-select:focus {
   border-color: color-mix(in srgb, var(--journal-accent) 54%, transparent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
-}
-
-.challenge-divider {
-  margin-top: var(--space-6);
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .challenge-loading {
