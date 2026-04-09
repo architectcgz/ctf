@@ -51,6 +51,10 @@ views/           # 页面级组件（路由对应）
 
 Slots: `default`, `header`, `footer`
 
+强制约定（数值展示卡片）：
+- 数值展示型卡片（MetricCard、summary item、dashboard KPI）默认必须带说明性文字（`hint`/`helper`），不能只显示“指标名 + 数值”。
+- 说明文字至少要覆盖统计口径、时间范围或状态含义中的一项，避免歧义。
+
 ### 2.3 AppInput
 
 | Prop | 类型 | 说明 |
