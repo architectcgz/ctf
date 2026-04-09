@@ -83,8 +83,16 @@
   .instance-summary-item
 ) {
   min-width: 0;
-  padding-left: 16px;
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border: 1px solid
+    var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 78%, transparent));
+  border-radius: var(--workspace-radius-lg, 18px);
+  background: color-mix(
+    in srgb,
+    var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
+    transparent
+  );
+  box-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
+  padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
 }
 
 :is(
@@ -96,7 +104,7 @@
 ) {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
@@ -108,8 +116,9 @@
   .scoreboard-summary-value,
   .instance-summary-value
 ) {
-  margin-top: 8px;
-  font-size: 22px;
+  margin-top: var(--space-2-5, 0.625rem);
+  font-size: 26px;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
   color: var(--journal-ink);
@@ -122,9 +131,9 @@
   .scoreboard-summary-helper,
   .instance-summary-helper
 ) {
-  margin-top: 8px;
+  margin-top: var(--space-2, 0.5rem);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--journal-muted);
 }
 
@@ -231,17 +240,5 @@
     .instance-summary-grid
   ) {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  :is(
-    .challenge-summary-item,
-    .contest-summary-item,
-    .notification-summary-item,
-    .scoreboard-summary-item,
-    .instance-summary-item
-  ) {
-    padding-left: 12px;
   }
 }
