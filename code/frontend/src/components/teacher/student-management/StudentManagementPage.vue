@@ -343,8 +343,8 @@ const emit = defineEmits<{
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-size: var(--font-size-0-98);
-  font-weight: 700;
+  font-size: var(--font-size-0-90);
+  font-weight: 600;
   line-height: 1.35;
   color: var(--journal-ink);
   overflow: hidden;
