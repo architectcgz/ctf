@@ -198,8 +198,6 @@ onMounted(() => {
           </div>
         </header>
 
-        <div class="journal-divider" />
-
         <section class="workspace-directory-section">
           <header class="list-heading">
             <div>
