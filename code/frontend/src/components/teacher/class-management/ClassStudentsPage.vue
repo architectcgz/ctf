@@ -427,7 +427,11 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           v-show="activeTab === 'insight'"
         >
           <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
+            <TeacherClassInsightsPanel
+              :students="students"
+              :class-name="selectedClassName"
+              split-cards
+            />
           </div>
         </section>
 
