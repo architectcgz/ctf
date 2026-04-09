@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { marked } from 'marked'
 
 import type { AdminChallengeImportPreview } from '@/api/contracts'
+import { useSanitize } from '@/composables/useSanitize'
 
 const props = defineProps<{
   preview: AdminChallengeImportPreview
@@ -12,6 +14,7 @@ const emit = defineEmits<{
   confirm: []
   reset: []
 }>()
+const { sanitizeHtml } = useSanitize()
 
 const metadata = computed(() => [
   { label: 'Slug', value: props.preview.slug },
@@ -19,6 +22,17 @@ const metadata = computed(() => [
   { label: '难度', value: props.preview.difficulty },
   { label: '分值', value: `${props.preview.points} pts` },
 ])
+
+function renderRichContent(source?: string): string {
+  if (!source) return ''
+  const html = marked.parse(source, {
+    gfm: true,
+    breaks: true,
+  })
+  return sanitizeHtml(typeof html === 'string' ? html : source)
+}
+
+const renderedDescription = computed(() => renderRichContent(props.preview.description))
 </script>
 
 <template>
@@ -50,7 +64,14 @@ const metadata = computed(() => [
             <strong class="import-review__meta-value">{{ item.value }}</strong>
           </div>
         </div>
-        <p class="import-review__description">{{ preview.description }}</p>
+        <div class="import-review__statement">
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div
+            class="import-review__description"
+            data-testid="import-review-description"
+            v-html="renderedDescription"
+          />
+        </div>
       </article>
 
       <article class="import-review__section">
@@ -79,7 +100,11 @@ const metadata = computed(() => [
       <article class="import-review__section">
         <div class="import-review__section-title">附件</div>
         <div v-if="preview.attachments?.length" class="import-review__list">
-          <div v-for="attachment in preview.attachments" :key="attachment.path" class="import-review__list-item">
+          <div
+            v-for="attachment in preview.attachments"
+            :key="attachment.path"
+            class="import-review__list-item"
+          >
             <strong>{{ attachment.name }}</strong>
             <span>{{ attachment.path }}</span>
           </div>
@@ -170,7 +195,11 @@ const metadata = computed(() => [
 
 .import-review__ghost {
   border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
   color: var(--journal-ink);
 }
 
@@ -185,7 +214,8 @@ const metadata = computed(() => [
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4) 0;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .import-review__section-title {
@@ -217,11 +247,89 @@ const metadata = computed(() => [
   color: var(--journal-ink);
 }
 
+.import-review__statement {
+  max-height: clamp(15rem, 36vh, 24rem);
+  overflow: auto;
+  border: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-radius: 0.95rem;
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 95%,
+    var(--color-bg-base)
+  );
+  scrollbar-gutter: stable;
+}
+
 .import-review__description {
-  margin: 0;
-  color: var(--journal-muted);
-  line-height: 1.75;
-  white-space: pre-wrap;
+  padding: var(--space-3) var(--space-3-5);
+  color: var(--journal-ink);
+  line-height: 1.72;
+  font-size: var(--font-size-0-90);
+}
+
+.import-review__description :deep(*:first-child) {
+  margin-top: 0;
+}
+
+.import-review__description :deep(*:last-child) {
+  margin-bottom: 0;
+}
+
+.import-review__description :deep(h1),
+.import-review__description :deep(h2),
+.import-review__description :deep(h3),
+.import-review__description :deep(h4) {
+  margin-top: var(--space-2-5);
+  margin-bottom: var(--space-2);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.import-review__description :deep(h1) {
+  font-size: var(--font-size-1-16);
+}
+
+.import-review__description :deep(h2) {
+  font-size: var(--font-size-1-05);
+}
+
+.import-review__description :deep(p),
+.import-review__description :deep(ul),
+.import-review__description :deep(ol),
+.import-review__description :deep(pre),
+.import-review__description :deep(blockquote) {
+  margin-top: 0;
+  margin-bottom: var(--space-2-5);
+}
+
+.import-review__description :deep(ul),
+.import-review__description :deep(ol) {
+  padding-left: var(--space-4);
+}
+
+.import-review__description :deep(pre),
+.import-review__description :deep(code) {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+}
+
+.import-review__description :deep(pre) {
+  padding: var(--space-2-5);
+  border-radius: 0.75rem;
+  border: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 82%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
+  overflow: auto;
+}
+
+.import-review__description :deep(a) {
+  color: var(--journal-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .import-review__definition {
@@ -250,7 +358,8 @@ const metadata = computed(() => [
   display: grid;
   gap: var(--space-1);
   padding-bottom: var(--space-2-5);
-  border-bottom: 1px dashed color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
+  border-bottom: 1px dashed
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
 }
 
 .import-review__list-item strong {
