@@ -128,6 +128,48 @@
   grid-template-columns: var(--admin-summary-grid-columns, repeat(4, minmax(0, 1fr)));
 }
 
+.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note {
+  border: 1px solid
+    var(--metric-panel-border, var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 78%, transparent)));
+  border-radius: var(--metric-panel-radius, var(--workspace-radius-lg, 18px));
+  background: var(
+    --metric-panel-background,
+    color-mix(
+      in srgb,
+      var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
+      transparent
+    )
+  );
+  box-shadow: var(
+    --metric-panel-shadow,
+    var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft))
+  );
+  padding: var(--metric-panel-padding, var(--space-3-5) var(--space-4) var(--space-4));
+}
+
+.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-value {
+  margin-top: var(--space-2-5);
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--journal-ink);
+}
+
+.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-helper {
+  margin-top: var(--space-2);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
 .journal-shell-admin .journal-divider {
   margin-block: var(--journal-divider-margin-block, var(--space-divider-gap, var(--space-4)));
   border-top: var(

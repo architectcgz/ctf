@@ -269,33 +269,41 @@
 .teacher-summary-item,
 .teacher-management-shell .report-summary-item {
   min-width: 0;
-  padding-left: var(--space-4);
-  border-left: 2px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border: 1px solid var(--teacher-card-border, color-mix(in srgb, var(--journal-border) 78%, transparent));
+  border-radius: var(--workspace-radius-lg, 18px);
+  background: color-mix(
+    in srgb,
+    var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
+    transparent
+  );
+  box-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
+  padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
 }
 
 .teacher-summary-label,
 .teacher-management-shell .report-summary-label {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--journal-muted);
 }
 
 .teacher-summary-value,
 .teacher-management-shell .report-summary-value {
-  margin-top: 0.55rem;
-  font-size: 1.35rem;
+  margin-top: var(--space-2-5, 0.625rem);
+  font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.03em;
+  line-height: 1;
   color: var(--journal-ink);
 }
 
 .teacher-summary-helper,
 .teacher-management-shell .report-summary-helper {
-  margin-top: 0.45rem;
-  font-size: 0.8rem;
-  line-height: 1.6;
+  margin-top: var(--space-2, 0.5rem);
+  font-size: 13px;
+  line-height: 1.7;
   color: var(--journal-muted);
 }
 
