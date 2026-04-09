@@ -112,10 +112,17 @@ const {
 </script>
 
 <template>
-  <div :class="['topology-page', { 'topology-page--template-library': isTemplateLibraryMode }]">
+  <div
+    :class="[
+      'topology-page',
+      isTemplateLibraryMode
+        ? 'topology-page--template-library'
+        : 'topology-page--challenge workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero teacher-management-shell teacher-surface teacher-surface-workspace-bg',
+    ]"
+  >
     <PageHeader
-      v-if="!isTemplateLibraryMode"
-      :class="isTemplateLibraryMode ? 'topology-page-header' : undefined"
+      v-if="isTemplateLibraryMode"
+      class="topology-page-header"
       :eyebrow="pageHeader.eyebrow"
       :title="pageHeader.title"
       :description="pageHeader.description"
@@ -173,9 +180,45 @@ const {
       </button>
     </PageHeader>
 
+    <header
+      v-else
+      class="workspace-topbar topology-workspace-topbar"
+    >
+      <div class="topology-topbar-leading">
+        <span class="workspace-overline">Challenge Workspace</span>
+        <span class="topology-topbar-chip">{{ pageHeader.eyebrow }}</span>
+      </div>
+      <div class="topology-topbar-actions">
+        <button
+          type="button"
+          class="topology-toolbar-btn topology-toolbar-btn--ghost"
+          @click="emit('back')"
+        >
+          返回题目详情
+        </button>
+        <button
+          type="button"
+          class="topology-toolbar-btn topology-toolbar-btn--ghost"
+          @click="void reloadAll()"
+        >
+          <RefreshCw class="h-4 w-4" />
+          刷新
+        </button>
+        <button
+          type="button"
+          class="topology-toolbar-btn topology-toolbar-btn--primary"
+          :disabled="saving"
+          @click="void handleSaveTopology()"
+        >
+          <Save class="h-4 w-4" />
+          {{ saving ? '保存中...' : '保存拓扑' }}
+        </button>
+      </div>
+    </header>
+
     <div
       v-if="loading && !isTemplateLibraryMode"
-      class="flex justify-center py-16"
+      class="content-pane topology-loading-pane"
     >
       <AppLoading>{{ loadingText }}</AppLoading>
     </div>
@@ -1070,110 +1113,39 @@ const {
       </section>
 
       <template v-else>
-        <section class="topology-hero-grid grid gap-4 xl:grid-cols-[1.04fr_0.96fr]">
-          <div class="rounded-[30px] border border-primary/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.22),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]">
-            <div
-              class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75"
-            >
-              <span>{{ heroEyebrow }}</span>
-              <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
-            </div>
-            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">
-              {{ heroTitle }}
-            </h2>
-            <p class="mt-3 max-w-3xl text-sm leading-7 text-cyan-50/80">
-              {{ heroDescription }}
-            </p>
-
-            <div class="mt-6 grid gap-3 md:grid-cols-4">
-              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                  网络
-                </div>
-                <div class="mt-2 text-2xl font-semibold text-white">
-                  {{ topologySummary.networks }}
-                </div>
-              </div>
-              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                  节点
-                </div>
-                <div class="mt-2 text-2xl font-semibold text-white">
-                  {{ topologySummary.nodes }}
-                </div>
-              </div>
-              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                  连线
-                </div>
-                <div class="mt-2 text-2xl font-semibold text-white">
-                  {{ topologySummary.links }}
-                </div>
-              </div>
-              <div class="rounded-[24px] border border-white/10 bg-white/6 px-4 py-4">
-                <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">
-                  策略
-                </div>
-                <div class="mt-2 text-2xl font-semibold text-white">
-                  {{ topologySummary.policies }}
-                </div>
-              </div>
-            </div>
+        <section class="workspace-tab-heading topology-page-heading">
+          <div class="workspace-tab-heading__main">
+            <div class="topology-page-kicker">{{ heroEyebrow }}</div>
+            <h1 class="hero-title workspace-tab-heading__title">{{ heroTitle }}</h1>
           </div>
+          <p class="workspace-tab-copy topology-page-copy">
+            {{ heroDescription }}
+          </p>
 
-          <div class="topology-hero-aside grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-            <AppCard
-              variant="metric"
-              accent="primary"
-              :eyebrow="statusCard.eyebrow"
-              :title="statusCard.title"
-              :subtitle="statusCard.subtitle"
-            >
-              <template #header>
-                <div
-                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/12 text-primary"
-                >
-                  <Blocks class="h-5 w-5" />
-                </div>
-              </template>
-            </AppCard>
-
-            <AppCard
-              variant="metric"
-              accent="warning"
-              :eyebrow="secondaryCard.eyebrow"
-              :title="secondaryCard.title"
-              :subtitle="secondaryCard.subtitle"
-            >
-              <template #header>
-                <div
-                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--color-warning)]/20 bg-[var(--color-warning)]/10 text-[var(--color-warning)]"
-                >
-                  <GitBranch class="h-5 w-5" />
-                </div>
-              </template>
-            </AppCard>
-
-            <AppCard
-              variant="metric"
-              accent="danger"
-              eyebrow="运行时约束"
-              title="粗粒度"
-              subtitle="当前只支持节点级 allow/deny，不支持端口级 ACL。"
-            >
-              <template #header>
-                <div
-                  class="flex h-11 w-11 items-center justify-center rounded-2xl border border-danger/20 bg-danger/12 text-danger"
-                >
-                  <ShieldBan class="h-5 w-5" />
-                </div>
-              </template>
-            </AppCard>
+          <div class="topology-summary-grid topology-summary-grid--challenge metric-panel-grid">
+            <article class="topology-summary-card metric-panel-card">
+              <div class="topology-summary-label metric-panel-label">网络</div>
+              <div class="topology-summary-value metric-panel-value">{{ topologySummary.networks }}</div>
+            </article>
+            <article class="topology-summary-card metric-panel-card">
+              <div class="topology-summary-label metric-panel-label">节点</div>
+              <div class="topology-summary-value metric-panel-value">{{ topologySummary.nodes }}</div>
+            </article>
+            <article class="topology-summary-card metric-panel-card">
+              <div class="topology-summary-label metric-panel-label">连线</div>
+              <div class="topology-summary-value metric-panel-value">{{ topologySummary.links }}</div>
+            </article>
+            <article class="topology-summary-card metric-panel-card">
+              <div class="topology-summary-label metric-panel-label">策略</div>
+              <div class="topology-summary-value metric-panel-value">{{ topologySummary.policies }}</div>
+            </article>
           </div>
         </section>
 
-        <section class="topology-workbench grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
-        <div class="space-y-6">
+        <div class="journal-divider" />
+
+        <main class="content-pane topology-workspace">
+        <div class="topology-primary-column">
           <SectionCard
             title="图形画布"
             subtitle="拖拽节点调整视图布局，点击节点可快速跳到对应节点编辑卡片。"
@@ -1803,7 +1775,46 @@ const {
           </SectionCard>
         </div>
 
-        <div :class="isTemplateLibraryMode ? 'topology-side-stack topology-side-stack--library' : 'space-y-6'">
+        <aside class="context-rail topology-context-rail">
+          <div class="topology-context-stack">
+            <section class="topology-status-list">
+              <article class="topology-status-note topology-status-note--primary">
+                <div class="topology-status-note__icon">
+                  <Blocks class="h-5 w-5" />
+                </div>
+                <div class="topology-status-note__body">
+                  <div class="topology-status-note__eyebrow">{{ statusCard.eyebrow }}</div>
+                  <div class="topology-status-note__title">{{ statusCard.title }}</div>
+                  <p class="topology-status-note__copy">{{ statusCard.subtitle }}</p>
+                </div>
+              </article>
+
+              <article class="topology-status-note topology-status-note--warning">
+                <div class="topology-status-note__icon">
+                  <GitBranch class="h-5 w-5" />
+                </div>
+                <div class="topology-status-note__body">
+                  <div class="topology-status-note__eyebrow">{{ secondaryCard.eyebrow }}</div>
+                  <div class="topology-status-note__title">{{ secondaryCard.title }}</div>
+                  <p class="topology-status-note__copy">{{ secondaryCard.subtitle }}</p>
+                </div>
+              </article>
+
+              <article class="topology-status-note topology-status-note--danger">
+                <div class="topology-status-note__icon">
+                  <ShieldBan class="h-5 w-5" />
+                </div>
+                <div class="topology-status-note__body">
+                  <div class="topology-status-note__eyebrow">运行时约束</div>
+                  <div class="topology-status-note__title">粗粒度</div>
+                  <p class="topology-status-note__copy">
+                    当前只支持节点级 allow/deny，不支持端口级 ACL。
+                  </p>
+                </div>
+              </article>
+            </section>
+
+            <div class="topology-side-stack space-y-6">
           <SectionCard
             title="模板库"
             :subtitle="
@@ -2030,8 +2041,10 @@ const {
               </AppCard>
             </div>
           </SectionCard>
-        </div>
-      </section>
+            </div>
+          </div>
+        </aside>
+      </main>
       </template>
 
       <AppEmpty
@@ -2045,6 +2058,329 @@ const {
 </template>
 
 <style scoped>
+.topology-page--challenge {
+  --journal-ink: var(--color-text-primary);
+  --journal-muted: var(--color-text-secondary);
+  --journal-border: color-mix(in srgb, var(--color-border-default) 84%, transparent);
+  --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
+  --journal-accent: color-mix(in srgb, var(--color-primary) 88%, var(--journal-ink));
+  --topology-panel: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --topology-panel-subtle: color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base));
+  --topology-divider: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  display: flex;
+  flex-direction: column;
+  min-height: max(100%, calc(100vh - 5rem));
+  border: 1px solid var(--journal-border);
+  border-radius: 30px;
+  padding: var(--space-6) var(--space-7);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 8%, transparent), transparent 22rem),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+    );
+  box-shadow: 0 24px 56px var(--color-shadow-soft);
+}
+
+.topology-page--challenge .workspace-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+.topology-page--challenge .topology-topbar-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.topology-page--challenge .workspace-overline,
+.topology-page--challenge .topology-page-kicker {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.topology-page--challenge .topology-topbar-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-0-76);
+  font-weight: 600;
+  color: var(--journal-accent);
+}
+
+.topology-page--challenge .topology-topbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.topology-page--challenge .topology-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--journal-border);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-0-84);
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.topology-page--challenge .topology-toolbar-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+.topology-page--challenge .topology-toolbar-btn--ghost {
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+.topology-page--challenge .topology-toolbar-btn--ghost:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
+  color: var(--journal-accent);
+}
+
+.topology-page--challenge .topology-toolbar-btn--primary {
+  border-color: transparent;
+  background: var(--journal-accent);
+  color: var(--color-bg-base);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.topology-page--challenge .topology-toolbar-btn--primary:hover {
+  background: color-mix(in srgb, var(--journal-accent) 88%, black);
+}
+
+.topology-page--challenge .topology-toolbar-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.topology-page--challenge .topology-page-heading {
+  display: grid;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+.topology-page--challenge .topology-page-copy {
+  max-width: 48rem;
+}
+
+.topology-page--challenge .topology-summary-grid--challenge {
+  margin-top: var(--space-2);
+  --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+}
+
+.topology-page--challenge .topology-summary-card {
+  border: 1px solid var(--journal-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  box-shadow: 0 10px 24px var(--color-shadow-soft);
+}
+
+.topology-page--challenge .content-pane.topology-workspace {
+  display: grid;
+  gap: var(--space-7);
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 22rem);
+  align-items: start;
+  min-width: 0;
+  padding: 0;
+}
+
+.topology-page--challenge .topology-primary-column,
+.topology-page--challenge .topology-context-stack,
+.topology-page--challenge .topology-side-stack {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.topology-page--challenge .topology-context-rail {
+  min-width: 0;
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--topology-divider);
+}
+
+.topology-page--challenge .topology-context-stack {
+  position: sticky;
+  top: var(--space-6);
+}
+
+.topology-page--challenge .topology-status-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.topology-page--challenge .topology-status-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--journal-border);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  box-shadow: 0 12px 28px var(--color-shadow-soft);
+}
+
+.topology-page--challenge .topology-status-note__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+}
+
+.topology-page--challenge .topology-status-note--primary .topology-status-note__icon {
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-accent);
+}
+
+.topology-page--challenge .topology-status-note--warning .topology-status-note__icon {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 24%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.topology-page--challenge .topology-status-note--danger .topology-status-note__icon {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 24%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+}
+
+.topology-page--challenge .topology-status-note__eyebrow {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.topology-page--challenge .topology-status-note__title {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-1-10);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.topology-page--challenge .topology-status-note__copy {
+  margin-top: var(--space-1-5);
+  font-size: var(--font-size-0-86);
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.topology-page--challenge :deep(.section-card) {
+  padding: var(--space-5) 0 0;
+  border-top: 1px solid var(--topology-divider);
+}
+
+.topology-page--challenge .topology-primary-column :deep(.section-card:first-child),
+.topology-page--challenge .topology-side-stack :deep(.section-card:first-child) {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.topology-page--challenge :deep(.section-card__header) {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom-color: var(--topology-divider);
+}
+
+.topology-page--challenge :deep(.section-card__header h2) {
+  color: var(--journal-ink);
+  font-size: var(--font-size-1-08);
+}
+
+.topology-page--challenge :deep(.section-card__header p) {
+  color: var(--journal-muted);
+}
+
+.topology-page--challenge :deep(.section-card__body) {
+  padding-left: 0;
+}
+
+.topology-page--challenge :deep(.section-card__body > .rounded-2xl),
+.topology-page--challenge :deep(.section-card__body > .rounded-xl),
+.topology-page--challenge :deep([data-node-editor]),
+.topology-page--challenge :deep(.topology-canvas-board__root) {
+  border-color: var(--journal-border);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topology-panel) 98%, var(--color-bg-base)),
+    color-mix(in srgb, var(--topology-panel-subtle) 96%, var(--color-bg-base))
+  );
+  box-shadow: 0 14px 30px var(--color-shadow-soft);
+}
+
+.topology-page--challenge :deep(input),
+.topology-page--challenge :deep(select),
+.topology-page--challenge :deep(textarea) {
+  border-color: var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+.topology-page--challenge :deep(input::placeholder),
+.topology-page--challenge :deep(textarea::placeholder) {
+  color: color-mix(in srgb, var(--journal-muted) 78%, transparent);
+}
+
+.topology-page--challenge :deep(option) {
+  background: var(--journal-surface);
+  color: var(--journal-ink);
+}
+
+.topology-page--challenge :deep(input:focus),
+.topology-page--challenge :deep(select:focus),
+.topology-page--challenge :deep(textarea:focus) {
+  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  outline: none;
+}
+
+.topology-page--challenge :deep(.topology-canvas-board__surface) {
+  border-color: color-mix(in srgb, var(--journal-border) 70%, transparent);
+}
+
+.topology-loading-pane {
+  display: flex;
+  justify-content: center;
+  padding-block: var(--space-10);
+}
+
 .topology-page--template-library {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
@@ -2548,6 +2884,25 @@ const {
 }
 
 @media (max-width: 1023px) {
+  .topology-page--challenge .topology-summary-grid--challenge {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topology-page--challenge .content-pane.topology-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .topology-page--challenge .topology-context-rail {
+    padding-left: 0;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--topology-divider);
+    border-left: 0;
+  }
+
+  .topology-page--challenge .topology-context-stack {
+    position: static;
+  }
+
   .topology-page--template-library .topology-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2576,6 +2931,20 @@ const {
 }
 
 @media (max-width: 767px) {
+  .topology-page--challenge {
+    padding: var(--space-5);
+    border-radius: 24px;
+  }
+
+  .topology-page--challenge .workspace-topbar {
+    align-items: flex-start;
+    padding-bottom: var(--space-5);
+  }
+
+  .topology-page--challenge .topology-summary-grid--challenge {
+    grid-template-columns: 1fr;
+  }
+
   .topology-page--template-library .topology-summary-grid {
     grid-template-columns: 1fr;
   }
