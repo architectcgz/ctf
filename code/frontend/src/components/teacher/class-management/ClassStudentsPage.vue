@@ -33,6 +33,7 @@ const emit = defineEmits<{
   openClassManagement: []
   openDashboard: []
   openReportExport: []
+  selectClass: [className: string]
   updateStudentNoQuery: [value: string]
   openStudent: [studentId: string]
 }>()
@@ -307,11 +308,22 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               </div>
 
               <div class="teacher-filter-grid">
-                <div class="teacher-context-card">
-                  <div class="teacher-field-label">当前班级</div>
-                  <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
-                  <div class="teacher-context-copy">{{ students.length }} 名学生</div>
-                </div>
+                <label class="teacher-field teacher-field--class-switch">
+                  <span class="teacher-field-label">班级切换</span>
+                  <div class="teacher-field-control teacher-filter-control teacher-filter-control--select">
+                    <select
+                      :value="selectedClassName"
+                      class="teacher-input teacher-select"
+                      aria-label="选择班级"
+                      @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
+                    >
+                      <option v-if="classes.length === 0" value="" disabled>暂无可切换班级</option>
+                      <option v-for="item in classes" :key="item.name" :value="item.name">
+                        {{ item.name }} · {{ item.student_count || 0 }} 人
+                      </option>
+                    </select>
+                  </div>
+                </label>
 
                 <label class="teacher-field">
                   <span class="teacher-field-label">按学号查询</span>
@@ -773,6 +785,22 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .teacher-section-meta {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
+}
+
+.teacher-filter-control--select {
+  justify-content: flex-start;
+}
+
+.teacher-select {
+  min-height: 1.75rem;
+  padding-right: var(--space-5);
+  border: 0;
+  appearance: none;
+  cursor: pointer;
+}
+
+.teacher-select:focus-visible {
+  outline: none;
 }
 
 .teacher-controls-meta {

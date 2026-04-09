@@ -91,6 +91,18 @@ function updateStudentNoQuery(value: string): void {
   filters.updateStudentNoQuery(value)
 }
 
+function selectClass(className: string): void {
+  if (!className || className === selectedClassName.value) {
+    return
+  }
+
+  router.push({
+    name: 'TeacherClassStudents',
+    params: { className },
+    query: route.query,
+  })
+}
+
 async function loadClassWorkspace(className = classNameFromRoute()): Promise<void> {
   if (!className) {
     filters.updateSelectedClassName('')
@@ -158,6 +170,7 @@ onMounted(() => {
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
     @open-report-export="router.push({ name: 'ReportExport' })"
+    @select-class="selectClass"
     @update-student-no-query="updateStudentNoQuery"
     @open-student="openStudent"
   />

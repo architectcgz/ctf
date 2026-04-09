@@ -11,6 +11,9 @@ const routeMock = {
   params: {
     className: 'Class A',
   },
+  query: {
+    panel: 'students',
+  },
 }
 
 const teacherApiMocks = vi.hoisted(() => ({
@@ -47,6 +50,7 @@ describe('TeacherClassStudents', () => {
     localStorage.clear()
     pushMock.mockReset()
     routeMock.params.className = 'Class A'
+    routeMock.query.panel = 'students'
     teacherApiMocks.getClasses.mockReset()
     teacherApiMocks.getClassStudents.mockReset()
     teacherApiMocks.getClassReview.mockReset()
@@ -233,6 +237,42 @@ describe('TeacherClassStudents', () => {
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassSummary).toHaveBeenCalledWith('100% 班级')
     expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('100% 班级')
+  })
+
+  it('选择班级下拉框后应跳转到对应班级页面并保持 panel 查询参数', async () => {
+    teacherApiMocks.getClasses.mockResolvedValue([
+      { name: 'Class A', student_count: 2 },
+      { name: 'Class B', student_count: 1 },
+    ])
+
+    const wrapper = mount(TeacherClassStudents, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+    await wrapper.find('#class-tab-students').trigger('click')
+
+    const classSelect = wrapper.find('select[aria-label="选择班级"]')
+    expect(classSelect.exists()).toBe(true)
+
+    await classSelect.setValue('Class B')
+    await flushPromises()
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'TeacherClassStudents',
+      params: { className: 'Class B' },
+      query: { panel: 'students' },
+    })
   })
 
   it('应该忽略过期学号搜索请求的返回结果', async () => {
