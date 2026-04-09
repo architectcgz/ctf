@@ -181,6 +181,7 @@ select {
 }
 
 .app-destructive-confirm-box.el-message-box {
+  --el-message-close-size: 16px;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -236,6 +237,22 @@ select {
 .app-destructive-confirm-box .el-message-box__headerbtn:hover,
 .app-destructive-confirm-box .el-message-box__headerbtn:focus-visible {
   border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 38%, transparent);
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.app-destructive-confirm-box .el-message-box__headerbtn .el-message-box__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
+.app-destructive-confirm-box .el-message-box__headerbtn:hover .el-message-box__close,
+.app-destructive-confirm-box .el-message-box__headerbtn:focus-visible .el-message-box__close {
   color: var(--journal-ink, var(--color-text-primary));
 }
 
