@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
+import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
 import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -22,6 +23,7 @@ describe('page tabs shared styles', () => {
     for (const source of [
       classManagementSource,
       challengeDetailSource,
+      contestDetailSource,
       skillProfileSource,
       userGovernanceSource,
       challengeManageSource,
