@@ -16,23 +16,6 @@ import type {
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
-export function toLocalDateTimeInputValue(value?: string) {
-  if (!value) {
-    return ''
-  }
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) {
-    return ''
-  }
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 16)
-}
-
-function fromLocalDateTimeInputValue(value: string) {
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
-}
-
 export function useChallengeWriteupEditorPage(challengeId: string) {
   const toast = useToast()
 
@@ -46,7 +29,6 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     title: '',
     content: '',
     visibility: 'private' as WriteupVisibility,
-    releaseAt: '',
   })
 
   const hasWriteup = computed(() => writeup.value !== null)
@@ -54,8 +36,6 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     switch (form.visibility) {
       case 'public':
         return '公开后，所有已发布题目的学员都可查看'
-      case 'scheduled':
-        return '到达发布时间后自动公开'
       default:
         return '仅管理员可查看'
     }
@@ -65,7 +45,6 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
     form.title = item?.title || ''
     form.content = item?.content || ''
     form.visibility = item?.visibility || 'private'
-    form.releaseAt = toLocalDateTimeInputValue(item?.release_at)
   }
 
   async function loadPage() {
@@ -94,10 +73,6 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
       toast.error('题解内容不能为空')
       return false
     }
-    if (form.visibility === 'scheduled' && !form.releaseAt) {
-      toast.error('定时公开必须设置发布时间')
-      return false
-    }
     return true
   }
 
@@ -112,8 +87,6 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
         title: form.title.trim(),
         content: form.content.trim(),
         visibility: form.visibility,
-        release_at:
-          form.visibility === 'scheduled' ? fromLocalDateTimeInputValue(form.releaseAt) : undefined,
       })
       writeup.value = saved
       resetForm(saved)

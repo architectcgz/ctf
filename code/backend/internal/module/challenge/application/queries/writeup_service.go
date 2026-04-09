@@ -69,8 +69,6 @@ func (s *WriteupService) GetPublished(userID, challengeID int64) (*dto.Challenge
 		Title:                  item.Title,
 		Content:                item.Content,
 		Visibility:             item.Visibility,
-		ReleaseAt:              item.ReleaseAt,
-		IsReleased:             true,
 		RequiresSpoilerWarning: !isSolved,
 		IsRecommended:          item.IsRecommended,
 		RecommendedAt:          item.RecommendedAt,

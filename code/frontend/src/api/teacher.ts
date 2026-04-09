@@ -127,12 +127,11 @@ interface RawTeacherManualReviewSubmissionItem extends Omit<
 
 interface RawTeacherManualReviewSubmissionDetail extends Omit<
   TeacherManualReviewSubmissionDetailData,
-  'id' | 'user_id' | 'challenge_id' | 'reviewed_by'
+  'id' | 'user_id' | 'challenge_id'
 > {
   id: string | number
   user_id: string | number
   challenge_id: string | number
-  reviewed_by?: string | number
 }
 
 export async function getClasses(): Promise<TeacherClassItem[]>
@@ -465,7 +464,6 @@ export async function getTeacherManualReviewSubmission(
     id: String(payload.id),
     user_id: String(payload.user_id),
     challenge_id: String(payload.challenge_id),
-    reviewed_by: payload.reviewed_by == null ? undefined : String(payload.reviewed_by),
   }
 }
 
@@ -487,7 +485,6 @@ export async function reviewTeacherManualReviewSubmission(
     id: String(response.id),
     user_id: String(response.user_id),
     challenge_id: String(response.challenge_id),
-    reviewed_by: response.reviewed_by == null ? undefined : String(response.reviewed_by),
   }
 }
 
