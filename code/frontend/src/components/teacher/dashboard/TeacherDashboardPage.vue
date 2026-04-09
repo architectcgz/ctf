@@ -284,7 +284,7 @@ const {
 
           <div class="trend-layout">
             <div class="workspace-subpanel">
-              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" subtitle="" />
+              <TeacherClassTrendPanel :trend="trend" title="班级近 7 天训练趋势" subtitle="" bare />
             </div>
 
             <aside class="trend-side">
