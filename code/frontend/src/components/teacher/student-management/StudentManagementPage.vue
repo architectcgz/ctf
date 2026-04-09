@@ -196,8 +196,8 @@ const emit = defineEmits<{
             </div>
 
             <div class="teacher-directory-cell teacher-directory-cell-alias">
-              <div class="teacher-directory-row-points" :title="`@${student.username}`">
-                @{{ student.username }}
+              <div class="teacher-directory-row-points" :title="student.username">
+                {{ student.username }}
               </div>
             </div>
 
@@ -344,7 +344,7 @@ const emit = defineEmits<{
   margin: 0;
   min-width: 0;
   font-size: var(--font-size-0-90);
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.35;
   color: var(--journal-ink);
   overflow: hidden;
@@ -364,8 +364,8 @@ const emit = defineEmits<{
 
 .teacher-directory-row-points {
   font-size: var(--font-size-0-80);
-  font-weight: 700;
-  color: var(--journal-accent-strong);
+  font-weight: 400;
+  color: var(--journal-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

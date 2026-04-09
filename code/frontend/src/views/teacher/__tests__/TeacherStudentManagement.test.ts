@@ -131,14 +131,14 @@ describe('TeacherStudentManagement', () => {
     expect(firstRowChildren[2]).toContain('teacher-directory-cell-alias')
     expect(rows[0].find('.teacher-directory-cell-student-no').text()).toContain('2024001')
     expect(rows[0].find('.teacher-directory-cell-name').text()).toContain('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-cell-alias').text()).toContain('@alice')
+    expect(rows[0].find('.teacher-directory-cell-alias').text()).toContain('alice')
     expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
-    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('@alice')
+    expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
     expect(rows[0].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
     expect(rows[0].find('.teacher-directory-row-tags').text()).not.toContain('Student')
     expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
     expect(rows[1].find('.teacher-directory-cell-name').text()).toContain('未设置姓名')
-    expect(rows[1].find('.teacher-directory-cell-alias').text()).toContain('@bob')
+    expect(rows[1].find('.teacher-directory-cell-alias').text()).toContain('bob')
     expect(rows[1].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
     expect(rows[1].find('.teacher-directory-row-status').exists()).toBe(false)
     expect(wrapper.text()).toContain('alice')
@@ -466,7 +466,7 @@ describe('TeacherStudentManagement', () => {
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
     )
     expect(studentManagementSource).toMatch(
-      /class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s
+      /class="teacher-directory-row-points"[\s\S]*:title="student\.username"/s
     )
     expect(studentManagementSource).toMatch(
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
