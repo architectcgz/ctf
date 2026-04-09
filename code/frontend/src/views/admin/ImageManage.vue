@@ -264,6 +264,7 @@ onUnmounted(() => {
 
 <style scoped>
 .journal-shell {
+  --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --journal-divider-border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   --journal-shell-hero-radial-strength: 7%;
@@ -407,12 +408,6 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-}
-
-.image-summary-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .image-divider {

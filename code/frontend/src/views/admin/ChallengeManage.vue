@@ -561,6 +561,7 @@ onMounted(() => {
 
 <style scoped>
 .journal-shell {
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
   --journal-topbar-padding-bottom: var(--space-3);
   --page-top-tabs-gap: var(--space-7);
   --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
@@ -597,12 +598,6 @@ onMounted(() => {
   gap: var(--space-6);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.manage-summary-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .list-heading {
