@@ -2,8 +2,8 @@ package domain
 
 import (
 	"errors"
-	"strconv"
 	"sort"
+	"strconv"
 	"strings"
 
 	"ctf-platform/internal/dto"
@@ -99,7 +99,6 @@ func AdminWriteupRespFromModel(item *model.ChallengeWriteup) *dto.AdminChallenge
 		Title:         item.Title,
 		Content:       item.Content,
 		Visibility:    item.Visibility,
-		ReleaseAt:     item.ReleaseAt,
 		CreatedBy:     item.CreatedBy,
 		IsRecommended: item.IsRecommended,
 		RecommendedAt: item.RecommendedAt,
