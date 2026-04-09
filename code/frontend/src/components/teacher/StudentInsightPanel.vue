@@ -69,6 +69,9 @@ const publishedWriteupSubmissions = computed(() =>
 const publishedRecommendedWriteupCount = computed(() =>
   publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
 )
+const rankedProfileDimensions = computed(() =>
+  [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
+)
 const publishedChallengeCount = computed(
   () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
 )
@@ -169,10 +172,29 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           v-if="isSectionVisible('overview')"
           class="insight-overview-layout"
         >
-          <SectionCard title="能力画像" subtitle="以雷达图观察当前能力维度分布。">
+          <SectionCard title="能力雷达" subtitle="左侧雷达图展示当前能力维度分布。">
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
             </div>
+          </SectionCard>
+
+          <SectionCard title="能力比例" subtitle="右侧条状图展示各维度当前分值。">
+            <div v-if="rankedProfileDimensions.length > 0" class="insight-dimension-bars mt-4">
+              <article
+                v-for="item in rankedProfileDimensions"
+                :key="item.key"
+                class="insight-dimension-item"
+              >
+                <div class="insight-dimension-item__head">
+                  <strong>{{ item.name }}</strong>
+                  <span>{{ item.value }}%</span>
+                </div>
+                <div class="insight-dimension-item__track">
+                  <div class="insight-dimension-item__fill" :style="{ width: `${item.value}%` }" />
+                </div>
+              </article>
+            </div>
+            <div v-else class="insight-dimension-empty mt-4">暂无画像维度数据</div>
           </SectionCard>
         </div>
 
@@ -571,6 +593,9 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .insight-overview-layout {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
   align-items: start;
   padding-top: var(--space-3);
   border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
@@ -578,6 +603,52 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-overview-layout :deep(.section-card) {
   border-top: 0;
+}
+
+.insight-dimension-bars {
+  display: grid;
+  gap: var(--space-3-5);
+}
+
+.insight-dimension-item {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.insight-dimension-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--journal-ink);
+}
+
+.insight-dimension-item__head span {
+  color: var(--journal-muted);
+  font-family: var(--font-family-mono);
+}
+
+.insight-dimension-item__track {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--journal-border) 36%, transparent);
+}
+
+.insight-dimension-item__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink)),
+    color-mix(in srgb, var(--journal-accent) 48%, white) 58%,
+    color-mix(in srgb, var(--color-warning) 84%, var(--journal-accent))
+  );
+}
+
+.insight-dimension-empty {
+  font-size: var(--font-size-0-84);
+  color: var(--journal-muted);
 }
 
 .insight-progress-item {
@@ -800,6 +871,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 @media (max-width: 767px) {
+  .insight-overview-layout {
+    grid-template-columns: 1fr;
+  }
+
   .writeup-kpi-grid {
     grid-template-columns: 1fr;
   }
