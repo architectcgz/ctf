@@ -413,7 +413,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'platform/challenges/:id/writeup',
         name: 'AdminChallengeWriteup',
-        component: () => import('@/views/admin/ChallengeWriteup.vue'),
+        redirect: (to) => ({
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}`,
+          query: {
+            ...to.query,
+            panel: 'writeup',
+          },
+          hash: to.hash,
+        }),
         meta: {
           requiresAuth: true,
           roles: ['teacher', 'admin'],
@@ -424,8 +431,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'admin/challenges/:id/writeup',
         redirect: (to) => ({
-          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup`,
-          query: to.query,
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}`,
+          query: {
+            ...to.query,
+            panel: 'writeup',
+          },
           hash: to.hash,
         }),
       },
