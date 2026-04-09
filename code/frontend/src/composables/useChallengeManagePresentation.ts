@@ -12,16 +12,12 @@ import type { AdminChallengeListRow } from '@/composables/useAdminChallenges'
 
 interface UseChallengeManagePresentationOptions {
   router: Router
-  switchToImportPanel: () => void | Promise<void>
-  loadPreview: (previewId: string) => Promise<void>
   publish: (row: AdminChallengeListRow) => Promise<void>
   remove: (challengeId: string) => Promise<void>
 }
 
 export function useChallengeManagePresentation({
   router,
-  switchToImportPanel,
-  loadPreview,
   publish,
   remove,
 }: UseChallengeManagePresentationOptions) {
@@ -106,8 +102,10 @@ export function useChallengeManagePresentation({
   }
 
   async function inspectImportTask(item: AdminChallengeImportPreview): Promise<void> {
-    await loadPreview(item.id)
-    await switchToImportPanel()
+    await router.push({
+      name: 'AdminChallengeImportPreview',
+      params: { importId: item.id },
+    })
   }
 
   function toggleActionMenu(challengeId: string): void {

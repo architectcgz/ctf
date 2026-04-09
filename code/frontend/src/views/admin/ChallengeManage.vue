@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
-import ChallengePackageImportReview from '@/components/admin/challenge/ChallengePackageImportReview.vue'
 import { useAdminChallenges } from '@/composables/useAdminChallenges'
 import { useChallengeManagePresentation } from '@/composables/useChallengeManagePresentation'
 import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
@@ -37,28 +36,17 @@ const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string;
 const route = useRoute()
 const router = useRouter()
 
-const { list, total, page, pageSize, loading, changePage, refresh, publish, remove } =
-  useAdminChallenges()
+const { list, total, page, pageSize, loading, changePage, publish, remove } = useAdminChallenges()
 
 const {
-  preview,
   uploading,
-  committing,
   queueLoading,
   selectedFileName,
   queue,
   uploadResults,
-  hasPreview,
   refreshQueue,
   selectPackages,
-  loadPreview,
-  resetPreview,
-  commitPreview,
-} = useChallengePackageImport({
-  onCommitted: async () => {
-    await refresh()
-  },
-})
+} = useChallengePackageImport()
 
 const publishedCount = computed(
   () => list.value.filter((item) => item.status === 'published').length
@@ -93,7 +81,6 @@ const {
   formatDateTime,
   inspectImportTask,
   toggleActionMenu,
-  closeActionMenu,
   openChallengeDetail,
   openChallengeTopology,
   openChallengeWriteup,
@@ -101,18 +88,19 @@ const {
   removeChallenge,
 } = useChallengeManagePresentation({
   router,
-  switchToImportPanel: () => switchPanel('import'),
-  loadPreview,
   publish,
   remove,
 })
 
 async function handleSelectPackage(files: File[]) {
-  await selectPackages(files, { parallel: files.length > 1 })
-}
-
-async function handleCommitPreview() {
-  await commitPreview()
+  const selectedPreview = await selectPackages(files, { parallel: files.length > 1 })
+  if (!selectedPreview?.id) {
+    return
+  }
+  await router.push({
+    name: 'AdminChallengeImportPreview',
+    params: { importId: selectedPreview.id },
+  })
 }
 
 async function openPackageFormatGuide(): Promise<void> {
@@ -235,10 +223,7 @@ onMounted(() => {
                 <div class="challenge-row__identity">
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                      <h2
-                        class="challenge-row__title"
-                        :title="row.title"
-                      >
+                      <h2 class="challenge-row__title" :title="row.title">
                         {{ row.title }}
                       </h2>
                     </div>
@@ -455,7 +440,9 @@ onMounted(() => {
                 >
                   {{ result.status === 'success' ? '成功' : '失败' }}
                 </span>
-                <strong class="upload-result-item__name" :title="result.fileName">{{ result.fileName }}</strong>
+                <strong class="upload-result-item__name" :title="result.fileName">{{
+                  result.fileName
+                }}</strong>
               </header>
 
               <p class="upload-result-item__message">{{ result.message }}</p>
@@ -468,14 +455,6 @@ onMounted(() => {
             </article>
           </div>
         </section>
-
-        <ChallengePackageImportReview
-          v-if="hasPreview && preview"
-          :preview="preview"
-          :committing="committing"
-          @confirm="handleCommitPreview"
-          @reset="resetPreview"
-        />
       </section>
 
       <section

@@ -33,7 +33,12 @@ const routes: RouteRecordRaw[] = [
         path: 'student/dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/DashboardView.vue'),
-        meta: { requiresAuth: true, title: '仪表盘', icon: 'LayoutDashboard', contentLayout: 'bleed' },
+        meta: {
+          requiresAuth: true,
+          title: '仪表盘',
+          icon: 'LayoutDashboard',
+          contentLayout: 'bleed',
+        },
       },
       {
         path: 'dashboard',
@@ -46,7 +51,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['student', 'teacher'],
-          title: '靶场',
+          title: '题目',
           icon: 'Swords',
           contentLayout: 'bleed',
         },
@@ -58,7 +63,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['student', 'teacher'],
-          title: '靶场详情',
+          title: '题目详情',
           contentLayout: 'bleed',
         },
       },
@@ -308,7 +313,7 @@ const routes: RouteRecordRaw[] = [
         meta: {
           requiresAuth: true,
           roles: ['teacher', 'admin'],
-          title: '靶场管理',
+          title: '题目管理',
           icon: 'Settings',
           contentLayout: 'bleed',
         },
@@ -325,6 +330,17 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'platform/challenges/imports/:importId',
+        name: 'AdminChallengeImportPreview',
+        component: () => import('@/views/admin/ChallengeImportPreview.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '导入预览',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'admin/challenges',
         redirect: redirectWithQuery('/platform/challenges'),
       },
@@ -333,13 +349,21 @@ const routes: RouteRecordRaw[] = [
         redirect: redirectWithQuery('/platform/challenges/package-format'),
       },
       {
+        path: 'admin/challenges/imports/:importId',
+        redirect: (to) => ({
+          path: `/platform/challenges/imports/${encodeURIComponent(String(to.params.importId || ''))}`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
         path: 'platform/challenges/:id',
         name: 'AdminChallengeDetail',
         component: () => import('@/views/admin/ChallengeDetail.vue'),
         meta: {
           requiresAuth: true,
           roles: ['teacher', 'admin'],
-          title: '靶场详情',
+          title: '题目详情',
           contentLayout: 'bleed',
         },
       },

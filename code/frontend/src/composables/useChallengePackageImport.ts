@@ -133,7 +133,7 @@ export function useChallengePackageImport(options: UseChallengePackageImportOpti
     }
   }
 
-  async function selectPackage(file: File) {
+  async function selectPackage(file: File): Promise<AdminChallengeImportPreview | null> {
     selectedFileName.value = file.name
     uploading.value = true
     try {
@@ -144,6 +144,7 @@ export function useChallengePackageImport(options: UseChallengePackageImportOpti
       })
       toast.success('题目包解析完成')
       await refreshQueue()
+      return preview.value
     } catch (error) {
       const normalizedError = normalizeUploadError(error)
       appendUploadResult('error', {
@@ -153,21 +154,29 @@ export function useChallengePackageImport(options: UseChallengePackageImportOpti
         requestId: normalizedError.requestId,
       })
       toast.error(`题目包解析失败：${normalizedError.message}`)
+      return null
     } finally {
       uploading.value = false
     }
   }
 
-  async function selectPackages(files: File[], options: SelectPackagesOptions = {}) {
+  async function selectPackages(
+    files: File[],
+    options: SelectPackagesOptions = {}
+  ): Promise<AdminChallengeImportPreview | null> {
     if (files.length === 0) {
-      return
+      return null
     }
 
     if (!options.parallel || files.length === 1) {
+      let latestSuccess: AdminChallengeImportPreview | null = null
       for (const file of files) {
-        await selectPackage(file)
+        const result = await selectPackage(file)
+        if (result) {
+          latestSuccess = result
+        }
       }
-      return
+      return latestSuccess
     }
 
     selectedFileName.value = `${files[0]?.name || ''} +${Math.max(0, files.length - 1)}`
@@ -220,6 +229,7 @@ export function useChallengePackageImport(options: UseChallengePackageImportOpti
       }
 
       await refreshQueue()
+      return latestSuccess
     } finally {
       uploading.value = false
     }
