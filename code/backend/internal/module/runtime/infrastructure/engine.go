@@ -13,9 +13,11 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/filters"
 	networktypes "github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/errdefs"
 	"github.com/docker/go-connections/nat"
 
 	"ctf-platform/internal/config"
@@ -72,6 +74,10 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 		}
 	}
 
+	if err := e.ensureImagePresent(ctx, cfg.Image); err != nil {
+		return "", err
+	}
+
 	portBindings := nat.PortMap{}
 	exposedPorts := nat.PortSet{}
 	for containerPort, hostPort := range cfg.Ports {
@@ -114,12 +120,26 @@ func (e *Engine) CreateContainer(ctx context.Context, cfg *model.ContainerConfig
 
 	resp, err := e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
 	if err != nil {
+		if isImageNotFoundError(err) {
+			if pullErr := e.pullImage(ctx, cfg.Image); pullErr != nil {
+				return "", pullErr
+			}
+			resp, err = e.cli.ContainerCreate(ctx, containerCfg, hostCfg, nil, nil, cfg.Name)
+			if err != nil {
+				return "", err
+			}
+			return resp.ID, nil
+		}
 		return "", err
 	}
 	return resp.ID, nil
 }
 
 func (e *Engine) ResolveServicePort(ctx context.Context, imageRef string, preferredPort int) (int, error) {
+	if err := e.ensureImagePresent(ctx, imageRef); err != nil {
+		return 0, err
+	}
+
 	resp, _, err := e.cli.ImageInspectWithRaw(ctx, imageRef)
 	if err != nil {
 		return 0, err
@@ -249,6 +269,44 @@ func DefaultSecurityConfig(cfg *config.ContainerConfig) *model.SecurityConfig {
 		SecurityOpt:    buildSecurityOpts(cfg.Seccomp),
 		User:           cfg.RunAsUser,
 	}
+}
+
+func (e *Engine) ensureImagePresent(ctx context.Context, imageRef string) error {
+	if strings.TrimSpace(imageRef) == "" {
+		return fmt.Errorf("image ref is empty")
+	}
+	_, _, err := e.cli.ImageInspectWithRaw(ctx, imageRef)
+	if err == nil {
+		return nil
+	}
+	if !isImageNotFoundError(err) {
+		return err
+	}
+	if pullErr := e.pullImage(ctx, imageRef); pullErr != nil {
+		return pullErr
+	}
+	_, _, err = e.cli.ImageInspectWithRaw(ctx, imageRef)
+	return err
+}
+
+func (e *Engine) pullImage(ctx context.Context, imageRef string) error {
+	reader, err := e.cli.ImagePull(ctx, imageRef, image.PullOptions{})
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	_, _ = io.Copy(io.Discard, reader)
+	return nil
+}
+
+func isImageNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errdefs.IsNotFound(err) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "no such image")
 }
 
 func buildSecurityOpts(seccomp string) []string {
