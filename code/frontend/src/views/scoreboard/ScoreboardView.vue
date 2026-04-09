@@ -334,7 +334,7 @@ function getCardDescription(
 
 .scoreboard-card-title {
   margin-top: 10px;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -442,7 +442,7 @@ function getCardDescription(
 
 .sb-cell--rank,
 .sb-cell--mono {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .sb-cell--muted {

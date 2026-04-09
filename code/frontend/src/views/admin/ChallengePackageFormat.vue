@@ -187,7 +187,7 @@ extensions:
   background: var(--color-bg-surface);
   padding: var(--space-4);
   color: var(--color-text-primary);
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.92rem;
   line-height: 1.7;
 }

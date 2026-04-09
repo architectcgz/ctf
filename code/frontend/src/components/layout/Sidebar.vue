@@ -454,7 +454,7 @@ async function navigate(item: NavItem): Promise<void> {
 .sidebar-group-title,
 .sidebar-footer-title,
 .tech-accent {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: var(--font-family-mono);
 }
 
 .sidebar-brand-kicker,

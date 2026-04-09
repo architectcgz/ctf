@@ -114,7 +114,7 @@ const statItems = [
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .archive-hero__title {
@@ -122,7 +122,7 @@ const statItems = [
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1.05;
   color: var(--journal-ink);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .archive-hero__description {
@@ -163,7 +163,7 @@ const statItems = [
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .archive-hero__student {
@@ -190,7 +190,7 @@ const statItems = [
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.82rem;
 }
 

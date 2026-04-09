@@ -25,15 +25,7 @@
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  font-family: var(
-    --teacher-management-font,
-    'IBM Plex Sans',
-    'Noto Sans SC',
-    'PingFang SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif
-  );
+  font-family: var(--teacher-management-font, var(--font-family-sans));
 }
 
 .teacher-management-shell.teacher-surface-workspace-bg {

@@ -252,7 +252,7 @@ const emit = defineEmits<{
   --teacher-directory-columns: var(--teacher-student-directory-columns);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(12rem, 0.95fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
-  --teacher-management-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --teacher-management-font: var(--font-family-sans);
 }
 
 .teacher-page {
@@ -328,7 +328,7 @@ const emit = defineEmits<{
 
 .teacher-directory-cell-alias .teacher-directory-row-points,
 .teacher-directory-row-points {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .teacher-directory-cell-student-no {
@@ -336,9 +336,7 @@ const emit = defineEmits<{
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--journal-muted);
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
+  font-family: var(--font-family-sans);
   font-variant-numeric: tabular-nums;
 }
 

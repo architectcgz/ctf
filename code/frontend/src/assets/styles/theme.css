@@ -1,4 +1,10 @@
 :root {
+  --font-family-sans:
+    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+    system-ui, -apple-system, sans-serif;
+  --font-family-mono:
+    'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Consolas',
+    'Liberation Mono', monospace;
   --theme-bg-base: #0d1117;
   --theme-bg-surface: #161b22;
   --theme-bg-elevated: #1f2630;

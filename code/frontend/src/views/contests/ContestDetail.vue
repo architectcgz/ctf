@@ -1081,7 +1081,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .team-summary__invite {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.78rem;
   color: var(--journal-muted);
 }

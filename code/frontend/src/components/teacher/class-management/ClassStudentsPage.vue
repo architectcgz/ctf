@@ -713,7 +713,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .workspace-subpanel :deep(.top-student-item__rank),
 .workspace-subpanel :deep(.teacher-tip-index) {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .teacher-anchor-section {
@@ -823,7 +823,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .teacher-directory-cell-alias .teacher-directory-row-points,
 .teacher-directory-row-points {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .teacher-directory-cell-student-no {

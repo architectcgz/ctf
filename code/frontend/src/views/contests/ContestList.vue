@@ -323,7 +323,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-row-title {
   margin-top: 10px;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;

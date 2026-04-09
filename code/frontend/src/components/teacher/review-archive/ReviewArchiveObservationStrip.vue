@@ -60,7 +60,7 @@ function levelClass(level: string): string {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .observation-strip__title {
@@ -115,7 +115,7 @@ function levelClass(level: string): string {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--journal-muted);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .observation__summary {

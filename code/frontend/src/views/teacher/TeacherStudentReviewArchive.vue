@@ -288,7 +288,7 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__label {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .summary-card__value {
@@ -328,7 +328,7 @@ async function handleExportArchive(): Promise<void> {
 
 .skill-bars__head span {
   color: var(--journal-muted);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .skill-bars__track {

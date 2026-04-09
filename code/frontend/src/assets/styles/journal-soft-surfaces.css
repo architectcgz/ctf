@@ -11,9 +11,7 @@
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .journal-soft-surface .journal-shell-embedded {

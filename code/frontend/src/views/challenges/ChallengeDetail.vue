@@ -737,10 +737,8 @@ watch(
   --shadow-shell: 0 24px 84px rgba(13, 23, 39, 0.06);
   --radius-xl: 28px;
   --radius-lg: 18px;
-  --font-sans:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
   --journal-ink: var(--text-main);
   --journal-muted: var(--text-subtle);
   --journal-faint: var(--text-faint);

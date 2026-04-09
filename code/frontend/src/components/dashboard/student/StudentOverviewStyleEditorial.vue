@@ -460,7 +460,7 @@ const operationsSummary = computed(() => [
 }
 
 .tech-font {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .status-dot {
