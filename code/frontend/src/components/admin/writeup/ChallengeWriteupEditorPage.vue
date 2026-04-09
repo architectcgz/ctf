@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { RefreshCw, Save, Trash2 } from 'lucide-vue-next'
 
-import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
 const props = defineProps<{
@@ -34,195 +32,120 @@ const {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <PageHeader
-      title="题解管理"
-      eyebrow="Admin Writeup"
-      :description="
-        challenge
-          ? `为《${challenge.title}》维护管理员题解，控制公开范围与发布时间。`
-          : '为题目维护管理员题解，控制公开范围与发布时间。'
-      "
-    >
-      <button
-        class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
-        @click="emit('back')"
-      >
-        返回题目
-      </button>
-      <button
-        class="rounded-lg border border-[var(--color-border-default)] px-4 py-2 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
-        @click="void loadPage()"
-      >
-        <RefreshCw class="mr-2 inline-flex h-4 w-4" />
-        刷新
-      </button>
-    </PageHeader>
+  <section
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+  >
+    <header class="workspace-topbar">
+      <div class="topbar-leading">
+        <span class="workspace-overline">Challenge Workspace</span>
+        <span class="class-chip">题解管理</span>
+      </div>
+      <div class="writeup-top-actions">
+        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">返回题目</button>
+        <button class="admin-btn admin-btn-ghost" type="button" @click="void loadPage()">
+          <RefreshCw class="h-4 w-4" />
+          刷新
+        </button>
+      </div>
+    </header>
 
-    <AppLoading v-if="loading">
-      正在加载题解数据...
-    </AppLoading>
+    <div class="workspace-tab-heading">
+      <div class="workspace-tab-heading__main">
+        <div class="journal-note-label">Admin Writeup</div>
+        <h1 class="workspace-tab-heading__title">题解管理</h1>
+      </div>
+      <p class="workspace-tab-copy">
+        {{
+          challenge
+            ? `为《${challenge.title}》维护管理员题解，控制公开范围与发布时间。`
+            : '为题目维护管理员题解，控制公开范围与发布时间。'
+        }}
+      </p>
+    </div>
 
-    <div
-      v-else
-      class="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]"
-    >
-      <AppCard
-        accent="neutral"
-        title="题目信息"
-        subtitle="当前编辑对象"
-        eyebrow="Challenge"
-      >
-        <div
-          v-if="challenge"
-          class="space-y-4 text-sm text-[var(--color-text-secondary)]"
-        >
-          <div>
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              标题
-            </div>
-            <div class="mt-2 text-base font-semibold text-[var(--color-text-primary)]">
-              {{ challenge.title }}
-            </div>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <div>
-              <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                分类
-              </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">
-                {{ challenge.category }}
-              </div>
-            </div>
-            <div>
-              <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                状态
-              </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">
-                {{ challenge.status }}
-              </div>
-            </div>
-            <div>
-              <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                难度
-              </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">
-                {{ challenge.difficulty }}
-              </div>
-            </div>
-            <div>
-              <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                分值
-              </div>
-              <div class="mt-2 text-[var(--color-text-primary)]">
-                {{ challenge.points }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </AppCard>
+    <div class="journal-divider" />
 
-      <AppCard
-        variant="hero"
-        accent="primary"
-        title="题解编辑器"
-        subtitle="支持 private / public / scheduled 三种可见性。"
-        eyebrow="Writeup"
-      >
-        <template #header>
-          <div class="flex items-center gap-2">
-            <span
-              class="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em]"
-              :class="
-                hasWriteup
-                  ? 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                  : 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-              "
-            >
-              {{ hasWriteup ? '已存在题解' : '尚未创建' }}
-            </span>
-            <span
-              v-if="writeup?.is_recommended"
-              class="rounded-full border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--color-primary)]"
-            >
-              推荐题解
-            </span>
-          </div>
-        </template>
+    <AppLoading v-if="loading" class="writeup-loading">正在加载题解数据...</AppLoading>
 
-        <div class="space-y-5">
-          <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
-            <label class="space-y-2">
-              <span class="text-sm font-medium text-[var(--color-text-primary)]">题解标题</span>
+    <main v-else class="content-pane writeup-workspace">
+      <section class="writeup-main">
+        <section class="writeup-section writeup-editor-section">
+          <header class="writeup-editor-head">
+            <div>
+              <div class="journal-note-label">Writeup Editor</div>
+              <h2 class="writeup-section-title">编辑器</h2>
+            </div>
+            <div class="writeup-badges">
+              <span class="writeup-badge" :class="hasWriteup ? 'writeup-badge--ok' : 'writeup-badge--warn'">
+                {{ hasWriteup ? '已存在题解' : '尚未创建' }}
+              </span>
+              <span v-if="writeup?.is_recommended" class="writeup-badge writeup-badge--accent">
+                推荐题解
+              </span>
+            </div>
+          </header>
+
+          <div class="writeup-form-grid">
+            <label class="writeup-field writeup-field--title">
+              <span class="writeup-field-label">题解标题</span>
               <input
                 v-model="form.title"
                 type="text"
-                class="w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
+                class="writeup-field-input"
                 placeholder="例如：官方解题思路 / 赛后复盘"
               >
             </label>
 
-            <label class="space-y-2">
-              <span class="text-sm font-medium text-[var(--color-text-primary)]">可见性</span>
-              <select
-                v-model="form.visibility"
-                class="w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
-              >
+            <label class="writeup-field writeup-field--visibility">
+              <span class="writeup-field-label">可见性</span>
+              <select v-model="form.visibility" class="writeup-field-input">
                 <option value="private">private</option>
                 <option value="public">public</option>
                 <option value="scheduled">scheduled</option>
               </select>
             </label>
+
+            <label v-if="form.visibility === 'scheduled'" class="writeup-field writeup-field--schedule">
+              <span class="writeup-field-label">发布时间</span>
+              <input v-model="form.releaseAt" type="datetime-local" class="writeup-field-input">
+            </label>
           </div>
 
-          <div
-            class="rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)]/70 p-4 text-sm text-[var(--color-text-secondary)]"
-          >
-            {{ visibilityLabel }}
-          </div>
+          <div class="writeup-visibility-note">{{ visibilityLabel }}</div>
 
-          <label
-            v-if="form.visibility === 'scheduled'"
-            class="block space-y-2"
-          >
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">发布时间</span>
-            <input
-              v-model="form.releaseAt"
-              type="datetime-local"
-              class="w-full rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
-            >
-          </label>
-
-          <label class="block space-y-2">
-            <span class="text-sm font-medium text-[var(--color-text-primary)]">题解正文</span>
+          <label class="writeup-field writeup-field--content">
+            <span class="writeup-field-label">题解正文</span>
             <textarea
               v-model="form.content"
               rows="16"
-              class="min-h-[360px] w-full rounded-3xl border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] px-4 py-4 text-sm leading-7 text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-primary)]"
+              class="writeup-content-input"
               placeholder="输入官方题解、赛后复盘或教学讲解内容。"
             />
           </label>
 
-          <div class="flex flex-wrap items-center gap-3">
+          <div class="writeup-editor-actions" role="group" aria-label="题解编辑操作">
             <button
               :disabled="saving"
-              class="rounded-2xl bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--color-primary)]/90 disabled:cursor-not-allowed disabled:opacity-60"
+              class="admin-btn admin-btn-primary"
+              type="button"
               @click="void handleSave()"
             >
-              <Save class="mr-2 inline-flex h-4 w-4" />
+              <Save class="h-4 w-4" />
               {{ saving ? '保存中...' : '保存题解' }}
             </button>
             <button
               v-if="hasWriteup"
               :disabled="togglingRecommendation"
-              class="rounded-2xl border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-5 py-3 text-sm font-medium text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-60"
+              class="admin-btn admin-btn-accent"
+              type="button"
               @click="void handleToggleRecommendation()"
             >
               {{ togglingRecommendation ? '处理中...' : writeup?.is_recommended ? '取消推荐' : '设为推荐' }}
             </button>
             <button
               v-if="hasWriteup"
-              class="rounded-2xl border border-[var(--color-border-default)] px-5 py-3 text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-bg-surface)]"
+              class="admin-btn admin-btn-ghost"
+              type="button"
               @click="restoreExistingWriteup"
             >
               恢复已保存版本
@@ -230,79 +153,414 @@ const {
             <button
               v-if="hasWriteup"
               :disabled="deleting"
-              class="rounded-2xl border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-5 py-3 text-sm font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger)]/20 disabled:cursor-not-allowed disabled:opacity-60"
+              class="admin-btn admin-btn-danger"
+              type="button"
               @click="void handleDelete()"
             >
-              <Trash2 class="mr-2 inline-flex h-4 w-4" />
+              <Trash2 class="h-4 w-4" />
               {{ deleting ? '删除中...' : '删除题解' }}
             </button>
           </div>
-        </div>
-      </AppCard>
+        </section>
 
-      <AppCard
-        v-if="writeup"
-        accent="success"
-        title="当前已保存版本"
-        subtitle="保存成功后的元数据会显示在这里。"
-        eyebrow="Snapshot"
-        class="xl:col-span-2"
-      >
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              标题
-            </div>
-            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              {{ writeup.title }}
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              可见性
-            </div>
-            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              {{ writeup.visibility }}
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              推荐状态
-            </div>
-            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              {{ writeup.is_recommended ? '推荐题解' : '未推荐' }}
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              创建时间
-            </div>
-            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              {{ writeup.created_at }}
-            </div>
-          </div>
-          <div class="rounded-2xl border border-border-subtle bg-[var(--color-bg-surface)]/70 p-4">
-            <div class="text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-              更新时间
-            </div>
-            <div class="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">
-              {{ writeup.updated_at }}
-            </div>
-          </div>
-        </div>
-      </AppCard>
+        <section class="writeup-section writeup-snapshot-section">
+          <header class="writeup-subsection-head">
+            <div class="journal-note-label">Snapshot</div>
+            <h2 class="writeup-section-title">当前已保存版本</h2>
+          </header>
 
-      <AppCard
-        v-else
-        accent="warning"
-        class="xl:col-span-2"
-      >
-        <AppEmpty
-          title="当前还没有管理员题解"
-          description="填写表单后点击保存，即可创建题解并控制公开范围。"
-          icon="BookOpen"
-        />
-      </AppCard>
-    </div>
-  </div>
+          <template v-if="writeup">
+            <dl class="writeup-snapshot-grid">
+              <div class="writeup-snapshot-item">
+                <dt>标题</dt>
+                <dd>{{ writeup.title }}</dd>
+              </div>
+              <div class="writeup-snapshot-item">
+                <dt>可见性</dt>
+                <dd>{{ writeup.visibility }}</dd>
+              </div>
+              <div class="writeup-snapshot-item">
+                <dt>推荐状态</dt>
+                <dd>{{ writeup.is_recommended ? '推荐题解' : '未推荐' }}</dd>
+              </div>
+              <div class="writeup-snapshot-item">
+                <dt>创建时间</dt>
+                <dd>{{ writeup.created_at }}</dd>
+              </div>
+              <div class="writeup-snapshot-item">
+                <dt>更新时间</dt>
+                <dd>{{ writeup.updated_at }}</dd>
+              </div>
+            </dl>
+          </template>
+
+          <AppEmpty
+            v-else
+            title="当前还没有管理员题解"
+            description="填写表单后点击保存，即可创建题解并控制公开范围。"
+            icon="BookOpen"
+          />
+        </section>
+      </section>
+
+      <aside class="context-rail writeup-rail">
+        <div class="writeup-rail-card">
+          <div class="journal-note-label">Challenge</div>
+          <h2 class="writeup-rail-title">题目信息</h2>
+
+          <dl v-if="challenge" class="writeup-rail-meta">
+            <div>
+              <dt>标题</dt>
+              <dd>{{ challenge.title }}</dd>
+            </div>
+            <div>
+              <dt>分类</dt>
+              <dd>{{ challenge.category }}</dd>
+            </div>
+            <div>
+              <dt>状态</dt>
+              <dd>{{ challenge.status }}</dd>
+            </div>
+            <div>
+              <dt>难度</dt>
+              <dd>{{ challenge.difficulty }}</dd>
+            </div>
+            <div>
+              <dt>分值</dt>
+              <dd>{{ challenge.points }}</dd>
+            </div>
+          </dl>
+          <div v-else class="writeup-rail-empty">题目信息加载中。</div>
+        </div>
+      </aside>
+    </main>
+  </section>
 </template>
+
+<style scoped>
+.journal-shell {
+  --journal-topbar-padding-bottom: var(--space-3);
+  --journal-shell-hero-radial-strength: 7%;
+  --journal-shell-hero-radial-size: 22rem;
+  --journal-shell-hero-end: var(--journal-surface);
+  --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
+}
+
+.workspace-overline {
+  font-size: var(--font-size-0-70);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--journal-accent);
+}
+
+.writeup-top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.writeup-loading {
+  padding-block: var(--space-7);
+}
+
+.writeup-workspace {
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) minmax(16.5rem, 18.5rem);
+  align-items: start;
+}
+
+.writeup-main {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.writeup-section {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.writeup-snapshot-section {
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  padding-top: var(--space-5);
+}
+
+.writeup-editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.writeup-subsection-head {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.writeup-section-title {
+  margin: 0;
+  font-size: var(--font-size-1-08);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.writeup-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.writeup-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-0-76);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.writeup-badge--ok {
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+}
+
+.writeup-badge--warn {
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
+}
+
+.writeup-badge--accent {
+  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent);
+}
+
+.writeup-form-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 12.5rem);
+}
+
+.writeup-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.writeup-field--schedule,
+.writeup-field--content,
+.writeup-field--title {
+  grid-column: 1 / -1;
+}
+
+.writeup-field-label {
+  font-size: var(--font-size-0-84);
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.writeup-field-input,
+.writeup-content-input {
+  width: 100%;
+  border-radius: 0.95rem;
+  border: 1px solid var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+  padding: var(--space-3) var(--space-3-5);
+  font-size: var(--font-size-0-90);
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.writeup-content-input {
+  min-height: 22rem;
+  line-height: 1.68;
+}
+
+.writeup-field-input:focus,
+.writeup-content-input:focus {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--journal-accent) 16%, transparent);
+}
+
+.writeup-visibility-note {
+  border-left: 2px solid color-mix(in srgb, var(--journal-accent) 36%, transparent);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-0-86);
+  line-height: 1.65;
+  color: var(--journal-muted);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
+}
+
+.writeup-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  border-radius: 0.65rem;
+  border: 1px solid transparent;
+  padding: var(--space-2) var(--space-3-5);
+  font-size: var(--font-size-0-84);
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 18%, transparent);
+}
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-btn-primary {
+  border-color: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+  background: var(--journal-accent);
+  color: #fff;
+}
+
+.admin-btn-ghost {
+  border-color: var(--journal-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+}
+
+.admin-btn-accent {
+  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent);
+}
+
+.admin-btn-danger {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.writeup-snapshot-grid {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.writeup-snapshot-item {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3-5) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.writeup-snapshot-item dt {
+  font-size: var(--font-size-0-76);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.writeup-snapshot-item dd {
+  margin: 0;
+  font-size: var(--font-size-0-90);
+  font-weight: 600;
+  color: var(--journal-ink);
+  word-break: break-word;
+}
+
+.writeup-rail {
+  border-left: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  padding-left: var(--space-4);
+}
+
+.writeup-rail-card {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.writeup-rail-title {
+  margin: 0;
+  font-size: var(--font-size-1-02);
+  color: var(--journal-ink);
+}
+
+.writeup-rail-meta {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.writeup-rail-meta > div {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+}
+
+.writeup-rail-meta dt {
+  font-size: var(--font-size-0-74);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.writeup-rail-meta dd {
+  margin: 0;
+  font-size: var(--font-size-0-88);
+  color: var(--journal-ink);
+  word-break: break-word;
+}
+
+.writeup-rail-empty {
+  font-size: var(--font-size-0-84);
+  color: var(--journal-muted);
+}
+
+@media (max-width: 1100px) {
+  .writeup-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .writeup-rail {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+    padding-left: 0;
+    padding-top: var(--space-4);
+  }
+}
+
+@media (max-width: 760px) {
+  .writeup-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .writeup-top-actions {
+    width: 100%;
+  }
+
+  .writeup-top-actions .admin-btn {
+    flex: 1 1 auto;
+  }
+}
+</style>
