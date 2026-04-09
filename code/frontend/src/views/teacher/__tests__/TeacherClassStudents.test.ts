@@ -195,12 +195,13 @@ describe('TeacherClassStudents', () => {
   })
 
   it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构', () => {
-    expect(classStudentsPageSource).toContain('class="workspace-shell"')
+    expect(classStudentsPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
+    expect(classStudentsPageSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)
     expect(classStudentsPageSource).toContain('class="workspace-topbar"')
     expect(classStudentsPageSource).toContain('class="top-tabs"')
     expect(classStudentsPageSource).toContain('class="content-pane"')
     expect(classStudentsPageSource).toMatch(
-      /<div class="workspace-shell">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
     expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s)
     expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s)
@@ -397,7 +398,16 @@ describe('TeacherClassStudents', () => {
     await studentNoInput.setValue('20260001')
     await flushPromises()
 
-    expect(teacherApiMocks.getClassStudents).toHaveBeenLastCalledWith('Class A', {
+    expect(wrapper.find('.teacher-filter-reset').exists()).toBe(true)
+    expect(wrapper.find('.teacher-filter-clear').exists()).toBe(true)
+
+    await wrapper.find('.teacher-filter-clear').trigger('click')
+    await flushPromises()
+
+    expect((studentNoInput.element as HTMLInputElement).value).toBe('')
+    expect(wrapper.find('.teacher-filter-reset').exists()).toBe(false)
+
+    expect(teacherApiMocks.getClassStudents).toHaveBeenCalledWith('Class A', {
       student_no: '20260001',
     })
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledTimes(1)
