@@ -85,4 +85,28 @@ describe('ChallengeTopologyStudioPage', () => {
     expect(wrapper.text()).toContain('基础校验已通过')
     expect(wrapper.text()).toContain('当前模板')
   })
+
+  it('应该使用统一的工作区壳层与右侧上下文轨道', async () => {
+    const wrapper = mount(ChallengeTopologyStudioPage, {
+      props: {
+        challengeId: '11',
+      },
+      global: {
+        stubs: {
+          AppCard: { template: '<div><slot name="header" /><slot /><slot name="footer" /></div>' },
+          AppEmpty: { template: '<div><slot /></div>' },
+          AppLoading: { template: '<div><slot /></div>' },
+          PageHeader: { template: '<div><slot /></div>' },
+          SectionCard: { template: '<section><slot /><slot name="footer" /></section>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('.workspace-shell').exists()).toBe(true)
+    expect(wrapper.find('.workspace-topbar').exists()).toBe(true)
+    expect(wrapper.find('.content-pane').exists()).toBe(true)
+    expect(wrapper.find('.context-rail').exists()).toBe(true)
+  })
 })
