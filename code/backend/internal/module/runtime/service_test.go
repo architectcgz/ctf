@@ -331,6 +331,80 @@ func TestServiceExtendInstanceAllowsContestTeamMember(t *testing.T) {
 	}
 }
 
+func TestServiceDestroyInstanceRejectsSharedInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+
+	if err := repo.db.Create(&model.Challenge{
+		ID:              903,
+		Title:           "Shared Practice",
+		Category:        model.DimensionWeb,
+		Difficulty:      model.ChallengeDifficultyEasy,
+		FlagType:        model.FlagTypeStatic,
+		Status:          model.ChallengeStatusPublished,
+		InstanceSharing: model.InstanceSharingShared,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          903,
+		UserID:      1,
+		ChallengeID: 903,
+		ShareScope:  model.InstanceSharingShared,
+		ContainerID: "shared-ctr",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	err := service.DestroyInstanceWithContext(context.Background(), 903, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for shared destroy, got %v", err)
+	}
+}
+
+func TestServiceExtendInstanceRejectsSharedInstance(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+
+	if err := repo.db.Create(&model.Challenge{
+		ID:              904,
+		Title:           "Shared Practice",
+		Category:        model.DimensionWeb,
+		Difficulty:      model.ChallengeDifficultyEasy,
+		FlagType:        model.FlagTypeStatic,
+		Status:          model.ChallengeStatusPublished,
+		InstanceSharing: model.InstanceSharingShared,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          904,
+		UserID:      1,
+		ChallengeID: 904,
+		ShareScope:  model.InstanceSharingShared,
+		ContainerID: "shared-ctr",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(time.Hour),
+	})
+
+	_, err := service.ExtendInstanceWithContext(context.Background(), 904, 2)
+	if err == nil || err.Error() != errcode.ErrForbidden.Error() {
+		t.Fatalf("expected forbidden for shared extend, got %v", err)
+	}
+}
+
 func TestServiceGetUserInstancesIncludesChallengeMetadata(t *testing.T) {
 	t.Parallel()
 
@@ -454,6 +528,53 @@ func TestServiceGetUserInstancesShowsContestSharedInstanceToTeamMember(t *testin
 	}
 	if len(items) != 1 || items[0].ID != 1002 {
 		t.Fatalf("expected teammate visible shared instance, got %+v", items)
+	}
+}
+
+func TestServiceGetUserInstancesShowsPracticeSharedInstanceToAnyUser(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	service := newTestRuntimeModule(repo, nil)
+	now := time.Now()
+
+	if err := repo.db.Create(&model.Challenge{
+		ID:              103,
+		Title:           "Shared Practice",
+		Category:        model.DimensionWeb,
+		Difficulty:      model.ChallengeDifficultyEasy,
+		FlagType:        model.FlagTypeStatic,
+		Status:          model.ChallengeStatusPublished,
+		InstanceSharing: model.InstanceSharingShared,
+		Points:          80,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	seedInstance(t, repo.db, &model.Instance{
+		ID:          1003,
+		UserID:      1,
+		ChallengeID: 103,
+		ShareScope:  model.InstanceSharingShared,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30003",
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1003 {
+		t.Fatalf("expected global shared instance visible to another user, got %+v", items)
+	}
+	if items[0].ShareScope != model.InstanceSharingShared {
+		t.Fatalf("expected share scope to be returned, got %+v", items[0])
 	}
 }
 
@@ -859,7 +980,7 @@ func newTestRepository(t *testing.T) *runtimeTestRepository {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &model.PortAllocation{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.Instance{}, &model.PortAllocation{}, &model.ContestRegistration{}); err != nil {
 		t.Fatalf("migrate tables: %v", err)
 	}
 	if err := db.AutoMigrate(&model.Team{}, &model.TeamMember{}); err != nil {

@@ -261,10 +261,14 @@ components:
         is_unlocked: { type: boolean }
         content: { type: string, nullable: true }
 
+    InstanceSharing:
+      type: string
+      enum: [per_user, per_team, shared]
+
     ChallengeDetailData:
       type: object
       required:
-        [id, title, description, category, difficulty, tags, points, need_target, is_solved, hints]
+        [id, title, description, category, difficulty, tags, points, need_target, instance_sharing, is_solved, hints]
       properties:
         id: { $ref: "#/components/schemas/ID" }
         title: { type: string }
@@ -278,6 +282,7 @@ components:
           items: { type: string }
         points: { type: integer, minimum: 0 }
         need_target: { type: boolean, description: "题目是否需要启动靶机实例" }
+        instance_sharing: { $ref: "#/components/schemas/InstanceSharing" }
         attachment_url: { type: string, nullable: true }
         is_solved: { type: boolean }
         solved_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
@@ -310,11 +315,12 @@ components:
 
     InstanceData:
       type: object
-      required: [id, challenge_id, status, flag_type, expires_at, remaining_extends, created_at]
+      required: [id, challenge_id, status, share_scope, flag_type, expires_at, remaining_extends, created_at]
       properties:
         id: { $ref: "#/components/schemas/ID" }
         challenge_id: { $ref: "#/components/schemas/ID" }
         status: { $ref: "#/components/schemas/InstanceStatus" }
+        share_scope: { $ref: "#/components/schemas/InstanceSharing" }
         access_url: { type: string, nullable: true }
         ssh_info: { $ref: "#/components/schemas/SshInfo", nullable: true }
         flag_type: { $ref: "#/components/schemas/FlagType" }

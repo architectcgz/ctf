@@ -159,16 +159,21 @@ const {
 
           <div class="instance-row-actions">
             <button
-              v-if="instance.status === 'running'"
+              v-if="instance.status === 'running' && instance.share_scope !== 'shared'"
               :disabled="instance.remaining_extends <= 0"
               class="instance-btn instance-btn-primary"
               @click="extendTime(instance.id)"
             >
               延时 +{{ EXTEND_DURATION_SECONDS / 60 }}min
             </button>
-            <button class="instance-btn instance-btn-danger" @click="destroyInstance(instance.id)">
+            <button
+              v-if="instance.share_scope !== 'shared'"
+              class="instance-btn instance-btn-danger"
+              @click="destroyInstance(instance.id)"
+            >
               销毁
             </button>
+            <span v-if="instance.share_scope === 'shared'" class="instance-row-note">系统托管</span>
           </div>
         </article>
       </section>

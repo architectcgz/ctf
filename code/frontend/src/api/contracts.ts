@@ -34,6 +34,7 @@ export interface AuthUser {
 
 export type ChallengeCategory = 'web' | 'pwn' | 'reverse' | 'crypto' | 'misc' | 'forensics'
 export type ChallengeDifficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'insane'
+export type InstanceSharing = 'per_user' | 'per_team' | 'shared'
 
 export interface ChallengeListItem {
   id: ID
@@ -64,6 +65,7 @@ export interface ChallengeDetailData {
   tags: string[]
   points: number
   need_target: boolean
+  instance_sharing: InstanceSharing
   attachment_url?: string
   is_solved: boolean
   solved_at?: ISODateTime
@@ -171,6 +173,7 @@ export interface InstanceData {
   id: ID
   challenge_id: ID
   status: InstanceStatus
+  share_scope: InstanceSharing
   access_url?: string
   ssh_info?: { host: string; port: number; username: string }
   flag_type: FlagType

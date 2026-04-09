@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { InstanceData, InstanceStatus } from '@/api/contracts'
+import type { InstanceData, InstanceSharing, InstanceStatus } from '@/api/contracts'
 import { useCountdown } from '@/composables/useCountdown'
 import { formatTime } from '@/utils/format'
 
@@ -13,6 +13,7 @@ const props = defineProps<{
   extending: boolean
   destroying: boolean
   challengeSolved: boolean
+  instanceSharing?: InstanceSharing
 }>()
 
 const emit = defineEmits<{
@@ -71,7 +72,6 @@ function formatEta(seconds?: number) {
 }
 
 const canOpen = computed(() => props.instance?.status === 'running')
-const canExtend = computed(() => canOpen.value && (props.instance?.remaining_extends ?? 0) > 0)
 const isWaiting = computed(
   () => props.instance?.status === 'pending' || props.instance?.status === 'creating'
 )
@@ -84,6 +84,7 @@ const createdAtLabel = computed(() => {
 })
 
 const remainingExtendsLabel = computed(() => {
+  if (isSharedInstance.value) return '系统托管'
   if (!props.instance) return '0 次'
   return `${props.instance.remaining_extends} 次`
 })
@@ -127,6 +128,22 @@ const openButtonLabel = computed(() => {
   if (isFailed.value) return '实例不可用'
   return '打开目标'
 })
+
+const isSharedInstance = computed(() => props.instance?.share_scope === 'shared')
+
+const sharedStrategyLabel = computed(() => {
+  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
+    return '共享实例'
+  }
+  if (props.instanceSharing === 'per_team') {
+    return '队伍共享'
+  }
+  return ''
+})
+
+const canExtend = computed(
+  () => !isSharedInstance.value && canOpen.value && (props.instance?.remaining_extends ?? 0) > 0
+)
 </script>
 
 <template>
@@ -147,6 +164,9 @@ const openButtonLabel = computed(() => {
         <div class="instance-created">
           创建于 {{ createdAtLabel }}
         </div>
+        <div v-if="sharedStrategyLabel" class="instance-created">
+          {{ sharedStrategyLabel }}
+        </div>
       </div>
 
       <div class="instance-grid">
@@ -155,7 +175,7 @@ const openButtonLabel = computed(() => {
           <strong :class="statusClass">{{ statusLabel }}</strong>
         </div>
         <div class="instance-stat">
-          <span>剩余延时</span>
+          <span>{{ isSharedInstance ? '实例管理' : '剩余延时' }}</span>
           <strong>{{ remainingExtendsLabel }}</strong>
         </div>
         <div class="instance-stat instance-stat--full">
@@ -191,6 +211,7 @@ const openButtonLabel = computed(() => {
           {{ openButtonLabel }}
         </button>
         <button
+          v-if="!isSharedInstance"
           type="button"
           class="subtle-action"
           :disabled="!canExtend || extending"
@@ -199,6 +220,7 @@ const openButtonLabel = computed(() => {
           {{ extending ? '延时中...' : '延时' }}
         </button>
         <button
+          v-if="!isSharedInstance"
           type="button"
           class="subtle-action subtle-action--danger"
           :disabled="destroying"
@@ -206,12 +228,21 @@ const openButtonLabel = computed(() => {
         >
           {{ destroying ? '销毁中...' : '销毁' }}
         </button>
+        <div v-if="isSharedInstance" class="instance-note instance-note--managed">
+          共享实例由系统统一保活与回收。
+        </div>
       </div>
     </div>
 
     <div v-else>
       <div class="instance-note">
-        <div>实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或销毁。</div>
+        <div>
+          {{
+            props.instanceSharing === 'shared'
+              ? '该题使用共享实例，再次启动会进入同一环境并自动刷新有效期。'
+              : '实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或销毁。'
+          }}
+        </div>
         <div>默认有效期 2 小时。</div>
       </div>
       <button
@@ -221,7 +252,9 @@ const openButtonLabel = computed(() => {
         :disabled="creating"
         @click="emit('start')"
       >
-        {{ creating ? '正在创建实例...' : '启动靶机' }}
+        {{
+          creating ? '正在创建实例...' : props.instanceSharing === 'shared' ? '进入共享靶机' : '启动靶机'
+        }}
       </button>
       <div v-else class="instance-callout instance-callout--success">
         当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。
@@ -251,6 +284,10 @@ const openButtonLabel = computed(() => {
 .instance-shell,
 .instance-shell button {
   font-family: var(--font-sans);
+}
+
+.instance-note--managed {
+  margin: 0;
 }
 
 .instance-time,

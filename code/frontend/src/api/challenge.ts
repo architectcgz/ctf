@@ -73,6 +73,7 @@ function normalizeChallengeDetail(item: RawChallengeDetailData): ChallengeDetail
     tags: item.tags ?? [],
     hints: item.hints ?? [],
     need_target: item.need_target ?? true,
+    instance_sharing: item.instance_sharing ?? 'per_user',
   }
 }
 

@@ -29,6 +29,7 @@ type userVisibleInstanceRow struct {
 	Difficulty     string    `gorm:"column:difficulty"`
 	FlagType       string    `gorm:"column:flag_type"`
 	Status         string    `gorm:"column:status"`
+	ShareScope     string    `gorm:"column:share_scope"`
 	AccessURL      string    `gorm:"column:access_url"`
 	ExpiresAt      time.Time `gorm:"column:expires_at"`
 	ExtendCount    int       `gorm:"column:extend_count"`
@@ -210,8 +211,14 @@ func (r *Repository) FindAccessibleByIDForUser(ctx context.Context, instanceID, 
 		Table("instances AS inst").
 		Select("inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
 		Where("inst.id = ?", instanceID).
-		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
+		Where(strings.Join([]string{
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
+			"(inst.share_scope <> 'shared' AND inst.team_id IS NULL AND inst.user_id = ?)",
+			"(inst.team_id IS NOT NULL AND tm.user_id IS NOT NULL)",
+		}, " OR "), userID).
 		First(&instance).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -228,8 +235,14 @@ func (r *Repository) FindVisibleByUser(ctx context.Context, userID int64) ([]*mo
 		Table("instances AS inst").
 		Select("DISTINCT inst.*").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
-		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
+		Where(strings.Join([]string{
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
+			"(inst.share_scope <> 'shared' AND inst.team_id IS NULL AND inst.user_id = ?)",
+			"(inst.team_id IS NOT NULL AND tm.user_id IS NOT NULL)",
+		}, " OR "), userID).
 		Order("inst.created_at DESC").
 		Scan(&instances).Error
 	return instances, err
@@ -247,6 +260,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 			"c.difficulty",
 			"c.flag_type",
 			"inst.status",
+			"inst.share_scope",
 			"inst.access_url",
 			"inst.expires_at",
 			"inst.extend_count",
@@ -255,8 +269,14 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 		}, ", ")).
 		Joins("JOIN challenges c ON c.id = inst.challenge_id").
 		Joins("LEFT JOIN team_members AS tm ON tm.team_id = inst.team_id AND tm.contest_id = inst.contest_id AND tm.user_id = ?", userID).
+		Joins("LEFT JOIN contest_registrations AS reg ON reg.contest_id = inst.contest_id AND reg.user_id = ? AND reg.status = ?", userID, model.ContestRegistrationStatusApproved).
 		Where("inst.status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning}).
-		Where("(inst.team_id IS NULL AND inst.user_id = ?) OR tm.user_id IS NOT NULL", userID).
+		Where(strings.Join([]string{
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NULL)",
+			"(inst.share_scope = 'shared' AND inst.contest_id IS NOT NULL AND reg.user_id IS NOT NULL)",
+			"(inst.share_scope <> 'shared' AND inst.team_id IS NULL AND inst.user_id = ?)",
+			"(inst.team_id IS NOT NULL AND tm.user_id IS NOT NULL)",
+		}, " OR "), userID).
 		Order("inst.created_at DESC").
 		Scan(&rows).Error
 	if err != nil {
@@ -273,6 +293,7 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]run
 			Difficulty:     row.Difficulty,
 			FlagType:       row.FlagType,
 			Status:         row.Status,
+			ShareScope:     row.ShareScope,
 			AccessURL:      row.AccessURL,
 			ExpiresAt:      row.ExpiresAt,
 			ExtendCount:    row.ExtendCount,

@@ -122,6 +122,10 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
 
   async function extend() {
     if (!instance.value) return
+    if (instance.value.share_scope === 'shared') {
+      toast.error('共享实例不支持手动延时')
+      return
+    }
 
     extending.value = true
     try {
@@ -145,6 +149,10 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
 
   async function destroy() {
     if (!instance.value) return
+    if (instance.value.share_scope === 'shared') {
+      toast.error('共享实例不支持手动销毁')
+      return
+    }
 
     destroying.value = true
     try {

@@ -21,6 +21,10 @@ const (
 	FlagTypeDynamic      = "dynamic"
 	FlagTypeRegex        = "regex"
 	FlagTypeManualReview = "manual_review"
+
+	InstanceSharingPerUser = "per_user"
+	InstanceSharingPerTeam = "per_team"
+	InstanceSharingShared  = "shared"
 )
 
 type Challenge struct {
@@ -39,6 +43,7 @@ type Challenge struct {
 	FlagSalt      string         `gorm:"column:flag_salt;size:64"`
 	FlagRegex     string         `gorm:"column:flag_regex;size:512"`
 	FlagPrefix    string         `gorm:"column:flag_prefix;size:32;default:'flag'"`
+	InstanceSharing string       `gorm:"column:instance_sharing;size:16;default:'per_user'"`
 	CreatedBy     *int64         `gorm:"column:created_by"`
 	CreatedAt     time.Time      `gorm:"column:created_at"`
 	UpdatedAt     time.Time      `gorm:"column:updated_at"`

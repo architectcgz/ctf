@@ -25,6 +25,7 @@ import (
 	runtimeinfrarepo "ctf-platform/internal/module/runtime/infrastructure"
 	"ctf-platform/internal/platform/events"
 	flagcrypto "ctf-platform/pkg/crypto"
+	"ctf-platform/pkg/errcode"
 )
 
 type stubPracticeRuntimeService struct {
@@ -193,6 +194,31 @@ func TestBuildTopologyCreateRequestKeepsFineGrainedPolicies(t *testing.T) {
 	}
 	if request.Policies[0].Protocol != model.TopologyPolicyProtocolTCP {
 		t.Fatalf("unexpected policy protocol: %+v", request.Policies[0])
+	}
+}
+
+func TestBuildTopologyCreateRequestRejectsSharedChallengeFlagInjection(t *testing.T) {
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{ID: 2, Name: "ctf/web", Tag: "v2", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	service := &Service{
+		imageRepo: challengeinfra.NewImageRepository(db),
+		config:    &config.Config{},
+	}
+
+	_, err := service.buildTopologyCreateRequest(30002, &model.Challenge{
+		ImageID:         2,
+		InstanceSharing: model.InstanceSharingShared,
+	}, "web", model.TopologySpec{
+		Nodes: []model.TopologyNode{
+			{Key: "web", ServicePort: 8080, InjectFlag: true},
+		},
+	}, "flag{demo}")
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for shared topology flag injection, got %v", err)
 	}
 }
 

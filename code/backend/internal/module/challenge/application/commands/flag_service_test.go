@@ -9,6 +9,7 @@ import (
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestFlagServiceConfigureStaticFlagAndValidate(t *testing.T) {
@@ -96,6 +97,31 @@ func TestFlagServiceConfigureDynamicFlagAndGenerate(t *testing.T) {
 	}
 	if !ok {
 		t.Fatal("expected dynamic flag validation success")
+	}
+}
+
+func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Challenge{
+		ID:              22,
+		Title:           "shared-dynamic-flag",
+		Status:          model.ChallengeStatusDraft,
+		InstanceSharing: model.InstanceSharingShared,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+
+	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("d", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService() error = %v", err)
+	}
+
+	err = service.ConfigureDynamicFlag(22, "flag")
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for shared dynamic flag, got %v", err)
 	}
 }
 

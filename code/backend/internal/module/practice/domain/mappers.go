@@ -10,6 +10,7 @@ func InstanceRespFromModel(inst *model.Instance) *dto.InstanceResp {
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
 		Status:           inst.Status,
+		ShareScope:       inst.ShareScope,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,

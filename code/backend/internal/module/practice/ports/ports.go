@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
@@ -9,8 +10,10 @@ import (
 
 type InstanceScope struct {
 	ContestID     *int64
+	ContestMode   string
 	TeamID        *int64
 	FlagSubjectID int64
+	ShareScope    string
 }
 
 type TopologyCreateNode struct {
@@ -43,9 +46,10 @@ type TopologyCreateResult struct {
 }
 
 type PracticeCommandTxRepository interface {
-	LockInstanceScope(userID int64, scope InstanceScope) error
+	LockInstanceScope(userID, challengeID int64, scope InstanceScope) error
 	FindScopedExistingInstance(userID, challengeID int64, scope InstanceScope) (*model.Instance, error)
 	CountScopedRunningInstances(userID int64, scope InstanceScope) (int, error)
+	RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error
 	CreateInstance(instance *model.Instance) error
 	ReserveAvailablePort(start, end int) (int, error)
 	BindReservedPort(port int, instanceID int64) error

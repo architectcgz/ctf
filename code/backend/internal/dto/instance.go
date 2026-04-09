@@ -6,6 +6,7 @@ type InstanceResp struct {
 	ID               int64     `json:"id"`
 	ChallengeID      int64     `json:"challenge_id"`
 	Status           string    `json:"status"`
+	ShareScope       string    `json:"share_scope"`
 	AccessURL        string    `json:"access_url"`
 	ExpiresAt        time.Time `json:"expires_at"`
 	ExtendCount      int       `json:"extend_count"`
@@ -22,6 +23,7 @@ type InstanceInfo struct {
 	Difficulty       string    `json:"difficulty,omitempty"`
 	FlagType         string    `json:"flag_type,omitempty"`
 	Status           string    `json:"status"`
+	ShareScope       string    `json:"share_scope"`
 	AccessURL        string    `json:"access_url"`
 	ExpiresAt        time.Time `json:"expires_at"`
 	RemainingTime    int64     `json:"remaining_time"` // 秒

@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"time"
 
 	"ctf-platform/internal/dto"
 	"gorm.io/gorm"
@@ -15,9 +16,10 @@ type stubPracticeRepository struct {
 	findContestByIDWithContextFn           func(ctx context.Context, contestID int64) (*model.Contest, error)
 	findContestChallengeWithContextFn      func(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error)
 	findContestRegistrationWithContextFn   func(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
-	lockInstanceScopeFn                    func(userID int64, scope practiceports.InstanceScope) error
+	lockInstanceScopeFn                    func(userID, challengeID int64, scope practiceports.InstanceScope) error
 	findScopedExistingInstanceFn           func(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error)
 	countScopedRunningInstancesFn          func(userID int64, scope practiceports.InstanceScope) (int, error)
+	refreshInstanceExpiryFn                func(instanceID int64, expiresAt time.Time) error
 	createInstanceFn                       func(instance *model.Instance) error
 	reserveAvailablePortFn                 func(start, end int) (int, error)
 	bindReservedPortFn                     func(port int, instanceID int64) error
@@ -58,9 +60,9 @@ func (s *stubPracticeRepository) FindContestRegistrationWithContext(ctx context.
 	return nil, gorm.ErrRecordNotFound
 }
 
-func (s *stubPracticeRepository) LockInstanceScope(userID int64, scope practiceports.InstanceScope) error {
+func (s *stubPracticeRepository) LockInstanceScope(userID, challengeID int64, scope practiceports.InstanceScope) error {
 	if s.lockInstanceScopeFn != nil {
-		return s.lockInstanceScopeFn(userID, scope)
+		return s.lockInstanceScopeFn(userID, challengeID, scope)
 	}
 	return nil
 }
@@ -77,6 +79,13 @@ func (s *stubPracticeRepository) CountScopedRunningInstances(userID int64, scope
 		return s.countScopedRunningInstancesFn(userID, scope)
 	}
 	return 0, nil
+}
+
+func (s *stubPracticeRepository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+	if s.refreshInstanceExpiryFn != nil {
+		return s.refreshInstanceExpiryFn(instanceID, expiresAt)
+	}
+	return nil
 }
 
 func (s *stubPracticeRepository) CreateInstance(instance *model.Instance) error {

@@ -81,7 +81,7 @@
 
           <div class="flex gap-2">
             <ElButton
-              v-if="instance.remaining_extends > 0"
+              v-if="instance.share_scope !== 'shared' && instance.remaining_extends > 0"
               size="small"
               type="primary"
               plain
@@ -91,12 +91,19 @@
               延时 (剩余 {{ instance.remaining_extends }} 次)
             </ElButton>
             <ElButton
+              v-if="instance.share_scope !== 'shared'"
               size="small"
               type="danger"
               @click="emit('destroy', instance.id)"
             >
               销毁
             </ElButton>
+            <div
+              v-if="instance.share_scope === 'shared'"
+              class="text-xs text-[var(--color-text-muted)]"
+            >
+              系统托管
+            </div>
           </div>
         </div>
       </ElCard>
