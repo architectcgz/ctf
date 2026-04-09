@@ -57,8 +57,8 @@ const {
       <p class="workspace-tab-copy">
         {{
           challenge
-            ? `为《${challenge.title}》维护管理员题解，控制公开范围与发布时间。`
-            : '为题目维护管理员题解，控制公开范围与发布时间。'
+            ? `为《${challenge.title}》维护管理员题解，控制公开范围。`
+            : '为题目维护管理员题解，控制公开范围。'
         }}
       </p>
     </div>
@@ -101,13 +101,7 @@ const {
               <select v-model="form.visibility" class="writeup-field-input">
                 <option value="private">private</option>
                 <option value="public">public</option>
-                <option value="scheduled">scheduled</option>
               </select>
-            </label>
-
-            <label v-if="form.visibility === 'scheduled'" class="writeup-field writeup-field--schedule">
-              <span class="writeup-field-label">发布时间</span>
-              <input v-model="form.releaseAt" type="datetime-local" class="writeup-field-input">
             </label>
           </div>
 

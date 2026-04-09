@@ -25,7 +25,7 @@ func (r *Repository) FindWriteupByChallengeID(challengeID int64) (*model.Challen
 func (r *Repository) UpsertWriteup(writeup *model.ChallengeWriteup) error {
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "challenge_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "release_at", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"title", "content", "visibility", "created_by", "is_recommended", "recommended_at", "recommended_by", "updated_at"}),
 	}).Create(writeup).Error
 }
 
@@ -37,11 +37,7 @@ func (r *Repository) FindReleasedWriteupByChallengeID(challengeID int64, now tim
 	var writeup model.ChallengeWriteup
 	err := r.db.
 		Where("challenge_id = ?", challengeID).
-		Where("visibility = ? OR (visibility = ? AND release_at IS NOT NULL AND release_at <= ?)",
-			model.WriteupVisibilityPublic,
-			model.WriteupVisibilityScheduled,
-			now,
-		).
+		Where("visibility = ?", model.WriteupVisibilityPublic).
 		First(&writeup).Error
 	if err != nil {
 		return nil, err
@@ -205,11 +201,7 @@ func (r *Repository) ListRecommendedSolutionsByChallengeID(challengeID int64, no
 		`)).
 		Joins("LEFT JOIN users author ON author.id = cw.created_by").
 		Where("cw.challenge_id = ? AND cw.is_recommended = ?", challengeID, true).
-		Where("cw.visibility = ? OR (cw.visibility = ? AND cw.release_at IS NOT NULL AND cw.release_at <= ?)",
-			model.WriteupVisibilityPublic,
-			model.WriteupVisibilityScheduled,
-			now,
-		).
+		Where("cw.visibility = ?", model.WriteupVisibilityPublic).
 		Order("cw.recommended_at DESC, cw.updated_at DESC").
 		Scan(&officialRows).Error; err != nil {
 		return nil, err

@@ -744,27 +744,19 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Scheduled Writeup",
 		"content":    "scheduled content",
-		"visibility": model.WriteupVisibilityScheduled,
+		"visibility": "scheduled",
 	}, adminHeaders)
 	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
-	releaseAt := time.Now().Add(time.Hour).Format(time.RFC3339)
 	resp = performFullRouterRequest(t, env.router, http.MethodPut, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), map[string]any{
 		"title":      "Scheduled Writeup",
 		"content":    "scheduled content",
-		"visibility": model.WriteupVisibilityScheduled,
-		"release_at": releaseAt,
+		"visibility": "scheduled",
 	}, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
+	assertFullRouterStatus(t, resp, http.StatusBadRequest)
 
 	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/authoring/challenges/%d/writeup", createdChallenge.ID), nil, adminHeaders)
-	assertFullRouterStatus(t, resp, http.StatusOK)
-
-	var adminWriteup dto.AdminChallengeWriteupResp
-	decodeFullRouterData(t, resp, &adminWriteup)
-	if adminWriteup.Visibility != model.WriteupVisibilityScheduled || adminWriteup.ReleaseAt == nil {
-		t.Fatalf("unexpected admin writeup: %+v", adminWriteup)
-	}
+	assertFullRouterStatus(t, resp, http.StatusNotFound)
 
 	if err := env.db.Model(&model.Challenge{}).
 		Where("id = ?", createdChallenge.ID).
@@ -796,6 +788,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var publicWriteup dto.ChallengeWriteupResp
 	decodeFullRouterData(t, resp, &publicWriteup)
+	if publicWriteup.Visibility != model.WriteupVisibilityPublic {
+		t.Fatalf("unexpected public writeup visibility: %+v", publicWriteup)
+	}
 	if !publicWriteup.RequiresSpoilerWarning {
 		t.Fatalf("expected spoiler warning before solving, got %+v", publicWriteup)
 	}

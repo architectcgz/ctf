@@ -18,9 +18,8 @@ const (
 	TopologyPolicyProtocolUDP = "udp"
 	TopologyPolicyProtocolAny = "any"
 
-	WriteupVisibilityPrivate   = "private"
-	WriteupVisibilityPublic    = "public"
-	WriteupVisibilityScheduled = "scheduled"
+	WriteupVisibilityPrivate = "private"
+	WriteupVisibilityPublic  = "public"
 )
 
 type ChallengeTopology struct {
@@ -105,7 +104,6 @@ type ChallengeWriteup struct {
 	Title         string     `gorm:"column:title"`
 	Content       string     `gorm:"column:content"`
 	Visibility    string     `gorm:"column:visibility"`
-	ReleaseAt     *time.Time `gorm:"column:release_at"`
 	CreatedBy     *int64     `gorm:"column:created_by"`
 	IsRecommended bool       `gorm:"column:is_recommended;index:idx_challenge_writeups_recommended"`
 	RecommendedAt *time.Time `gorm:"column:recommended_at"`

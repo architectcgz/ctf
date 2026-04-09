@@ -75,9 +75,7 @@ export interface ChallengeWriteupData {
   challenge_id: ID
   title: string
   content: string
-  visibility: 'private' | 'public' | 'scheduled'
-  release_at?: ISODateTime
-  is_released: boolean
+  visibility: 'private' | 'public'
   requires_spoiler_warning: boolean
   is_recommended?: boolean
   recommended_at?: ISODateTime
@@ -233,7 +231,6 @@ export interface TeacherManualReviewSubmissionDetailData {
   is_correct: boolean
   score: number
   review_status: TeacherManualReviewStatus
-  reviewed_by?: ID
   reviewed_at?: ISODateTime
   review_comment?: string
   submitted_at: ISODateTime
@@ -851,7 +848,7 @@ export interface AdminCheatDetectionData {
 }
 
 export type ChallengeStatus = 'draft' | 'published' | 'archived'
-export type WriteupVisibility = 'private' | 'public' | 'scheduled'
+export type WriteupVisibility = 'private' | 'public'
 
 export interface AdminChallengeHint {
   id?: ID
@@ -906,7 +903,6 @@ export interface AdminChallengeWriteupData {
   title: string
   content: string
   visibility: WriteupVisibility
-  release_at?: ISODateTime
   created_by?: ID
   is_recommended: boolean
   recommended_at?: ISODateTime
