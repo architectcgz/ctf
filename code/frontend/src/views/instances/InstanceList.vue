@@ -213,7 +213,6 @@ const {
   max-width: 720px;
 }
 
-.instance-summary-title,
 .instance-directory-head {
   font-size: 11px;
   font-weight: 700;
