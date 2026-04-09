@@ -212,7 +212,7 @@ const {
 }
 
 .instance-directory-head {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -244,14 +244,14 @@ const {
 }
 
 .instance-empty-title {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--journal-muted);
 }
 
 .instance-empty-link {
   display: inline-block;
   margin-top: 12px;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--journal-accent);
 }
@@ -279,7 +279,7 @@ const {
 
 .instance-row-title {
   font-family: var(--font-family-mono);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -301,7 +301,7 @@ const {
   min-height: 26px;
   padding: 0 9px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -318,7 +318,7 @@ const {
 .instance-row-access,
 .instance-row-remaining {
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -351,14 +351,14 @@ const {
   padding: 0;
   border: 0;
   background: transparent;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 600;
   color: var(--journal-accent);
   cursor: pointer;
 }
 
 .instance-row-note {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -371,7 +371,7 @@ const {
   padding: 0 10px;
   border-radius: 8px;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
   color: var(--journal-accent);
 }

@@ -497,7 +497,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 600;
   color: var(--journal-muted);
 }
@@ -520,13 +520,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .teacher-context-value {
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .teacher-context-copy {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
@@ -545,14 +545,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-alert-title {
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .workspace-alert-copy {
   margin-top: var(--space-2);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.65;
   color: var(--journal-muted);
 }
@@ -606,7 +606,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .teacher-tip-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -614,7 +614,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .teacher-tip-copy {
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   line-height: 1.65;
   color: var(--journal-muted);
 }
@@ -657,7 +657,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-radius: 0;
   background: transparent;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -666,7 +666,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .workspace-subpanel :deep(.teacher-panel__title) {
   margin-top: var(--space-2-5);
-  font-size: 22px;
+  font-size: var(--font-size-22);
   line-height: 1.15;
   color: var(--journal-ink);
 }
@@ -730,20 +730,20 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .teacher-section-title:not(.workspace-tab-heading__title) {
   margin-top: var(--space-1-5);
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .teacher-section-copy {
   margin-top: var(--space-2);
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   line-height: 1.65;
   color: var(--journal-muted);
 }
 
 .teacher-section-meta {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
@@ -753,7 +753,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   gap: var(--space-2);
   border: 0;
   background: transparent;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   color: var(--journal-accent);
 }
@@ -827,7 +827,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .teacher-directory-cell-student-no {
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--journal-muted);
@@ -840,7 +840,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.98rem;
+  font-size: var(--font-size-0-98);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -857,7 +857,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .teacher-directory-row-points {
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   font-weight: 700;
   color: var(--journal-accent-strong);
   overflow: hidden;
@@ -876,7 +876,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   min-height: 1.75rem;
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
 }
 
@@ -893,7 +893,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .teacher-directory-row-metrics {
   display: grid;
   gap: var(--space-1);
-  font-size: 0.81rem;
+  font-size: var(--font-size-0-81);
   line-height: 1.5;
   color: var(--journal-muted);
 }
@@ -902,7 +902,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   font-weight: 700;
   color: var(--journal-accent-strong);
 }

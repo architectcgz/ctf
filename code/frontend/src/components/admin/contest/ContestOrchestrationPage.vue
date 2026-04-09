@@ -361,7 +361,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .panel-title {
   margin: var(--space-1-5) 0 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -441,7 +441,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .list-heading__title:not(.workspace-tab-heading__title) {
   margin: var(--space-1) 0 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -454,7 +454,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   min-height: 2.75rem;
   border-radius: 1rem;
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   transition: all 150ms ease;
 }
@@ -486,7 +486,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
   padding: var(--space-3) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
   transition: border-color 150ms ease;

@@ -80,7 +80,7 @@ defineProps<{
 }
 
 .archive-panel__eyebrow {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
@@ -89,7 +89,7 @@ defineProps<{
 
 .archive-panel__title {
   margin-top: var(--space-2);
-  font-size: 1.18rem;
+  font-size: var(--font-size-1-18);
   color: var(--journal-ink);
 }
 
@@ -131,7 +131,7 @@ defineProps<{
 .timeline-item__head span,
 .evidence-item__head span,
 .evidence-item__meta {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
   font-family: var(--font-family-mono);
 }

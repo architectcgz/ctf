@@ -675,7 +675,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   align-items: center;
   border-radius: 999px;
   padding: var(--space-1-5) var(--space-3);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 600;
 }
 
@@ -737,7 +737,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .writeup-directory-head {
   padding: var(--space-3) var(--space-1-5) var(--space-2-5);
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -754,13 +754,13 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .writeup-directory-challenge {
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 600;
   color: var(--journal-ink);
 }
 
 .writeup-directory-title {
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -768,7 +768,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .writeup-directory-preview {
   margin-top: var(--space-1-5);
   line-height: 1.6;
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   color: var(--journal-muted);
 }
 
@@ -779,7 +779,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .writeup-directory-time {
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -892,7 +892,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 }
 
 .insight-kpi-label {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -901,7 +901,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-kpi-value {
   margin-top: var(--space-2);
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   line-height: 1.5;
   color: var(--journal-ink);
@@ -909,7 +909,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-kpi-hint {
   margin-top: var(--space-2);
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   line-height: 1.55;
   color: var(--journal-muted);
 }

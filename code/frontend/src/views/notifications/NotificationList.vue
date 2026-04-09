@@ -288,7 +288,7 @@ async function handlePublishSuccess(): Promise<void> {
   gap: 16px;
   padding: 0 0 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -326,7 +326,7 @@ async function handlePublishSuccess(): Promise<void> {
   min-height: 26px;
   padding: 0 9px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -340,7 +340,7 @@ async function handlePublishSuccess(): Promise<void> {
 }
 
 .notification-row-title {
-  font-size: 15px;
+  font-size: var(--font-size-15);
   font-weight: 700;
   color: var(--journal-ink);
   overflow: hidden;
@@ -351,7 +351,7 @@ async function handlePublishSuccess(): Promise<void> {
 .notification-row-copy {
   margin-top: 6px;
   display: -webkit-box;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
   -webkit-line-clamp: 2;
@@ -360,7 +360,7 @@ async function handlePublishSuccess(): Promise<void> {
 }
 
 .notification-row-time {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }

@@ -113,7 +113,7 @@ function formatTime(value: string): string {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -152,7 +152,7 @@ function formatTime(value: string): string {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -163,14 +163,14 @@ function formatTime(value: string): string {
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   line-height: 1.55;
   color: var(--journal-muted);
 }
 
 .contest-row__mode,
 .contest-row__window {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   color: var(--journal-muted);
 }
 
@@ -202,7 +202,7 @@ function formatTime(value: string): string {
   border-radius: 10px;
   border: 1px solid transparent;
   padding: var(--space-1-5) var(--space-3);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   font-weight: 600;
   line-height: 1;
   transition:

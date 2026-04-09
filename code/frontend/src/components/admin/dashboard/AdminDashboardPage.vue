@@ -365,7 +365,7 @@ const {
 .hero-summary {
   max-width: 760px;
   margin-top: var(--space-3-5);
-  font-size: 15px;
+  font-size: var(--font-size-15);
   line-height: 1.9;
   color: var(--journal-muted);
 }
@@ -385,7 +385,7 @@ const {
   border: 1px solid var(--workspace-line-soft);
   border-radius: 8px;
   background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   color: var(--journal-muted);
 }
 
@@ -418,7 +418,7 @@ const {
 
 .progress-card-label,
 .section-kicker {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -436,7 +436,7 @@ const {
 .workspace-alert-copy,
 .hotspot-memory {
   margin-top: var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -496,7 +496,7 @@ const {
 }
 
 .rail-label {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--workspace-faint);
@@ -510,7 +510,7 @@ const {
 
 .rail-score small {
   margin-left: var(--space-1);
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--workspace-faint);
 }
 
@@ -525,7 +525,7 @@ const {
 
 .panel-title {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--font-size-18);
   line-height: 1.2;
   color: var(--journal-ink);
 }
@@ -545,7 +545,7 @@ const {
 
 .section-title:not(.workspace-tab-heading__title) {
   margin: var(--space-2-5) 0 0;
-  font-size: 22px;
+  font-size: var(--font-size-22);
   line-height: 1.12;
   color: var(--journal-ink);
 }
@@ -565,7 +565,7 @@ const {
 
 .insight-item strong {
   display: block;
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--journal-ink);
 }
 
@@ -585,7 +585,7 @@ const {
   padding: 0 var(--space-2);
   border-radius: 7px;
   border: 1px solid var(--workspace-line-soft);
-  font-size: 11.5px;
+  font-size: var(--font-size-11-5);
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--journal-muted);
@@ -639,7 +639,7 @@ const {
 }
 
 .workspace-alert-title {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -652,7 +652,7 @@ const {
 }
 
 .empty-inline {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--workspace-faint);
 }
@@ -683,7 +683,7 @@ const {
 }
 
 .hotspot-title-row strong {
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--journal-ink);
 }
 
@@ -701,7 +701,7 @@ const {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   color: var(--journal-muted);
 }
 
@@ -738,7 +738,7 @@ const {
   border: 1px solid transparent;
   border-radius: 1rem;
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   box-shadow: var(--admin-btn-shadow, none);
   transition: all 150ms ease;

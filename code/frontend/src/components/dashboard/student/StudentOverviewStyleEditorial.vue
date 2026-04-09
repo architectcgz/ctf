@@ -400,12 +400,12 @@ const operationsSummary = computed(() => [
 }
 
 .journal-radar-dimension__label {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
 .journal-radar-dimension__value {
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
   color: var(--journal-ink);
 }

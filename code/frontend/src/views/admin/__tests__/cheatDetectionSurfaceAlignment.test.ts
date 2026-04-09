@@ -60,7 +60,7 @@ describe('cheat detection surface alignment', () => {
       /\.top-tab:hover,\s*\.top-tab.active,\s*\.top-tab:focus-visible\s*\{[\s\S]*border-bottom-color:\s*var\(/s
     )
     expect(cheatDetectionSource).toContain('--page-top-tabs-gap: 28px;')
-    expect(cheatDetectionSource).toContain('--page-top-tab-font-size: 15px;')
+    expect(cheatDetectionSource).toContain('--page-top-tab-font-size: var(--font-size-15);')
     expect(cheatDetectionSource).toContain('--page-top-tab-active-border:')
     expect(cheatDetectionSource).not.toMatch(/\.top-tabs\s*\{[^}]*display:\s*flex;/s)
     expect(cheatDetectionSource).not.toMatch(

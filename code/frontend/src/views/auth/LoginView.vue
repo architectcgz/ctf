@@ -95,7 +95,7 @@ async function onSubmit() {
 .auth-login-form__footer {
   color: var(--color-text-secondary);
   line-height: 1.7;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
 }
 
 .auth-login-form__link {

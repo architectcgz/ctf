@@ -447,7 +447,7 @@ const {
 .hero-summary {
   max-width: 760px;
   margin-top: var(--space-3-5);
-  font-size: 15px;
+  font-size: var(--font-size-15);
   line-height: 1.9;
   color: var(--journal-muted);
 }
@@ -467,7 +467,7 @@ const {
   border: 1px solid var(--workspace-line-soft);
   border-radius: 8px;
   background: color-mix(in srgb, var(--workspace-panel) 72%, transparent);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   color: var(--journal-muted);
 }
 
@@ -496,7 +496,7 @@ const {
 }
 
 .trend-signal-label {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -505,7 +505,7 @@ const {
 
 .trend-signal-copy {
   margin-top: var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -563,7 +563,7 @@ const {
 }
 
 .rail-label {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--workspace-faint);
@@ -577,7 +577,7 @@ const {
 
 .rail-score small {
   margin-left: var(--space-1);
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--workspace-faint);
 }
 
@@ -585,7 +585,7 @@ const {
   margin-top: var(--space-3-5);
   padding-top: var(--space-3-5);
   border-top: 1px solid var(--workspace-line-soft);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.78;
   color: var(--journal-muted);
 }
@@ -596,7 +596,7 @@ const {
 
 .panel-title {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--font-size-18);
   line-height: 1.2;
   color: var(--journal-ink);
 }
@@ -633,7 +633,7 @@ const {
 }
 
 .section-kicker {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -642,7 +642,7 @@ const {
 
 .section-title {
   margin: var(--space-2-5) 0 0;
-  font-size: 22px;
+  font-size: var(--font-size-22);
   line-height: 1.12;
   color: var(--journal-ink);
 }
@@ -687,14 +687,14 @@ const {
 }
 
 .weak-name {
-  font-size: 15px;
+  font-size: var(--font-size-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .weak-copy {
   margin-top: var(--space-1-5);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--journal-muted);
 }
@@ -737,7 +737,7 @@ const {
 
 .trend-signal-value {
   margin-top: var(--space-2-5);
-  font-size: 24px;
+  font-size: var(--font-size-24);
   letter-spacing: -0.03em;
   color: var(--journal-ink);
 }
@@ -760,7 +760,7 @@ const {
 .insight-item strong,
 .action-item strong {
   display: block;
-  font-size: 15px;
+  font-size: var(--font-size-15);
   color: var(--journal-ink);
 }
 
@@ -781,7 +781,7 @@ const {
   padding: 0 var(--space-2);
   border-radius: 7px;
   border: 1px solid var(--workspace-line-soft);
-  font-size: 11.5px;
+  font-size: var(--font-size-11-5);
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--journal-muted);
@@ -810,7 +810,7 @@ const {
 
 .item-copy {
   margin-top: var(--space-2-5);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.8;
   color: var(--journal-muted);
 }
@@ -842,18 +842,18 @@ const {
   width: 28px;
   height: 28px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 
 .hint-label {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--journal-ink);
 }
 
 .hint-copy {
   margin-top: var(--space-1-5);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--journal-muted);
 }
@@ -883,14 +883,14 @@ const {
 }
 
 .workspace-alert-title {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .workspace-alert-copy {
   margin-top: var(--space-2);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -920,7 +920,7 @@ const {
   border-radius: 0;
   background: transparent;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -929,7 +929,7 @@ const {
 
 .workspace-subpanel :deep(.teacher-panel__title) {
   margin-top: var(--space-2-5);
-  font-size: 22px;
+  font-size: var(--font-size-22);
   line-height: 1.15;
   color: var(--journal-ink);
 }
@@ -963,7 +963,7 @@ const {
 
 .empty-inline {
   margin-top: var(--space-4-5);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--workspace-faint);
 }

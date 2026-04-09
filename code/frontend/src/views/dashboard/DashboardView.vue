@@ -316,7 +316,7 @@ function openChallenge(challengeId: string): void {
   border: 1px solid color-mix(in srgb, var(--workspace-danger) 24%, var(--workspace-line-soft));
   border-radius: 18px;
   background: color-mix(in srgb, var(--workspace-danger) 6%, transparent);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-ink);
 }

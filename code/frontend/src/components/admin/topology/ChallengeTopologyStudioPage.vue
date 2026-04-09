@@ -2090,7 +2090,7 @@ const {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -2144,7 +2144,7 @@ const {
 }
 
 .topology-page--template-library .template-hero-note__label {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -2153,14 +2153,14 @@ const {
 
 .topology-page--template-library .template-hero-note__value {
   margin-top: var(--space-1-5);
-  font-size: 1.1rem;
+  font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .topology-page--template-library .template-hero-note__copy {
   margin-top: var(--space-1-5);
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -2202,7 +2202,7 @@ const {
   border-radius: 0.75rem;
   border: 1px solid var(--journal-border);
   padding: var(--space-2) var(--space-4);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   font-weight: 600;
   transition:
     border-color 150ms ease,
@@ -2227,7 +2227,7 @@ const {
   gap: var(--space-2);
   padding: 0 var(--space-0-5);
   border-bottom: 2px solid transparent;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 700;
   transition:
     border-color 150ms ease,
@@ -2323,7 +2323,7 @@ const {
 }
 
 .topology-page--template-library :deep(.section-card__header h2) {
-  font-size: 1.1rem;
+  font-size: var(--font-size-1-10);
   color: var(--journal-ink);
 }
 
@@ -2341,7 +2341,7 @@ const {
 }
 
 .topology-page--template-library :deep(.topology-hero-aside--library > section h2) {
-  font-size: 1.45rem;
+  font-size: var(--font-size-1-45);
 }
 
 .topology-page--template-library :deep(.topology-hero-aside--library > section p) {
@@ -2424,7 +2424,7 @@ const {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -2477,7 +2477,7 @@ const {
   gap: var(--space-2) var(--space-3);
   align-content: start;
   padding-top: var(--space-0-5);
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -2498,14 +2498,14 @@ const {
 }
 
 .topology-page--template-library .template-boundary-item__label {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .topology-page--template-library .template-boundary-item__copy {
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.65;
   color: var(--journal-muted);
 }

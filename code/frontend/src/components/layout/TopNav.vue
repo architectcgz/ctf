@@ -353,7 +353,7 @@ onUnmounted(() => {
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
   background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 700;
   color: var(--color-primary);
 }
@@ -363,7 +363,7 @@ onUnmounted(() => {
 }
 
 .topnav-user-role {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;

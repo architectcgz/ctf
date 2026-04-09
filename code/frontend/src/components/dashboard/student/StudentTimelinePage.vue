@@ -218,7 +218,7 @@ function changeTimelinePage(page: number): void {
 
 .timeline-metric-card .journal-note-value {
   margin-top: 0.5rem;
-  font-size: 1.05rem;
+  font-size: var(--font-size-1-05);
   font-weight: 700;
 }
 
@@ -265,7 +265,7 @@ function changeTimelinePage(page: number): void {
   border-radius: 999px;
   background: color-mix(in srgb, var(--journal-surface-subtle) 90%, transparent);
   padding: var(--space-1) var(--space-3);
-  font-size: 0.68rem;
+  font-size: var(--font-size-0-68);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;

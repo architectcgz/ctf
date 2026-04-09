@@ -279,7 +279,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   gap: 16px;
   padding: 0 0 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -324,7 +324,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 .contest-row-title {
   margin-top: 10px;
   font-family: var(--font-family-mono);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -340,7 +340,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   min-height: 26px;
   padding: 0 9px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -365,7 +365,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-row-time,
 .contest-row-timeline {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.5;
   color: var(--journal-muted);
 }
@@ -385,7 +385,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 700;
   color: var(--contest-row-accent, var(--journal-accent));
 }

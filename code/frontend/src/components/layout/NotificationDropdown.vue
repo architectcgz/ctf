@@ -316,13 +316,13 @@ const {
 
 .notification-timeline-time {
   flex-shrink: 0;
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   color: var(--color-text-muted);
 }
 
 .notification-timeline-title {
   margin-top: 0.5rem;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 700;
   line-height: 1.5;
   color: var(--color-text-primary);
@@ -333,7 +333,7 @@ const {
   display: -webkit-box;
   overflow: hidden;
   color: var(--color-text-secondary);
-  font-size: 0.83rem;
+  font-size: var(--font-size-0-83);
   line-height: 1.65;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -344,13 +344,13 @@ const {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   color: var(--color-text-muted);
 }
 
 .notification-kicker {
   font-family: var(--font-family-mono);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;

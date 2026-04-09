@@ -33,7 +33,7 @@
   border: 1px solid color-mix(in srgb, var(--journal-accent, var(--color-primary)) 26%, transparent);
   background: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 10%, transparent);
   padding: 0.25rem 0.7rem;
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   font-weight: 600;
   color: var(--journal-accent, var(--color-primary));
 }
@@ -42,7 +42,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--journal-top-note-gap, var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x));
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted, var(--color-text-secondary));
 }
 

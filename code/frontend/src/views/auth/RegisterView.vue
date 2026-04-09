@@ -93,7 +93,7 @@ async function onSubmit() {
 
 .auth-register-form__footer {
   color: var(--color-text-secondary);
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.7;
 }
 

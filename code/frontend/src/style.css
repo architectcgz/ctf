@@ -24,7 +24,7 @@
   --workspace-page-title-line-height: 1.02;
   --workspace-page-title-letter-spacing: -0.04em;
   --workspace-page-copy-margin-top: 0.8rem;
-  --workspace-page-copy-font-size: 0.94rem;
+  --workspace-page-copy-font-size: var(--font-size-0-94);
   --workspace-page-copy-line-height: 1.75;
   color-scheme: dark;
 }
@@ -98,7 +98,7 @@ select {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.7rem 1.1rem 1.05rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-muted, var(--color-text-secondary));
 }
 
