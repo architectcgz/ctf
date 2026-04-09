@@ -39,6 +39,7 @@ type UserVisibleInstanceRow struct {
 	Difficulty     string
 	FlagType       string
 	Status         string
+	ShareScope     string
 	AccessURL      string
 	ExpiresAt      time.Time
 	ExtendCount    int

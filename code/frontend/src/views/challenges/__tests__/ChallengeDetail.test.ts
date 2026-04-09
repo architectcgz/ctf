@@ -670,6 +670,55 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('启动靶机')
   })
 
+  it('共享实例应隐藏延时和销毁操作', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Shared Challenge',
+      description: '<p>Shared instance</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['shared'],
+      points: 100,
+      need_target: true,
+      instance_sharing: 'shared',
+      is_solved: false,
+      hints: [],
+    })
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'inst-shared',
+        challenge_id: 1,
+        status: 'running',
+        access_url: 'http://127.0.0.1:30000',
+        flag_type: 'static',
+        share_scope: 'shared',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-12T00:00:00.000Z',
+        challenge_title: 'Shared Challenge',
+        category: 'web',
+        difficulty: 'easy',
+      },
+    ])
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('打开目标')
+    expect(wrapper.text()).toContain('共享实例')
+    expect(wrapper.text()).not.toContain('延时')
+    expect(wrapper.text()).not.toContain('销毁')
+  })
+
   it('题目不需要靶机时应展示提示文案', async () => {
     challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
       id: '1',

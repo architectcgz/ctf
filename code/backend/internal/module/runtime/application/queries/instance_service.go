@@ -121,6 +121,7 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 		Difficulty:       inst.Difficulty,
 		FlagType:         inst.FlagType,
 		Status:           inst.Status,
+		ShareScope:       inst.ShareScope,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
 		RemainingTime:    runtimedomain.RemainingTime(inst.ExpiresAt, now),

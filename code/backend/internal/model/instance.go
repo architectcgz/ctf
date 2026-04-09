@@ -13,6 +13,7 @@ type Instance struct {
 	ContainerID    string    `gorm:"size:64;not null"`
 	NetworkID      string    `gorm:"size:64"`
 	RuntimeDetails string    `gorm:"column:runtime_details;type:text"`
+	ShareScope     string    `gorm:"column:share_scope;size:16;not null;default:'per_user'"`
 	Status         string    `gorm:"size:16;not null;index"`
 	AccessURL      string    `gorm:"size:255"`
 	Nonce          string    `gorm:"size:64"`

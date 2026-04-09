@@ -105,6 +105,7 @@ func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T
 		ContestID:   &contestID,
 		TeamID:      &teamID,
 		ChallengeID: 2002,
+		ShareScope:  model.InstanceSharingPerTeam,
 		ContainerID: "existing-team-instance",
 		Status:      model.InstanceStatusRunning,
 		AccessURL:   "http://127.0.0.1:30001",
@@ -122,6 +123,115 @@ func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T
 	}
 	if resp.ID != 9002 {
 		t.Fatalf("expected existing shared instance, got %+v", resp)
+	}
+}
+
+func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceUser(t, db, 5101, now)
+	seedContestInstanceUser(t, db, 5102, now)
+	seedContestInstanceChallenge(t, db, 1101, 2101, now)
+	if err := db.Model(&model.Challenge{}).
+		Where("id = ?", 2101).
+		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
+		t.Fatalf("update challenge sharing: %v", err)
+	}
+
+	service := newContestInstanceTestService(db)
+
+	first, err := service.StartChallengeWithContext(context.Background(), 5101, 2101)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() first error = %v", err)
+	}
+	second, err := service.StartChallengeWithContext(context.Background(), 5102, 2101)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() second error = %v", err)
+	}
+	if first.ID != second.ID {
+		t.Fatalf("expected shared practice instance reuse, got first=%d second=%d", first.ID, second.ID)
+	}
+}
+
+func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceUser(t, db, 5201, now)
+	seedContestInstanceUser(t, db, 5202, now)
+	seedContestInstanceChallenge(t, db, 1201, 2201, now)
+	if err := db.Model(&model.Challenge{}).
+		Where("id = ?", 2201).
+		Update("instance_sharing", model.InstanceSharingShared).Error; err != nil {
+		t.Fatalf("update challenge sharing: %v", err)
+	}
+
+	originalExpiry := now.Add(5 * time.Minute)
+	if err := db.Create(&model.Instance{
+		ID:          9201,
+		UserID:      5201,
+		ChallengeID: 2201,
+		ShareScope:  model.InstanceSharingShared,
+		ContainerID: "shared-practice-instance",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30009",
+		ExpiresAt:   originalExpiry,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("seed shared instance: %v", err)
+	}
+
+	service := newContestInstanceTestService(db)
+	resp, err := service.StartChallengeWithContext(context.Background(), 5202, 2201)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() error = %v", err)
+	}
+	if resp.ID != 9201 {
+		t.Fatalf("expected shared instance reuse, got %+v", resp)
+	}
+
+	var instance model.Instance
+	if err := db.First(&instance, 9201).Error; err != nil {
+		t.Fatalf("load reused instance: %v", err)
+	}
+	if !instance.ExpiresAt.After(originalExpiry) {
+		t.Fatalf("expected shared instance expiry to be refreshed, before=%s after=%s", originalExpiry, instance.ExpiresAt)
+	}
+}
+
+func TestServiceStartContestChallengePerTeamReusesTeamInstance(t *testing.T) {
+	db := newContestInstanceTestDB(t)
+	now := time.Now()
+
+	seedContestInstanceUser(t, db, 5103, now)
+	seedContestInstanceUser(t, db, 5104, now)
+	seedContestInstanceChallenge(t, db, 1102, 2102, now)
+	if err := db.Model(&model.Challenge{}).
+		Where("id = ?", 2102).
+		Update("instance_sharing", model.InstanceSharingPerTeam).Error; err != nil {
+		t.Fatalf("update challenge sharing: %v", err)
+	}
+	seedContestInstanceJeopardyContest(t, db, 3102, 2102, now)
+	seedContestInstanceTeam(t, db, 3102, 4102, 5103, now)
+	seedContestInstanceRegistration(t, db, 3102, 5103, 4102, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceRegistration(t, db, 3102, 5104, 4102, model.ContestRegistrationStatusApproved, now)
+	seedContestInstanceTeamMember(t, db, 3102, 4102, 5103, now)
+	seedContestInstanceTeamMember(t, db, 3102, 4102, 5104, now)
+
+	service := newContestInstanceTestService(db)
+
+	first, err := service.StartContestChallenge(context.Background(), 5103, 3102, 2102)
+	if err != nil {
+		t.Fatalf("StartContestChallenge() first error = %v", err)
+	}
+	second, err := service.StartContestChallenge(context.Background(), 5104, 3102, 2102)
+	if err != nil {
+		t.Fatalf("StartContestChallenge() second error = %v", err)
+	}
+	if first.ID != second.ID {
+		t.Fatalf("expected per-team instance reuse, got first=%d second=%d", first.ID, second.ID)
 	}
 }
 
@@ -162,6 +272,7 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("open sqlite: %v", err)
 	}
 	if err := db.AutoMigrate(
+		&model.User{},
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeTopology{},
@@ -247,12 +358,53 @@ func seedContestInstanceChallenge(t *testing.T, db *gorm.DB, imageID, challengeI
 	}
 }
 
+func seedContestInstanceUser(t *testing.T, db *gorm.DB, userID int64, now time.Time) {
+	t.Helper()
+	if err := db.Create(&model.User{
+		ID:           userID,
+		Username:     fmt.Sprintf("user-%d", userID),
+		PasswordHash: "hash",
+		Role:         model.RoleStudent,
+		Status:       model.UserStatusActive,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+}
+
 func seedContestInstanceAWDContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
 	t.Helper()
 	if err := db.Create(&model.Contest{
 		ID:        contestID,
 		Title:     "AWD Contest",
 		Mode:      model.ContestModeAWD,
+		StartTime: now.Add(-time.Minute),
+		EndTime:   now.Add(time.Hour),
+		Status:    model.ContestStatusRunning,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := db.Create(&model.ContestChallenge{
+		ContestID:   contestID,
+		ChallengeID: challengeID,
+		Points:      100,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create contest challenge: %v", err)
+	}
+}
+
+func seedContestInstanceJeopardyContest(t *testing.T, db *gorm.DB, contestID, challengeID int64, now time.Time) {
+	t.Helper()
+	if err := db.Create(&model.Contest{
+		ID:        contestID,
+		Title:     "Jeopardy Contest",
+		Mode:      model.ContestModeJeopardy,
 		StartTime: now.Add(-time.Minute),
 		EndTime:   now.Add(time.Hour),
 		Status:    model.ContestStatusRunning,

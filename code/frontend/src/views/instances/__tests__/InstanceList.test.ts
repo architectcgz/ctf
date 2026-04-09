@@ -24,6 +24,7 @@ describe('InstanceList', () => {
         status: 'running',
         access_url: 'http://example.test',
         flag_type: 'static',
+        share_scope: 'shared',
         expires_at: '2099-01-01T00:00:00Z',
         remaining_extends: 1,
         created_at: '2026-03-05T00:00:00Z',
@@ -37,6 +38,7 @@ describe('InstanceList', () => {
         status: 'pending',
         access_url: '',
         flag_type: 'dynamic',
+        share_scope: 'per_user',
         expires_at: '2099-01-01T00:00:00Z',
         remaining_extends: 1,
         created_at: '2026-03-05T00:00:00Z',
@@ -71,6 +73,7 @@ describe('InstanceList', () => {
     expect(wrapper.text()).toContain('反序列化迷宫')
     expect(wrapper.text()).toContain('等待创建')
     expect(wrapper.text()).toContain('实例正在排队创建')
+    expect(wrapper.text()).toContain('系统托管')
     expect(wrapper.find('.instance-row-title').attributes('title')).toBe('SQL 注入基础')
     expect(wrapper.find('.instance-row-access-value').attributes('title')).toBe('http://example.test')
   })

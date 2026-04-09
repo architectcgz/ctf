@@ -52,12 +52,13 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	service := newTestService(repo, imageRepo)
 
 	resp, err := service.CreateChallenge(1001, &dto.CreateChallengeReq{
-		Title:       "Test Challenge",
-		Description: "Test",
-		Category:    "web",
-		Difficulty:  "easy",
-		Points:      100,
-		ImageID:     1,
+		Title:            "Test Challenge",
+		Description:      "Test",
+		Category:         "web",
+		Difficulty:       "easy",
+		Points:           100,
+		ImageID:          1,
+		InstanceSharing:  model.InstanceSharingPerUser,
 	})
 
 	if err != nil {
@@ -68,6 +69,9 @@ func TestServiceCreateChallengeSuccess(t *testing.T) {
 	}
 	if resp.CreatedBy == nil || *resp.CreatedBy != 1001 {
 		t.Fatalf("unexpected created_by: %+v", resp.CreatedBy)
+	}
+	if resp.InstanceSharing != model.InstanceSharingPerUser {
+		t.Fatalf("unexpected instance sharing: %s", resp.InstanceSharing)
 	}
 }
 

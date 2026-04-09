@@ -69,8 +69,20 @@ func (r *Repository) FindContestRegistrationWithContext(ctx context.Context, con
 	return &registration, nil
 }
 
-func (r *Repository) LockInstanceScope(userID int64, scope practiceports.InstanceScope) error {
-	if scope.TeamID != nil {
+func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practiceports.InstanceScope) error {
+	switch scope.ShareScope {
+	case model.InstanceSharingShared:
+		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id = ?", challengeID).
+			First(&model.Challenge{}).Error
+	case model.InstanceSharingPerTeam:
+		if scope.TeamID != nil {
+			return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
+				Where("id = ?", *scope.TeamID).
+				First(&model.Team{}).Error
+		}
+	}
+	if scope.TeamID != nil && scope.ShareScope == model.InstanceSharingPerTeam {
 		return r.db.Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("id = ?", *scope.TeamID).
 			First(&model.Team{}).Error
@@ -82,9 +94,13 @@ func (r *Repository) LockInstanceScope(userID int64, scope practiceports.Instanc
 
 func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
 	query := r.db.Model(&model.Instance{}).
-		Where("challenge_id = ? AND status IN ?", challengeID, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("challenge_id = ? AND share_scope = ? AND status IN ?", challengeID, scope.ShareScope, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
+	case scope.ShareScope == model.InstanceSharingShared && scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND team_id IS NULL", *scope.ContestID)
+	case scope.ShareScope == model.InstanceSharingShared:
+		query = query.Where("contest_id IS NULL AND team_id IS NULL")
 	case scope.TeamID != nil && scope.ContestID != nil:
 		query = query.Where("contest_id = ? AND team_id = ?", *scope.ContestID, *scope.TeamID)
 	case scope.ContestID != nil:
@@ -105,9 +121,13 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 
 func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
 	query := r.db.Model(&model.Instance{}).
-		Where("status IN ?", []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("share_scope = ? AND status IN ?", scope.ShareScope, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
 
 	switch {
+	case scope.ShareScope == model.InstanceSharingShared && scope.ContestID != nil:
+		query = query.Where("contest_id = ? AND team_id IS NULL", *scope.ContestID)
+	case scope.ShareScope == model.InstanceSharingShared:
+		query = query.Where("contest_id IS NULL AND team_id IS NULL")
 	case scope.TeamID != nil && scope.ContestID != nil:
 		query = query.Where("contest_id = ? AND team_id = ?", *scope.ContestID, *scope.TeamID)
 	case scope.ContestID != nil:
@@ -121,6 +141,15 @@ func (r *Repository) CountScopedRunningInstances(userID int64, scope practicepor
 		return 0, err
 	}
 	return int(count), nil
+}
+
+func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+	return r.db.Model(&model.Instance{}).
+		Where("id = ?", instanceID).
+		Updates(map[string]any{
+			"expires_at": expiresAt,
+			"updated_at": time.Now(),
+		}).Error
 }
 
 func (r *Repository) CreateInstance(instance *model.Instance) error {

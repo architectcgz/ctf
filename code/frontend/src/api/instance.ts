@@ -42,6 +42,7 @@ function normalizeInstanceData(item: RawInstanceData): InstanceData {
     ...rest,
     id: String(id),
     challenge_id: String(challenge_id),
+    share_scope: item.share_scope ?? 'per_user',
     remaining_extends: resolveRemainingExtends({ remaining_extends, extend_count, max_extends }),
   }
 }

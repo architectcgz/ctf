@@ -94,15 +94,16 @@ func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateCha
 	}
 
 	challenge := &model.Challenge{
-		Title:         req.Title,
-		Description:   req.Description,
-		Category:      req.Category,
-		Difficulty:    req.Difficulty,
-		Points:        req.Points,
-		ImageID:       req.ImageID,
-		AttachmentURL: strings.TrimSpace(req.AttachmentURL),
-		Status:        model.ChallengeStatusDraft,
-		CreatedBy:     &actorUserID,
+		Title:           req.Title,
+		Description:     req.Description,
+		Category:        req.Category,
+		Difficulty:      req.Difficulty,
+		Points:          req.Points,
+		ImageID:         req.ImageID,
+		AttachmentURL:   strings.TrimSpace(req.AttachmentURL),
+		InstanceSharing: normalizeInstanceSharing(req.InstanceSharing),
+		Status:          model.ChallengeStatusDraft,
+		CreatedBy:       &actorUserID,
 	}
 
 	hints, err := domain.NormalizeHintModels(req.Hints)
@@ -153,6 +154,9 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	if req.AttachmentURL != nil {
 		challenge.AttachmentURL = strings.TrimSpace(*req.AttachmentURL)
 	}
+	if req.InstanceSharing != "" {
+		challenge.InstanceSharing = normalizeInstanceSharing(req.InstanceSharing)
+	}
 
 	replaceHints := req.Hints != nil
 	hints, err := domain.NormalizeHintModels(req.Hints)
@@ -161,6 +165,17 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	}
 
 	return s.repo.UpdateWithHints(challenge, hints, replaceHints)
+}
+
+func normalizeInstanceSharing(value string) string {
+	switch strings.TrimSpace(value) {
+	case model.InstanceSharingPerTeam:
+		return model.InstanceSharingPerTeam
+	case model.InstanceSharingShared:
+		return model.InstanceSharingShared
+	default:
+		return model.InstanceSharingPerUser
+	}
 }
 
 func (s *ChallengeService) DeleteChallenge(id int64) error {

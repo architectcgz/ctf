@@ -61,6 +61,7 @@ func ChallengeRespFromModel(challenge *model.Challenge, hints []*model.Challenge
 		Points:        challenge.Points,
 		ImageID:       challenge.ImageID,
 		AttachmentURL: challenge.AttachmentURL,
+		InstanceSharing: challenge.InstanceSharing,
 		Hints:         adminHints,
 		Status:        challenge.Status,
 		CreatedBy:     challenge.CreatedBy,

@@ -463,6 +463,7 @@
             <ChallengeInstanceCard
               v-if="needTarget"
               :instance="instance"
+              :instance-sharing="challenge.instance_sharing"
               :loading="instanceLoading"
               :creating="instanceCreating"
               :opening="instanceOpening"

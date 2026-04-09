@@ -119,6 +119,7 @@ func (s *Service) StartContestChallenge(ctx context.Context, userID, contestID, 
 func (s *Service) startPersonalChallenge(ctx context.Context, userID, challengeID int64) (*dto.InstanceResp, error) {
 	return s.startChallengeWithScope(ctx, userID, challengeID, practiceports.InstanceScope{
 		FlagSubjectID: userID,
+		ShareScope:    model.InstanceSharingPerUser,
 	})
 }
 
@@ -136,6 +137,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 	if chal.ImageID == 0 {
 		return nil, errcode.ErrInvalidParams.WithCause(errors.New(errMsgChallengeNoTarget))
 	}
+	scope = resolveEffectiveInstanceScope(chal, scope)
 
 	flag, nonce, err := s.buildInstanceFlag(scope.FlagSubjectID, challengeID, chal)
 	if err != nil {
@@ -151,7 +153,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 		initialStatus = model.InstanceStatusPending
 	}
 	if err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
-		if err := txRepo.LockInstanceScope(userID, scope); err != nil {
+		if err := txRepo.LockInstanceScope(userID, challengeID, scope); err != nil {
 			return err
 		}
 
@@ -160,6 +162,17 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			return errcode.ErrInternal.WithCause(err)
 		}
 		if existingInstance != nil {
+			if scope.ShareScope == model.InstanceSharingShared {
+				refreshedExpiry := existingInstance.ExpiresAt
+				candidateExpiry := time.Now().Add(s.config.Container.DefaultTTL)
+				if candidateExpiry.After(refreshedExpiry) {
+					refreshedExpiry = candidateExpiry
+				}
+				if err := txRepo.RefreshInstanceExpiry(existingInstance.ID, refreshedExpiry); err != nil {
+					return errcode.ErrInternal.WithCause(err)
+				}
+				existingInstance.ExpiresAt = refreshedExpiry
+			}
 			instance = existingInstance
 			reused = true
 			return nil
@@ -189,6 +202,7 @@ func (s *Service) startChallengeWithScope(ctx context.Context, userID, challenge
 			TeamID:      scope.TeamID,
 			ChallengeID: challengeID,
 			HostPort:    hostPort,
+			ShareScope:  scope.ShareScope,
 			Status:      initialStatus,
 			Nonce:       nonce,
 			ExpiresAt:   time.Now().Add(s.config.Container.DefaultTTL),
@@ -822,19 +836,44 @@ func (s *Service) resolveContestInstanceScope(ctx context.Context, userID, conte
 	contestIDCopy := contestID
 	scope := practiceports.InstanceScope{
 		ContestID:     &contestIDCopy,
+		ContestMode:   contest.Mode,
 		FlagSubjectID: userID,
+		ShareScope:    model.InstanceSharingPerUser,
 	}
-	if contest.Mode == model.ContestModeAWD {
-		if registration.TeamID == nil || *registration.TeamID <= 0 {
-			return practiceports.InstanceScope{}, errcode.ErrAWDTeamRequired
-		}
+	if registration.TeamID != nil && *registration.TeamID > 0 {
 		teamID := *registration.TeamID
 		scope.TeamID = &teamID
-		scope.FlagSubjectID = teamID
-		return scope, nil
 	}
 
 	return scope, nil
+}
+
+func resolveEffectiveInstanceScope(chal *model.Challenge, scope practiceports.InstanceScope) practiceports.InstanceScope {
+	effective := scope
+	effective.FlagSubjectID = scope.FlagSubjectID
+	effective.ShareScope = model.InstanceSharingPerUser
+
+	switch {
+	case scope.ContestMode == model.ContestModeAWD:
+		effective.ShareScope = model.InstanceSharingPerTeam
+		if scope.TeamID != nil && *scope.TeamID > 0 {
+			effective.FlagSubjectID = *scope.TeamID
+		}
+	case chal.InstanceSharing == model.InstanceSharingShared:
+		effective.ShareScope = model.InstanceSharingShared
+		effective.TeamID = nil
+	case chal.InstanceSharing == model.InstanceSharingPerTeam && scope.TeamID != nil && *scope.TeamID > 0:
+		effective.ShareScope = model.InstanceSharingPerTeam
+		effective.FlagSubjectID = *scope.TeamID
+	default:
+		effective.ShareScope = model.InstanceSharingPerUser
+		effective.TeamID = nil
+	}
+
+	if effective.ShareScope != model.InstanceSharingPerTeam {
+		effective.TeamID = nil
+	}
+	return effective
 }
 
 func (s *Service) buildInstanceFlag(subjectID, challengeID int64, chal *model.Challenge) (string, string, error) {
@@ -966,6 +1005,13 @@ func (s *Service) buildTopologyCreateRequest(
 ) (*practiceports.TopologyCreateRequest, error) {
 	if len(spec.Nodes) == 0 {
 		return nil, errcode.ErrContainerCreateFailed.WithCause(fmt.Errorf("challenge topology has no nodes"))
+	}
+	if chal != nil && chal.InstanceSharing == model.InstanceSharingShared {
+		for _, node := range spec.Nodes {
+			if node.InjectFlag {
+				return nil, errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持带 Flag 注入的拓扑"))
+			}
+		}
 	}
 
 	defaultImageRef, err := s.resolveAvailableImageRef(chal.ImageID)

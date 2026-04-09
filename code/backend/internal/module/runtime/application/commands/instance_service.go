@@ -46,6 +46,9 @@ func (s *InstanceService) DestroyInstanceWithContext(ctx context.Context, instan
 	if instance == nil {
 		return errcode.ErrForbidden
 	}
+	if instance.ShareScope == model.InstanceSharingShared {
+		return errcode.ErrForbidden
+	}
 
 	s.logger.Info("销毁实例", zap.Int64("instance_id", instanceID), zap.Int64("user_id", userID))
 
@@ -60,6 +63,9 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 		return nil, errcode.ErrInternal.WithCause(err)
 	}
 	if instance == nil {
+		return nil, errcode.ErrForbidden
+	}
+	if instance.ShareScope == model.InstanceSharingShared {
 		return nil, errcode.ErrForbidden
 	}
 	if instance.Status != model.InstanceStatusRunning {
@@ -137,6 +143,7 @@ func toInstanceResp(inst *model.Instance) *dto.InstanceResp {
 		ID:               inst.ID,
 		ChallengeID:      inst.ChallengeID,
 		Status:           inst.Status,
+		ShareScope:       inst.ShareScope,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
 		ExtendCount:      inst.ExtendCount,

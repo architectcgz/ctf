@@ -68,6 +68,9 @@ func (s *FlagService) ConfigureDynamicFlag(challengeID int64, flagPrefix string)
 	if err != nil {
 		return err
 	}
+	if challenge.InstanceSharing == model.InstanceSharingShared {
+		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例策略不支持动态 Flag"))
+	}
 
 	s.resetNonDynamicFlagFields(challenge)
 	challenge.FlagType = model.FlagTypeDynamic

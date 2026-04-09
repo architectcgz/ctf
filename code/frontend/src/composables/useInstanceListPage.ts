@@ -18,6 +18,10 @@ export interface InstanceViewModel extends InstanceListItem {
   remaining: number
 }
 
+function isSharedInstance(instance: Pick<InstanceListItem, 'share_scope'>): boolean {
+  return instance.share_scope === 'shared'
+}
+
 function calculateRemaining(expiresAt: string): number {
   return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))
 }
@@ -146,6 +150,11 @@ export function useInstanceListPage() {
   }
 
   async function extendTime(id: string) {
+    const target = instances.value.find((instance) => instance.id === id)
+    if (target && isSharedInstance(target)) {
+      toast.error('共享实例不支持手动延时')
+      return
+    }
     try {
       const result = await extendInstance(id)
       if (result) {
@@ -180,6 +189,11 @@ export function useInstanceListPage() {
   }
 
   async function destroyInstance(id: string) {
+    const target = instances.value.find((instance) => instance.id === id)
+    if (target && isSharedInstance(target)) {
+      toast.error('共享实例不支持手动销毁')
+      return
+    }
     if (!window.confirm('确定要销毁该实例吗？此操作不可恢复。')) {
       return
     }
@@ -220,6 +234,9 @@ export function useInstanceListPage() {
 
     instances.value = instances.value.map((instance) => {
       if (instance.status !== 'running') {
+        return instance
+      }
+      if (isSharedInstance(instance)) {
         return instance
       }
 

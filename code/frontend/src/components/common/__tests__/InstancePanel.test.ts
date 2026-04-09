@@ -16,6 +16,7 @@ describe('InstancePanel', () => {
             status: 'running',
             access_url: 'http://test.com',
             flag_type: 'static',
+            share_scope: 'per_user',
             expires_at: new Date(Date.now() + 3600000).toISOString(),
             remaining_extends: 2,
             created_at: '2024-01-01T00:00:00Z',
