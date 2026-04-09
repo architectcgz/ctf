@@ -591,6 +591,12 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-overview-layout {
   align-items: start;
+  padding-top: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
+}
+
+.insight-overview-layout :deep(.section-card) {
+  border-top: 0;
 }
 
 .insight-rate-row {
@@ -599,7 +605,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-rate-panel {
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 86%, transparent);
   background: transparent;
   box-shadow: none;
   display: flex;

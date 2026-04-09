@@ -23,16 +23,16 @@
             创建镜像
           </button>
         </div>
-        <div class="image-summary-grid">
-          <article class="journal-note">
-            <div class="journal-note-label">镜像总量</div>
-            <div class="journal-note-value">{{ total }}</div>
-            <div class="journal-note-helper">当前查询结果的镜像总数</div>
+        <div class="image-summary-grid metric-panel-grid">
+          <article class="image-summary-card metric-panel-card">
+            <div class="metric-panel-label">镜像总量</div>
+            <div class="metric-panel-value">{{ total }}</div>
+            <div class="metric-panel-helper">当前查询结果的镜像总数</div>
           </article>
-          <article class="journal-note">
-            <div class="journal-note-label">当前页</div>
-            <div class="journal-note-value">{{ list.length }}</div>
-            <div class="journal-note-helper">这一页已加载的镜像数量</div>
+          <article class="image-summary-card metric-panel-card">
+            <div class="metric-panel-label">当前页</div>
+            <div class="metric-panel-value">{{ list.length }}</div>
+            <div class="metric-panel-helper">这一页已加载的镜像数量</div>
           </article>
         </div>
       </div>
@@ -402,6 +402,7 @@ onUnmounted(() => {
   display: grid;
   gap: var(--space-3);
   justify-items: start;
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
 }
 
 .image-header__actions {
@@ -556,8 +557,8 @@ onUnmounted(() => {
 }
 
 @media (max-width: 720px) {
-  .image-summary-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .image-header__side {
+    --metric-panel-columns: minmax(0, 1fr);
   }
 }
 </style>

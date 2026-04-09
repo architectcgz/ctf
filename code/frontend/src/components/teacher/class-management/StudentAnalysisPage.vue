@@ -499,9 +499,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .summary-strip {
   --metric-panel-grid-gap: var(--space-2-5) var(--space-4);
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
-  margin: 0 0 var(--space-4);
-  padding: var(--space-1) 0 var(--space-2-5);
-  border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 82%, transparent);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-1) 0 0;
 }
 
 .summary-card {
