@@ -918,6 +918,14 @@ const {
   padding: var(--space-5);
 }
 
+.workspace-subpanel :deep(.teacher-panel.teacher-panel--shellless) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
 .workspace-subpanel :deep(.teacher-panel__header),
 .workspace-subpanel :deep(.teacher-subsection__header) {
   margin-bottom: var(--space-4);
