@@ -137,8 +137,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         </div>
       </section>
 
-      <div class="contest-divider" />
-
       <div v-if="loading" class="contest-loading">
         <div class="contest-loading-spinner" />
       </div>
@@ -245,11 +243,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
 
 .contest-subtitle {
   max-width: 680px;
-}
-
-.contest-divider {
-  margin-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .contest-loading {
