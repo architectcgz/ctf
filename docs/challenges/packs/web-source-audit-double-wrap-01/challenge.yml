@@ -18,8 +18,9 @@ content:
   attachments: []
 
 flag:
-  type: dynamic
+  type: static
   prefix: flag
+  value: flag{web-source-audit-double-wrap-01}
 
 hints:
   - level: 1
@@ -32,6 +33,4 @@ hints:
     content: "有些可疑变量的值不是只编码了一层。"
 
 runtime:
-  type: container
-  image:
-    ref: "registry.example.edu/ctf/web-source-audit-double-wrap-01:20260404"
+  type: none
