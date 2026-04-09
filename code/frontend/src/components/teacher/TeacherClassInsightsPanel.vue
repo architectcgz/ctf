@@ -51,7 +51,10 @@ const weakDimensionStats = computed(() => {
         'teacher-insight-layout--split-cards': splitCards,
       }"
     >
-      <section class="teacher-subsection">
+      <section
+        class="teacher-subsection"
+        :class="splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined"
+      >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Students</div>
           <h2 class="teacher-panel__title">班级 Top 学生</h2>
@@ -97,7 +100,10 @@ const weakDimensionStats = computed(() => {
         </div>
       </section>
 
-      <section class="teacher-subsection">
+      <section
+        class="teacher-subsection"
+        :class="splitCards ? ['showcase-panel-card', 'showcase-panel-card--minimal-wire'] : undefined"
+      >
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Weak Dimensions</div>
           <h2 class="teacher-panel__title">薄弱维度分布</h2>
@@ -141,6 +147,11 @@ const weakDimensionStats = computed(() => {
 
 .teacher-insight-layout--split-cards {
   gap: var(--space-4);
+  --showcase-panel-border: var(--panel-border);
+  --showcase-panel-radius: 14px;
+  --showcase-panel-background: transparent;
+  --showcase-panel-shadow: none;
+  --showcase-panel-padding: var(--space-4) var(--space-4-5);
 }
 
 .teacher-panel {
@@ -177,13 +188,6 @@ const weakDimensionStats = computed(() => {
 .teacher-subsection + .teacher-subsection {
   border-top: 1px dashed var(--panel-divider);
   padding-top: var(--space-5);
-}
-
-.teacher-insight-layout--split-cards .teacher-subsection {
-  border: 1px solid var(--panel-border);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--panel-surface) 96%, transparent);
-  padding: var(--space-4) var(--space-4-5);
 }
 
 .teacher-insight-layout--split-cards .teacher-subsection + .teacher-subsection {
