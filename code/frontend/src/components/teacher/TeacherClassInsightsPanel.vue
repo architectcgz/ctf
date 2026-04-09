@@ -195,6 +195,10 @@ const weakDimensionStats = computed(() => {
   padding-top: 0;
 }
 
+.teacher-insight-layout--split-cards .showcase-panel-card + .showcase-panel-card {
+  border-top: 1px solid var(--showcase-panel-border, var(--panel-border));
+}
+
 .teacher-subsection__header {
   margin-bottom: var(--space-4);
 }
