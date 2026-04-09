@@ -207,7 +207,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 .journal-soft-surface {
   --category-cols: minmax(130px, 1fr) minmax(88px, 120px) minmax(110px, 150px);
   --journal-soft-button-height: 34px;
-  --journal-soft-button-padding: 0.45rem 1rem;
+  --journal-soft-button-padding: var(--space-2) var(--space-4);
   --journal-soft-button-size: 0.82rem;
   --journal-soft-button-primary-background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   --journal-soft-button-primary-hover-background: color-mix(
@@ -228,12 +228,12 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-board--embedded {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .category-section + .category-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -242,14 +242,14 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) var(--space-4-5);
 }
 
 .category-head {
   display: grid;
   grid-template-columns: var(--category-cols);
-  gap: 0.5rem;
-  padding-bottom: 0.75rem;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
   font-size: 0.69rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -263,8 +263,8 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-item + .category-item {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -279,7 +279,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 .category-row {
   display: grid;
   grid-template-columns: var(--category-cols);
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: center;
 }
 
