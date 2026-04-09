@@ -6,7 +6,7 @@
       <div>
         <div class="journal-eyebrow">Challenge Detail</div>
         <h1 class="mt-3 text-3xl font-semibold tracking-tight text-[var(--journal-ink)]">
-          靶场详情
+          题目详情
         </h1>
         <p class="mt-3 text-sm leading-7 text-[var(--journal-muted)]">
           查看题目状态、附件、Flag 配置和提示。
@@ -318,7 +318,7 @@ onMounted(() => {
   justify-content: center;
   min-height: 2.75rem;
   border-radius: 1rem;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -340,7 +340,7 @@ onMounted(() => {
   border-radius: 999px;
   border: 1px solid rgba(37, 99, 235, 0.18);
   background: rgba(37, 99, 235, 0.08);
-  padding: 0.5rem 0.9rem;
+  padding: var(--space-2) var(--space-3-5);
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--journal-accent);
@@ -349,7 +349,7 @@ onMounted(() => {
 .flag-field {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
 }
 
 .flag-field-label {
@@ -363,7 +363,7 @@ onMounted(() => {
   border: 1px solid var(--journal-border);
   border-radius: 1rem;
   background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
-  padding: 0.8rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.92rem;
   color: var(--journal-ink);
   outline: none;
