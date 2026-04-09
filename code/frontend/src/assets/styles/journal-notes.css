@@ -122,6 +122,54 @@
   color: var(--metric-panel-helper-color, var(--journal-muted, var(--color-text-secondary)));
 }
 
+.showcase-panel-card {
+  min-width: 0;
+  border: 1px solid
+    var(
+      --showcase-panel-border,
+      color-mix(
+        in srgb,
+        var(--journal-border, var(--color-border-default)) 76%,
+        transparent
+      )
+    );
+  border-radius: var(--showcase-panel-radius, 14px);
+  background: var(--showcase-panel-background, transparent);
+  box-shadow: var(--showcase-panel-shadow, none);
+  padding: var(--showcase-panel-padding, var(--space-4));
+}
+
+.showcase-panel-card--minimal-wire {
+  border-color: var(
+    --showcase-panel-border,
+    color-mix(
+      in srgb,
+      var(--journal-border, var(--color-border-default)) 76%,
+      transparent
+    )
+  );
+  border-radius: var(--showcase-panel-radius, 14px);
+  background: var(--showcase-panel-background, transparent);
+  box-shadow: var(--showcase-panel-shadow, none);
+  padding: var(--showcase-panel-padding, var(--space-4));
+}
+
+.showcase-panel-card--minimal-wire.showcase-panel-card--interactive:hover,
+.showcase-panel-card--minimal-wire.showcase-panel-card--interactive:focus-within {
+  border-color: var(
+    --showcase-panel-hover-border,
+    color-mix(
+      in srgb,
+      var(--journal-accent, var(--color-primary-default)) 42%,
+      var(--showcase-panel-border, var(--journal-border, var(--color-border-default)))
+    )
+  );
+  background: var(
+    --showcase-panel-hover-background,
+    color-mix(in srgb, var(--journal-accent, var(--color-primary-default)) 5%, transparent)
+  );
+}
+
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) {
   display: grid;
   gap: var(--admin-summary-grid-gap, var(--space-3));
