@@ -198,7 +198,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 <style scoped>
 .journal-soft-surface {
   --journal-soft-button-height: 34px;
-  --journal-soft-button-padding: 0.4rem 1rem;
+  --journal-soft-button-padding: var(--space-1-5) var(--space-4);
   --journal-soft-button-size: 0.8rem;
   --journal-soft-button-primary-border: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
@@ -218,12 +218,12 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 }
 
 .recommend-board--embedded {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .recommend-section + .recommend-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -234,7 +234,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
 }
 
 .recommend-item {
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) var(--space-4-5);
   transition: background 0.2s ease-in-out;
 }
 
@@ -275,7 +275,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   border-radius: 999px;
   border: 1px solid var(--journal-soft-border);
   background: color-mix(in srgb, var(--journal-track) 82%, transparent);
-  padding: 0.125rem 0.5rem;
+  padding: var(--space-0-5) var(--space-2);
   font-size: 0.74rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -288,7 +288,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  padding: 0.25rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--journal-accent-strong);
