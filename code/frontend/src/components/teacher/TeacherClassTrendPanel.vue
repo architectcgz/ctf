@@ -13,20 +13,23 @@ const props = defineProps<{
 
 const panelTitle = computed(() => props.title || '近 7 天训练趋势')
 
-const categories = computed(() => (props.trend?.points ?? []).map((point) => point.date.slice(5)))
+const trendPoints = computed(() => (Array.isArray(props.trend?.points) ? props.trend.points : []))
+const hasTrendPoints = computed(() => trendPoints.value.length > 0)
+
+const categories = computed(() => trendPoints.value.map((point) => point.date.slice(5)))
 
 const series = computed(() => [
   {
     name: '训练事件',
-    data: (props.trend?.points ?? []).map((point) => point.event_count),
+    data: trendPoints.value.map((point) => point.event_count),
   },
   {
     name: '成功解题',
-    data: (props.trend?.points ?? []).map((point) => point.solve_count),
+    data: trendPoints.value.map((point) => point.solve_count),
   },
   {
     name: '活跃学生',
-    data: (props.trend?.points ?? []).map((point) => point.active_student_count),
+    data: trendPoints.value.map((point) => point.active_student_count),
   },
 ])
 </script>
@@ -38,7 +41,7 @@ const series = computed(() => [
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
     </header>
 
-    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy">暂无趋势数据</p>
+    <p v-if="!hasTrendPoints" class="teacher-panel__empty-copy">暂无</p>
 
     <div v-else class="teacher-panel__chart">
       <LineChart :categories="categories" :series="series" />
@@ -46,9 +49,7 @@ const series = computed(() => [
   </section>
 
   <template v-else>
-    <p v-if="!trend || trend.points.length === 0" class="teacher-panel__empty-copy teacher-panel__empty-copy--bare">
-      暂无趋势数据
-    </p>
+    <p v-if="!hasTrendPoints" class="teacher-panel__empty-copy teacher-panel__empty-copy--bare">暂无</p>
 
     <div v-else class="teacher-panel__chart teacher-panel__chart--bare">
       <LineChart :categories="categories" :series="series" />
