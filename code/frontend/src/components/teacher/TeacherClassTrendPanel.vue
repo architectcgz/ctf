@@ -13,8 +13,18 @@ const props = defineProps<{
 
 const panelTitle = computed(() => props.title || '近 7 天训练趋势')
 
-const trendPoints = computed(() => (Array.isArray(props.trend?.points) ? props.trend.points : []))
-const hasTrendPoints = computed(() => trendPoints.value.length > 0)
+const trendPoints = computed(() => {
+  const points = Array.isArray(props.trend?.points) ? props.trend.points : []
+  return points.filter((point) => typeof point.date === 'string' && point.date.trim().length > 0)
+})
+const hasTrendPoints = computed(() =>
+  trendPoints.value.some(
+    (point) =>
+      Number(point.event_count ?? 0) > 0 ||
+      Number(point.solve_count ?? 0) > 0 ||
+      Number(point.active_student_count ?? 0) > 0
+  )
+)
 
 const categories = computed(() => trendPoints.value.map((point) => point.date.slice(5)))
 

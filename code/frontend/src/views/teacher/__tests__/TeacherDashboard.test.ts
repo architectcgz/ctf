@@ -281,6 +281,31 @@ describe('TeacherDashboard', () => {
     expect(wrapper.find('#trend').text()).toContain('暂无')
   })
 
+  it('趋势点位全为 0 时也应显示“暂无”空态提示', async () => {
+    teacherApiMocks.getClassTrend.mockResolvedValueOnce({
+      class_name: 'Class A',
+      points: [
+        { date: '2026-03-05', active_student_count: 0, event_count: 0, solve_count: 0 },
+        { date: '2026-03-06', active_student_count: 0, event_count: 0, solve_count: 0 },
+      ],
+    })
+
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.get('#top-tab-trend').trigger('click')
+    expect(wrapper.find('#trend').text()).toContain('暂无')
+  })
+
   it('教师概览不应渲染设计介绍式文案', async () => {
     const wrapper = mount(TeacherDashboard, {
       global: {
