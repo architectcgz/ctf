@@ -426,7 +426,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
           v-show="activeTab === 'insight'"
         >
-          <div class="workspace-subpanel workspace-subpanel--flat">
+          <div class="workspace-subpanel workspace-subpanel--flat workspace-subpanel--insight">
             <TeacherClassInsightsPanel
               :students="students"
               :class-name="selectedClassName"
@@ -708,6 +708,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   padding: 0;
   box-shadow: none;
   overflow: visible;
+}
+
+.workspace-subpanel--insight {
+  margin-top: var(--space-6);
 }
 
 .workspace-subpanel :deep(.review-item) {
