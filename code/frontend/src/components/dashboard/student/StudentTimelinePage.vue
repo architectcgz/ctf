@@ -193,18 +193,18 @@ function changeTimelinePage(page: number): void {
 
 .timeline-header {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .timeline-metric-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .timeline-metric-card {
   min-height: 100%;
-  padding: 0.82rem 0.95rem 0.78rem;
+  padding: var(--space-3-5) var(--space-4) var(--space-3);
 }
 
 .timeline-metric-card.teacher-surface-section {
@@ -235,12 +235,12 @@ function changeTimelinePage(page: number): void {
 }
 
 .timeline-board--embedded {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .timeline-section + .timeline-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -251,7 +251,7 @@ function changeTimelinePage(page: number): void {
 }
 
 .timeline-group {
-  padding: 1rem 0;
+  padding: var(--space-4) 0;
 }
 
 .timeline-group + .timeline-group {
@@ -259,12 +259,12 @@ function changeTimelinePage(page: number): void {
 }
 
 .timeline-group-date {
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--space-3-5);
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
   background: color-mix(in srgb, var(--journal-surface-subtle) 90%, transparent);
-  padding: 0.28rem 0.72rem;
+  padding: var(--space-1) var(--space-3);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -278,7 +278,7 @@ function changeTimelinePage(page: number): void {
 
 .timeline-event-item {
   position: relative;
-  padding: 0.95rem 0 0.95rem 1.1rem;
+  padding: var(--space-4) 0 var(--space-4) var(--space-4-5);
 }
 
 .timeline-event-item::before {
@@ -312,7 +312,7 @@ function changeTimelinePage(page: number): void {
 
 .timeline-pagination {
   border-top: 1px solid var(--journal-divider);
-  padding-top: 0.35rem;
+  padding-top: var(--space-1-5);
 }
 
 .stat-icon {
