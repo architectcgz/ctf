@@ -60,6 +60,31 @@ function getRankPillClass(rank: number): string[] {
 function supportsRealtime(status: ContestStatus): boolean {
   return status === 'running' || status === 'frozen'
 }
+
+function getCardDescription(
+  status: ContestStatus,
+  frozen: boolean,
+  hasError: boolean,
+  rowCount: number
+): string {
+  if (hasError) {
+    return '该竞赛排行榜暂时不可用，可稍后重新加载。'
+  }
+
+  if (rowCount === 0) {
+    return '当前还没有可展示的队伍成绩，提交后会自动进入榜单。'
+  }
+
+  if (frozen || status === 'frozen') {
+    return '封榜阶段仅展示冻结前排名，解封后会同步最终成绩。'
+  }
+
+  if (status === 'running') {
+    return '进行中竞赛支持实时刷新，提交后榜单会自动更新。'
+  }
+
+  return '历史竞赛展示最终成绩，可用于复盘队伍解题表现。'
+}
 </script>
 
 <template>
@@ -149,6 +174,16 @@ function supportsRealtime(status: ContestStatus): boolean {
                 <h3 class="scoreboard-card-title">{{ section.contest.title }}</h3>
                 <p class="scoreboard-card-time">
                   {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
+                </p>
+                <p class="scoreboard-card-description">
+                  {{
+                    getCardDescription(
+                      section.contest.status,
+                      section.frozen,
+                      section.error,
+                      section.rows.length
+                    )
+                  }}
                 </p>
               </div>
               <div class="scoreboard-card-meta">
@@ -308,6 +343,14 @@ function supportsRealtime(status: ContestStatus): boolean {
   font-size: 13px;
   line-height: 1.6;
   color: var(--journal-muted);
+}
+
+.scoreboard-card-description {
+  margin-top: 8px;
+  max-width: 700px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
 
 .scoreboard-card-meta {
