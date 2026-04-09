@@ -111,7 +111,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       <template v-else-if="contest">
         <ContestAnnouncementRealtimeBridge :contest-id="contest.id" @updated="refreshAnnouncements" />
 
-        <div class="workspace-tabbar" role="tablist" aria-label="竞赛页面主切换">
+        <div class="workspace-tabbar top-tabs" role="tablist" aria-label="竞赛页面主切换">
           <button
             v-for="(tab, index) in workspaceTabs"
             :id="`contest-workspace-tab-${tab.id}`"
@@ -119,8 +119,8 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             :ref="(element) => setTabButtonRef(tab.id, element as HTMLButtonElement | null)"
             type="button"
             role="tab"
-            class="workspace-tab"
-            :class="{ 'workspace-tab--active': activeWorkspaceTab === tab.id }"
+            class="workspace-tab top-tab"
+            :class="{ active: activeWorkspaceTab === tab.id }"
             :aria-selected="activeWorkspaceTab === tab.id"
             :aria-controls="`contest-workspace-panel-${tab.id}`"
             :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
@@ -565,6 +565,17 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --page-top-tabs-gap: 0.35rem;
+  --page-top-tabs-margin: 0;
+  --page-top-tabs-padding: 0;
+  --page-top-tabs-border: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --page-top-tab-min-height: 2.5rem;
+  --page-top-tab-padding: 0.4rem 0.1rem 0.65rem;
+  --page-top-tab-font-size: var(--font-size-0-90);
+  --page-top-tab-font-weight: 600;
+  --page-top-tab-color: var(--journal-muted);
+  --page-top-tab-active-color: var(--journal-ink);
+  --page-top-tab-active-border: color-mix(in srgb, var(--contest-accent) 72%, transparent);
   --journal-shell-hero-radial-strength: 10%;
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-top-strength: 97%;
@@ -605,42 +616,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-loading__text {
   font-size: var(--font-size-0-88);
   color: var(--journal-muted);
-}
-
-.workspace-tabbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding-bottom: 0.9rem;
-}
-
-.workspace-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  padding: 0.4rem 0.1rem 0.65rem;
-  font-size: var(--font-size-0-90);
-  font-weight: 600;
-  color: var(--journal-muted);
-  transition:
-    color 150ms ease,
-    border-color 150ms ease;
-}
-
-.workspace-tab:hover,
-.workspace-tab:focus-visible {
-  color: var(--journal-ink);
-  outline: none;
-}
-
-.workspace-tab--active {
-  border-bottom-color: color-mix(in srgb, var(--contest-accent) 72%, transparent);
-  color: var(--journal-ink);
 }
 
 .workspace-panel {
@@ -1265,16 +1240,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 @media (max-width: 640px) {
-  .workspace-tabbar {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
-
-  .workspace-tab {
-    flex: 0 0 auto;
-    min-width: max-content;
-  }
-
   .flag-submit {
     flex-direction: column;
   }
