@@ -390,7 +390,7 @@ describe('TeacherClassStudents', () => {
 
     await wrapper.find('#class-tab-students').trigger('click')
 
-    expect(wrapper.text()).toContain('学生筛选')
+    expect(wrapper.text()).not.toContain('学生筛选')
 
     const studentNoInput = wrapper.find('input[placeholder="输入学号精确查询"]')
     expect(studentNoInput.exists()).toBe(true)
