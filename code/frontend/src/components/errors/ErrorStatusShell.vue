@@ -110,7 +110,7 @@ const accentVars = computed(() => ({
   align-self: flex-start;
   padding-left: 0.72rem;
   border-left: 2px solid color-mix(in srgb, var(--error-accent) 55%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -137,7 +137,7 @@ const accentVars = computed(() => ({
 .error-status-text {
   margin-top: 0.8rem;
   max-width: 56ch;
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95);
   line-height: 1.85;
   color: var(--color-text-secondary);
 }
@@ -157,7 +157,7 @@ const accentVars = computed(() => ({
   border-radius: 10px;
   border: 1px solid transparent;
   padding: 0.58rem 0.9rem;
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 600;
   transition: all 180ms ease;
 }

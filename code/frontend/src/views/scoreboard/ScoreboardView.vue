@@ -266,7 +266,7 @@ function getCardDescription(
   padding: 0 10px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
   color: var(--journal-muted);
 }
@@ -335,7 +335,7 @@ function getCardDescription(
 .scoreboard-card-title {
   margin-top: 10px;
   font-family: var(--font-family-mono);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -344,7 +344,7 @@ function getCardDescription(
 .scoreboard-card-time,
 .scoreboard-card-meta {
   margin-top: 6px;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -352,7 +352,7 @@ function getCardDescription(
 .scoreboard-card-description {
   margin-top: 8px;
   max-width: 700px;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
@@ -382,7 +382,7 @@ function getCardDescription(
   min-height: 26px;
   padding: 0 9px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -410,7 +410,7 @@ function getCardDescription(
 
 .sb-table th {
   padding: 0 0 12px;
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -421,7 +421,7 @@ function getCardDescription(
 .sb-row td {
   padding: 14px 0;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--journal-ink);
 }
 

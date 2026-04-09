@@ -46,7 +46,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -101,7 +101,7 @@
   .scoreboard-summary-label,
   .instance-summary-label
 ) {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -116,7 +116,7 @@
   .instance-summary-value
 ) {
   margin-top: var(--space-2-5, 0.625rem);
-  font-size: 26px;
+  font-size: var(--font-size-26);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -131,7 +131,7 @@
   .instance-summary-helper
 ) {
   margin-top: var(--space-2, 0.5rem);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -158,7 +158,7 @@
   .scoreboard-directory-title,
   .instance-directory-title
 ) {
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--journal-ink);
@@ -171,7 +171,7 @@
   .scoreboard-directory-meta,
   .instance-directory-meta
 ) {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -186,7 +186,7 @@
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--journal-ink);
   cursor: pointer;

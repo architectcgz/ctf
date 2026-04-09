@@ -292,13 +292,13 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__value {
-  font-size: 1.8rem;
+  font-size: var(--font-size-1-80);
   --metric-panel-value-margin-top: var(--space-3);
   --metric-panel-value-size: 1.8rem;
 }
 
 .summary-card__value--time {
-  font-size: 1.06rem;
+  font-size: var(--font-size-1-06);
   line-height: 1.5;
 }
 

@@ -85,7 +85,7 @@ function handleFileChange(event: Event) {
 }
 
 .import-entry__eyebrow {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -142,7 +142,7 @@ function handleFileChange(event: Event) {
 }
 
 .import-entry__drop-kicker {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -150,13 +150,13 @@ function handleFileChange(event: Event) {
 }
 
 .import-entry__drop-title {
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   line-height: 1.45;
   color: var(--journal-ink);
 }
 
 .import-entry__drop-copy {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -170,7 +170,7 @@ function handleFileChange(event: Event) {
   border-radius: 999px;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   color: var(--journal-accent);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 700;
 }
 

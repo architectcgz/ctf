@@ -71,21 +71,21 @@ const series = computed(() => [
 
 .teacher-panel__title {
   margin-top: var(--space-3);
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
   margin-top: var(--space-2);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.65;
   color: var(--panel-muted);
 }
 
 .teacher-panel__empty-copy {
   margin-top: var(--space-1);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.7;
   color: var(--panel-muted);
 }

@@ -255,14 +255,14 @@ watch(
 
 .teacher-panel__title {
   margin-top: var(--space-3);
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
   margin-top: var(--space-2);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.65;
   color: var(--panel-muted);
 }
@@ -309,20 +309,20 @@ watch(
 }
 
 .intervention-item__name {
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .intervention-item__username {
   margin-top: var(--space-0-5);
-  font-size: 0.79rem;
+  font-size: var(--font-size-0-79);
   color: var(--panel-muted);
 }
 
 .intervention-item__reason {
   margin-top: var(--space-1-5);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.7;
   color: var(--panel-muted);
 }
@@ -331,12 +331,12 @@ watch(
   margin-top: var(--space-3);
   border-top: 1px dashed color-mix(in srgb, var(--intervention-accent) 28%, var(--panel-border));
   padding-top: var(--space-3);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--panel-muted);
 }
 
 .intervention-item__recommendation-label {
-  font-size: 0.69rem;
+  font-size: var(--font-size-0-69);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -345,20 +345,20 @@ watch(
 
 .intervention-item__recommendation-title {
   margin-top: var(--space-1);
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .intervention-item__recommendation-meta {
   margin-top: var(--space-0-5);
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   color: var(--panel-muted);
 }
 
 .intervention-item__recommendation-reason {
   margin-top: var(--space-1);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.68;
   color: var(--panel-muted);
 }
@@ -366,7 +366,7 @@ watch(
 .intervention-item__stats {
   flex-shrink: 0;
   text-align: right;
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   line-height: 1.7;
   color: var(--panel-muted);
 }

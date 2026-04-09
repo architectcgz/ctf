@@ -404,7 +404,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   --page-top-tabs-border: color-mix(in srgb, var(--journal-soft-border) 92%, transparent);
   --page-top-tab-min-height: 3rem;
   --page-top-tab-padding: 0.4rem 0 0.75rem;
-  --page-top-tab-font-size: 0.92rem;
+  --page-top-tab-font-size: var(--font-size-0-92);
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
   --journal-user-button-height: 34px;
@@ -453,7 +453,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 }
 
 .skill-field-label {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -469,7 +469,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     var(--color-bg-base)
   );
   padding: 0.7rem 0.95rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
   transition: border-color 0.2s;
@@ -493,7 +493,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .skill-overview-copy {
   max-width: 42rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   line-height: 1.75;
   color: var(--journal-muted);
 }

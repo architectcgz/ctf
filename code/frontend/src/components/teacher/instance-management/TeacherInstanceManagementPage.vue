@@ -387,7 +387,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-directory-row-index {
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--journal-muted);
@@ -403,7 +403,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 .teacher-directory-row-title {
   min-width: 0;
   font-family: var(--font-family-mono);
-  font-size: 1.08rem;
+  font-size: var(--font-size-1-08);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -413,7 +413,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 }
 
 .teacher-directory-row-points {
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   font-weight: 700;
   color: var(--journal-accent-strong);
   overflow: hidden;
@@ -423,7 +423,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 .teacher-directory-row-copy {
   display: -webkit-box;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
   -webkit-line-clamp: 2;
@@ -448,7 +448,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
   color: var(--journal-accent-strong);
 }
@@ -469,14 +469,14 @@ function remainingExtends(item: TeacherInstanceItem): number {
   min-height: 1.75rem;
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
 }
 
 .teacher-directory-row-metrics {
   display: grid;
   gap: var(--space-1);
-  font-size: 0.81rem;
+  font-size: var(--font-size-0-81);
   line-height: 1.5;
   color: var(--journal-muted);
 }
@@ -495,7 +495,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, var(--teacher-control-border));
   background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   font-weight: 600;
   color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
   transition:

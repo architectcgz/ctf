@@ -124,7 +124,7 @@ const metadata = computed(() => [
 }
 
 .import-review__eyebrow {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -152,7 +152,7 @@ const metadata = computed(() => [
   min-height: 2.75rem;
   padding: var(--space-2-5) var(--space-4);
   border-radius: 999px;
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 700;
   transition: all 150ms ease;
 }
@@ -189,7 +189,7 @@ const metadata = computed(() => [
 }
 
 .import-review__section-title {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -208,12 +208,12 @@ const metadata = computed(() => [
 }
 
 .import-review__meta-label {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--journal-muted);
 }
 
 .import-review__meta-value {
-  font-size: 0.96rem;
+  font-size: var(--font-size-0-96);
   color: var(--journal-ink);
 }
 
@@ -231,7 +231,7 @@ const metadata = computed(() => [
 }
 
 .import-review__definition dt {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--journal-muted);
 }
 
@@ -255,13 +255,13 @@ const metadata = computed(() => [
 
 .import-review__list-item strong {
   color: var(--journal-ink);
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
 }
 
 .import-review__list-item span,
 .import-review__empty {
   color: var(--journal-muted);
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.7;
 }
 
@@ -271,7 +271,7 @@ const metadata = computed(() => [
   display: grid;
   gap: var(--space-2);
   color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.7;
 }
 

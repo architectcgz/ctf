@@ -332,7 +332,7 @@ const emit = defineEmits<{
 }
 
 .teacher-directory-cell-student-no {
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--journal-muted);
@@ -343,7 +343,7 @@ const emit = defineEmits<{
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-size: 0.98rem;
+  font-size: var(--font-size-0-98);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -363,7 +363,7 @@ const emit = defineEmits<{
 }
 
 .teacher-directory-row-points {
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   font-weight: 700;
   color: var(--journal-accent-strong);
   overflow: hidden;
@@ -372,7 +372,7 @@ const emit = defineEmits<{
 }
 
 .teacher-directory-row-copy {
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.6;
   color: color-mix(in srgb, var(--journal-muted) 92%, transparent);
 }
@@ -390,7 +390,7 @@ const emit = defineEmits<{
   padding: 0 var(--space-2-5);
   border-radius: 0.5rem;
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
   color: var(--journal-accent-strong);
 }
@@ -403,7 +403,7 @@ const emit = defineEmits<{
 .teacher-directory-row-metrics {
   display: grid;
   gap: var(--space-1);
-  font-size: 0.81rem;
+  font-size: var(--font-size-0-81);
   line-height: 1.5;
   color: var(--journal-muted);
 }
@@ -412,7 +412,7 @@ const emit = defineEmits<{
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   font-weight: 700;
   color: var(--journal-accent-strong);
 }

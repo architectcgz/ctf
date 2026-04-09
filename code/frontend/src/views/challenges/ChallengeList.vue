@@ -428,7 +428,7 @@ onMounted(() => {
 .challenge-subtitle {
   margin-top: var(--space-3);
   max-width: 680px;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -457,7 +457,7 @@ onMounted(() => {
 }
 
 .challenge-controls-title {
-  font-size: 17px;
+  font-size: var(--font-size-17);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--journal-ink);
@@ -465,7 +465,7 @@ onMounted(() => {
 
 .challenge-controls-copy {
   margin-top: var(--space-1-5);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -479,7 +479,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
   border-radius: 8px;
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
   color: var(--journal-accent-strong);
 }
@@ -516,7 +516,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 12px;
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--journal-ink);
   outline: none;
   transition:
@@ -583,7 +583,7 @@ onMounted(() => {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -633,7 +633,7 @@ onMounted(() => {
 .challenge-row-title {
   min-width: 0;
   font-family: var(--font-family-mono);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 700;
   line-height: 1.35;
   color: var(--journal-ink);
@@ -646,7 +646,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   font-family: var(--font-family-mono);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 700;
   color: var(--challenge-row-accent, var(--journal-accent));
 }
@@ -673,7 +673,7 @@ onMounted(() => {
   border-radius: 8px;
   background: var(--challenge-chip-bg, color-mix(in srgb, var(--journal-accent) 10%, transparent));
   color: var(--challenge-chip-color, var(--journal-accent-strong));
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -683,7 +683,7 @@ onMounted(() => {
 }
 
 .challenge-row-fallback {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   color: var(--journal-muted);
 }
 
@@ -698,7 +698,7 @@ onMounted(() => {
   min-height: 28px;
   padding: 0 var(--space-2-5);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 
@@ -715,7 +715,7 @@ onMounted(() => {
 .challenge-row-metrics {
   display: grid;
   gap: var(--space-1);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.5;
   color: var(--journal-muted);
 }
@@ -725,7 +725,7 @@ onMounted(() => {
   align-items: center;
   justify-content: flex-start;
   gap: var(--space-1-5);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 700;
   color: var(--journal-accent-strong);
 }
@@ -781,7 +781,7 @@ onMounted(() => {
 
 @media (max-width: 640px) {
   .challenge-title {
-    font-size: 34px;
+    font-size: var(--font-size-34);
   }
 
   .challenge-directory-top {

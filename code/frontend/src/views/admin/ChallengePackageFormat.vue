@@ -110,7 +110,7 @@ extensions:
 
 .workspace-overline,
 .guide-section__label {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -127,7 +127,7 @@ extensions:
   padding: var(--space-2) var(--space-3-5);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
   color: var(--journal-ink);
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
 }
 
@@ -174,7 +174,7 @@ extensions:
 
 .guide-section__title {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: var(--font-size-1-12);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -188,7 +188,7 @@ extensions:
   padding: var(--space-4);
   color: var(--color-text-primary);
   font-family: var(--font-family-mono);
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   line-height: 1.7;
 }
 

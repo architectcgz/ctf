@@ -151,7 +151,7 @@ const signals: AuthSignalItem[] = [
 
 .auth-entry-shell__kicker,
 .auth-entry-shell__panel-eyebrow {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -185,7 +185,7 @@ const signals: AuthSignalItem[] = [
 
 .auth-entry-shell__copy {
   max-width: 34rem;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
 }
 
 .auth-entry-shell__signals {
@@ -203,14 +203,14 @@ const signals: AuthSignalItem[] = [
 }
 
 .auth-entry-shell__signal-title {
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95);
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
 .auth-entry-shell__signal-copy {
   margin-top: 0.35rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
 }
 
 .auth-entry-shell__panel {
@@ -229,13 +229,13 @@ const signals: AuthSignalItem[] = [
 
 .auth-entry-shell__panel-title {
   margin: 0.6rem 0 0.3rem;
-  font-size: 1.6rem;
+  font-size: var(--font-size-1-60);
   line-height: 1.15;
   font-weight: 700;
 }
 
 .auth-entry-shell__panel-copy {
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
 }
 
 .auth-entry-shell__panel-body {

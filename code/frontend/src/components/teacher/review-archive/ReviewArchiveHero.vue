@@ -109,7 +109,7 @@ const statItems = [
 }
 
 .archive-hero__eyebrow {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -159,7 +159,7 @@ const statItems = [
 
 .archive-hero__label,
 .archive-hero__stat-label {
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
@@ -168,7 +168,7 @@ const statItems = [
 
 .archive-hero__student {
   margin-top: var(--space-3);
-  font-size: 1.9rem;
+  font-size: var(--font-size-1-90);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -191,12 +191,12 @@ const statItems = [
   background: color-mix(in srgb, var(--journal-accent) 6%, var(--journal-surface));
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
   font-family: var(--font-family-mono);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
 }
 
 .archive-hero__stamp strong {
   color: var(--journal-ink);
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95);
 }
 
 .archive-hero__stats {
@@ -211,7 +211,7 @@ const statItems = [
 
 .archive-hero__stat-value {
   margin-top: var(--space-3);
-  font-size: 1.8rem;
+  font-size: var(--font-size-1-80);
   font-weight: 700;
   color: var(--journal-ink);
 }

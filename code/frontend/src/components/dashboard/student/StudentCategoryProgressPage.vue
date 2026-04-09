@@ -250,7 +250,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   grid-template-columns: var(--category-cols);
   gap: var(--space-2);
   padding-bottom: var(--space-3);
-  font-size: 0.69rem;
+  font-size: var(--font-size-0-69);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -284,7 +284,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-row__name {
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -297,13 +297,13 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 }
 
 .category-row__rate {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .category-row__count {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--journal-muted);
 }
 

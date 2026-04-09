@@ -569,7 +569,7 @@ onMounted(() => {
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
   --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: 15px;
+  --page-top-tab-font-size: var(--font-size-15);
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-note-value-weight: 700;
@@ -580,7 +580,7 @@ onMounted(() => {
 }
 
 .workspace-overline {
-  font-size: 0.7rem;
+  font-size: var(--font-size-0-70);
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -609,7 +609,7 @@ onMounted(() => {
 
 .list-heading__title {
   margin: var(--space-1) 0 0;
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -627,7 +627,7 @@ onMounted(() => {
   gap: var(--space-4);
   padding: 0 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -705,7 +705,7 @@ onMounted(() => {
 }
 
 .challenge-row__review-status {
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 600;
   line-height: 1.5;
 }
@@ -713,7 +713,7 @@ onMounted(() => {
 .challenge-row__failure {
   margin-top: var(--space-3);
   display: -webkit-box;
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--color-danger);
   -webkit-line-clamp: 2;
@@ -772,7 +772,7 @@ onMounted(() => {
   min-height: 2.45rem;
   border-radius: 0.75rem;
   padding: var(--space-2) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   transition:
     border-color 150ms ease,
@@ -816,7 +816,7 @@ onMounted(() => {
   gap: var(--space-1-5);
   border-radius: 999px;
   padding: var(--space-1) var(--space-3);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 700;
 }
 
@@ -850,7 +850,7 @@ onMounted(() => {
 
 .sample-guide__eyebrow,
 .sample-guide__link {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
 }
 
@@ -862,7 +862,7 @@ onMounted(() => {
 
 .sample-guide__title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--font-size-1-05);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -914,7 +914,7 @@ onMounted(() => {
 }
 
 .upload-result-panel__eyebrow {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -923,7 +923,7 @@ onMounted(() => {
 
 .upload-result-panel__title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -965,7 +965,7 @@ onMounted(() => {
   min-height: 1.5rem;
   padding: var(--space-0-5) var(--space-2);
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.06em;
 }
@@ -983,7 +983,7 @@ onMounted(() => {
 .upload-result-item__name {
   min-width: 0;
   color: var(--journal-ink);
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -993,7 +993,7 @@ onMounted(() => {
   margin: 0;
   color: var(--journal-ink);
   line-height: 1.55;
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
 }
 
 .upload-result-item__meta {
@@ -1001,7 +1001,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: var(--space-3);
   color: var(--journal-muted);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
 }
 
 .queue-list {
@@ -1020,7 +1020,7 @@ onMounted(() => {
 
 .queue-row__title {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
   overflow: hidden;
@@ -1031,7 +1031,7 @@ onMounted(() => {
 .queue-row__meta-text,
 .queue-row__detail-label {
   margin: var(--space-1) 0 0;
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 

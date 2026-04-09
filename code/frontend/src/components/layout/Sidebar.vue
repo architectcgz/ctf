@@ -445,7 +445,7 @@ async function navigate(item: NavItem): Promise<void> {
   justify-content: center;
   border-radius: 14px;
   background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85);
   font-weight: 700;
   border: 1px solid color-mix(in srgb, var(--color-primary) 16%, var(--color-border-default));
 }
@@ -460,7 +460,7 @@ async function navigate(item: NavItem): Promise<void> {
 .sidebar-brand-kicker,
 .sidebar-group-title,
 .sidebar-footer-title {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;

@@ -372,7 +372,7 @@ onUnmounted(() => {
   border: 1px solid rgba(16, 185, 129, 0.22);
   background: rgba(16, 185, 129, 0.08);
   padding: 0.55rem 0.95rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 500;
   color: var(--journal-ink);
 }
@@ -414,7 +414,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -434,7 +434,7 @@ onUnmounted(() => {
 
 .profile-field-value {
   margin-top: 0.45rem;
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -456,13 +456,13 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   color: var(--journal-ink);
 }
 
 .profile-status__meta {
   margin-top: 0.5rem;
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--journal-muted);
 }
 
@@ -472,7 +472,7 @@ onUnmounted(() => {
 
 .profile-fieldset__legend {
   margin-bottom: 0.75rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -513,7 +513,7 @@ onUnmounted(() => {
   align-items: center;
   border-radius: 999px;
   padding: 0.4rem 0.8rem;
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
 }
 
@@ -546,14 +546,14 @@ onUnmounted(() => {
 
 .profile-report-meta__value {
   margin-top: 0.45rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 600;
   color: var(--journal-ink);
 }
 
 .profile-error-copy {
   margin-top: 0.75rem;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   color: var(--color-danger);
 }
 
@@ -562,7 +562,7 @@ onUnmounted(() => {
   border-inline-start: 2px solid color-mix(in srgb, var(--color-warning) 60%, transparent);
   background: color-mix(in srgb, var(--color-warning) 8%, transparent);
   padding: 0.8rem 0.95rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
 }
 

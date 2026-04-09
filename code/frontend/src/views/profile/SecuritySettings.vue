@@ -307,14 +307,14 @@ async function submitPasswordChange(): Promise<void> {
 
 .security-section-title {
   margin-top: 0.35rem;
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .journal-label {
   display: block;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-0-8125);
   font-weight: 500;
   color: var(--journal-ink);
 }
@@ -325,7 +325,7 @@ async function submitPasswordChange(): Promise<void> {
   border: 1px solid var(--journal-border);
   background: var(--journal-surface);
   padding: 0.7rem 0.95rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
   transition:
@@ -343,7 +343,7 @@ async function submitPasswordChange(): Promise<void> {
 }
 
 .journal-field-error {
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   color: var(--color-danger);
 }
 
@@ -355,7 +355,7 @@ async function submitPasswordChange(): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   padding: 0.48rem 0.9rem;
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   font-weight: 600;
   color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
 }
@@ -390,7 +390,7 @@ async function submitPasswordChange(): Promise<void> {
   border-inline-start: 2px solid color-mix(in srgb, var(--color-danger) 60%, transparent);
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
   padding: 0.75rem 0.9rem;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 

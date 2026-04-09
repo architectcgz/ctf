@@ -253,7 +253,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   align-items: center;
   justify-content: center;
   border-radius: 0.625rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   flex-shrink: 0;
 }
@@ -276,7 +276,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   border: 1px solid var(--journal-soft-border);
   background: color-mix(in srgb, var(--journal-track) 82%, transparent);
   padding: var(--space-0-5) var(--space-2);
-  font-size: 0.74rem;
+  font-size: var(--font-size-0-74);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--journal-muted);
@@ -289,7 +289,7 @@ const topRecs = computed(() => props.recommendations.slice(0, 3))
   border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
   padding: var(--space-1) var(--space-3);
-  font-size: 0.75rem;
+  font-size: var(--font-size-0-75);
   font-weight: 600;
   color: var(--journal-accent-strong);
 }

@@ -362,7 +362,7 @@ onMounted(() => {
   --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
   --journal-topbar-padding-bottom: var(--space-3-5);
-  --journal-overline-font-size: 0.72rem;
+  --journal-overline-font-size: var(--font-size-0-72);
   --journal-overline-letter-spacing: 0.18em;
   --page-top-tabs-gap: 28px;
   --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
@@ -370,7 +370,7 @@ onMounted(() => {
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
   --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: 15px;
+  --page-top-tab-font-size: var(--font-size-15);
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-divider-border: 1px dashed var(--cheat-divider);
@@ -412,7 +412,7 @@ onMounted(() => {
 .hero-summary {
   margin-top: var(--space-3);
   max-width: 48rem;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -434,7 +434,7 @@ onMounted(() => {
   border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
   padding: var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-muted);
 }
 

@@ -337,14 +337,14 @@ onMounted(() => {
 
 .admin-section-title {
   margin-top: var(--space-1-5);
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .admin-section-copy,
 .admin-caption {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -363,7 +363,7 @@ onMounted(() => {
   border: 1px solid var(--admin-control-border);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
   padding: var(--space-3) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
   transition:
@@ -385,7 +385,7 @@ onMounted(() => {
   min-height: 2.75rem;
   border-radius: 999px;
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   transition:
     border-color 150ms ease,
@@ -416,7 +416,7 @@ onMounted(() => {
   border-radius: 18px;
   background: color-mix(in srgb, var(--color-danger) 8%, transparent);
   padding: var(--space-4) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
@@ -439,7 +439,7 @@ onMounted(() => {
   border: 1px solid color-mix(in srgb, var(--journal-accent) 18%, transparent);
   background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: var(--space-1-5) var(--space-3);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   color: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
 }

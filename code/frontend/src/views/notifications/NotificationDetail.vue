@@ -301,7 +301,7 @@ watch(
   border: 0;
   background: transparent;
   padding: 0;
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 600;
   color: var(--journal-muted);
   cursor: pointer;
@@ -312,7 +312,7 @@ watch(
 }
 
 .notification-overline {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -344,12 +344,12 @@ watch(
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
   padding: 0.4rem 0.8rem;
-  font-size: 0.74rem;
+  font-size: var(--font-size-0-74);
   font-weight: 700;
 }
 
 .notification-detail-meta-text {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
@@ -379,7 +379,7 @@ watch(
 }
 
 .notification-detail-side-value {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   line-height: 1.6;
   color: var(--journal-ink);
 }
@@ -388,14 +388,14 @@ watch(
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85);
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
 .notification-detail-side-value--mono {
   font-family: var(--font-family-mono);
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
 }
 
 .notification-divider {
@@ -416,7 +416,7 @@ watch(
 
 .notification-section-title {
   margin-top: 0.35rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -425,7 +425,7 @@ watch(
   margin-top: 0.9rem;
   padding: 0;
   white-space: pre-wrap;
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95);
   line-height: 1.85;
   color: var(--journal-ink);
 }
@@ -444,7 +444,7 @@ watch(
   border: 1px solid color-mix(in srgb, var(--journal-border) 80%, transparent);
   background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
   padding: 0.72rem 1rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
   color: var(--journal-ink);
 }

@@ -319,7 +319,7 @@ onMounted(() => {
   min-height: 2.75rem;
   border-radius: 1rem;
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
 }
 
@@ -341,7 +341,7 @@ onMounted(() => {
   border: 1px solid rgba(37, 99, 235, 0.18);
   background: rgba(37, 99, 235, 0.08);
   padding: var(--space-2) var(--space-3-5);
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   font-weight: 600;
   color: var(--journal-accent);
 }
@@ -353,7 +353,7 @@ onMounted(() => {
 }
 
 .flag-field-label {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -364,7 +364,7 @@ onMounted(() => {
   border-radius: 1rem;
   background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
   padding: var(--space-3) var(--space-4);
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   color: var(--journal-ink);
   outline: none;
   transition:

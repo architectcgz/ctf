@@ -292,7 +292,7 @@ onUnmounted(() => {
   min-height: 2.45rem;
   border-radius: 0.75rem;
   padding: var(--space-2) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   transition:
     border-color 150ms ease,
@@ -328,13 +328,13 @@ onUnmounted(() => {
   align-items: center;
   border-radius: 0.5rem;
   padding: var(--space-1) var(--space-2-5);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 600;
 }
 
 .admin-empty {
   padding: var(--space-4) 0 0;
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-muted);
 }
 
@@ -428,14 +428,14 @@ onUnmounted(() => {
 
 .image-section-title {
   margin-top: var(--space-1-5);
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .image-board__hint,
 .image-row__time {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -453,7 +453,7 @@ onUnmounted(() => {
   gap: var(--space-4);
   padding: var(--space-4) 0 var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -487,7 +487,7 @@ onUnmounted(() => {
 }
 
 .image-row__name {
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
   overflow: hidden;
@@ -505,7 +505,7 @@ onUnmounted(() => {
 
 .image-row__description {
   display: -webkit-box;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.65;
   color: var(--journal-muted);
   -webkit-line-clamp: 2;
@@ -520,7 +520,7 @@ onUnmounted(() => {
 
 .image-row__time {
   padding-top: var(--space-0-5);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }

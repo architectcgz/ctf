@@ -542,7 +542,7 @@ function handleImportChange(event: Event): void {
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
   --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: 15px;
+  --page-top-tab-font-size: var(--font-size-15);
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-note-label-weight: 600;
@@ -615,7 +615,7 @@ function handleImportChange(event: Event): void {
   min-height: 2.75rem;
   border-radius: 1rem;
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   transition: all 150ms ease;
 }
@@ -629,7 +629,7 @@ function handleImportChange(event: Event): void {
   min-height: 2rem;
   padding: var(--space-1-5) var(--space-3);
   border-radius: 0.8rem;
-  font-size: 0.8125rem;
+  font-size: var(--font-size-0-8125);
 }
 
 .admin-btn-primary {
@@ -665,7 +665,7 @@ function handleImportChange(event: Event): void {
   border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
   padding: var(--space-3) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
   outline: none;
   transition: border-color 150ms ease;
@@ -680,7 +680,7 @@ function handleImportChange(event: Event): void {
   border: 1px solid var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
   padding: var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-ink);
 }
 
@@ -688,7 +688,7 @@ function handleImportChange(event: Event): void {
   border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
   padding: var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   color: var(--journal-muted);
 }
 
@@ -729,7 +729,7 @@ function handleImportChange(event: Event): void {
   gap: var(--space-1-5);
   border-radius: 999px;
   padding: var(--space-1-5) var(--space-3);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 600;
 }
 

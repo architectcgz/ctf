@@ -603,7 +603,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-loading__text {
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   color: var(--journal-muted);
 }
 
@@ -624,7 +624,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   border-bottom: 2px solid transparent;
   background: transparent;
   padding: 0.4rem 0.1rem 0.65rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 600;
   color: var(--journal-muted);
   transition:
@@ -648,7 +648,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-overline {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -672,7 +672,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-hero__desc {
   margin-top: 0.8rem;
   max-width: 60ch;
-  font-size: 0.95rem;
+  font-size: var(--font-size-0-95);
   line-height: 1.8;
   color: var(--journal-muted);
 }
@@ -690,7 +690,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
   padding: 0.36rem 0.78rem;
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   font-weight: 700;
   color: var(--journal-muted);
 }
@@ -724,7 +724,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-score-rail__label {
-  font-size: 0.74rem;
+  font-size: var(--font-size-0-74);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -733,20 +733,20 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-score-rail__value {
   margin-top: 0.7rem;
-  font-size: 2.1rem;
+  font-size: var(--font-size-2-10);
   font-weight: 700;
   line-height: 1;
   color: var(--journal-ink);
 }
 
 .contest-score-rail__value small {
-  font-size: 0.85rem;
+  font-size: var(--font-size-0-85);
   color: var(--journal-muted);
 }
 
 .contest-score-rail__note {
   margin-top: 0.7rem;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -785,13 +785,13 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-section__title:not(.workspace-tab-heading__title) {
   margin-top: 0.35rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .contest-section__hint {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
@@ -806,7 +806,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-copy {
   white-space: pre-wrap;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   line-height: 1.8;
   color: var(--journal-ink);
 }
@@ -824,7 +824,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   gap: 0.5rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
   padding-bottom: 0.8rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   color: var(--journal-muted);
 }
 
@@ -856,20 +856,20 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .announcement-item__title {
-  font-size: 0.96rem;
+  font-size: var(--font-size-0-96);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .announcement-item__time {
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   color: var(--journal-muted);
 }
 
 .announcement-item__content {
   margin-top: 0.55rem;
   white-space: pre-wrap;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.75;
   color: var(--journal-muted);
 }
@@ -923,7 +923,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-challenge__title {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -938,7 +938,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 0.7rem;
-  font-size: 0.76rem;
+  font-size: var(--font-size-0-76);
   color: var(--journal-muted);
 }
 
@@ -956,13 +956,13 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .challenge-focus__title {
   margin-top: 0.35rem;
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .challenge-focus__meta {
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
@@ -975,7 +975,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .challenge-focus__form-title {
   margin-top: 0.35rem;
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
 }
@@ -983,7 +983,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .flag-submit__label {
   display: inline-flex;
   margin-top: 1rem;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -1019,7 +1019,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   margin-top: 0.8rem;
   border-inline-start: 2px solid transparent;
   padding: 0.6rem 0.75rem;
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.6;
 }
 
@@ -1044,7 +1044,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 .contest-inline-note {
   border-inline-start: 2px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
   padding-inline-start: 0.85rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   line-height: 1.7;
   color: var(--journal-muted);
 }
@@ -1075,14 +1075,14 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .team-summary__name {
   margin-top: 0.35rem;
-  font-size: 1.1rem;
+  font-size: var(--font-size-1-10);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .team-summary__invite {
   font-family: var(--font-family-mono);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--journal-muted);
 }
 
@@ -1103,7 +1103,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .team-member__name {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   color: var(--journal-ink);
 }
 
@@ -1118,7 +1118,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   border: 1px solid color-mix(in srgb, var(--contest-accent) 28%, transparent);
   background: color-mix(in srgb, var(--contest-accent) 10%, transparent);
   padding: 0.2rem 0.55rem;
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   color: color-mix(in srgb, var(--contest-accent) 84%, var(--journal-ink));
 }
@@ -1127,7 +1127,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   border: 0;
   background: transparent;
   padding: 0;
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
@@ -1146,7 +1146,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   border-radius: 999px;
   border: 1px solid transparent;
   padding: 0.65rem 1rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
   transition:
     border-color 150ms ease,
@@ -1195,7 +1195,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-modal__title {
-  font-size: 1rem;
+  font-size: var(--font-size-1-00);
   font-weight: 700;
   color: var(--journal-ink);
 }

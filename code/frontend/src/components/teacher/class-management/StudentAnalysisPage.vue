@@ -465,7 +465,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 600;
   color: var(--journal-muted);
 }
@@ -480,14 +480,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .workspace-alert-title {
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .workspace-alert-copy {
   margin-top: var(--space-2);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.65;
   color: var(--journal-muted);
 }
@@ -539,7 +539,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
   border-radius: 0;
   background: transparent;
-  font-size: 0.86rem;
+  font-size: var(--font-size-0-86);
   font-weight: 600;
   color: var(--journal-ink);
   transition:
@@ -572,7 +572,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .student-directory-head {
   padding: 0 var(--space-1-5) var(--space-2);
   border-bottom: 1px solid var(--teacher-divider);
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -622,7 +622,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 600;
   color: var(--journal-ink);
 }
@@ -632,12 +632,12 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   color: var(--journal-muted);
 }
 
 .student-directory-state {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 600;
   color: var(--workspace-brand-ink);
 }
@@ -719,13 +719,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .quick-action__main strong {
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   font-weight: 600;
   color: inherit;
 }
 
 .quick-action__main small {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   line-height: 1.55;
   color: var(--journal-muted);
 }

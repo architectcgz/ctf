@@ -775,7 +775,7 @@ watch(
   --page-top-tabs-border: var(--line-soft);
   --page-top-tab-min-height: 52px;
   --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: 15px;
+  --page-top-tab-font-size: var(--font-size-15);
   --page-top-tab-font-weight: 600;
   --page-top-tab-color: var(--text-faint);
   --page-top-tab-active-color: var(--brand-ink);
@@ -827,7 +827,7 @@ watch(
   display: inline-block;
   border: 0 !important;
   box-shadow: none !important;
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 600;
   letter-spacing: 0.18em;
   line-height: 1;
@@ -841,7 +841,7 @@ watch(
 .section-hint,
 .tool-copy,
 .writeup-footnote {
-  font-size: 13px;
+  font-size: var(--font-size-13);
   line-height: 1.75;
   color: var(--text-faint);
 }
@@ -952,7 +952,7 @@ watch(
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: color-mix(in srgb, var(--bg-panel) 72%, transparent);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   font-weight: 600;
   color: var(--text-subtle);
 }
@@ -969,7 +969,7 @@ watch(
 }
 
 .score-label {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -982,7 +982,7 @@ watch(
 }
 
 .score-value small {
-  font-size: 16px;
+  font-size: var(--font-size-16);
   color: var(--text-faint);
 }
 
@@ -990,7 +990,7 @@ watch(
   margin-top: var(--space-4);
   padding-top: var(--space-4);
   border-top: 1px solid var(--line-soft);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--text-subtle);
 }
@@ -1020,7 +1020,7 @@ watch(
 
 .section-title:not(.workspace-tab-heading__title) {
   margin: var(--space-2-5) 0 0;
-  font-size: 20px;
+  font-size: var(--font-size-20);
   line-height: 1.2;
   color: var(--text-main);
 }
@@ -1032,7 +1032,7 @@ watch(
 }
 
 .description {
-  font-size: 15px;
+  font-size: var(--font-size-15);
   line-height: 1.92;
   color: var(--text-subtle);
 }
@@ -1081,14 +1081,14 @@ watch(
 }
 
 .hint-label {
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 600;
   color: var(--text-main);
 }
 
 .hint-copy {
   margin-top: var(--space-2-5);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.8;
   color: var(--text-subtle);
 }
@@ -1145,7 +1145,7 @@ watch(
 .solution-item strong,
 .solution-list-item strong {
   display: block;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--text-main);
 }
 
@@ -1153,7 +1153,7 @@ watch(
 .solution-list-item span {
   display: block;
   margin-top: var(--space-1-5);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   color: var(--text-faint);
 }
 
@@ -1166,7 +1166,7 @@ watch(
 
 .solution-preview {
   min-height: 22rem;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.9;
   color: var(--text-subtle);
 }
@@ -1184,7 +1184,7 @@ watch(
 .inline-note {
   padding-left: var(--space-4);
   border-left: 2px solid var(--line-soft);
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
   line-height: 1.8;
   color: var(--text-subtle);
 }
@@ -1221,7 +1221,7 @@ watch(
 .submission-record-answer {
   min-width: 0;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--font-size-13);
   color: var(--text-subtle);
   word-break: break-all;
 }
@@ -1251,7 +1251,7 @@ watch(
 .flag-label {
   display: block;
   margin-bottom: var(--space-2);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -1326,14 +1326,14 @@ watch(
 
 .tool-title {
   margin: var(--space-2-5) 0 0;
-  font-size: 18px;
+  font-size: var(--font-size-18);
   line-height: 1.25;
   color: var(--text-main);
 }
 
 .tool-copy {
   margin-top: var(--space-2);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--text-subtle);
 }
@@ -1368,7 +1368,7 @@ watch(
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-3);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   color: var(--text-subtle);
 }
 

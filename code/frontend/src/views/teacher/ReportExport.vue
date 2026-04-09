@@ -440,14 +440,14 @@ const {
 
 .report-section-title {
   margin-top: var(--space-1-5);
-  font-size: 1.15rem;
+  font-size: var(--font-size-1-15);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .report-section-copy {
   max-width: 30rem;
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -517,7 +517,7 @@ const {
 }
 
 .report-note-label {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -526,14 +526,14 @@ const {
 
 .report-note-value {
   margin-top: var(--space-2);
-  font-size: 1.02rem;
+  font-size: var(--font-size-1-02);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .report-note-helper {
   margin-top: var(--space-2);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
@@ -591,7 +591,7 @@ const {
 }
 
 .report-kpi-label {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -600,14 +600,14 @@ const {
 
 .report-kpi-value {
   margin-top: var(--space-1-5);
-  font-size: 1.08rem;
+  font-size: var(--font-size-1-08);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
 .report-kpi-hint {
   margin-top: var(--space-2);
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   line-height: 1.55;
   color: var(--journal-muted);
 }
@@ -630,7 +630,7 @@ const {
   border-radius: 999px;
   border: 1px solid transparent;
   padding: var(--space-1-5) var(--space-3);
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 700;
 }
 
@@ -668,7 +668,7 @@ const {
   border: 1px solid var(--report-control-border);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
   padding: var(--space-2-5) var(--space-4);
-  font-size: 0.875rem;
+  font-size: var(--font-size-0-875);
   font-weight: 600;
   color: var(--journal-ink);
   transition:

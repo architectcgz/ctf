@@ -56,7 +56,7 @@ function levelClass(level: string): string {
 }
 
 .observation-strip__eyebrow {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
@@ -65,13 +65,13 @@ function levelClass(level: string): string {
 
 .observation-strip__title {
   margin-top: var(--space-2);
-  font-size: 1.35rem;
+  font-size: var(--font-size-1-35);
   color: var(--journal-ink);
 }
 
 .observation-strip__hint {
   max-width: 32rem;
-  font-size: 0.93rem;
+  font-size: var(--font-size-0-93);
   line-height: 1.7;
   color: var(--color-text-secondary);
 }
@@ -111,7 +111,7 @@ function levelClass(level: string): string {
 }
 
 .observation__level {
-  font-size: 0.72rem;
+  font-size: var(--font-size-0-72);
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--journal-muted);
@@ -127,7 +127,7 @@ function levelClass(level: string): string {
 .observation__evidence {
   margin-top: var(--space-2-5);
   color: var(--journal-muted);
-  font-size: 0.93rem;
+  font-size: var(--font-size-0-93);
   line-height: 1.7;
 }
 

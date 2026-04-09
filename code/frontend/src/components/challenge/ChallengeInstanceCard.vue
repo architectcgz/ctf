@@ -259,7 +259,7 @@ const openButtonLabel = computed(() => {
 }
 
 .instance-kicker {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -268,7 +268,7 @@ const openButtonLabel = computed(() => {
 
 .instance-title {
   margin: 10px 0 0;
-  font-size: 18px;
+  font-size: var(--font-size-18);
   color: var(--text-main);
 }
 
@@ -279,7 +279,7 @@ const openButtonLabel = computed(() => {
 }
 
 .instance-meta-label {
-  font-size: 11px;
+  font-size: var(--font-size-11);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -297,7 +297,7 @@ const openButtonLabel = computed(() => {
 
 .instance-created {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   color: var(--text-faint);
 }
 
@@ -319,7 +319,7 @@ const openButtonLabel = computed(() => {
 
 .instance-stat span {
   display: block;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
@@ -328,20 +328,20 @@ const openButtonLabel = computed(() => {
 .instance-stat strong {
   display: block;
   margin-top: 8px;
-  font-size: 16px;
+  font-size: var(--font-size-16);
   color: var(--text-main);
 }
 
 .instance-access {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
   word-break: break-all;
 }
 
 .instance-note {
   margin-top: 16px;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.75;
   color: var(--text-subtle);
 }
@@ -354,7 +354,7 @@ const openButtonLabel = computed(() => {
   margin-top: 16px;
   border-left: 2px solid currentColor;
   padding-left: 12px;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 1.7;
 }
 

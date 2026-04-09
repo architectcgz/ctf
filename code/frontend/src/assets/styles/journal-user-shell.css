@@ -128,7 +128,7 @@
 
 .journal-shell.journal-shell-user :is(.profile-summary-value, .security-summary-value) {
   margin-top: 0.38rem;
-  font-size: 0.98rem;
+  font-size: var(--font-size-0-98);
   font-weight: 600;
   color: var(--journal-ink);
 }

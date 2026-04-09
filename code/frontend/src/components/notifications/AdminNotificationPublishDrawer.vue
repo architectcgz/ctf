@@ -332,7 +332,7 @@ async function handleUserSearch(): Promise<void> {
 }
 
 .publish-label {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--color-text-muted, #64748b);
@@ -345,7 +345,7 @@ async function handleUserSearch(): Promise<void> {
   background: var(--color-bg-elevated, #fff);
   padding: 0.58rem 0.75rem;
   color: var(--color-text, #0f172a);
-  font-size: 0.9rem;
+  font-size: var(--font-size-0-90);
 }
 
 .publish-input:focus-visible {
@@ -364,7 +364,7 @@ async function handleUserSearch(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   color: var(--color-text, #0f172a);
 }
 
@@ -383,7 +383,7 @@ async function handleUserSearch(): Promise<void> {
 }
 
 .publish-empty {
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   color: var(--color-text-muted, #64748b);
 }
 
@@ -393,7 +393,7 @@ async function handleUserSearch(): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--color-border, #d8e1ec) 80%, transparent);
   border-radius: 0.75rem;
   padding: 0.45rem 0.75rem;
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   color: var(--color-text, #0f172a);
   background: var(--color-bg-soft, var(--color-bg-elevated, var(--color-bg-surface)));
   cursor: pointer;
@@ -422,7 +422,7 @@ async function handleUserSearch(): Promise<void> {
 }
 
 .publish-error {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--color-danger, #dc2626);
 }
 

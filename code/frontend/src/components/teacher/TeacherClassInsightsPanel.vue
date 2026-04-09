@@ -162,14 +162,14 @@ const weakDimensionStats = computed(() => {
 
 .teacher-panel__title {
   margin-top: var(--space-3);
-  font-size: 1.2rem;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .teacher-panel__subtitle {
   margin-top: var(--space-2);
-  font-size: 0.84rem;
+  font-size: var(--font-size-0-84);
   line-height: 1.65;
   color: var(--panel-muted);
 }
@@ -208,7 +208,7 @@ const weakDimensionStats = computed(() => {
   min-width: 1.3rem;
   justify-content: center;
   font-family: var(--font-family-mono);
-  font-size: 0.82rem;
+  font-size: var(--font-size-0-82);
   font-weight: 700;
   color: var(--panel-accent);
 }
@@ -218,21 +218,21 @@ const weakDimensionStats = computed(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.92rem;
+  font-size: var(--font-size-0-92);
   font-weight: 700;
   color: var(--panel-ink);
 }
 
 .top-student-item__meta {
   margin-top: var(--space-1);
-  font-size: 0.8rem;
+  font-size: var(--font-size-0-80);
   color: var(--panel-muted);
 }
 
 .top-student-item__stats {
   flex-shrink: 0;
   text-align: right;
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   line-height: 1.6;
   color: var(--panel-muted);
 }
@@ -260,13 +260,13 @@ const weakDimensionStats = computed(() => {
 }
 
 .dimension-item__name {
-  font-size: 0.88rem;
+  font-size: var(--font-size-0-88);
   font-weight: 600;
   color: var(--panel-ink);
 }
 
 .dimension-item__count {
-  font-size: 0.78rem;
+  font-size: var(--font-size-0-78);
   color: var(--panel-muted);
 }
 
