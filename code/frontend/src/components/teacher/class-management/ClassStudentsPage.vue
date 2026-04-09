@@ -75,7 +75,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell teacher-management-shell teacher-surface">
     <header class="workspace-topbar">
       <div class="topbar-leading">
         <span class="workspace-overline">Class Workspace</span>
@@ -292,7 +292,23 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                   <h3 class="teacher-controls-title workspace-tab-heading__title">学生筛选</h3>
                   <p class="teacher-controls-copy">按学号快速定位学生，并继续进入学员分析。</p>
                 </div>
-                <div class="teacher-section-meta">共 {{ students.length }} 名学生</div>
+                <div class="teacher-controls-meta">
+                  <div class="teacher-section-meta" aria-live="polite">
+                    {{
+                      studentNoQuery
+                        ? `学号筛选：${studentNoQuery} · 匹配 ${students.length} 名学生`
+                        : `共 ${students.length} 名学生`
+                    }}
+                  </div>
+                  <button
+                    v-if="studentNoQuery"
+                    type="button"
+                    class="teacher-filter-reset"
+                    @click="emit('updateStudentNoQuery', '')"
+                  >
+                    清空筛选
+                  </button>
+                </div>
               </div>
 
               <div class="teacher-filter-grid">
@@ -315,6 +331,15 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                         emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)
                       "
                     />
+                    <button
+                      v-if="studentNoQuery"
+                      type="button"
+                      class="teacher-filter-clear"
+                      aria-label="清空学号筛选"
+                      @click="emit('updateStudentNoQuery', '')"
+                    >
+                      清空
+                    </button>
                   </div>
                 </label>
               </div>
@@ -347,9 +372,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 <span class="teacher-directory-head-cell teacher-directory-head-cell-alias"
                   >昵称</span
                 >
-                <span>状态</span>
-                <span>数据</span>
-                <span>操作</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-status">状态</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics">数据</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-action">操作</span>
               </div>
 
               <button
@@ -755,6 +780,39 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   color: var(--journal-muted);
 }
 
+.teacher-controls-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2-5);
+}
+
+.teacher-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 var(--space-2-5);
+  border: 1px solid color-mix(in srgb, var(--teacher-control-border) 92%, transparent);
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, transparent);
+  font-size: var(--font-size-0-75);
+  font-weight: 600;
+  color: var(--journal-muted);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.teacher-filter-reset:hover,
+.teacher-filter-reset:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+  color: var(--journal-accent-strong);
+  outline: none;
+}
+
 .teacher-inline-link {
   display: inline-flex;
   align-items: center;
@@ -857,11 +915,19 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .teacher-directory-head-cell-student-no,
 .teacher-directory-head-cell-name,
 .teacher-directory-head-cell-alias,
+.teacher-directory-head-cell-status,
+.teacher-directory-head-cell-metrics,
+.teacher-directory-head-cell-action,
 .teacher-directory-cell-student-no,
 .teacher-directory-cell-name,
 .teacher-directory-cell-alias {
   justify-self: start;
   width: 100%;
+}
+
+.teacher-directory-head-cell-action {
+  justify-self: end;
+  text-align: right;
 }
 
 .teacher-directory-row-points {
@@ -904,15 +970,56 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   font-size: var(--font-size-0-81);
   line-height: 1.5;
   color: var(--journal-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .teacher-directory-row-cta {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-1-5);
+  justify-self: end;
+  min-height: 2.1rem;
+  padding: 0 var(--space-2-5);
+  border: 1px solid color-mix(in srgb, var(--teacher-control-border) 92%, transparent);
+  border-radius: 0.625rem;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 90%, transparent);
   font-size: var(--font-size-0-82);
   font-weight: 700;
   color: var(--journal-accent-strong);
+}
+
+.teacher-directory-row:hover .teacher-directory-row-cta,
+.teacher-directory-row:focus-visible .teacher-directory-row-cta {
+  border-color: color-mix(in srgb, var(--journal-accent) 48%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+}
+
+.teacher-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 1.95rem;
+  padding: 0 var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--teacher-control-border) 90%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, transparent);
+  font-size: var(--font-size-0-72);
+  font-weight: 600;
+  color: var(--journal-muted);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.teacher-filter-clear:hover,
+.teacher-filter-clear:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  color: var(--journal-accent-strong);
+  outline: none;
 }
 
 @media (max-width: 1080px) {
@@ -935,6 +1042,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
     grid-template-columns: 1fr;
     gap: var(--space-3);
     padding: var(--space-4) 0;
+  }
+
+  .teacher-controls-meta {
+    justify-content: flex-start;
+  }
+
+  .teacher-directory-row-cta {
+    justify-self: start;
   }
 }
 

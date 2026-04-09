@@ -18,6 +18,10 @@ function extractScopedStyle(source: string): string {
 }
 
 describe('teacher shared directory styles', () => {
+  it('班级学生页应通过 teacher-management-shell 承接目录与筛选共享样式', () => {
+    expect(classStudentsSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)
+  })
+
   it('应在 teacher-surface.css 中声明教师端目录与筛选基础块共享样式', () => {
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-controls')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-controls-bar')
