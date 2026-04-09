@@ -109,18 +109,22 @@ function getCardDescription(
           <div class="scoreboard-summary-item">
             <div class="scoreboard-summary-label">展示竞赛</div>
             <div class="scoreboard-summary-value">{{ contestCount }}</div>
+            <div class="scoreboard-summary-helper">当前可查看排行的竞赛总数</div>
           </div>
           <div class="scoreboard-summary-item">
             <div class="scoreboard-summary-label">参赛队伍</div>
             <div class="scoreboard-summary-value">{{ teamCount }}</div>
+            <div class="scoreboard-summary-helper">已进入榜单统计的队伍规模</div>
           </div>
           <div class="scoreboard-summary-item">
             <div class="scoreboard-summary-label">冻结竞赛</div>
             <div class="scoreboard-summary-value">{{ frozenCount }}</div>
+            <div class="scoreboard-summary-helper">当前处于封榜阶段的竞赛数量</div>
           </div>
           <div class="scoreboard-summary-item">
             <div class="scoreboard-summary-label">异常分区</div>
             <div class="scoreboard-summary-value">{{ failureCount }}</div>
+            <div class="scoreboard-summary-helper">排行榜加载异常的竞赛分区</div>
           </div>
         </div>
         <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
