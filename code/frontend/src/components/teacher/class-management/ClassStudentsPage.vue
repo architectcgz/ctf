@@ -636,6 +636,10 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   border-top: 0;
 }
 
+#class-overview > .teacher-surface-board {
+  border-top: 0;
+}
+
 .teacher-tip-block {
   display: grid;
   gap: var(--space-1-5);
