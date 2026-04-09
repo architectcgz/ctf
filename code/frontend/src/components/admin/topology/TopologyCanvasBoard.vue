@@ -65,12 +65,12 @@ let pointerOffset = { x: 0, y: 0 }
 
 function edgeStroke(kind: 'link' | 'allow' | 'deny') {
   if (kind === 'allow') {
-    return '#3fb950'
+    return 'var(--topology-canvas-edge-allow)'
   }
   if (kind === 'deny') {
-    return '#f85149'
+    return 'var(--topology-canvas-edge-deny)'
   }
-  return 'rgba(148, 163, 184, 0.7)'
+  return 'var(--topology-canvas-edge-link)'
 }
 
 function startDrag(event: PointerEvent, nodeKey: string) {
@@ -165,28 +165,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="topology-canvas-board__root overflow-hidden rounded-[28px] border border-border bg-[radial-gradient(circle_at_top,rgba(14,165,233,0.12),transparent_38%),linear-gradient(180deg,rgba(15,23,42,0.94),rgba(2,6,23,0.98))] p-4 shadow-[0_24px_60px_var(--color-shadow-soft)]"
-  >
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <div class="topology-canvas-board__root">
+    <div class="topology-canvas-board__head">
       <div>
-        <div class="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/65">
-          Graph Canvas
-        </div>
-        <div class="mt-2 text-lg font-semibold text-white">拖拽节点调整拓扑视图</div>
+        <div class="topology-canvas-board__eyebrow">Graph Canvas</div>
+        <div class="topology-canvas-board__title">拖拽节点调整拓扑视图</div>
       </div>
-      <div class="flex flex-wrap gap-2 text-xs">
-        <span
-          class="rounded-full border border-[var(--color-text-muted)]/30 bg-[var(--color-text-muted)]/10 px-3 py-1 text-[var(--color-text-primary)]"
-        >
+      <div class="topology-canvas-board__legend">
+        <span class="topology-canvas-board__legend-pill">
           灰线：逻辑连线
         </span>
-        <span
-          class="rounded-full border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-3 py-1 text-[var(--color-success)]"
-        >
+        <span class="topology-canvas-board__legend-pill topology-canvas-board__legend-pill--allow">
           绿线：allow
         </span>
-        <span class="rounded-full border border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 px-3 py-1 text-[var(--color-danger)]">
+        <span class="topology-canvas-board__legend-pill topology-canvas-board__legend-pill--deny">
           红线：deny
         </span>
       </div>
@@ -195,7 +187,7 @@ onBeforeUnmount(() => {
     <svg
       ref="svgRef"
       viewBox="0 0 920 600"
-      class="topology-canvas-board__surface h-[600px] w-full rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(15,23,42,0.88),rgba(2,6,23,0.96))]"
+      class="topology-canvas-board__surface"
       @click="handleCanvasClick"
       @pointermove="moveDrag"
       @pointerup="stopDrag"
@@ -206,7 +198,7 @@ onBeforeUnmount(() => {
           <path
             d="M 36 0 L 0 0 0 36"
             fill="none"
-            stroke="rgba(148,163,184,0.08)"
+            stroke="var(--topology-canvas-grid)"
             stroke-width="1"
           />
         </pattern>
@@ -238,15 +230,19 @@ onBeforeUnmount(() => {
       >
         <circle
           r="52"
-          :fill="selectedNodeKey === node.key ? 'rgba(8,145,178,0.28)' : 'rgba(15,23,42,0.95)'"
+          :fill="
+            selectedNodeKey === node.key
+              ? 'var(--topology-canvas-node-selected)'
+              : 'var(--topology-canvas-node-shell)'
+          "
           :stroke="
             pendingSourceNodeKey === node.key
-              ? '#fb923c'
+              ? 'var(--topology-canvas-node-pending)'
               : selectedNodeKey === node.key
-                ? '#38bdf8'
+                ? 'var(--topology-canvas-node-active)'
                 : node.isEntry
-                  ? '#f59e0b'
-                  : 'rgba(148,163,184,0.45)'
+                  ? 'var(--topology-canvas-node-entry)'
+                  : 'var(--topology-canvas-node-ring)'
           "
           stroke-width="3"
         />
@@ -254,39 +250,39 @@ onBeforeUnmount(() => {
           r="40"
           :fill="
             node.tier === 'public'
-              ? 'rgba(14,165,233,0.16)'
+              ? 'var(--topology-canvas-tier-public)'
               : node.tier === 'internal'
-                ? 'rgba(248,81,73,0.16)'
-                : 'rgba(99,102,241,0.16)'
+                ? 'var(--topology-canvas-tier-internal)'
+                : 'var(--topology-canvas-tier-service)'
           "
-          stroke="rgba(255,255,255,0.08)"
+          stroke="var(--topology-canvas-node-core-ring)"
           stroke-width="1.5"
         />
 
-        <text x="0" y="-8" text-anchor="middle" class="fill-white text-[14px] font-semibold">
+        <text x="0" y="-8" text-anchor="middle" class="topology-canvas-board__node-label">
           {{ node.label.slice(0, 14) }}
         </text>
         <text
           x="0"
           y="12"
           text-anchor="middle"
-          class="fill-[var(--color-text-secondary)] text-[10px] uppercase tracking-[0.18em]"
+          class="topology-canvas-board__node-key"
         >
           {{ node.key }}
         </text>
-        <text x="0" y="30" text-anchor="middle" class="fill-[var(--color-text-muted)] text-[9px]">
+        <text x="0" y="30" text-anchor="middle" class="topology-canvas-board__node-meta">
           {{ node.networks.join(', ') || 'no-network' }}
         </text>
 
         <g v-if="node.isEntry">
-          <circle cx="38" cy="-36" r="10" fill="#f59e0b" />
-          <text x="38" y="-32" text-anchor="middle" class="fill-[#0f172a] text-[9px] font-bold">
+          <circle cx="38" cy="-36" r="10" fill="var(--topology-canvas-node-entry)" />
+          <text x="38" y="-32" text-anchor="middle" class="topology-canvas-board__node-badge-text">
             IN
           </text>
         </g>
         <g v-if="node.injectFlag">
-          <circle cx="-38" cy="-36" r="10" fill="#22c55e" />
-          <text x="-38" y="-32" text-anchor="middle" class="fill-[#0f172a] text-[9px] font-bold">
+          <circle cx="-38" cy="-36" r="10" fill="var(--topology-canvas-edge-allow)" />
+          <text x="-38" y="-32" text-anchor="middle" class="topology-canvas-board__node-badge-text">
             F
           </text>
         </g>
@@ -294,3 +290,153 @@ onBeforeUnmount(() => {
     </svg>
   </div>
 </template>
+
+<style scoped>
+.topology-canvas-board__root {
+  --topology-canvas-shell: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base)),
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+      var(--color-bg-base)
+    )
+  );
+  --topology-canvas-surface: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 94%, var(--color-bg-base)),
+    color-mix(
+      in srgb,
+      var(--journal-surface-subtle, var(--color-bg-elevated)) 92%,
+      var(--color-bg-base)
+    )
+  );
+  --topology-canvas-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 84%,
+    transparent
+  );
+  --topology-canvas-grid: color-mix(in srgb, var(--color-text-secondary) 14%, transparent);
+  --topology-canvas-edge-link: color-mix(in srgb, var(--color-text-secondary) 72%, transparent);
+  --topology-canvas-edge-allow: var(--color-success);
+  --topology-canvas-edge-deny: var(--color-danger);
+  --topology-canvas-node-shell: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 88%,
+    var(--color-bg-base)
+  );
+  --topology-canvas-node-selected: color-mix(
+    in srgb,
+    var(--color-primary) 20%,
+    var(--topology-canvas-node-shell)
+  );
+  --topology-canvas-node-active: color-mix(in srgb, var(--color-primary) 74%, white);
+  --topology-canvas-node-pending: color-mix(in srgb, var(--color-warning) 90%, white);
+  --topology-canvas-node-entry: color-mix(in srgb, var(--color-warning) 90%, #f8fafc);
+  --topology-canvas-node-ring: color-mix(in srgb, var(--color-text-secondary) 44%, transparent);
+  --topology-canvas-node-core-ring: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --topology-canvas-tier-public: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --topology-canvas-tier-service: color-mix(in srgb, var(--color-text-secondary) 18%, transparent);
+  --topology-canvas-tier-internal: color-mix(in srgb, var(--color-danger) 16%, transparent);
+  overflow: hidden;
+  border: 1px solid var(--topology-canvas-border);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 20rem),
+    var(--topology-canvas-shell);
+  padding: 1rem;
+  box-shadow: 0 20px 44px var(--color-shadow-soft);
+}
+
+.topology-canvas-board__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.topology-canvas-board__eyebrow {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--journal-muted, var(--color-text-secondary));
+}
+
+.topology-canvas-board__title {
+  margin-top: 0.45rem;
+  font-size: var(--font-size-1-08);
+  font-weight: 700;
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.topology-canvas-board__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.topology-canvas-board__legend-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.8rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-text-secondary) 22%, transparent);
+  background: color-mix(in srgb, var(--color-text-secondary) 8%, transparent);
+  padding: 0 0.75rem;
+  font-size: var(--font-size-0-76);
+  color: var(--journal-ink, var(--color-text-primary));
+}
+
+.topology-canvas-board__legend-pill--allow {
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.topology-canvas-board__legend-pill--deny {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.topology-canvas-board__surface {
+  width: 100%;
+  height: 600px;
+  border: 1px solid var(--topology-canvas-border);
+  border-radius: 22px;
+  background: var(--topology-canvas-surface);
+}
+
+.topology-canvas-board__node-label {
+  fill: var(--journal-ink, var(--color-text-primary));
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.topology-canvas-board__node-key {
+  fill: var(--journal-muted, var(--color-text-secondary));
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.topology-canvas-board__node-meta {
+  fill: color-mix(in srgb, var(--journal-muted, var(--color-text-secondary)) 84%, transparent);
+  font-size: 9px;
+}
+
+.topology-canvas-board__node-badge-text {
+  fill: var(--color-bg-base);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .topology-canvas-board__surface {
+    height: 520px;
+  }
+}
+</style>
