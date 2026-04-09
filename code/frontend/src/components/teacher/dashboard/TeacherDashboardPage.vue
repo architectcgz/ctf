@@ -146,11 +146,11 @@ const {
               </span>
             </div>
 
-            <div class="progress-strip">
-              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card">
-                <div class="progress-card-label">{{ item.label }}</div>
-                <div class="progress-card-value">{{ item.value }}</div>
-                <div class="progress-card-hint">{{ item.hint }}</div>
+            <div class="progress-strip metric-panel-grid">
+              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card metric-panel-card">
+                <div class="progress-card-label metric-panel-label">{{ item.label }}</div>
+                <div class="progress-card-value metric-panel-value">{{ item.value }}</div>
+                <div class="progress-card-hint metric-panel-helper">{{ item.hint }}</div>
               </article>
             </div>
 
@@ -200,11 +200,11 @@ const {
           <article class="overview-pulse-panel panel panel-pad">
             <div class="workspace-overline">Class Pulse</div>
             <h2 class="panel-title panel-title--spaced">班级脉搏</h2>
-            <div class="pulse-grid">
-              <article v-for="item in overviewPulseCards" :key="item.key" class="pulse-card">
-                <div class="pulse-label">{{ item.label }}</div>
-                <div class="pulse-value">{{ item.value }}</div>
-                <div class="pulse-copy">{{ item.copy }}</div>
+            <div class="pulse-grid metric-panel-grid">
+              <article v-for="item in overviewPulseCards" :key="item.key" class="pulse-card metric-panel-card">
+                <div class="pulse-label metric-panel-label">{{ item.label }}</div>
+                <div class="pulse-value metric-panel-value">{{ item.value }}</div>
+                <div class="pulse-copy metric-panel-helper">{{ item.copy }}</div>
               </article>
             </div>
           </article>
@@ -251,11 +251,11 @@ const {
               </div>
               <div v-else class="empty-inline">当前班级还没有足够的能力画像数据。</div>
 
-              <div class="summary-grid">
-                <article v-for="item in portraitSummaryNotes" :key="item.key" class="summary-note">
-                  <div class="summary-note-label">{{ item.label }}</div>
-                  <div class="summary-note-value">{{ item.value }}</div>
-                  <div class="summary-note-copy">{{ item.copy }}</div>
+              <div class="summary-grid metric-panel-grid">
+                <article v-for="item in portraitSummaryNotes" :key="item.key" class="summary-note metric-panel-card">
+                  <div class="summary-note-label metric-panel-label">{{ item.label }}</div>
+                  <div class="summary-note-value metric-panel-value">{{ item.value }}</div>
+                  <div class="summary-note-copy metric-panel-helper">{{ item.copy }}</div>
                 </article>
               </div>
             </article>
@@ -480,16 +480,12 @@ const {
 }
 
 .progress-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
   margin-top: var(--space-5-5);
 }
 
-.progress-card,
 .panel,
-.summary-note,
-.pulse-card,
 .trend-signal {
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
@@ -498,13 +494,10 @@ const {
 }
 
 .progress-card {
-  padding: var(--space-3-5) var(--space-4) var(--space-4);
+  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
 }
 
-.progress-card-label,
-.pulse-label,
-.trend-signal-label,
-.summary-note-label {
+.trend-signal-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -512,19 +505,7 @@ const {
   color: var(--workspace-faint);
 }
 
-.progress-card-value,
-.pulse-value {
-  margin-top: var(--space-2-5);
-  font-size: 26px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
-}
-
-.progress-card-hint,
-.pulse-copy,
-.trend-signal-copy,
-.summary-note-copy {
+.trend-signal-copy {
   margin-top: var(--space-2);
   font-size: 13px;
   line-height: 1.7;
@@ -631,14 +612,13 @@ const {
 }
 
 .pulse-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
   margin-top: var(--space-4-5);
 }
 
 .pulse-card {
-  padding: var(--space-3-5);
+  --metric-panel-padding: var(--space-3-5);
 }
 
 .section {
@@ -727,22 +707,19 @@ const {
 }
 
 .summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
   margin-top: var(--space-4-5);
 }
 
 .summary-note {
-  padding: var(--space-3-5) var(--space-4);
-  background: color-mix(in srgb, var(--workspace-panel-soft) 92%, transparent);
+  --metric-panel-padding: var(--space-3-5) var(--space-4);
+  --metric-panel-background: color-mix(in srgb, var(--workspace-panel-soft) 92%, transparent);
 }
 
 .summary-note-value {
-  margin-top: var(--space-2);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--journal-ink);
+  --metric-panel-value-margin-top: var(--space-2);
+  --metric-panel-value-size: 16px;
 }
 
 .trend-layout {

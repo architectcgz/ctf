@@ -38,13 +38,12 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="top-tabs"')
     expect(studentAnalysisSource).toMatch(
-      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+      /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
     )
+    expect(studentAnalysisSource).toContain('class="summary-card metric-panel-card"')
+    expect(studentAnalysisSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(studentAnalysisSource).toMatch(
-      /\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
-    )
-    expect(studentAnalysisSource).toMatch(
-      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
+      /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
     )
 
     expect(reviewArchiveSource).toContain('--teacher-card-border:')
@@ -55,9 +54,8 @@ describe('teacher detail surface alignment', () => {
     expect(reviewArchiveSource).toMatch(
       /:deep\(\.section-card__header\)\s*\{[\s\S]*border-bottom:\s*1px dashed var\(--teacher-divider\);/s
     )
-    expect(reviewArchiveSource).toMatch(
-      /\.summary-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
-    )
+    expect(reviewArchiveSource).toContain('metric-panel-card')
+    expect(reviewArchiveSource).toContain('--metric-panel-border: var(--teacher-card-border);')
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
@@ -73,10 +71,10 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
     expect(studentInsightPanelSource).toMatch(
-      /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+      /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*88%,\s*transparent\);/s
     )
     expect(studentInsightPanelSource).toMatch(
-      /\.insight-kpi-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
+      /\.insight-kpi-card\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
     )
 
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')

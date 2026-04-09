@@ -103,11 +103,11 @@ describe('AdminDashboard', () => {
     expect(adminDashboardPageSource).toContain('class="workspace-topbar"')
     expect(adminDashboardPageSource).toContain('class="content-pane"')
     expect(adminDashboardPageSource).toContain('class="workspace-hero tab-panel"')
-    expect(adminDashboardPageSource).toContain('class="hero-title"')
+    expect(adminDashboardPageSource).toMatch(/class="[^"]*\bhero-title\b[^"]*"/)
     expect(adminDashboardPageSource).toContain('系统值守台')
     expect(adminDashboardPageSource).toContain('class="hero-summary"')
     expect(adminDashboardPageSource).toContain('class="meta-strip"')
-    expect(adminDashboardPageSource).toContain('class="progress-strip"')
+    expect(adminDashboardPageSource).toMatch(/class="[^"]*\bprogress-strip\b[^"]*"/)
     expect(adminDashboardPageSource).toContain('class="hero-rail"')
   })
 

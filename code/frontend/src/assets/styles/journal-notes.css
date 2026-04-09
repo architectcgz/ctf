@@ -62,6 +62,66 @@
   color: var(--journal-note-helper-color, var(--journal-muted));
 }
 
+.metric-panel-grid {
+  display: grid;
+  gap: var(--metric-panel-grid-gap, var(--space-3));
+  grid-template-columns: var(--metric-panel-columns, repeat(4, minmax(0, 1fr)));
+}
+
+.metric-panel-card {
+  min-width: 0;
+  border: 1px solid
+    var(
+      --metric-panel-border,
+      var(
+        --workspace-line-soft,
+        color-mix(
+          in srgb,
+          var(--journal-border, var(--color-border-default)) 78%,
+          transparent
+        )
+      )
+    );
+  border-radius: var(--metric-panel-radius, var(--workspace-radius-lg, 18px));
+  background: var(
+    --metric-panel-background,
+    color-mix(
+      in srgb,
+      var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
+      transparent
+    )
+  );
+  box-shadow: var(
+    --metric-panel-shadow,
+    var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft))
+  );
+  padding: var(--metric-panel-padding, var(--space-3-5) var(--space-4) var(--space-4));
+}
+
+.metric-panel-label {
+  font-size: var(--metric-panel-label-size, 11px);
+  font-weight: var(--metric-panel-label-weight, 700);
+  letter-spacing: var(--metric-panel-label-spacing, 0.18em);
+  text-transform: uppercase;
+  color: var(--metric-panel-label-color, var(--workspace-faint, var(--journal-muted)));
+}
+
+.metric-panel-value {
+  margin-top: var(--metric-panel-value-margin-top, var(--space-2-5));
+  font-size: var(--metric-panel-value-size, 26px);
+  font-weight: var(--metric-panel-value-weight, 700);
+  line-height: var(--metric-panel-value-line-height, 1);
+  letter-spacing: var(--metric-panel-value-spacing, -0.03em);
+  color: var(--metric-panel-value-color, var(--journal-ink, var(--color-text-primary)));
+}
+
+.metric-panel-helper {
+  margin-top: var(--metric-panel-helper-margin-top, var(--space-2));
+  font-size: var(--metric-panel-helper-size, 13px);
+  line-height: var(--metric-panel-helper-line-height, 1.7);
+  color: var(--metric-panel-helper-color, var(--journal-muted, var(--color-text-secondary)));
+}
+
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) {
   display: grid;
   gap: var(--admin-summary-grid-gap, var(--space-3));

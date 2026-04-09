@@ -155,21 +155,21 @@ async function handleExportArchive(): Promise<void> {
 
       <section class="review-archive-summary-grid">
         <SectionCard title="训练摘要" subtitle="将当前归档的关键指标收束为一页课堂摘要。">
-          <div class="summary-grid">
-            <article class="summary-card summary-card--primary">
-              <div class="summary-card__label">完成率</div>
-              <div class="summary-card__value">{{ solvedRate }}%</div>
-              <div class="summary-card__hint">已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}</div>
+          <div class="summary-grid metric-panel-grid">
+            <article class="summary-card summary-card--primary metric-panel-card">
+              <div class="summary-card__label metric-panel-label">完成率</div>
+              <div class="summary-card__value metric-panel-value">{{ solvedRate }}%</div>
+              <div class="summary-card__hint metric-panel-helper">已完成 {{ archive.summary.total_solved }} / {{ archive.summary.total_challenges }}</div>
             </article>
-            <article class="summary-card summary-card--warning">
-              <div class="summary-card__label">有效提交</div>
-              <div class="summary-card__value">{{ archive.summary.correct_submission_count }}</div>
-              <div class="summary-card__hint">归档内命中 Flag 的提交次数</div>
+            <article class="summary-card summary-card--warning metric-panel-card">
+              <div class="summary-card__label metric-panel-label">有效提交</div>
+              <div class="summary-card__value metric-panel-value">{{ archive.summary.correct_submission_count }}</div>
+              <div class="summary-card__hint metric-panel-helper">归档内命中 Flag 的提交次数</div>
             </article>
-            <article class="summary-card summary-card--neutral">
-              <div class="summary-card__label">最近活跃</div>
-              <div class="summary-card__value summary-card__value--time">{{ formattedLastActivity }}</div>
-              <div class="summary-card__hint">归档内最后一条训练活动</div>
+            <article class="summary-card summary-card--neutral metric-panel-card">
+              <div class="summary-card__label metric-panel-label">最近活跃</div>
+              <div class="summary-card__value summary-card__value--time metric-panel-value">{{ formattedLastActivity }}</div>
+              <div class="summary-card__hint metric-panel-helper">归档内最后一条训练活动</div>
             </article>
           </div>
         </SectionCard>
@@ -260,16 +260,15 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-grid {
-  display: grid;
-  gap: var(--space-3-5);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3-5);
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
 
 .summary-card {
-  padding: var(--space-4);
-  border-radius: 20px;
-  border: 1px solid var(--teacher-card-border);
-  background: var(--journal-surface);
+  --metric-panel-border: var(--teacher-card-border);
+  --metric-panel-background: var(--journal-surface);
+  --metric-panel-radius: 20px;
+  --metric-panel-padding: var(--space-4);
 }
 
 .summary-card--primary {
@@ -289,18 +288,13 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__label {
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--journal-muted);
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 .summary-card__value {
-  margin-top: var(--space-3);
   font-size: 1.8rem;
-  font-weight: 700;
-  color: var(--journal-ink);
+  --metric-panel-value-margin-top: var(--space-3);
+  --metric-panel-value-size: 1.8rem;
 }
 
 .summary-card__value--time {
