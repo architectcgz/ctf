@@ -84,12 +84,13 @@
             </a>
           </div>
         </div>
-        <div v-if="challenge.description" class="mt-4">
-          <div class="text-sm text-[var(--color-text-secondary)]">描述：</div>
-          <div class="mt-2 text-sm text-[var(--color-text-primary)]">
-            {{ challenge.description }}
-          </div>
-        </div>
+        <ChallengeDescriptionPanel
+          v-if="challenge.description"
+          class="mt-4"
+          :content="challenge.description"
+          label="描述"
+          test-id="challenge-detail-description"
+        />
         <div v-if="challenge.hints?.length" class="mt-4">
           <div class="text-sm text-[var(--color-text-secondary)]">提示：</div>
           <div class="mt-2 space-y-3">
@@ -186,6 +187,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ChallengeDescriptionPanel from '@/components/admin/challenge/ChallengeDescriptionPanel.vue'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
 import { useToast } from '@/composables/useToast'
 import type { AdminChallengeFlagPayload } from '@/api/admin'

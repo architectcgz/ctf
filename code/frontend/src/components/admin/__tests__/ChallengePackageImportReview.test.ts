@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 
 import ChallengePackageImportReview from '../challenge/ChallengePackageImportReview.vue'
 import challengePackageImportReviewSource from '../challenge/ChallengePackageImportReview.vue?raw'
+import challengeDescriptionPanelSource from '../challenge/ChallengeDescriptionPanel.vue?raw'
 import type { AdminChallengeImportPreview } from '@/api/contracts'
 
 const preview: AdminChallengeImportPreview = {
@@ -58,11 +59,12 @@ describe('ChallengePackageImportReview', () => {
   })
 
   it('题面区域应保持固定高度滚动容器，避免长题面破坏布局', () => {
-    expect(challengePackageImportReviewSource).toMatch(
+    expect(challengeDescriptionPanelSource).toMatch(
       /\.import-review__statement\s*\{[^}]*max-height:\s*clamp\(15rem,\s*36vh,\s*24rem\);[^}]*overflow:\s*auto;/s
     )
     expect(challengePackageImportReviewSource).toMatch(
       /\.import-review__grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s
     )
+    expect(challengePackageImportReviewSource).toContain('<ChallengeDescriptionPanel')
   })
 })
