@@ -101,8 +101,6 @@ function supportsRealtime(status: ContestStatus): boolean {
         <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
       </section>
 
-      <div class="scoreboard-divider" />
-
       <div v-if="loading && !hasSections" class="scoreboard-loading">
         <div class="scoreboard-loading-spinner" />
       </div>
@@ -238,11 +236,6 @@ function supportsRealtime(status: ContestStatus): boolean {
   color: var(--color-danger);
   border-color: color-mix(in srgb, var(--color-danger) 24%, var(--journal-border));
   background: color-mix(in srgb, var(--color-danger) 6%, transparent);
-}
-
-.scoreboard-divider {
-  margin-top: 24px;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .scoreboard-loading {

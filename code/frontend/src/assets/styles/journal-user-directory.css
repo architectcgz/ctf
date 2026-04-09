@@ -34,11 +34,6 @@
   display: grid;
   gap: 18px;
   padding: 24px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.contest-summary {
-  border-bottom: none;
 }
 
 :is(
