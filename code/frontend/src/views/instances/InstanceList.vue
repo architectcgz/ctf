@@ -214,21 +214,12 @@ const {
 }
 
 .instance-summary-title,
-.instance-summary-label,
 .instance-directory-head {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--journal-muted);
-}
-
-.instance-summary-value {
-  margin-top: 8px;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
 }
 
 .instance-divider {

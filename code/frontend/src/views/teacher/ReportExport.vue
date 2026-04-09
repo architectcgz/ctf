@@ -365,6 +365,8 @@ const {
   --teacher-card-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --teacher-control-border: color-mix(in srgb, var(--journal-border) 78%, transparent);
   --teacher-divider: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --teacher-summary-columns: repeat(4, minmax(0, 1fr));
+  --teacher-summary-grid-gap: var(--space-3);
   --report-card-border: var(--teacher-card-border);
   --report-control-border: var(--teacher-control-border);
   --report-divider: var(--teacher-divider);
@@ -396,12 +398,6 @@ const {
 
 .report-copy {
   max-width: 52rem;
-}
-
-.report-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
 }
 
 .report-hero-divider {
