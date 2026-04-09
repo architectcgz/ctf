@@ -21,6 +21,8 @@ import {
   createChallengePublishRequest,
   createContest,
   configureChallengeFlag,
+  deleteChallengeTopology,
+  deleteEnvironmentTemplate,
   deleteChallengeWriteup,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
@@ -1387,6 +1389,25 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenLastCalledWith({
       method: 'DELETE',
       url: '/authoring/challenges/12/writeup',
+      suppressErrorToast: true,
+    })
+  })
+
+  it('应该在删除拓扑与环境模板时关闭全局错误提示', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await deleteChallengeTopology('12')
+    expect(requestMock).toHaveBeenNthCalledWith(1, {
+      method: 'DELETE',
+      url: '/authoring/challenges/12/topology',
+      suppressErrorToast: true,
+    })
+
+    await deleteEnvironmentTemplate('7')
+    expect(requestMock).toHaveBeenNthCalledWith(2, {
+      method: 'DELETE',
+      url: '/authoring/environment-templates/7',
+      suppressErrorToast: true,
     })
   })
 
