@@ -154,14 +154,26 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).not.toMatch(
       /\.challenge-row,\s*\.queue-row\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/s
     )
-    expect(challengeManageSource).not.toMatch(/\.challenge-list\s*\{[^}]*--challenge-list-columns:[^;]*\bauto;/s)
+    expect(challengeManageSource).not.toMatch(
+      /\.challenge-list\s*\{[^}]*--challenge-list-columns:[^;]*\bauto;/s
+    )
     expect(challengeManageSource).toContain('.challenge-row__title')
-    expect(challengeManageSource).toMatch(/\.challenge-row__title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(challengeManageSource).toMatch(/\.challenge-row__failure\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
+    expect(challengeManageSource).toMatch(
+      /\.challenge-row__title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.challenge-row__failure\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
+    )
     expect(challengeManageSource).toMatch(/class="queue-row__title"[\s\S]*:title="item\.title"/s)
-    expect(challengeManageSource).toMatch(/class="queue-row__meta-text"[\s\S]*:title="item\.file_name"/s)
-    expect(challengeManageSource).toMatch(/\.queue-row__title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(challengeManageSource).toMatch(/\.queue-row__meta-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(challengeManageSource).toMatch(
+      /class="queue-row__meta-text"[\s\S]*:title="item\.file_name"/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.queue-row__title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(challengeManageSource).toMatch(
+      /\.queue-row__meta-text\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
   })
 
   it('应该根据 query 切到待确认导入，并在导入标签中只保留独立示例页入口', async () => {
@@ -193,12 +205,19 @@ describe('ChallengeManage', () => {
     expect(importWrapper.text()).not.toContain('api_version: v1')
     expect(wrapper.find('.queue-row__title').attributes('title')).toBe('Web Demo')
     expect(wrapper.find('.queue-row__meta-text').attributes('title')).toBe('demo-import.zip')
-    expect(importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('href')).toBe(
-      '/downloads/challenge-package-sample-v1.zip'
-    )
-    expect(importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('download')).toBe(
-      'challenge-package-sample-v1.zip'
-    )
+    expect(
+      importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('href')
+    ).toBe('/downloads/challenge-package-sample-v1.zip')
+    expect(
+      importWrapper.get('[data-testid="challenge-package-download-link"]').attributes('download')
+    ).toBe('challenge-package-sample-v1.zip')
+
+    await wrapper.get('.queue-row__actions button').trigger('click')
+    await flushPromises()
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminChallengeImportPreview',
+      params: { importId: 'import-1' },
+    })
 
     await importWrapper.get('[data-testid="challenge-package-format-link"]').trigger('click')
 
@@ -259,5 +278,9 @@ describe('ChallengeManage', () => {
     expect(text).toContain('题目包格式校验失败')
     expect(text).toContain('错误码 10001')
     expect(text).toContain('请求ID req_18056986c1123ac6')
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'AdminChallengeImportPreview',
+      params: { importId: 'import-ok' },
+    })
   })
 })
