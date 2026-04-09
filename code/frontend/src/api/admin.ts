@@ -1414,7 +1414,11 @@ export async function getLatestChallengePublishRequest(
 }
 
 export async function deleteChallenge(id: string) {
-  return request<void>({ method: 'DELETE', url: `/authoring/challenges/${encodeURIComponent(id)}` })
+  return request<void>({
+    method: 'DELETE',
+    url: `/authoring/challenges/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
 }
 
 export interface AdminChallengeWriteupPayload {

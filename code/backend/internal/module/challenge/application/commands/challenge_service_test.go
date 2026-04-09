@@ -5,10 +5,12 @@ import (
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	"ctf-platform/internal/module/challenge/domain"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	"ctf-platform/internal/module/challenge/testsupport"
 	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
+	"errors"
 	"testing"
 
 	"go.uber.org/zap"
@@ -122,8 +124,15 @@ func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	service := newTestService(repo, nil)
 
 	err := service.DeleteChallenge(challenge.ID)
-	if err == nil || err.Error() != errcode.ErrConflict.Error() {
+	if err == nil {
+		t.Fatal("expected running instances error, got nil")
+	}
+	if err.Error() != domain.ErrMsgHasRunningStudents {
 		t.Fatalf("expected running instances error, got %v", err)
+	}
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrConflict.Code {
+		t.Fatalf("expected conflict app error, got %v", err)
 	}
 }
 

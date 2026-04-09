@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent } from 'vue'
 
 import { useAdminChallenges } from '@/composables/useAdminChallenges'
+import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
   createChallengePublishRequest: vi.fn(),
@@ -216,5 +217,29 @@ describe('useAdminChallenges', () => {
     expect(adminApiMocks.getChallenges).toHaveBeenCalledTimes(2)
     expect(composable.list.value[0]?.latestPublishRequest?.status).toBe('succeeded')
     expect(composable.list.value[0]?.status).toBe('published')
+  })
+
+  it('preserves specific delete failure messages', async () => {
+    confirmMock.mockResolvedValue(true)
+    adminApiMocks.deleteChallenge.mockRejectedValue(
+      new ApiError('还有学生正在解题，暂时不能删除', { code: 10007, status: 409 })
+    )
+
+    let composable!: ReturnType<typeof useAdminChallenges>
+    const Harness = defineComponent({
+      setup() {
+        composable = useAdminChallenges()
+        return () => null
+      },
+    })
+
+    mount(Harness)
+    await flushPromises()
+
+    await composable.remove('1')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('还有学生正在解题，暂时不能删除')
+    expect(toastMocks.error).not.toHaveBeenCalledWith('删除失败')
   })
 })
