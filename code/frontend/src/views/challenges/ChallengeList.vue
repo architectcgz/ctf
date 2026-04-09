@@ -758,18 +758,6 @@ onMounted(() => {
   background: color-mix(in srgb, var(--journal-surface) 84%, transparent);
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
 @keyframes challengeSpin {
   from {
     transform: rotate(0deg);
