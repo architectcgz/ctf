@@ -365,7 +365,7 @@ function changeTimelinePage(page: number): void {
 }
 
 .tech-font {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 @keyframes dot-pulse {

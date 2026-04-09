@@ -35,7 +35,7 @@
 
 body {
   margin: 0;
-  font-family: "Inter", "Noto Sans SC", system-ui, sans-serif;
+  font-family: var(--font-family-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-base);

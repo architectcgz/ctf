@@ -322,7 +322,7 @@ onUnmounted(() => {
 
 <style scoped>
 .journal-shell {
-  --journal-shell-font: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  --journal-shell-font: var(--font-family-sans);
   --journal-shell-accent: var(--color-primary);
   --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
@@ -344,7 +344,7 @@ onUnmounted(() => {
     var(--journal-surface)
   );
   --journal-user-button-primary-color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
-  --journal-user-tech-font: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', monospace;
+  --journal-user-tech-font: var(--font-family-mono);
 }
 
 .profile-loading {

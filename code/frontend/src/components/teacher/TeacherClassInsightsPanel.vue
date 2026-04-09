@@ -207,9 +207,7 @@ const weakDimensionStats = computed(() => {
   display: inline-flex;
   min-width: 1.3rem;
   justify-content: center;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
-    monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--panel-accent);

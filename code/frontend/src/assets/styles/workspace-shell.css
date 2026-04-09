@@ -21,15 +21,7 @@
   border-radius: var(--workspace-shell-radius);
   box-shadow: var(--workspace-shell-shadow);
   overflow: clip;
-  font-family: var(
-    --workspace-font-sans,
-    'IBM Plex Sans',
-    'Noto Sans SC',
-    'PingFang SC',
-    'Hiragino Sans GB',
-    'Microsoft YaHei',
-    sans-serif
-  );
+  font-family: var(--workspace-font-sans, var(--font-family-sans));
   color: var(--journal-ink, var(--color-text-primary));
 }
 
@@ -124,16 +116,7 @@
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--workspace-faint, var(--color-text-secondary));
-  font: 600 15px/1
-    var(
-      --workspace-font-sans,
-      'IBM Plex Sans',
-      'Noto Sans SC',
-      'PingFang SC',
-      'Hiragino Sans GB',
-      'Microsoft YaHei',
-      sans-serif
-    );
+  font: 600 15px/1 var(--workspace-font-sans, var(--font-family-sans));
   white-space: nowrap;
   cursor: pointer;
   transition:

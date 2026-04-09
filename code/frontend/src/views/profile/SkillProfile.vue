@@ -430,15 +430,8 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
     var(--journal-accent) 14%,
     transparent
   );
-  --journal-user-tech-font:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    'SFMono-Regular',
-    'Consolas',
-    monospace;
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
+  --journal-user-tech-font: var(--font-family-mono);
+  font-family: var(--font-family-sans);
 }
 
 .journal-hero {

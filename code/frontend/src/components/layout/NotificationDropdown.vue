@@ -349,7 +349,7 @@ const {
 }
 
 .notification-kicker {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: var(--font-family-mono);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.18em;

@@ -483,7 +483,7 @@ onUnmounted(() => {
 
 .image-row__name,
 .image-row__tag {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .image-row__name {

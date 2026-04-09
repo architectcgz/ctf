@@ -392,9 +392,7 @@ const currentPageStudentCount = computed(() =>
   --page-top-tab-font-size: 0.92rem;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
-  font-family:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .teacher-page {
@@ -472,7 +470,7 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-directory-cell-class-code,
 .teacher-directory-row-points {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .teacher-directory-cell-class-code {
@@ -485,7 +483,7 @@ const currentPageStudentCount = computed(() =>
 .teacher-directory-row-title {
   margin: 0;
   min-width: 0;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 1.08rem;
   font-weight: 700;
   line-height: 1.35;

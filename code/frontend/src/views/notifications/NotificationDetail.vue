@@ -394,7 +394,7 @@ watch(
 }
 
 .notification-detail-side-value--mono {
-  font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", monospace;
+  font-family: var(--font-family-mono);
   font-size: 0.76rem;
 }
 

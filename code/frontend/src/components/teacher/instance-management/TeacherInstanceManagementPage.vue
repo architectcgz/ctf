@@ -383,7 +383,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 .teacher-directory-row-index,
 .teacher-directory-row-points,
 .teacher-directory-url {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .teacher-directory-row-index {
@@ -402,7 +402,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
 
 .teacher-directory-row-title {
   min-width: 0;
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 1.08rem;
   font-weight: 700;
   line-height: 1.35;

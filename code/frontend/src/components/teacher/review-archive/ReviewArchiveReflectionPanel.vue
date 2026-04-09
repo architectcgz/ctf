@@ -96,7 +96,7 @@ defineProps<{
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--journal-accent-strong);
-  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  font-family: var(--font-family-sans);
 }
 
 .archive-panel__title {
@@ -136,7 +136,7 @@ defineProps<{
 .reflection-item__meta {
   font-size: 0.82rem;
   color: var(--journal-muted);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--font-family-mono);
 }
 
 .reflection-item__subhead {

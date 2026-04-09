@@ -342,10 +342,8 @@ const {
   --workspace-radius-xl: 28px;
   --workspace-radius-lg: 18px;
   --workspace-radius-md: 14px;
-  --workspace-font-sans:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
-  --workspace-font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  --workspace-font-sans: var(--font-family-sans);
+  --workspace-font-mono: var(--font-family-mono);
 }
 
 .workspace-hero {

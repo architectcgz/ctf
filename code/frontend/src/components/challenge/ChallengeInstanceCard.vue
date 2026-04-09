@@ -240,11 +240,8 @@ const openButtonLabel = computed(() => {
   --brand: oklch(52% 0.12 254);
   --warning: oklch(68% 0.14 82);
   --danger: oklch(58% 0.16 28);
-  --font-sans:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', sans-serif;
-  --font-mono:
-    'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  --font-sans: var(--font-family-sans);
+  --font-mono: var(--font-family-mono);
   margin-top: 26px;
   padding-top: 26px;
   border-top: 1px solid var(--line-soft);

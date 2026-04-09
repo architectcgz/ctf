@@ -296,9 +296,7 @@ function openChallenge(challengeId: string): void {
   --workspace-shell-bg: var(--journal-surface);
   --workspace-danger: var(--color-danger);
   --workspace-shadow-shell: var(--journal-shell-hero-shadow, 0 22px 50px var(--color-shadow-soft));
-  --workspace-font-sans:
-    'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-    sans-serif;
+  --workspace-font-sans: var(--font-family-sans);
   --journal-track: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
   --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
   flex: 1 1 auto;

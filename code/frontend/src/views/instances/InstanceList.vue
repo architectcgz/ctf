@@ -278,7 +278,7 @@ const {
 }
 
 .instance-row-title {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
@@ -324,7 +324,7 @@ const {
 }
 
 .instance-row-mono {
-  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-family: var(--font-family-mono);
   color: var(--journal-ink);
 }
 
