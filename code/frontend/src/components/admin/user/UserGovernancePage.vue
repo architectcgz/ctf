@@ -207,12 +207,11 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
     >
       <template v-if="activePanel === 'overview'">
-        <h1
-          class="text-3xl font-semibold tracking-tight text-[var(--journal-ink)] md:text-[2.45rem]"
-        >
-          用户治理台
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        <div class="workspace-tab-heading__main">
+          <div class="journal-note-label">User Governance</div>
+          <h1 class="workspace-tab-heading__title">用户治理台</h1>
+        </div>
+        <p class="workspace-tab-copy">
           在这里筛选账号、批量导入并处理用户状态。
         </p>
 
@@ -255,10 +254,10 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
       v-show="activePanel === 'directory'"
     >
-      <div class="admin-section-head">
-        <div>
+      <div class="workspace-tab-heading">
+        <div class="workspace-tab-heading__main">
           <div class="journal-note-label">Filters</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">用户列表</h2>
+          <h2 class="workspace-tab-heading__title">用户列表</h2>
         </div>
 
         <div class="flex flex-wrap gap-3">
@@ -478,10 +477,10 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
       v-show="activePanel === 'import'"
     >
-      <div class="admin-section-head admin-section-head-intro">
-        <div>
+      <div class="workspace-tab-heading admin-section-head-intro">
+        <div class="workspace-tab-heading__main">
           <div class="journal-note-label">User Import</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入用户</h2>
+          <h2 class="workspace-tab-heading__title">导入用户</h2>
         </div>
 
         <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
@@ -501,10 +500,10 @@ function handleImportChange(event: Event): void {
     <div v-show="activePanel === 'import'" class="journal-divider mt-6" aria-hidden="true" />
 
     <section v-show="activePanel === 'import'" class="space-y-4">
-      <div class="admin-section-head">
-        <div>
+      <div class="workspace-tab-heading">
+        <div class="workspace-tab-heading__main">
           <div class="journal-note-label">Import Receipt</div>
-          <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">导入回执</h2>
+          <h2 class="workspace-tab-heading__title">导入回执</h2>
         </div>
       </div>
 
@@ -537,12 +536,12 @@ function handleImportChange(event: Event): void {
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --user-table-border: color-mix(in srgb, var(--journal-border) 72%, transparent);
   --user-row-divider: color-mix(in srgb, var(--journal-border) 58%, transparent);
-  --page-top-tabs-gap: 28px;
-  --page-top-tabs-margin: 0 -1.5rem 1.5rem;
-  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: 0 calc(var(--space-6) * -1) var(--space-6);
+  --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
   --page-top-tab-font-size: 15px;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
@@ -554,14 +553,14 @@ function handleImportChange(event: Event): void {
 }
 
 .user-overview-summary {
-  margin-top: 1.5rem;
+  margin-top: var(--space-6);
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .user-overview-grid {
   display: grid;
-  gap: 0.85rem;
+  gap: var(--space-3-5);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -578,17 +577,9 @@ function handleImportChange(event: Event): void {
   letter-spacing: -0.04em;
 }
 
-.admin-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
 .admin-section-head-intro {
   position: relative;
-  padding: 1rem 1.1rem 1rem 1.35rem;
+  padding: var(--space-4) var(--space-4-5) var(--space-4) var(--space-5-5);
   border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
   border-radius: 18px;
   background: linear-gradient(
@@ -621,10 +612,10 @@ function handleImportChange(event: Event): void {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
   border-radius: 1rem;
-  padding: 0.65rem 1rem;
+  padding: var(--space-2-5) var(--space-4);
   font-size: 0.875rem;
   font-weight: 600;
   transition: all 150ms ease;
@@ -632,12 +623,12 @@ function handleImportChange(event: Event): void {
 
 .admin-btn-compact {
   min-height: 2.35rem;
-  padding: 0.5rem 0.85rem;
+  padding: var(--space-2) var(--space-3-5);
 }
 
 .user-action-btn {
   min-height: 2rem;
-  padding: 0.35rem 0.7rem;
+  padding: var(--space-1-5) var(--space-3);
   border-radius: 0.8rem;
   font-size: 0.8125rem;
 }
@@ -674,7 +665,7 @@ function handleImportChange(event: Event): void {
   border-radius: 1rem;
   border: 1px solid var(--admin-control-border);
   background: var(--journal-surface);
-  padding: 0.7rem 1rem;
+  padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-ink);
   outline: none;
@@ -689,7 +680,7 @@ function handleImportChange(event: Event): void {
   border-radius: 16px;
   border: 1px solid var(--journal-border);
   background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
-  padding: 1rem;
+  padding: var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-ink);
 }
@@ -697,7 +688,7 @@ function handleImportChange(event: Event): void {
 .admin-empty {
   border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
-  padding: 1rem;
+  padding: var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -736,9 +727,9 @@ function handleImportChange(event: Event): void {
 .admin-role-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1-5);
   border-radius: 999px;
-  padding: 0.34rem 0.75rem;
+  padding: var(--space-1-5) var(--space-3);
   font-size: 0.72rem;
   font-weight: 600;
 }
@@ -777,10 +768,10 @@ function handleImportChange(event: Event): void {
   }
 
   .top-tabs {
-    gap: 18px;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    padding: 0 1rem;
+    gap: var(--space-4-5);
+    margin-left: calc(var(--space-4) * -1);
+    margin-right: calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
   }
 
   .user-table-shell {
