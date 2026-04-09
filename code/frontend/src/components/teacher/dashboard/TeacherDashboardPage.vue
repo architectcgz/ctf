@@ -227,7 +227,7 @@ const {
           </div>
 
           <div class="portrait-grid">
-            <article class="panel panel-pad">
+            <div class="portrait-summary-block">
               <h3 class="panel-title">优先补强方向</h3>
 
               <div v-if="weakDimensionStats.length > 0" class="weak-list">
@@ -258,10 +258,10 @@ const {
                   <div class="summary-note-copy metric-panel-helper">{{ item.copy }}</div>
                 </article>
               </div>
-            </article>
+            </div>
 
             <div class="workspace-subpanel">
-              <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" />
+              <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" stacked />
             </div>
           </div>
         </section>
@@ -649,8 +649,12 @@ const {
 
 .portrait-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(280px, 0.98fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
+}
+
+.portrait-summary-block {
+  min-width: 0;
 }
 
 .weak-list {
