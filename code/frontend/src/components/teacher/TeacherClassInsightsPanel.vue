@@ -43,7 +43,7 @@ const weakDimensionStats = computed(() => {
 </script>
 
 <template>
-  <section class="teacher-panel">
+  <section class="teacher-panel" :class="{ 'teacher-panel--shellless': splitCards }">
     <div
       class="teacher-insight-layout"
       :class="{
@@ -156,11 +156,22 @@ const weakDimensionStats = computed(() => {
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
   --panel-accent: var(--journal-accent, #4f46e5);
   --panel-accent-strong: var(--journal-accent-strong, #4338ca);
+}
+
+.teacher-panel:not(.teacher-panel--shellless) {
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel-surface-subtle);
   padding: var(--space-5) var(--space-5) var(--space-5-5);
   box-shadow: 0 10px 24px var(--color-shadow-soft);
+}
+
+.teacher-panel--shellless {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .teacher-subsection + .teacher-subsection {
