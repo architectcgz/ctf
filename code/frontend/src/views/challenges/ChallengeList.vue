@@ -633,8 +633,8 @@ onMounted(() => {
 .challenge-row-title {
   min-width: 0;
   font-family: var(--font-family-mono);
-  font-size: var(--font-size-18);
-  font-weight: 700;
+  font-size: var(--font-size-16);
+  font-weight: 600;
   line-height: 1.35;
   color: var(--journal-ink);
   overflow: hidden;
