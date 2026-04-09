@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portrait Showcase Card Variants</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg-page: #060a12;
+        --bg-grid: #0a101c;
+        --text-main: #e8eefc;
+        --text-muted: #9aa8c9;
+        --text-faint: #7f8fb1;
+        --line-soft: rgba(157, 180, 231, 0.2);
+        --line-strong: rgba(157, 180, 231, 0.32);
+        --brand: #5f8dff;
+        --brand-soft: rgba(95, 141, 255, 0.18);
+        --ok: #6ad0a5;
+        --warn: #ffc875;
+        --danger: #ff8f8f;
+        --radius-lg: 18px;
+        --radius-md: 14px;
+        --shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.32);
+        --font-sans:
+          "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+          "Microsoft YaHei", sans-serif;
+        --font-mono:
+          "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", "Consolas", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: clamp(16px, 2.5vw, 28px);
+        background:
+          radial-gradient(circle at 8% -12%, rgba(95, 141, 255, 0.24), transparent 34%),
+          radial-gradient(circle at 90% -6%, rgba(106, 208, 165, 0.12), transparent 28%),
+          linear-gradient(180deg, var(--bg-grid), var(--bg-page));
+        color: var(--text-main);
+        font-family: var(--font-sans);
+      }
+
+      .shell {
+        max-width: 1380px;
+        margin: 0 auto;
+      }
+
+      .page-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        align-items: end;
+        justify-content: space-between;
+        margin-bottom: 18px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: clamp(22px, 2.2vw, 30px);
+        font-weight: 650;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 8px 0 0;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+        padding: 0 10px;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        color: var(--text-muted);
+        font: 600 12px/1 var(--font-mono);
+        background: rgba(8, 15, 28, 0.62);
+      }
+
+      .variant-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .variant-block {
+        border: 1px solid rgba(123, 147, 198, 0.16);
+        border-radius: 20px;
+        background: rgba(9, 14, 25, 0.62);
+        padding: 16px;
+      }
+
+      .variant-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 12px;
+      }
+
+      .variant-name {
+        margin: 0;
+        font: 600 14px/1.2 var(--font-sans);
+        color: #c8d6f4;
+      }
+
+      .variant-note {
+        color: var(--text-faint);
+        font-size: 13px;
+      }
+
+      .preview-row {
+        display: grid;
+        gap: 12px;
+      }
+
+      .showcase-card {
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-eyebrow {
+        margin: 0;
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--text-faint);
+      }
+
+      .card-title {
+        margin: 10px 0 0;
+        font-size: 18px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .card-subtitle {
+        margin: 8px 0 0;
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .rows {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed rgba(157, 180, 231, 0.24);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .index {
+        width: 22px;
+        text-align: center;
+        font: 700 12px/1 var(--font-mono);
+        color: #c1d2ff;
+      }
+
+      .name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+      }
+
+      .value {
+        font: 600 12px/1 var(--font-mono);
+        color: var(--text-muted);
+      }
+
+      .bar-item {
+        margin-top: 12px;
+      }
+
+      .bar-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 13px;
+      }
+
+      .bar-track {
+        margin-top: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(157, 180, 231, 0.14);
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #6593ff, #7cb9ff);
+      }
+
+      .showcase-card--a {
+        border: 1px solid rgba(138, 160, 205, 0.3);
+        border-radius: 18px;
+        background: linear-gradient(165deg, rgba(17, 26, 44, 0.95), rgba(14, 21, 36, 0.92));
+        box-shadow: var(--shadow-soft);
+        padding: 16px;
+        position: relative;
+      }
+
+      .showcase-card--a::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        border-radius: 18px 18px 0 0;
+        background: linear-gradient(90deg, var(--brand), rgba(95, 141, 255, 0));
+      }
+
+      .showcase-card--b {
+        border: 1px solid rgba(108, 143, 226, 0.45);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(11, 19, 34, 0.96), rgba(8, 14, 26, 0.96));
+        padding: 16px;
+        position: relative;
+      }
+
+      .showcase-card--b::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 1px rgba(95, 141, 255, 0.2);
+        pointer-events: none;
+      }
+
+      .showcase-card--b .card-title {
+        font-size: 17px;
+      }
+
+      .showcase-card--c {
+        border: 1px solid rgba(138, 160, 205, 0.35);
+        border-radius: 20px;
+        background: rgba(14, 21, 35, 0.9);
+        padding: 16px;
+      }
+
+      .showcase-card--c .card-header {
+        padding-bottom: 12px;
+        margin-bottom: 10px;
+        border-bottom: 1px dashed rgba(157, 180, 231, 0.26);
+      }
+
+      .showcase-card--d {
+        border: 1px solid rgba(138, 160, 205, 0.26);
+        border-radius: 14px;
+        background: transparent;
+        padding: 14px;
+        transition: border-color 160ms ease, background 160ms ease;
+      }
+
+      .showcase-card--d:hover {
+        border-color: rgba(102, 143, 245, 0.56);
+        background: rgba(95, 141, 255, 0.08);
+      }
+
+      @media (min-width: 960px) {
+        .preview-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="page-head">
+        <div>
+          <h1 class="title">画像展示卡片样式对比</h1>
+          <p class="subtitle">每个方案都包含左右两个独立卡片，不带外层总卡片壳。</p>
+        </div>
+        <div class="chip">CTF UI Mock</div>
+      </header>
+
+      <section class="variant-stack">
+        <article class="variant-block">
+          <header class="variant-head">
+            <h2 class="variant-name">方案 A · Tactical Surface</h2>
+            <div class="variant-note">稳重、层次清晰</div>
+          </header>
+          <div class="preview-row">
+            <section class="showcase-card showcase-card--a">
+              <div class="card-header">
+                <p class="card-eyebrow">Students</p>
+                <h3 class="card-title">班级 Top 学生</h3>
+                <p class="card-subtitle">按解题数与分数综合排序，定位稳定输出选手。</p>
+              </div>
+              <div class="rows">
+                <div class="row"><div class="index">01</div><div class="name">luori</div><div class="value">29 题</div></div>
+                <div class="row"><div class="index">02</div><div class="name">ginkgo</div><div class="value">24 题</div></div>
+                <div class="row"><div class="index">03</div><div class="name">novabyte</div><div class="value">20 题</div></div>
+              </div>
+            </section>
+            <section class="showcase-card showcase-card--a">
+              <div class="card-header">
+                <p class="card-eyebrow">Weak Dimensions</p>
+                <h3 class="card-title">薄弱维度分布</h3>
+                <p class="card-subtitle">建议先补密码学与 PWN 基础链路。</p>
+              </div>
+              <div class="bar-item"><div class="bar-head"><span>密码学</span><span>18 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>PWN</span><span>14 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>逆向</span><span>9 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div></div>
+            </section>
+          </div>
+        </article>
+
+        <article class="variant-block">
+          <header class="variant-head">
+            <h2 class="variant-name">方案 B · Intel Panel</h2>
+            <div class="variant-note">情报面板感更强，推荐优先试</div>
+          </header>
+          <div class="preview-row">
+            <section class="showcase-card showcase-card--b">
+              <div class="card-header">
+                <p class="card-eyebrow">Students</p>
+                <h3 class="card-title">班级 Top 学生</h3>
+                <p class="card-subtitle">面向竞赛备战的核心学生清单。</p>
+              </div>
+              <div class="rows">
+                <div class="row"><div class="index">01</div><div class="name">luori</div><div class="value">29 题</div></div>
+                <div class="row"><div class="index">02</div><div class="name">ginkgo</div><div class="value">24 题</div></div>
+                <div class="row"><div class="index">03</div><div class="name">novabyte</div><div class="value">20 题</div></div>
+              </div>
+            </section>
+            <section class="showcase-card showcase-card--b">
+              <div class="card-header">
+                <p class="card-eyebrow">Weak Dimensions</p>
+                <h3 class="card-title">薄弱维度分布</h3>
+                <p class="card-subtitle">帮助教师定位下一轮训练投入方向。</p>
+              </div>
+              <div class="bar-item"><div class="bar-head"><span>密码学</span><span>18 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>PWN</span><span>14 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>逆向</span><span>9 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div></div>
+            </section>
+          </div>
+        </article>
+
+        <article class="variant-block">
+          <header class="variant-head">
+            <h2 class="variant-name">方案 C · Split Edge</h2>
+            <div class="variant-note">分隔感更明显，信息分区强</div>
+          </header>
+          <div class="preview-row">
+            <section class="showcase-card showcase-card--c">
+              <div class="card-header">
+                <p class="card-eyebrow">Students</p>
+                <h3 class="card-title">班级 Top 学生</h3>
+                <p class="card-subtitle">快速识别班级中的前排选手。</p>
+              </div>
+              <div class="rows">
+                <div class="row"><div class="index">01</div><div class="name">luori</div><div class="value">29 题</div></div>
+                <div class="row"><div class="index">02</div><div class="name">ginkgo</div><div class="value">24 题</div></div>
+                <div class="row"><div class="index">03</div><div class="name">novabyte</div><div class="value">20 题</div></div>
+              </div>
+            </section>
+            <section class="showcase-card showcase-card--c">
+              <div class="card-header">
+                <p class="card-eyebrow">Weak Dimensions</p>
+                <h3 class="card-title">薄弱维度分布</h3>
+                <p class="card-subtitle">按弱项人数聚类，便于排训练优先级。</p>
+              </div>
+              <div class="bar-item"><div class="bar-head"><span>密码学</span><span>18 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>PWN</span><span>14 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>逆向</span><span>9 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div></div>
+            </section>
+          </div>
+        </article>
+
+        <article class="variant-block">
+          <header class="variant-head">
+            <h2 class="variant-name">方案 D · Minimal Wire</h2>
+            <div class="variant-note">最克制，偏工具化</div>
+          </header>
+          <div class="preview-row">
+            <section class="showcase-card showcase-card--d">
+              <div class="card-header">
+                <p class="card-eyebrow">Students</p>
+                <h3 class="card-title">班级 Top 学生</h3>
+                <p class="card-subtitle">低装饰风格，强调数据本身。</p>
+              </div>
+              <div class="rows">
+                <div class="row"><div class="index">01</div><div class="name">luori</div><div class="value">29 题</div></div>
+                <div class="row"><div class="index">02</div><div class="name">ginkgo</div><div class="value">24 题</div></div>
+                <div class="row"><div class="index">03</div><div class="name">novabyte</div><div class="value">20 题</div></div>
+              </div>
+            </section>
+            <section class="showcase-card showcase-card--d">
+              <div class="card-header">
+                <p class="card-eyebrow">Weak Dimensions</p>
+                <h3 class="card-title">薄弱维度分布</h3>
+                <p class="card-subtitle">适合信息密度高的管理视图。</p>
+              </div>
+              <div class="bar-item"><div class="bar-head"><span>密码学</span><span>18 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 88%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>PWN</span><span>14 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 70%"></div></div></div>
+              <div class="bar-item"><div class="bar-head"><span>逆向</span><span>9 人</span></div><div class="bar-track"><div class="bar-fill" style="width: 44%"></div></div></div>
+            </section>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
