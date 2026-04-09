@@ -133,5 +133,7 @@ describe('admin management surface alignment', () => {
     expect(imageManageSource).not.toMatch(
       /^\.image-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
     )
+    expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid')
+    expect(contestOrchestrationSource).toContain('class="admin-summary-grid contest-overview-summary')
   })
 })

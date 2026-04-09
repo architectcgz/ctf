@@ -220,7 +220,7 @@ function handleImportChange(event: Event): void {
             <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
             当前用户概况
           </div>
-          <div class="user-overview-grid mt-5">
+          <div class="admin-summary-grid user-overview-grid mt-5">
             <div class="journal-note user-overview-stat">
               <div class="journal-note-label">用户总量</div>
               <div class="journal-note-value">{{ total }}</div>
@@ -559,9 +559,8 @@ function handleImportChange(event: Event): void {
 }
 
 .user-overview-grid {
-  display: grid;
-  gap: var(--space-3-5);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  --admin-summary-grid-gap: var(--space-3-5);
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
 }
 
 .user-overview-stat {
@@ -779,13 +778,13 @@ function handleImportChange(event: Event): void {
   }
 
   .user-overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
   .user-overview-grid {
-    grid-template-columns: 1fr;
+    --admin-summary-grid-columns: 1fr;
   }
 }
 </style>

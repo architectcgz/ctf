@@ -285,32 +285,6 @@ async function submitPasswordChange(): Promise<void> {
   gap: 0.75rem;
 }
 
-.security-summary-grid {
-  display: grid;
-  gap: 0.9rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.security-summary-item {
-  display: flex;
-  gap: 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding-top: 0.85rem;
-}
-
-.security-summary-icon {
-  display: inline-flex;
-  margin-top: 0.1rem;
-  color: var(--journal-accent);
-}
-
-.security-summary-value {
-  margin-top: 0.4rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .security-divider {
   margin: 1.2rem 0 0;
 }
@@ -460,10 +434,6 @@ async function submitPasswordChange(): Promise<void> {
 @media (max-width: 720px) {
   .journal-shell {
     padding-inline: 1rem;
-  }
-
-  .security-summary-grid {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 </style>

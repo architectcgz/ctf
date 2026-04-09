@@ -183,7 +183,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
               <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
               当前赛事概况
             </div>
-            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="admin-summary-grid contest-overview-summary mt-5">
               <div class="journal-note">
                 <div class="journal-note-label">赛事总量</div>
                 <div class="journal-note-value">{{ total }}</div>
@@ -382,6 +382,10 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   gap: var(--space-3);
 }
 
+.contest-overview-summary {
+  --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
+}
+
 .journal-brief {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
@@ -516,6 +520,12 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
   .panel-head--overview {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .contest-overview-summary {
+    --admin-summary-grid-columns: 1fr;
   }
 }
 </style>
