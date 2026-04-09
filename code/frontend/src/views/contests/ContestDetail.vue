@@ -173,26 +173,26 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
           <div class="contest-divider" />
 
-          <section class="contest-stat-grid">
-            <article class="contest-stat">
-              <div class="contest-stat__label">队伍成员</div>
-              <div class="contest-stat__value">{{ memberCount }}</div>
-              <div class="contest-stat__hint">当前队伍人数</div>
+          <section class="contest-stat-grid metric-panel-grid">
+            <article class="contest-stat metric-panel-card">
+              <div class="contest-stat__label metric-panel-label">队伍成员</div>
+              <div class="contest-stat__value metric-panel-value">{{ memberCount }}</div>
+              <div class="contest-stat__hint metric-panel-helper">当前队伍人数</div>
             </article>
-            <article class="contest-stat">
-              <div class="contest-stat__label">题目数量</div>
-              <div class="contest-stat__value">{{ challenges.length }}</div>
-              <div class="contest-stat__hint">本场竞赛题目总数</div>
+            <article class="contest-stat metric-panel-card">
+              <div class="contest-stat__label metric-panel-label">题目数量</div>
+              <div class="contest-stat__value metric-panel-value">{{ challenges.length }}</div>
+              <div class="contest-stat__hint metric-panel-helper">本场竞赛题目总数</div>
             </article>
-            <article class="contest-stat">
-              <div class="contest-stat__label">已解题目</div>
-              <div class="contest-stat__value">{{ solvedCount }}</div>
-              <div class="contest-stat__hint">当前账号已完成数量</div>
+            <article class="contest-stat metric-panel-card">
+              <div class="contest-stat__label metric-panel-label">已解题目</div>
+              <div class="contest-stat__value metric-panel-value">{{ solvedCount }}</div>
+              <div class="contest-stat__hint metric-panel-helper">当前账号已完成数量</div>
             </article>
-            <article class="contest-stat">
-              <div class="contest-stat__label">积分总览</div>
-              <div class="contest-stat__value">{{ totalPoints }}</div>
-              <div class="contest-stat__hint">全部题目可获得积分</div>
+            <article class="contest-stat metric-panel-card">
+              <div class="contest-stat__label metric-panel-label">积分总览</div>
+              <div class="contest-stat__value metric-panel-value">{{ totalPoints }}</div>
+              <div class="contest-stat__hint metric-panel-helper">全部题目可获得积分</div>
             </article>
           </section>
 
@@ -761,35 +761,12 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 }
 
 .contest-stat-grid {
-  display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-grid-gap: 0.85rem;
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
 .contest-stat {
   min-width: 0;
-}
-
-.contest-stat__label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.contest-stat__value {
-  margin-top: 0.45rem;
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.contest-stat__hint {
-  margin-top: 0.35rem;
-  font-size: 0.82rem;
-  line-height: 1.6;
-  color: var(--journal-muted);
 }
 
 .contest-overview-grid {

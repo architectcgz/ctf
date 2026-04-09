@@ -224,18 +224,18 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               <div class="teacher-tip-copy">先看班级趋势和复盘结论，再决定课堂介入动作。</div>
             </div>
 
-            <div class="teacher-summary-cards">
-              <article class="teacher-summary-card">
-                <div class="teacher-summary-label">近 7 天训练事件</div>
-                <div class="teacher-summary-value">
+            <div class="teacher-summary-cards metric-panel-grid">
+              <article class="teacher-summary-card metric-panel-card">
+                <div class="teacher-summary-label metric-panel-label">近 7 天训练事件</div>
+                <div class="teacher-summary-value metric-panel-value">
                   {{ props.summary?.recent_event_count ?? '--' }}
                 </div>
-                <div class="teacher-summary-helper">提交、实例启动与销毁等动作总数</div>
+                <div class="teacher-summary-helper metric-panel-helper">提交、实例启动与销毁等动作总数</div>
               </article>
-              <article class="teacher-summary-card">
-                <div class="teacher-summary-label">当前学生记录</div>
-                <div class="teacher-summary-value">{{ students.length }}</div>
-                <div class="teacher-summary-helper">当前列表内可直接进入分析的学生数量</div>
+              <article class="teacher-summary-card metric-panel-card">
+                <div class="teacher-summary-label metric-panel-label">当前学生记录</div>
+                <div class="teacher-summary-value metric-panel-value">{{ students.length }}</div>
+                <div class="teacher-summary-helper metric-panel-helper">当前列表内可直接进入分析的学生数量</div>
               </article>
             </div>
           </div>
@@ -621,13 +621,14 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .teacher-summary-cards {
   margin-top: var(--space-5);
-  display: grid;
-  gap: var(--space-3-5);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3-5);
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
 }
 
 .teacher-summary-card {
-  padding-top: 0.25rem;
+  --metric-panel-border: var(--teacher-card-border);
+  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
 .teacher-badge-card {

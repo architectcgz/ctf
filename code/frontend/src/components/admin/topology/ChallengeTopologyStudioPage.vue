@@ -207,22 +207,22 @@ const {
               {{ heroDescription }}
             </p>
 
-            <div class="topology-summary-grid">
-              <div class="topology-summary-tile">
-                <div class="topology-summary-label">网络</div>
-                <div class="topology-summary-value">{{ topologySummary.networks }}</div>
+            <div class="topology-summary-grid metric-panel-grid">
+              <div class="topology-summary-tile metric-panel-card">
+                <div class="topology-summary-label metric-panel-label">网络</div>
+                <div class="topology-summary-value metric-panel-value">{{ topologySummary.networks }}</div>
               </div>
-              <div class="topology-summary-tile">
-                <div class="topology-summary-label">节点</div>
-                <div class="topology-summary-value">{{ topologySummary.nodes }}</div>
+              <div class="topology-summary-tile metric-panel-card">
+                <div class="topology-summary-label metric-panel-label">节点</div>
+                <div class="topology-summary-value metric-panel-value">{{ topologySummary.nodes }}</div>
               </div>
-              <div class="topology-summary-tile">
-                <div class="topology-summary-label">连线</div>
-                <div class="topology-summary-value">{{ topologySummary.links }}</div>
+              <div class="topology-summary-tile metric-panel-card">
+                <div class="topology-summary-label metric-panel-label">连线</div>
+                <div class="topology-summary-value metric-panel-value">{{ topologySummary.links }}</div>
               </div>
-              <div class="topology-summary-tile">
-                <div class="topology-summary-label">策略</div>
-                <div class="topology-summary-value">{{ topologySummary.policies }}</div>
+              <div class="topology-summary-tile metric-panel-card">
+                <div class="topology-summary-label metric-panel-label">策略</div>
+                <div class="topology-summary-value metric-panel-value">{{ topologySummary.policies }}</div>
               </div>
             </div>
           </div>
@@ -2111,12 +2111,10 @@ const {
 
 .topology-page--template-library .topology-summary-grid {
   margin-top: var(--space-6);
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
-.topology-page--template-library .topology-summary-tile,
 .topology-page--template-library .template-focus-card,
 .topology-page--template-library .template-empty-state {
   padding: 0 0 0 var(--space-4);
@@ -2125,21 +2123,6 @@ const {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-}
-
-.topology-page--template-library .topology-summary-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.topology-page--template-library .topology-summary-value {
-  margin-top: var(--space-1-5);
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: var(--journal-ink);
 }
 
 .topology-page--template-library .topology-hero-aside--library {

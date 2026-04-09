@@ -96,15 +96,15 @@ const {
               </span>
             </div>
 
-            <div class="progress-strip">
-              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card">
-                <div class="progress-card-label">
+            <div class="progress-strip metric-panel-grid">
+              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card metric-panel-card">
+                <div class="progress-card-label metric-panel-label">
                   {{ item.label }}
                 </div>
-                <div class="progress-card-value">
+                <div class="progress-card-value metric-panel-value">
                   {{ item.value }}
                 </div>
-                <div class="progress-card-hint">
+                <div class="progress-card-hint metric-panel-helper">
                   {{ item.hint }}
                 </div>
               </article>
@@ -165,8 +165,8 @@ const {
               </div>
             </div>
 
-            <div v-else-if="loading" class="progress-strip">
-              <div v-for="index in 4" :key="index" class="progress-card progress-card--skeleton" />
+            <div v-else-if="loading" class="progress-strip metric-panel-grid">
+              <div v-for="index in 4" :key="index" class="progress-card progress-card--skeleton metric-panel-card" />
             </div>
           </div>
 
@@ -398,13 +398,11 @@ const {
 }
 
 .progress-strip {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
   margin-top: var(--space-5-5);
 }
 
-.progress-card,
 .panel {
   border: 1px solid var(--workspace-line-soft);
   border-radius: var(--workspace-radius-lg);
@@ -413,7 +411,7 @@ const {
 }
 
 .progress-card {
-  padding: var(--space-3-5) var(--space-4) var(--space-4);
+  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
 }
 
 .progress-card--skeleton {
@@ -430,11 +428,8 @@ const {
 }
 
 .progress-card-value {
-  margin-top: var(--space-2-5);
-  font-size: 26px;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
+  --metric-panel-value-margin-top: var(--space-2-5);
+  --metric-panel-value-size: 26px;
 }
 
 .progress-card-hint,

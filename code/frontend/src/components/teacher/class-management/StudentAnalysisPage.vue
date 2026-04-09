@@ -198,23 +198,23 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           </div>
         </div>
 
-        <section v-if="activeTab === 'overview'" class="summary-strip">
-          <article class="summary-card">
-            <div class="summary-card__label">已做题目数</div>
-            <div class="summary-card__value">{{ progress?.solved_challenges ?? 0 }}</div>
-            <div class="summary-card__hint">已成功完成的题目数量</div>
+        <section v-if="activeTab === 'overview'" class="summary-strip metric-panel-grid">
+          <article class="summary-card metric-panel-card">
+            <div class="summary-card__label metric-panel-label">已做题目数</div>
+            <div class="summary-card__value metric-panel-value">{{ progress?.solved_challenges ?? 0 }}</div>
+            <div class="summary-card__hint metric-panel-helper">已成功完成的题目数量</div>
           </article>
-          <article class="summary-card">
-            <div class="summary-card__label">完成率</div>
-            <div class="summary-card__value">{{ solvedRate }}%</div>
-            <div class="summary-card__hint">基于当前学员训练数据计算</div>
+          <article class="summary-card metric-panel-card">
+            <div class="summary-card__label metric-panel-label">完成率</div>
+            <div class="summary-card__value metric-panel-value">{{ solvedRate }}%</div>
+            <div class="summary-card__hint metric-panel-helper">基于当前学员训练数据计算</div>
           </article>
-          <article class="summary-card">
-            <div class="summary-card__label">薄弱维度</div>
-            <div class="summary-card__value">
+          <article class="summary-card metric-panel-card">
+            <div class="summary-card__label metric-panel-label">薄弱维度</div>
+            <div class="summary-card__value metric-panel-value">
               {{ weakDimensions.length > 0 ? weakDimensions.join('、') : '暂无' }}
             </div>
-            <div class="summary-card__hint">基于能力画像提炼的风险点</div>
+            <div class="summary-card__hint metric-panel-helper">基于能力画像提炼的风险点</div>
           </article>
         </section>
 
@@ -497,9 +497,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 .summary-strip {
-  display: grid;
-  gap: var(--space-2-5) var(--space-4);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-2-5) var(--space-4);
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
   margin: 0 0 var(--space-4);
   padding: var(--space-1) 0 var(--space-2-5);
   border-bottom: 1px solid color-mix(in srgb, var(--teacher-divider) 82%, transparent);
@@ -507,35 +506,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .summary-card {
   min-width: 0;
-  border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--teacher-divider) 88%, transparent);
-  border-radius: 0;
-  background: transparent;
-  padding: var(--space-3) var(--space-1-5) var(--space-2-5);
-  box-shadow: none;
-}
-
-.summary-card__label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.summary-card__value {
-  margin-top: var(--space-2);
-  font-size: 1.15rem;
-  font-weight: 700;
-  line-height: 1.4;
-  color: var(--journal-ink);
-}
-
-.summary-card__hint {
-  margin-top: var(--space-2);
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: var(--journal-muted);
+  --metric-panel-border: var(--teacher-card-border);
+  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
 .rail-stack {
