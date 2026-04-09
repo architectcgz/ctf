@@ -39,6 +39,9 @@ hints:
   - level: 1 # 提示级别（数字越大通常越晚解锁）
     title: Hint 1 # 提示标题
     content: 先看登录流程的请求参数 # 提示内容
+  - level: 2 # 第二条提示示例（可继续追加 level: 3、4...）
+    title: Hint 2 # 提示标题
+    content: 关注 SQL 语句拼接位置 # 提示内容
 
 runtime:
   type: container # 运行方式，如 container/static
@@ -121,7 +124,7 @@ extensions:
   min-height: 2.35rem;
   border-radius: 0.75rem;
   border: 1px solid var(--journal-border);
-  padding: 0.45rem 0.85rem;
+  padding: var(--space-2) var(--space-3-5);
   background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
   color: var(--journal-ink);
   font-size: 0.88rem;
@@ -134,21 +137,21 @@ extensions:
 }
 
 .hero-summary {
-  margin: 0.9rem 0 0;
+  margin: var(--space-3-5) 0 0;
   color: var(--journal-muted);
   line-height: 1.75;
 }
 
 .guide-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .guide-section {
   display: grid;
-  gap: 0.85rem;
-  padding: 1.1rem;
+  gap: var(--space-3-5);
+  padding: var(--space-4-5);
   border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
   border-radius: 1rem;
   background: linear-gradient(
@@ -166,7 +169,7 @@ extensions:
 }
 
 .guide-section--full {
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }
 
 .guide-section__title {
@@ -182,7 +185,7 @@ extensions:
   border-radius: 0.85rem;
   border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
   background: var(--color-bg-surface);
-  padding: 1rem;
+  padding: var(--space-4);
   color: var(--color-text-primary);
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
   font-size: 0.92rem;
@@ -191,7 +194,7 @@ extensions:
 
 .guide-list {
   display: grid;
-  gap: 0.65rem;
+  gap: var(--space-2-5);
   margin: 0;
   padding-left: 1.15rem;
   color: var(--journal-muted);
