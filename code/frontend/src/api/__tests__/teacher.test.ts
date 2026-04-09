@@ -6,7 +6,7 @@ vi.mock('@/api/request', () => ({
   request: requestMock,
 }))
 
-import { getClasses } from '@/api/teacher'
+import { destroyTeacherInstance, getClasses } from '@/api/teacher'
 
 describe('teacher api contract', () => {
   beforeEach(() => {
@@ -57,6 +57,18 @@ describe('teacher api contract', () => {
       total: 21,
       page: 2,
       page_size: 20,
+    })
+  })
+
+  it('销毁教师实例时应关闭全局错误提示，交给页面展示具体原因', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await destroyTeacherInstance('inst-3')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/teacher/instances/inst-3',
+      suppressErrorToast: true,
     })
   })
 })
