@@ -51,7 +51,10 @@ const series = computed(() => [
       <h2 class="teacher-panel__title">{{ panelTitle }}</h2>
     </header>
 
-    <p v-if="!hasTrendPoints" class="teacher-panel__empty-copy">暂无</p>
+    <div v-if="!hasTrendPoints" class="teacher-panel__empty-state">
+      <p class="teacher-panel__empty-title">暂无</p>
+      <p class="teacher-panel__empty-copy">近 7 天还没有可展示的训练趋势</p>
+    </div>
 
     <div v-else class="teacher-panel__chart">
       <LineChart :categories="categories" :series="series" />
@@ -59,7 +62,10 @@ const series = computed(() => [
   </section>
 
   <template v-else>
-    <p v-if="!hasTrendPoints" class="teacher-panel__empty-copy teacher-panel__empty-copy--bare">暂无</p>
+    <div v-if="!hasTrendPoints" class="teacher-panel__empty-state teacher-panel__empty-state--bare">
+      <p class="teacher-panel__empty-title">暂无</p>
+      <p class="teacher-panel__empty-copy">近 7 天还没有可展示的训练趋势</p>
+    </div>
 
     <div v-else class="teacher-panel__chart teacher-panel__chart--bare">
       <LineChart :categories="categories" :series="series" />
@@ -105,15 +111,35 @@ const series = computed(() => [
   color: var(--panel-muted);
 }
 
+.teacher-panel__empty-state {
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  min-height: 16rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-surface) 92%, transparent);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.teacher-panel__empty-title {
+  margin: 0;
+  font-size: var(--font-size-1-00);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--panel-ink);
+}
+
 .teacher-panel__empty-copy {
-  margin-top: var(--space-1);
+  margin: 0;
   font-size: var(--font-size-0-84);
   line-height: 1.7;
   color: var(--panel-muted);
 }
 
-.teacher-panel__empty-copy--bare {
-  margin-top: 0;
+.teacher-panel__empty-state--bare {
+  min-height: 20rem;
 }
 
 .teacher-panel__chart {
