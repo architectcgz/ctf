@@ -377,32 +377,6 @@ onUnmounted(() => {
   color: var(--journal-ink);
 }
 
-.profile-summary-grid {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.profile-summary-item {
-  display: flex;
-  gap: 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding-top: 0.85rem;
-}
-
-.profile-summary-icon {
-  display: inline-flex;
-  margin-top: 0.1rem;
-  color: var(--journal-accent);
-}
-
-.profile-summary-value {
-  margin-top: 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
 .profile-divider {
   margin: 1.2rem 0 0;
 }
@@ -638,7 +612,6 @@ onUnmounted(() => {
     padding-inline: 1rem;
   }
 
-  .profile-summary-grid,
   .profile-field-list,
   .profile-format-grid,
   .profile-report-meta {
