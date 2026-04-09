@@ -6,9 +6,11 @@
     <title>Portrait Showcase Card Variants</title>
     <style>
       :root {
-        color-scheme: dark;
+        color-scheme: light dark;
         --bg-page: #060a12;
         --bg-grid: #0a101c;
+        --bg-accent-a: rgba(95, 141, 255, 0.24);
+        --bg-accent-b: rgba(106, 208, 165, 0.12);
         --text-main: #e8eefc;
         --text-muted: #9aa8c9;
         --text-faint: #7f8fb1;
@@ -22,11 +24,67 @@
         --radius-lg: 18px;
         --radius-md: 14px;
         --shadow-soft: 0 14px 36px rgba(0, 0, 0, 0.32);
+        --chip-bg: rgba(8, 15, 28, 0.62);
+        --variant-border: rgba(123, 147, 198, 0.16);
+        --variant-bg: rgba(9, 14, 25, 0.62);
+        --variant-name: #c8d6f4;
+        --row-border: rgba(157, 180, 231, 0.24);
+        --index-color: #c1d2ff;
+        --bar-track-bg: rgba(157, 180, 231, 0.14);
+        --card-a-border: rgba(138, 160, 205, 0.3);
+        --card-a-bg-start: rgba(17, 26, 44, 0.95);
+        --card-a-bg-end: rgba(14, 21, 36, 0.92);
+        --card-b-border: rgba(108, 143, 226, 0.45);
+        --card-b-bg-start: rgba(11, 19, 34, 0.96);
+        --card-b-bg-end: rgba(8, 14, 26, 0.96);
+        --card-b-inset: rgba(95, 141, 255, 0.2);
+        --card-c-border: rgba(138, 160, 205, 0.35);
+        --card-c-bg: rgba(14, 21, 35, 0.9);
+        --card-c-divider: rgba(157, 180, 231, 0.26);
+        --card-d-border: rgba(138, 160, 205, 0.26);
+        --card-d-hover-border: rgba(102, 143, 245, 0.56);
+        --card-d-hover-bg: rgba(95, 141, 255, 0.08);
         --font-sans:
           "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
           "Microsoft YaHei", sans-serif;
         --font-mono:
           "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", "Consolas", monospace;
+      }
+
+      html[data-theme="light"] {
+        color-scheme: light;
+        --bg-page: #eef3fb;
+        --bg-grid: #f8fbff;
+        --bg-accent-a: rgba(64, 101, 223, 0.15);
+        --bg-accent-b: rgba(59, 165, 126, 0.12);
+        --text-main: #16233d;
+        --text-muted: #51648c;
+        --text-faint: #6d7f9f;
+        --line-soft: rgba(66, 96, 156, 0.2);
+        --line-strong: rgba(66, 96, 156, 0.3);
+        --brand: #3e66e6;
+        --brand-soft: rgba(62, 102, 230, 0.12);
+        --shadow-soft: 0 10px 22px rgba(31, 53, 95, 0.13);
+        --chip-bg: rgba(255, 255, 255, 0.8);
+        --variant-border: rgba(71, 108, 176, 0.18);
+        --variant-bg: rgba(255, 255, 255, 0.78);
+        --variant-name: #2c4678;
+        --row-border: rgba(74, 104, 162, 0.24);
+        --index-color: #3e66e6;
+        --bar-track-bg: rgba(88, 122, 186, 0.18);
+        --card-a-border: rgba(88, 123, 194, 0.38);
+        --card-a-bg-start: rgba(255, 255, 255, 0.95);
+        --card-a-bg-end: rgba(244, 248, 255, 0.95);
+        --card-b-border: rgba(82, 119, 194, 0.46);
+        --card-b-bg-start: rgba(255, 255, 255, 0.96);
+        --card-b-bg-end: rgba(242, 247, 255, 0.96);
+        --card-b-inset: rgba(75, 110, 196, 0.18);
+        --card-c-border: rgba(82, 119, 194, 0.32);
+        --card-c-bg: rgba(250, 252, 255, 0.96);
+        --card-c-divider: rgba(77, 108, 177, 0.22);
+        --card-d-border: rgba(89, 124, 194, 0.3);
+        --card-d-hover-border: rgba(69, 106, 196, 0.56);
+        --card-d-hover-bg: rgba(89, 124, 194, 0.1);
       }
 
       * {
@@ -38,8 +96,8 @@
         min-height: 100vh;
         padding: clamp(16px, 2.5vw, 28px);
         background:
-          radial-gradient(circle at 8% -12%, rgba(95, 141, 255, 0.24), transparent 34%),
-          radial-gradient(circle at 90% -6%, rgba(106, 208, 165, 0.12), transparent 28%),
+          radial-gradient(circle at 8% -12%, var(--bg-accent-a), transparent 34%),
+          radial-gradient(circle at 90% -6%, var(--bg-accent-b), transparent 28%),
           linear-gradient(180deg, var(--bg-grid), var(--bg-page));
         color: var(--text-main);
         font-family: var(--font-sans);
@@ -82,7 +140,39 @@
         border-radius: 10px;
         color: var(--text-muted);
         font: 600 12px/1 var(--font-mono);
-        background: rgba(8, 15, 28, 0.62);
+        background: var(--chip-bg);
+      }
+
+      .page-tools {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .theme-switch {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        border: 1px solid var(--line-soft);
+        border-radius: 10px;
+        background: var(--chip-bg);
+      }
+
+      .theme-btn {
+        border: 0;
+        min-width: 52px;
+        height: 28px;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text-faint);
+        font: 600 12px/1 var(--font-sans);
+        cursor: pointer;
+      }
+
+      .theme-btn.active {
+        background: var(--brand-soft);
+        color: var(--text-main);
       }
 
       .variant-stack {
@@ -91,9 +181,9 @@
       }
 
       .variant-block {
-        border: 1px solid rgba(123, 147, 198, 0.16);
+        border: 1px solid var(--variant-border);
         border-radius: 20px;
-        background: rgba(9, 14, 25, 0.62);
+        background: var(--variant-bg);
         padding: 16px;
       }
 
@@ -109,7 +199,7 @@
       .variant-name {
         margin: 0;
         font: 600 14px/1.2 var(--font-sans);
-        color: #c8d6f4;
+        color: var(--variant-name);
       }
 
       .variant-note {
@@ -162,7 +252,7 @@
         gap: 10px;
         align-items: center;
         padding: 8px 0;
-        border-bottom: 1px dashed rgba(157, 180, 231, 0.24);
+        border-bottom: 1px dashed var(--row-border);
       }
 
       .row:last-child {
@@ -174,7 +264,7 @@
         width: 22px;
         text-align: center;
         font: 700 12px/1 var(--font-mono);
-        color: #c1d2ff;
+        color: var(--index-color);
       }
 
       .name {
@@ -205,7 +295,7 @@
         margin-top: 6px;
         height: 6px;
         border-radius: 999px;
-        background: rgba(157, 180, 231, 0.14);
+        background: var(--bar-track-bg);
         overflow: hidden;
       }
 
@@ -216,9 +306,9 @@
       }
 
       .showcase-card--a {
-        border: 1px solid rgba(138, 160, 205, 0.3);
+        border: 1px solid var(--card-a-border);
         border-radius: 18px;
-        background: linear-gradient(165deg, rgba(17, 26, 44, 0.95), rgba(14, 21, 36, 0.92));
+        background: linear-gradient(165deg, var(--card-a-bg-start), var(--card-a-bg-end));
         box-shadow: var(--shadow-soft);
         padding: 16px;
         position: relative;
@@ -236,9 +326,9 @@
       }
 
       .showcase-card--b {
-        border: 1px solid rgba(108, 143, 226, 0.45);
+        border: 1px solid var(--card-b-border);
         border-radius: 16px;
-        background: linear-gradient(180deg, rgba(11, 19, 34, 0.96), rgba(8, 14, 26, 0.96));
+        background: linear-gradient(180deg, var(--card-b-bg-start), var(--card-b-bg-end));
         padding: 16px;
         position: relative;
       }
@@ -248,7 +338,7 @@
         position: absolute;
         inset: 0;
         border-radius: inherit;
-        box-shadow: inset 0 0 0 1px rgba(95, 141, 255, 0.2);
+        box-shadow: inset 0 0 0 1px var(--card-b-inset);
         pointer-events: none;
       }
 
@@ -257,20 +347,20 @@
       }
 
       .showcase-card--c {
-        border: 1px solid rgba(138, 160, 205, 0.35);
+        border: 1px solid var(--card-c-border);
         border-radius: 20px;
-        background: rgba(14, 21, 35, 0.9);
+        background: var(--card-c-bg);
         padding: 16px;
       }
 
       .showcase-card--c .card-header {
         padding-bottom: 12px;
         margin-bottom: 10px;
-        border-bottom: 1px dashed rgba(157, 180, 231, 0.26);
+        border-bottom: 1px dashed var(--card-c-divider);
       }
 
       .showcase-card--d {
-        border: 1px solid rgba(138, 160, 205, 0.26);
+        border: 1px solid var(--card-d-border);
         border-radius: 14px;
         background: transparent;
         padding: 14px;
@@ -278,8 +368,8 @@
       }
 
       .showcase-card--d:hover {
-        border-color: rgba(102, 143, 245, 0.56);
-        background: rgba(95, 141, 255, 0.08);
+        border-color: var(--card-d-hover-border);
+        background: var(--card-d-hover-bg);
       }
 
       @media (min-width: 960px) {
@@ -296,7 +386,13 @@
           <h1 class="title">画像展示卡片样式对比</h1>
           <p class="subtitle">每个方案都包含左右两个独立卡片，不带外层总卡片壳。</p>
         </div>
-        <div class="chip">CTF UI Mock</div>
+        <div class="page-tools">
+          <div class="chip">CTF UI Mock</div>
+          <div class="theme-switch" role="group" aria-label="切换主题">
+            <button class="theme-btn" data-theme-value="light" type="button">日间</button>
+            <button class="theme-btn" data-theme-value="dark" type="button">夜间</button>
+          </div>
+        </div>
       </header>
 
       <section class="variant-stack">
@@ -425,5 +521,34 @@
         </article>
       </section>
     </main>
+    <script>
+      (function () {
+        var storageKey = "portrait-mock-theme";
+        var root = document.documentElement;
+        var themeButtons = document.querySelectorAll(".theme-btn");
+        var saved = localStorage.getItem(storageKey);
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var initialTheme = saved || (prefersDark ? "dark" : "light");
+
+        function setTheme(theme) {
+          root.dataset.theme = theme;
+          themeButtons.forEach(function (button) {
+            var active = button.dataset.themeValue === theme;
+            button.classList.toggle("active", active);
+            button.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+        }
+
+        setTheme(initialTheme);
+
+        themeButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            var next = button.dataset.themeValue;
+            setTheme(next);
+            localStorage.setItem(storageKey, next);
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
