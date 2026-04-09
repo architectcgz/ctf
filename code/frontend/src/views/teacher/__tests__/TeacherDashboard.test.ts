@@ -259,6 +259,28 @@ describe('TeacherDashboard', () => {
     expect(wrapper.text()).not.toContain('把训练事件、成功解题和活跃学生放在同一条时间轴上观察。')
   })
 
+  it('趋势数据为空时应显示“暂无”空态提示', async () => {
+    teacherApiMocks.getClassTrend.mockResolvedValueOnce({
+      class_name: 'Class A',
+      points: [],
+    })
+
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.get('#top-tab-trend').trigger('click')
+    expect(wrapper.find('#trend').text()).toContain('暂无')
+  })
+
   it('教师概览不应渲染设计介绍式文案', async () => {
     const wrapper = mount(TeacherDashboard, {
       global: {
