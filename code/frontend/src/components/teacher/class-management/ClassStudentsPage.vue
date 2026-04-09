@@ -196,48 +196,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                   </div>
                 </div>
               </section>
-
-              <section class="teacher-controls">
-                <div class="teacher-controls-bar">
-                  <div class="teacher-controls-heading workspace-tab-heading__main">
-                    <div class="teacher-surface-eyebrow journal-eyebrow">Class Workspace</div>
-                    <h3 class="teacher-controls-title workspace-tab-heading__title">班级详情</h3>
-                    <p class="teacher-controls-copy">
-                      {{
-                        selectedClassName || '当前未选择班级'
-                      }}。先看班级趋势与复盘，再按学号快速定位学生。
-                    </p>
-                  </div>
-                </div>
-
-                <div class="teacher-context-card">
-                  <div class="teacher-field-label">当前班级</div>
-                  <div class="teacher-context-value">{{ selectedClassName || '未选择班级' }}</div>
-                  <div class="teacher-context-copy">
-                    {{ props.summary?.student_count ?? students.length }} 名学生
-                  </div>
-                </div>
-              </section>
-
-              <div class="teacher-hero-divider" />
-
-              <div class="teacher-tip-label">当前焦点</div>
-              <div class="teacher-tip-copy">先看班级趋势和复盘结论，再决定课堂介入动作。</div>
-            </div>
-
-            <div class="teacher-summary-cards metric-panel-grid">
-              <article class="teacher-summary-card metric-panel-card">
-                <div class="teacher-summary-label metric-panel-label">近 7 天训练事件</div>
-                <div class="teacher-summary-value metric-panel-value">
-                  {{ props.summary?.recent_event_count ?? '--' }}
-                </div>
-                <div class="teacher-summary-helper metric-panel-helper">提交、实例启动与销毁等动作总数</div>
-              </article>
-              <article class="teacher-summary-card metric-panel-card">
-                <div class="teacher-summary-label metric-panel-label">当前学生记录</div>
-                <div class="teacher-summary-value metric-panel-value">{{ students.length }}</div>
-                <div class="teacher-summary-helper metric-panel-helper">当前列表内可直接进入分析的学生数量</div>
-              </article>
             </div>
           </div>
         </section>
@@ -544,33 +502,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
 }
 
-.teacher-context-card {
-  display: grid;
-  gap: var(--space-2);
-  min-height: 2.9rem;
-  align-content: center;
-  border: 1px solid var(--teacher-control-border);
-  border-radius: 1rem;
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: var(--space-3) var(--space-4);
-}
-
-.teacher-context-value {
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.teacher-context-copy {
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
-}
-
-.teacher-hero-divider {
-  margin-top: var(--space-6);
-  border-top: 1px dashed var(--teacher-divider);
-}
-
 .workspace-alert {
   margin-bottom: var(--space-section-gap, var(--space-6));
   border: 1px solid var(--workspace-line-soft);
@@ -643,32 +574,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 .teacher-tip-block {
   display: grid;
   gap: var(--space-1-5);
-}
-
-.teacher-tip-label {
-  font-size: var(--font-size-0-75);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
-.teacher-tip-copy {
-  font-size: var(--font-size-0-86);
-  line-height: 1.65;
-  color: var(--journal-muted);
-}
-
-.teacher-summary-cards {
-  margin-top: var(--space-5);
-  --metric-panel-grid-gap: var(--space-3-5);
-  --metric-panel-columns: repeat(2, minmax(0, 1fr));
-}
-
-.teacher-summary-card {
-  --metric-panel-border: var(--teacher-card-border);
-  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
-  --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
 .teacher-badge-card {
