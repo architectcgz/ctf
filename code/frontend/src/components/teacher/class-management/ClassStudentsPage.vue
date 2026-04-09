@@ -117,17 +117,30 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         >
           <header class="teacher-topbar">
             <div class="teacher-heading workspace-tab-heading__main">
-              <div class="teacher-eyebrow-row">
-                <div class="teacher-surface-eyebrow journal-eyebrow">Class Students</div>
-                <span class="teacher-class-chip teacher-surface-chip">{{
-                  selectedClassName || '未选择班级'
-                }}</span>
-              </div>
-
-              <h1 class="teacher-title workspace-tab-heading__title">
-                {{ selectedClassName ? `${selectedClassName} · 学生列表` : '班级学生' }}
-              </h1>
-              <p class="teacher-copy">查看当前班级学生名单，并继续进入学员分析。</p>
+              <section class="teacher-summary">
+                <div class="teacher-summary-title">
+                  <span>Class Snapshot</span>
+                </div>
+                <div class="teacher-summary-grid">
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">班级人数</div>
+                    <div class="teacher-summary-value">
+                      {{ props.summary?.student_count ?? students.length }}
+                    </div>
+                    <div class="teacher-summary-helper">当前班级纳入统计的学生数量</div>
+                  </div>
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">平均解题</div>
+                    <div class="teacher-summary-value">{{ averageSolvedText }}</div>
+                    <div class="teacher-summary-helper">班级当前平均完成情况</div>
+                  </div>
+                  <div class="teacher-summary-item">
+                    <div class="teacher-summary-label">近 7 天活跃率</div>
+                    <div class="teacher-summary-value">{{ activeRateText }}</div>
+                    <div class="teacher-summary-helper">当前班级近 7 天训练参与情况</div>
+                  </div>
+                </div>
+              </section>
             </div>
 
             <div class="teacher-actions">
@@ -167,35 +180,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 <span>重试加载</span>
                 <span>→</span>
               </button>
-            </div>
-          </div>
-
-          <div class="teacher-surface-board">
-            <div class="teacher-tip-block">
-              <section class="teacher-summary">
-                <div class="teacher-summary-title">
-                  <span>Class Snapshot</span>
-                </div>
-                <div class="teacher-summary-grid">
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">班级人数</div>
-                    <div class="teacher-summary-value">
-                      {{ props.summary?.student_count ?? students.length }}
-                    </div>
-                    <div class="teacher-summary-helper">当前班级纳入统计的学生数量</div>
-                  </div>
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">平均解题</div>
-                    <div class="teacher-summary-value">{{ averageSolvedText }}</div>
-                    <div class="teacher-summary-helper">班级当前平均完成情况</div>
-                  </div>
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">近 7 天活跃率</div>
-                    <div class="teacher-summary-value">{{ activeRateText }}</div>
-                    <div class="teacher-summary-helper">当前班级近 7 天训练参与情况</div>
-                  </div>
-                </div>
-              </section>
             </div>
           </div>
         </section>
