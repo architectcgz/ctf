@@ -153,6 +153,8 @@ describe('ScoreboardView', () => {
     expect(wrapper.text()).toContain('进行中竞赛支持实时刷新，提交后榜单会自动更新。')
     expect(wrapper.text()).toContain('封榜阶段仅展示冻结前排名，解封后会同步最终成绩。')
     expect(wrapper.text()).toContain('历史竞赛展示最终成绩，可用于复盘队伍解题表现。')
+    expect(wrapper.text()).toContain('当前可查看排行的竞赛总数')
+    expect(wrapper.text()).toContain('排行榜加载异常的竞赛分区')
     expect(wrapper.text()).not.toContain('报名中竞赛')
     expect(getScoreboardMock).toHaveBeenCalledTimes(3)
   })
