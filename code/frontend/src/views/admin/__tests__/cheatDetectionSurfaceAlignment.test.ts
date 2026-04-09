@@ -67,4 +67,14 @@ describe('cheat detection surface alignment', () => {
       /\.top-tab\s*\{[^}]*border-bottom:\s*2px solid transparent;/s
     )
   })
+
+  it('uses shared admin summary-grid styles for cheat overview metric panels', () => {
+    expect(journalNotesSource).toContain(
+      '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
+    )
+    expect(cheatDetectionSource).toContain('class="admin-summary-grid cheat-risk-summary mt-5"')
+    expect(cheatDetectionSource).toContain('class="admin-summary-grid cheat-kpi-summary"')
+    expect(cheatDetectionSource).not.toContain('class="mt-5 grid gap-3 sm:grid-cols-2"')
+    expect(cheatDetectionSource).not.toContain('class="grid gap-3 md:grid-cols-3"')
+  })
 })
