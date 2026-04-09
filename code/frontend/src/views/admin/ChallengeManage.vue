@@ -126,7 +126,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-rail journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
@@ -238,7 +238,7 @@ onMounted(() => {
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
                       <h2
-                        class="challenge-row__title text-base font-semibold text-[var(--journal-ink)]"
+                        class="challenge-row__title"
                         :title="row.title"
                       >
                         {{ row.title }}
@@ -669,6 +669,11 @@ onMounted(() => {
 
 .challenge-row__title {
   min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-0-90);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--journal-ink);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
