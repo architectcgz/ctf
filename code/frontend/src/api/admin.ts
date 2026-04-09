@@ -1588,7 +1588,11 @@ export async function createImage(data: AdminImagePayload) {
 }
 
 export async function deleteImage(id: string) {
-  return request<void>({ method: 'DELETE', url: `/authoring/images/${encodeURIComponent(id)}` })
+  return request<void>({
+    method: 'DELETE',
+    url: `/authoring/images/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
 }
 
 export async function getAuditLogs(params?: Record<string, unknown>) {
