@@ -18,7 +18,7 @@
 }
 
 .journal-shell .workspace-overline {
-  font-size: var(--journal-overline-font-size, 0.7rem);
+  font-size: var(--journal-overline-font-size, var(--font-size-0-70));
   font-weight: 700;
   letter-spacing: var(--journal-overline-letter-spacing, 0.2em);
   text-transform: uppercase;
@@ -76,7 +76,7 @@
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
-  font-size: var(--page-top-tab-font-size, 0.92rem);
+  font-size: var(--page-top-tab-font-size, var(--font-size-0-92));
   font-weight: var(--page-top-tab-font-weight, 600);
   line-height: 1;
   color: var(

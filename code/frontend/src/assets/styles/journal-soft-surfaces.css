@@ -41,7 +41,7 @@
 }
 
 .journal-soft-surface .journal-note-label {
-  font-size: var(--journal-soft-note-label-size, 0.68rem);
+  font-size: var(--journal-soft-note-label-size, var(--font-size-0-68));
   font-weight: var(--journal-soft-note-label-weight, 600);
   letter-spacing: var(--journal-soft-note-label-spacing, 0.12em);
   text-transform: uppercase;
@@ -50,7 +50,7 @@
 
 .journal-soft-surface .journal-note-value {
   margin-top: var(--journal-soft-note-value-margin-top, var(--space-2-5));
-  font-size: var(--journal-soft-note-value-size, 1.05rem);
+  font-size: var(--journal-soft-note-value-size, var(--font-size-1-05));
   font-weight: var(--journal-soft-note-value-weight, 600);
   color: var(--journal-soft-note-value-color, var(--journal-ink));
 }
@@ -66,7 +66,7 @@
     color-mix(in srgb, var(--journal-accent) 8%, transparent)
   );
   padding: var(--journal-soft-eyebrow-padding, var(--space-1) var(--space-3));
-  font-size: var(--journal-soft-eyebrow-size, 0.72rem);
+  font-size: var(--journal-soft-eyebrow-size, var(--font-size-0-72));
   font-weight: var(--journal-soft-eyebrow-weight, 700);
   letter-spacing: var(--journal-soft-eyebrow-spacing, 0.08em);
   text-transform: uppercase;
@@ -88,7 +88,7 @@
   min-height: var(--journal-soft-button-height, 34px);
   border-radius: var(--journal-soft-button-radius, 10px);
   padding: var(--journal-soft-button-padding, 0.45rem var(--space-4));
-  font-size: var(--journal-soft-button-size, 0.82rem);
+  font-size: var(--journal-soft-button-size, var(--font-size-0-82));
   font-weight: var(--journal-soft-button-weight, 600);
   transition: var(
     --journal-soft-button-transition,

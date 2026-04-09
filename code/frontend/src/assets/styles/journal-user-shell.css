@@ -40,7 +40,7 @@
     color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base))
   );
   padding: var(--journal-user-button-padding, 0.62rem 1rem);
-  font-size: var(--journal-user-button-size, 0.875rem);
+  font-size: var(--journal-user-button-size, var(--font-size-0-875));
   font-weight: var(--journal-user-button-weight, 600);
   color: var(--journal-user-button-color, var(--journal-ink));
   transition: var(
