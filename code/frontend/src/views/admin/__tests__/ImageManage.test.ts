@@ -80,6 +80,13 @@ describe('ImageManage', () => {
     expect(wrapper.text()).toContain('镜像管理')
   })
 
+  it('应使用通用数值卡片样式展示镜像统计', () => {
+    expect(imageManageSource).toContain('class="image-summary-grid metric-panel-grid"')
+    expect(imageManageSource).toContain('class="image-summary-card metric-panel-card"')
+    expect(imageManageSource).toContain('class="metric-panel-label">镜像总量</div>')
+    expect(imageManageSource).toContain('class="metric-panel-label">当前页</div>')
+  })
+
   it('应该把镜像名称、标签和描述拆成独立列', async () => {
     const wrapper = mountPage()
 
