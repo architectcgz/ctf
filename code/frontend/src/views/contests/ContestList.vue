@@ -247,17 +247,6 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
   max-width: 680px;
 }
 
-.contest-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
 .contest-divider {
   margin-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);

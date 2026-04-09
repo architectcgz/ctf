@@ -442,17 +442,6 @@ onMounted(() => {
   gap: var(--space-3);
 }
 
-.challenge-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2-5);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent-strong);
-}
-
 .challenge-controls {
   padding: var(--space-6) 0 0;
 }

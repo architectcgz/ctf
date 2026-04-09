@@ -222,17 +222,6 @@ function supportsRealtime(status: ContestStatus): boolean {
   max-width: 760px;
 }
 
-.scoreboard-summary-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
 .scoreboard-inline-note {
   display: inline-flex;
   align-items: center;
