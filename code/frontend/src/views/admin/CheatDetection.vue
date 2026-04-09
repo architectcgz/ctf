@@ -231,10 +231,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'suspects' ? 'false' : 'true'"
           v-show="activePanel === 'suspects'"
         >
-          <div class="admin-section-head">
-            <div>
+          <div class="workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="journal-note-label">Burst Accounts</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">高频提交账号</h2>
+              <h2 class="workspace-tab-heading__title">高频提交账号</h2>
             </div>
           </div>
 
@@ -276,10 +276,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'shared-ip' ? 'false' : 'true'"
           v-show="activePanel === 'shared-ip'"
         >
-          <div class="admin-section-head">
-            <div>
+          <div class="workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="journal-note-label">Shared IP</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">共享 IP 线索</h2>
+              <h2 class="workspace-tab-heading__title">共享 IP 线索</h2>
             </div>
           </div>
 
@@ -318,10 +318,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'actions' ? 'false' : 'true'"
           v-show="activePanel === 'actions'"
         >
-          <div class="admin-section-head">
-            <div>
+          <div class="workspace-tab-heading">
+            <div class="workspace-tab-heading__main">
               <div class="journal-note-label">Quick Actions</div>
-              <h2 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">快速排查入口</h2>
+              <h2 class="workspace-tab-heading__title">快速排查入口</h2>
             </div>
           </div>
 
@@ -361,15 +361,15 @@ onMounted(() => {
 .journal-shell {
   --cheat-card-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --cheat-divider: color-mix(in srgb, var(--journal-border) 68%, transparent);
-  --journal-topbar-padding-bottom: 0.85rem;
+  --journal-topbar-padding-bottom: var(--space-3-5);
   --journal-overline-font-size: 0.72rem;
   --journal-overline-letter-spacing: 0.18em;
-  --page-top-tabs-gap: 28px;
-  --page-top-tabs-margin: 10px -1.5rem 0;
-  --page-top-tabs-padding: 0 1.5rem;
+  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
+  --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
   --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: 10px 0 13px;
+  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
   --page-top-tab-font-size: 15px;
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
@@ -387,34 +387,26 @@ onMounted(() => {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .workspace-hero {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .overview-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 
 .hero-summary {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
   max-width: 48rem;
   font-size: 0.92rem;
   line-height: 1.7;
   color: var(--journal-muted);
-}
-
-.admin-section-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
 }
 
 .risk-row,
@@ -422,7 +414,7 @@ onMounted(() => {
   border: 1px solid var(--cheat-card-border);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .cheat-empty-state {
@@ -433,7 +425,7 @@ onMounted(() => {
 .admin-empty {
   border: 1px dashed rgba(148, 163, 184, 0.72);
   border-radius: 16px;
-  padding: 1rem;
+  padding: var(--space-4);
   font-size: 0.875rem;
   color: var(--journal-muted);
 }
@@ -442,7 +434,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   text-align: left;
 }
 
@@ -455,22 +447,22 @@ onMounted(() => {
 
 @media (max-width: 720px) {
   .top-tabs {
-    gap: 22px;
+    gap: var(--space-5-5);
   }
 
   .top-note {
     width: 100%;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--space-1-5);
   }
 }
 
 @media (min-width: 768px) {
   .top-tabs {
-    margin-left: -2rem;
-    margin-right: -2rem;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    margin-left: calc(var(--space-8) * -1);
+    margin-right: calc(var(--space-8) * -1);
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
   }
 }
 </style>
