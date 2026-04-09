@@ -167,27 +167,8 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
       <template v-else-if="student">
         <div
           v-if="isSectionVisible('overview')"
-          class="insight-overview-layout grid gap-6 lg:grid-cols-[1.15fr_0.85fr]"
+          class="insight-overview-layout"
         >
-          <SectionCard>
-            <div
-              class="insight-rate-row insight-rate-panel rounded-2xl px-5 py-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <p class="insight-rate-panel__label text-xs uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
-                Solved Rate
-              </p>
-              <p class="insight-rate-panel__value mt-2 text-3xl font-semibold text-[var(--color-primary)]">
-                {{
-                  progress?.total_challenges
-                    ? Math.round(
-                        ((progress.solved_challenges ?? 0) / progress.total_challenges) * 100
-                      )
-                    : 0
-                }}%
-              </p>
-            </div>
-          </SectionCard>
-
           <SectionCard title="能力画像" subtitle="以雷达图观察当前能力维度分布。">
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
@@ -597,26 +578,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 
 .insight-overview-layout :deep(.section-card) {
   border-top: 0;
-}
-
-.insight-rate-row {
-  margin-top: 0;
-}
-
-.insight-rate-panel {
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-1) var(--space-2-5);
-}
-
-.insight-rate-panel__label,
-.insight-rate-panel__value {
-  margin: 0;
 }
 
 .insight-progress-item {
