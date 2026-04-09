@@ -116,7 +116,7 @@
   border-bottom: 2px solid transparent;
   background: transparent;
   color: var(--workspace-faint, var(--color-text-secondary));
-  font: 600 15px/1 var(--workspace-font-sans, var(--font-family-sans));
+  font: 600 var(--font-size-15)/1 var(--workspace-font-sans, var(--font-family-sans));
   white-space: nowrap;
   cursor: pointer;
   transition:
