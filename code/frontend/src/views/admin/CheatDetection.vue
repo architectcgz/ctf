@@ -187,7 +187,7 @@ onMounted(() => {
 
             <article class="journal-brief rounded-[24px] border px-5 py-5">
               <div class="journal-note-label">风险概况</div>
-              <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              <div class="admin-summary-grid cheat-risk-summary mt-5">
                 <div class="journal-note">
                   <div class="journal-note-label">提交突增</div>
                   <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
@@ -204,7 +204,7 @@ onMounted(() => {
 
           <div class="journal-divider" />
 
-          <div class="grid gap-3 md:grid-cols-3">
+          <div class="admin-summary-grid cheat-kpi-summary">
             <div class="journal-note">
               <div class="journal-note-label">Submit Burst</div>
               <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
@@ -364,7 +364,7 @@ onMounted(() => {
   --journal-topbar-padding-bottom: var(--space-3-5);
   --journal-overline-font-size: 0.72rem;
   --journal-overline-letter-spacing: 0.18em;
-  --page-top-tabs-gap: var(--space-7);
+  --page-top-tabs-gap: 28px;
   --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
   --page-top-tabs-padding: 0 var(--space-6);
   --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
@@ -394,6 +394,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.cheat-risk-summary {
+  --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cheat-kpi-summary {
+  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
 }
 
 .overview-grid {
@@ -446,6 +454,11 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
+  .cheat-risk-summary,
+  .cheat-kpi-summary {
+    --admin-summary-grid-columns: 1fr;
+  }
+
   .top-tabs {
     gap: var(--space-5-5);
   }
