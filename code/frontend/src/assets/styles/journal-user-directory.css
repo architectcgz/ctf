@@ -37,6 +37,10 @@
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
+.contest-summary {
+  border-bottom: none;
+}
+
 :is(
   .challenge-summary-title,
   .contest-summary-title,
