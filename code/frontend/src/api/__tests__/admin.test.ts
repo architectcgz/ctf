@@ -23,6 +23,7 @@ import {
   configureChallengeFlag,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
+  deleteImage,
   deleteChallengeWriteup,
   getAdminContestLiveScoreboard,
   getChallengeTopology,
@@ -1407,6 +1408,18 @@ describe('admin contest api contract', () => {
     expect(requestMock).toHaveBeenNthCalledWith(2, {
       method: 'DELETE',
       url: '/authoring/environment-templates/7',
+      suppressErrorToast: true,
+    })
+  })
+
+  it('应该在删除镜像时关闭全局错误提示', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await deleteImage('9')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/authoring/images/9',
       suppressErrorToast: true,
     })
   })
