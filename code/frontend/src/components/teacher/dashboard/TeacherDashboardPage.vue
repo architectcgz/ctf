@@ -261,7 +261,11 @@ const {
             </div>
 
             <div class="workspace-subpanel">
-              <TeacherClassInsightsPanel :students="students" :class-name="selectedClassName" stacked />
+              <TeacherClassInsightsPanel
+                :students="students"
+                :class-name="selectedClassName"
+                split-cards
+              />
             </div>
           </div>
         </section>

@@ -8,6 +8,7 @@ const props = defineProps<{
   students: TeacherStudentItem[]
   className?: string
   stacked?: boolean
+  splitCards?: boolean
 }>()
 
 const topStudents = computed(() =>
@@ -43,7 +44,13 @@ const weakDimensionStats = computed(() => {
 
 <template>
   <section class="teacher-panel">
-    <div class="teacher-insight-layout" :class="{ 'teacher-insight-layout--stacked': stacked }">
+    <div
+      class="teacher-insight-layout"
+      :class="{
+        'teacher-insight-layout--stacked': stacked,
+        'teacher-insight-layout--split-cards': splitCards,
+      }"
+    >
       <section class="teacher-subsection">
         <header class="teacher-subsection__header">
           <div class="journal-eyebrow">Students</div>
@@ -132,6 +139,10 @@ const weakDimensionStats = computed(() => {
   gap: var(--space-5);
 }
 
+.teacher-insight-layout--split-cards {
+  gap: var(--space-4);
+}
+
 .teacher-panel {
   --panel-ink: var(--journal-ink, #0f172a);
   --panel-muted: var(--journal-muted, #64748b);
@@ -155,6 +166,18 @@ const weakDimensionStats = computed(() => {
 .teacher-subsection + .teacher-subsection {
   border-top: 1px dashed var(--panel-divider);
   padding-top: var(--space-5);
+}
+
+.teacher-insight-layout--split-cards .teacher-subsection {
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel-surface) 96%, transparent);
+  padding: var(--space-4) var(--space-4-5);
+}
+
+.teacher-insight-layout--split-cards .teacher-subsection + .teacher-subsection {
+  border-top: 1px solid var(--panel-border);
+  padding-top: var(--space-4);
 }
 
 .teacher-subsection__header {
@@ -286,9 +309,15 @@ const weakDimensionStats = computed(() => {
 }
 
 @media (min-width: 1280px) {
-  .teacher-insight-layout:not(.teacher-insight-layout--stacked) {
+  .teacher-insight-layout:not(.teacher-insight-layout--stacked):not(.teacher-insight-layout--split-cards) {
     grid-template-columns: 1.05fr 0.95fr;
     gap: var(--space-4);
+  }
+}
+
+@media (min-width: 960px) {
+  .teacher-insight-layout--split-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
