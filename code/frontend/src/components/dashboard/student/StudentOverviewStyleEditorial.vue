@@ -237,7 +237,7 @@ const operationsSummary = computed(() => [
   --journal-soft-eyebrow-spacing: 0.12em;
   --journal-soft-eyebrow-color: var(--journal-accent-strong);
   --journal-soft-button-height: 36px;
-  --journal-soft-button-padding: 0.5rem 1rem;
+  --journal-soft-button-padding: var(--space-2) var(--space-4);
   --journal-soft-button-hover-transform: translateY(-1px);
 }
 
@@ -302,19 +302,19 @@ const operationsSummary = computed(() => [
 .journal-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .journal-panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .journal-radar-body {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .journal-radar-chart {
@@ -387,8 +387,8 @@ const operationsSummary = computed(() => [
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.9rem 0.95rem;
+  gap: var(--space-3);
+  padding: var(--space-3-5) var(--space-4);
 }
 
 .journal-radar-dimension:nth-child(n + 3) {
@@ -503,7 +503,7 @@ const operationsSummary = computed(() => [
 @media (max-width: 767px) {
   .journal-soft-surface {
     --journal-soft-button-height: 38px;
-    --journal-soft-button-padding: 0.5rem 0.95rem;
+    --journal-soft-button-padding: var(--space-2) var(--space-4);
   }
 
   .journal-radar-dimensions {
