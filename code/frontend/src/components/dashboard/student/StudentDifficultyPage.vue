@@ -209,12 +209,12 @@ const nextFocus = computed(
 }
 
 .difficulty-board--embedded {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .difficulty-section + .difficulty-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--journal-divider);
 }
 
@@ -227,7 +227,7 @@ const nextFocus = computed(
 
 .difficulty-item,
 .difficulty-insight-item {
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) var(--space-4-5);
 }
 
 .difficulty-item + .difficulty-item,
@@ -269,7 +269,7 @@ const nextFocus = computed(
 
 @media (min-width: 1280px) {
   .difficulty-focus {
-    padding-left: 1.5rem;
+    padding-left: var(--space-6);
   }
 
   .difficulty-focus::before {
