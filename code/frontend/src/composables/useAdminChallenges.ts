@@ -114,7 +114,17 @@ export function useAdminChallenges() {
 
   async function remove(id: string) {
     try {
-      await ElMessageBox.confirm('确定要删除这道题目吗？', '确认', { type: 'warning' })
+      await ElMessageBox.confirm('确定要删除这道题目吗？', '确认删除', {
+        type: 'warning',
+        showClose: true,
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        cancelButtonClass: 'challenge-delete-confirm-cancel',
+        confirmButtonClass: 'challenge-delete-confirm-primary',
+        customClass: 'challenge-delete-confirm-box',
+        modalClass: 'challenge-delete-confirm-modal',
+        closeOnClickModal: false,
+      })
       await deleteChallenge(id)
       toast.success('删除成功')
       await refresh()
