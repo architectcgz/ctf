@@ -286,6 +286,7 @@ onMounted(() => {
 <style scoped>
 .journal-shell {
   --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
+  --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
@@ -315,12 +316,6 @@ onMounted(() => {
 
 .admin-page-copy {
   max-width: 48rem;
-}
-
-.admin-summary-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .admin-toolbar,

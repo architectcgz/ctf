@@ -12,6 +12,7 @@ import adminContestTableSource from '@/components/admin/contest/AdminContestTabl
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 const styleSource = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8')
+const journalNotesSource = readFileSync(resolve(process.cwd(), 'src/assets/styles/journal-notes.css'), 'utf8')
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
@@ -116,5 +117,21 @@ describe('admin management surface alignment', () => {
     expect(challengeManageSource).toContain('AdminPaginationControls')
     expect(adminContestTableSource).toContain('AdminPaginationControls')
     expect(awdRoundInspectorSource).toContain('AdminPaginationControls')
+  })
+
+  it('admin summary grids should use shared summary-grid base styles', () => {
+    expect(journalNotesSource).toContain(
+      '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
+    )
+
+    expect(challengeManageSource).not.toMatch(
+      /^\.manage-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
+    )
+    expect(auditLogSource).not.toMatch(
+      /^\.admin-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
+    )
+    expect(imageManageSource).not.toMatch(
+      /^\.image-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
+    )
   })
 })
