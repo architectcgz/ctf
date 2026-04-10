@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { Blocks, GitBranch, Link2, Plus, RefreshCw, Save, ShieldBan, Trash2, Layout, Server, Network, ShieldCheck } from 'lucide-vue-next'
 
 import {
@@ -12,9 +12,10 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 
-import TopologyCanvasBoard from './TopologyCanvasBoard.vue'
 import type { CanvasInteractionMode } from './TopologyCanvasBoard.vue'
-import TopologyNodeEditor from './TopologyNodeEditor.vue'
+
+const TopologyCanvasBoard = defineAsyncComponent(() => import('./TopologyCanvasBoard.vue'))
+const TopologyNodeEditor = defineAsyncComponent(() => import('./TopologyNodeEditor.vue'))
 
 const props = withDefaults(
   defineProps<{
