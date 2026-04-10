@@ -121,23 +121,23 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 <div class="teacher-summary-title">
                   <span>Class Snapshot</span>
                 </div>
-                <div class="teacher-summary-grid">
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">班级人数</div>
-                    <div class="teacher-summary-value">
+                <div class="teacher-summary-grid metric-panel-grid">
+                  <div class="teacher-summary-item metric-panel-card">
+                    <div class="teacher-summary-label metric-panel-label">班级人数</div>
+                    <div class="teacher-summary-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
                     </div>
-                    <div class="teacher-summary-helper">当前班级纳入统计的学生数量</div>
+                    <div class="teacher-summary-helper metric-panel-helper">当前班级纳入统计的学生数量</div>
                   </div>
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">平均解题</div>
-                    <div class="teacher-summary-value">{{ averageSolvedText }}</div>
-                    <div class="teacher-summary-helper">班级当前平均完成情况</div>
+                  <div class="teacher-summary-item metric-panel-card">
+                    <div class="teacher-summary-label metric-panel-label">平均解题</div>
+                    <div class="teacher-summary-value metric-panel-value">{{ averageSolvedText }}</div>
+                    <div class="teacher-summary-helper metric-panel-helper">班级当前平均完成情况</div>
                   </div>
-                  <div class="teacher-summary-item">
-                    <div class="teacher-summary-label">近 7 天活跃率</div>
-                    <div class="teacher-summary-value">{{ activeRateText }}</div>
-                    <div class="teacher-summary-helper">当前班级近 7 天训练参与情况</div>
+                  <div class="teacher-summary-item metric-panel-card">
+                    <div class="teacher-summary-label metric-panel-label">近 7 天活跃率</div>
+                    <div class="teacher-summary-value metric-panel-value">{{ activeRateText }}</div>
+                    <div class="teacher-summary-helper metric-panel-helper">当前班级近 7 天训练参与情况</div>
                   </div>
                 </div>
               </section>

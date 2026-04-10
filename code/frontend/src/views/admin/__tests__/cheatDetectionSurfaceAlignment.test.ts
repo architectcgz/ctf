@@ -72,8 +72,16 @@ describe('cheat detection surface alignment', () => {
     expect(journalNotesSource).toContain(
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
-    expect(cheatDetectionSource).toContain('class="admin-summary-grid cheat-risk-summary mt-5"')
-    expect(cheatDetectionSource).toContain('class="admin-summary-grid cheat-kpi-summary"')
+    expect(cheatDetectionSource).toContain(
+      'class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid"'
+    )
+    expect(cheatDetectionSource).toContain(
+      'class="admin-summary-grid cheat-kpi-summary metric-panel-grid"'
+    )
+    expect(cheatDetectionSource).toContain('class="journal-note metric-panel-card"')
+    expect(cheatDetectionSource).toContain('class="journal-note-label metric-panel-label"')
+    expect(cheatDetectionSource).toContain('class="journal-note-value metric-panel-value"')
+    expect(cheatDetectionSource).toContain('class="journal-note-helper metric-panel-helper"')
     expect(cheatDetectionSource).not.toContain('class="mt-5 grid gap-3 sm:grid-cols-2"')
     expect(cheatDetectionSource).not.toContain('class="grid gap-3 md:grid-cols-3"')
   })

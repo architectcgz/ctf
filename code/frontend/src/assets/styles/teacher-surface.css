@@ -244,6 +244,25 @@
   display: grid;
   gap: var(--space-workspace-topbar-gap-x, var(--space-4-5));
   padding: var(--space-section-gap, var(--space-6)) 0;
+  --metric-panel-border: var(--teacher-card-border);
+  --metric-panel-radius: var(--workspace-radius-lg, 18px);
+  --metric-panel-background: color-mix(
+    in srgb,
+    var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
+    transparent
+  );
+  --metric-panel-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
+  --metric-panel-padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
+  --metric-panel-label-size: var(--font-size-11);
+  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-color: var(--journal-muted);
+  --metric-panel-value-margin-top: var(--space-2-5, 0.625rem);
+  --metric-panel-value-size: var(--font-size-26);
+  --metric-panel-value-color: var(--journal-ink);
+  --metric-panel-helper-margin-top: var(--space-2, 0.5rem);
+  --metric-panel-helper-size: var(--font-size-13);
+  --metric-panel-helper-line-height: 1.7;
+  --metric-panel-helper-color: var(--journal-muted);
 }
 
 .teacher-summary-title,
@@ -261,49 +280,27 @@
 .teacher-summary-item,
 .teacher-management-shell .report-summary-item {
   min-width: 0;
-  border: 1px solid var(--teacher-card-border, color-mix(in srgb, var(--journal-border) 78%, transparent));
-  border-radius: var(--workspace-radius-lg, 18px);
-  background: color-mix(
-    in srgb,
-    var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
-    transparent
-  );
-  box-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
-  padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
 }
 
 .teacher-summary-label,
 .teacher-management-shell .report-summary-label {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--journal-muted);
 }
 
 .teacher-summary-value,
 .teacher-management-shell .report-summary-value {
-  margin-top: var(--space-2-5, 0.625rem);
-  font-size: var(--font-size-26);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
   color: var(--journal-ink);
 }
 
 .teacher-summary-helper,
 .teacher-management-shell .report-summary-helper {
-  margin-top: var(--space-2, 0.5rem);
-  font-size: var(--font-size-13);
-  line-height: 1.7;
   color: var(--journal-muted);
 }
 
 .teacher-management-shell .teacher-summary-grid,
 .teacher-management-shell .report-summary-grid {
-  display: grid;
-  grid-template-columns: var(--teacher-summary-columns, repeat(3, minmax(0, 1fr)));
-  gap: var(--teacher-summary-grid-gap, 0.75rem);
+  --metric-panel-columns: var(--teacher-summary-columns, repeat(3, minmax(0, 1fr)));
+  --metric-panel-grid-gap: var(--teacher-summary-grid-gap, 0.75rem);
 }
 
 .teacher-management-shell .teacher-controls {

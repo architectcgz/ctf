@@ -220,26 +220,26 @@ function handleImportChange(event: Event): void {
             <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
             当前用户概况
           </div>
-          <div class="admin-summary-grid user-overview-grid mt-5">
-            <div class="journal-note user-overview-stat">
-              <div class="journal-note-label">用户总量</div>
-              <div class="journal-note-value">{{ total }}</div>
-              <div class="journal-note-helper">当前筛选条件下的用户总数</div>
+          <div class="admin-summary-grid user-overview-grid metric-panel-grid mt-5">
+            <div class="journal-note user-overview-stat metric-panel-card">
+              <div class="journal-note-label metric-panel-label">用户总量</div>
+              <div class="journal-note-value metric-panel-value">{{ total }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前筛选条件下的用户总数</div>
             </div>
-            <div class="journal-note user-overview-stat">
-              <div class="journal-note-label">活跃账号</div>
-              <div class="journal-note-value">{{ activeCount }}</div>
-              <div class="journal-note-helper">当前页处于 active 的账号</div>
+            <div class="journal-note user-overview-stat metric-panel-card">
+              <div class="journal-note-label metric-panel-label">活跃账号</div>
+              <div class="journal-note-value metric-panel-value">{{ activeCount }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前页处于 active 的账号</div>
             </div>
-            <div class="journal-note user-overview-stat">
-              <div class="journal-note-label">教师角色</div>
-              <div class="journal-note-value">{{ teacherCount }}</div>
-              <div class="journal-note-helper">当前页教师账号数量</div>
+            <div class="journal-note user-overview-stat metric-panel-card">
+              <div class="journal-note-label metric-panel-label">教师角色</div>
+              <div class="journal-note-value metric-panel-value">{{ teacherCount }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前页教师账号数量</div>
             </div>
-            <div class="journal-note user-overview-stat">
-              <div class="journal-note-label">导入回执</div>
-              <div class="journal-note-value">{{ importSummary }}</div>
-              <div class="journal-note-helper">最近一次导入结果</div>
+            <div class="journal-note user-overview-stat metric-panel-card">
+              <div class="journal-note-label metric-panel-label">导入回执</div>
+              <div class="journal-note-value metric-panel-value">{{ importSummary }}</div>
+              <div class="journal-note-helper metric-panel-helper">最近一次导入结果</div>
             </div>
           </div>
         </div>
