@@ -153,7 +153,8 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
       clearPollingTimer()
       toast.success('实例已销毁')
     } catch (error) {
-      toast.error('销毁实例失败')
+      const message = error instanceof Error && error.message.trim() ? error.message : '销毁实例失败'
+      toast.error(message)
     } finally {
       destroying.value = false
     }

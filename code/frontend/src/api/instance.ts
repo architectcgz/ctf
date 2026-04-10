@@ -62,7 +62,11 @@ export async function getMyInstances(): Promise<InstanceListItem[]> {
 }
 
 export async function destroyInstance(id: string) {
-  return request<void>({ method: 'DELETE', url: `/instances/${encodeURIComponent(id)}` })
+  return request<void>({
+    method: 'DELETE',
+    url: `/instances/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
 }
 
 export async function extendInstance(id: string) {
