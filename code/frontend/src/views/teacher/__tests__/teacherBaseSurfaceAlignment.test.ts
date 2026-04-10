@@ -106,6 +106,12 @@ describe('teacher base surface alignment', () => {
     expect(reportExportSource).toContain('--report-divider:')
     expect(reportExportSource).not.toMatch(/^\.report-hero\s*\{/m)
     expect(reportExportSource).not.toMatch(/^\.report-summary\s*\{/m)
+    expect(reportExportSource).toContain('class="report-kpi-grid report-kpi-grid--task metric-panel-grid"')
+    expect(reportExportSource).toContain('class="journal-brief journal-metric report-kpi-card metric-panel-card"')
+    expect(reportExportSource).toContain('class="report-kpi-label metric-panel-label"')
+    expect(reportExportSource).toContain('class="report-kpi-value metric-panel-value"')
+    expect(reportExportSource).toContain('class="report-kpi-hint metric-panel-helper"')
+    expect(reportExportSource).toContain('class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid"')
     expect(reportExportSource).toMatch(
       /:deep\(\.page-header\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
     )
