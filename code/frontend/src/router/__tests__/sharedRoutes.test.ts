@@ -57,7 +57,7 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/challenges/:id')?.name).toBe('AdminChallengeDetail')
     expect(findChild('platform/challenges/:id/topology')?.name).toBe('AdminChallengeTopologyStudio')
     expect(findChild('platform/challenges/:id/writeup')?.name).toBe('AdminChallengeWriteup')
-    expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeTruthy()
+    expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeFalsy()
     expect(findChild('platform/environment-templates')?.name).toBe(
       'AdminEnvironmentTemplateLibrary'
     )

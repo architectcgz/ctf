@@ -69,7 +69,7 @@ describe('Admin ChallengeDetail', () => {
       global: {
         stubs: {
           ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
-          ChallengeWriteupEditorPage: { template: '<div>题解管理表单</div>' },
+          ChallengeWriteupManagePanel: { template: '<div data-testid="challenge-writeup-manage-panel">题解目录</div>' },
         },
       },
     })
@@ -98,7 +98,7 @@ describe('Admin ChallengeDetail', () => {
       global: {
         stubs: {
           ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
-          ChallengeWriteupEditorPage: { template: '<div data-testid="challenge-writeup-tab">题解管理表单</div>' },
+          ChallengeWriteupManagePanel: { template: '<div data-testid="challenge-writeup-tab">题解目录</div>' },
         },
       },
     })
@@ -115,7 +115,7 @@ describe('Admin ChallengeDetail', () => {
       global: {
         stubs: {
           ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
-          ChallengeWriteupEditorPage: { template: '<div>题解管理表单</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
         },
       },
     })

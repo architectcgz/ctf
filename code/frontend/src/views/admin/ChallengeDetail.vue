@@ -228,7 +228,10 @@
           :aria-hidden="activePanel === 'writeup' ? 'false' : 'true'"
           v-show="activePanel === 'writeup'"
         >
-          <ChallengeWriteupEditorPage embedded :challenge-id="challengeId" />
+          <ChallengeWriteupManagePanel
+            :challenge-id="challengeId"
+            :challenge-title="challenge.title"
+          />
         </section>
       </template>
     </main>
@@ -243,7 +246,7 @@ import type { AdminChallengeFlagPayload } from '@/api/admin'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/admin/challenge/ChallengeDescriptionPanel.vue'
-import ChallengeWriteupEditorPage from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue'
+import ChallengeWriteupManagePanel from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue'
 import { useToast } from '@/composables/useToast'
 
 type ChallengePanelKey = 'detail' | 'writeup'
