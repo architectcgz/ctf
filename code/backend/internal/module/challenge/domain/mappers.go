@@ -134,6 +134,7 @@ func TeacherSubmissionWriteupItemRespFromRecord(item challengeports.TeacherSubmi
 		UserID:           item.Submission.UserID,
 		StudentUsername:  item.StudentUsername,
 		StudentName:      item.StudentName,
+		StudentNo:        item.StudentNo,
 		ClassName:        item.ClassName,
 		ChallengeID:      item.Submission.ChallengeID,
 		ChallengeTitle:   item.ChallengeTitle,
@@ -152,6 +153,7 @@ func TeacherSubmissionWriteupDetailRespFromRecord(item challengeports.TeacherSub
 		SubmissionWriteupResp: *SubmissionWriteupRespFromModel(&item.Submission),
 		StudentUsername:       item.StudentUsername,
 		StudentName:           item.StudentName,
+		StudentNo:             item.StudentNo,
 		ClassName:             item.ClassName,
 		ChallengeTitle:        item.ChallengeTitle,
 	}

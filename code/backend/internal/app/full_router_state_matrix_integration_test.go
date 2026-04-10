@@ -840,6 +840,11 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	if submittedWriteup.SubmissionStatus != model.SubmissionWriteupStatusPublished || submittedWriteup.PublishedAt == nil {
 		t.Fatalf("unexpected submitted writeup response: %+v", submittedWriteup)
 	}
+	peerStudentNo := "20240001"
+	if err := env.db.Model(&model.User{}).Where("id = ?", env.peerStudent.ID).Update("student_no", peerStudentNo).Error; err != nil {
+		t.Fatalf("set peer student number: %v", err)
+	}
+	env.peerStudent.StudentNo = peerStudentNo
 
 	resp = performFullRouterRequest(
 		t,
@@ -861,7 +866,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 	if teacherSubmissionList.Total != 1 || len(teacherSubmissionList.List) != 1 {
 		t.Fatalf("unexpected teacher submission list: %+v", teacherSubmissionList)
 	}
-	if teacherSubmissionList.List[0].StudentUsername != env.peerStudent.Username || teacherSubmissionList.List[0].ChallengeID != createdChallenge.ID {
+	if teacherSubmissionList.List[0].StudentUsername != env.peerStudent.Username ||
+		teacherSubmissionList.List[0].StudentNo != peerStudentNo ||
+		teacherSubmissionList.List[0].ChallengeID != createdChallenge.ID {
 		t.Fatalf("unexpected teacher submission list item: %+v", teacherSubmissionList.List[0])
 	}
 
@@ -889,7 +896,9 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 
 	var teacherSubmissionDetail dto.TeacherSubmissionWriteupDetailResp
 	decodeFullRouterData(t, resp, &teacherSubmissionDetail)
-	if teacherSubmissionDetail.StudentUsername != env.peerStudent.Username || teacherSubmissionDetail.Content == "" {
+	if teacherSubmissionDetail.StudentUsername != env.peerStudent.Username ||
+		teacherSubmissionDetail.StudentNo != peerStudentNo ||
+		teacherSubmissionDetail.Content == "" {
 		t.Fatalf("unexpected teacher submission detail: %+v", teacherSubmissionDetail)
 	}
 

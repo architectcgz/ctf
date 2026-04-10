@@ -69,6 +69,7 @@ type TeacherSubmissionWriteupRecord struct {
 	Submission      model.SubmissionWriteup
 	StudentUsername string
 	StudentName     string
+	StudentNo       string
 	ClassName       string
 	ChallengeTitle  string
 }

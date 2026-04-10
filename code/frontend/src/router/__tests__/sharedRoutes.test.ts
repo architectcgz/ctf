@@ -57,7 +57,9 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/challenges/:id')?.name).toBe('AdminChallengeDetail')
     expect(findChild('platform/challenges/:id/topology')?.name).toBe('AdminChallengeTopologyStudio')
     expect(findChild('platform/challenges/:id/writeup')?.name).toBe('AdminChallengeWriteup')
+    expect(findChild('platform/challenges/:id/writeup/view')?.name).toBe('AdminChallengeWriteupView')
     expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeFalsy()
+    expect(findChild('platform/challenges/:id/writeup/view')?.redirect).toBeFalsy()
     expect(findChild('platform/environment-templates')?.name).toBe(
       'AdminEnvironmentTemplateLibrary'
     )
@@ -69,6 +71,7 @@ describe('shared route canonical paths', () => {
     expect(findChild('admin/challenges/:id')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/:id/topology')?.redirect).toBeTruthy()
     expect(findChild('admin/challenges/:id/writeup')?.redirect).toBeTruthy()
+    expect(findChild('admin/challenges/:id/writeup/view')?.redirect).toBeTruthy()
     expect(findChild('admin/environment-templates')?.redirect).toBeTruthy()
     expect(findChild('admin/images')?.redirect).toBeTruthy()
   })

@@ -140,6 +140,7 @@ export interface TeacherSubmissionWriteupItemData {
   user_id: ID
   student_username: string
   student_name?: string
+  student_no?: string
   class_name?: string
   challenge_id: ID
   challenge_title: string
@@ -155,6 +156,7 @@ export interface TeacherSubmissionWriteupItemData {
 export interface TeacherSubmissionWriteupDetailData extends SubmissionWriteupData {
   student_username: string
   student_name?: string
+  student_no?: string
   class_name?: string
   challenge_title: string
 }

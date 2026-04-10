@@ -422,9 +422,28 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'platform/challenges/:id/writeup/view',
+        name: 'AdminChallengeWriteupView',
+        component: () => import('@/views/admin/ChallengeWriteupView.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: '查看题解',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'admin/challenges/:id/writeup',
         redirect: (to) => ({
           path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
+        path: 'admin/challenges/:id/writeup/view',
+        redirect: (to) => ({
+          path: `/platform/challenges/${encodeURIComponent(String(to.params.id || ''))}/writeup/view`,
           query: to.query,
           hash: to.hash,
         }),

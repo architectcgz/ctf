@@ -44,7 +44,7 @@ const renderedContent = computed(() => {
   overflow: auto;
   border: 1px solid
     color-mix(in srgb, var(--journal-border, var(--color-border-default)) 88%, transparent);
-  border-radius: 0.95rem;
+  border-radius: 0.75rem;
   background: color-mix(
     in srgb,
     var(--journal-surface, var(--color-bg-surface)) 95%,
