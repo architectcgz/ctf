@@ -116,8 +116,9 @@ export function useChallengeWriteupEditorPage(challengeId: string) {
       writeup.value = null
       resetForm(null)
       toast.success('题解已删除')
-    } catch {
-      toast.error('删除题解失败')
+    } catch (error) {
+      const message = error instanceof Error && error.message.trim() ? error.message : '删除题解失败'
+      toast.error(message)
     } finally {
       deleting.value = false
     }

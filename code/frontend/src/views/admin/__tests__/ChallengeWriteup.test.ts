@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import ChallengeWriteupEditorPage from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue'
+import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
   getChallengeDetail: vi.fn().mockResolvedValue({
@@ -49,9 +50,54 @@ const adminApiMocks = vi.hoisted(() => ({
   }),
 }))
 
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+}))
+
+const confirmMock = vi.hoisted(() => vi.fn())
+
 vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: confirmMock,
+}))
 
 describe('ChallengeWriteupEditorPage', () => {
+  it('删除题解失败时应优先展示接口返回消息', async () => {
+    confirmMock.mockResolvedValue(true)
+    adminApiMocks.deleteChallengeWriteup.mockRejectedValue(
+      new ApiError('题解正在审核流程中，暂时不能删除', { code: 10007, status: 409 })
+    )
+
+    const wrapper = mount(ChallengeWriteupEditorPage, {
+      props: {
+        challengeId: '11',
+      },
+      global: {
+        stubs: {
+          AppCard: { template: '<section><slot name="header" /><slot /></section>' },
+          AppEmpty: { template: '<div><slot /></div>' },
+          AppLoading: { template: '<div><slot /></div>' },
+          PageHeader: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const deleteButton = wrapper.findAll('button').find((button) => button.text().includes('删除题解'))
+    expect(deleteButton).toBeTruthy()
+
+    await deleteButton!.trigger('click')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('题解正在审核流程中，暂时不能删除')
+    expect(toastMocks.error).not.toHaveBeenCalledWith('删除题解失败')
+  })
+
   it('应该渲染已保存题解的核心信息', async () => {
     const wrapper = mount(ChallengeWriteupEditorPage, {
       props: {

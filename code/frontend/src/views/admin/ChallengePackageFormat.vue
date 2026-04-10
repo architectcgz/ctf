@@ -52,6 +52,14 @@ extensions:
   topology:
     source: docker/topology.yml # 拓扑文件路径（可选）
     enabled: false # 是否启用拓扑扩展`
+
+const statementGuide = `statement.md 写法建议
+
+- 不要写 # 题目名，页面外层已经展示标题
+- 不要写 ## 题目描述，页面外层已经有该区块标题
+- 开头直接写正文背景和任务
+- 推荐结构：## 目标 / ## 访问入口(或 ## 获取方式) / ## 补充说明
+- hints 已单独配置时，尽量不要再在 statement.md 重复写提示`
 </script>
 
 <template>
@@ -88,6 +96,11 @@ extensions:
         <div class="guide-section__label">目录结构</div>
         <h2 class="guide-section__title">建议保留最小目录</h2>
         <pre class="guide-code"><code>{{ packageTree }}</code></pre>
+      </article>
+      <article class="guide-section guide-section--plain">
+        <div class="guide-section__label">statement.md</div>
+        <h2 class="guide-section__title">题面正文写法</h2>
+        <pre class="guide-code"><code>{{ statementGuide }}</code></pre>
       </article>
     </div>
 

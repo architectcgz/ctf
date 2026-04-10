@@ -124,8 +124,9 @@ export function useAdminChallenges() {
       await deleteChallenge(id)
       toast.success('删除成功')
       await refresh()
-    } catch {
-      toast.error('删除失败')
+    } catch (error) {
+      const message = error instanceof Error && error.message.trim() ? error.message : '删除失败'
+      toast.error(message)
     }
   }
 

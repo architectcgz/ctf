@@ -16,7 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import { createInstance } from '@/api/challenge'
-import { getMyInstances } from '@/api/instance'
+import { destroyInstance, getMyInstances } from '@/api/instance'
 
 describe('instance api contract', () => {
   beforeEach(() => {
@@ -97,6 +97,18 @@ describe('instance api contract', () => {
       expires_at: '2099-01-01T00:00:00Z',
       remaining_extends: 2,
       created_at: '2026-03-12T00:00:00.000Z',
+    })
+  })
+
+  it('应该在销毁实例时关闭全局错误提示，交给调用方处理', async () => {
+    requestMock.mockResolvedValue(undefined)
+
+    await destroyInstance('inst-9')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/instances/inst-9',
+      suppressErrorToast: true,
     })
   })
 })

@@ -530,7 +530,11 @@ export async function getTeacherInstances(params?: {
 }
 
 export async function destroyTeacherInstance(id: string): Promise<void> {
-  return request<void>({ method: 'DELETE', url: `/teacher/instances/${encodeURIComponent(id)}` })
+  return request<void>({
+    method: 'DELETE',
+    url: `/teacher/instances/${encodeURIComponent(id)}`,
+    suppressErrorToast: true,
+  })
 }
 
 export async function exportClassReport(data: Record<string, unknown>) {
