@@ -62,7 +62,6 @@ const {
   averageSolvedText,
   activeRateText,
   studentCountText,
-  activeStudentCountText,
   recentEventCountText,
   recentTrendPoints,
   weakDimensionStats,
@@ -74,7 +73,6 @@ const {
   overviewDescription,
   metaPills,
   overviewMetrics,
-  overviewPulseCards,
   interventionTips,
   teachingAdvice,
   studentInsightRows,
@@ -192,22 +190,10 @@ const {
               {{
                 riskStudentCount > 0
                   ? `当前仍有 ${riskStudentCount} 名学生需要优先回流训练节奏，建议先投放低门槛补训题，再通过复盘结论安排课堂干预。`
-                  : '班级整体节奏稳定，可以把更多注意力放在薄弱维度补强和中段学生进阶上。'
+                : '班级整体节奏稳定，可以把更多注意力放在薄弱维度补强和中段学生进阶上。'
               }}
             </div>
           </aside>
-
-          <article class="overview-pulse-panel panel panel-pad">
-            <div class="workspace-overline">Class Pulse</div>
-            <h2 class="panel-title panel-title--spaced">班级脉搏</h2>
-            <div class="pulse-grid metric-panel-grid">
-              <article v-for="item in overviewPulseCards" :key="item.key" class="pulse-card metric-panel-card">
-                <div class="pulse-label metric-panel-label">{{ item.label }}</div>
-                <div class="pulse-value metric-panel-value">{{ item.value }}</div>
-                <div class="pulse-copy metric-panel-helper">{{ item.copy }}</div>
-              </article>
-            </div>
-          </article>
         </section>
 
         <section
@@ -590,33 +576,11 @@ const {
   color: var(--journal-muted);
 }
 
-.panel-pad {
-  padding: var(--space-5);
-}
-
 .panel-title {
   margin: 0;
   font-size: var(--font-size-18);
   line-height: 1.2;
   color: var(--journal-ink);
-}
-
-.panel-title--spaced {
-  margin-top: var(--space-2-5);
-}
-
-.overview-pulse-panel {
-  grid-column: 1 / -1;
-}
-
-.pulse-grid {
-  --metric-panel-columns: repeat(2, minmax(0, 1fr));
-  --metric-panel-grid-gap: var(--space-3);
-  margin-top: var(--space-4-5);
-}
-
-.pulse-card {
-  --metric-panel-padding: var(--space-3-5);
 }
 
 .section {
@@ -997,8 +961,7 @@ const {
 
 @media (max-width: 860px) {
   .progress-strip,
-  .summary-grid,
-  .pulse-grid {
+  .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1025,8 +988,7 @@ const {
   }
 
   .progress-strip,
-  .summary-grid,
-  .pulse-grid {
+  .summary-grid {
     grid-template-columns: 1fr;
   }
 }
