@@ -65,16 +65,29 @@ type TeacherInstanceRow struct {
 }
 
 type ProxyTicketClaims struct {
-	UserID     int64     `json:"user_id"`
-	Username   string    `json:"username"`
-	Role       string    `json:"role"`
-	InstanceID int64     `json:"instance_id"`
-	IssuedAt   time.Time `json:"issued_at"`
+	UserID      int64     `json:"user_id"`
+	Username    string    `json:"username"`
+	Role        string    `json:"role"`
+	InstanceID  int64     `json:"instance_id"`
+	ChallengeID int64     `json:"challenge_id"`
+	ContestID   *int64    `json:"contest_id,omitempty"`
+	ShareScope  string    `json:"share_scope"`
+	IssuedAt    time.Time `json:"issued_at"`
 }
 
 type ProxyTicketStore interface {
 	SaveProxyTicket(ctx context.Context, ticket string, claims ProxyTicketClaims, ttl time.Duration) error
 	FindProxyTicket(ctx context.Context, ticket string) (*ProxyTicketClaims, error)
+}
+
+type ProxyTicketInstanceReader interface {
+	FindByID(id int64) (*model.Instance, error)
+}
+
+type SharedProofRepository interface {
+	FindByID(id int64) (*model.Instance, error)
+	FindChallengeByID(challengeID int64) (*model.Challenge, error)
+	CreateSharedProof(proof *model.SharedProof) error
 }
 
 type ProxyTrafficEventRecorder interface {

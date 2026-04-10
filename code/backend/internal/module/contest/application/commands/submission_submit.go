@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 
 	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
@@ -18,8 +19,11 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 		return s.handleIncorrectSubmission(ctx, submission, attempt.rateLimitKey)
 	}
 
-	finalScore, err := s.handleCorrectSubmission(ctx, submission, attempt.contestChallenge, attempt.teamID)
+	finalScore, err := s.handleCorrectSubmission(ctx, submission, attempt.contestChallenge, attempt.teamID, attempt.sharedProofHash)
 	if err != nil {
+		if errors.Is(err, errContestSharedProofInvalid) {
+			return s.handleIncorrectSubmission(ctx, submission, attempt.rateLimitKey)
+		}
 		return nil, err
 	}
 

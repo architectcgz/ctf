@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"time"
 
 	"ctf-platform/internal/model"
 )
@@ -15,4 +16,19 @@ func (r *SubmissionRepository) UpdateSubmissionScore(ctx context.Context, submis
 		Model(&model.Submission{}).
 		Where("id = ?", submissionID).
 		Update("score", score).Error
+}
+
+func (r *SubmissionRepository) ConsumeSharedProof(ctx context.Context, sharedProofID int64, consumedAt time.Time) (bool, error) {
+	result := r.dbWithContext(ctx).
+		Model(&model.SharedProof{}).
+		Where("id = ? AND status = ? AND consumed_at IS NULL AND expires_at > ?", sharedProofID, model.SharedProofStatusActive, consumedAt).
+		Updates(map[string]any{
+			"status":      model.SharedProofStatusConsumed,
+			"consumed_at": consumedAt,
+			"updated_at":  time.Now(),
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }

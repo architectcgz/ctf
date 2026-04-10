@@ -134,9 +134,23 @@ export function useChallengeDetailPresentation({
       case 'error':
         return '答案不正确，请继续尝试'
       default:
-        return 'flag{...}'
+        return challenge.value?.flag_type === 'shared_proof' ? 'proof-...' : 'flag{...}'
     }
   })
+
+  const submitPanelTitle = computed(() =>
+    challenge.value?.flag_type === 'shared_proof' ? 'Proof 提交' : 'Flag 提交'
+  )
+
+  const submitPanelCopy = computed(() =>
+    challenge.value?.flag_type === 'shared_proof'
+      ? '输入共享实例返回的 proof 并提交验证。'
+      : '输入当前题目的 Flag 并提交验证。'
+  )
+
+  const submitFieldLabel = computed(() =>
+    challenge.value?.flag_type === 'shared_proof' ? 'Proof' : 'Flag'
+  )
 
   const submitInputClass = computed(() => {
     switch (submitResult.value?.variant) {
@@ -320,6 +334,9 @@ export function useChallengeDetailPresentation({
     activeSolution,
     sanitizedActiveSolutionContent,
     submitPlaceholder,
+    submitPanelTitle,
+    submitPanelCopy,
+    submitFieldLabel,
     submitInputClass,
     clearSolutions,
     handleSolutionTabKeydown,

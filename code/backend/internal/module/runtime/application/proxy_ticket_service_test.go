@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/authctx"
+	"ctf-platform/internal/model"
 	runtimeqry "ctf-platform/internal/module/runtime/application/queries"
 	runtimeports "ctf-platform/internal/module/runtime/ports"
 	"ctf-platform/pkg/errcode"
@@ -31,11 +32,32 @@ func (s *stubProxyTicketStore) FindProxyTicket(ctx context.Context, ticket strin
 	return s.findClaims, s.findErr
 }
 
+type stubProxyTicketInstanceReader struct {
+	findByIDFn func(id int64) (*model.Instance, error)
+}
+
+func (s *stubProxyTicketInstanceReader) FindByID(id int64) (*model.Instance, error) {
+	if s.findByIDFn == nil {
+		return nil, nil
+	}
+	return s.findByIDFn(id)
+}
+
 func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	t.Parallel()
 
 	store := &stubProxyTicketStore{}
-	service := runtimeqry.NewProxyTicketService(store, 15*time.Minute)
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{
+		findByIDFn: func(id int64) (*model.Instance, error) {
+			contestID := int64(3001)
+			return &model.Instance{
+				ID:          id,
+				ContestID:   &contestID,
+				ChallengeID: 2001,
+				ShareScope:  model.InstanceSharingShared,
+			}, nil
+		},
+	}, 15*time.Minute)
 
 	ticket, expiresAt, err := service.IssueTicket(context.Background(), authctx.CurrentUser{
 		UserID:   1001,
@@ -54,8 +76,14 @@ func TestProxyTicketServiceIssueTicketPersistsClaimsWithTTL(t *testing.T) {
 	if store.savedTicket != ticket {
 		t.Fatalf("expected stored ticket %q, got %q", ticket, store.savedTicket)
 	}
-	if store.savedClaims.UserID != 1001 || store.savedClaims.InstanceID != 2001 {
+	if store.savedClaims.UserID != 1001 || store.savedClaims.InstanceID != 2001 || store.savedClaims.ChallengeID != 2001 {
 		t.Fatalf("unexpected saved claims: %+v", store.savedClaims)
+	}
+	if store.savedClaims.ContestID == nil || *store.savedClaims.ContestID != 3001 {
+		t.Fatalf("unexpected saved contest scope: %+v", store.savedClaims)
+	}
+	if store.savedClaims.ShareScope != model.InstanceSharingShared {
+		t.Fatalf("unexpected saved share scope: %+v", store.savedClaims)
 	}
 	if store.savedTTL != 15*time.Minute {
 		t.Fatalf("saved ttl = %s, want %s", store.savedTTL, 15*time.Minute)
@@ -74,7 +102,7 @@ func TestProxyTicketServiceResolveTicketRejectsInvalidClaims(t *testing.T) {
 			InstanceID: 2001,
 		},
 	}
-	service := runtimeqry.NewProxyTicketService(store, 15*time.Minute)
+	service := runtimeqry.NewProxyTicketService(store, &stubProxyTicketInstanceReader{}, 15*time.Minute)
 
 	_, err := service.ResolveTicket(context.Background(), "ticket-1")
 	if err == nil || err.Error() != errcode.ErrProxyTicketInvalid.Error() {

@@ -1,11 +1,14 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"ctf-platform/internal/model"
 )
+
+var errContestSharedProofInvalid = errors.New("contest shared proof invalid")
 
 type validatedContestSubmission struct {
 	contestChallenge *model.ContestChallenge
@@ -13,6 +16,7 @@ type validatedContestSubmission struct {
 	rateLimitKey     string
 	submittedAt      time.Time
 	isCorrect        bool
+	sharedProofHash  string
 }
 
 func buildContestSubmission(userID, contestID, challengeID int64, flag string, teamID *int64, submittedAt time.Time) *model.Submission {

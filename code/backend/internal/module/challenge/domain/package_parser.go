@@ -76,9 +76,9 @@ func buildParsedChallengePackage(rootDir string, manifest *ChallengePackageManif
 
 	flagType := strings.ToLower(strings.TrimSpace(manifest.Flag.Type))
 	switch flagType {
-	case model.FlagTypeStatic, model.FlagTypeDynamic, model.FlagTypeRegex, model.FlagTypeManualReview:
+	case model.FlagTypeStatic, model.FlagTypeDynamic, model.FlagTypeRegex, model.FlagTypeManualReview, model.FlagTypeSharedProof:
 	default:
-		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex 或 manual_review"))
+		return nil, errcode.ErrInvalidParams.WithCause(errors.New("flag.type 仅支持 static、dynamic、regex、manual_review 或 shared_proof"))
 	}
 
 	flagPrefix := strings.TrimSpace(manifest.Flag.Prefix)

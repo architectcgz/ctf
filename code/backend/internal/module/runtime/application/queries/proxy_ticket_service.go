@@ -13,19 +13,21 @@ import (
 )
 
 type ProxyTicketService struct {
-	store     runtimeports.ProxyTicketStore
-	ticketTTL time.Duration
+	instanceReader runtimeports.ProxyTicketInstanceReader
+	store          runtimeports.ProxyTicketStore
+	ticketTTL      time.Duration
 }
 
-func NewProxyTicketService(store runtimeports.ProxyTicketStore, ticketTTL time.Duration) *ProxyTicketService {
+func NewProxyTicketService(store runtimeports.ProxyTicketStore, instanceReader runtimeports.ProxyTicketInstanceReader, ticketTTL time.Duration) *ProxyTicketService {
 	return &ProxyTicketService{
-		store:     store,
-		ticketTTL: ticketTTL,
+		instanceReader: instanceReader,
+		store:          store,
+		ticketTTL:      ticketTTL,
 	}
 }
 
 func (s *ProxyTicketService) IssueTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, time.Time, error) {
-	if s == nil || s.store == nil || s.ticketTTL <= 0 {
+	if s == nil || s.store == nil || s.instanceReader == nil || s.ticketTTL <= 0 {
 		return "", time.Time{}, errProxyTicketServiceUnavailable()
 	}
 
@@ -34,12 +36,23 @@ func (s *ProxyTicketService) IssueTicket(ctx context.Context, user authctx.Curre
 		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
 	}
 
+	instance, err := s.instanceReader.FindByID(instanceID)
+	if err != nil {
+		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if instance == nil {
+		return "", time.Time{}, errcode.ErrNotFound
+	}
+
 	claims := runtimeports.ProxyTicketClaims{
-		UserID:     user.UserID,
-		Username:   user.Username,
-		Role:       user.Role,
-		InstanceID: instanceID,
-		IssuedAt:   time.Now().UTC(),
+		UserID:      user.UserID,
+		Username:    user.Username,
+		Role:        user.Role,
+		InstanceID:  instanceID,
+		ChallengeID: instance.ChallengeID,
+		ContestID:   instance.ContestID,
+		ShareScope:  instance.ShareScope,
+		IssuedAt:    time.Now().UTC(),
 	}
 	expiresAt := time.Now().Add(s.ticketTTL).UTC()
 
@@ -65,7 +78,7 @@ func (s *ProxyTicketService) ResolveTicket(ctx context.Context, ticket string) (
 	if claims == nil {
 		return nil, errcode.ErrProxyTicketInvalid
 	}
-	if claims.UserID <= 0 || claims.InstanceID <= 0 || claims.Username == "" || claims.Role == "" {
+	if claims.UserID <= 0 || claims.InstanceID <= 0 || claims.ChallengeID <= 0 || claims.Username == "" || claims.Role == "" || claims.ShareScope == "" {
 		return nil, errcode.ErrProxyTicketInvalid
 	}
 

@@ -131,6 +131,7 @@
                 <option value="dynamic">动态前缀</option>
                 <option value="regex">正则匹配</option>
                 <option value="manual_review">人工审核</option>
+                <option value="shared_proof">共享 Proof</option>
               </select>
             </label>
 
@@ -225,6 +226,8 @@ function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): st
       return `正则匹配 / ${config.flag_regex || '未填写'}`
     case 'manual_review':
       return '人工审核'
+    case 'shared_proof':
+      return '共享 Proof'
     default:
       return '未配置'
   }

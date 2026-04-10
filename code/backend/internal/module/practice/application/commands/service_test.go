@@ -82,6 +82,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&model.Image{},
 		&model.Challenge{},
 		&model.ChallengeTopology{},
+		&model.SharedProof{},
 		&model.User{},
 		&model.Team{},
 		&model.Instance{},
@@ -656,6 +657,226 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("expected practice.flag_accepted event to be published")
+	}
+}
+
+func TestSubmitFlagWithSharedProofChallengeConsumesBoundProof(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	proof := "proof-practice-success"
+	if err := db.Create(&model.SharedProof{
+		UserID:      7,
+		ChallengeID: 11,
+		InstanceID:  101,
+		ProofHash:   flagcrypto.HashSharedProof(proof),
+		Status:      model.SharedProofStatusActive,
+		ExpiresAt:   now.Add(time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create shared proof: %v", err)
+	}
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeSharedProof,
+					InstanceSharing: model.InstanceSharingShared,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, proof)
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
+		t.Fatalf("expected shared proof submission success, got %+v", resp)
+	}
+
+	var storedProof model.SharedProof
+	if err := db.First(&storedProof).Error; err != nil {
+		t.Fatalf("load shared proof: %v", err)
+	}
+	if storedProof.Status != model.SharedProofStatusConsumed || storedProof.ConsumedAt == nil {
+		t.Fatalf("expected shared proof to be consumed, got %+v", storedProof)
+	}
+}
+
+func TestSubmitFlagWithSharedProofChallengeRejectsCrossUserReuse(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	proof := "proof-practice-cross-user"
+	if err := db.Create(&model.SharedProof{
+		UserID:      7,
+		ChallengeID: 11,
+		InstanceID:  102,
+		ProofHash:   flagcrypto.HashSharedProof(proof),
+		Status:      model.SharedProofStatusActive,
+		ExpiresAt:   now.Add(time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create shared proof: %v", err)
+	}
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeSharedProof,
+					InstanceSharing: model.InstanceSharingShared,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.SubmitFlagWithContext(context.Background(), 8, 11, proof)
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if resp.IsCorrect || resp.Status != dto.SubmissionStatusIncorrect {
+		t.Fatalf("expected shared proof cross-user rejection, got %+v", resp)
+	}
+
+	var storedProof model.SharedProof
+	if err := db.First(&storedProof).Error; err != nil {
+		t.Fatalf("load shared proof: %v", err)
+	}
+	if storedProof.Status != model.SharedProofStatusActive || storedProof.ConsumedAt != nil {
+		t.Fatalf("expected shared proof to remain active, got %+v", storedProof)
+	}
+}
+
+func TestSubmitFlagWithSharedProofChallengeRejectsReplayAfterConsumption(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	proof := "proof-practice-replay"
+	if err := db.Create(&model.SharedProof{
+		UserID:      7,
+		ChallengeID: 11,
+		InstanceID:  103,
+		ProofHash:   flagcrypto.HashSharedProof(proof),
+		Status:      model.SharedProofStatusActive,
+		ExpiresAt:   now.Add(time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create shared proof: %v", err)
+	}
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeSharedProof,
+					InstanceSharing: model.InstanceSharingShared,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	firstResp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, proof)
+	if err != nil {
+		t.Fatalf("first SubmitFlagWithContext() error = %v", err)
+	}
+	if !firstResp.IsCorrect {
+		t.Fatalf("expected first shared proof submission success, got %+v", firstResp)
+	}
+
+	if err := db.Exec("DELETE FROM submissions").Error; err != nil {
+		t.Fatalf("delete submissions to isolate replay behavior: %v", err)
+	}
+
+	secondResp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, proof)
+	if err != nil {
+		t.Fatalf("second SubmitFlagWithContext() error = %v", err)
+	}
+	if secondResp.IsCorrect || secondResp.Status != dto.SubmissionStatusIncorrect {
+		t.Fatalf("expected replayed shared proof to be rejected, got %+v", secondResp)
 	}
 }
 

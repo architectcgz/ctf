@@ -2,12 +2,14 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"math"
 	"time"
 
 	"ctf-platform/internal/model"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
+	"gorm.io/gorm"
 )
 
 type correctSubmissionScoringResult struct {
@@ -15,7 +17,7 @@ type correctSubmissionScoringResult struct {
 	teamScoreDeltas map[int64]int
 }
 
-func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, submission *model.Submission, challengeRecord *model.Challenge, teamID *int64) (correctSubmissionScoringResult, error) {
+func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, submission *model.Submission, challengeRecord *model.Challenge, teamID *int64, sharedProofHash string) (correctSubmissionScoringResult, error) {
 	result := correctSubmissionScoringResult{
 		teamScoreDeltas: make(map[int64]int),
 	}
@@ -39,6 +41,27 @@ func (s *SubmissionService) applyCorrectSubmissionScoring(ctx context.Context, s
 				return err
 			}
 			lockedChallenge.FirstBloodBy = teamID
+		}
+
+		if sharedProofHash != "" {
+			proof, err := txRepo.FindActiveSharedProofByHash(ctx, sharedProofHash)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return errContestSharedProofInvalid
+				}
+				return err
+			}
+			if proof == nil || proof.UserID != submission.UserID || proof.ChallengeID != submission.ChallengeID || proof.ContestID == nil || *proof.ContestID != *submission.ContestID || proof.ExpiresAt.Before(submission.SubmittedAt) {
+				return errContestSharedProofInvalid
+			}
+
+			consumed, err := txRepo.ConsumeSharedProof(ctx, proof.ID, submission.SubmittedAt)
+			if err != nil {
+				return err
+			}
+			if !consumed {
+				return errContestSharedProofInvalid
+			}
 		}
 
 		submission.IsCorrect = true
