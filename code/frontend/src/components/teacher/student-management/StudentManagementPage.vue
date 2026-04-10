@@ -67,21 +67,21 @@ const emit = defineEmits<{
           <div class="teacher-summary-title">
             <span>Directory Snapshot</span>
           </div>
-          <div class="teacher-summary-grid">
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">可访问班级</div>
-              <div class="teacher-summary-value">{{ classes.length }}</div>
-              <div class="teacher-summary-helper">当前教师可切换的班级数量</div>
+          <div class="teacher-summary-grid metric-panel-grid">
+            <div class="teacher-summary-item metric-panel-card">
+              <div class="teacher-summary-label metric-panel-label">可访问班级</div>
+              <div class="teacher-summary-value metric-panel-value">{{ classes.length }}</div>
+              <div class="teacher-summary-helper metric-panel-helper">当前教师可切换的班级数量</div>
             </div>
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">当前班级学生</div>
-              <div class="teacher-summary-value">{{ totalStudents }}</div>
-              <div class="teacher-summary-helper">当前选中班级的学生总数</div>
+            <div class="teacher-summary-item metric-panel-card">
+              <div class="teacher-summary-label metric-panel-label">当前班级学生</div>
+              <div class="teacher-summary-value metric-panel-value">{{ totalStudents }}</div>
+              <div class="teacher-summary-helper metric-panel-helper">当前选中班级的学生总数</div>
             </div>
-            <div class="teacher-summary-item">
-              <div class="teacher-summary-label">搜索结果</div>
-              <div class="teacher-summary-value">{{ filteredStudents.length }}</div>
-              <div class="teacher-summary-helper">当前搜索条件下匹配的学生数量</div>
+            <div class="teacher-summary-item metric-panel-card">
+              <div class="teacher-summary-label metric-panel-label">搜索结果</div>
+              <div class="teacher-summary-value metric-panel-value">{{ filteredStudents.length }}</div>
+              <div class="teacher-summary-helper metric-panel-helper">当前搜索条件下匹配的学生数量</div>
             </div>
           </div>
         </section>

@@ -116,17 +116,24 @@ async function submitPasswordChange(): Promise<void> {
         </div>
       </div>
 
-      <div class="security-summary-grid">
-        <article v-for="stat in securityStats" :key="stat.key" class="security-summary-item">
+      <div class="security-summary-grid metric-panel-grid">
+        <article
+          v-for="stat in securityStats"
+          :key="stat.key"
+          class="security-summary-item metric-panel-card"
+        >
           <div class="security-summary-icon">
             <KeyRound class="h-4 w-4" />
           </div>
           <div>
-            <div class="journal-note-label">{{ stat.label }}</div>
-            <div class="security-summary-value" :class="{ 'tech-font': stat.key === 'rotation' }">
+            <div class="journal-note-label metric-panel-label">{{ stat.label }}</div>
+            <div
+              class="security-summary-value metric-panel-value"
+              :class="{ 'tech-font': stat.key === 'rotation' }"
+            >
               {{ stat.value }}
             </div>
-            <div class="journal-note-helper">{{ stat.helper }}</div>
+            <div class="journal-note-helper metric-panel-helper">{{ stat.helper }}</div>
           </div>
         </article>
       </div>

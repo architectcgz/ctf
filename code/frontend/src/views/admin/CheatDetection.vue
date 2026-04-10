@@ -187,16 +187,22 @@ onMounted(() => {
 
             <article class="journal-brief rounded-[24px] border px-5 py-5">
               <div class="journal-note-label">风险概况</div>
-              <div class="admin-summary-grid cheat-risk-summary mt-5">
-                <div class="journal-note">
-                  <div class="journal-note-label">提交突增</div>
-                  <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
-                  <div class="journal-note-helper">最近窗口内提交次数异常的账号</div>
+              <div class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid">
+                <div class="journal-note metric-panel-card">
+                  <div class="journal-note-label metric-panel-label">提交突增</div>
+                  <div class="journal-note-value metric-panel-value">
+                    {{ riskData.summary.submit_burst_users }}
+                  </div>
+                  <div class="journal-note-helper metric-panel-helper">最近窗口内提交次数异常的账号</div>
                 </div>
-                <div class="journal-note">
-                  <div class="journal-note-label">共享 IP</div>
-                  <div class="journal-note-value">{{ riskData.summary.shared_ip_groups }}</div>
-                  <div class="journal-note-helper">最近 24 小时出现多账号复用的 IP 组</div>
+                <div class="journal-note metric-panel-card">
+                  <div class="journal-note-label metric-panel-label">共享 IP</div>
+                  <div class="journal-note-value metric-panel-value">
+                    {{ riskData.summary.shared_ip_groups }}
+                  </div>
+                  <div class="journal-note-helper metric-panel-helper">
+                    最近 24 小时出现多账号复用的 IP 组
+                  </div>
                 </div>
               </div>
             </article>
@@ -204,21 +210,27 @@ onMounted(() => {
 
           <div class="journal-divider" />
 
-          <div class="admin-summary-grid cheat-kpi-summary">
-            <div class="journal-note">
-              <div class="journal-note-label">Submit Burst</div>
-              <div class="journal-note-value">{{ riskData.summary.submit_burst_users }}</div>
-              <div class="journal-note-helper">高频提交账号</div>
+          <div class="admin-summary-grid cheat-kpi-summary metric-panel-grid">
+            <div class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">Submit Burst</div>
+              <div class="journal-note-value metric-panel-value">
+                {{ riskData.summary.submit_burst_users }}
+              </div>
+              <div class="journal-note-helper metric-panel-helper">高频提交账号</div>
             </div>
-            <div class="journal-note">
-              <div class="journal-note-label">Shared IP</div>
-              <div class="journal-note-value">{{ riskData.summary.shared_ip_groups }}</div>
-              <div class="journal-note-helper">共享 IP 组数</div>
+            <div class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">Shared IP</div>
+              <div class="journal-note-value metric-panel-value">
+                {{ riskData.summary.shared_ip_groups }}
+              </div>
+              <div class="journal-note-helper metric-panel-helper">共享 IP 组数</div>
             </div>
-            <div class="journal-note">
-              <div class="journal-note-label">Affected Users</div>
-              <div class="journal-note-value">{{ riskData.summary.affected_users }}</div>
-              <div class="journal-note-helper">受影响账号数</div>
+            <div class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">Affected Users</div>
+              <div class="journal-note-value metric-panel-value">
+                {{ riskData.summary.affected_users }}
+              </div>
+              <div class="journal-note-helper metric-panel-helper">受影响账号数</div>
             </div>
           </div>
         </section>

@@ -269,7 +269,7 @@ onMounted(() => {
     </div>
 
     <div class="writeup-manage-stats-shell">
-      <div class="admin-summary-grid writeup-summary-grid">
+      <div class="admin-summary-grid writeup-summary-grid metric-panel-grid">
         <article class="journal-note metric-panel-card">
           <div class="journal-note-label metric-panel-label">官方题解</div>
           <div class="journal-note-value metric-panel-value">{{ officialWriteupCount }}</div>

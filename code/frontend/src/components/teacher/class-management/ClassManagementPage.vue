@@ -203,21 +203,23 @@ const currentPageStudentCount = computed(() =>
               <FolderKanban class="h-4 w-4" />
               <span>Directory Snapshot</span>
             </div>
-            <div class="teacher-summary-grid">
-              <div class="teacher-summary-item">
-                <div class="teacher-summary-label">班级数量</div>
-                <div class="teacher-summary-value">{{ total }}</div>
-                <div class="teacher-summary-helper">当前可管理班级总数</div>
+            <div class="teacher-summary-grid metric-panel-grid">
+              <div class="teacher-summary-item metric-panel-card">
+                <div class="teacher-summary-label metric-panel-label">班级数量</div>
+                <div class="teacher-summary-value metric-panel-value">{{ total }}</div>
+                <div class="teacher-summary-helper metric-panel-helper">当前可管理班级总数</div>
               </div>
-              <div class="teacher-summary-item">
-                <div class="teacher-summary-label">当前页学生数</div>
-                <div class="teacher-summary-value">{{ currentPageStudentCount }}</div>
-                <div class="teacher-summary-helper">当前分页已加载班级的学生数汇总</div>
+              <div class="teacher-summary-item metric-panel-card">
+                <div class="teacher-summary-label metric-panel-label">当前页学生数</div>
+                <div class="teacher-summary-value metric-panel-value">{{ currentPageStudentCount }}</div>
+                <div class="teacher-summary-helper metric-panel-helper">当前分页已加载班级的学生数汇总</div>
               </div>
-              <div class="teacher-summary-item">
-                <div class="teacher-summary-label">当前状态</div>
-                <div class="teacher-summary-value">{{ loading ? '同步中' : '已就绪' }}</div>
-                <div class="teacher-summary-helper">班级目录与入口操作已同步</div>
+              <div class="teacher-summary-item metric-panel-card">
+                <div class="teacher-summary-label metric-panel-label">当前状态</div>
+                <div class="teacher-summary-value metric-panel-value">
+                  {{ loading ? '同步中' : '已就绪' }}
+                </div>
+                <div class="teacher-summary-helper metric-panel-helper">班级目录与入口操作已同步</div>
               </div>
             </div>
           </section>
