@@ -207,26 +207,32 @@ const {
                 </span>
               </div>
 
-              <div class="report-kpi-grid report-kpi-grid--task">
-                <article class="journal-brief journal-metric report-kpi-card">
-                  <div class="report-kpi-label">班级</div>
-                  <div class="report-kpi-value">{{ latestExport.className }}</div>
-                  <div class="report-kpi-hint">本次导出的目标班级</div>
+              <div class="report-kpi-grid report-kpi-grid--task metric-panel-grid">
+                <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+                  <div class="report-kpi-label metric-panel-label">班级</div>
+                  <div class="report-kpi-value metric-panel-value">{{ latestExport.className }}</div>
+                  <div class="report-kpi-hint metric-panel-helper">本次导出的目标班级</div>
                 </article>
-                <article class="journal-brief journal-metric report-kpi-card">
-                  <div class="report-kpi-label">格式</div>
-                  <div class="report-kpi-value">{{ latestExport.format.toUpperCase() }}</div>
-                  <div class="report-kpi-hint">本次任务选择的导出文件格式</div>
+                <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+                  <div class="report-kpi-label metric-panel-label">格式</div>
+                  <div class="report-kpi-value metric-panel-value">
+                    {{ latestExport.format.toUpperCase() }}
+                  </div>
+                  <div class="report-kpi-hint metric-panel-helper">本次任务选择的导出文件格式</div>
                 </article>
-                <article class="journal-brief journal-metric report-kpi-card">
-                  <div class="report-kpi-label">创建时间</div>
-                  <div class="report-kpi-value">{{ formatDate(latestExport.createdAt) }}</div>
-                  <div class="report-kpi-hint">最近一次任务创建时间</div>
+                <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+                  <div class="report-kpi-label metric-panel-label">创建时间</div>
+                  <div class="report-kpi-value metric-panel-value">
+                    {{ formatDate(latestExport.createdAt) }}
+                  </div>
+                  <div class="report-kpi-hint metric-panel-helper">最近一次任务创建时间</div>
                 </article>
-                <article class="journal-brief journal-metric report-kpi-card">
-                  <div class="report-kpi-label">过期时间</div>
-                  <div class="report-kpi-value">{{ latestExpiresText }}</div>
-                  <div class="report-kpi-hint">文件生成完成后，后端会返回有效期截止时间</div>
+                <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+                  <div class="report-kpi-label metric-panel-label">过期时间</div>
+                  <div class="report-kpi-value metric-panel-value">{{ latestExpiresText }}</div>
+                  <div class="report-kpi-hint metric-panel-helper">
+                    文件生成完成后，后端会返回有效期截止时间
+                  </div>
                 </article>
               </div>
 
@@ -320,21 +326,21 @@ const {
       </div>
 
       <template v-else-if="previewSummary">
-        <section class="report-kpi-grid report-kpi-grid--dialog">
-          <article class="journal-brief journal-metric report-kpi-card">
-            <div class="report-kpi-label">班级人数</div>
-            <div class="report-kpi-value">{{ previewSummary.student_count }}</div>
-            <div class="report-kpi-hint">当前预览班级纳入统计的学生数</div>
+        <section class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid">
+          <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+            <div class="report-kpi-label metric-panel-label">班级人数</div>
+            <div class="report-kpi-value metric-panel-value">{{ previewSummary.student_count }}</div>
+            <div class="report-kpi-hint metric-panel-helper">当前预览班级纳入统计的学生数</div>
           </article>
-          <article class="journal-brief journal-metric report-kpi-card">
-            <div class="report-kpi-label">平均解题</div>
-            <div class="report-kpi-value">{{ averageSolvedText }}</div>
-            <div class="report-kpi-hint">当前班级学生的人均解题数</div>
+          <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+            <div class="report-kpi-label metric-panel-label">平均解题</div>
+            <div class="report-kpi-value metric-panel-value">{{ averageSolvedText }}</div>
+            <div class="report-kpi-hint metric-panel-helper">当前班级学生的人均解题数</div>
           </article>
-          <article class="journal-brief journal-metric report-kpi-card">
-            <div class="report-kpi-label">近 7 天活跃率</div>
-            <div class="report-kpi-value">{{ activeRateText }}</div>
-            <div class="report-kpi-hint">近 7 天至少有一次训练动作的学生占比</div>
+          <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
+            <div class="report-kpi-label metric-panel-label">近 7 天活跃率</div>
+            <div class="report-kpi-value metric-panel-value">{{ activeRateText }}</div>
+            <div class="report-kpi-hint metric-panel-helper">近 7 天至少有一次训练动作的学生占比</div>
           </article>
         </section>
 
@@ -571,9 +577,8 @@ const {
 }
 
 .report-kpi-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--space-3);
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
 }
 
 .report-kpi-grid--task,
@@ -582,36 +587,31 @@ const {
 }
 
 .report-kpi-grid--dialog {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
 }
 
 .report-kpi-card {
-  border: 1px solid var(--report-card-border);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-  padding: var(--space-4) var(--space-4);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
+  --metric-panel-border: var(--report-card-border);
+  --metric-panel-background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
+  --metric-panel-padding: var(--space-4) var(--space-4);
+  --metric-panel-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
 .report-kpi-label {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+  --metric-panel-label-size: var(--font-size-0-72);
+  --metric-panel-label-spacing: 0.14em;
 }
 
 .report-kpi-value {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-1-08);
-  font-weight: 700;
-  color: var(--journal-ink);
+  --metric-panel-value-margin-top: var(--space-1-5);
+  --metric-panel-value-size: var(--font-size-1-08);
+  --metric-panel-value-line-height: 1.2;
 }
 
 .report-kpi-hint {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-0-80);
-  line-height: 1.55;
-  color: var(--journal-muted);
+  --metric-panel-helper-margin-top: var(--space-2);
+  --metric-panel-helper-size: var(--font-size-0-80);
+  --metric-panel-helper-line-height: 1.55;
 }
 
 .report-status-banner {

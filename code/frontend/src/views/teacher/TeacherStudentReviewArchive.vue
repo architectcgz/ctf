@@ -266,24 +266,24 @@ async function handleExportArchive(): Promise<void> {
 
 .summary-card {
   --metric-panel-border: var(--teacher-card-border);
-  --metric-panel-background: var(--journal-surface);
-  --metric-panel-radius: 20px;
+  --metric-panel-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  --metric-panel-radius: 18px;
   --metric-panel-padding: var(--space-4);
 }
 
 .summary-card--primary {
-  background: linear-gradient(
+  --metric-panel-background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base))
+    color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
   );
 }
 
 .summary-card--warning {
-  background: linear-gradient(
+  --metric-panel-background: linear-gradient(
     180deg,
-    color-mix(in srgb, #f59e0b 18%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base))
+    color-mix(in srgb, #f59e0b 14%, var(--journal-surface)),
+    color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
   );
 }
 
@@ -292,7 +292,6 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__value {
-  font-size: var(--font-size-1-80);
   --metric-panel-value-margin-top: var(--space-3);
   --metric-panel-value-size: 1.8rem;
 }
@@ -303,9 +302,8 @@ async function handleExportArchive(): Promise<void> {
 }
 
 .summary-card__hint {
-  margin-top: var(--space-2);
-  color: var(--journal-muted);
-  line-height: 1.65;
+  --metric-panel-helper-margin-top: var(--space-2);
+  --metric-panel-helper-line-height: 1.65;
 }
 
 .skill-bars {

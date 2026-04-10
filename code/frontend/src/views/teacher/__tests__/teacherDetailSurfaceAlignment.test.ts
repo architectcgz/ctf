@@ -62,6 +62,11 @@ describe('teacher detail surface alignment', () => {
     )
     expect(reviewArchiveSource).toContain('metric-panel-card')
     expect(reviewArchiveSource).toContain('--metric-panel-border: var(--teacher-card-border);')
+    expect(reviewArchiveSource).toContain('class="summary-grid metric-panel-grid"')
+    expect(reviewArchiveSource).toContain('class="summary-card summary-card--primary metric-panel-card"')
+    expect(reviewArchiveSource).toContain('class="summary-card__label metric-panel-label"')
+    expect(reviewArchiveSource).toContain('class="summary-card__value metric-panel-value"')
+    expect(reviewArchiveSource).toContain('class="summary-card__hint metric-panel-helper"')
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
@@ -88,8 +93,22 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).not.toMatch(
       /\.insight-rate-panel\s*\{[^}]*border-top:/s
     )
+    expect(studentInsightPanelSource).toContain('class="writeup-kpi-grid metric-panel-grid"')
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-card writeup-kpi-card insight-kpi-card--primary metric-panel-card"'
+    )
+    expect(studentInsightPanelSource).toContain('class="insight-kpi-label metric-panel-label"')
+    expect(studentInsightPanelSource).toContain('class="insight-kpi-value metric-panel-value"')
+    expect(studentInsightPanelSource).toContain('class="insight-kpi-hint metric-panel-helper"')
+    expect(studentInsightPanelSource).toContain('class="insight-kpi-grid metric-panel-grid')
     expect(studentInsightPanelSource).toMatch(
-      /\.insight-kpi-card\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*86%,\s*transparent\);/s
+      /\.insight-kpi-card\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);/s
+    )
+    expect(studentInsightPanelSource).toMatch(
+      /\.insight-kpi-card\s*\{[\s\S]*--metric-panel-radius:\s*16px;/s
+    )
+    expect(studentInsightPanelSource).toMatch(
+      /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
 
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
