@@ -10,6 +10,6 @@ const router = useRouter()
 <template>
   <ChallengeWriteupEditorPage
     :challenge-id="String(route.params.id || '')"
-    @back="router.push({ name: 'AdminChallengeDetail', params: { id: String(route.params.id || '') } })"
+    @back="router.push({ name: 'AdminChallengeDetail', params: { id: String(route.params.id || '') }, query: { panel: 'writeup' } })"
   />
 </template>
