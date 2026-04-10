@@ -168,11 +168,11 @@ onMounted(() => {
           <Target class="h-4 w-4" />
           <span>当前题库概况</span>
         </div>
-        <div class="challenge-summary-grid">
-          <div v-for="stat in summaryStats" :key="stat.key" class="challenge-summary-item">
-            <div class="challenge-summary-label">{{ stat.label }}</div>
-            <div class="challenge-summary-value">{{ stat.value }}</div>
-            <div class="challenge-summary-helper">{{ stat.helper }}</div>
+        <div class="challenge-summary-grid metric-panel-grid">
+          <div v-for="stat in summaryStats" :key="stat.key" class="challenge-summary-item metric-panel-card">
+            <div class="challenge-summary-label metric-panel-label">{{ stat.label }}</div>
+            <div class="challenge-summary-value metric-panel-value">{{ stat.value }}</div>
+            <div class="challenge-summary-helper metric-panel-helper">{{ stat.helper }}</div>
           </div>
         </div>
       </section>

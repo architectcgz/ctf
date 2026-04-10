@@ -75,7 +75,7 @@
       --metric-panel-border,
       color-mix(
         in srgb,
-        var(--journal-border, var(--color-border-default)) 90%,
+        var(--color-border-default) 82%,
         transparent
       )
     );
@@ -89,10 +89,10 @@
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
       color-mix(
         in srgb,
-        var(--journal-surface-subtle, var(--workspace-panel, var(--journal-surface, var(--color-bg-surface)))) 92%,
+        var(--color-bg-surface) 92%,
         var(--color-bg-base)
       )
     )
@@ -109,7 +109,7 @@
   font-weight: var(--metric-panel-label-weight, 700);
   letter-spacing: var(--metric-panel-label-spacing, 0.12em);
   text-transform: uppercase;
-  color: var(--metric-panel-label-color, var(--workspace-faint, var(--journal-muted)));
+  color: var(--metric-panel-label-color, var(--journal-muted, var(--color-text-secondary)));
 }
 
 .metric-panel-value {
@@ -186,7 +186,7 @@
   border: 1px solid
     var(
       --metric-panel-border,
-      color-mix(in srgb, var(--journal-border, var(--color-border-default)) 90%, transparent)
+      color-mix(in srgb, var(--color-border-default) 82%, transparent)
     );
   border-radius: var(--metric-panel-radius, 1rem);
   background: var(
@@ -198,10 +198,10 @@
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
       color-mix(
         in srgb,
-        var(--journal-surface-subtle, var(--workspace-panel, var(--journal-surface, var(--color-bg-surface)))) 92%,
+        var(--color-bg-surface) 92%,
         var(--color-bg-base)
       )
     )

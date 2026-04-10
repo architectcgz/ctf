@@ -136,11 +136,11 @@ async function handlePublishSuccess(): Promise<void> {
           <Bell class="h-4 w-4" />
           <span>当前消息概况</span>
         </div>
-        <div class="notification-summary-grid">
-          <div v-for="stat in summaryStats" :key="stat.key" class="notification-summary-item">
-            <div class="notification-summary-label">{{ stat.label }}</div>
-            <div class="notification-summary-value">{{ stat.value }}</div>
-            <div class="notification-summary-helper">{{ stat.helper }}</div>
+        <div class="notification-summary-grid metric-panel-grid">
+          <div v-for="stat in summaryStats" :key="stat.key" class="notification-summary-item metric-panel-card">
+            <div class="notification-summary-label metric-panel-label">{{ stat.label }}</div>
+            <div class="notification-summary-value metric-panel-value">{{ stat.value }}</div>
+            <div class="notification-summary-helper metric-panel-helper">{{ stat.helper }}</div>
           </div>
         </div>
       </section>

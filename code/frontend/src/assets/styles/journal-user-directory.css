@@ -82,16 +82,18 @@
   .instance-summary-item
 ) {
   min-width: 0;
-  border: 1px solid
-    var(--workspace-line-soft, color-mix(in srgb, var(--journal-border) 78%, transparent));
-  border-radius: var(--workspace-radius-lg, 18px);
-  background: color-mix(
+  --metric-panel-border: var(
+    --workspace-line-soft,
+    color-mix(in srgb, var(--journal-border) 78%, transparent)
+  );
+  --metric-panel-radius: var(--workspace-radius-lg, 18px);
+  --metric-panel-background: color-mix(
     in srgb,
     var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
     transparent
   );
-  box-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
-  padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
+  --metric-panel-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
+  --metric-panel-padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
 }
 
 :is(
@@ -101,11 +103,9 @@
   .scoreboard-summary-label,
   .instance-summary-label
 ) {
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
+  --metric-panel-label-size: var(--font-size-11);
+  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-color: var(--journal-muted);
 }
 
 :is(
@@ -115,12 +115,8 @@
   .scoreboard-summary-value,
   .instance-summary-value
 ) {
-  margin-top: var(--space-2-5, 0.625rem);
-  font-size: var(--font-size-26);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
-  color: var(--journal-ink);
+  --metric-panel-value-margin-top: var(--space-2-5, 0.625rem);
+  --metric-panel-value-size: var(--font-size-26);
 }
 
 :is(
@@ -130,10 +126,10 @@
   .scoreboard-summary-helper,
   .instance-summary-helper
 ) {
-  margin-top: var(--space-2, 0.5rem);
-  font-size: var(--font-size-13);
-  line-height: 1.7;
-  color: var(--journal-muted);
+  --metric-panel-helper-margin-top: var(--space-2, 0.5rem);
+  --metric-panel-helper-size: var(--font-size-13);
+  --metric-panel-helper-line-height: 1.7;
+  --metric-panel-helper-color: var(--journal-muted);
 }
 
 :is(

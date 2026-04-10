@@ -199,7 +199,7 @@ describe('TeacherDashboard', () => {
   })
 
   it('教师概览应采用 workspace tabs 结构而不是单一仪表盘堆叠', () => {
-    expect(teacherDashboardPageSource).toContain('class="workspace-shell"')
+    expect(teacherDashboardPageSource).toContain('class="workspace-shell teacher-management-shell teacher-surface"')
     expect(teacherDashboardPageSource).toContain('role="tablist"')
     expect(teacherDashboardPageSource).toContain('top-tab-overview')
     expect(teacherDashboardPageSource).toContain('top-tab-portrait')

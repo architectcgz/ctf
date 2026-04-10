@@ -84,4 +84,11 @@ describe('InstanceList', () => {
     expect(instanceListSource).toMatch(/\.instance-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
     expect(instanceListSource).toMatch(/\.instance-row-access-value\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
+
+  it('实例页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(instanceListSource).toContain('class="instance-summary-grid metric-panel-grid"')
+    expect(instanceListSource).toContain('class="instance-summary-item metric-panel-card"')
+    expect(instanceListSource).toContain('class="instance-summary-label metric-panel-label"')
+    expect(instanceListSource).toContain('class="instance-summary-value metric-panel-value"')
+  })
 })

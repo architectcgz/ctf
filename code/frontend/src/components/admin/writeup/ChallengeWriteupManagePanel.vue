@@ -270,15 +270,15 @@ onMounted(() => {
 
     <div class="writeup-manage-stats-shell">
       <div class="admin-summary-grid writeup-summary-grid">
-        <article class="journal-note">
-          <div class="journal-note-label">官方题解</div>
-          <div class="journal-note-value">{{ officialWriteupCount }}</div>
-          <div class="journal-note-helper">篇</div>
+        <article class="journal-note metric-panel-card">
+          <div class="journal-note-label metric-panel-label">官方题解</div>
+          <div class="journal-note-value metric-panel-value">{{ officialWriteupCount }}</div>
+          <div class="journal-note-helper metric-panel-helper">篇</div>
         </article>
-        <article class="journal-note">
-          <div class="journal-note-label">学员题解</div>
-          <div class="journal-note-value">{{ submissionTotal }}</div>
-          <div class="journal-note-helper">篇</div>
+        <article class="journal-note metric-panel-card">
+          <div class="journal-note-label metric-panel-label">学员题解</div>
+          <div class="journal-note-value metric-panel-value">{{ submissionTotal }}</div>
+          <div class="journal-note-helper metric-panel-helper">篇</div>
         </article>
       </div>
     </div>
