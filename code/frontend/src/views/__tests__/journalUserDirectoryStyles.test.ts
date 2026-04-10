@@ -98,4 +98,26 @@ describe('journal user directory shared styles', () => {
     expect(instanceStyle).not.toMatch(/^\.instance-directory-meta\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-btn\s*\{/m)
   })
+
+  it('challenge 等目录页的概况卡片不应在目录共享样式里继续覆写 metric-panel 单卡外观', () => {
+    expect(challengeListSource).toContain('class="challenge-summary-grid metric-panel-grid"')
+    expect(challengeListSource).toContain('class="challenge-summary-item metric-panel-card"')
+    expect(challengeListSource).toContain('class="challenge-summary-label metric-panel-label"')
+    expect(challengeListSource).toContain('class="challenge-summary-value metric-panel-value"')
+    expect(challengeListSource).toContain('class="challenge-summary-helper metric-panel-helper"')
+
+    expect(journalUserDirectorySource).toContain('.challenge-summary-grid')
+    expect(journalUserDirectorySource).not.toMatch(
+      /:is\(\s*\.challenge-summary-item,[\s\S]*?--metric-panel-border:/s
+    )
+    expect(journalUserDirectorySource).not.toMatch(
+      /:is\(\s*\.challenge-summary-label,[\s\S]*?--metric-panel-label-size:/s
+    )
+    expect(journalUserDirectorySource).not.toMatch(
+      /:is\(\s*\.challenge-summary-value,[\s\S]*?--metric-panel-value-size:/s
+    )
+    expect(journalUserDirectorySource).not.toMatch(
+      /:is\(\s*\.challenge-summary-helper,[\s\S]*?--metric-panel-helper-size:/s
+    )
+  })
 })
