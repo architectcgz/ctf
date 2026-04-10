@@ -1,123 +1,46 @@
 # 共享实例 Proof 提交流程设计
 
-## 背景
+> 状态：已采用
 
-上一轮已经把实例共享策略补到了平台里，`shared` 题可以在练习模式和竞赛模式下复用同一份实例。
+## 1. 设计概览
 
-但只要题目仍使用可转发的提交凭证，`shared` 就会天然带来一类风险：
+共享实例模式解决了“多人启动同一道题导致容器数量线性增长”的问题，但共享运行环境本身不能解决“提交凭证可转发”的问题。
 
-- `static` 题：一个人拿到 flag，其他人直接抄提交通关
-- `regex` 题：如果答案格式固定，其他人同样可以复用
-- `manual_review` 题：平台不会自动阻止“抄答案提交”，只能依赖人工审核识别
+因此，平台对共享题采用独立的提交凭证类型 `shared_proof`：
 
-当前平台已经禁止了 `shared + dynamic`，因为动态 flag 依赖实例启动期注入环境变量，而共享实例没有办法同时承载多个用户的私有 flag。
+- 实例仍然共享
+- 提交结果仍然按用户归属
+- proof 由平台签发、校验和消费
+- proof 短时有效且一次性使用
 
-这说明还缺最后一层能力：共享环境与用户提交凭证解耦。
+这套设计把“共享环境”与“用户提交凭证”拆开，避免一个用户拿到答案后其他用户直接复用同一份提交内容通关。
 
-## 目标
+## 2. 适用范围
 
-本轮要补的不是“共享实例里的动态环境变量”，而是“共享实例里的用户绑定提交凭证”：
+`shared_proof` 只用于共享实例题目，并且是共享题的正式提交模式之一。
 
-1. 新增 `flag_type = shared_proof`
-2. 仅允许 `instance_sharing = shared` 的题目使用 `shared_proof`
-3. 共享题完成后，由平台为当前访问用户签发一次性 proof
-4. 练习和竞赛都走现有提交入口，但提交内容改为 proof
-5. proof 必须绑定 `user_id + challenge_id + contest_id + instance_id`
-6. proof 必须短时有效，且一次性消费
+配置约束固定如下：
 
-## 非目标
+- `flag_type = shared_proof` 时，强制要求 `instance_sharing = shared`
+- `instance_sharing = shared` 时，允许 `flag_type = static / regex / manual_review / shared_proof`
+- `instance_sharing = shared` 时，禁止 `flag_type = dynamic`
 
-本轮不做下面这些内容：
+## 3. 配置与数据模型
 
-- 题目服务直接回调平台“强制判题成功”
-- 在共享容器内存放平台签名密钥
-- 独立于实例代理之外再做一套新的会话系统
-- 前端完整的题目管理 UI 重构
-- 对已有 `static / regex` 共享题自动迁移
+### 3.1 题目配置
 
-## 可选方案
-
-### 方案 A：共享应用自行生成 proof，平台只做验签
-
-优点：
-
-- 共享题服务可以完全自主生成结果
-- 平台提交流程改动较小
-
-缺点：
-
-- 平台签名能力必须进入共享容器
-- 共享应用一旦被打穿，proof 体系会一起失守
-- 不符合当前平台的密钥边界
-
-不推荐。
-
-### 方案 B：共享应用向平台换 proof，平台负责签发和消费
-
-优点：
-
-- 不需要把平台密钥放进共享容器
-- 可以复用现有实例代理和 proxy ticket
-- proof 可以做成短时、一次性、强绑定上下文
-
-缺点：
-
-- 需要新增 proof 存储和内部签发接口
-- 需要同时改练习和竞赛提交校验
-
-推荐采用。
-
-### 方案 C：共享应用直接调用平台标记 solve
-
-优点：
-
-- 用户不需要再提交 proof
-- 流程最短
-
-缺点：
-
-- 绕开现有提交链路、限流、记录与反馈语义
-- 会把“提交流程”和“题目服务回调”变成两套判题模型
-
-不推荐作为第一版。
-
-## 推荐方案
-
-采用方案 B，并尽量复用现有运行时代理链路：
-
-1. 用户访问共享实例时，平台继续签发 `proxy ticket`
-2. `proxy ticket` claims 补充当前题目和上下文信息
-3. 共享题服务在完成关键步骤后，使用平台代理注入的 ticket 调平台内部接口换取一次性 `shared_proof`
-4. 用户仍通过现有 `/submit` 接口提交 proof
-5. 平台在提交时校验 proof 是否属于当前用户、当前题目、当前 contest 和当前实例
-6. 校验成功后消费 proof，并写入现有 submission 记录
-
-## 数据设计
-
-### `challenges.flag_type`
-
-新增枚举值：
+`challenges.flag_type` 新增枚举值：
 
 - `shared_proof`
 
-语义：
+它表示该题的有效提交内容不是静态 flag，也不是实例内动态 flag，而是由平台签发的用户绑定 proof。
 
-- 共享实例题目的“用户绑定提交凭证”
-- 不是静态 flag，也不是实例环境变量
-- 必须通过平台内部签发流程获得
+### 3.2 `shared_proofs` 表
 
-约束：
+平台使用 `shared_proofs` 表保存 proof 元数据，明文 proof 不落库，只保存 hash。
 
-- `shared_proof` 仅允许和 `instance_sharing = shared` 搭配
-- `per_user / per_team` 题不允许配置为 `shared_proof`
+核心字段包括：
 
-### `shared_proofs`
-
-新增表，用于保存已签发的 proof 元数据。
-
-建议字段：
-
-- `id`
 - `token_hash`
 - `user_id`
 - `challenge_id`
@@ -125,36 +48,26 @@
 - `instance_id`
 - `issued_by_ticket`
 - `status`
-  - `issued`
-  - `consumed`
-  - `expired`
 - `expires_at`
 - `consumed_at`
-- `created_at`
-- `updated_at`
 
-说明：
+状态值固定为：
 
-- 平台不直接存明文 proof，只存 hash
-- contest 为空表示练习模式
-- `issued_by_ticket` 用于审计和问题排查
+- `issued`
+- `consumed`
+- `expired`
 
-### 索引建议
+核心索引包括：
 
 - `token_hash` 唯一索引
-- `(user_id, challenge_id, contest_id, status)` 普通索引
-- `expires_at` 索引，便于后续清理
+- `(user_id, challenge_id, contest_id, status)` 查询索引
+- `expires_at` 清理索引
 
-## 代理票据设计
+## 4. 代理票据上下文
 
-当前平台已经有 `proxy ticket`，但 claims 里只有：
+proof 签发不依赖题目服务自报用户上下文，而是复用现有 runtime proxy ticket。
 
-- `user_id`
-- `username`
-- `role`
-- `instance_id`
-
-本轮扩展为：
+当前 ticket claims 包含：
 
 - `user_id`
 - `username`
@@ -165,144 +78,115 @@
 - `share_scope`
 - `issued_at`
 
-原因：
+这组 claims 由平台在实例代理链路中签发，题目服务只能携带 ticket 调平台内部接口，不能自行声明用户、题目或竞赛身份。
 
-- shared proof 签发时需要明确上下文
-- 不应要求共享题服务自己再上传 `user_id / challenge_id / contest_id`
-- proof 服务应该优先信任平台代理票据，而不是题目服务自报身份
+## 5. Proof 签发接口
 
-## 内部接口设计
-
-新增一个仅供共享题服务调用的内部接口，例如：
+平台提供内部接口：
 
 - `POST /api/v1/internal/runtime/shared-proofs/issue`
 
-请求头：
+请求方式：
 
-- `X-CTF-Proxy-Ticket`
+- 请求头：`X-CTF-Proxy-Ticket`
+- 请求体：可为空
 
-请求体最小化：
-
-- 可为空，或只带调试字段
-
-响应：
+响应字段：
 
 - `proof`
 - `expires_at`
 
-当前实现里，`shared_proof` 的过期时间先复用 `container.proxy_ticket_ttl`，不额外新增单独 TTL 配置项。
+proof 的有效时间当前复用 `container.proxy_ticket_ttl`，不单独增加新的 TTL 配置项。
 
-签发流程：
+## 6. Proof 签发流程
 
-1. 平台解析并校验 proxy ticket
-2. 校验对应实例仍可访问，且 `share_scope = shared`
-3. 校验 challenge 的 `flag_type = shared_proof`
-4. 签发 proof，保存 hash 和上下文
-5. 返回 proof 给共享题服务
+共享题服务在用户完成题目要求后，使用当前访问票据向平台换取 proof。平台按以下顺序处理：
 
-## 提交流程设计
+1. 解析并校验 `X-CTF-Proxy-Ticket`
+2. 校验实例存在且当前仍可访问
+3. 校验 `share_scope = shared`
+4. 校验题目 `flag_type = shared_proof`
+5. 生成 proof 明文并计算 hash
+6. 将 hash 和上下文写入 `shared_proofs`
+7. 返回 proof 与过期时间
 
-### 练习模式
+题目服务本身不持有平台签名密钥，也不直接写入提交结果。
 
-现有入口不变：
+## 7. 提交流程
+
+### 7.1 练习模式
+
+练习模式仍使用原有提交入口：
 
 - `POST /api/v1/challenges/{id}/submit`
 
-提交值仍放在：
-
-- `flag`
-
-但当题目 `flag_type = shared_proof` 时，平台改为：
-
-1. 把输入值当作 proof
-2. 查 proof hash
-3. 校验：
-   - `user_id` 匹配当前用户
-   - `challenge_id` 匹配当前题目
-   - `contest_id IS NULL`
-   - proof 未过期
-   - proof 未消费
-4. 成功后消费 proof，并继续沿用现有正确提交流程
-
-### 竞赛模式
-
-现有竞赛提交入口不变。
-
-当题目 `flag_type = shared_proof` 时，校验改为：
+当题目 `flag_type = shared_proof` 时，后端把提交值视为 proof，并执行以下校验：
 
 1. proof hash 命中
-2. `user_id` 匹配当前用户
-3. `challenge_id` 匹配当前题目
-4. `contest_id` 匹配当前竞赛
-5. proof 未过期、未消费
-6. 成功后消费 proof，再进入现有记分逻辑
+2. `user_id` 与当前用户一致
+3. `challenge_id` 与当前题目一致
+4. `contest_id IS NULL`
+5. `instance_id` 与 proof 所属实例一致
+6. proof 未过期
+7. proof 未消费
 
-这样可以保证：
+校验通过后，proof 被标记为已消费，再沿用现有练习正确提交流程记分和落库。
 
-- 实例可以共享
-- 提交结果仍然是用户级
-- 队伍赛的计分仍由现有 contest scoring 决定
+### 7.2 竞赛模式
 
-## 安全边界
+竞赛仍走现有提交入口，区别只在于校验内容改为 proof：
 
-本轮必须守住下面几条：
+1. proof hash 命中
+2. `user_id` 与当前用户一致
+3. `challenge_id` 与当前题目一致
+4. `contest_id` 与当前竞赛一致
+5. `instance_id` 与 proof 所属实例一致
+6. proof 未过期
+7. proof 未消费
 
-1. 平台签名能力不能进入共享容器
-2. proof 必须一次性消费
-3. proof 必须短期有效
-4. proof 必须绑定用户、题目、contest、实例
-5. 题目服务不能靠前端自报 `user_id`
-6. internal issue 接口必须只信平台代理注入的 ticket
+校验通过后，proof 被消费，再进入现有竞赛计分流程。
 
-## 兼容性规则
+这样保证共享实例不影响提交归属，竞赛计分仍保持用户或队伍侧的既有规则。
 
-### 题目配置
+## 8. 安全边界
 
-- `instance_sharing = shared`
-  - 允许：`static / regex / manual_review / shared_proof`
-  - 禁止：`dynamic`
-- `flag_type = shared_proof`
-  - 强制要求：`instance_sharing = shared`
+`shared_proof` 的安全边界固定如下：
 
-### 前端
+- 平台签发能力不能进入共享容器
+- proof 必须绑定 `user_id + challenge_id + contest_id + instance_id`
+- proof 必须一次性消费
+- proof 必须短时有效
+- proof 校验只信任平台代理票据带来的上下文
+- 共享题服务不能通过前端参数冒充其他用户签发 proof
 
-本轮前端只做最小同步：
+这意味着即使多个用户共享同一运行环境，提交成功仍然需要当前用户自己完成一次独立的 proof 签发。
 
-- 题目详情页识别 `shared_proof`
-- 共享题的提交文案可改为“提交 proof”
-- 不要求新增出题端高级配置面板
+## 9. 前端与接口表现
 
-## 测试策略
+前端只做与提交流程直接相关的同步：
 
-至少覆盖下面场景：
+- 题目详情识别 `flag_type = shared_proof`
+- 提交区文案显示为“提交 proof”
+- 仍使用现有提交入口，不引入新的学员端提交流程
 
-1. 题目配置
-   - `shared_proof + per_user` 被拒绝
-   - `shared_proof + shared` 允许保存
-2. 签发 proof
-   - 共享实例访问者可通过 ticket 换取 proof
-   - 非共享实例或非共享题不能签发
-3. 练习提交
-   - 正确 proof 允许当前用户通过
-   - 其他用户复用 proof 被拒绝
-   - proof 第二次提交被拒绝
-4. 竞赛提交
-   - 同题同赛 proof 可用
-   - 不同 contest 复用 proof 被拒绝
-5. 安全边界
-   - 过期 proof 被拒绝
-   - 实例不匹配的 proof 被拒绝
+管理端配置层面，`shared_proof` 作为正式 flag 类型出现在题目配置中。
 
-## 分阶段后续工作
+## 10. 运行边界
 
-### 下一阶段
+这套设计负责的是共享题的提交凭证绑定，不负责共享应用内部如何判定“用户已完成挑战”。
 
-- shared proof 的后台清理任务
-- internal issue 接口的速率限制和审计统计
-- 前端题目详情页更明确地区分 flag / proof 文案
+当前边界明确如下：
 
-### 更长期
+- 平台负责 proof 的签发、存储、校验和消费
+- 题目服务负责在合适的业务节点向平台申请 proof
+- 不引入题目服务直接回调“判题成功”的旁路接口
+- 不引入平台与题目服务之间的第二套会话系统
 
-- 共享实例中的多租户 checker SDK
-- 题目服务与平台间的双向鉴权
-- 共享题 proof 模板和出题脚手架
+## 11. 当前落地结果
+
+当前后端设计已经固定为：
+
+- `shared_proof` 是共享题的正式 flag 类型
+- proof 通过 runtime proxy ticket 上下文签发
+- 练习和竞赛共用现有提交流程，只替换校验逻辑
+- proof 绑定用户、题目、竞赛和实例，并且一次性消费
