@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { RefreshCw, Save, Trash2 } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   challengeId: string
-}>()
+  embedded?: boolean
+}>(), {
+  embedded: false,
+})
 
 const emit = defineEmits<{
   back: []
 }>()
+
+const isEmbedded = computed(() => props.embedded)
 
 const {
   loading,
@@ -32,10 +38,15 @@ const {
 </script>
 
 <template>
-  <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
+  <component
+    :is="isEmbedded ? 'div' : 'section'"
+    :class="
+      isEmbedded
+        ? 'writeup-embedded-shell'
+        : 'workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8'
+    "
   >
-    <header class="workspace-topbar">
+    <header v-if="!isEmbedded" class="workspace-topbar">
       <div class="topbar-leading">
         <span class="workspace-overline">Challenge Workspace</span>
         <span class="class-chip">题解管理</span>
@@ -49,7 +60,7 @@ const {
       </div>
     </header>
 
-    <div class="workspace-tab-heading">
+    <div class="workspace-tab-heading" :class="{ 'writeup-tab-heading': isEmbedded }">
       <div class="workspace-tab-heading__main">
         <div class="journal-note-label">Admin Writeup</div>
         <h1 class="workspace-tab-heading__title">题解管理</h1>
@@ -67,7 +78,7 @@ const {
 
     <AppLoading v-if="loading" class="writeup-loading">正在加载题解数据...</AppLoading>
 
-    <main v-else class="content-pane writeup-workspace">
+    <main v-else :class="isEmbedded ? 'writeup-workspace' : 'content-pane writeup-workspace'">
       <section class="writeup-main">
         <section class="writeup-section writeup-editor-section">
           <header class="writeup-editor-head">
@@ -228,16 +239,26 @@ const {
         </div>
       </aside>
     </main>
-  </section>
+  </component>
 </template>
 
 <style scoped>
-.journal-shell {
+.journal-shell,
+.writeup-embedded-shell {
   --journal-topbar-padding-bottom: var(--space-3);
   --journal-shell-hero-radial-strength: 7%;
   --journal-shell-hero-radial-size: 22rem;
   --journal-shell-hero-end: var(--journal-surface);
   --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
+}
+
+.writeup-embedded-shell {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.writeup-tab-heading {
+  margin-bottom: var(--space-1);
 }
 
 .workspace-overline {

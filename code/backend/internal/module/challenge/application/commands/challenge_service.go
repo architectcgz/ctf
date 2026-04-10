@@ -191,7 +191,8 @@ func (s *ChallengeService) DeleteChallenge(id int64) error {
 		return err
 	}
 	if hasInstances {
-		return errcode.ErrConflict.WithCause(errors.New(domain.ErrMsgHasRunningInstances))
+		return errcode.New(errcode.ErrConflict.Code, domain.ErrMsgHasRunningStudents, errcode.ErrConflict.HTTPStatus).
+			WithCause(errors.New(domain.ErrMsgHasRunningInstances))
 	}
 	return s.repo.Delete(id)
 }

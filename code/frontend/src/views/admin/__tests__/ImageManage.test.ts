@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import ImageManage from '../ImageManage.vue'
 import imageManageSource from '../ImageManage.vue?raw'
+import { ApiError } from '@/api/request'
 
 const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
   getImagesMock: vi.fn(),
@@ -9,10 +10,23 @@ const { getImagesMock, createImageMock, deleteImageMock } = vi.hoisted(() => ({
   deleteImageMock: vi.fn(),
 }))
 
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+}))
+
+const confirmMock = vi.hoisted(() => vi.fn())
+
 vi.mock('@/api/admin', () => ({
   getImages: getImagesMock,
   createImage: createImageMock,
   deleteImage: deleteImageMock,
+}))
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastMocks,
+}))
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: confirmMock,
 }))
 
 function createImageItem(status: 'pending' | 'building' | 'available' | 'failed' = 'available') {
@@ -60,7 +74,11 @@ describe('ImageManage', () => {
     getImagesMock.mockReset()
     createImageMock.mockReset()
     deleteImageMock.mockReset()
+    toastMocks.success.mockReset()
+    toastMocks.error.mockReset()
+    confirmMock.mockReset()
     getImagesMock.mockResolvedValue(createImagePage())
+    confirmMock.mockResolvedValue(true)
   })
 
   afterEach(() => {
@@ -149,5 +167,21 @@ describe('ImageManage', () => {
     await flushPromises()
 
     expect(getImagesMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('删除镜像失败时应优先展示接口返回消息', async () => {
+    deleteImageMock.mockRejectedValue(
+      new ApiError('镜像仍被题目使用，暂时不能删除', { code: 10007, status: 409 })
+    )
+
+    const wrapper = mountPage()
+    await flushPromises()
+
+    const deleteButton = wrapper.find('.image-row__actions button')
+    await deleteButton.trigger('click')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('镜像仍被题目使用，暂时不能删除')
+    expect(toastMocks.error).not.toHaveBeenCalledWith('删除失败')
   })
 })

@@ -38,8 +38,47 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('echarts') || id.includes('vue-echarts')) {
-            return 'echarts'
+          if (id.includes('/vue-echarts/')) {
+            return 'vue-echarts'
+          }
+
+          if (id.includes('/echarts/charts/')) {
+            return 'echarts-charts'
+          }
+
+          if (id.includes('/echarts/components/') || id.includes('/echarts/features/')) {
+            return 'echarts-components'
+          }
+
+          if (id.includes('/echarts/renderers/') || id.includes('/echarts/lib/renderer/')) {
+            return 'echarts-renderers'
+          }
+
+          if (id.includes('/zrender/')) {
+            return 'zrender'
+          }
+
+          if (
+            id.includes('/echarts/core/') ||
+            id.includes('/echarts/lib/core/') ||
+            id.includes('/echarts/lib/chart/') ||
+            id.includes('/echarts/lib/component/') ||
+            id.includes('/echarts/lib/visual/') ||
+            id.includes('/echarts/lib/layout/') ||
+            id.includes('/echarts/lib/util/') ||
+            id.includes('/echarts/lib/coord/') ||
+            id.includes('/echarts/lib/label/') ||
+            id.includes('/echarts/lib/animation/') ||
+            id.includes('/echarts/lib/data/') ||
+            id.includes('/echarts/lib/model/') ||
+            id.includes('/echarts/lib/view/') ||
+            id.includes('/echarts/lib/export/')
+          ) {
+            return 'echarts-runtime'
+          }
+
+          if (id.includes('/echarts/')) {
+            return 'echarts-runtime'
           }
 
           if (id.includes('element-plus')) {

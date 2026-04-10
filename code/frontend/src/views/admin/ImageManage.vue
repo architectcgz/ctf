@@ -226,8 +226,9 @@ async function handleDelete(id: string) {
     await deleteImage(id)
     toast.success('删除成功')
     refresh()
-  } catch {
-    toast.error('删除失败')
+  } catch (error) {
+    const message = error instanceof Error && error.message.trim() ? error.message : '删除失败'
+    toast.error(message)
   }
 }
 

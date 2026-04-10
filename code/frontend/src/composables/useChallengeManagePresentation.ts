@@ -128,7 +128,11 @@ export function useChallengeManagePresentation({
 
   function openChallengeWriteup(challengeId: string): void {
     closeActionMenu()
-    void router.push(`/platform/challenges/${challengeId}/writeup`)
+    void router.push({
+      name: 'AdminChallengeDetail',
+      params: { id: challengeId },
+      query: { panel: 'writeup' },
+    })
   }
 
   async function submitPublishCheck(row: AdminChallengeListRow): Promise<void> {
