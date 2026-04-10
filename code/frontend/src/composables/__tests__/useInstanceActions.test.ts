@@ -116,6 +116,7 @@ describe('instance action errors', () => {
       id: 'inst-1',
       challenge_id: 'challenge-1',
       status: 'running',
+      share_scope: 'per_user',
       access_url: 'http://target.test',
       flag_type: 'dynamic',
       expires_at: '2099-01-01T00:00:00Z',
