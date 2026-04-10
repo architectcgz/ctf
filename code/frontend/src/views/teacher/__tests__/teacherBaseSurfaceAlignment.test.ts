@@ -74,17 +74,26 @@ describe('teacher base surface alignment', () => {
     expect(classManagementSource).toContain('class="teacher-summary-value metric-panel-value"')
     expect(classManagementSource).toContain('class="teacher-summary-helper metric-panel-helper"')
 
+    expect(studentManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
     expect(studentManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
     expect(studentManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
 
+    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
     expect(instanceManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
     expect(instanceManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
 
+    expect(reportExportSource).toContain('class="report-summary metric-panel-default-surface"')
     expect(reportExportSource).toContain('class="report-summary-grid metric-panel-grid"')
     expect(reportExportSource).toContain('class="report-summary-item metric-panel-card"')
     expect(reportExportSource).toContain('class="report-summary-label metric-panel-label"')
     expect(reportExportSource).toContain('class="report-summary-value metric-panel-value"')
     expect(reportExportSource).toContain('class="report-summary-helper metric-panel-helper"')
+    expect(reportExportSource).toContain(
+      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(reportExportSource).toContain(
+      'class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-default-surface"'
+    )
 
     expect(teacherSurfaceSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(teacherSurfaceSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
@@ -106,12 +115,15 @@ describe('teacher base surface alignment', () => {
     expect(reportExportSource).toContain('--report-divider:')
     expect(reportExportSource).not.toMatch(/^\.report-hero\s*\{/m)
     expect(reportExportSource).not.toMatch(/^\.report-summary\s*\{/m)
-    expect(reportExportSource).toContain('class="report-kpi-grid report-kpi-grid--task metric-panel-grid"')
+    expect(reportExportSource).toContain(
+      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface"'
+    )
     expect(reportExportSource).toContain('class="journal-brief journal-metric report-kpi-card metric-panel-card"')
     expect(reportExportSource).toContain('class="report-kpi-label metric-panel-label"')
     expect(reportExportSource).toContain('class="report-kpi-value metric-panel-value"')
     expect(reportExportSource).toContain('class="report-kpi-hint metric-panel-helper"')
-    expect(reportExportSource).toContain('class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid"')
+    expect(reportExportSource).not.toContain('--metric-panel-background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));')
+    expect(reportExportSource).not.toContain('--metric-panel-value-size: var(--font-size-1-08);')
     expect(reportExportSource).toMatch(
       /:deep\(\.page-header\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
     )
@@ -124,7 +136,7 @@ describe('teacher base surface alignment', () => {
     expect(reportExportSource).toMatch(
       /:deep\(\.report-preview-dialog \.el-dialog\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
     )
-    expect(reportExportSource).toMatch(
+    expect(reportExportSource).not.toMatch(
       /\.report-kpi-card\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
     )
   })

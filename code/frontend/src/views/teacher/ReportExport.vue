@@ -49,7 +49,7 @@ const {
         </div>
       </header>
 
-      <section class="report-summary">
+      <section class="report-summary metric-panel-default-surface">
         <div class="report-summary-title">Export Snapshot</div>
         <div class="report-summary-grid metric-panel-grid">
           <div class="report-summary-item metric-panel-card">
@@ -207,7 +207,7 @@ const {
                 </span>
               </div>
 
-              <div class="report-kpi-grid report-kpi-grid--task metric-panel-grid">
+              <div class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface">
                 <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
                   <div class="report-kpi-label metric-panel-label">班级</div>
                   <div class="report-kpi-value metric-panel-value">{{ latestExport.className }}</div>
@@ -326,7 +326,7 @@ const {
       </div>
 
       <template v-else-if="previewSummary">
-        <section class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid">
+        <section class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-default-surface">
           <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
             <div class="report-kpi-label metric-panel-label">班级人数</div>
             <div class="report-kpi-value metric-panel-value">{{ previewSummary.student_count }}</div>
@@ -382,11 +382,6 @@ const {
 
 .report-shell {
   gap: 0;
-}
-
-.journal-brief,
-.journal-metric {
-  border-radius: 18px;
 }
 
 .report-page {
@@ -588,30 +583,6 @@ const {
 
 .report-kpi-grid--dialog {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
-}
-
-.report-kpi-card {
-  --metric-panel-border: var(--report-card-border);
-  --metric-panel-background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-  --metric-panel-padding: var(--space-4) var(--space-4);
-  --metric-panel-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
-.report-kpi-label {
-  --metric-panel-label-size: var(--font-size-0-72);
-  --metric-panel-label-spacing: 0.14em;
-}
-
-.report-kpi-value {
-  --metric-panel-value-margin-top: var(--space-1-5);
-  --metric-panel-value-size: var(--font-size-1-08);
-  --metric-panel-value-line-height: 1.2;
-}
-
-.report-kpi-hint {
-  --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-0-80);
-  --metric-panel-helper-line-height: 1.55;
 }
 
 .report-status-banner {

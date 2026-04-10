@@ -63,7 +63,7 @@ const emit = defineEmits<{
           </div>
         </header>
 
-        <section class="teacher-summary">
+        <section class="teacher-summary metric-panel-default-surface">
           <div class="teacher-summary-title">
             <span>Directory Snapshot</span>
           </div>

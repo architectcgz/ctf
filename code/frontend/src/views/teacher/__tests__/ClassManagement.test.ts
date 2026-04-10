@@ -206,4 +206,15 @@ describe('ClassManagement', () => {
       /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
   })
+
+  it('班级管理概况卡片应复用教学概览的默认 metric-panel 外观', () => {
+    expect(classManagementSource).toContain('class="teacher-summary teacher-summary--overview-metrics"')
+    expect(classManagementSource).toContain('--metric-panel-radius: 1rem;')
+    expect(classManagementSource).toContain('--metric-panel-value-size: clamp(1.5rem, 2vw, 2rem);')
+    expect(classManagementSource).toContain('--metric-panel-helper-line-height: 1.55;')
+    expect(classManagementSource).toContain(
+      'color-mix(in srgb, var(--color-border-default) 82%, transparent)'
+    )
+    expect(classManagementSource).toContain('radial-gradient(')
+  })
 })
