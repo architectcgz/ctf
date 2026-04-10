@@ -12,6 +12,20 @@ import AppLoading from '@/components/common/AppLoading.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
+type WriteupDirectoryRow = {
+  key: string
+  source: 'official' | 'student'
+  title: string
+  preview?: string
+  authorPrimary: string
+  authorSecondary?: string
+  authorTertiary?: string
+  studentNo: string
+  statusPrimary: string
+  statusSecondary?: string
+  updatedAt: string
+}
+
 const props = defineProps<{
   challengeId: string
   challengeTitle?: string
@@ -33,6 +47,43 @@ const submissionTotal = ref(0)
 const submissionTotalPages = computed(() =>
   Math.max(1, Math.ceil(submissionTotal.value / Math.max(1, submissionPageSize.value)))
 )
+const officialWriteupCount = computed(() => (writeup.value ? 1 : 0))
+const hasAnyWriteups = computed(() => Boolean(writeup.value) || writeupSubmissions.value.length > 0)
+const directoryRows = computed<WriteupDirectoryRow[]>(() => {
+  const rows: WriteupDirectoryRow[] = []
+
+  if (writeup.value && submissionPage.value === 1) {
+    rows.push({
+      key: `official-${writeup.value.id}`,
+      source: 'official',
+      title: writeup.value.title,
+      authorPrimary: '平台官方',
+      authorSecondary: '独立查看 / 编辑入口',
+      studentNo: '-',
+      statusPrimary: writeup.value.visibility,
+      statusSecondary: writeup.value.is_recommended ? '推荐题解' : '未推荐',
+      updatedAt: formatDate(writeup.value.updated_at),
+    })
+  }
+
+  rows.push(
+    ...writeupSubmissions.value.map((item) => ({
+      key: `student-${item.id}`,
+      source: 'student' as const,
+      title: item.title,
+      preview: item.content_preview,
+      authorPrimary: resolveAuthorName(item),
+      authorSecondary: `@${item.student_username}`,
+      authorTertiary: resolveClassName(item),
+      studentNo: resolveStudentNo(item),
+      statusPrimary: submissionStatusLabel(item.submission_status),
+      statusSecondary: visibilityStatusLabel(item.visibility_status),
+      updatedAt: formatDate(item.updated_at),
+    }))
+  )
+
+  return rows
+})
 
 async function loadWriteup() {
   if (!props.challengeId) {
@@ -202,20 +253,34 @@ onMounted(() => {
 
 <template>
   <section class="writeup-manage-panel">
-    <div class="workspace-tab-heading">
-      <div class="workspace-tab-heading__main">
-        <div class="journal-note-label">Writeup Directory</div>
-        <h1 class="workspace-tab-heading__title">题解管理</h1>
+    <div class="writeup-manage-header">
+      <div class="workspace-tab-heading">
+        <div class="workspace-tab-heading__main">
+          <div class="journal-note-label">Writeup Directory</div>
+          <h1 class="workspace-tab-heading__title">题解管理</h1>
+        </div>
       </div>
-      <p class="workspace-tab-copy">
-        {{ challengeTitle ? `查看《${challengeTitle}》的题解目录，并进入独立编辑页维护内容。` : '查看当前题目的题解目录，并进入独立编辑页维护内容。' }}
-      </p>
+
+      <div class="writeup-manage-actions">
+        <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
+          编写题解
+        </button>
+      </div>
     </div>
 
-    <div class="writeup-manage-actions">
-      <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
-        编写题解
-      </button>
+    <div class="writeup-manage-stats-shell">
+      <div class="writeup-manage-stats">
+        <article class="writeup-manage-stat">
+          <div class="writeup-manage-stat__label">官方题解</div>
+          <div class="writeup-manage-stat__value">{{ officialWriteupCount }}</div>
+          <div class="writeup-manage-stat__meta">篇</div>
+        </article>
+        <article class="writeup-manage-stat">
+          <div class="writeup-manage-stat__label">学员题解</div>
+          <div class="writeup-manage-stat__value">{{ submissionTotal }}</div>
+          <div class="writeup-manage-stat__meta">篇</div>
+        </article>
+      </div>
     </div>
 
     <AppLoading v-if="loading && submissionLoading" class="writeup-manage-loading">
@@ -225,157 +290,119 @@ onMounted(() => {
     <template v-else>
       <section class="writeup-manage-section">
         <header class="writeup-manage-section__head">
-          <div>
-            <div class="journal-note-label">Official Writeup</div>
-            <h2 class="writeup-manage-section__title">官方题解</h2>
-          </div>
-          <p class="writeup-manage-section__copy">
-            {{ challengeTitle ? `维护《${challengeTitle}》的官方题解，并保留独立查看与编辑入口。` : '维护当前题目的官方题解，并保留独立查看与编辑入口。' }}
-          </p>
-        </header>
-
-        <section v-if="writeup" class="writeup-directory">
-          <div class="writeup-directory-head" aria-hidden="true">
-            <span>题解标题</span>
-            <span>可见性</span>
-            <span>推荐状态</span>
-            <span>更新时间</span>
-            <span class="writeup-directory-head__actions">操作</span>
-          </div>
-
-          <article class="writeup-row">
-            <div class="writeup-row__title">
-              <div class="writeup-row__name">{{ writeup.title }}</div>
-            </div>
-            <div class="writeup-row__visibility">{{ writeup.visibility }}</div>
-            <div class="writeup-row__recommendation">
-              {{ writeup.is_recommended ? '推荐题解' : '未推荐' }}
-            </div>
-            <div class="writeup-row__updated">{{ formatDate(writeup.updated_at) }}</div>
-            <div class="writeup-row__actions" role="group" aria-label="题解目录操作">
-              <button class="admin-btn admin-btn-outline admin-btn-compact" type="button" @click="openWriteup('view')">
-                查看
-              </button>
-              <div
-                class="writeup-actions-menu-shell"
-                @mouseenter="openActionMenu"
-                @mouseleave="closeActionMenu"
-                @focusin="openActionMenu"
-                @focusout="handleActionMenuFocusout"
-                @keydown.esc="closeActionMenu"
-              >
-                <button
-                  class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu-trigger"
-                  data-testid="writeup-more-actions"
-                  type="button"
-                  aria-label="更多题解操作"
-                  :aria-expanded="actionMenuOpen ? 'true' : 'false'"
-                  @mouseenter="openActionMenu"
-                  @focus="openActionMenu"
-                  @click="toggleActionMenu"
-                >
-                  <MoreHorizontal class="h-4 w-4" />
-                </button>
-
-                <div
-                  v-if="actionMenuOpen"
-                  class="writeup-actions-menu"
-                  role="menu"
-                  aria-label="更多题解操作"
-                >
-                  <button
-                    class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu__button"
-                    role="menuitem"
-                    type="button"
-                    @click="openWriteup('edit')"
-                  >
-                    编辑
-                  </button>
-                  <button
-                    :disabled="deleting"
-                    class="admin-btn admin-btn-danger admin-btn-compact writeup-actions-menu__button"
-                    role="menuitem"
-                    type="button"
-                    @click="void handleDelete()"
-                  >
-                    {{ deleting ? '删除中...' : '删除' }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <AppEmpty
-          v-else
-          icon="BookOpen"
-          title="当前还没有题解"
-          :description="challengeTitle ? `为《${challengeTitle}》创建第一份官方题解。` : '为当前题目创建第一份官方题解。'"
-        >
-          <template #actions>
-            <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
-              编写题解
-            </button>
-          </template>
-        </AppEmpty>
-      </section>
-
-      <section class="writeup-manage-section">
-        <header class="writeup-manage-section__head">
-          <div>
-            <div class="journal-note-label">Submission Directory</div>
-            <h2 class="writeup-manage-section__title">题解投稿</h2>
-          </div>
-          <div class="writeup-manage-section__meta">
-            <span class="writeup-manage-section__caption">共 {{ submissionTotal }} 篇题解</span>
-            <span class="writeup-manage-section__caption">第 {{ submissionPage }} / {{ submissionTotalPages }} 页</span>
+          <div class="writeup-manage-section__intro">
+            <div class="journal-note-label">Writeup Directory</div>
+            <h2 class="writeup-manage-section__title">题解列表</h2>
           </div>
         </header>
-        <p class="writeup-manage-section__copy">
-          按题目查看学员投稿，补充展示作者姓名、学号、班级与当前可见状态。
-        </p>
 
         <AppLoading v-if="submissionLoading" class="writeup-manage-loading">正在加载题解投稿...</AppLoading>
 
         <template v-else>
           <AppEmpty
-            v-if="writeupSubmissions.length === 0"
+            v-if="!hasAnyWriteups"
             icon="FileText"
-            title="当前还没有学员题解"
-            :description="challengeTitle ? `《${challengeTitle}》暂时还没有学员提交题解。` : '当前题目暂时还没有学员提交题解。'"
-          />
+            title="当前还没有题解"
+            :description="challengeTitle ? `《${challengeTitle}》暂时还没有官方题解或学员题解。` : '当前题目暂时还没有官方题解或学员题解。'"
+          >
+            <template #actions>
+              <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
+                编写题解
+              </button>
+            </template>
+          </AppEmpty>
 
           <template v-else>
-            <section class="submission-directory">
-              <div class="submission-directory-head" aria-hidden="true">
+            <section class="writeup-directory">
+              <div class="writeup-directory-head" aria-hidden="true">
                 <span>题解标题</span>
+                <span>来源</span>
                 <span>作者</span>
                 <span>学号</span>
-                <span>班级</span>
                 <span>状态</span>
                 <span>更新时间</span>
+                <span class="writeup-directory-head__actions">操作</span>
               </div>
 
               <article
-                v-for="item in writeupSubmissions"
-                :key="item.id"
-                class="submission-row"
+                v-for="row in directoryRows"
+                :key="row.key"
+                class="writeup-row"
               >
-                <div class="submission-row__title">
-                  <div class="submission-row__name">{{ item.title }}</div>
-                  <div class="submission-row__preview">{{ item.content_preview }}</div>
+                <div class="writeup-row__title">
+                  <div class="writeup-row__name">{{ row.title }}</div>
+                  <div v-if="row.preview" class="writeup-row__preview">{{ row.preview }}</div>
                 </div>
-                <div class="submission-row__author">
-                  <div class="submission-row__author-name">{{ resolveAuthorName(item) }}</div>
-                  <div class="submission-row__author-username">@{{ item.student_username }}</div>
+                <div class="writeup-row__source">
+                  <span class="writeup-row__source-pill" :class="`writeup-row__source-pill--${row.source}`">
+                    {{ row.source === 'official' ? '官方' : '学员' }}
+                  </span>
                 </div>
-                <div class="submission-row__student-no">{{ resolveStudentNo(item) }}</div>
-                <div class="submission-row__class-name">{{ resolveClassName(item) }}</div>
-                <div class="submission-row__status">
-                  <div>{{ submissionStatusLabel(item.submission_status) }}</div>
-                  <div class="submission-row__status-subtle">{{ visibilityStatusLabel(item.visibility_status) }}</div>
+                <div class="writeup-row__author">
+                  <div class="writeup-row__author-name">{{ row.authorPrimary }}</div>
+                  <div v-if="row.authorSecondary" class="writeup-row__author-meta">{{ row.authorSecondary }}</div>
+                  <div v-if="row.authorTertiary" class="writeup-row__author-meta">{{ row.authorTertiary }}</div>
                 </div>
-                <div class="submission-row__updated">{{ formatDate(item.updated_at) }}</div>
+                <div class="writeup-row__student-no">{{ row.studentNo }}</div>
+                <div class="writeup-row__status">
+                  <div>{{ row.statusPrimary }}</div>
+                  <div v-if="row.statusSecondary" class="writeup-row__status-subtle">{{ row.statusSecondary }}</div>
+                </div>
+                <div class="writeup-row__updated">{{ row.updatedAt }}</div>
+                <div class="writeup-row__actions" role="group" aria-label="题解目录操作">
+                  <template v-if="row.source === 'official'">
+                    <button class="admin-btn admin-btn-outline admin-btn-compact" type="button" @click="openWriteup('view')">
+                      查看
+                    </button>
+                    <div
+                      class="writeup-actions-menu-shell"
+                      @mouseenter="openActionMenu"
+                      @mouseleave="closeActionMenu"
+                      @focusin="openActionMenu"
+                      @focusout="handleActionMenuFocusout"
+                      @keydown.esc="closeActionMenu"
+                    >
+                      <button
+                        class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu-trigger"
+                        data-testid="writeup-more-actions"
+                        type="button"
+                        aria-label="更多题解操作"
+                        :aria-expanded="actionMenuOpen ? 'true' : 'false'"
+                        @mouseenter="openActionMenu"
+                        @focus="openActionMenu"
+                        @click="toggleActionMenu"
+                      >
+                        <MoreHorizontal class="h-4 w-4" />
+                      </button>
+
+                      <div
+                        v-if="actionMenuOpen"
+                        class="writeup-actions-menu"
+                        role="menu"
+                        aria-label="更多题解操作"
+                      >
+                        <button
+                          class="admin-btn admin-btn-ghost admin-btn-compact writeup-actions-menu__button"
+                          role="menuitem"
+                          type="button"
+                          @click="openWriteup('edit')"
+                        >
+                          编辑
+                        </button>
+                        <button
+                          :disabled="deleting"
+                          class="admin-btn admin-btn-danger admin-btn-compact writeup-actions-menu__button"
+                          role="menuitem"
+                          type="button"
+                          @click="void handleDelete()"
+                        >
+                          {{ deleting ? '删除中...' : '删除' }}
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                  <span v-else class="writeup-row__placeholder">--</span>
+                </div>
               </article>
             </section>
 
@@ -400,6 +427,13 @@ onMounted(() => {
   gap: var(--space-6);
 }
 
+.writeup-manage-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
 .writeup-manage-section {
   display: grid;
   gap: var(--space-4);
@@ -413,8 +447,13 @@ onMounted(() => {
 .writeup-manage-section__head {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
   gap: var(--space-3);
+}
+
+.writeup-manage-section__intro {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .writeup-manage-section__title {
@@ -424,30 +463,44 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
-.writeup-manage-section__copy {
-  margin: 0;
-  max-width: 54rem;
-  font-size: var(--font-size-0-88);
-  line-height: 1.75;
+.writeup-manage-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 12rem));
+  gap: var(--space-3);
+}
+
+.writeup-manage-stat {
+  display: grid;
+  gap: 0.2rem;
+  padding: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 90%, transparent);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 44%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
+    );
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
+}
+
+.writeup-manage-stat__label {
+  font-size: var(--font-size-0-74);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--journal-muted);
 }
 
-.writeup-manage-section__meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2);
+.writeup-manage-stat__value {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--journal-ink);
 }
 
-.writeup-manage-section__caption {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2rem;
-  padding: 0 var(--space-3);
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  font-size: var(--font-size-0-78);
+.writeup-manage-stat__meta {
+  font-size: var(--font-size-0-8);
   color: var(--journal-muted);
 }
 
@@ -456,13 +509,17 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
+.writeup-manage-stats-shell {
+  display: grid;
+}
+
 .writeup-manage-loading {
   padding-block: var(--space-7);
 }
 
 .writeup-directory {
-  --writeup-directory-columns: minmax(14rem, 1.6fr) minmax(7rem, 0.7fr) minmax(7rem, 0.8fr)
-    minmax(11rem, 1fr) minmax(10rem, 10rem);
+  --writeup-directory-columns: minmax(14rem, 1.55fr) minmax(6rem, 0.58fr) minmax(12rem, 1.1fr)
+    minmax(8.5rem, 0.72fr) minmax(8rem, 0.78fr) minmax(10.5rem, 0.9fr) minmax(10rem, 10rem);
   display: grid;
   gap: 0;
 }
@@ -495,8 +552,10 @@ onMounted(() => {
 }
 
 .writeup-row__title,
-.writeup-row__visibility,
-.writeup-row__recommendation,
+.writeup-row__source,
+.writeup-row__author,
+.writeup-row__student-no,
+.writeup-row__status,
 .writeup-row__updated,
 .writeup-row__actions {
   min-width: 0;
@@ -511,8 +570,57 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.writeup-row__visibility,
-.writeup-row__recommendation,
+.writeup-row__preview,
+.writeup-row__author-meta,
+.writeup-row__status-subtle {
+  margin-top: 0.18rem;
+  font-size: var(--font-size-0-78);
+  color: var(--journal-muted);
+}
+
+.writeup-row__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+
+.writeup-row__source-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.85rem;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  font-size: var(--font-size-0-74);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--journal-ink);
+}
+
+.writeup-row__source-pill--official {
+  border-color: color-mix(in srgb, var(--journal-accent) 26%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 14%, var(--journal-surface));
+  color: color-mix(in srgb, var(--journal-accent) 82%, white);
+}
+
+.writeup-row__source-pill--student {
+  border-color: color-mix(in srgb, #38bdf8 24%, transparent);
+  background: color-mix(in srgb, #38bdf8 12%, var(--journal-surface));
+  color: color-mix(in srgb, #38bdf8 78%, white);
+}
+
+.writeup-row__author-name {
+  font-size: var(--font-size-0-92);
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.writeup-row__student-no,
+.writeup-row__status,
 .writeup-row__updated {
   font-size: var(--font-size-0-86);
   color: var(--journal-ink);
@@ -526,73 +634,11 @@ onMounted(() => {
   justify-self: end;
 }
 
-.submission-directory {
-  --submission-directory-columns: minmax(14rem, 1.5fr) minmax(12rem, 1.05fr) minmax(9rem, 0.8fr)
-    minmax(9rem, 0.8fr) minmax(8rem, 0.75fr) minmax(11rem, 1fr);
-  display: grid;
-  gap: 0;
-}
-
-.submission-directory-head,
-.submission-row {
-  display: grid;
-  grid-template-columns: var(--submission-directory-columns);
-  gap: var(--space-4);
-}
-
-.submission-directory-head {
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.submission-row {
+.writeup-row__placeholder {
+  display: inline-flex;
   align-items: center;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.submission-row__title,
-.submission-row__author,
-.submission-row__student-no,
-.submission-row__class-name,
-.submission-row__status,
-.submission-row__updated {
-  min-width: 0;
-}
-
-.submission-row__name,
-.submission-row__author-name {
-  font-size: var(--font-size-0-92);
-  font-weight: 600;
-  color: var(--journal-ink);
-}
-
-.submission-row__preview,
-.submission-row__author-username,
-.submission-row__status-subtle {
-  margin-top: 0.18rem;
-  font-size: var(--font-size-0-78);
+  min-height: 2.1rem;
   color: var(--journal-muted);
-}
-
-.submission-row__preview {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.submission-row__student-no,
-.submission-row__class-name,
-.submission-row__status,
-.submission-row__updated {
-  font-size: var(--font-size-0-86);
-  color: var(--journal-ink);
 }
 
 .admin-btn {
@@ -682,21 +728,23 @@ onMounted(() => {
 }
 
 @media (max-width: 960px) {
+  .writeup-manage-header {
+    flex-direction: column;
+  }
+
   .writeup-manage-section__head {
     flex-direction: column;
   }
 
-  .writeup-manage-section__meta {
-    justify-content: flex-start;
+  .writeup-manage-stats {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .writeup-directory-head,
-  .submission-directory-head {
+  .writeup-directory-head {
     display: none;
   }
 
-  .writeup-row,
-  .submission-row {
+  .writeup-row {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
     align-items: start;
