@@ -144,7 +144,8 @@ describe('admin management surface alignment', () => {
     expect(auditLogSource).toContain('class="journal-note-value metric-panel-value"')
     expect(auditLogSource).toContain('class="journal-note-helper metric-panel-helper"')
 
-    expect(challengeManageSource).toContain('class="manage-summary-grid metric-panel-grid"')
+    expect(journalNotesSource).toContain('.metric-panel-default-surface {')
+    expect(challengeManageSource).toContain('class="manage-summary-grid metric-panel-grid metric-panel-default-surface"')
     expect(challengeManageSource).toContain('class="journal-note metric-panel-card"')
     expect(challengeManageSource).toContain('class="journal-note-label metric-panel-label"')
     expect(challengeManageSource).toContain('class="journal-note-value metric-panel-value"')

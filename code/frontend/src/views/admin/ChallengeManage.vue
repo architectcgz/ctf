@@ -162,7 +162,7 @@ onMounted(() => {
             <h1 class="workspace-tab-heading__title">题目管理</h1>
           </div>
 
-          <div class="manage-summary-grid metric-panel-grid">
+          <div class="manage-summary-grid metric-panel-grid metric-panel-default-surface">
             <article class="journal-note metric-panel-card">
               <div class="journal-note-label metric-panel-label">题目总量</div>
               <div class="journal-note-value metric-panel-value">{{ total }}</div>

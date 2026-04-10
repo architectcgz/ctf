@@ -112,6 +112,7 @@ describe('ChallengeList', () => {
   })
 
   it('题目页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(challengeListSource).toContain('class="challenge-summary metric-panel-default-surface"')
     expect(challengeListSource).toContain('class="challenge-summary-grid metric-panel-grid"')
     expect(challengeListSource).toContain('class="challenge-summary-item metric-panel-card"')
     expect(challengeListSource).toContain('class="challenge-summary-label metric-panel-label"')

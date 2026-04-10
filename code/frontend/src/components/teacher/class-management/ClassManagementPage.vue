@@ -198,7 +198,7 @@ const currentPageStudentCount = computed(() =>
             </div>
           </header>
 
-          <section class="teacher-summary">
+          <section class="teacher-summary teacher-summary--overview-metrics">
             <div class="teacher-summary-title">
               <FolderKanban class="h-4 w-4" />
               <span>Directory Snapshot</span>
@@ -412,6 +412,32 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-empty-state {
   margin-top: var(--space-6);
+}
+
+.teacher-summary--overview-metrics {
+  --metric-panel-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  --metric-panel-radius: 1rem;
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent, var(--color-primary-default)) 16%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 97%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
+    );
+  --metric-panel-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
+  --metric-panel-padding: var(--space-4);
+  --metric-panel-label-size: var(--font-size-0-74);
+  --metric-panel-label-spacing: 0.12em;
+  --metric-panel-value-margin-top: var(--space-2);
+  --metric-panel-value-size: clamp(1.5rem, 2vw, 2rem);
+  --metric-panel-helper-margin-top: var(--space-1);
+  --metric-panel-helper-size: var(--font-size-0-8);
+  --metric-panel-helper-line-height: 1.55;
+  --teacher-summary-grid-gap: var(--space-3);
 }
 
 .teacher-badge-card {

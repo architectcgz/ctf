@@ -163,7 +163,7 @@ onMounted(() => {
         </div>
       </header>
 
-      <section class="challenge-summary">
+      <section class="challenge-summary metric-panel-default-surface">
         <div class="challenge-summary-title">
           <Target class="h-4 w-4" />
           <span>当前题库概况</span>
