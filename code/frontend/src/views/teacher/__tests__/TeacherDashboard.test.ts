@@ -180,6 +180,7 @@ describe('TeacherDashboard', () => {
     expect(wrapper.text()).toContain('建议训练题')
     expect(wrapper.text()).toContain('crypto-lab')
     expect(wrapper.text()).toContain('推荐训练题')
+    expect(wrapper.find('#overview .overview-pulse-panel').exists()).toBe(false)
     expect(teacherApiMocks.getClassReview).toHaveBeenCalledWith('Class A')
     expect(teacherApiMocks.getClassTrend).toHaveBeenCalledWith('Class A')
     expect(teacherApiMocks.getStudentRecommendations).toHaveBeenCalledWith('stu-1')
@@ -207,6 +208,7 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toContain('top-tab-insight')
     expect(teacherDashboardPageSource).toContain('top-tab-advice')
     expect(teacherDashboardPageSource).toContain('top-tab-action')
+    expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
   })
 
   it('切换工作台 tab 时应同步 panel 查询参数且次级标题使用公共样式类', async () => {

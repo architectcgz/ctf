@@ -142,36 +142,6 @@ export function useTeacherDashboardMetrics({
     },
   ])
 
-  const overviewPulseCards = computed(() => [
-    {
-      key: 'active-rate',
-      label: '活跃率',
-      value: activeRateText.value,
-      copy: summary.value ? '近 7 天班级训练参与强度' : '等待班级训练汇总',
-    },
-    {
-      key: 'risk',
-      label: '风险学生',
-      value: `${riskStudentCount.value}`,
-      copy: riskStudentCount.value > 0 ? '连续 7 天无训练动作' : '暂无明显训练断层',
-    },
-    {
-      key: 'weak',
-      label: '薄弱方向',
-      value: dominantWeakDimension.value,
-      copy:
-        strongestDimensionCount.value > 0
-          ? `${strongestDimensionCount.value} 名学生集中暴露该薄弱项`
-          : '等待能力画像形成',
-    },
-    {
-      key: 'review',
-      label: '建议动作',
-      value: review.value?.items[0]?.title || '继续观察',
-      copy: review.value?.items[0]?.detail || '可先查看趋势与学生洞察，再决定课堂动作。',
-    },
-  ])
-
   const interventionTips = computed(() => {
     const tips: string[] = []
 
@@ -356,7 +326,6 @@ export function useTeacherDashboardMetrics({
     overviewDescription,
     metaPills,
     overviewMetrics,
-    overviewPulseCards,
     interventionTips,
     teachingAdvice,
     studentInsightRows,
