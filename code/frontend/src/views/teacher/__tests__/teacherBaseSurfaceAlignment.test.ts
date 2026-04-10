@@ -67,6 +67,40 @@ describe('teacher base surface alignment', () => {
     )
   })
 
+  it('teacher summary cards should explicitly adopt metric-panel classes and rely on shared variables', () => {
+    expect(classManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
+    expect(classManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
+    expect(classManagementSource).toContain('class="teacher-summary-label metric-panel-label"')
+    expect(classManagementSource).toContain('class="teacher-summary-value metric-panel-value"')
+    expect(classManagementSource).toContain('class="teacher-summary-helper metric-panel-helper"')
+
+    expect(studentManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
+    expect(studentManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
+
+    expect(instanceManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
+    expect(instanceManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
+
+    expect(reportExportSource).toContain('class="report-summary-grid metric-panel-grid"')
+    expect(reportExportSource).toContain('class="report-summary-item metric-panel-card"')
+    expect(reportExportSource).toContain('class="report-summary-label metric-panel-label"')
+    expect(reportExportSource).toContain('class="report-summary-value metric-panel-value"')
+    expect(reportExportSource).toContain('class="report-summary-helper metric-panel-helper"')
+
+    expect(teacherSurfaceSource).toContain('--metric-panel-border: var(--teacher-card-border);')
+    expect(teacherSurfaceSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
+    expect(teacherSurfaceSource).toContain('--metric-panel-value-size: var(--font-size-26);')
+    expect(teacherSurfaceSource).toContain('--metric-panel-helper-line-height: 1.7;')
+    expect(teacherSurfaceSource).not.toMatch(
+      /\.teacher-summary-item,\s*\.teacher-management-shell \.report-summary-item\s*\{\s*min-width:\s*0;\s*border:\s*1px solid/s
+    )
+    expect(teacherSurfaceSource).not.toMatch(
+      /\.teacher-summary-label,\s*\.teacher-management-shell \.report-summary-label\s*\{\s*font-size:\s*var\(--font-size-11\)/s
+    )
+    expect(teacherSurfaceSource).not.toMatch(
+      /\.teacher-summary-value,\s*\.teacher-management-shell \.report-summary-value\s*\{\s*margin-top:\s*var\(--space-2-5,\s*0\.625rem\);\s*font-size:\s*var\(--font-size-26\)/s
+    )
+  })
+
   it('report export should soften page header, cards, divider, and dialog borders', () => {
     expect(reportExportSource).toContain('--report-card-border:')
     expect(reportExportSource).toContain('--report-divider:')

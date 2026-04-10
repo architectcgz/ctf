@@ -108,16 +108,28 @@
 }
 
 .journal-shell.journal-shell-user :is(.profile-summary-grid, .security-summary-grid) {
-  display: grid;
-  gap: var(--journal-user-summary-grid-gap, 1rem);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  --metric-panel-grid-gap: var(--journal-user-summary-grid-gap, 1rem);
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
 }
 
 .journal-shell.journal-shell-user :is(.profile-summary-item, .security-summary-item) {
   display: flex;
+  align-items: flex-start;
   gap: 0.75rem;
-  border-top: 1px solid color-mix(in srgb, var(--journal-border) 86%, transparent);
-  padding-top: 0.85rem;
+  --metric-panel-border: color-mix(in srgb, var(--journal-border) 86%, transparent);
+  --metric-panel-background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 94%,
+    var(--color-bg-base)
+  );
+  --metric-panel-shadow: none;
+  --metric-panel-padding: 0.95rem 1rem;
+  --metric-panel-value-margin-top: 0.38rem;
+  --metric-panel-value-size: var(--font-size-0-98);
+  --metric-panel-value-weight: 600;
+  --metric-panel-value-line-height: 1.35;
+  --metric-panel-value-spacing: 0;
+  --metric-panel-helper-margin-top: 0.38rem;
 }
 
 .journal-shell.journal-shell-user :is(.profile-summary-icon, .security-summary-icon) {
@@ -127,9 +139,6 @@
 }
 
 .journal-shell.journal-shell-user :is(.profile-summary-value, .security-summary-value) {
-  margin-top: 0.38rem;
-  font-size: var(--font-size-0-98);
-  font-weight: 600;
   color: var(--journal-ink);
 }
 

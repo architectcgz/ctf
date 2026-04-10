@@ -86,4 +86,27 @@ describe('journal user shell shared styles', () => {
     expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
     expect(skillProfileStyle).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-hero\s*\{/m)
   })
+
+  it('profile 与 security 顶部概况应显式使用 metric-panel 类，旧共享 CSS 只保留变量桥接', () => {
+    expect(userProfileSource).toContain('class="profile-summary-grid metric-panel-grid"')
+    expect(userProfileSource).toContain('class="profile-summary-item metric-panel-card"')
+    expect(userProfileSource).toContain('class="journal-note-label metric-panel-label"')
+    expect(userProfileSource).toContain('class="profile-summary-value metric-panel-value"')
+
+    expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
+    expect(securitySettingsSource).toContain('class="security-summary-item metric-panel-card"')
+    expect(securitySettingsSource).toContain('class="journal-note-label metric-panel-label"')
+    expect(securitySettingsSource).toContain('class="security-summary-value metric-panel-value')
+    expect(securitySettingsSource).toContain('class="journal-note-helper metric-panel-helper"')
+
+    expect(journalUserShellSource).toContain('--metric-panel-columns: repeat(2, minmax(0, 1fr));')
+    expect(journalUserShellSource).toContain('--metric-panel-border: color-mix(in srgb, var(--journal-border) 86%, transparent);')
+    expect(journalUserShellSource).toContain('--metric-panel-value-size: var(--font-size-0-98);')
+    expect(journalUserShellSource).not.toMatch(
+      /\.journal-shell\.journal-shell-user :is\(\.profile-summary-item, \.security-summary-item\)\s*\{[\s\S]*border-top:\s*1px solid/s
+    )
+    expect(journalUserShellSource).not.toMatch(
+      /\.journal-shell\.journal-shell-user :is\(\.profile-summary-value, \.security-summary-value\)\s*\{[\s\S]*font-size:\s*var\(--font-size-0-98\)/s
+    )
+  })
 })

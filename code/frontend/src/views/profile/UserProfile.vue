@@ -152,23 +152,23 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div v-if="canManagePersonalReport" class="profile-summary-grid">
-          <article class="profile-summary-item">
+        <div v-if="canManagePersonalReport" class="profile-summary-grid metric-panel-grid">
+          <article class="profile-summary-item metric-panel-card">
             <div class="profile-summary-icon">
               <ShieldCheck class="h-4 w-4" />
             </div>
             <div>
-              <div class="journal-note-label">报告状态</div>
-              <div class="profile-summary-value">{{ reportTaskMeta.label }}</div>
+              <div class="journal-note-label metric-panel-label">报告状态</div>
+              <div class="profile-summary-value metric-panel-value">{{ reportTaskMeta.label }}</div>
             </div>
           </article>
-          <article class="profile-summary-item">
+          <article class="profile-summary-item metric-panel-card">
             <div class="profile-summary-icon">
               <Activity class="h-4 w-4" />
             </div>
             <div>
-              <div class="journal-note-label">最近生成</div>
-              <div class="profile-summary-value">
+              <div class="journal-note-label metric-panel-label">最近生成</div>
+              <div class="profile-summary-value metric-panel-value">
                 {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '尚未生成' }}
               </div>
             </div>

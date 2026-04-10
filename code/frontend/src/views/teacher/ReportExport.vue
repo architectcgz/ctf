@@ -51,26 +51,28 @@ const {
 
       <section class="report-summary">
         <div class="report-summary-title">Export Snapshot</div>
-        <div class="report-summary-grid">
-          <div class="report-summary-item">
-            <div class="report-summary-label">当前账号</div>
-            <div class="report-summary-value">{{ authStore.user?.username || '-' }}</div>
-            <div class="report-summary-helper">用于发起当前导出任务的教师账号</div>
+        <div class="report-summary-grid metric-panel-grid">
+          <div class="report-summary-item metric-panel-card">
+            <div class="report-summary-label metric-panel-label">当前账号</div>
+            <div class="report-summary-value metric-panel-value">{{ authStore.user?.username || '-' }}</div>
+            <div class="report-summary-helper metric-panel-helper">用于发起当前导出任务的教师账号</div>
           </div>
-          <div class="report-summary-item">
-            <div class="report-summary-label">默认班级</div>
-            <div class="report-summary-value">{{ authStore.user?.class_name || '未绑定' }}</div>
-            <div class="report-summary-helper">留空时将优先使用当前账号绑定班级</div>
+          <div class="report-summary-item metric-panel-card">
+            <div class="report-summary-label metric-panel-label">默认班级</div>
+            <div class="report-summary-value metric-panel-value">
+              {{ authStore.user?.class_name || '未绑定' }}
+            </div>
+            <div class="report-summary-helper metric-panel-helper">留空时将优先使用当前账号绑定班级</div>
           </div>
-          <div class="report-summary-item">
-            <div class="report-summary-label">当前格式</div>
-            <div class="report-summary-value">{{ selectedFormatLabel }}</div>
-            <div class="report-summary-helper">{{ selectedFormatHint }}</div>
+          <div class="report-summary-item metric-panel-card">
+            <div class="report-summary-label metric-panel-label">当前格式</div>
+            <div class="report-summary-value metric-panel-value">{{ selectedFormatLabel }}</div>
+            <div class="report-summary-helper metric-panel-helper">{{ selectedFormatHint }}</div>
           </div>
-          <div class="report-summary-item">
-            <div class="report-summary-label">最近状态</div>
-            <div class="report-summary-value">{{ latestStatusMeta.label }}</div>
-            <div class="report-summary-helper">
+          <div class="report-summary-item metric-panel-card">
+            <div class="report-summary-label metric-panel-label">最近状态</div>
+            <div class="report-summary-value metric-panel-value">{{ latestStatusMeta.label }}</div>
+            <div class="report-summary-helper metric-panel-helper">
               {{
                 latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。'
               }}
