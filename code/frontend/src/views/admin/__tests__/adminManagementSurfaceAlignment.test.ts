@@ -136,4 +136,26 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid')
     expect(contestOrchestrationSource).toContain('class="admin-summary-grid contest-overview-summary')
   })
+
+  it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
+    expect(auditLogSource).toContain('class="admin-summary-grid metric-panel-grid"')
+    expect(auditLogSource).toContain('class="journal-note metric-panel-card"')
+    expect(auditLogSource).toContain('class="journal-note-label metric-panel-label"')
+    expect(auditLogSource).toContain('class="journal-note-value metric-panel-value"')
+    expect(auditLogSource).toContain('class="journal-note-helper metric-panel-helper"')
+
+    expect(challengeManageSource).toContain('class="manage-summary-grid metric-panel-grid"')
+    expect(challengeManageSource).toContain('class="journal-note metric-panel-card"')
+    expect(challengeManageSource).toContain('class="journal-note-label metric-panel-label"')
+    expect(challengeManageSource).toContain('class="journal-note-value metric-panel-value"')
+    expect(challengeManageSource).toContain('class="journal-note-helper metric-panel-helper"')
+
+    expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid metric-panel-grid')
+    expect(userGovernanceSource).toContain('class="journal-note user-overview-stat metric-panel-card"')
+
+    expect(contestOrchestrationSource).toContain(
+      'class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid"'
+    )
+    expect(contestOrchestrationSource).toContain('class="journal-note metric-panel-card"')
+  })
 })

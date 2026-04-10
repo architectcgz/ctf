@@ -162,26 +162,26 @@ onMounted(() => {
             <h1 class="workspace-tab-heading__title">题目管理</h1>
           </div>
 
-          <div class="manage-summary-grid">
-            <article class="journal-note">
-              <div class="journal-note-label">题目总量</div>
-              <div class="journal-note-value">{{ total }}</div>
-              <div class="journal-note-helper">当前题库中可管理的题目</div>
+          <div class="manage-summary-grid metric-panel-grid">
+            <article class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">题目总量</div>
+              <div class="journal-note-value metric-panel-value">{{ total }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前题库中可管理的题目</div>
             </article>
-            <article class="journal-note">
-              <div class="journal-note-label">当前页</div>
-              <div class="journal-note-value">{{ list.length }}</div>
-              <div class="journal-note-helper">当前分页中的题目数量</div>
+            <article class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">当前页</div>
+              <div class="journal-note-value metric-panel-value">{{ list.length }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前分页中的题目数量</div>
             </article>
-            <article class="journal-note">
-              <div class="journal-note-label">已发布</div>
-              <div class="journal-note-value">{{ publishedCount }}</div>
-              <div class="journal-note-helper">当前页已开放训练的题目</div>
+            <article class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">已发布</div>
+              <div class="journal-note-value metric-panel-value">{{ publishedCount }}</div>
+              <div class="journal-note-helper metric-panel-helper">当前页已开放训练的题目</div>
             </article>
-            <article class="journal-note">
-              <div class="journal-note-label">草稿</div>
-              <div class="journal-note-value">{{ draftCount }}</div>
-              <div class="journal-note-helper">导入后仍待完善或发布的题目</div>
+            <article class="journal-note metric-panel-card">
+              <div class="journal-note-label metric-panel-label">草稿</div>
+              <div class="journal-note-value metric-panel-value">{{ draftCount }}</div>
+              <div class="journal-note-helper metric-panel-helper">导入后仍待完善或发布的题目</div>
             </article>
           </div>
         </header>
