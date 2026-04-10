@@ -107,6 +107,7 @@ type teacherSubmissionWriteupRow struct {
 	UpdatedAt        time.Time
 	StudentUsername  string
 	StudentName      string
+	StudentNo        string
 	ClassName        string
 	ChallengeTitle   string
 }
@@ -131,6 +132,7 @@ func (r teacherSubmissionWriteupRow) toRecord() challengeports.TeacherSubmission
 		},
 		StudentUsername: r.StudentUsername,
 		StudentName:     r.StudentName,
+		StudentNo:       r.StudentNo,
 		ClassName:       r.ClassName,
 		ChallengeTitle:  r.ChallengeTitle,
 	}
@@ -387,6 +389,7 @@ func (r *Repository) listTeacherSubmissionWriteups(
 			sw.updated_at,
 			u.username AS student_username,
 			COALESCE(u.name, '') AS student_name,
+			COALESCE(NULLIF(u.student_no, ''), '') AS student_no,
 			COALESCE(u.class_name, '') AS class_name,
 			c.title AS challenge_title
 		`)).

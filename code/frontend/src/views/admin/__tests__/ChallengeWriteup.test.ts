@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import ChallengeWriteupEditorPage from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue'
+import ChallengeWriteupViewPage from '@/components/admin/writeup/ChallengeWriteupViewPage.vue'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -149,5 +150,41 @@ describe('ChallengeWriteupEditorPage', () => {
     await flushPromises()
 
     expect(adminApiMocks.unrecommendChallengeWriteup).toHaveBeenCalledWith('11')
+  })
+
+  it('查看页应独立展示题解内容而不是编辑表单', async () => {
+    const wrapper = mount(ChallengeWriteupViewPage, {
+      props: {
+        challengeId: '11',
+      },
+      global: {
+        stubs: {
+          AppCard: { template: '<section><slot name="header" /><slot /></section>' },
+          AppEmpty: { template: '<div><slot /></div>' },
+          AppLoading: { template: '<div><slot /></div>' },
+          PageHeader: { template: '<div><slot /></div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('查看题解')
+    expect(wrapper.text()).toContain('官方题解')
+    expect(wrapper.text()).toContain('题解正文')
+    expect(wrapper.text()).toContain('Step 1')
+    expect(wrapper.find('main > .writeup-snapshot-grid').exists()).toBe(true)
+    expect(wrapper.find('main > .writeup-view-body').exists()).toBe(true)
+    expect(wrapper.find('.writeup-reading-card').exists()).toBe(false)
+    expect(wrapper.find('.workspace-tab-heading').exists()).toBe(false)
+    expect(wrapper.find('input.writeup-field-input').exists()).toBe(false)
+    expect(wrapper.find('select.writeup-field-input').exists()).toBe(false)
+    expect(wrapper.find('textarea.writeup-content-input').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('保存题解')
+    expect(wrapper.text()).not.toContain('删除题解')
+    expect(wrapper.text()).not.toContain('恢复已保存版本')
+    expect(wrapper.text()).not.toContain('取消推荐')
+    expect(wrapper.find('.writeup-reading-card__hero .writeup-badges').exists()).toBe(false)
+    expect(wrapper.find('.writeup-reading-card__hero .writeup-badge--accent').exists()).toBe(false)
   })
 })

@@ -18,7 +18,6 @@ const emit = defineEmits<{
 }>()
 
 const isEmbedded = computed(() => props.embedded)
-
 const {
   loading,
   saving,

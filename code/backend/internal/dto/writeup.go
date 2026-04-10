@@ -74,6 +74,7 @@ type TeacherSubmissionWriteupItemResp struct {
 	UserID           int64      `json:"user_id"`
 	StudentUsername  string     `json:"student_username"`
 	StudentName      string     `json:"student_name,omitempty"`
+	StudentNo        string     `json:"student_no,omitempty"`
 	ClassName        string     `json:"class_name,omitempty"`
 	ChallengeID      int64      `json:"challenge_id"`
 	ChallengeTitle   string     `json:"challenge_title"`
@@ -90,6 +91,7 @@ type TeacherSubmissionWriteupDetailResp struct {
 	SubmissionWriteupResp
 	StudentUsername string `json:"student_username"`
 	StudentName     string `json:"student_name,omitempty"`
+	StudentNo       string `json:"student_no,omitempty"`
 	ClassName       string `json:"class_name,omitempty"`
 	ChallengeTitle  string `json:"challenge_title"`
 }
