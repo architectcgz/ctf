@@ -269,16 +269,16 @@ onMounted(() => {
     </div>
 
     <div class="writeup-manage-stats-shell">
-      <div class="writeup-manage-stats">
-        <article class="writeup-manage-stat">
-          <div class="writeup-manage-stat__label">官方题解</div>
-          <div class="writeup-manage-stat__value">{{ officialWriteupCount }}</div>
-          <div class="writeup-manage-stat__meta">篇</div>
+      <div class="admin-summary-grid writeup-summary-grid">
+        <article class="journal-note">
+          <div class="journal-note-label">官方题解</div>
+          <div class="journal-note-value">{{ officialWriteupCount }}</div>
+          <div class="journal-note-helper">篇</div>
         </article>
-        <article class="writeup-manage-stat">
-          <div class="writeup-manage-stat__label">学员题解</div>
-          <div class="writeup-manage-stat__value">{{ submissionTotal }}</div>
-          <div class="writeup-manage-stat__meta">篇</div>
+        <article class="journal-note">
+          <div class="journal-note-label">学员题解</div>
+          <div class="journal-note-value">{{ submissionTotal }}</div>
+          <div class="journal-note-helper">篇</div>
         </article>
       </div>
     </div>
@@ -463,45 +463,9 @@ onMounted(() => {
   color: var(--journal-ink);
 }
 
-.writeup-manage-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 12rem));
-  gap: var(--space-3);
-}
-
-.writeup-manage-stat {
-  display: grid;
-  gap: 0.2rem;
-  padding: var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 90%, transparent);
-  border-radius: 1rem;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 16%, transparent), transparent 44%),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base)),
-      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-    );
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
-}
-
-.writeup-manage-stat__label {
-  font-size: var(--font-size-0-74);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.writeup-manage-stat__value {
-  font-size: clamp(1.5rem, 2vw, 2rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--journal-ink);
-}
-
-.writeup-manage-stat__meta {
-  font-size: var(--font-size-0-8);
-  color: var(--journal-muted);
+.writeup-summary-grid {
+  --admin-summary-grid-columns: repeat(2, minmax(0, 12rem));
+  --admin-summary-grid-gap: var(--space-3);
 }
 
 .writeup-manage-actions {
@@ -736,8 +700,8 @@ onMounted(() => {
     flex-direction: column;
   }
 
-  .writeup-manage-stats {
-    grid-template-columns: minmax(0, 1fr);
+  .writeup-summary-grid {
+    --admin-summary-grid-columns: 1fr;
   }
 
   .writeup-directory-head {
