@@ -22,6 +22,7 @@ import (
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	flagcrypto "ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -209,6 +210,135 @@ func TestSubmissionServiceSubmitFlagInContestRejectsSecondSolveFromSameTeam(t *t
 	}
 	if score != 495 {
 		t.Fatalf("unexpected redis score: %v", score)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestAcceptsContestBoundSharedProof(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(5)
+	challengeID := int64(105)
+	teamID := int64(51)
+	userID := int64(5001)
+	proof := "proof-contest-success"
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Shared", now)
+
+	if err := db.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(map[string]any{
+			"flag_type":        model.FlagTypeSharedProof,
+			"instance_sharing": model.InstanceSharingShared,
+			"updated_at":       now,
+		}).Error; err != nil {
+		t.Fatalf("configure shared proof challenge: %v", err)
+	}
+	if err := db.Create(&model.SharedProof{
+		UserID:      userID,
+		ChallengeID: challengeID,
+		ContestID:   &contestID,
+		InstanceID:  501,
+		ProofHash:   flagcrypto.HashSharedProof(proof),
+		Status:      model.SharedProofStatusActive,
+		ExpiresAt:   now.Add(time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create shared proof: %v", err)
+	}
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, proof)
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected contest shared proof submission success, got %+v", resp)
+	}
+
+	var storedProof model.SharedProof
+	if err := db.First(&storedProof).Error; err != nil {
+		t.Fatalf("load shared proof: %v", err)
+	}
+	if storedProof.Status != model.SharedProofStatusConsumed || storedProof.ConsumedAt == nil {
+		t.Fatalf("expected shared proof to be consumed, got %+v", storedProof)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestRejectsProofFromDifferentContest(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(6)
+	otherContestID := int64(7)
+	challengeID := int64(106)
+	userID := int64(6001)
+	teamID := int64(61)
+	proof := "proof-contest-mismatch"
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	if err := db.Create(&model.Contest{
+		ID:        otherContestID,
+		Title:     "other-ctf",
+		Mode:      model.ContestModeJeopardy,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+		Status:    model.ContestStatusRunning,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create other contest: %v", err)
+	}
+	if err := db.Create(&model.ContestChallenge{
+		ContestID:   otherContestID,
+		ChallengeID: challengeID,
+		Points:      500,
+		IsVisible:   true,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create other contest challenge: %v", err)
+	}
+	testsupport.CreateContestTeamRegistration(t, db, otherContestID, teamID, userID, "Mismatch", now)
+
+	if err := db.Model(&model.Challenge{}).
+		Where("id = ?", challengeID).
+		Updates(map[string]any{
+			"flag_type":        model.FlagTypeSharedProof,
+			"instance_sharing": model.InstanceSharingShared,
+			"updated_at":       now,
+		}).Error; err != nil {
+		t.Fatalf("configure shared proof challenge: %v", err)
+	}
+	if err := db.Create(&model.SharedProof{
+		UserID:      userID,
+		ChallengeID: challengeID,
+		ContestID:   &contestID,
+		InstanceID:  601,
+		ProofHash:   flagcrypto.HashSharedProof(proof),
+		Status:      model.SharedProofStatusActive,
+		ExpiresAt:   now.Add(time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create shared proof: %v", err)
+	}
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, otherContestID, challengeID, proof)
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if resp.IsCorrect {
+		t.Fatalf("expected contest-mismatched shared proof to be rejected, got %+v", resp)
+	}
+
+	var storedProof model.SharedProof
+	if err := db.First(&storedProof).Error; err != nil {
+		t.Fatalf("load shared proof: %v", err)
+	}
+	if storedProof.Status != model.SharedProofStatusActive || storedProof.ConsumedAt != nil {
+		t.Fatalf("expected shared proof to remain active, got %+v", storedProof)
 	}
 }
 

@@ -574,6 +574,9 @@ func filteredRouterRoutes(routes gin.RoutesInfo) gin.RoutesInfo {
 		if route.Path == "/favicon.ico" {
 			continue
 		}
+		if route.Path == "/api/v1/internal/runtime/shared-proofs/issue" {
+			continue
+		}
 		filtered = append(filtered, route)
 	}
 	return filtered

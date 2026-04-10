@@ -500,11 +500,21 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		UpdatedAt:    time.Now(),
 	}
 	status := dto.SubmissionStatusIncorrect
+	submissionPersisted := false
 
 	if challengeItem.FlagType == model.FlagTypeManualReview {
 		submission.Flag = flag
 		submission.ReviewStatus = model.SubmissionReviewStatusPending
 		status = dto.SubmissionStatusPendingReview
+	} else if challengeItem.FlagType == model.FlagTypeSharedProof {
+		isCorrect, err := s.createSharedProofSubmission(ctx, userID, challengeItem, flag, submission)
+		if err != nil {
+			return nil, err
+		}
+		if isCorrect {
+			status = dto.SubmissionStatusCorrect
+		}
+		submissionPersisted = true
 	} else {
 		isCorrect, err := s.validateSubmittedFlag(userID, challengeItem, flag)
 		if err != nil {
@@ -516,11 +526,13 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		}
 	}
 
-	if err := s.repo.CreateSubmission(submission); err != nil {
-		if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
-			return nil, errcode.ErrAlreadySolved
+	if !submissionPersisted {
+		if err := s.repo.CreateSubmission(submission); err != nil {
+			if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
+				return nil, errcode.ErrAlreadySolved
+			}
+			return nil, errcode.ErrInternal.WithCause(err)
 		}
-		return nil, errcode.ErrInternal.WithCause(err)
 	}
 
 	if submission.IsCorrect {
@@ -558,6 +570,59 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	return resp, nil
+}
+
+func (s *Service) createSharedProofSubmission(
+	ctx context.Context,
+	userID int64,
+	challengeItem *model.Challenge,
+	proof string,
+	submission *model.Submission,
+) (bool, error) {
+	if submission == nil || challengeItem == nil {
+		return false, errcode.ErrInternal.WithCause(errors.New("submission or challenge is nil"))
+	}
+
+	proofHash := crypto.HashSharedProof(strings.TrimSpace(proof))
+	err := s.repo.WithinTransaction(ctx, func(txRepo practiceports.PracticeCommandTxRepository) error {
+		isCorrect, err := s.consumeValidPracticeSharedProof(txRepo, userID, challengeItem.ID, proofHash, submission.SubmittedAt)
+		if err != nil {
+			return err
+		}
+		submission.IsCorrect = isCorrect
+		return txRepo.CreateSubmission(submission)
+	})
+	if err != nil {
+		if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
+			return false, errcode.ErrAlreadySolved
+		}
+		return false, errcode.ErrInternal.WithCause(err)
+	}
+	return submission.IsCorrect, nil
+}
+
+func (s *Service) consumeValidPracticeSharedProof(
+	txRepo practiceports.PracticeCommandTxRepository,
+	userID, challengeID int64,
+	proofHash string,
+	submittedAt time.Time,
+) (bool, error) {
+	proof, err := txRepo.FindActiveSharedProofByHash(proofHash)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	if proof == nil || proof.UserID != userID || proof.ChallengeID != challengeID || proof.ContestID != nil || proof.ExpiresAt.Before(submittedAt) {
+		return false, nil
+	}
+
+	consumed, err := txRepo.ConsumeSharedProof(proof.ID, submittedAt)
+	if err != nil {
+		return false, err
+	}
+	return consumed, nil
 }
 
 func (s *Service) ReviewManualReviewSubmissionWithContext(

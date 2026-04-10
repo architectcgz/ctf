@@ -711,6 +711,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		&model.User{},
 		&model.UserRole{},
 		&model.AuditLog{},
+		&model.Contest{},
+		&model.ContestRegistration{},
 		&model.Team{},
 		&model.TeamMember{},
 		&model.Image{},
@@ -791,11 +793,12 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 	runtimeProvisioningService := runtimecmd.NewProvisioningService(instanceRepo, nil, &cfg.Container, logger)
 	runtimeInstanceCommands := runtimecmd.NewInstanceService(instanceRepo, runtimeCleanupService, &cfg.Container, logger)
 	runtimeInstanceQueries := runtimeqry.NewInstanceService(instanceRepo)
-	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), cfg.Container.ProxyTicketTTL)
+	runtimeProxyTicketService := runtimeqry.NewProxyTicketService(runtimeinfrarepo.NewProxyTicketStore(cache), instanceRepo, cfg.Container.ProxyTicketTTL)
 	runtimeService := runtimeadapters.NewHTTPService(
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,
 		runtimeProxyTicketService,
+		runtimeqry.NewSharedProofService(instanceRepo, runtimeProxyTicketService, cfg.Container.ProxyTicketTTL),
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 	practiceService := practicecmd.NewService(

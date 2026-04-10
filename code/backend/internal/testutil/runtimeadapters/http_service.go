@@ -27,20 +27,26 @@ type httpProxyTicketService interface {
 	MaxAge() int
 }
 
+type httpSharedProofService interface {
+	IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error)
+}
+
 // HTTPService 为测试提供 runtime HTTP handler 所需的 facade。
 type HTTPService struct {
 	commandService       httpInstanceCommandService
 	queryService         httpInstanceQueryService
 	proxyTickets         httpProxyTicketService
+	sharedProofs         httpSharedProofService
 	proxyBodyPreviewSize int
 }
 
 // NewHTTPService 创建 runtime HTTP 测试 facade。
-func NewHTTPService(commandService httpInstanceCommandService, queryService httpInstanceQueryService, proxyTickets httpProxyTicketService, proxyBodyPreviewSize int) *HTTPService {
+func NewHTTPService(commandService httpInstanceCommandService, queryService httpInstanceQueryService, proxyTickets httpProxyTicketService, sharedProofs httpSharedProofService, proxyBodyPreviewSize int) *HTTPService {
 	return &HTTPService{
 		commandService:       commandService,
 		queryService:         queryService,
 		proxyTickets:         proxyTickets,
+		sharedProofs:         sharedProofs,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 	}
 }
@@ -72,6 +78,10 @@ func (a *HTTPService) DestroyTeacherInstance(ctx context.Context, instanceID, re
 func (a *HTTPService) IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error) {
 	ticket, _, err := a.proxyTickets.IssueTicket(ctx, user, instanceID)
 	return ticket, err
+}
+
+func (a *HTTPService) IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error) {
+	return a.sharedProofs.IssueSharedProof(ctx, proxyTicket)
 }
 
 func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

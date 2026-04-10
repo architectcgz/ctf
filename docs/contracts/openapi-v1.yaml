@@ -268,7 +268,7 @@ components:
     ChallengeDetailData:
       type: object
       required:
-        [id, title, description, category, difficulty, tags, points, need_target, instance_sharing, is_solved, hints]
+        [id, title, description, category, difficulty, tags, points, need_target, flag_type, instance_sharing, is_solved, hints]
       properties:
         id: { $ref: "#/components/schemas/ID" }
         title: { type: string }
@@ -282,6 +282,7 @@ components:
           items: { type: string }
         points: { type: integer, minimum: 0 }
         need_target: { type: boolean, description: "题目是否需要启动靶机实例" }
+        flag_type: { $ref: "#/components/schemas/FlagType" }
         instance_sharing: { $ref: "#/components/schemas/InstanceSharing" }
         attachment_url: { type: string, nullable: true }
         is_solved: { type: boolean }
@@ -303,7 +304,7 @@ components:
       enum: [pending, creating, running, expired, destroying, destroyed, failed, crashed]
     FlagType:
       type: string
-      enum: [static, dynamic, regex, manual_review]
+      enum: [static, dynamic, regex, manual_review, shared_proof]
 
     SshInfo:
       type: object

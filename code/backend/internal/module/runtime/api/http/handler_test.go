@@ -44,6 +44,10 @@ func (stubRuntimeService) IssueProxyTicket(context.Context, authctx.CurrentUser,
 	return "", nil
 }
 
+func (stubRuntimeService) IssueSharedProof(context.Context, string) (*dto.SharedProofIssueResp, error) {
+	return nil, nil
+}
+
 func (stubRuntimeService) ResolveProxyTicket(context.Context, string) (*runtimeports.ProxyTicketClaims, error) {
 	return nil, nil
 }

@@ -111,6 +111,20 @@ func (s *FlagService) ConfigureManualReviewFlag(challengeID int64) error {
 	return s.repo.Update(challenge)
 }
 
+func (s *FlagService) ConfigureSharedProofFlag(challengeID int64) error {
+	challenge, err := s.loadChallenge(challengeID)
+	if err != nil {
+		return err
+	}
+	if challenge.InstanceSharing != model.InstanceSharingShared {
+		return errcode.ErrInvalidParams.WithCause(errors.New("shared_proof 仅支持共享实例策略"))
+	}
+
+	s.resetNonDynamicFlagFields(challenge)
+	challenge.FlagType = model.FlagTypeSharedProof
+	return s.repo.Update(challenge)
+}
+
 func (s *FlagService) resetNonDynamicFlagFields(challenge *model.Challenge) {
 	if challenge == nil {
 		return

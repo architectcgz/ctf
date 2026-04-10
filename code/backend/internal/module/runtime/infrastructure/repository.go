@@ -98,6 +98,18 @@ func (r *Repository) FindUserByID(ctx context.Context, userID int64) (*model.Use
 	return &user, nil
 }
 
+func (r *Repository) FindChallengeByID(challengeID int64) (*model.Challenge, error) {
+	var challenge model.Challenge
+	if err := r.db.Where("id = ?", challengeID).First(&challenge).Error; err != nil {
+		return nil, err
+	}
+	return &challenge, nil
+}
+
+func (r *Repository) CreateSharedProof(proof *model.SharedProof) error {
+	return r.db.Create(proof).Error
+}
+
 func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,

@@ -65,6 +65,7 @@ export interface ChallengeDetailData {
   tags: string[]
   points: number
   need_target: boolean
+  flag_type?: FlagType
   instance_sharing: InstanceSharing
   attachment_url?: string
   is_solved: boolean
@@ -167,7 +168,7 @@ export type InstanceStatus =
   | 'destroyed'
   | 'failed'
   | 'crashed'
-export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
+export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'
 
 export interface InstanceData {
   id: ID
@@ -866,7 +867,7 @@ export interface AdminChallengeImportAttachment {
 }
 
 export interface AdminChallengeImportFlag {
-  type: Extract<FlagType, 'static' | 'dynamic' | 'regex' | 'manual_review'>
+  type: Extract<FlagType, 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'>
   prefix?: string
 }
 

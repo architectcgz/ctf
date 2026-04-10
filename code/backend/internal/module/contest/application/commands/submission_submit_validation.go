@@ -10,6 +10,7 @@ import (
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	"ctf-platform/pkg/crypto"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -60,12 +61,28 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		return nil, errcode.ErrSubmitTooFrequent
 	}
 
-	if s.flagValidator == nil {
-		return nil, errcode.ErrInternal.WithCause(fmt.Errorf("challenge flag validator is nil"))
-	}
-	isCorrect, err := s.flagValidator.ValidateFlag(userID, challengeID, flag, "")
-	if err != nil {
-		return nil, err
+	sharedProofHash := ""
+	isCorrect := false
+	if challengeItem.FlagType == model.FlagTypeSharedProof {
+		sharedProofHash = crypto.HashSharedProof(flag)
+		proof, err := s.repo.FindActiveSharedProofByHash(ctx, sharedProofHash)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrInternal.WithCause(err)
+		}
+		isCorrect = proof != nil &&
+			proof.UserID == userID &&
+			proof.ChallengeID == challengeID &&
+			proof.ContestID != nil &&
+			*proof.ContestID == contestID &&
+			!proof.ExpiresAt.Before(submittedAt)
+	} else {
+		if s.flagValidator == nil {
+			return nil, errcode.ErrInternal.WithCause(fmt.Errorf("challenge flag validator is nil"))
+		}
+		isCorrect, err = s.flagValidator.ValidateFlag(userID, challengeID, flag, "")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &validatedContestSubmission{
@@ -74,5 +91,6 @@ func (s *SubmissionService) validateContestSubmission(ctx context.Context, userI
 		rateLimitKey:     rateLimitKey,
 		submittedAt:      submittedAt,
 		isCorrect:        isCorrect,
+		sharedProofHash:  sharedProofHash,
 	}, nil
 }
