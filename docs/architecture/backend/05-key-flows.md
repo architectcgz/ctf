@@ -111,6 +111,30 @@ sequenceDiagram
 - **资源泄漏防护**：容器创建失败时立即走补偿清理，运行中实例仍由既有过期清理器和孤儿资源清理器兜底。
 - **同步回退**：当 `container.scheduler.enabled=false` 时，仍允许使用同步创建路径，便于测试和小规模部署。
 
+### 1.7 实例访问与 Proxy Ticket
+
+实例启动成功后，用户访问实例并不是直接连接容器地址，而是先通过平台访问入口换取一个短时 `proxy ticket`。
+
+当前规则固定如下：
+
+- `proxy ticket` 在“访问实例”时签发，不在“启动实例”时签发
+- ticket 用于平台代理访问链路的短时鉴权
+- ticket 同时携带 `user_id`、`instance_id`、`challenge_id`、`contest_id`、`share_scope` 等访问上下文
+- 共享题题目服务可以复用这个 ticket 向平台申请 `shared_proof`
+
+它和最终提交内容不是同一类凭证：
+
+- 普通题提交的是 `flag`
+- `shared_proof` 题提交的是 `proof`
+- `proxy ticket` 只负责“实例访问”与“上下文传递”
+
+因此，实例相关链路实际上分成两段：
+
+1. `POST /api/v1/challenges/:id/instances`
+   负责创建或复用实例
+2. `GET /api/v1/instances/:id/access`
+   负责校验访问权限、签发 `proxy ticket`、返回平台代理访问地址
+
 ---
 
 ## 2. Flag 提交与计分流程
