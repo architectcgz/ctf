@@ -111,6 +111,14 @@ describe('ChallengeList', () => {
     expect(wrapper.find('.challenge-row-index').exists()).toBe(false)
   })
 
+  it('题目页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(challengeListSource).toContain('class="challenge-summary-grid metric-panel-grid"')
+    expect(challengeListSource).toContain('class="challenge-summary-item metric-panel-card"')
+    expect(challengeListSource).toContain('class="challenge-summary-label metric-panel-label"')
+    expect(challengeListSource).toContain('class="challenge-summary-value metric-panel-value"')
+    expect(challengeListSource).toContain('class="challenge-summary-helper metric-panel-helper"')
+  })
+
   it('搜索时应通过 keyword 参数请求真实筛选', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [],
@@ -297,6 +305,7 @@ describe('ChallengeList', () => {
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
+    expect(challengeListSource).not.toContain('</section>\n\n        <div v-if="total > 0" class="challenge-pagination">')
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
     expect(challengeListSource).toContain('搜索挑战标题或描述')

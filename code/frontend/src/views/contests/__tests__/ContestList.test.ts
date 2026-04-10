@@ -50,4 +50,12 @@ describe('ContestList', () => {
     expect(contestListSource).toMatch(/class="contest-row-title"[\s\S]*:title="contest\.title"/s)
     expect(contestListSource).toMatch(/\.contest-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
   })
+
+  it('竞赛页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(contestListSource).toContain('class="contest-summary-grid metric-panel-grid"')
+    expect(contestListSource).toContain('class="contest-summary-item metric-panel-card"')
+    expect(contestListSource).toContain('class="contest-summary-label metric-panel-label"')
+    expect(contestListSource).toContain('class="contest-summary-value metric-panel-value"')
+    expect(contestListSource).toContain('class="contest-summary-helper metric-panel-helper"')
+  })
 })

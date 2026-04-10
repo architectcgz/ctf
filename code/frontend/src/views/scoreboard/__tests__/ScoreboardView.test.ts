@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 
 import ScoreboardView from '../ScoreboardView.vue'
+import scoreboardSource from '../ScoreboardView.vue?raw'
 
 const { getContestsMock, getScoreboardMock } = vi.hoisted(() => ({
   getContestsMock: vi.fn(),
@@ -374,5 +375,13 @@ describe('ScoreboardView', () => {
     expect(getScoreboardMock).toHaveBeenCalledTimes(3)
     expect(getScoreboardMock.mock.calls.at(-1)?.[0]).toBe('contest-running')
     expect(wrapper.text()).toContain('Updated Champions')
+  })
+
+  it('排行榜页概况卡片应使用统一 metric-panel 样式类', () => {
+    expect(scoreboardSource).toContain('class="scoreboard-summary-grid metric-panel-grid"')
+    expect(scoreboardSource).toContain('class="scoreboard-summary-item metric-panel-card"')
+    expect(scoreboardSource).toContain('class="scoreboard-summary-label metric-panel-label"')
+    expect(scoreboardSource).toContain('class="scoreboard-summary-value metric-panel-value"')
+    expect(scoreboardSource).toContain('class="scoreboard-summary-helper metric-panel-helper"')
   })
 })

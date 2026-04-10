@@ -128,11 +128,11 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
           <Trophy class="h-4 w-4" />
           <span>当前竞赛概况</span>
         </div>
-        <div class="contest-summary-grid">
-          <div v-for="stat in summaryMetrics" :key="stat.key" class="contest-summary-item">
-            <div class="contest-summary-label">{{ stat.label }}</div>
-            <div class="contest-summary-value">{{ stat.value }}</div>
-            <div class="contest-summary-helper">{{ stat.hint }}</div>
+        <div class="contest-summary-grid metric-panel-grid">
+          <div v-for="stat in summaryMetrics" :key="stat.key" class="contest-summary-item metric-panel-card">
+            <div class="contest-summary-label metric-panel-label">{{ stat.label }}</div>
+            <div class="contest-summary-value metric-panel-value">{{ stat.value }}</div>
+            <div class="contest-summary-helper metric-panel-helper">{{ stat.hint }}</div>
           </div>
         </div>
       </section>

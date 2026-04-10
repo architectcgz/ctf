@@ -43,18 +43,18 @@ const {
 
       <section class="instance-summary">
         <div class="instance-summary-title">当前运行概况</div>
-        <div class="instance-summary-grid">
-          <div class="instance-summary-item">
-            <div class="instance-summary-label">运行中</div>
-            <div class="instance-summary-value">{{ runningCount }}</div>
+        <div class="instance-summary-grid metric-panel-grid">
+          <div class="instance-summary-item metric-panel-card">
+            <div class="instance-summary-label metric-panel-label">运行中</div>
+            <div class="instance-summary-value metric-panel-value">{{ runningCount }}</div>
           </div>
-          <div class="instance-summary-item">
-            <div class="instance-summary-label">等待创建</div>
-            <div class="instance-summary-value">{{ waitingCount }}</div>
+          <div class="instance-summary-item metric-panel-card">
+            <div class="instance-summary-label metric-panel-label">等待创建</div>
+            <div class="instance-summary-value metric-panel-value">{{ waitingCount }}</div>
           </div>
-          <div class="instance-summary-item">
-            <div class="instance-summary-label">实例上限</div>
-            <div class="instance-summary-value">{{ maxInstances }}</div>
+          <div class="instance-summary-item metric-panel-card">
+            <div class="instance-summary-label metric-panel-label">实例上限</div>
+            <div class="instance-summary-value metric-panel-value">{{ maxInstances }}</div>
           </div>
         </div>
       </section>

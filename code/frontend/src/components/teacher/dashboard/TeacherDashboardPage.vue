@@ -91,7 +91,7 @@ const {
 </script>
 
 <template>
-  <div class="workspace-shell">
+  <div class="workspace-shell teacher-management-shell teacher-surface">
     <header class="workspace-topbar">
       <div class="topbar-leading">
         <span class="workspace-overline">Teaching Workspace</span>
@@ -493,10 +493,6 @@ const {
   border-radius: var(--workspace-radius-lg);
   background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
   box-shadow: var(--workspace-shadow-panel);
-}
-
-.progress-card {
-  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
 }
 
 .trend-signal-label {
