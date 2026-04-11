@@ -138,24 +138,35 @@ describe('admin management surface alignment', () => {
   })
 
   it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
-    expect(auditLogSource).toContain('class="admin-summary-grid metric-panel-grid"')
+    expect(auditLogSource).toContain(
+      'class="admin-summary-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
     expect(auditLogSource).toContain('class="journal-note metric-panel-card"')
     expect(auditLogSource).toContain('class="journal-note-label metric-panel-label"')
     expect(auditLogSource).toContain('class="journal-note-value metric-panel-value"')
     expect(auditLogSource).toContain('class="journal-note-helper metric-panel-helper"')
 
     expect(journalNotesSource).toContain('.metric-panel-default-surface {')
+    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
+    expect(journalNotesSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
+    expect(journalNotesSource).toContain('--metric-panel-value-size: var(--font-size-26);')
+    expect(journalNotesSource).toContain('--metric-panel-helper-line-height: 1.7;')
     expect(challengeManageSource).toContain('class="manage-summary-grid metric-panel-grid metric-panel-default-surface"')
     expect(challengeManageSource).toContain('class="journal-note metric-panel-card"')
     expect(challengeManageSource).toContain('class="journal-note-label metric-panel-label"')
     expect(challengeManageSource).toContain('class="journal-note-value metric-panel-value"')
     expect(challengeManageSource).toContain('class="journal-note-helper metric-panel-helper"')
 
-    expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid metric-panel-grid')
+    expect(userGovernanceSource).toContain(
+      'class="admin-summary-grid user-overview-grid metric-panel-grid metric-panel-default-surface'
+    )
     expect(userGovernanceSource).toContain('class="journal-note user-overview-stat metric-panel-card"')
+    expect(userGovernanceSource).not.toMatch(
+      /\.user-overview-stat \.journal-note-value\s*\{[\s\S]*font-size:\s*clamp\(1\.35rem,\s*2vw,\s*1\.9rem\);/s
+    )
 
     expect(contestOrchestrationSource).toContain(
-      'class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid"'
+      'class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid metric-panel-default-surface"'
     )
     expect(contestOrchestrationSource).toContain('class="journal-note metric-panel-card"')
   })

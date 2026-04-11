@@ -165,6 +165,25 @@ describe('TeacherStudentManagement', () => {
     })
   })
 
+  it('学生管理概况卡片应复用 admin dashboard 的共享数值卡片结构', () => {
+    expect(studentManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-item progress-card metric-panel-card"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
+  })
+
   it('应该忽略过期搜索请求的返回结果', async () => {
     const slowRequest = deferred<
       Array<{

@@ -117,7 +117,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
           </div>
         </header>
 
-        <section class="teacher-summary metric-panel-default-surface">
+        <section class="teacher-summary metric-panel-workspace-surface">
           <div class="teacher-summary-title">
             <span>Instance Snapshot</span>
           </div>

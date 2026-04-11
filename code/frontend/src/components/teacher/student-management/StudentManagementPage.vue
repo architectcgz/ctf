@@ -67,22 +67,34 @@ const emit = defineEmits<{
           <div class="teacher-summary-title">
             <span>Directory Snapshot</span>
           </div>
-          <div class="teacher-summary-grid metric-panel-grid">
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">可访问班级</div>
-              <div class="teacher-summary-value metric-panel-value">{{ classes.length }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前教师可切换的班级数量</div>
-            </div>
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">当前班级学生</div>
-              <div class="teacher-summary-value metric-panel-value">{{ totalStudents }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前选中班级的学生总数</div>
-            </div>
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">搜索结果</div>
-              <div class="teacher-summary-value metric-panel-value">{{ filteredStudents.length }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前搜索条件下匹配的学生数量</div>
-            </div>
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">可访问班级</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ classes.length }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                当前教师可切换的班级数量
+              </div>
+            </article>
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">当前班级学生</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ totalStudents }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                当前选中班级的学生总数
+              </div>
+            </article>
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">搜索结果</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ filteredStudents.length }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                当前搜索条件下匹配的学生数量
+              </div>
+            </article>
           </div>
         </section>
 
@@ -275,6 +287,31 @@ const emit = defineEmits<{
   display: grid;
   gap: var(--space-4);
   grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.teacher-summary-grid.progress-strip {
+  margin-top: var(--space-4-5);
+}
+
+.teacher-summary-item.progress-card {
+  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
+}
+
+.teacher-summary-label.progress-card-label {
+  --metric-panel-label-size: var(--font-size-11);
+  --metric-panel-label-spacing: 0.18em;
+  --metric-panel-label-color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
+}
+
+.teacher-summary-value.progress-card-value {
+  --metric-panel-value-margin-top: var(--space-2-5);
+  --metric-panel-value-size: 26px;
+}
+
+.teacher-summary-helper.progress-card-hint {
+  --metric-panel-helper-margin-top: var(--space-2);
+  --metric-panel-helper-size: var(--font-size-13);
+  --metric-panel-helper-line-height: 1.7;
 }
 
 .teacher-skeleton-list {

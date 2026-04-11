@@ -75,30 +75,41 @@ describe('teacher base surface alignment', () => {
     expect(classManagementSource).toContain('class="teacher-summary-helper metric-panel-helper"')
 
     expect(studentManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
-    expect(studentManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
-    expect(studentManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
+    expect(studentManagementSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid"')
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-item progress-card metric-panel-card"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
 
-    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-workspace-surface"')
     expect(instanceManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
     expect(instanceManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
 
-    expect(reportExportSource).toContain('class="report-summary metric-panel-default-surface"')
+    expect(reportExportSource).toContain('class="report-summary metric-panel-workspace-surface"')
     expect(reportExportSource).toContain('class="report-summary-grid metric-panel-grid"')
     expect(reportExportSource).toContain('class="report-summary-item metric-panel-card"')
     expect(reportExportSource).toContain('class="report-summary-label metric-panel-label"')
     expect(reportExportSource).toContain('class="report-summary-value metric-panel-value"')
     expect(reportExportSource).toContain('class="report-summary-helper metric-panel-helper"')
     expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface"'
+      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface"'
     )
     expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-default-surface"'
+      'class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-workspace-surface"'
     )
 
-    expect(teacherSurfaceSource).toContain('--metric-panel-border: var(--teacher-card-border);')
-    expect(teacherSurfaceSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
-    expect(teacherSurfaceSource).toContain('--metric-panel-value-size: var(--font-size-26);')
-    expect(teacherSurfaceSource).toContain('--metric-panel-helper-line-height: 1.7;')
+    expect(teacherSurfaceSource).not.toContain('--metric-panel-border: var(--teacher-card-border);')
+    expect(teacherSurfaceSource).not.toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
+    expect(teacherSurfaceSource).not.toContain('--metric-panel-value-size: var(--font-size-26);')
+    expect(teacherSurfaceSource).not.toContain('--metric-panel-helper-line-height: 1.7;')
     expect(teacherSurfaceSource).not.toMatch(
       /\.teacher-summary-item,\s*\.teacher-management-shell \.report-summary-item\s*\{\s*min-width:\s*0;\s*border:\s*1px solid/s
     )
@@ -116,7 +127,7 @@ describe('teacher base surface alignment', () => {
     expect(reportExportSource).not.toMatch(/^\.report-hero\s*\{/m)
     expect(reportExportSource).not.toMatch(/^\.report-summary\s*\{/m)
     expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface"'
+      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface"'
     )
     expect(reportExportSource).toContain('class="journal-brief journal-metric report-kpi-card metric-panel-card"')
     expect(reportExportSource).toContain('class="report-kpi-label metric-panel-label"')

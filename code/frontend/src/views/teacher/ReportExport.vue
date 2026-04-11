@@ -49,7 +49,7 @@ const {
         </div>
       </header>
 
-      <section class="report-summary metric-panel-default-surface">
+      <section class="report-summary metric-panel-workspace-surface">
         <div class="report-summary-title">Export Snapshot</div>
         <div class="report-summary-grid metric-panel-grid">
           <div class="report-summary-item metric-panel-card">
@@ -207,7 +207,7 @@ const {
                 </span>
               </div>
 
-              <div class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-default-surface">
+              <div class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface">
                 <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
                   <div class="report-kpi-label metric-panel-label">班级</div>
                   <div class="report-kpi-value metric-panel-value">{{ latestExport.className }}</div>
@@ -326,7 +326,7 @@ const {
       </div>
 
       <template v-else-if="previewSummary">
-        <section class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-default-surface">
+        <section class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-workspace-surface">
           <article class="journal-brief journal-metric report-kpi-card metric-panel-card">
             <div class="report-kpi-label metric-panel-label">班级人数</div>
             <div class="report-kpi-value metric-panel-value">{{ previewSummary.student_count }}</div>

@@ -34,7 +34,7 @@ describe('journal note shared styles', () => {
       'journal-shell journal-shell-admin journal-notes-card'
     )
     expect(userGovernanceSource).toContain('journal-shell journal-shell-admin journal-notes-card')
-    expect(challengeManageSource).toContain('journal-shell journal-shell-admin journal-notes-rail')
+    expect(challengeManageSource).toContain('journal-shell journal-shell-admin journal-notes-card')
     expect(imageManageSource).toContain('journal-shell journal-shell-admin journal-notes-rail')
     expect(challengePackageFormatSource).toContain('journal-shell journal-shell-admin')
     expect(challengeDetailSource).toContain('journal-shell journal-shell-admin')

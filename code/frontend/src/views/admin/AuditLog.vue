@@ -126,7 +126,7 @@ onMounted(() => {
         <p class="admin-page-copy">按动作、资源类型和执行人快速检索关键操作记录。</p>
       </div>
 
-      <div class="admin-summary-grid metric-panel-grid">
+      <div class="admin-summary-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
         <article class="journal-note metric-panel-card">
           <div class="journal-note-label metric-panel-label">激活筛选</div>
           <div class="journal-note-value metric-panel-value">{{ activeFilterCount }}</div>
@@ -291,18 +291,6 @@ onMounted(() => {
   --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
   --audit-row-divider: color-mix(in srgb, var(--journal-border) 62%, transparent);
   --journal-eyebrow-spacing: 0.18em;
-  --journal-note-label-spacing: 0.18em;
-  --journal-note-card-radius: 18px;
-  --journal-note-card-background: color-mix(
-    in srgb,
-    var(--journal-surface) 94%,
-    var(--color-bg-base)
-  );
-  --journal-note-card-padding: var(--space-4) var(--space-4);
-  --journal-note-value-size: 1.15rem;
-  --journal-note-value-weight: 700;
-  --journal-note-helper-margin-top: var(--space-2);
-  --journal-note-helper-line-height: 1.55;
   --journal-shell-hero-radial-strength: 10%;
   --journal-shell-hero-radial-size: 16rem;
   --journal-shell-hero-top-strength: 97%;
