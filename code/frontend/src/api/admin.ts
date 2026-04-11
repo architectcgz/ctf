@@ -91,6 +91,27 @@ export interface AdminUserUpdatePayload {
   status?: UserStatus
 }
 
+export interface AdminContestChallengeCreatePayload {
+  challenge_id: number
+  points: number
+  order?: number
+  is_visible?: boolean
+  awd_checker_type?: AWDCheckerType
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+}
+
+export interface AdminContestChallengeUpdatePayload {
+  points?: number
+  order?: number
+  is_visible?: boolean
+  awd_checker_type?: AWDCheckerType
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
+}
+
 export async function exportContestArchive(
   contestId: string,
   data?: { format?: 'json' }
@@ -302,6 +323,10 @@ interface RawAdminContestChallengeItem {
   points: number
   order: number
   is_visible: boolean
+  awd_checker_type?: string | null
+  awd_checker_config?: Record<string, unknown> | null
+  awd_sla_score?: number | null
+  awd_defense_score?: number | null
   created_at: string
 }
 
@@ -894,6 +919,10 @@ function normalizeAdminContestChallenge(item: RawAdminContestChallengeItem): Adm
     points: item.points,
     order: item.order,
     is_visible: item.is_visible,
+    awd_checker_type: normalizeAWDCheckerType(item.awd_checker_type),
+    awd_checker_config: item.awd_checker_config || {},
+    awd_sla_score: typeof item.awd_sla_score === 'number' ? item.awd_sla_score : 0,
+    awd_defense_score: typeof item.awd_defense_score === 'number' ? item.awd_defense_score : 0,
     created_at: item.created_at,
   }
 }
@@ -1706,6 +1735,30 @@ export async function listAdminContestChallenges(
     url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
   })
   return response.map(normalizeAdminContestChallenge)
+}
+
+export async function createAdminContestChallenge(
+  contestId: string,
+  data: AdminContestChallengeCreatePayload
+): Promise<AdminContestChallengeData> {
+  const response = await request<RawAdminContestChallengeItem>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/challenges`,
+    data,
+  })
+  return normalizeAdminContestChallenge(response)
+}
+
+export async function updateAdminContestChallenge(
+  contestId: string,
+  challengeId: string,
+  data: AdminContestChallengeUpdatePayload
+): Promise<void> {
+  await request<void>({
+    method: 'PUT',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
+    data,
+  })
 }
 
 export async function listContestAWDRoundServices(

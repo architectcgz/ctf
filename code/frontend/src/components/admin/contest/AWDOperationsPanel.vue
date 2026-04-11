@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import type { AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
+import type { AdminContestChallengeData, AWDTrafficStatusGroup, ContestDetailData } from '@/api/contracts'
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
+import AWDChallengeConfigDialog from './AWDChallengeConfigDialog.vue'
+import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
 
@@ -25,6 +27,48 @@ const selectedContest = computed(
 const roundDialogOpen = ref(false)
 const serviceCheckDialogOpen = ref(false)
 const attackLogDialogOpen = ref(false)
+const challengeConfigDialogOpen = ref(false)
+const challengeConfigMode = ref<'create' | 'edit'>('create')
+const editingChallengeLink = ref<AdminContestChallengeData | null>(null)
+
+const operationTabs = [
+  {
+    key: 'inspector',
+    label: '轮次态势',
+    tabId: 'awd-ops-tab-inspector',
+    panelId: 'awd-ops-panel-inspector',
+  },
+  {
+    key: 'challenges',
+    label: '题目配置',
+    tabId: 'awd-ops-tab-challenges',
+    panelId: 'awd-ops-panel-challenges',
+  },
+] as const
+
+type AWDOperationsPanelKey = (typeof operationTabs)[number]['key']
+
+function getOperationsPanelStorageKey(contestId: string): string {
+  return `ctf_admin_awd_ops_panel:${contestId}`
+}
+
+function loadStoredOperationsPanel(contestId: string): AWDOperationsPanelKey {
+  if (typeof window === 'undefined') {
+    return 'inspector'
+  }
+  const value = window.sessionStorage.getItem(getOperationsPanelStorageKey(contestId))
+  return value === 'challenges' ? 'challenges' : 'inspector'
+}
+
+function persistOperationsPanel(contestId: string, value: AWDOperationsPanelKey): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+  window.sessionStorage.setItem(getOperationsPanelStorageKey(contestId), value)
+}
+
+const activePanel = ref<AWDOperationsPanelKey>('inspector')
+const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 const {
   rounds,
@@ -40,14 +84,17 @@ const {
   scoreboardFrozen,
   teams,
   challengeLinks,
+  challengeCatalog,
   loadingRounds,
   loadingRoundDetail,
   loadingTrafficSummary,
   loadingTrafficEvents,
+  loadingChallengeCatalog,
   checking,
   creatingRound,
   savingServiceCheck,
   savingAttackLog,
+  savingChallengeConfig,
   shouldAutoRefresh,
   refresh,
   applyTrafficFilters,
@@ -57,6 +104,9 @@ const {
   createRound,
   createServiceCheck,
   createAttackLog,
+  loadChallengeCatalog,
+  createChallengeLink,
+  updateChallengeLink,
 } = useAdminContestAWD(selectedContest)
 
 const nextRoundNumber = computed(() =>
@@ -90,6 +140,7 @@ const attackLogHint = computed(() => {
   }
   return ''
 })
+const existingChallengeIds = computed(() => challengeLinks.value.map((item) => item.challenge_id))
 
 function updateSelectedContestId(value: string) {
   emit('update:selectedContestId', value)
@@ -121,6 +172,64 @@ function openAttackLogDialog() {
 
 function updateAttackLogDialogOpen(value: boolean) {
   attackLogDialogOpen.value = value
+}
+
+function setTabButtonRef(index: number, element: HTMLButtonElement | null) {
+  tabButtonRefs.value[index] = element
+}
+
+function focusTabByIndex(index: number) {
+  tabButtonRefs.value[index]?.focus()
+}
+
+function selectPanel(panel: AWDOperationsPanelKey) {
+  activePanel.value = panel
+}
+
+function handlePanelKeydown(event: KeyboardEvent, index: number) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+    return
+  }
+
+  event.preventDefault()
+
+  if (event.key === 'Home') {
+    activePanel.value = operationTabs[0].key
+    focusTabByIndex(0)
+    return
+  }
+
+  if (event.key === 'End') {
+    const endIndex = operationTabs.length - 1
+    activePanel.value = operationTabs[endIndex].key
+    focusTabByIndex(endIndex)
+    return
+  }
+
+  const direction = event.key === 'ArrowRight' ? 1 : -1
+  const nextIndex = (index + direction + operationTabs.length) % operationTabs.length
+  activePanel.value = operationTabs[nextIndex].key
+  focusTabByIndex(nextIndex)
+}
+
+function openChallengeCreateDialog() {
+  challengeConfigMode.value = 'create'
+  editingChallengeLink.value = null
+  challengeConfigDialogOpen.value = true
+  void loadChallengeCatalog()
+}
+
+function openChallengeEditDialog(challenge: AdminContestChallengeData) {
+  challengeConfigMode.value = 'edit'
+  editingChallengeLink.value = challenge
+  challengeConfigDialogOpen.value = true
+}
+
+function updateChallengeConfigDialogOpen(value: boolean) {
+  challengeConfigDialogOpen.value = value
+  if (!value) {
+    editingChallengeLink.value = null
+  }
 }
 
 async function handleCreateRound(payload: {
@@ -155,6 +264,26 @@ async function handleCreateAttackLog(payload: {
   attackLogDialogOpen.value = false
 }
 
+async function handleSaveChallengeConfig(payload: {
+  challenge_id: number
+  points: number
+  order: number
+  is_visible: boolean
+  awd_checker_type: 'legacy_probe' | 'http_standard'
+  awd_checker_config: Record<string, unknown>
+  awd_sla_score: number
+  awd_defense_score: number
+}) {
+  if (challengeConfigMode.value === 'create') {
+    await createChallengeLink(payload)
+  } else if (editingChallengeLink.value) {
+    const { challenge_id: _challengeId, ...updatePayload } = payload
+    await updateChallengeLink(editingChallengeLink.value.challenge_id, updatePayload)
+  }
+  challengeConfigDialogOpen.value = false
+  editingChallengeLink.value = null
+}
+
 async function handleApplyTrafficFilters(payload: {
   attacker_team_id?: string
   victim_team_id?: string
@@ -172,6 +301,28 @@ async function handleTrafficPageChange(page: number) {
 async function handleResetTrafficFilters() {
   await resetTrafficFilters()
 }
+
+watch(
+  () => selectedContest.value?.id || null,
+  (contestId) => {
+    activePanel.value = contestId ? loadStoredOperationsPanel(contestId) : 'inspector'
+  },
+  { immediate: true }
+)
+
+watch(
+  () => [selectedContest.value?.id || null, activePanel.value] as const,
+  ([contestId, panel]) => {
+    if (!contestId) {
+      return
+    }
+    persistOperationsPanel(contestId, panel)
+    if (panel === 'challenges' && challengeCatalog.value.length === 0) {
+      void loadChallengeCatalog()
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -206,41 +357,86 @@ async function handleResetTrafficFilters() {
       icon="Flag"
     />
 
-    <AWDRoundInspector
-      v-else
-      :contest="selectedContest"
-      :rounds="rounds"
-      :selected-round-id="selectedRoundId"
-      :services="services"
-      :attacks="attacks"
-      :challenge-links="challengeLinks"
-      :summary="summary"
-      :traffic-summary="trafficSummary"
-      :traffic-events="trafficEvents"
-      :traffic-events-total="trafficEventsTotal"
-      :traffic-filters="trafficFilters"
-      :scoreboard-rows="scoreboardRows"
-      :scoreboard-frozen="scoreboardFrozen"
-      :loading-rounds="loadingRounds"
-      :loading-round-detail="loadingRoundDetail"
-      :loading-traffic-summary="loadingTrafficSummary"
-      :loading-traffic-events="loadingTrafficEvents"
-      :checking="checking"
-      :should-auto-refresh="shouldAutoRefresh"
-      :can-record-service-checks="canRecordServiceChecks"
-      :can-record-attack-logs="canRecordAttackLogs"
-      :service-check-hint="serviceCheckHint"
-      :attack-log-hint="attackLogHint"
-      @refresh="refresh"
-      @apply-traffic-filters="handleApplyTrafficFilters"
-      @change-traffic-page="handleTrafficPageChange"
-      @reset-traffic-filters="handleResetTrafficFilters"
-      @open-create-round-dialog="openRoundDialog"
-      @open-service-check-dialog="openServiceCheckDialog"
-      @open-attack-log-dialog="openAttackLogDialog"
-      @run-selected-round-check="runSelectedRoundCheck"
-      @update:selected-round-id="updateSelectedRoundId"
-    />
+    <section v-else class="space-y-6">
+      <nav class="top-tabs awd-ops-tabs" role="tablist" aria-label="AWD 运维工作区切换">
+        <button
+          v-for="(tab, index) in operationTabs"
+          :id="tab.tabId"
+          :key="tab.key"
+          :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+          type="button"
+          role="tab"
+          class="top-tab"
+          :class="{ active: activePanel === tab.key }"
+          :aria-selected="activePanel === tab.key ? 'true' : 'false'"
+          :aria-controls="tab.panelId"
+          :tabindex="activePanel === tab.key ? 0 : -1"
+          @click="selectPanel(tab.key)"
+          @keydown="handlePanelKeydown($event, index)"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+
+      <section
+        id="awd-ops-panel-inspector"
+        class="awd-ops-tab-panel"
+        role="tabpanel"
+        aria-labelledby="awd-ops-tab-inspector"
+        :aria-hidden="activePanel === 'inspector' ? 'false' : 'true'"
+        v-show="activePanel === 'inspector'"
+      >
+        <AWDRoundInspector
+          :contest="selectedContest"
+          :rounds="rounds"
+          :selected-round-id="selectedRoundId"
+          :services="services"
+          :attacks="attacks"
+          :challenge-links="challengeLinks"
+          :summary="summary"
+          :traffic-summary="trafficSummary"
+          :traffic-events="trafficEvents"
+          :traffic-events-total="trafficEventsTotal"
+          :traffic-filters="trafficFilters"
+          :scoreboard-rows="scoreboardRows"
+          :scoreboard-frozen="scoreboardFrozen"
+          :loading-rounds="loadingRounds"
+          :loading-round-detail="loadingRoundDetail"
+          :loading-traffic-summary="loadingTrafficSummary"
+          :loading-traffic-events="loadingTrafficEvents"
+          :checking="checking"
+          :should-auto-refresh="shouldAutoRefresh"
+          :can-record-service-checks="canRecordServiceChecks"
+          :can-record-attack-logs="canRecordAttackLogs"
+          :service-check-hint="serviceCheckHint"
+          :attack-log-hint="attackLogHint"
+          @refresh="refresh"
+          @apply-traffic-filters="handleApplyTrafficFilters"
+          @change-traffic-page="handleTrafficPageChange"
+          @reset-traffic-filters="handleResetTrafficFilters"
+          @open-create-round-dialog="openRoundDialog"
+          @open-service-check-dialog="openServiceCheckDialog"
+          @open-attack-log-dialog="openAttackLogDialog"
+          @run-selected-round-check="runSelectedRoundCheck"
+          @update:selected-round-id="updateSelectedRoundId"
+        />
+      </section>
+
+      <section
+        id="awd-ops-panel-challenges"
+        class="awd-ops-tab-panel"
+        role="tabpanel"
+        aria-labelledby="awd-ops-tab-challenges"
+        :aria-hidden="activePanel === 'challenges' ? 'false' : 'true'"
+        v-show="activePanel === 'challenges'"
+      >
+        <AWDChallengeConfigPanel
+          :challenge-links="challengeLinks"
+          @create="openChallengeCreateDialog"
+          @edit="openChallengeEditDialog"
+        />
+      </section>
+    </section>
 
     <AWDRoundCreateDialog
       :open="roundDialogOpen"
@@ -267,5 +463,28 @@ async function handleResetTrafficFilters() {
       @update:open="updateAttackLogDialogOpen"
       @save="handleCreateAttackLog"
     />
+
+    <AWDChallengeConfigDialog
+      :open="challengeConfigDialogOpen"
+      :mode="challengeConfigMode"
+      :challenge-options="challengeCatalog"
+      :existing-challenge-ids="existingChallengeIds"
+      :draft="editingChallengeLink"
+      :loading-challenge-catalog="loadingChallengeCatalog"
+      :saving="savingChallengeConfig"
+      @update:open="updateChallengeConfigDialogOpen"
+      @save="handleSaveChallengeConfig"
+    />
   </div>
 </template>
+
+<style scoped>
+.awd-ops-tabs {
+  margin-top: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+}
+
+.awd-ops-tab-panel {
+  min-width: 0;
+}
+</style>

@@ -16,6 +16,7 @@ vi.mock('@/api/request', () => ({
 }))
 
 import {
+  createAdminContestChallenge,
   createEnvironmentTemplate,
   createChallenge,
   createChallengePublishRequest,
@@ -48,6 +49,7 @@ import {
   saveChallengeTopology,
   saveChallengeWriteup,
   unrecommendChallengeWriteup,
+  updateAdminContestChallenge,
   updateContest,
 } from '@/api/admin'
 
@@ -179,6 +181,13 @@ describe('admin contest api contract', () => {
         points: 120,
         order: 2,
         is_visible: true,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+          get_flag: { method: 'GET', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
@@ -200,9 +209,117 @@ describe('admin contest api contract', () => {
         points: 120,
         order: 2,
         is_visible: true,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+          get_flag: { method: 'GET', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
+  })
+
+  it('应该按后端契约创建带 AWD 配置的竞赛题目', async () => {
+    requestMock.mockResolvedValue({
+      id: 31,
+      contest_id: 7,
+      challenge_id: 11,
+      title: 'SQL Injection 101',
+      category: 'web',
+      difficulty: 'easy',
+      points: 120,
+      order: 2,
+      is_visible: true,
+      awd_checker_type: 'http_standard',
+      awd_checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      awd_sla_score: 18,
+      awd_defense_score: 28,
+      created_at: '2026-03-12T00:00:00.000Z',
+    })
+
+    const result = await createAdminContestChallenge('7', {
+      challenge_id: 11,
+      points: 120,
+      order: 2,
+      is_visible: true,
+      awd_checker_type: 'http_standard',
+      awd_checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      awd_sla_score: 18,
+      awd_defense_score: 28,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/challenges',
+      data: {
+        challenge_id: 11,
+        points: 120,
+        order: 2,
+        is_visible: true,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+      },
+    })
+    expect(result).toEqual({
+      id: '31',
+      contest_id: '7',
+      challenge_id: '11',
+      title: 'SQL Injection 101',
+      category: 'web',
+      difficulty: 'easy',
+      points: 120,
+      order: 2,
+      is_visible: true,
+      awd_checker_type: 'http_standard',
+      awd_checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+      },
+      awd_sla_score: 18,
+      awd_defense_score: 28,
+      created_at: '2026-03-12T00:00:00.000Z',
+    })
+  })
+
+  it('应该按后端契约更新竞赛题目的 AWD 配置', async () => {
+    requestMock.mockResolvedValue(null)
+
+    await updateAdminContestChallenge('7', '11', {
+      points: 150,
+      order: 3,
+      is_visible: false,
+      awd_checker_type: 'legacy_probe',
+      awd_checker_config: {
+        health_path: '/healthz',
+      },
+      awd_sla_score: 10,
+      awd_defense_score: 20,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/admin/contests/7/challenges/11',
+      data: {
+        points: 150,
+        order: 3,
+        is_visible: false,
+        awd_checker_type: 'legacy_probe',
+        awd_checker_config: {
+          health_path: '/healthz',
+        },
+        awd_sla_score: 10,
+        awd_defense_score: 20,
+      },
+    })
   })
 
   it('应该请求指定 AWD 轮次巡检接口并归一化返回值', async () => {
