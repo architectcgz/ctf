@@ -39,17 +39,19 @@ func (AWDRound) TableName() string {
 }
 
 type AWDTeamService struct {
-	ID             int64     `gorm:"column:id;primaryKey"`
-	RoundID        int64     `gorm:"column:round_id;not null;uniqueIndex:uk_awd_team_services"`
-	TeamID         int64     `gorm:"column:team_id;not null;index:idx_awd_ts_team;uniqueIndex:uk_awd_team_services"`
-	ChallengeID    int64     `gorm:"column:challenge_id;not null;uniqueIndex:uk_awd_team_services"`
-	ServiceStatus  string    `gorm:"column:service_status;size:16;not null;default:up"`
-	CheckResult    string    `gorm:"column:check_result;type:text;not null;default:'{}'"`
-	AttackReceived int       `gorm:"column:attack_received;not null;default:0"`
-	DefenseScore   int       `gorm:"column:defense_score;not null;default:0"`
-	AttackScore    int       `gorm:"column:attack_score;not null;default:0"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at"`
+	ID             int64          `gorm:"column:id;primaryKey"`
+	RoundID        int64          `gorm:"column:round_id;not null;uniqueIndex:uk_awd_team_services"`
+	TeamID         int64          `gorm:"column:team_id;not null;index:idx_awd_ts_team;uniqueIndex:uk_awd_team_services"`
+	ChallengeID    int64          `gorm:"column:challenge_id;not null;uniqueIndex:uk_awd_team_services"`
+	ServiceStatus  string         `gorm:"column:service_status;size:16;not null;default:up"`
+	CheckResult    string         `gorm:"column:check_result;type:text;not null;default:'{}'"`
+	CheckerType    AWDCheckerType `gorm:"column:checker_type;size:32;not null;default:''"`
+	AttackReceived int            `gorm:"column:attack_received;not null;default:0"`
+	SLAScore       int            `gorm:"column:sla_score;not null;default:0"`
+	DefenseScore   int            `gorm:"column:defense_score;not null;default:0"`
+	AttackScore    int            `gorm:"column:attack_score;not null;default:0"`
+	CreatedAt      time.Time      `gorm:"column:created_at"`
+	UpdatedAt      time.Time      `gorm:"column:updated_at"`
 }
 
 func (AWDTeamService) TableName() string {

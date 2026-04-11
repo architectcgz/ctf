@@ -22,6 +22,8 @@ func (r *AWDRepository) UpsertServiceCheck(
 		ChallengeID:   challengeID,
 		ServiceStatus: serviceStatus,
 		CheckResult:   checkResult,
+		CheckerType:   "",
+		SLAScore:      0,
 		DefenseScore:  defenseScore,
 	}
 	if err := r.dbWithContext(ctx).
@@ -51,6 +53,8 @@ func (r *AWDRepository) UpsertTeamServices(ctx context.Context, records []model.
 		DoUpdates: clause.AssignmentColumns([]string{
 			"service_status",
 			"check_result",
+			"checker_type",
+			"sla_score",
 			"defense_score",
 			"updated_at",
 		}),

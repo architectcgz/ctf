@@ -13,17 +13,18 @@ func applyAWDContestTeamScores(
 	ctx context.Context,
 	db *gorm.DB,
 	teams []model.Team,
-	defenseMap map[int64]int,
+	serviceScoreMap map[int64]awdServiceScoreTotal,
 	attackMap map[int64]awdAttackScoreRow,
 ) error {
 	for _, team := range teams {
+		serviceScore := serviceScoreMap[team.ID]
 		attack := attackMap[team.ID]
 		lastSolveAt := (*time.Time)(nil)
 		if !attack.CreatedAt.IsZero() {
 			lastSolveAt = &attack.CreatedAt
 		}
 		updates := map[string]any{
-			"total_score":   defenseMap[team.ID] + attack.ScoreGained,
+			"total_score":   serviceScore.SLAScore + serviceScore.DefenseScore + attack.ScoreGained,
 			"last_solve_at": lastSolveAt,
 		}
 		if err := db.WithContext(ctx).

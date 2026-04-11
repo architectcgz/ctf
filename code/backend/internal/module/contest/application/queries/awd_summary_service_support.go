@@ -45,6 +45,7 @@ func accumulateAWDRoundServiceSummary(
 			metrics.ServiceCompromisedCount++
 			item.ServiceCompromisedCount++
 		}
+		item.SLAScore += service.SLAScore
 		item.DefenseScore += service.DefenseScore
 	}
 }

@@ -20,19 +20,28 @@ type awdAttackScoreRow struct {
 
 type awdServiceScoreRow struct {
 	TeamID       int64  `gorm:"column:team_id"`
+	SLAScore     int    `gorm:"column:sla_score"`
 	DefenseScore int    `gorm:"column:defense_score"`
 	CheckResult  string `gorm:"column:check_result"`
 }
 
-func accumulateAWDDefenseScores(rows []awdServiceScoreRow) map[int64]int {
-	defenseMap := make(map[int64]int, len(rows))
+type awdServiceScoreTotal struct {
+	SLAScore     int
+	DefenseScore int
+}
+
+func accumulateAWDServiceScores(rows []awdServiceScoreRow) map[int64]awdServiceScoreTotal {
+	scoreMap := make(map[int64]awdServiceScoreTotal, len(rows))
 	for _, row := range rows {
 		if !shouldCountAWDDefenseScoreForOfficialTotals(row.CheckResult) {
 			continue
 		}
-		defenseMap[row.TeamID] += row.DefenseScore
+		current := scoreMap[row.TeamID]
+		current.SLAScore += row.SLAScore
+		current.DefenseScore += row.DefenseScore
+		scoreMap[row.TeamID] = current
 	}
-	return defenseMap
+	return scoreMap
 }
 
 func accumulateAWDAttackScores(rows []awdAttackScoreRow) map[int64]awdAttackScoreRow {
