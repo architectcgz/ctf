@@ -183,26 +183,38 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
               <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
               当前赛事概况
             </div>
-            <div class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid metric-panel-default-surface">
-              <div class="journal-note metric-panel-card">
-                <div class="journal-note-label metric-panel-label">赛事总量</div>
-                <div class="journal-note-value metric-panel-value">{{ total }}</div>
-                <div class="journal-note-helper metric-panel-helper">当前筛选条件下的赛事总数</div>
+            <div class="admin-summary-grid contest-overview-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+              <div class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">赛事总量</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前筛选条件下的赛事总数
+                </div>
               </div>
-              <div class="journal-note metric-panel-card">
-                <div class="journal-note-label metric-panel-label">报名中</div>
-                <div class="journal-note-value metric-panel-value">{{ registeringCount }}</div>
-                <div class="journal-note-helper metric-panel-helper">当前页开放报名的赛事</div>
+              <div class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">报名中</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ registeringCount }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前页开放报名的赛事
+                </div>
               </div>
-              <div class="journal-note metric-panel-card">
-                <div class="journal-note-label metric-panel-label">进行中</div>
-                <div class="journal-note-value metric-panel-value">{{ runningCount }}</div>
-                <div class="journal-note-helper metric-panel-helper">当前页正在进行的赛事</div>
+              <div class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">
+                  {{ runningCount }}
+                </div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前页正在进行的赛事
+                </div>
               </div>
-              <div class="journal-note metric-panel-card">
-                <div class="journal-note-label metric-panel-label">AWD</div>
-                <div class="journal-note-value metric-panel-value">{{ awdCount }}</div>
-                <div class="journal-note-helper metric-panel-helper">当前页可直接切换到攻防运维视图</div>
+              <div class="journal-note progress-card metric-panel-card">
+                <div class="journal-note-label progress-card-label metric-panel-label">AWD</div>
+                <div class="journal-note-value progress-card-value metric-panel-value">{{ awdCount }}</div>
+                <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                  当前页可直接切换到攻防运维视图
+                </div>
               </div>
             </div>
           </article>

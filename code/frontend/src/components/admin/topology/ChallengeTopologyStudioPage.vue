@@ -251,22 +251,42 @@ const {
               {{ heroDescription }}
             </p>
 
-            <div class="topology-summary-grid metric-panel-grid">
-              <div class="topology-summary-tile metric-panel-card">
-                <div class="topology-summary-label metric-panel-label">网络</div>
-                <div class="topology-summary-value metric-panel-value">{{ topologySummary.networks }}</div>
+            <div class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+              <div class="topology-summary-tile progress-card metric-panel-card">
+                <div class="topology-summary-label progress-card-label metric-panel-label">网络</div>
+                <div class="topology-summary-value progress-card-value metric-panel-value">
+                  {{ topologySummary.networks }}
+                </div>
+                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
+                  当前模板草稿中的网络数量
+                </div>
               </div>
-              <div class="topology-summary-tile metric-panel-card">
-                <div class="topology-summary-label metric-panel-label">节点</div>
-                <div class="topology-summary-value metric-panel-value">{{ topologySummary.nodes }}</div>
+              <div class="topology-summary-tile progress-card metric-panel-card">
+                <div class="topology-summary-label progress-card-label metric-panel-label">节点</div>
+                <div class="topology-summary-value progress-card-value metric-panel-value">
+                  {{ topologySummary.nodes }}
+                </div>
+                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
+                  当前模板草稿中的节点数量
+                </div>
               </div>
-              <div class="topology-summary-tile metric-panel-card">
-                <div class="topology-summary-label metric-panel-label">连线</div>
-                <div class="topology-summary-value metric-panel-value">{{ topologySummary.links }}</div>
+              <div class="topology-summary-tile progress-card metric-panel-card">
+                <div class="topology-summary-label progress-card-label metric-panel-label">连线</div>
+                <div class="topology-summary-value progress-card-value metric-panel-value">
+                  {{ topologySummary.links }}
+                </div>
+                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
+                  当前模板草稿中的连线数量
+                </div>
               </div>
-              <div class="topology-summary-tile metric-panel-card">
-                <div class="topology-summary-label metric-panel-label">策略</div>
-                <div class="topology-summary-value metric-panel-value">{{ topologySummary.policies }}</div>
+              <div class="topology-summary-tile progress-card metric-panel-card">
+                <div class="topology-summary-label progress-card-label metric-panel-label">策略</div>
+                <div class="topology-summary-value progress-card-value metric-panel-value">
+                  {{ topologySummary.policies }}
+                </div>
+                <div class="topology-summary-helper progress-card-hint metric-panel-helper">
+                  当前模板草稿中的策略数量
+                </div>
               </div>
             </div>
           </div>

@@ -126,21 +126,31 @@ onMounted(() => {
         <p class="admin-page-copy">按动作、资源类型和执行人快速检索关键操作记录。</p>
       </div>
 
-      <div class="admin-summary-grid metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-        <article class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">激活筛选</div>
-          <div class="journal-note-value metric-panel-value">{{ activeFilterCount }}</div>
-          <div class="journal-note-helper metric-panel-helper">当前生效的筛选项数量</div>
+      <div class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">激活筛选</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ activeFilterCount }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            当前生效的筛选项数量
+          </div>
         </article>
-        <article class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">当前页</div>
-          <div class="journal-note-value metric-panel-value">{{ list.length }}</div>
-          <div class="journal-note-helper metric-panel-helper">本页已加载的日志条数</div>
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ list.length }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            本页已加载的日志条数
+          </div>
         </article>
-        <article class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">总记录</div>
-          <div class="journal-note-value metric-panel-value">{{ total }}</div>
-          <div class="journal-note-helper metric-panel-helper">符合条件的审计记录总量</div>
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">总记录</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            符合条件的审计记录总量
+          </div>
         </article>
       </div>
     </header>

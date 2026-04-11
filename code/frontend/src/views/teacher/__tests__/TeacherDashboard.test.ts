@@ -211,6 +211,53 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).not.toContain('overview-pulse-panel')
   })
 
+  it('教师概览画像页的摘要卡片应采用统一 metric-panel 样式栈', async () => {
+    expect(teacherDashboardPageSource).toContain(
+      'class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="summary-note progress-card metric-panel-card"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="summary-note-label progress-card-label metric-panel-label"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="summary-note-value progress-card-value metric-panel-value"'
+    )
+    expect(teacherDashboardPageSource).toContain(
+      'class="summary-note-copy progress-card-hint metric-panel-helper"'
+    )
+    expect(teacherDashboardPageSource).not.toMatch(
+      /\.summary-note\s*\{[\s\S]*--metric-panel-background:/s
+    )
+    expect(teacherDashboardPageSource).not.toMatch(
+      /\.summary-note-value\s*\{[\s\S]*--metric-panel-value-size:/s
+    )
+
+    const wrapper = mount(TeacherDashboard, {
+      global: {
+        stubs: {
+          LineChart: true,
+          SkillRadar: true,
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.get('#top-tab-portrait').trigger('click')
+
+    const summary = wrapper.get('#portrait .summary-grid')
+    expect(summary.classes()).toContain('progress-strip')
+    expect(summary.classes()).toContain('metric-panel-grid')
+    expect(summary.classes()).toContain('metric-panel-default-surface')
+    expect(summary.findAll('.summary-note.progress-card.metric-panel-card')).toHaveLength(3)
+    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(3)
+    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(3)
+    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(3)
+  })
+
   it('切换工作台 tab 时应同步 panel 查询参数且次级标题使用公共样式类', async () => {
     const wrapper = mount(TeacherDashboard, {
       global: {

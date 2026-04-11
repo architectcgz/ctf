@@ -174,9 +174,9 @@ const currentPageStudentCount = computed(() =>
           v-show="activeTab === 'overview'"
         >
           <header class="teacher-topbar">
-            <div class="teacher-heading workspace-tab-heading__main">
+            <div class="teacher-heading">
               <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-              <h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>
+              <h1 class="teacher-title">班级管理</h1>
               <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
             </div>
 
