@@ -1,7 +1,19 @@
+import type { AWDCheckerType } from '@/api/contracts'
+
 interface AWDProbeAttemptView {
   probe: string
   healthy: boolean
   latency_ms?: number
+  error_code?: string
+  error?: string
+}
+
+interface AWDCheckerActionView {
+  key: 'put_flag' | 'get_flag' | 'havoc'
+  label: string
+  healthy: boolean
+  method?: string
+  path?: string
   error_code?: string
   error?: string
 }
@@ -14,6 +26,7 @@ interface AWDProbeTargetView {
   error_code?: string
   error?: string
   attempts: AWDProbeAttemptView[]
+  actions: AWDCheckerActionView[]
 }
 
 interface UseAwdCheckResultPresentationOptions {
@@ -21,6 +34,15 @@ interface UseAwdCheckResultPresentationOptions {
 }
 
 export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckResultPresentationOptions) {
+  const checkerActionOptions: Array<{
+    key: AWDCheckerActionView['key']
+    label: AWDCheckerActionView['label']
+  }> = [
+    { key: 'put_flag', label: 'PUT Flag' },
+    { key: 'get_flag', label: 'GET Flag' },
+    { key: 'havoc', label: 'Havoc' },
+  ]
+
   function getCheckSourceLabel(value: unknown): string {
     switch (value) {
       case 'manual_current_round':
@@ -36,6 +58,17 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
     }
   }
 
+  function getCheckerTypeLabel(value: unknown): string {
+    switch (value as AWDCheckerType | undefined) {
+      case 'legacy_probe':
+        return '基础探活'
+      case 'http_standard':
+        return 'HTTP 标准 Checker'
+      default:
+        return ''
+    }
+  }
+
   function getCheckStatusLabel(value: unknown): string {
     if (typeof value !== 'string' || value.trim() === '') {
       return ''
@@ -46,13 +79,48 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
       no_running_instances: '无运行实例',
       unexpected_http_status: 'HTTP 状态异常',
       http_request_failed: 'HTTP 请求失败',
+      http_response_read_failed: 'HTTP 响应读取失败',
       invalid_access_url: '访问地址无效',
       all_probes_failed: '巡检失败',
+      flag_mismatch: 'Flag 校验失败',
+      invalid_checker_config: 'Checker 配置无效',
+      flag_unavailable: '轮次 Flag 不可用',
+      checker_action_not_configured: 'Checker 动作未配置',
+      service_compromised: '服务已失陷',
+      service_down: '服务下线',
     }
     return labels[value] || value
   }
 
+  function readCheckerAction(
+    key: AWDCheckerActionView['key'],
+    label: AWDCheckerActionView['label'],
+    value: unknown
+  ): AWDCheckerActionView | null {
+    if (!value || typeof value !== 'object') {
+      return null
+    }
+    const item = value as Record<string, unknown>
+    return {
+      key,
+      label,
+      healthy: item.healthy === true,
+      method: typeof item.method === 'string' ? item.method : undefined,
+      path: typeof item.path === 'string' ? item.path : undefined,
+      error_code: typeof item.error_code === 'string' ? item.error_code : undefined,
+      error: typeof item.error === 'string' ? item.error : undefined,
+    }
+  }
+
+  function getCheckActions(result: Record<string, unknown>): AWDCheckerActionView[] {
+    return checkerActionOptions.flatMap(({ key, label }) => {
+      const action = readCheckerAction(key, label, result[key])
+      return action ? [action] : []
+    })
+  }
+
   function summarizeCheckResult(result: Record<string, unknown>): string {
+    const checkerLabel = getCheckerTypeLabel(result.checker_type)
     const sourceLabel = getCheckSourceLabel(result.check_source)
     const statusLabel = getCheckStatusLabel(result.status_reason)
     const checkedAt =
@@ -61,6 +129,7 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
         : ''
 
     const entries = [
+      checkerLabel ? `Checker: ${checkerLabel}` : '',
       sourceLabel ? `来源: ${sourceLabel}` : '',
       statusLabel ? `状态: ${statusLabel}` : '',
       checkedAt ? `时间: ${checkedAt}` : '',
@@ -93,6 +162,13 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
       }))
   }
 
+  function getTargetActions(target: Record<string, unknown> | AWDProbeTargetView): AWDCheckerActionView[] {
+    if (Array.isArray((target as AWDProbeTargetView).actions)) {
+      return (target as AWDProbeTargetView).actions
+    }
+    return getCheckActions(target as Record<string, unknown>)
+  }
+
   function getCheckTargets(result: Record<string, unknown>): AWDProbeTargetView[] {
     if (!Array.isArray(result.targets)) {
       return []
@@ -107,6 +183,7 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
         error_code: typeof item.error_code === 'string' ? item.error_code : undefined,
         error: typeof item.error === 'string' ? item.error : undefined,
         attempts: readProbeAttempts(item.attempts),
+        actions: getTargetActions(item),
       }))
   }
 
@@ -123,7 +200,7 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
     if (healthy) {
       return '探测成功'
     }
-    return getCheckStatusLabel(errorCode) || error || '探测失败'
+    return getCheckStatusLabel(errorCode) || getCheckStatusLabel(error) || error || '探测失败'
   }
 
   function formatLatency(value?: number): string {
@@ -135,9 +212,12 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
 
   return {
     getCheckSourceLabel,
+    getCheckerTypeLabel,
     getCheckStatusLabel,
     summarizeCheckResult,
+    getCheckActions,
     getCheckTargets,
+    getTargetActions,
     getTargetProbeSummary,
     getProbeStatusText,
     formatLatency,

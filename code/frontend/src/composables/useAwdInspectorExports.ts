@@ -49,6 +49,7 @@ interface UseAwdInspectorExportsOptions {
   getAttackTypeLabel: (type: AWDAttackLogData['attack_type']) => string
   getAttackSourceLabel: (source: AWDAttackLogData['source']) => string
   getCheckSourceLabel: (source: unknown) => string
+  getCheckerTypeLabel: (value: unknown) => string
   getServiceAlertLabel: (reason: string) => string
   summarizeCheckResult: (checkResult: Record<string, unknown>) => string
   getServiceCheckSourceValue: (result: Record<string, unknown>) => string
@@ -81,6 +82,7 @@ export function useAwdInspectorExports({
   getAttackTypeLabel,
   getAttackSourceLabel,
   getCheckSourceLabel,
+  getCheckerTypeLabel,
   getServiceAlertLabel,
   summarizeCheckResult,
   getServiceCheckSourceValue,
@@ -112,32 +114,42 @@ export function useAwdInspectorExports({
     }
     downloadCSVFile(
       buildExportFilename('services'),
-      filteredServices.value.map((item) => ({
-        赛事: contest.value.title,
-        轮次: getSelectedRoundLabel(),
-        筛选队伍: serviceTeamFilter.value
-          ? serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
-              ?.team_name || serviceTeamFilter.value
-          : '全部队伍',
-        筛选状态:
-          serviceStatusFilter.value === 'all'
-            ? '全部状态'
-            : getServiceStatusLabel(serviceStatusFilter.value),
-        筛选来源: serviceCheckSourceFilter.value
-          ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
-          : '全部来源',
-        筛选告警: serviceAlertReasonFilter.value
-          ? getServiceAlertLabel(serviceAlertReasonFilter.value)
-          : '全部告警',
-        队伍: item.team_name,
-        靶题: getChallengeTitle(item.challenge_id),
-        服务状态: getServiceStatusLabel(item.service_status),
-        巡检来源: getCheckSourceLabel(item.check_result.check_source) || '',
-        检查摘要: summarizeCheckResult(item.check_result),
-        防守得分: item.defense_score,
-        受攻击次数: item.attack_received,
-        更新时间: formatDateTime(item.updated_at),
-      }))
+      filteredServices.value.map((item) => {
+        const checkResult = {
+          checker_type: item.checker_type,
+          ...item.check_result,
+        }
+
+        return {
+          赛事: contest.value.title,
+          轮次: getSelectedRoundLabel(),
+          筛选队伍: serviceTeamFilter.value
+            ? serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
+                ?.team_name || serviceTeamFilter.value
+            : '全部队伍',
+          筛选状态:
+            serviceStatusFilter.value === 'all'
+              ? '全部状态'
+              : getServiceStatusLabel(serviceStatusFilter.value),
+          筛选来源: serviceCheckSourceFilter.value
+            ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
+            : '全部来源',
+          筛选告警: serviceAlertReasonFilter.value
+            ? getServiceAlertLabel(serviceAlertReasonFilter.value)
+            : '全部告警',
+          队伍: item.team_name,
+          靶题: getChallengeTitle(item.challenge_id),
+          服务状态: getServiceStatusLabel(item.service_status),
+          巡检来源: getCheckSourceLabel(item.check_result.check_source) || '',
+          Checker类型: getCheckerTypeLabel(checkResult.checker_type) || '',
+          检查摘要: summarizeCheckResult(checkResult),
+          SLA得分: item.sla_score ?? 0,
+          防守得分: item.defense_score,
+          攻击得分: item.attack_score,
+          受攻击次数: item.attack_received,
+          更新时间: formatDateTime(item.updated_at),
+        }
+      })
     )
   }
 
@@ -252,9 +264,11 @@ export function useAwdInspectorExports({
         challenge_title: getChallengeTitle(item.challenge_id),
         service_status: item.service_status,
         service_status_label: getServiceStatusLabel(item.service_status),
+        checker_type: item.checker_type,
         check_source: getServiceCheckSourceValue(item.check_result) || null,
         check_source_label: getCheckSourceLabel(item.check_result.check_source) || '',
         check_result: item.check_result,
+        sla_score: item.sla_score ?? 0,
         defense_score: item.defense_score,
         attack_received: item.attack_received,
         attack_score: item.attack_score,
