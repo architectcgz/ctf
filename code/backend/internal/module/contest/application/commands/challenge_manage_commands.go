@@ -32,7 +32,8 @@ func (s *ChallengeService) RemoveChallengeFromContest(ctx context.Context, conte
 }
 
 func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, challengeID int64, req *dto.UpdateContestChallengeReq) error {
-	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
+	contest, err := s.ensureMutableContest(ctx, contestID)
+	if err != nil {
 		return err
 	}
 
@@ -54,6 +55,39 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 	if req.IsVisible != nil {
 		updates["is_visible"] = *req.IsVisible
 	}
+	checkerTypeValue := ""
+	if req.AWDCheckerType != nil {
+		checkerTypeValue = *req.AWDCheckerType
+	}
+	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
+		contest,
+		checkerTypeValue,
+		req.AWDCheckerConfig,
+		zeroIfNil(req.AWDSLAScore),
+		zeroIfNil(req.AWDDefenseScore),
+	)
+	if err != nil {
+		return err
+	}
+	if req.AWDCheckerType != nil {
+		updates["awd_checker_type"] = checkerType
+	}
+	if req.AWDCheckerConfig != nil {
+		updates["awd_checker_config"] = checkerConfig
+	}
+	if req.AWDSLAScore != nil {
+		updates["awd_sla_score"] = *req.AWDSLAScore
+	}
+	if req.AWDDefenseScore != nil {
+		updates["awd_defense_score"] = *req.AWDDefenseScore
+	}
 
 	return s.repo.UpdateChallenge(ctx, contestID, challengeID, updates)
+}
+
+func zeroIfNil(value *int) int {
+	if value == nil {
+		return 0
+	}
+	return *value
 }
