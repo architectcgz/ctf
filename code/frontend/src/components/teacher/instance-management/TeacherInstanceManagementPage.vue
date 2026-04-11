@@ -117,26 +117,38 @@ function remainingExtends(item: TeacherInstanceItem): number {
           </div>
         </header>
 
-        <section class="teacher-summary metric-panel-workspace-surface">
+        <section class="teacher-summary metric-panel-default-surface">
           <div class="teacher-summary-title">
             <span>Instance Snapshot</span>
           </div>
-          <div class="teacher-summary-grid metric-panel-grid">
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">当前可见</div>
-              <div class="teacher-summary-value metric-panel-value">{{ totalCount }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">符合当前筛选条件的实例数量</div>
-            </div>
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">运行中</div>
-              <div class="teacher-summary-value metric-panel-value">{{ runningCount }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">仍在占用环境资源的实例数量</div>
-            </div>
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">即将到期</div>
-              <div class="teacher-summary-value metric-panel-value">{{ expiringSoonCount }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">剩余时间不足 10 分钟的实例数量</div>
-            </div>
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">当前可见</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ totalCount }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                符合当前筛选条件的实例数量
+              </div>
+            </article>
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">运行中</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ runningCount }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                仍在占用环境资源的实例数量
+              </div>
+            </article>
+            <article class="teacher-summary-item progress-card metric-panel-card">
+              <div class="teacher-summary-label progress-card-label metric-panel-label">即将到期</div>
+              <div class="teacher-summary-value progress-card-value metric-panel-value">
+                {{ expiringSoonCount }}
+              </div>
+              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+                剩余时间不足 10 分钟的实例数量
+              </div>
+            </article>
           </div>
         </section>
 

@@ -162,26 +162,40 @@ onMounted(() => {
             <h1 class="workspace-tab-heading__title">题目管理</h1>
           </div>
 
-          <div class="manage-summary-grid metric-panel-grid metric-panel-default-surface">
-            <article class="journal-note metric-panel-card">
-              <div class="journal-note-label metric-panel-label">题目总量</div>
-              <div class="journal-note-value metric-panel-value">{{ total }}</div>
-              <div class="journal-note-helper metric-panel-helper">当前题库中可管理的题目</div>
+          <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">题目总量</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前题库中可管理的题目
+              </div>
             </article>
-            <article class="journal-note metric-panel-card">
-              <div class="journal-note-label metric-panel-label">当前页</div>
-              <div class="journal-note-value metric-panel-value">{{ list.length }}</div>
-              <div class="journal-note-helper metric-panel-helper">当前分页中的题目数量</div>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ list.length }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前分页中的题目数量
+              </div>
             </article>
-            <article class="journal-note metric-panel-card">
-              <div class="journal-note-label metric-panel-label">已发布</div>
-              <div class="journal-note-value metric-panel-value">{{ publishedCount }}</div>
-              <div class="journal-note-helper metric-panel-helper">当前页已开放训练的题目</div>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">已发布</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ publishedCount }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前页已开放训练的题目
+              </div>
             </article>
-            <article class="journal-note metric-panel-card">
-              <div class="journal-note-label metric-panel-label">草稿</div>
-              <div class="journal-note-value metric-panel-value">{{ draftCount }}</div>
-              <div class="journal-note-helper metric-panel-helper">导入后仍待完善或发布的题目</div>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">草稿</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ draftCount }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                导入后仍待完善或发布的题目
+              </div>
             </article>
           </div>
         </header>
