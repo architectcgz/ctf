@@ -21,7 +21,6 @@ const (
 	FlagTypeDynamic      = "dynamic"
 	FlagTypeRegex        = "regex"
 	FlagTypeManualReview = "manual_review"
-	FlagTypeSharedProof  = "shared_proof"
 
 	InstanceSharingPerUser = "per_user"
 	InstanceSharingPerTeam = "per_team"

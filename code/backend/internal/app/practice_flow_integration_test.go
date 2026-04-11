@@ -798,7 +798,6 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		runtimeInstanceCommands,
 		runtimeInstanceQueries,
 		runtimeProxyTicketService,
-		runtimeqry.NewSharedProofService(instanceRepo, runtimeProxyTicketService, cfg.Container.ProxyTicketTTL),
 		cfg.Container.ProxyBodyPreviewSize,
 	)
 	practiceService := practicecmd.NewService(

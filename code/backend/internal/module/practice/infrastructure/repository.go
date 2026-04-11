@@ -183,29 +183,6 @@ func (r *Repository) CreateSubmission(submission *model.Submission) error {
 	return r.db.Create(submission).Error
 }
 
-func (r *Repository) FindActiveSharedProofByHash(proofHash string) (*model.SharedProof, error) {
-	var proof model.SharedProof
-	if err := r.db.Where("proof_hash = ? AND status = ?", proofHash, model.SharedProofStatusActive).
-		First(&proof).Error; err != nil {
-		return nil, err
-	}
-	return &proof, nil
-}
-
-func (r *Repository) ConsumeSharedProof(sharedProofID int64, consumedAt time.Time) (bool, error) {
-	result := r.db.Model(&model.SharedProof{}).
-		Where("id = ? AND status = ? AND consumed_at IS NULL AND expires_at > ?", sharedProofID, model.SharedProofStatusActive, consumedAt).
-		Updates(map[string]any{
-			"status":      model.SharedProofStatusConsumed,
-			"consumed_at": consumedAt,
-			"updated_at":  time.Now(),
-		})
-	if result.Error != nil {
-		return false, result.Error
-	}
-	return result.RowsAffected > 0, nil
-}
-
 // FindCorrectSubmission 查找用户是否已正确提交过该题
 func (r *Repository) FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error) {
 	var submission model.Submission

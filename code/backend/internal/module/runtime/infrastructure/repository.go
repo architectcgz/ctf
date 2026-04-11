@@ -106,10 +106,6 @@ func (r *Repository) FindChallengeByID(challengeID int64) (*model.Challenge, err
 	return &challenge, nil
 }
 
-func (r *Repository) CreateSharedProof(proof *model.SharedProof) error {
-	return r.db.Create(proof).Error
-}
-
 func (r *Repository) FindByUserAndChallenge(userID, challengeID int64) (*model.Instance, error) {
 	var instance model.Instance
 	err := r.db.Where("user_id = ? AND contest_id IS NULL AND team_id IS NULL AND challenge_id = ? AND status IN ?", userID, challengeID,

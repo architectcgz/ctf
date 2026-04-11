@@ -774,11 +774,6 @@ func (s *ChallengeService) validateFlagConfig(challenge *model.Challenge) (bool,
 		return true, "Regex Flag 配置有效"
 	case model.FlagTypeManualReview:
 		return true, "人工审核题已跳过 Flag 自动校验"
-	case model.FlagTypeSharedProof:
-		if challenge.InstanceSharing != model.InstanceSharingShared {
-			return false, "shared_proof 仅支持共享实例策略"
-		}
-		return true, "共享实例 proof 提交配置有效"
 	default:
 		return false, "Flag 类型无效"
 	}
@@ -797,7 +792,7 @@ func (s *ChallengeService) buildRuntimeFlag(challenge *model.Challenge) (string,
 			return "", fmt.Errorf("flag global secret is empty")
 		}
 		return crypto.GenerateDynamicFlag(0, challenge.ID, s.selfCheckCfg.FlagGlobalSecret, nonce, challenge.FlagPrefix), nil
-	case model.FlagTypeRegex, model.FlagTypeManualReview, model.FlagTypeSharedProof:
+	case model.FlagTypeRegex, model.FlagTypeManualReview:
 		return "", nil
 	default:
 		return "", fmt.Errorf("unsupported flag type %s", challenge.FlagType)

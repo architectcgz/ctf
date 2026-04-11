@@ -631,8 +631,6 @@ func configureImportedFlag(
 		return configureImportedRegexFlag(tx, challengeID, prefix, value)
 	case model.FlagTypeManualReview:
 		return configureImportedManualReviewFlag(tx, challengeID, prefix)
-	case model.FlagTypeSharedProof:
-		return configureImportedSharedProofFlag(tx, challengeID, prefix)
 	default:
 		return errcode.ErrInvalidParams.WithCause(errors.New("不支持的 flag 类型"))
 	}
@@ -690,19 +688,6 @@ func configureImportedManualReviewFlag(tx *gorm.DB, challengeID int64, prefix st
 		Where("id = ?", challengeID).
 		Updates(map[string]any{
 			"flag_type":   model.FlagTypeManualReview,
-			"flag_salt":   "",
-			"flag_hash":   "",
-			"flag_regex":  "",
-			"flag_prefix": prefix,
-			"updated_at":  time.Now(),
-		}).Error
-}
-
-func configureImportedSharedProofFlag(tx *gorm.DB, challengeID int64, prefix string) error {
-	return tx.Model(&model.Challenge{}).
-		Where("id = ?", challengeID).
-		Updates(map[string]any{
-			"flag_type":   model.FlagTypeSharedProof,
 			"flag_salt":   "",
 			"flag_hash":   "",
 			"flag_regex":  "",

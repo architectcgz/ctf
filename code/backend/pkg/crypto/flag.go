@@ -39,13 +39,6 @@ func HashStaticFlag(flag, salt string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// HashSharedProof 对 shared proof 做单向哈希，数据库仅保存摘要。
-func HashSharedProof(proof string) string {
-	h := sha256.New()
-	h.Write([]byte(proof))
-	return hex.EncodeToString(h.Sum(nil))
-}
-
 // ValidateFlag 验证 Flag（防时序攻击）
 func ValidateFlag(input, expected string) bool {
 	return subtle.ConstantTimeCompare([]byte(input), []byte(expected)) == 1

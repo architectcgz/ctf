@@ -680,7 +680,7 @@ describe('ChallengeDetail', () => {
       tags: ['shared'],
       points: 100,
       need_target: true,
-      flag_type: 'shared_proof',
+      flag_type: 'static',
       instance_sharing: 'shared',
       is_solved: false,
       hints: [],
@@ -716,8 +716,8 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).toContain('打开目标')
     expect(wrapper.text()).toContain('共享实例')
-    expect(wrapper.text()).toContain('Proof 提交')
-    expect(wrapper.text()).toContain('输入共享实例返回的 proof 并提交验证。')
+    expect(wrapper.text()).toContain('Flag 提交')
+    expect(wrapper.text()).toContain('输入当前题目的 Flag 并提交验证。')
     expect(wrapper.text()).not.toContain('延时')
     expect(wrapper.text()).not.toContain('销毁')
   })

@@ -1072,7 +1072,6 @@ cors:
 | 04 | `04-api-design.md` | REST API 规范、接口清单、认证与 WebSocket 设计 |
 | 05 | `05-key-flows.md` | 关键业务链路（提交流程、计分、实例生命周期等） |
 | 专题 | `design/instance-sharing.md` | 题目实例共享策略的最终设计 |
-| 专题 | `design/shared-proof.md` | 共享实例 Proof 提交流程的最终设计 |
 | 06 | `../frontend/01-architecture-overview.md` | 前端架构总览（路由/状态/API 层/WebSocket/部署） |
 
 ---

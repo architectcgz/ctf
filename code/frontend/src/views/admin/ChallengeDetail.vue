@@ -149,7 +149,7 @@
                 <div class="journal-note-label">Judge Mode</div>
                 <h2 class="challenge-flag-panel__title">判题模式配置</h2>
                 <p class="challenge-flag-panel__copy">
-                  支持静态 Flag、动态前缀、正则判题、人工审核和共享 Proof 五种模式。保存后即时刷新当前题目配置。
+                  支持静态 Flag、动态前缀、正则判题和人工审核四种模式。保存后即时刷新当前题目配置。
                 </p>
               </div>
               <div class="flag-summary-chip">
@@ -165,7 +165,6 @@
                   <option value="dynamic">动态前缀</option>
                   <option value="regex">正则匹配</option>
                   <option value="manual_review">人工审核</option>
-                  <option value="shared_proof">共享 Proof</option>
                 </select>
               </label>
 
@@ -362,8 +361,6 @@ function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): st
       return `正则匹配 / ${config.flag_regex || '未填写'}`
     case 'manual_review':
       return '人工审核'
-    case 'shared_proof':
-      return '共享 Proof'
     default:
       return '未配置'
   }

@@ -5,4 +5,3 @@
 当前包含：
 
 - `instance-sharing.md`：题目实例共享策略的最终设计
-- `shared-proof.md`：共享实例 Proof 提交流程的最终设计

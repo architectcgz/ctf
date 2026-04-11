@@ -170,7 +170,7 @@ export type InstanceStatus =
   | 'destroyed'
   | 'failed'
   | 'crashed'
-export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'
+export type FlagType = 'static' | 'dynamic' | 'regex' | 'manual_review'
 
 export interface InstanceData {
   id: ID
@@ -869,7 +869,7 @@ export interface AdminChallengeImportAttachment {
 }
 
 export interface AdminChallengeImportFlag {
-  type: Extract<FlagType, 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'>
+  type: Extract<FlagType, 'static' | 'dynamic' | 'regex' | 'manual_review'>
   prefix?: string
 }
 

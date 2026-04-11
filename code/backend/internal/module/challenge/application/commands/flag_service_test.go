@@ -125,68 +125,6 @@ func TestFlagServiceConfigureDynamicFlagRejectsSharedChallenge(t *testing.T) {
 	}
 }
 
-func TestFlagServiceConfigureSharedProofFlagAllowsSharedChallenge(t *testing.T) {
-	db := testsupport.SetupTestDB(t)
-	now := time.Now()
-	if err := db.Create(&model.Challenge{
-		ID:              23,
-		Title:           "shared-proof-flag",
-		Status:          model.ChallengeStatusDraft,
-		InstanceSharing: model.InstanceSharingShared,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}).Error; err != nil {
-		t.Fatalf("seed challenge: %v", err)
-	}
-
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("p", 32))
-	if err != nil {
-		t.Fatalf("NewFlagService() error = %v", err)
-	}
-
-	if err := service.ConfigureSharedProofFlag(23); err != nil {
-		t.Fatalf("ConfigureSharedProofFlag() error = %v", err)
-	}
-
-	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("p", 32))
-	if err != nil {
-		t.Fatalf("NewFlagService(query) error = %v", err)
-	}
-
-	cfg, err := queryService.GetFlagConfig(23)
-	if err != nil {
-		t.Fatalf("GetFlagConfig() error = %v", err)
-	}
-	if cfg.FlagType != model.FlagTypeSharedProof || !cfg.Configured {
-		t.Fatalf("unexpected shared proof flag config: %+v", cfg)
-	}
-}
-
-func TestFlagServiceConfigureSharedProofFlagRejectsNonSharedChallenge(t *testing.T) {
-	db := testsupport.SetupTestDB(t)
-	now := time.Now()
-	if err := db.Create(&model.Challenge{
-		ID:              24,
-		Title:           "non-shared-proof-flag",
-		Status:          model.ChallengeStatusDraft,
-		InstanceSharing: model.InstanceSharingPerUser,
-		CreatedAt:       now,
-		UpdatedAt:       now,
-	}).Error; err != nil {
-		t.Fatalf("seed challenge: %v", err)
-	}
-
-	service, err := NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("p", 32))
-	if err != nil {
-		t.Fatalf("NewFlagService() error = %v", err)
-	}
-
-	err = service.ConfigureSharedProofFlag(24)
-	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
-		t.Fatalf("expected invalid params for non-shared shared_proof flag, got %v", err)
-	}
-}
-
 func TestFlagServiceConfigureRegexFlagAndValidate(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 	now := time.Now()

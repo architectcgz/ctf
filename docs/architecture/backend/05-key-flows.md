@@ -120,12 +120,10 @@ sequenceDiagram
 - `proxy ticket` 在“访问实例”时签发，不在“启动实例”时签发
 - ticket 用于平台代理访问链路的短时鉴权
 - ticket 同时携带 `user_id`、`instance_id`、`challenge_id`、`contest_id`、`share_scope` 等访问上下文
-- 共享题题目服务可以复用这个 ticket 向平台申请 `shared_proof`
 
 它和最终提交内容不是同一类凭证：
 
-- 普通题提交的是 `flag`
-- `shared_proof` 题提交的是 `proof`
+- 所有题目统一提交 `flag`
 - `proxy ticket` 只负责“实例访问”与“上下文传递”
 
 因此，实例相关链路实际上分成两段：

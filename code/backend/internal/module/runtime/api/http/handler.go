@@ -23,7 +23,6 @@ import (
 )
 
 const proxyAccessCookieName = "ctf_instance_proxy_ticket"
-const sharedProofTicketHeader = "X-CTF-Proxy-Ticket"
 
 type CookieConfig struct {
 	Secure   bool
@@ -38,7 +37,6 @@ type runtimeService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
-	IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
@@ -143,15 +141,6 @@ func (h *Handler) AccessInstance(c *gin.Context) {
 	response.Success(c, &dto.InstanceAccessResp{
 		AccessURL: buildProxyAccessURL(instanceID, ticket),
 	})
-}
-
-func (h *Handler) IssueSharedProof(c *gin.Context) {
-	resp, err := h.service.IssueSharedProof(c.Request.Context(), strings.TrimSpace(c.GetHeader(sharedProofTicketHeader)))
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-	response.Success(c, resp)
 }
 
 func (h *Handler) ProxyInstance(c *gin.Context) {
