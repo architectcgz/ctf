@@ -16,7 +16,7 @@
           type="button"
           role="tab"
           class="workspace-tab top-tab"
-          :class="{ 'workspace-tab--active': activeWorkspaceTab === tab.id }"
+          :class="{ active: activeWorkspaceTab === tab.id }"
           :aria-selected="activeWorkspaceTab === tab.id"
           :aria-controls="`challenge-workspace-panel-${tab.id}`"
           :tabindex="activeWorkspaceTab === tab.id ? 0 : -1"
@@ -84,7 +84,7 @@
                 <button
                   v-if="challenge.attachment_url"
                   type="button"
-                  class="subtle-action"
+                  class="challenge-btn"
                   @click="downloadAttachment"
                 >
                   下载附件
@@ -121,7 +121,7 @@
                   </div>
                   <button
                     type="button"
-                    class="subtle-action hint-toggle"
+                    class="challenge-btn hint-toggle"
                     :aria-expanded="isHintExpanded(hint.level)"
                     :aria-controls="`challenge-hint-panel-${hint.id}`"
                     @click="toggleHint(hint.level)"
@@ -159,13 +159,13 @@
                 <template v-else>
                   <div class="solution-layout">
                     <div class="solution-nav">
-                      <div class="solution-tabbar sub-tabs" role="tablist" aria-label="题解分类">
+                      <div class="solution-tabbar top-tabs challenge-subtabs" role="tablist" aria-label="题解分类">
                         <button
                           id="challenge-solutions-tab-recommended"
                           type="button"
                           role="tab"
-                          class="solution-tab sub-tab"
-                          :class="{ 'solution-tab--active': activeSolutionTab === 'recommended' }"
+                          class="solution-tab top-tab challenge-subtab"
+                          :class="{ active: activeSolutionTab === 'recommended' }"
                           :aria-selected="activeSolutionTab === 'recommended'"
                           aria-controls="challenge-solutions-panel-recommended"
                           :tabindex="activeSolutionTab === 'recommended' ? 0 : -1"
@@ -178,8 +178,8 @@
                           id="challenge-solutions-tab-community"
                           type="button"
                           role="tab"
-                          class="solution-tab sub-tab"
-                          :class="{ 'solution-tab--active': activeSolutionTab === 'community' }"
+                          class="solution-tab top-tab challenge-subtab"
+                          :class="{ active: activeSolutionTab === 'community' }"
                           :aria-selected="activeSolutionTab === 'community'"
                           aria-controls="challenge-solutions-panel-community"
                           :tabindex="activeSolutionTab === 'community' ? 0 : -1"
@@ -390,7 +390,7 @@
                     <button
                       type="button"
                       :disabled="submissionLoading || submissionSaving !== null"
-                      class="ghost-action"
+                      class="challenge-btn disabled:cursor-not-allowed disabled:opacity-50"
                       @click="saveWriteup('draft')"
                     >
                       {{ submissionSaving === 'draft' ? '保存中...' : '保存草稿' }}
@@ -400,7 +400,7 @@
                       :disabled="
                         submissionLoading || submissionSaving !== null || !challenge?.is_solved
                       "
-                      class="primary-action disabled:cursor-not-allowed disabled:opacity-50"
+                      class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                       @click="saveWriteup('published')"
                     >
                       {{ submissionSaving === 'published' ? '发布中...' : '发布题解' }}
@@ -443,7 +443,7 @@
                   <button
                     type="button"
                     :disabled="challenge?.is_solved || submitting"
-                    class="primary-action disabled:cursor-not-allowed disabled:opacity-50"
+                    class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                     @click="submitFlagHandler"
                   >
                     {{ submitting ? '提交中...' : '提交' }}
@@ -850,15 +850,23 @@ watch(
   color: var(--text-faint);
 }
 
-.top-tabs::-webkit-scrollbar,
-.sub-tabs::-webkit-scrollbar {
-  display: none;
+.challenge-subtabs {
+  --page-top-tabs-gap: var(--space-4-5);
+  --page-top-tabs-margin: 0;
+  --page-top-tabs-padding: 0 0 var(--space-2-5);
+  --page-top-tabs-border: var(--line-soft);
+  --page-top-tab-min-height: 2.5rem;
+  --page-top-tab-padding: 0 0 var(--space-2);
+  --page-top-tab-font-size: var(--font-size-14);
+  --page-top-tab-font-weight: 600;
+  --page-top-tab-color: var(--text-faint);
+  --page-top-tab-active-color: var(--journal-accent-strong);
+  --page-top-tab-active-border: var(--journal-accent);
+  scrollbar-width: none;
 }
 
-.workspace-tab--active,
-.top-tab.workspace-tab--active {
-  border-bottom-color: var(--brand);
-  color: var(--brand-ink);
+.challenge-subtab {
+  min-width: fit-content;
 }
 
 .detail-grid,
@@ -1108,31 +1116,8 @@ watch(
   border-right: 1px solid var(--line-soft);
 }
 
-.sub-tabs,
-.solution-tabbar {
-  display: flex;
-  gap: var(--space-4-5);
-  padding-bottom: var(--space-2-5);
-  overflow-x: auto;
-  border-bottom: 1px solid var(--line-soft);
-  scrollbar-width: none;
-}
-
-.sub-tab,
 .solution-tab {
-  font: 600 14px/1.2 var(--font-sans);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  padding: 0 0 var(--space-2);
-  font-weight: 600;
-  color: var(--text-faint);
-}
-
-.solution-tab--active,
-.sub-tab.solution-tab--active {
-  border-bottom-color: var(--journal-accent);
-  color: var(--journal-accent-strong);
+  min-width: fit-content;
 }
 
 .solution-item,
@@ -1342,29 +1327,13 @@ watch(
   color: var(--text-subtle);
 }
 
-.primary-action,
-.ghost-action,
-.subtle-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.challenge-btn {
   min-height: 48px;
-  padding: 0 var(--space-4);
   border-radius: 14px;
-  font: 600 14px/1 var(--font-sans);
 }
 
-.primary-action {
-  border: 0;
-  background: var(--brand);
-  color: white;
-}
-
-.ghost-action,
-.subtle-action {
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  color: var(--text-main);
+.hint-toggle {
+  min-height: 40px;
 }
 
 .status-inline {
@@ -1431,22 +1400,7 @@ watch(
   color: var(--text-subtle);
 }
 
-.top-tab:hover,
-.sub-tab:hover,
-.solution-item:hover,
-.primary-action:hover,
-.ghost-action:hover,
-.subtle-action:hover,
-.workspace-tab:hover {
-  transform: translateY(-1px);
-}
-
-.workspace-tab:focus-visible,
-.solution-tab:focus-visible,
 .solution-list-item:focus-visible,
-.primary-action:focus-visible,
-.ghost-action:focus-visible,
-.subtle-action:focus-visible,
 .challenge-input:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--brand) 44%, white);
   outline-offset: 3px;
@@ -1494,17 +1448,14 @@ watch(
 }
 
 @media (max-width: 760px) {
-  .workspace-topbar,
-  .top-tabs,
-  .workspace-tabbar,
+  .detail-content > .workspace-tabbar,
   .content-pane,
   .tool-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);
   }
 
-  .top-tabs,
-  .workspace-tabbar {
+  .detail-content > .workspace-tabbar {
     gap: var(--space-5-5);
   }
 

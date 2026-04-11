@@ -204,7 +204,7 @@ const canExtend = computed(
       <div class="tool-actions">
         <button
           type="button"
-          class="subtle-action"
+          class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="!canOpen || opening"
           @click="emit('open')"
         >
@@ -213,7 +213,7 @@ const canExtend = computed(
         <button
           v-if="!isSharedInstance"
           type="button"
-          class="subtle-action"
+          class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="!canExtend || extending"
           @click="emit('extend')"
         >
@@ -222,7 +222,7 @@ const canExtend = computed(
         <button
           v-if="!isSharedInstance"
           type="button"
-          class="subtle-action subtle-action--danger"
+          class="instance-btn instance-action-danger disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="destroying"
           @click="emit('destroy')"
         >
@@ -248,7 +248,7 @@ const canExtend = computed(
       <button
         v-if="!challengeSolved"
         type="button"
-        class="primary-action"
+        class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="creating"
         @click="emit('start')"
       >
@@ -414,50 +414,15 @@ const canExtend = computed(
   margin-top: 18px;
 }
 
-.primary-action,
-.subtle-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.tool-actions .instance-btn,
+.instance-shell > .instance-btn {
+  width: 100%;
   min-height: 48px;
-  padding: 0 16px;
   border-radius: 14px;
-  border: 1px solid var(--line-strong);
-  background: transparent;
-  color: var(--text-main);
-  font: 600 14px/1 var(--font-sans);
 }
 
-.primary-action {
-  border: 0;
-  background: var(--brand);
-  color: #fff;
-}
-
-.subtle-action--danger {
+.instance-action-danger {
   color: var(--danger);
-}
-
-button {
-  transition:
-    border-color 180ms ease,
-    background-color 180ms ease,
-    color 180ms ease,
-    transform 180ms ease;
-}
-
-button:hover {
-  transform: translateY(-1px);
-}
-
-button:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--brand) 44%, white);
-  outline-offset: 3px;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
 }
 
 @media (max-width: 1024px) {
