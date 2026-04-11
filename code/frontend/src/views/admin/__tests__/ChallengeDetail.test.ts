@@ -129,4 +129,82 @@ describe('Admin ChallengeDetail', () => {
       query: { panel: 'writeup' },
     })
   })
+
+  it('共享实例题应明确提示答案不做用户隔离', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValue({
+      id: '11',
+      title: '共享密码题',
+      category: 'crypto',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      description: 'desc',
+      instance_sharing: 'shared',
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('共享实例只适用于无状态题')
+    expect(wrapper.text()).toContain('不提供用户级答案隔离')
+    expect(wrapper.text()).toContain('若需隔离答案，请使用 per_user 或 per_team')
+  })
+
+  it('共享实例题不应允许保存动态 Flag', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValue({
+      id: '11',
+      title: '共享密码题',
+      category: 'crypto',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      description: 'desc',
+      instance_sharing: 'shared',
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper.get('select.flag-field-input').setValue('dynamic')
+    const saveButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('保存配置'))
+    expect(saveButton).toBeTruthy()
+    await saveButton!.trigger('click')
+
+    expect(adminApiMocks.configureChallengeFlag).not.toHaveBeenCalled()
+    expect(toastMocks.error).toHaveBeenCalledWith(
+      '共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team'
+    )
+  })
 })

@@ -110,6 +110,9 @@ func (s *ChallengeService) CreateChallenge(actorUserID int64, req *dto.CreateCha
 	if err != nil {
 		return nil, err
 	}
+	if err := s.validateInstanceSharingConfig(challenge); err != nil {
+		return nil, err
+	}
 	if err := s.repo.CreateWithHints(challenge, hints); err != nil {
 		return nil, err
 	}
@@ -163,6 +166,9 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	if err != nil {
 		return err
 	}
+	if err := s.validateInstanceSharingConfig(challenge); err != nil {
+		return err
+	}
 
 	return s.repo.UpdateWithHints(challenge, hints, replaceHints)
 }
@@ -176,6 +182,37 @@ func normalizeInstanceSharing(value string) string {
 	default:
 		return model.InstanceSharingPerUser
 	}
+}
+
+func (s *ChallengeService) validateInstanceSharingConfig(challenge *model.Challenge) error {
+	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
+		return nil
+	}
+	if challenge.FlagType == model.FlagTypeDynamic {
+		return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持动态 Flag"))
+	}
+	if s.topologyRepo == nil || challenge.ID <= 0 {
+		return nil
+	}
+	topology, err := s.topologyRepo.FindChallengeTopologyByChallengeID(challenge.ID)
+	switch {
+	case err == nil:
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		return nil
+	default:
+		return err
+	}
+
+	spec, err := model.DecodeTopologySpec(topology.Spec)
+	if err != nil {
+		return errcode.ErrInvalidParams.WithCause(err)
+	}
+	for _, node := range spec.Nodes {
+		if node.InjectFlag {
+			return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
+		}
+	}
+	return nil
 }
 
 func (s *ChallengeService) DeleteChallenge(id int64) error {
