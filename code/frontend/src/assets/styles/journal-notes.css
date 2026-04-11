@@ -377,7 +377,7 @@
   );
 }
 
-.journal-shell-admin.journal-notes-card .journal-note {
+.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {
   border: var(--journal-note-card-border, 1px solid var(--journal-border));
   border-radius: var(--journal-note-card-radius, 14px);
   background: var(--journal-note-card-background, var(--journal-surface));

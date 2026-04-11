@@ -155,6 +155,12 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
     expect(journalNotesSource).toContain('--metric-panel-value-size: var(--font-size-26);')
     expect(journalNotesSource).toContain('--metric-panel-helper-line-height: 1.7;')
+    expect(journalNotesSource).toContain(
+      '.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {'
+    )
+    expect(journalNotesSource).not.toContain(
+      '.journal-shell-admin.journal-notes-card .journal-note {'
+    )
     expect(challengeManageSource).toContain('class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"')
     expect(challengeManageSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(challengeManageSource).toContain('class="journal-note-label progress-card-label metric-panel-label"')
