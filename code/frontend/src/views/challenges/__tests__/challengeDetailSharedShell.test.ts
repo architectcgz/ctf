@@ -55,4 +55,18 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeInstanceCardSource).not.toMatch(/\.primary-action\s*,/s)
     expect(challengeInstanceCardSource).not.toMatch(/\.subtle-action\s*\{/s)
   })
+
+  it('题目头部主信息块与右侧提交按钮应从统一主题主色链取色', () => {
+    expect(challengeDetailSource).toContain('class="question-hero-main"')
+    expect(challengeDetailSource).toContain('--brand: var(--color-primary);')
+    expect(challengeDetailSource).toContain(
+      '--brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);'
+    )
+    expect(challengeDetailSource).toContain(
+      '--brand-ink: color-mix(in srgb, var(--color-primary) 78%, var(--text-main));'
+    )
+    expect(challengeDetailSource).toContain(
+      'class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
+    )
+  })
 })

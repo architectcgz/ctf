@@ -40,7 +40,7 @@
             aria-labelledby="challenge-workspace-tab-question"
           >
             <div class="question-hero">
-              <div>
+              <div class="question-hero-main">
                 <div class="overline">Question</div>
                 <h1 class="question-title">
                   {{ challenge.title }}
@@ -731,10 +731,10 @@ watch(
   --text-main: oklch(24% 0.014 252);
   --text-subtle: oklch(49% 0.016 252);
   --text-faint: oklch(61% 0.012 252);
-  --brand: oklch(52% 0.12 254);
-  --brand-soft: color-mix(in srgb, var(--brand) 8%, transparent);
+  --brand: var(--color-primary);
+  --brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
   --brand-soft-strong: color-mix(in srgb, var(--brand) 14%, transparent);
-  --brand-ink: color-mix(in srgb, var(--brand) 82%, var(--text-main));
+  --brand-ink: color-mix(in srgb, var(--color-primary) 78%, var(--text-main));
   --success: oklch(56% 0.13 154);
   --warning: oklch(68% 0.14 82);
   --danger: oklch(58% 0.16 28);
@@ -932,6 +932,10 @@ watch(
   gap: var(--space-6);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--line-soft);
+}
+
+.question-hero-main {
+  min-width: 0;
 }
 
 .question-title {
