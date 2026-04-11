@@ -2,7 +2,7 @@
 
 ## 背景
 
-当前挑战管理主流程仍以手工表单创建题目为主，管理员在管理端直接填写标题、分类、难度、分值、描述、镜像、附件地址、提示和 Flag 配置。与此同时，后端已经存在一个离线的 `import-challenge-packs` 脚本，但它依赖内部 `manifest.yml` 规范，未接入管理端主流程，也不符合主流 CTF 平台常用的 `challenge.yml` 题目包思路。
+当前挑战管理主流程仍以手工表单创建题目为主，管理员在管理端直接填写标题、分类、难度、分值、描述、镜像、附件地址、提示和 Flag 配置。与此同时，后端已经存在一个离线的 `import-challenge-packs` 脚本，但它没有接入管理端主流程，也不符合当前统一的 `challenge.yml` 题目包思路。
 
 结合 [docs/毕业设计课题.md](/home/azhi/workspace/projects/ctf/.worktrees/feat-challenge-package-import/docs/毕业设计课题.md) 中“使用 Docker 技术快速生成靶机”“靶场管理支持自定义拓扑与难度分级”的要求，本项目的题目管理不能继续停留在“元数据录入表单”，而应收敛到“可复用、可迁移、可部署”的题目包模型。
 
@@ -199,7 +199,7 @@ extensions:
 
 ### 高风险
 
-- 新旧导入规范切换：`manifest.yml` 到 `challenge.yml`
+- 题目包导入约定统一到 `challenge.yml`
 - 附件存储与下载路径兼容
 - 导入预览与真正提交之间的临时文件生命周期管理
 
