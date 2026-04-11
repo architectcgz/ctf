@@ -89,16 +89,35 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-workspace-surface"')
-    expect(instanceManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
-    expect(instanceManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
+    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(instanceManagementSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid"')
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-item progress-card metric-panel-card"'
+    )
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
 
-    expect(reportExportSource).toContain('class="report-summary metric-panel-workspace-surface"')
-    expect(reportExportSource).toContain('class="report-summary-grid metric-panel-grid"')
-    expect(reportExportSource).toContain('class="report-summary-item metric-panel-card"')
-    expect(reportExportSource).toContain('class="report-summary-label metric-panel-label"')
-    expect(reportExportSource).toContain('class="report-summary-value metric-panel-value"')
-    expect(reportExportSource).toContain('class="report-summary-helper metric-panel-helper"')
+    expect(reportExportSource).toContain('class="report-summary metric-panel-default-surface"')
+    expect(reportExportSource).toContain('class="report-summary-grid progress-strip metric-panel-grid"')
+    expect(reportExportSource).toContain(
+      'class="report-summary-item progress-card metric-panel-card"'
+    )
+    expect(reportExportSource).toContain(
+      'class="report-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(reportExportSource).toContain(
+      'class="report-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(reportExportSource).toContain(
+      'class="report-summary-helper progress-card-hint metric-panel-helper"'
+    )
     expect(reportExportSource).toContain(
       'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface"'
     )
