@@ -796,7 +796,7 @@ describe('ContestManage', () => {
     expect(wrapper.text()).toContain('重点告警')
     expect(wrapper.text()).toContain('受影响服务 1 个')
     expect(wrapper.text()).toContain('探测目标 0/1 正常')
-    expect(wrapper.text()).toContain('查看探测明细')
+    expect(wrapper.text()).toContain('查看检查明细')
     expect(wrapper.text()).toContain('无运行实例')
     expect(wrapper.text()).toContain('学员提交')
     expect(wrapper.text()).toContain('调度巡检')
@@ -904,8 +904,11 @@ describe('ContestManage', () => {
           靶题: 'Challenge #challenge-1',
           服务状态: '已失陷',
           巡检来源: '指定轮次重跑',
+          Checker类型: '',
           检查摘要: '来源: 指定轮次重跑 | 状态: HTTP 状态异常 | 时间: 2026/03/15 17:05:00',
+          SLA得分: 0,
           防守得分: 0,
+          攻击得分: 100,
           受攻击次数: 2,
           更新时间: '2026/03/15 17:05:00',
         },
@@ -1611,12 +1614,17 @@ describe('ContestManage', () => {
               team_name: '红队甲',
               challenge_id: 'restore-challenge-1',
               service_status: 'up',
+              checker_type: 'http_standard',
               check_result: {
                 check_source: 'scheduler',
+                checker_type: 'http_standard',
                 status_reason: 'healthy',
+                put_flag: { healthy: true, method: 'PUT', path: '/api/flag' },
+                get_flag: { healthy: true, method: 'GET', path: '/api/flag' },
                 checked_at: '2026-03-26T09:15:00.000Z',
               },
               attack_received: 0,
+              sla_score: 18,
               defense_score: 40,
               attack_score: 0,
               updated_at: '2026-03-26T09:15:00.000Z',
@@ -1628,12 +1636,20 @@ describe('ContestManage', () => {
               team_name: '蓝队乙',
               challenge_id: 'restore-challenge-1',
               service_status: 'down',
+              checker_type: 'http_standard',
               check_result: {
                 check_source: 'manual_service_check',
+                checker_type: 'http_standard',
                 checked_at: '2026-03-26T09:16:00.000Z',
-                reason: 'manual timeout',
+                status_reason: 'flag_mismatch',
+                get_flag: {
+                  healthy: false,
+                  error_code: 'flag_mismatch',
+                  error: 'flag_mismatch',
+                },
               },
               attack_received: 1,
+              sla_score: 0,
               defense_score: 0,
               attack_score: 0,
               updated_at: '2026-03-26T09:16:00.000Z',
@@ -1686,7 +1702,36 @@ describe('ContestManage', () => {
         created_at: '2026-03-26T09:10:00.000Z',
         updated_at: '2026-03-26T09:15:00.000Z',
       },
-      items: [],
+      items: [
+        {
+          team_id: 'team-a',
+          team_name: '红队甲',
+          service_up_count: 1,
+          service_down_count: 0,
+          service_compromised_count: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 80,
+          successful_attack_count: 1,
+          successful_breach_count: 0,
+          unique_attackers_against: 0,
+          total_score: 138,
+        },
+        {
+          team_id: 'team-b',
+          team_name: '蓝队乙',
+          service_up_count: 0,
+          service_down_count: 1,
+          service_compromised_count: 0,
+          sla_score: 0,
+          defense_score: 0,
+          attack_score: 0,
+          successful_attack_count: 0,
+          successful_breach_count: 1,
+          unique_attackers_against: 1,
+          total_score: 0,
+        },
+      ],
     })
 
     const wrapper = mount(ContestManage, {
@@ -1726,6 +1771,8 @@ describe('ContestManage', () => {
     expect((wrapper.find('#awd-attack-filter-source').element as HTMLSelectElement).value).toBe(
       'manual_attack_log'
     )
+    expect(wrapper.text()).toContain('SLA 18 / 攻击 80 / 防守 40')
+    expect(wrapper.text()).toContain('GET Flag')
 
     await wrapper.find('#awd-export-services').trigger('click')
     expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith(
@@ -1742,8 +1789,12 @@ describe('ContestManage', () => {
           靶题: 'Restore Challenge',
           服务状态: '下线',
           巡检来源: '人工补录',
-          检查摘要: '来源: 人工补录 | 时间: 2026/03/26 17:16:00',
+          Checker类型: 'HTTP 标准 Checker',
+          检查摘要:
+            'Checker: HTTP 标准 Checker | 来源: 人工补录 | 状态: Flag 校验失败 | 时间: 2026/03/26 17:16:00',
+          SLA得分: 0,
           防守得分: 0,
+          攻击得分: 0,
           受攻击次数: 1,
           更新时间: '2026/03/26 17:16:00',
         },

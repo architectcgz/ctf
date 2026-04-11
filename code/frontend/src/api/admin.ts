@@ -2,6 +2,7 @@ import { ApiError, request } from './request'
 
 import type {
   AWDAttackLogData,
+  AWDCheckerType,
   AWDCheckerRunData,
   AWDRoundData,
   AWDRoundMetricsData,
@@ -139,8 +140,10 @@ interface RawAWDTeamServiceItem {
   team_name: string
   challenge_id: string | number
   service_status: AWDTeamServiceData['service_status']
+  checker_type?: string | null
   check_result?: Record<string, unknown> | null
   attack_received: number
+  sla_score?: number | null
   defense_score: number
   attack_score: number
   updated_at: string
@@ -173,6 +176,7 @@ interface RawAWDRoundSummaryItem {
   service_up_count: number
   service_down_count: number
   service_compromised_count: number
+  sla_score?: number | null
   defense_score: number
   attack_score: number
   successful_attack_count: number
@@ -651,6 +655,16 @@ function normalizeAWDRound(item: RawAWDRoundItem): AWDRoundData {
   }
 }
 
+function normalizeAWDCheckerType(value: unknown): AWDCheckerType | undefined {
+  switch (value) {
+    case 'legacy_probe':
+    case 'http_standard':
+      return value
+    default:
+      return undefined
+  }
+}
+
 function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceData {
   return {
     id: String(item.id),
@@ -659,8 +673,10 @@ function normalizeAWDTeamService(item: RawAWDTeamServiceItem): AWDTeamServiceDat
     team_name: item.team_name,
     challenge_id: String(item.challenge_id),
     service_status: item.service_status,
+    checker_type: normalizeAWDCheckerType(item.checker_type),
     check_result: item.check_result || {},
     attack_received: item.attack_received,
+    sla_score: typeof item.sla_score === 'number' ? item.sla_score : 0,
     defense_score: item.defense_score,
     attack_score: item.attack_score,
     updated_at: item.updated_at,
@@ -692,6 +708,7 @@ function normalizeAWDRoundSummaryItem(item: RawAWDRoundSummaryItem): AWDRoundSum
     service_up_count: item.service_up_count,
     service_down_count: item.service_down_count,
     service_compromised_count: item.service_compromised_count,
+    sla_score: typeof item.sla_score === 'number' ? item.sla_score : 0,
     defense_score: item.defense_score,
     attack_score: item.attack_score,
     successful_attack_count: item.successful_attack_count,

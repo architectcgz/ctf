@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
 import { RefreshCw, Search, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
+import type { AWDTeamServiceData } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import type {
   AWDRoundInspectorEmits,
@@ -77,9 +78,12 @@ const {
 
 const {
   getCheckSourceLabel,
+  getCheckerTypeLabel,
   getCheckStatusLabel,
   summarizeCheckResult,
+  getCheckActions,
   getCheckTargets,
+  getTargetActions,
   getTargetProbeSummary,
   getProbeStatusText,
   formatLatency,
@@ -174,10 +178,18 @@ const {
   getAttackTypeLabel,
   getAttackSourceLabel,
   getCheckSourceLabel,
+  getCheckerTypeLabel,
   getServiceAlertLabel,
   summarizeCheckResult,
   getServiceCheckSourceValue,
 })
+
+function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<string, unknown> {
+  return {
+    checker_type: service.checker_type,
+    ...service.check_result,
+  }
+}
 
 </script>
 
@@ -1011,7 +1023,7 @@ const {
                 <tr>
                   <th class="px-4 py-3">队伍</th>
                   <th class="px-4 py-3">总分</th>
-                  <th class="px-4 py-3">攻击 / 防守</th>
+                  <th class="px-4 py-3">SLA / 攻击 / 防守</th>
                   <th class="px-4 py-3">服务状态</th>
                   <th class="px-4 py-3">被攻击情况</th>
                 </tr>
@@ -1025,7 +1037,8 @@ const {
                     {{ item.total_score }}
                   </td>
                   <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                    {{ item.attack_score }} / {{ item.defense_score }}
+                    SLA {{ item.sla_score ?? 0 }} / 攻击 {{ item.attack_score }} / 防守
+                    {{ item.defense_score }}
                   </td>
                   <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
                     正常 {{ item.service_up_count }} / 下线 {{ item.service_down_count }} / 失陷
@@ -1161,10 +1174,32 @@ const {
                       </span>
                     </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
-                      防守 {{ service.defense_score }} / 受攻击 {{ service.attack_received }}
+                      <div>
+                        SLA {{ service.sla_score ?? 0 }} / 防守 {{ service.defense_score }} /
+                        攻击 {{ service.attack_score }}
+                      </div>
+                      <div class="mt-1 text-xs text-[var(--color-text-muted)]">
+                        受攻击 {{ service.attack_received }}
+                      </div>
                     </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
-                      <div>{{ summarizeCheckResult(service.check_result) }}</div>
+                      <div>{{ summarizeCheckResult(getServiceCheckPresentationResult(service)) }}</div>
+                      <div
+                        v-if="getCheckActions(service.check_result).length > 0"
+                        class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
+                      >
+                        <span
+                          v-for="action in getCheckActions(service.check_result)"
+                          :key="`${service.id}-action-${action.key}`"
+                          class="rounded-full border border-border/70 bg-surface-alt/40 px-2 py-1"
+                        >
+                          {{ action.label }} ·
+                          {{ getProbeStatusText(action.healthy, action.error_code, action.error) }}
+                          <span v-if="action.method || action.path">
+                            · {{ [action.method?.toUpperCase(), action.path].filter(Boolean).join(' ') }}
+                          </span>
+                        </span>
+                      </div>
                       <div
                         v-if="getTargetProbeSummary(service.check_result)"
                         class="mt-2 text-xs text-[var(--color-text-muted)]"
@@ -1178,7 +1213,7 @@ const {
                         <summary
                           class="cursor-pointer select-none text-[var(--color-text-primary)]"
                         >
-                          查看探测明细
+                          查看检查明细
                         </summary>
                         <div class="mt-3 space-y-3">
                           <div
@@ -1197,6 +1232,28 @@ const {
                               <span v-if="formatLatency(target.latency_ms)">
                                 · {{ formatLatency(target.latency_ms) }}</span
                               >
+                            </div>
+                            <div
+                              v-if="getTargetActions(target).length > 0"
+                              class="mt-2 space-y-1 border-t border-border/60 pt-2"
+                            >
+                              <div
+                                v-for="action in getTargetActions(target)"
+                                :key="`${service.id}-target-${targetIndex}-action-${action.key}`"
+                              >
+                                {{ action.label }} ·
+                                {{
+                                  getProbeStatusText(
+                                    action.healthy,
+                                    action.error_code,
+                                    action.error
+                                  )
+                                }}
+                                <span v-if="action.method || action.path">
+                                  ·
+                                  {{ [action.method?.toUpperCase(), action.path].filter(Boolean).join(' ') }}
+                                </span>
+                              </div>
                             </div>
                             <div
                               v-if="target.attempts.length > 0"

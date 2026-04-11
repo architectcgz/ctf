@@ -353,6 +353,7 @@ export type AWDRoundStatus = 'pending' | 'running' | 'finished'
 export type AWDServiceStatus = 'up' | 'down' | 'compromised'
 export type AWDAttackType = 'flag_capture' | 'service_exploit'
 export type AWDAttackSource = 'legacy' | 'manual_attack_log' | 'submission'
+export type AWDCheckerType = 'legacy_probe' | 'http_standard'
 
 export interface AWDRoundData {
   id: ID
@@ -374,8 +375,10 @@ export interface AWDTeamServiceData {
   team_name: string
   challenge_id: ID
   service_status: AWDServiceStatus
+  checker_type?: AWDCheckerType
   check_result: Record<string, unknown>
   attack_received: number
+  sla_score: number
   defense_score: number
   attack_score: number
   updated_at: ISODateTime
@@ -403,6 +406,7 @@ export interface AWDRoundSummaryItemData {
   service_up_count: number
   service_down_count: number
   service_compromised_count: number
+  sla_score: number
   defense_score: number
   attack_score: number
   successful_attack_count: number
