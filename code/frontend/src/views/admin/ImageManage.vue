@@ -23,16 +23,16 @@
             创建镜像
           </button>
         </div>
-        <div class="image-summary-grid metric-panel-grid">
-          <article class="image-summary-card metric-panel-card">
-            <div class="metric-panel-label">镜像总量</div>
-            <div class="metric-panel-value">{{ total }}</div>
-            <div class="metric-panel-helper">当前查询结果的镜像总数</div>
+        <div class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+          <article class="image-summary-card progress-card metric-panel-card">
+            <div class="progress-card-label metric-panel-label">镜像总量</div>
+            <div class="progress-card-value metric-panel-value">{{ total }}</div>
+            <div class="progress-card-hint metric-panel-helper">当前查询结果的镜像总数</div>
           </article>
-          <article class="image-summary-card metric-panel-card">
-            <div class="metric-panel-label">当前页</div>
-            <div class="metric-panel-value">{{ list.length }}</div>
-            <div class="metric-panel-helper">这一页已加载的镜像数量</div>
+          <article class="image-summary-card progress-card metric-panel-card">
+            <div class="progress-card-label metric-panel-label">当前页</div>
+            <div class="progress-card-value metric-panel-value">{{ list.length }}</div>
+            <div class="progress-card-hint metric-panel-helper">这一页已加载的镜像数量</div>
           </article>
         </div>
       </div>

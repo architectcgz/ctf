@@ -160,6 +160,11 @@ describe('admin management surface alignment', () => {
     expect(challengeManageSource).toContain('class="journal-note-label progress-card-label metric-panel-label"')
     expect(challengeManageSource).toContain('class="journal-note-value progress-card-value metric-panel-value"')
     expect(challengeManageSource).toContain('class="journal-note-helper progress-card-hint metric-panel-helper"')
+    expect(imageManageSource).toContain(
+      'class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(imageManageSource).toContain('class="image-summary-card progress-card metric-panel-card"')
+    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper"')
 
     expect(userGovernanceSource).toContain(
       'class="admin-summary-grid user-overview-grid metric-panel-grid metric-panel-default-surface'
