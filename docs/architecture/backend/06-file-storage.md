@@ -108,6 +108,31 @@ ${STORAGE_ROOT}/
 
 > 在线构建（dockerfile build）如果启用，必须异步化，并在隔离 builder 上执行，禁止 builder 访问平台内网与敏感配置。
 
+#### 5.1.1 当前实现流程图（上传 + 预检 + 导入）
+
+```mermaid
+flowchart TD
+  A[管理员上传题目包 zip] --> B[POST /api/v1/admin/challenge-imports/preview]
+  B --> C[保存 package.zip 到 challenge-import-previews/<preview-id>/]
+  C --> D[解包并定位题目包根目录 challenge.yml]
+  D --> E{静态预检是否通过}
+  E -- 否 --> F[返回预检错误\n结构/路径/symlink/大小/字段校验失败]
+  E -- 是 --> G[生成预览数据 preview.json]
+  G --> H[返回预览结果给管理端]
+  H --> I[管理员确认导入\nPOST /api/v1/admin/challenge-imports/:id/commit]
+  I --> J[重新解析 challenge.yml 与引用文件]
+  J --> K[落库 challenge/hints/flag/image 引用\n持久化附件到 challenge-attachments/imports/<slug>/]
+  K --> L[清理 challenge-import-previews/<preview-id>/]
+  L --> M[返回 challenge 草稿]
+  M --> N[可选：执行题目自检 SelfCheckChallenge]
+  N --> O[仅在自检阶段尝试拉起容器/拓扑]
+```
+
+说明：
+
+- `preview` 与 `commit` 都属于静态解析/落库流程，不会启动容器。
+- 容器或拓扑的实际拉起，仅发生在后续自检流程（`SelfCheckChallenge`）。
+
 ### 5.2 下载（学员/教师/管理员）
 
 下载必须走鉴权与审计：
