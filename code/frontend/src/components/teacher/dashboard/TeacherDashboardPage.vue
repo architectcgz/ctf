@@ -237,11 +237,15 @@ const {
               </div>
               <div v-else class="empty-inline">当前班级还没有足够的能力画像数据。</div>
 
-              <div class="summary-grid metric-panel-grid">
-                <article v-for="item in portraitSummaryNotes" :key="item.key" class="summary-note metric-panel-card">
-                  <div class="summary-note-label metric-panel-label">{{ item.label }}</div>
-                  <div class="summary-note-value metric-panel-value">{{ item.value }}</div>
-                  <div class="summary-note-copy metric-panel-helper">{{ item.copy }}</div>
+              <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+                <article
+                  v-for="item in portraitSummaryNotes"
+                  :key="item.key"
+                  class="summary-note progress-card metric-panel-card"
+                >
+                  <div class="summary-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
+                  <div class="summary-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
+                  <div class="summary-note-copy progress-card-hint metric-panel-helper">{{ item.copy }}</div>
                 </article>
               </div>
             </div>
@@ -676,16 +680,6 @@ const {
   --metric-panel-columns: repeat(3, minmax(0, 1fr));
   --metric-panel-grid-gap: var(--space-3);
   margin-top: var(--space-4-5);
-}
-
-.summary-note {
-  --metric-panel-padding: var(--space-3-5) var(--space-4);
-  --metric-panel-background: color-mix(in srgb, var(--workspace-panel-soft) 92%, transparent);
-}
-
-.summary-note-value {
-  --metric-panel-value-margin-top: var(--space-2);
-  --metric-panel-value-size: 16px;
 }
 
 .trend-layout {
