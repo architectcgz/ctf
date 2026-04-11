@@ -269,16 +269,24 @@ onMounted(() => {
     </div>
 
     <div class="writeup-manage-stats-shell">
-      <div class="admin-summary-grid writeup-summary-grid metric-panel-grid">
-        <article class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">官方题解</div>
-          <div class="journal-note-value metric-panel-value">{{ officialWriteupCount }}</div>
-          <div class="journal-note-helper metric-panel-helper">篇</div>
+      <div class="admin-summary-grid writeup-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">官方题解</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ officialWriteupCount }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            当前题目已创建的官方题解数量
+          </div>
         </article>
-        <article class="journal-note metric-panel-card">
-          <div class="journal-note-label metric-panel-label">学员题解</div>
-          <div class="journal-note-value metric-panel-value">{{ submissionTotal }}</div>
-          <div class="journal-note-helper metric-panel-helper">篇</div>
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">学员题解</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ submissionTotal }}
+          </div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            当前题目收到的学员题解投稿数量
+          </div>
         </article>
       </div>
     </div>
