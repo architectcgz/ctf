@@ -73,15 +73,21 @@ describe('cheat detection surface alignment', () => {
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
     expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid metric-panel-default-surface"'
+      'class="admin-summary-grid cheat-risk-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
     )
     expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-kpi-summary metric-panel-grid metric-panel-default-surface"'
+      'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(cheatDetectionSource).toContain('class="journal-note metric-panel-card"')
-    expect(cheatDetectionSource).toContain('class="journal-note-label metric-panel-label"')
-    expect(cheatDetectionSource).toContain('class="journal-note-value metric-panel-value"')
-    expect(cheatDetectionSource).toContain('class="journal-note-helper metric-panel-helper"')
+    expect(cheatDetectionSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(cheatDetectionSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(cheatDetectionSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(cheatDetectionSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
     expect(cheatDetectionSource).not.toContain('class="mt-5 grid gap-3 sm:grid-cols-2"')
     expect(cheatDetectionSource).not.toContain('class="grid gap-3 md:grid-cols-3"')
   })
