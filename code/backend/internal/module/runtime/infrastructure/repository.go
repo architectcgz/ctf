@@ -22,19 +22,19 @@ type Repository struct {
 }
 
 type userVisibleInstanceRow struct {
-	ID             int64     `gorm:"column:id"`
-	ChallengeID    int64     `gorm:"column:challenge_id"`
-	ChallengeTitle string    `gorm:"column:challenge_title"`
-	Category       string    `gorm:"column:category"`
-	Difficulty     string    `gorm:"column:difficulty"`
-	FlagType       string    `gorm:"column:flag_type"`
-	Status         string    `gorm:"column:status"`
-	ShareScope     string    `gorm:"column:share_scope"`
-	AccessURL      string    `gorm:"column:access_url"`
-	ExpiresAt      time.Time `gorm:"column:expires_at"`
-	ExtendCount    int       `gorm:"column:extend_count"`
-	MaxExtends     int       `gorm:"column:max_extends"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
+	ID             int64            `gorm:"column:id"`
+	ChallengeID    int64            `gorm:"column:challenge_id"`
+	ChallengeTitle string           `gorm:"column:challenge_title"`
+	Category       string           `gorm:"column:category"`
+	Difficulty     string           `gorm:"column:difficulty"`
+	FlagType       string           `gorm:"column:flag_type"`
+	Status         string           `gorm:"column:status"`
+	ShareScope     model.ShareScope `gorm:"column:share_scope"`
+	AccessURL      string           `gorm:"column:access_url"`
+	ExpiresAt      time.Time        `gorm:"column:expires_at"`
+	ExtendCount    int              `gorm:"column:extend_count"`
+	MaxExtends     int              `gorm:"column:max_extends"`
+	CreatedAt      time.Time        `gorm:"column:created_at"`
 }
 
 type teacherInstanceRow struct {
