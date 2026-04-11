@@ -74,6 +74,27 @@ describe('student and user surface alignment', () => {
     )
   })
 
+  it('student overview 当前排名卡片应切换到 shared metric-panel 卡片栈，而不是继续复用本地 note 边框样式', () => {
+    expect(studentOverviewSource).toContain(
+      'class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"'
+    )
+    expect(studentOverviewSource).toContain(
+      'class="journal-rank-summary__label progress-card-label metric-panel-label"'
+    )
+    expect(studentOverviewSource).toContain(
+      'class="journal-rank-summary__value progress-card-value metric-panel-value tech-font"'
+    )
+    expect(studentOverviewSource).toContain(
+      'class="journal-rank-summary__helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentOverviewSource).toMatch(
+      /\.journal-metric,\s*\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
+    )
+    expect(studentOverviewSource).not.toMatch(
+      /\.journal-metric,\s*\.journal-inline-item,\s*\.journal-rank-summary\s*\{/s
+    )
+  })
+
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('--journal-border:')

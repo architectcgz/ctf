@@ -157,6 +157,32 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('#7')
   })
 
+  it('应该把当前排名区域渲染为独立卡片', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const rankSummary = wrapper.get('.journal-rank-summary')
+
+    expect(rankSummary.classes()).toContain('progress-card')
+    expect(rankSummary.classes()).toContain('metric-panel-card')
+    expect(rankSummary.classes()).toContain('metric-panel-default-surface')
+    expect(rankSummary.get('.progress-card-label.metric-panel-label').text()).toContain('当前排名')
+    expect(rankSummary.get('.progress-card-value.metric-panel-value').text()).toBe('#7')
+    expect(rankSummary.get('.progress-card-hint.metric-panel-helper').text()).toContain('积分排名')
+  })
+
   it('应该在 recommendation 子菜单下展示训练建议', async () => {
     routeState.query = { panel: 'recommendation' }
 

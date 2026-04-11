@@ -181,13 +181,18 @@ const operationsSummary = computed(() => [
               </div>
             </article>
           </div>
-          <div class="journal-rank-summary mt-5 px-4 py-4">
-            <div class="flex items-center gap-2 text-sm text-[var(--journal-muted)]">
+          <div
+            class="journal-rank-summary mt-5 progress-card metric-panel-card metric-panel-default-surface"
+          >
+            <div class="journal-rank-summary__label progress-card-label metric-panel-label">
               <span class="status-dot status-dot-solved" />
               当前排名
             </div>
-            <div class="mt-2 tech-font text-2xl font-semibold text-[var(--journal-ink)]">
+            <div class="journal-rank-summary__value progress-card-value metric-panel-value tech-font">
               #{{ rankSummary }}
+            </div>
+            <div class="journal-rank-summary__helper progress-card-hint metric-panel-helper">
+              当前所在积分排名，继续解题后会按最新积分刷新。
             </div>
           </div>
         </article>
@@ -270,12 +275,26 @@ const operationsSummary = computed(() => [
 }
 
 .journal-metric,
-.journal-inline-item,
-.journal-rank-summary {
+.journal-inline-item {
   border: 1px solid var(--journal-shell-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   box-shadow: none;
+}
+
+.journal-rank-summary {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.journal-rank-summary__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.journal-rank-summary__value {
+  margin-top: 0;
 }
 
 .journal-bento {
