@@ -99,10 +99,26 @@ describe('ImageManage', () => {
   })
 
   it('应使用通用数值卡片样式展示镜像统计', () => {
-    expect(imageManageSource).toContain('class="image-summary-grid metric-panel-grid"')
-    expect(imageManageSource).toContain('class="image-summary-card metric-panel-card"')
-    expect(imageManageSource).toContain('class="metric-panel-label">镜像总量</div>')
-    expect(imageManageSource).toContain('class="metric-panel-label">当前页</div>')
+    expect(imageManageSource).toContain(
+      'class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(imageManageSource).toContain('class="image-summary-card progress-card metric-panel-card"')
+    expect(imageManageSource).toContain('class="progress-card-label metric-panel-label">镜像总量</div>')
+    expect(imageManageSource).toContain('class="progress-card-label metric-panel-label">当前页</div>')
+    expect(imageManageSource).toContain('class="progress-card-value metric-panel-value">{{ total }}</div>')
+    expect(imageManageSource).toContain(
+      'class="progress-card-value metric-panel-value">{{ list.length }}</div>'
+    )
+    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper">当前查询结果的镜像总数</div>')
+    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper">这一页已加载的镜像数量</div>')
+  })
+
+  it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
+    expect(imageManageSource).toMatch(
+      /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s
+    )
+    expect(imageManageSource).not.toContain('<div class="journal-divider image-divider" />')
+    expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
   })
 
   it('应该把镜像名称、标签和描述拆成独立列', async () => {

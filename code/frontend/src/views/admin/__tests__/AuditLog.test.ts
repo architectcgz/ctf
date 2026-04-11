@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import AuditLog from '../AuditLog.vue'
+import auditLogSource from '../AuditLog.vue?raw'
 
 const replaceMock = vi.fn()
 
@@ -93,5 +94,23 @@ describe('AuditLog', () => {
         actor_user_id: '12',
       },
     })
+  })
+
+  it('应使用统一进度卡片样式展示审计摘要', () => {
+    expect(auditLogSource).toContain(
+      'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
+    )
+    expect(auditLogSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(auditLogSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label">激活筛选</div>'
+    )
+    expect(auditLogSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(auditLogSource).toContain('{{ activeFilterCount }}')
+    expect(auditLogSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(auditLogSource).toContain('当前生效的筛选项数量')
   })
 })

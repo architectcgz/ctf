@@ -293,27 +293,6 @@ const emit = defineEmits<{
   margin-top: var(--space-4-5);
 }
 
-.teacher-summary-item.progress-card {
-  --metric-panel-padding: var(--space-3-5) var(--space-4) var(--space-4);
-}
-
-.teacher-summary-label.progress-card-label {
-  --metric-panel-label-size: var(--font-size-11);
-  --metric-panel-label-spacing: 0.18em;
-  --metric-panel-label-color: color-mix(in srgb, var(--journal-muted) 88%, var(--color-bg-base));
-}
-
-.teacher-summary-value.progress-card-value {
-  --metric-panel-value-margin-top: var(--space-2-5);
-  --metric-panel-value-size: 26px;
-}
-
-.teacher-summary-helper.progress-card-hint {
-  --metric-panel-helper-margin-top: var(--space-2);
-  --metric-panel-helper-size: var(--font-size-13);
-  --metric-panel-helper-line-height: 1.7;
-}
-
 .teacher-skeleton-list {
   margin-top: var(--space-6);
   display: grid;

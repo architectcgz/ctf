@@ -49,35 +49,47 @@ const {
         </div>
       </header>
 
-      <section class="report-summary metric-panel-workspace-surface">
+      <section class="report-summary metric-panel-default-surface">
         <div class="report-summary-title">Export Snapshot</div>
-        <div class="report-summary-grid metric-panel-grid">
-          <div class="report-summary-item metric-panel-card">
-            <div class="report-summary-label metric-panel-label">当前账号</div>
-            <div class="report-summary-value metric-panel-value">{{ authStore.user?.username || '-' }}</div>
-            <div class="report-summary-helper metric-panel-helper">用于发起当前导出任务的教师账号</div>
-          </div>
-          <div class="report-summary-item metric-panel-card">
-            <div class="report-summary-label metric-panel-label">默认班级</div>
-            <div class="report-summary-value metric-panel-value">
+        <div class="report-summary-grid progress-strip metric-panel-grid">
+          <article class="report-summary-item progress-card metric-panel-card">
+            <div class="report-summary-label progress-card-label metric-panel-label">当前账号</div>
+            <div class="report-summary-value progress-card-value metric-panel-value">
+              {{ authStore.user?.username || '-' }}
+            </div>
+            <div class="report-summary-helper progress-card-hint metric-panel-helper">
+              用于发起当前导出任务的教师账号
+            </div>
+          </article>
+          <article class="report-summary-item progress-card metric-panel-card">
+            <div class="report-summary-label progress-card-label metric-panel-label">默认班级</div>
+            <div class="report-summary-value progress-card-value metric-panel-value">
               {{ authStore.user?.class_name || '未绑定' }}
             </div>
-            <div class="report-summary-helper metric-panel-helper">留空时将优先使用当前账号绑定班级</div>
-          </div>
-          <div class="report-summary-item metric-panel-card">
-            <div class="report-summary-label metric-panel-label">当前格式</div>
-            <div class="report-summary-value metric-panel-value">{{ selectedFormatLabel }}</div>
-            <div class="report-summary-helper metric-panel-helper">{{ selectedFormatHint }}</div>
-          </div>
-          <div class="report-summary-item metric-panel-card">
-            <div class="report-summary-label metric-panel-label">最近状态</div>
-            <div class="report-summary-value metric-panel-value">{{ latestStatusMeta.label }}</div>
-            <div class="report-summary-helper metric-panel-helper">
+            <div class="report-summary-helper progress-card-hint metric-panel-helper">
+              留空时将优先使用当前账号绑定班级
+            </div>
+          </article>
+          <article class="report-summary-item progress-card metric-panel-card">
+            <div class="report-summary-label progress-card-label metric-panel-label">当前格式</div>
+            <div class="report-summary-value progress-card-value metric-panel-value">
+              {{ selectedFormatLabel }}
+            </div>
+            <div class="report-summary-helper progress-card-hint metric-panel-helper">
+              {{ selectedFormatHint }}
+            </div>
+          </article>
+          <article class="report-summary-item progress-card metric-panel-card">
+            <div class="report-summary-label progress-card-label metric-panel-label">最近状态</div>
+            <div class="report-summary-value progress-card-value metric-panel-value">
+              {{ latestStatusMeta.label }}
+            </div>
+            <div class="report-summary-helper progress-card-hint metric-panel-helper">
               {{
                 latestExport ? derivedDownloadHint : '创建一次导出任务后，这里会同步展示最新状态。'
               }}
             </div>
-          </div>
+          </article>
         </div>
       </section>
 
