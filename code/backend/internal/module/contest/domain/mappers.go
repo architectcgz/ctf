@@ -22,13 +22,17 @@ func ContestRespFromModel(contest *model.Contest) *dto.ContestResp {
 
 func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.Challenge) *dto.ContestChallengeResp {
 	resp := &dto.ContestChallengeResp{
-		ID:          cc.ID,
-		ContestID:   cc.ContestID,
-		ChallengeID: cc.ChallengeID,
-		Points:      cc.Points,
-		Order:       cc.Order,
-		IsVisible:   cc.IsVisible,
-		CreatedAt:   cc.CreatedAt,
+		ID:               cc.ID,
+		ContestID:        cc.ContestID,
+		ChallengeID:      cc.ChallengeID,
+		Points:           cc.Points,
+		Order:            cc.Order,
+		IsVisible:        cc.IsVisible,
+		AWDCheckerType:   NormalizeAWDCheckerType(string(cc.AWDCheckerType)),
+		AWDCheckerConfig: ParseAWDCheckerConfig(cc.AWDCheckerConfig),
+		AWDSLAScore:      cc.AWDSLAScore,
+		AWDDefenseScore:  cc.AWDDefenseScore,
+		CreatedAt:        cc.CreatedAt,
 	}
 	if challenge != nil {
 		resp.Title = challenge.Title

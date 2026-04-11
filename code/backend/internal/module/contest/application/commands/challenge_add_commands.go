@@ -13,7 +13,8 @@ import (
 )
 
 func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID int64, req *dto.AddContestChallengeReq) (*dto.ContestChallengeResp, error) {
-	if _, err := s.ensureMutableContest(ctx, contestID); err != nil {
+	contest, err := s.ensureMutableContest(ctx, contestID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -44,13 +45,27 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	if req.IsVisible != nil {
 		isVisible = *req.IsVisible
 	}
+	checkerType, checkerConfig, err := validateAndNormalizeContestAWDFields(
+		contest,
+		string(req.AWDCheckerType),
+		req.AWDCheckerConfig,
+		req.AWDSLAScore,
+		req.AWDDefenseScore,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	cc := &model.ContestChallenge{
-		ContestID:   contestID,
-		ChallengeID: req.ChallengeID,
-		Points:      points,
-		Order:       req.Order,
-		IsVisible:   isVisible,
+		ContestID:        contestID,
+		ChallengeID:      req.ChallengeID,
+		Points:           points,
+		Order:            req.Order,
+		IsVisible:        isVisible,
+		AWDCheckerType:   checkerType,
+		AWDCheckerConfig: checkerConfig,
+		AWDSLAScore:      req.AWDSLAScore,
+		AWDDefenseScore:  req.AWDDefenseScore,
 	}
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
