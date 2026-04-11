@@ -1542,7 +1542,18 @@ describe('ContestManage', () => {
         is_visible: true,
         awd_checker_type: 'http_standard',
         awd_checker_config: {
-          get_flag: { method: 'GET', path: '/api/flag' },
+          put_flag: {
+            method: 'PUT',
+            path: '/api/flag',
+            body_template: '{"flag":"{{FLAG}}"}',
+            expected_status: 201,
+          },
+          get_flag: {
+            method: 'GET',
+            path: '/api/flag',
+            expected_status: 200,
+            expected_substring: '{{FLAG}}',
+          },
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
@@ -1685,11 +1696,9 @@ describe('ContestManage', () => {
     await flushPromises()
 
     await wrapper.find('#awd-challenge-config-checker-type').setValue('legacy_probe')
+    await wrapper.find('#awd-challenge-config-legacy-health-path').setValue('/healthz')
     await wrapper.find('#awd-challenge-config-sla-score').setValue('20')
     await wrapper.find('#awd-challenge-config-defense-score').setValue('30')
-    await wrapper
-      .find('#awd-challenge-config-json')
-      .setValue('{"health_path":"/healthz"}')
     await wrapper.find('#awd-challenge-config-submit').trigger('click')
     await flushPromises()
     await flushPromises()
@@ -1720,11 +1729,13 @@ describe('ContestManage', () => {
     await wrapper.find('#awd-challenge-config-points').setValue('160')
     await wrapper.find('#awd-challenge-config-order').setValue('2')
     await wrapper.find('#awd-challenge-config-checker-type').setValue('http_standard')
+    await wrapper.find('#awd-http-put-path').setValue('/flag')
+    await wrapper.find('#awd-http-put-body-template').setValue('{{FLAG}}')
+    await wrapper.find('#awd-http-get-path').setValue('/flag')
+    await wrapper.find('#awd-http-get-expected-substring').setValue('{{FLAG}}')
+    await wrapper.find('#awd-http-havoc-path').setValue('/healthz')
     await wrapper.find('#awd-challenge-config-sla-score').setValue('22')
     await wrapper.find('#awd-challenge-config-defense-score').setValue('35')
-    await wrapper
-      .find('#awd-challenge-config-json')
-      .setValue('{"get_flag":{"method":"GET","path":"/flag"}}')
     await wrapper.find('#awd-challenge-config-submit').trigger('click')
     await flushPromises()
     await flushPromises()
@@ -1736,7 +1747,23 @@ describe('ContestManage', () => {
       is_visible: true,
       awd_checker_type: 'http_standard',
       awd_checker_config: {
-        get_flag: { method: 'GET', path: '/flag' },
+        put_flag: {
+          method: 'PUT',
+          path: '/flag',
+          body_template: '{{FLAG}}',
+          expected_status: 200,
+        },
+        get_flag: {
+          method: 'GET',
+          path: '/flag',
+          expected_status: 200,
+          expected_substring: '{{FLAG}}',
+        },
+        havoc: {
+          method: 'GET',
+          path: '/healthz',
+          expected_status: 200,
+        },
       },
       awd_sla_score: 22,
       awd_defense_score: 35,
