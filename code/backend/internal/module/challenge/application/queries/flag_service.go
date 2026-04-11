@@ -62,9 +62,6 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 	if challenge.FlagType == model.FlagTypeManualReview {
 		return false, nil
 	}
-	if challenge.FlagType == model.FlagTypeSharedProof {
-		return false, nil
-	}
 
 	expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
 	if err != nil {
@@ -87,8 +84,6 @@ func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
 	} else if challenge.FlagType == model.FlagTypeRegex && strings.TrimSpace(challenge.FlagRegex) != "" {
 		configured = true
 	} else if challenge.FlagType == model.FlagTypeManualReview {
-		configured = true
-	} else if challenge.FlagType == model.FlagTypeSharedProof {
 		configured = true
 	}
 

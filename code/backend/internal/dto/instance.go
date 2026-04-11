@@ -36,8 +36,3 @@ type InstanceInfo struct {
 type InstanceAccessResp struct {
 	AccessURL string `json:"access_url"`
 }
-
-type SharedProofIssueResp struct {
-	Proof     string    `json:"proof"`
-	ExpiresAt time.Time `json:"expires_at"`
-}

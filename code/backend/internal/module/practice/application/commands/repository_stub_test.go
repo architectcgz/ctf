@@ -23,8 +23,6 @@ type stubPracticeRepository struct {
 	createInstanceFn                       func(instance *model.Instance) error
 	reserveAvailablePortFn                 func(start, end int) (int, error)
 	bindReservedPortFn                     func(port int, instanceID int64) error
-	findActiveSharedProofByHashFn          func(proofHash string) (*model.SharedProof, error)
-	consumeSharedProofFn                   func(sharedProofID int64, consumedAt time.Time) (bool, error)
 	createSubmissionFn                     func(submission *model.Submission) error
 	findCorrectSubmissionFn                func(userID, challengeID int64) (*model.Submission, error)
 	updateSubmissionFn                     func(submission *model.Submission) error
@@ -109,20 +107,6 @@ func (s *stubPracticeRepository) BindReservedPort(port int, instanceID int64) er
 		return s.bindReservedPortFn(port, instanceID)
 	}
 	return nil
-}
-
-func (s *stubPracticeRepository) FindActiveSharedProofByHash(proofHash string) (*model.SharedProof, error) {
-	if s.findActiveSharedProofByHashFn != nil {
-		return s.findActiveSharedProofByHashFn(proofHash)
-	}
-	return nil, gorm.ErrRecordNotFound
-}
-
-func (s *stubPracticeRepository) ConsumeSharedProof(sharedProofID int64, consumedAt time.Time) (bool, error) {
-	if s.consumeSharedProofFn != nil {
-		return s.consumeSharedProofFn(sharedProofID, consumedAt)
-	}
-	return false, nil
 }
 
 func (s *stubPracticeRepository) CreateSubmission(submission *model.Submission) error {

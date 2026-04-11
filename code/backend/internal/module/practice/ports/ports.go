@@ -53,8 +53,6 @@ type PracticeCommandTxRepository interface {
 	CreateInstance(instance *model.Instance) error
 	ReserveAvailablePort(start, end int) (int, error)
 	BindReservedPort(port int, instanceID int64) error
-	FindActiveSharedProofByHash(proofHash string) (*model.SharedProof, error)
-	ConsumeSharedProof(sharedProofID int64, consumedAt time.Time) (bool, error)
 	CreateSubmission(submission *model.Submission) error
 }
 

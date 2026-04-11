@@ -72,7 +72,6 @@ type runtimeModuleDeps struct {
 	instanceQueries       runtimeHTTPQueryService
 	countRunningQuery     opsports.RuntimeQuery
 	proxyTicketService    runtimeHTTPProxyTicketService
-	sharedProofService    runtimeHTTPSharedProofService
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	maintenanceService    *runtimecmd.RuntimeMaintenanceService
 	provisioningService   *runtimecmd.ProvisioningService
@@ -122,7 +121,6 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 	}
 	proxyTicketStore := runtimeinfra.NewProxyTicketStore(root.Cache())
 	proxyTicketService := runtimeqry.NewProxyTicketService(proxyTicketStore, repo, cfg.Container.ProxyTicketTTL)
-	sharedProofService := runtimeqry.NewSharedProofService(repo, proxyTicketService, cfg.Container.ProxyTicketTTL)
 
 	return runtimeModuleDeps{
 		repo:                  repo,
@@ -131,7 +129,6 @@ func buildRuntimeModuleDeps(root *Root, engine *runtimeinfra.Engine) runtimeModu
 		instanceQueries:       runtimeqry.NewInstanceService(repo),
 		countRunningQuery:     runtimeqry.NewCountRunningService(repo),
 		proxyTicketService:    proxyTicketService,
-		sharedProofService:    sharedProofService,
 		cleanupService:        cleanupService,
 		maintenanceService:    maintenanceService,
 		provisioningService:   provisioningService,
@@ -162,7 +159,6 @@ func buildRuntimeHTTPDeps(root *Root, deps runtimeModuleDeps) runtimeHTTPDeps {
 			deps.instanceCommands,
 			deps.instanceQueries,
 			deps.proxyTicketService,
-			deps.sharedProofService,
 			root.Config().Container.ProxyBodyPreviewSize,
 		),
 		proxyTrafficRecorder: deps.proxyTrafficRecorder,
@@ -280,7 +276,6 @@ type runtimeHTTPService interface {
 	ListTeacherInstances(ctx context.Context, requesterID int64, requesterRole string, query *dto.TeacherInstanceQuery) ([]dto.TeacherInstanceItem, error)
 	DestroyTeacherInstance(ctx context.Context, instanceID, requesterID int64, requesterRole string) error
 	IssueProxyTicket(ctx context.Context, user authctx.CurrentUser, instanceID int64) (string, error)
-	IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error)
 	ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error)
 	ProxyTicketMaxAge() int
 	ProxyBodyPreviewSize() int
@@ -304,24 +299,18 @@ type runtimeHTTPProxyTicketService interface {
 	MaxAge() int
 }
 
-type runtimeHTTPSharedProofService interface {
-	IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error)
-}
-
 type runtimeHTTPServiceAdapter struct {
 	commandService       runtimeHTTPCommandService
 	queryService         runtimeHTTPQueryService
 	proxyTickets         runtimeHTTPProxyTicketService
-	sharedProofs         runtimeHTTPSharedProofService
 	proxyBodyPreviewSize int
 }
 
-func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, sharedProofs runtimeHTTPSharedProofService, proxyBodyPreviewSize int) *runtimeHTTPServiceAdapter {
+func newRuntimeHTTPServiceAdapter(commandService runtimeHTTPCommandService, queryService runtimeHTTPQueryService, proxyTickets runtimeHTTPProxyTicketService, proxyBodyPreviewSize int) *runtimeHTTPServiceAdapter {
 	return &runtimeHTTPServiceAdapter{
 		commandService:       commandService,
 		queryService:         queryService,
 		proxyTickets:         proxyTickets,
-		sharedProofs:         sharedProofs,
 		proxyBodyPreviewSize: proxyBodyPreviewSize,
 	}
 }
@@ -375,13 +364,6 @@ func (a *runtimeHTTPServiceAdapter) IssueProxyTicket(ctx context.Context, user a
 
 	ticket, _, err := a.proxyTickets.IssueTicket(ctx, user, instanceID)
 	return ticket, err
-}
-
-func (a *runtimeHTTPServiceAdapter) IssueSharedProof(ctx context.Context, proxyTicket string) (*dto.SharedProofIssueResp, error) {
-	if a == nil || a.sharedProofs == nil {
-		return nil, errRuntimeHTTPProxyTicketServiceUnavailable()
-	}
-	return a.sharedProofs.IssueSharedProof(ctx, proxyTicket)
 }
 
 func (a *runtimeHTTPServiceAdapter) ResolveProxyTicket(ctx context.Context, ticket string) (*runtimeports.ProxyTicketClaims, error) {

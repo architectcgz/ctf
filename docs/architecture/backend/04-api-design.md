@@ -512,8 +512,8 @@ TTL:         与 Token 剩余有效期一致（避免无限膨胀）
 > 说明：
 > - `POST /api/v1/challenges/:id/instances` 负责启动或复用实例，不签发 `proxy ticket`。
 > - `GET /api/v1/instances/:id/access` 在访问前校验权限，并签发短时 `proxy ticket`。
-> - `proxy ticket` 用于平台代理访问和共享题上下文传递，不是最终提交凭证。
-> - 普通题通过提交流程提交 `flag`；`shared_proof` 题提交的是后续由平台签发的 `proof`。
+> - `proxy ticket` 仅用于平台代理访问和共享实例访问上下文传递，不是最终提交凭证。
+> - 所有题目统一通过提交流程提交 `flag`。
 
 ### 5.4 竞赛管理
 

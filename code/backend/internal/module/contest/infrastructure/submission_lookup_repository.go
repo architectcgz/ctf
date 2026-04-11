@@ -33,13 +33,3 @@ func (r *SubmissionRepository) FindChallengeByID(ctx context.Context, challengeI
 	}
 	return &challenge, nil
 }
-
-func (r *SubmissionRepository) FindActiveSharedProofByHash(ctx context.Context, proofHash string) (*model.SharedProof, error) {
-	var proof model.SharedProof
-	if err := r.dbWithContext(ctx).
-		Where("proof_hash = ? AND status = ?", proofHash, model.SharedProofStatusActive).
-		First(&proof).Error; err != nil {
-		return nil, err
-	}
-	return &proof, nil
-}

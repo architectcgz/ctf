@@ -20,7 +20,6 @@ type flagCommandService interface {
 	ConfigureDynamicFlag(challengeID int64, flagPrefix string) error
 	ConfigureRegexFlag(challengeID int64, flagRegex, flagPrefix string) error
 	ConfigureManualReviewFlag(challengeID int64) error
-	ConfigureSharedProofFlag(challengeID int64) error
 }
 
 type flagQueryService interface {
@@ -52,8 +51,6 @@ func (h *FlagHandler) ConfigureFlag(c *gin.Context) {
 		err = h.commands.ConfigureDynamicFlag(challengeID, req.FlagPrefix)
 	} else if req.FlagType == model.FlagTypeRegex {
 		err = h.commands.ConfigureRegexFlag(challengeID, req.FlagRegex, req.FlagPrefix)
-	} else if req.FlagType == model.FlagTypeSharedProof {
-		err = h.commands.ConfigureSharedProofFlag(challengeID)
 	} else {
 		err = h.commands.ConfigureManualReviewFlag(challengeID)
 	}

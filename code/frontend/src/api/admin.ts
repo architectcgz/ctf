@@ -383,7 +383,7 @@ interface RawChallengeImportPreview {
     content: string
   }>
   flag: {
-    type: 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'
+    type: 'static' | 'dynamic' | 'regex' | 'manual_review'
     prefix?: string
   }
   runtime: {
@@ -466,7 +466,7 @@ interface RawEnvironmentTemplateData {
 }
 
 interface RawChallengeFlagConfig {
-  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'
+  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
   flag_regex?: string
   flag_prefix?: string
   configured: boolean
@@ -1282,7 +1282,7 @@ export interface AdminChallengePayload {
 }
 
 export interface AdminChallengeFlagPayload {
-  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review' | 'shared_proof'
+  flag_type: 'static' | 'dynamic' | 'regex' | 'manual_review'
   flag?: string
   flag_regex?: string
   flag_prefix?: string

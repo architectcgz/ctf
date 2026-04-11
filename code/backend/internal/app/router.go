@@ -186,7 +186,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		runtime:           runtimeModule,
 		teachingReadmodel: teachingReadmodelModule,
 	})
-	apiV1.POST("/internal/runtime/shared-proofs/issue", runtimeModule.Handler.IssueSharedProof)
 	engine.GET("/ws/contests/:id/announcements", contestRealtimeHandler.ServeAnnouncementWS)
 	engine.GET("/ws/contests/:id/scoreboard", contestRealtimeHandler.ServeScoreboardWS)
 

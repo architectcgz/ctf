@@ -304,7 +304,7 @@ components:
       enum: [pending, creating, running, expired, destroying, destroyed, failed, crashed]
     FlagType:
       type: string
-      enum: [static, dynamic, regex, manual_review, shared_proof]
+      enum: [static, dynamic, regex, manual_review]
 
     SshInfo:
       type: object

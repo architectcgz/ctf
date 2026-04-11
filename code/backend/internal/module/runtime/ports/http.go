@@ -84,12 +84,6 @@ type ProxyTicketInstanceReader interface {
 	FindByID(id int64) (*model.Instance, error)
 }
 
-type SharedProofRepository interface {
-	FindByID(id int64) (*model.Instance, error)
-	FindChallengeByID(challengeID int64) (*model.Challenge, error)
-	CreateSharedProof(proof *model.SharedProof) error
-}
-
 type ProxyTrafficEventRecorder interface {
 	RecordRuntimeProxyTrafficEvent(ctx context.Context, instanceID, userID int64, method, requestPath string, statusCode int) error
 }
