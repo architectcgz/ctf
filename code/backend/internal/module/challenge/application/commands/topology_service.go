@@ -29,7 +29,8 @@ func NewTopologyService(repo challengeports.ChallengeTopologyRepository, templat
 }
 
 func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.SaveChallengeTopologyReq) (*dto.ChallengeTopologyResp, error) {
-	if _, err := s.repo.FindByID(challengeID); err != nil {
+	challenge, err := s.repo.FindByID(challengeID)
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errcode.ErrChallengeNotFound
 		}
@@ -38,6 +39,9 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 
 	rawSpec, entryNodeKey, templateID, err := s.resolveTopologyPayload(req)
 	if err != nil {
+		return nil, err
+	}
+	if err := validateSharedTopologyConstraint(challenge, rawSpec); err != nil {
 		return nil, err
 	}
 	if err := s.ensureTopologyImagesExist(rawSpec); err != nil {
@@ -64,6 +68,22 @@ func (s *TopologyService) SaveChallengeTopology(challengeID int64, req *dto.Save
 		return nil, err
 	}
 	return domain.TopologyRespFromModel(saved)
+}
+
+func validateSharedTopologyConstraint(challenge *model.Challenge, rawSpec string) error {
+	if challenge == nil || challenge.InstanceSharing != model.InstanceSharingShared {
+		return nil
+	}
+	spec, err := model.DecodeTopologySpec(rawSpec)
+	if err != nil {
+		return errcode.ErrInvalidParams.WithCause(err)
+	}
+	for _, node := range spec.Nodes {
+		if node.InjectFlag {
+			return errcode.ErrInvalidParams.WithCause(errors.New("共享实例只适用于无状态题，不支持带 Flag 注入的拓扑"))
+		}
+	}
+	return nil
 }
 
 func (s *TopologyService) DeleteChallengeTopology(challengeID int64) error {

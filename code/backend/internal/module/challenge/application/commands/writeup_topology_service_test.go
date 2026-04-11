@@ -9,6 +9,7 @@ import (
 	challengeqry "ctf-platform/internal/module/challenge/application/queries"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	"ctf-platform/internal/module/challenge/testsupport"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestWriteupServiceUpsertAndGetPublished(t *testing.T) {
@@ -175,6 +176,43 @@ func TestTopologyServiceRejectsUnknownNetworkReference(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("expected unknown network validation error")
+	}
+}
+
+func TestTopologyServiceRejectsInjectFlagForSharedChallenge(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{ID: 1, Name: "ctf/web", Tag: "v1", Status: model.ImageStatusAvailable, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	challengeItem := &model.Challenge{
+		Title:           "shared-web-flag",
+		Description:     "desc",
+		Category:        model.DimensionWeb,
+		Difficulty:      model.ChallengeDifficultyMedium,
+		Points:          200,
+		ImageID:         1,
+		Status:          model.ChallengeStatusDraft,
+		InstanceSharing: model.InstanceSharingShared,
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+	if err := db.Create(challengeItem).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	service := NewTopologyService(challengeinfra.NewRepository(db), challengeinfra.NewTemplateRepository(db), challengeinfra.NewImageRepository(db))
+	_, err := service.SaveChallengeTopology(challengeItem.ID, &dto.SaveChallengeTopologyReq{
+		EntryNodeKey: "web",
+		Nodes: []dto.TopologyNodeReq{
+			{Key: "web", Name: "Web", ImageID: 1, ServicePort: 8080, InjectFlag: true},
+		},
+	})
+	if err == nil {
+		t.Fatalf("expected shared challenge topology validation error")
+	}
+	if err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for shared inject_flag topology, got %v", err)
 	}
 }
 

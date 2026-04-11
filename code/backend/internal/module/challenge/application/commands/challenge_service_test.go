@@ -116,6 +116,86 @@ func TestServiceCreateChallengeWithoutImageSuccess(t *testing.T) {
 	}
 }
 
+func TestServiceUpdateChallengeRejectsSharedDynamicFlagCombination(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	salt, err := flagcrypto.GenerateSalt()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &model.Challenge{
+		Title:           "dynamic-flag",
+		Description:     "desc",
+		Category:        model.DimensionCrypto,
+		Difficulty:      model.ChallengeDifficultyEasy,
+		Points:          100,
+		Status:          model.ChallengeStatusDraft,
+		FlagType:        model.FlagTypeDynamic,
+		FlagSalt:        salt,
+		FlagPrefix:      "flag",
+		InstanceSharing: model.InstanceSharingPerUser,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := newTestService(repo, imageRepo)
+
+	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+		InstanceSharing: model.InstanceSharingShared,
+	})
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params when enabling shared for dynamic flag challenge, got %v", err)
+	}
+}
+
+func TestServiceUpdateChallengeRejectsSharedInjectFlagTopologyCombination(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	challenge := &model.Challenge{
+		Title:           "inject-flag-topology",
+		Description:     "desc",
+		Category:        model.DimensionWeb,
+		Difficulty:      model.ChallengeDifficultyEasy,
+		Points:          100,
+		Status:          model.ChallengeStatusDraft,
+		FlagType:        model.FlagTypeStatic,
+		InstanceSharing: model.InstanceSharingPerUser,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	rawSpec, err := model.EncodeTopologySpec(model.TopologySpec{
+		Nodes: []model.TopologyNode{
+			{Key: "web", Name: "Web", ServicePort: 8080, InjectFlag: true},
+		},
+	})
+	if err != nil {
+		t.Fatalf("encode topology spec: %v", err)
+	}
+	if err := db.Create(&model.ChallengeTopology{
+		ChallengeID:  challenge.ID,
+		EntryNodeKey: "web",
+		Spec:         rawSpec,
+	}).Error; err != nil {
+		t.Fatalf("create topology: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(nil, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+
+	err = service.UpdateChallenge(challenge.ID, &dto.UpdateChallengeReq{
+		InstanceSharing: model.InstanceSharingShared,
+	})
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params when enabling shared for inject_flag topology challenge, got %v", err)
+	}
+}
+
 func TestServiceDeleteChallengeWithRunningInstances(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 

@@ -200,6 +200,13 @@
             </div>
 
             <div
+              v-if="isSharedInstanceChallenge"
+              class="challenge-flag-panel__warning"
+            >
+              共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用 per_user 或 per_team。
+            </div>
+
+            <div
               v-if="flagType === 'manual_review'"
               class="challenge-flag-panel__warning"
             >
@@ -282,6 +289,7 @@ const challengeId = computed(() => String(route.params.id || ''))
 const activePanel = computed<ChallengePanelKey>(() => resolvePanel(route.query.panel))
 const workspaceLabel = computed(() => challenge.value?.title || '题目管理')
 const flagConfigSummary = computed(() => summarizeFlagConfig(challenge.value?.flag_config))
+const isSharedInstanceChallenge = computed(() => challenge.value?.instance_sharing === 'shared')
 const flagDraftSummary = computed(() =>
   summarizeFlagConfig({
     configured: true,
@@ -396,6 +404,11 @@ async function loadChallenge(id: string): Promise<void> {
 }
 
 async function saveFlagConfig() {
+  if (isSharedInstanceChallenge.value && flagType.value === 'dynamic') {
+    toast.error('共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team')
+    return
+  }
+
   const payload: AdminChallengeFlagPayload = {
     flag_type: flagType.value,
   }

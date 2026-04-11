@@ -993,6 +993,7 @@ export interface AdminChallengeListItem {
   difficulty: ChallengeDifficulty
   status: ChallengeStatus
   points: number
+  instance_sharing?: InstanceSharing
   created_at: ISODateTime
   updated_at?: ISODateTime
   description?: string
