@@ -47,14 +47,23 @@ const {
           <div class="instance-summary-item metric-panel-card">
             <div class="instance-summary-label metric-panel-label">运行中</div>
             <div class="instance-summary-value metric-panel-value">{{ runningCount }}</div>
+            <div class="instance-summary-helper metric-panel-helper">
+              当前仍在运行、可直接访问的实例数量
+            </div>
           </div>
           <div class="instance-summary-item metric-panel-card">
             <div class="instance-summary-label metric-panel-label">等待创建</div>
             <div class="instance-summary-value metric-panel-value">{{ waitingCount }}</div>
+            <div class="instance-summary-helper metric-panel-helper">
+              已经提交创建请求、正在排队或启动中的实例数量
+            </div>
           </div>
           <div class="instance-summary-item metric-panel-card">
             <div class="instance-summary-label metric-panel-label">实例上限</div>
             <div class="instance-summary-value metric-panel-value">{{ maxInstances }}</div>
+            <div class="instance-summary-helper metric-panel-helper">
+              当前账号最多可同时保留的实例数量
+            </div>
           </div>
         </div>
       </section>
