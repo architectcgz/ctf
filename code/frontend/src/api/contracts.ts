@@ -536,6 +536,10 @@ export interface AdminContestChallengeData {
   points: number
   order: number
   is_visible: boolean
+  awd_checker_type?: AWDCheckerType
+  awd_checker_config?: Record<string, unknown>
+  awd_sla_score?: number
+  awd_defense_score?: number
   created_at: ISODateTime
 }
 

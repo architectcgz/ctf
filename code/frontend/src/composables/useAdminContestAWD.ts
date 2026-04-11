@@ -1,9 +1,11 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 
 import {
+  createAdminContestChallenge,
   createContestAWDRound,
   createContestAWDAttackLog,
   createContestAWDServiceCheck,
+  getChallenges,
   getAdminContestLiveScoreboard,
   getContestAWDRoundSummary,
   getContestAWDRoundTrafficSummary,
@@ -15,6 +17,7 @@ import {
   listContestAWDRounds,
   runContestAWDRoundCheck,
   runContestAWDCurrentRoundCheck,
+  updateAdminContestChallenge,
 } from '@/api/admin'
 import type {
   AWDAttackLogData,
@@ -24,6 +27,7 @@ import type {
   AWDTrafficStatusGroup,
   AWDTrafficSummaryData,
   AWDTeamServiceData,
+  AdminChallengeListItem,
   AdminContestChallengeData,
   AdminContestTeamData,
   ContestDetailData,
@@ -106,14 +110,17 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   const scoreboardFrozen = ref(false)
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
+  const challengeCatalog = ref<AdminChallengeListItem[]>([])
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
   const loadingTrafficSummary = ref(false)
   const loadingTrafficEvents = ref(false)
+  const loadingChallengeCatalog = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
+  const savingChallengeConfig = ref(false)
 
   const selectedRound = computed(() =>
     rounds.value.find((item) => item.id === selectedRoundId.value) || null
@@ -160,6 +167,14 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       page: filters.page,
       page_size: filters.page_size,
     }
+  }
+
+  async function refreshChallengeLinks() {
+    if (!selectedContest.value) {
+      challengeLinks.value = []
+      return
+    }
+    challengeLinks.value = await listAdminContestChallenges(selectedContest.value.id)
   }
 
   async function refreshRoundDetail(roundId = selectedRoundId.value) {
@@ -324,6 +339,20 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     }
   }
 
+  async function loadChallengeCatalog() {
+    if (loadingChallengeCatalog.value) {
+      return
+    }
+
+    loadingChallengeCatalog.value = true
+    try {
+      const result = await getChallenges({ page: 1, page_size: 200 })
+      challengeCatalog.value = result.list
+    } finally {
+      loadingChallengeCatalog.value = false
+    }
+  }
+
   async function runSelectedRoundCheck() {
     if (!selectedContest.value) {
       return
@@ -401,6 +430,56 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       await refreshRoundDetail(selectedRoundId.value)
     } finally {
       savingAttackLog.value = false
+    }
+  }
+
+  async function createChallengeLink(payload: {
+    challenge_id: number
+    points: number
+    order?: number
+    is_visible?: boolean
+    awd_checker_type?: AdminContestChallengeData['awd_checker_type']
+    awd_checker_config?: Record<string, unknown>
+    awd_sla_score?: number
+    awd_defense_score?: number
+  }) {
+    if (!selectedContest.value) {
+      return
+    }
+
+    savingChallengeConfig.value = true
+    try {
+      await createAdminContestChallenge(selectedContest.value.id, payload)
+      toast.success('赛事题目已关联')
+      await refreshChallengeLinks()
+    } finally {
+      savingChallengeConfig.value = false
+    }
+  }
+
+  async function updateChallengeLink(
+    challengeId: string,
+    payload: {
+      points?: number
+      order?: number
+      is_visible?: boolean
+      awd_checker_type?: AdminContestChallengeData['awd_checker_type']
+      awd_checker_config?: Record<string, unknown>
+      awd_sla_score?: number
+      awd_defense_score?: number
+    }
+  ) {
+    if (!selectedContest.value) {
+      return
+    }
+
+    savingChallengeConfig.value = true
+    try {
+      await updateAdminContestChallenge(selectedContest.value.id, challengeId, payload)
+      toast.success('题目配置已更新')
+      await refreshChallengeLinks()
+    } finally {
+      savingChallengeConfig.value = false
     }
   }
 
@@ -482,14 +561,17 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     scoreboardFrozen,
     teams,
     challengeLinks,
+    challengeCatalog,
     loadingRounds,
     loadingRoundDetail,
     loadingTrafficSummary,
     loadingTrafficEvents,
+    loadingChallengeCatalog,
     checking,
     creatingRound,
     savingServiceCheck,
     savingAttackLog,
+    savingChallengeConfig,
     hasSelectedContest,
     shouldAutoRefresh,
     refresh,
@@ -502,5 +584,8 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     createRound,
     createServiceCheck,
     createAttackLog,
+    loadChallengeCatalog,
+    createChallengeLink,
+    updateChallengeLink,
   }
 }

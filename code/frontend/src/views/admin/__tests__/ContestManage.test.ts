@@ -10,12 +10,15 @@ const exportMocks = vi.hoisted(() => ({
 
 const contestMocks = vi.hoisted(() => ({
   getContests: vi.fn(),
+  getChallenges: vi.fn(),
   createContest: vi.fn(),
   updateContest: vi.fn(),
   getAdminContestLiveScoreboard: vi.fn(),
   createContestAWDRound: vi.fn(),
   listContestTeams: vi.fn(),
   listAdminContestChallenges: vi.fn(),
+  createAdminContestChallenge: vi.fn(),
+  updateAdminContestChallenge: vi.fn(),
   createContestAWDServiceCheck: vi.fn(),
   createContestAWDAttackLog: vi.fn(),
   listContestAWDRounds: vi.fn(),
@@ -33,12 +36,15 @@ vi.mock('@/api/admin', async () => {
   return {
     ...actual,
     getContests: contestMocks.getContests,
+    getChallenges: contestMocks.getChallenges,
     createContest: contestMocks.createContest,
     updateContest: contestMocks.updateContest,
     getAdminContestLiveScoreboard: contestMocks.getAdminContestLiveScoreboard,
     createContestAWDRound: contestMocks.createContestAWDRound,
     listContestTeams: contestMocks.listContestTeams,
     listAdminContestChallenges: contestMocks.listAdminContestChallenges,
+    createAdminContestChallenge: contestMocks.createAdminContestChallenge,
+    updateAdminContestChallenge: contestMocks.updateAdminContestChallenge,
     createContestAWDServiceCheck: contestMocks.createContestAWDServiceCheck,
     createContestAWDAttackLog: contestMocks.createContestAWDAttackLog,
     listContestAWDRounds: contestMocks.listContestAWDRounds,
@@ -64,12 +70,15 @@ describe('ContestManage', () => {
     exportMocks.downloadCSVFile.mockReset()
     exportMocks.downloadJSONFile.mockReset()
     contestMocks.getContests.mockReset()
+    contestMocks.getChallenges.mockReset()
     contestMocks.createContest.mockReset()
     contestMocks.updateContest.mockReset()
     contestMocks.getAdminContestLiveScoreboard.mockReset()
     contestMocks.createContestAWDRound.mockReset()
     contestMocks.listContestTeams.mockReset()
     contestMocks.listAdminContestChallenges.mockReset()
+    contestMocks.createAdminContestChallenge.mockReset()
+    contestMocks.updateAdminContestChallenge.mockReset()
     contestMocks.createContestAWDServiceCheck.mockReset()
     contestMocks.createContestAWDAttackLog.mockReset()
     contestMocks.listContestAWDRounds.mockReset()
@@ -84,6 +93,29 @@ describe('ContestManage', () => {
     contestMocks.listContestAWDRounds.mockResolvedValue([])
     contestMocks.listContestTeams.mockResolvedValue([])
     contestMocks.listAdminContestChallenges.mockResolvedValue([])
+    contestMocks.getChallenges.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.createAdminContestChallenge.mockResolvedValue({
+      id: 'link-x',
+      contest_id: '1',
+      challenge_id: '101',
+      title: 'Challenge 101',
+      category: 'web',
+      difficulty: 'easy',
+      points: 100,
+      order: 1,
+      is_visible: true,
+      awd_checker_type: 'legacy_probe',
+      awd_checker_config: {},
+      awd_sla_score: 0,
+      awd_defense_score: 0,
+      created_at: '2026-03-11T00:00:00.000Z',
+    })
+    contestMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
     contestMocks.createContestAWDRound.mockResolvedValue({
       id: '1',
       contest_id: '1',
@@ -1494,6 +1526,224 @@ describe('ContestManage', () => {
       submitted_flag: 'awd{manual-log}',
       is_success: true,
     })
+  })
+
+  it('应该允许管理员在 AWD 运维页新增并编辑题目配置', async () => {
+    const challengeLinksState = [
+      {
+        id: 'link-1',
+        contest_id: 'awd-config',
+        challenge_id: '101',
+        title: 'Web Checker',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: 'http_standard',
+        awd_checker_config: {
+          get_flag: { method: 'GET', path: '/api/flag' },
+        },
+        awd_sla_score: 18,
+        awd_defense_score: 28,
+        created_at: '2026-03-24T09:00:00.000Z',
+      },
+    ]
+
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'awd-config',
+          title: '2026 AWD 配置场',
+          description: '支持题目配置',
+          mode: 'awd',
+          status: 'running',
+          starts_at: '2026-03-24T09:00:00.000Z',
+          ends_at: '2026-03-24T13:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.listContestAWDRounds.mockResolvedValue([
+      {
+        id: 'round-config-1',
+        contest_id: 'awd-config',
+        round_number: 1,
+        status: 'running',
+        attack_score: 80,
+        defense_score: 40,
+        created_at: '2026-03-24T09:00:00.000Z',
+        updated_at: '2026-03-24T09:05:00.000Z',
+      },
+    ])
+    contestMocks.listAdminContestChallenges.mockImplementation(async () =>
+      challengeLinksState.map((item) => ({ ...item }))
+    )
+    contestMocks.getChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '101',
+          title: 'Web Checker',
+          description: '已有题目',
+          category: 'web',
+          difficulty: 'easy',
+          points: 120,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-20T09:00:00.000Z',
+          updated_at: '2026-03-20T09:00:00.000Z',
+          flag_config: undefined,
+        },
+        {
+          id: '102',
+          title: 'Upload Service',
+          description: '新增题目',
+          category: 'web',
+          difficulty: 'medium',
+          points: 150,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-21T09:00:00.000Z',
+          updated_at: '2026-03-21T09:00:00.000Z',
+          flag_config: undefined,
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.createAdminContestChallenge.mockImplementation(async (_contestId, payload) => {
+      const created = {
+        id: 'link-2',
+        contest_id: 'awd-config',
+        challenge_id: String(payload.challenge_id),
+        title: 'Upload Service',
+        category: 'web',
+        difficulty: 'medium',
+        points: payload.points,
+        order: payload.order ?? 0,
+        is_visible: payload.is_visible ?? true,
+        awd_checker_type: payload.awd_checker_type,
+        awd_checker_config: payload.awd_checker_config ?? {},
+        awd_sla_score: payload.awd_sla_score ?? 0,
+        awd_defense_score: payload.awd_defense_score ?? 0,
+        created_at: '2026-03-24T09:10:00.000Z',
+      }
+      challengeLinksState.push(created)
+      return created
+    })
+    contestMocks.updateAdminContestChallenge.mockImplementation(async (_contestId, challengeId, payload) => {
+      const target = challengeLinksState.find((item) => item.challenge_id === challengeId)
+      if (!target) {
+        throw new Error('missing challenge link')
+      }
+      if (typeof payload.points === 'number') target.points = payload.points
+      if (typeof payload.order === 'number') target.order = payload.order
+      if (typeof payload.is_visible === 'boolean') target.is_visible = payload.is_visible
+      if (payload.awd_checker_type) target.awd_checker_type = payload.awd_checker_type
+      if (payload.awd_checker_config) target.awd_checker_config = payload.awd_checker_config
+      if (typeof payload.awd_sla_score === 'number') target.awd_sla_score = payload.awd_sla_score
+      if (typeof payload.awd_defense_score === 'number') {
+        target.awd_defense_score = payload.awd_defense_score
+      }
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue">{{ title }}</div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    await wrapper.find('#awd-ops-tab-challenges').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题目配置')
+    expect(wrapper.text()).toContain('Web Checker')
+    expect(wrapper.text()).toContain('HTTP 标准 Checker')
+    expect(wrapper.text()).toContain('SLA 18 / 防守 28')
+
+    await wrapper.find('#awd-challenge-config-edit-link-1').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('#awd-challenge-config-checker-type').setValue('legacy_probe')
+    await wrapper.find('#awd-challenge-config-sla-score').setValue('20')
+    await wrapper.find('#awd-challenge-config-defense-score').setValue('30')
+    await wrapper
+      .find('#awd-challenge-config-json')
+      .setValue('{"health_path":"/healthz"}')
+    await wrapper.find('#awd-challenge-config-submit').trigger('click')
+    await flushPromises()
+    await flushPromises()
+
+    expect(contestMocks.updateAdminContestChallenge).toHaveBeenCalledWith(
+      'awd-config',
+      '101',
+      {
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: 'legacy_probe',
+        awd_checker_config: {
+          health_path: '/healthz',
+        },
+        awd_sla_score: 20,
+        awd_defense_score: 30,
+      }
+    )
+
+    expect(wrapper.text()).toContain('基础探活')
+    expect(wrapper.text()).toContain('SLA 20 / 防守 30')
+
+    await wrapper.find('#awd-challenge-config-create').trigger('click')
+    await flushPromises()
+
+    await wrapper.find('#awd-challenge-config-challenge').setValue('102')
+    await wrapper.find('#awd-challenge-config-points').setValue('160')
+    await wrapper.find('#awd-challenge-config-order').setValue('2')
+    await wrapper.find('#awd-challenge-config-checker-type').setValue('http_standard')
+    await wrapper.find('#awd-challenge-config-sla-score').setValue('22')
+    await wrapper.find('#awd-challenge-config-defense-score').setValue('35')
+    await wrapper
+      .find('#awd-challenge-config-json')
+      .setValue('{"get_flag":{"method":"GET","path":"/flag"}}')
+    await wrapper.find('#awd-challenge-config-submit').trigger('click')
+    await flushPromises()
+    await flushPromises()
+
+    expect(contestMocks.createAdminContestChallenge).toHaveBeenCalledWith('awd-config', {
+      challenge_id: 102,
+      points: 160,
+      order: 2,
+      is_visible: true,
+      awd_checker_type: 'http_standard',
+      awd_checker_config: {
+        get_flag: { method: 'GET', path: '/flag' },
+      },
+      awd_sla_score: 22,
+      awd_defense_score: 35,
+    })
+
+    expect(wrapper.text()).toContain('Upload Service')
+    expect(wrapper.text()).toContain('SLA 22 / 防守 35')
   })
 
   it('应该恢复 AWD 赛事、轮次与筛选状态', async () => {
