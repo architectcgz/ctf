@@ -211,4 +211,16 @@ describe('ClassManagement', () => {
     expect(classManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
     expect(classManagementSource).not.toContain('teacher-summary--overview-metrics')
   })
+
+  it('班级管理概览头部应与学生管理页使用同一套 teacher header 结构', () => {
+    expect(classManagementSource).toContain('<header class="teacher-topbar">')
+    expect(classManagementSource).toContain('<div class="teacher-heading">')
+    expect(classManagementSource).toContain('<h1 class="teacher-title">班级管理</h1>')
+    expect(classManagementSource).not.toContain(
+      '<div class="teacher-heading workspace-tab-heading__main">'
+    )
+    expect(classManagementSource).not.toContain(
+      '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>'
+    )
+  })
 })
