@@ -44,6 +44,32 @@ const totalTimelinePages = computed(() =>
   Math.max(1, Math.ceil(totalTimelineCount.value / Math.max(1, props.pageSize)))
 )
 const timelinePage = ref(1)
+const timelineMetrics = computed(() => [
+  {
+    key: 'solve',
+    label: '成功解题',
+    value: solveCount.value,
+    helper: '累计命中 Flag 的训练次数',
+  },
+  {
+    key: 'submit',
+    label: '提交次数',
+    value: submitCount.value,
+    helper: '最近训练周期内的提交总量',
+  },
+  {
+    key: 'instance',
+    label: '实例操作',
+    value: instanceCount.value,
+    helper: '启动、访问和续期等实例相关动作',
+  },
+  {
+    key: 'total',
+    label: '总记录',
+    value: totalTimelineCount.value,
+    helper: '当前时间线中收录的训练事件数量',
+  },
+])
 
 watch(
   () => totalTimelinePages.value,
@@ -91,22 +117,21 @@ function changeTimelinePage(page: number): void {
         <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
           看最近训练记录和节奏变化。
         </p>
-        <div class="timeline-metric-grid mt-5">
-          <article class="timeline-metric-card teacher-surface-section">
-            <div class="journal-note-label">成功解题</div>
-            <div class="journal-note-value">{{ solveCount }} 次</div>
-          </article>
-          <article class="timeline-metric-card teacher-surface-section">
-            <div class="journal-note-label">提交次数</div>
-            <div class="journal-note-value">{{ submitCount }} 次</div>
-          </article>
-          <article class="timeline-metric-card teacher-surface-section">
-            <div class="journal-note-label">实例操作</div>
-            <div class="journal-note-value">{{ instanceCount }} 次</div>
-          </article>
-          <article class="timeline-metric-card teacher-surface-section">
-            <div class="journal-note-label">总记录</div>
-            <div class="journal-note-value">{{ totalTimelineCount }} 条</div>
+        <div class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+          <article
+            v-for="metric in timelineMetrics"
+            :key="metric.key"
+            class="timeline-metric-card progress-card metric-panel-card"
+          >
+            <div class="journal-note-label progress-card-label metric-panel-label">
+              {{ metric.label }}
+            </div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ metric.value }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              {{ metric.helper }}
+            </div>
           </article>
         </div>
       </div>
@@ -197,29 +222,27 @@ function changeTimelinePage(page: number): void {
 }
 
 .timeline-metric-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  --metric-panel-columns: repeat(4, minmax(0, 1fr));
+}
+
+.timeline-metric-grid.metric-panel-default-surface {
+  --metric-panel-border: var(--journal-soft-border);
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 14%, transparent),
+      transparent 44%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
+    );
+  --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
 }
 
 .timeline-metric-card {
   min-height: 100%;
-  padding: var(--space-3-5) var(--space-4) var(--space-3);
-}
-
-.timeline-metric-card.teacher-surface-section {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base))
-  );
-  box-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-}
-
-.timeline-metric-card .journal-note-value {
-  margin-top: 0.5rem;
-  font-size: var(--font-size-1-05);
-  font-weight: 700;
 }
 
 .timeline-board {
@@ -382,13 +405,13 @@ function changeTimelinePage(page: number): void {
 
 @media (max-width: 1023px) {
   .timeline-metric-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --metric-panel-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 767px) {
   .timeline-metric-grid {
-    grid-template-columns: 1fr;
+    --metric-panel-columns: 1fr;
   }
 }
 

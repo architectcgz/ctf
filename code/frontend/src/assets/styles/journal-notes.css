@@ -384,7 +384,7 @@
   padding: var(--journal-note-card-padding, var(--space-3) var(--space-3-5));
 }
 
-.journal-shell-admin.journal-notes-rail .journal-note {
+.journal-shell-admin.journal-notes-rail .journal-note:not(.metric-panel-card) {
   padding: var(--journal-note-rail-padding, 0 0 0 1rem);
   border-left: var(
     --journal-note-rail-border,

@@ -54,6 +54,26 @@ describe('student and user surface alignment', () => {
     expect(studentCategoryProgressSource).not.toContain('rgba(226, 232, 240, 0.65)')
   })
 
+  it('student timeline 概况卡片应显式采用统一 metric-panel 样式栈', () => {
+    expect(studentTimelineSource).toContain(
+      'class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentTimelineSource).toContain('class="timeline-metric-card progress-card metric-panel-card"')
+    expect(studentTimelineSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(studentTimelineSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(studentTimelineSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentTimelineSource).not.toContain('teacher-surface-section')
+    expect(studentTimelineSource).toMatch(
+      /\.timeline-metric-grid\.metric-panel-default-surface\s*\{[\s\S]*--metric-panel-background:\s*radial-gradient\(/s
+    )
+  })
+
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('--journal-border:')

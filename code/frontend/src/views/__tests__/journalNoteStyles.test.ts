@@ -23,8 +23,18 @@ describe('journal note shared styles', () => {
     expect(journalNotesSource).toContain('.journal-shell-admin .journal-note-value')
     expect(journalNotesSource).toContain('.journal-shell-admin .journal-note-helper')
     expect(journalNotesSource).toContain('.journal-shell-admin .journal-divider')
-    expect(journalNotesSource).toContain('.journal-shell-admin.journal-notes-card .journal-note')
-    expect(journalNotesSource).toContain('.journal-shell-admin.journal-notes-rail .journal-note')
+    expect(journalNotesSource).toContain(
+      '.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {'
+    )
+    expect(journalNotesSource).toContain(
+      '.journal-shell-admin.journal-notes-rail .journal-note:not(.metric-panel-card) {'
+    )
+    expect(journalNotesSource).not.toContain(
+      '.journal-shell-admin.journal-notes-card .journal-note {'
+    )
+    expect(journalNotesSource).not.toContain(
+      '.journal-shell-admin.journal-notes-rail .journal-note {'
+    )
   })
 
   it('目标 admin 页面应显式声明共享作用域和 note 变体', () => {
