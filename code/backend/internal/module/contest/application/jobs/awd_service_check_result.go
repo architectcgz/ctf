@@ -11,32 +11,38 @@ import (
 
 func (u *AWDRoundUpdater) checkTeamChallengeServices(
 	ctx context.Context,
+	contestID int64,
+	teamID int64,
 	definition contestports.AWDServiceDefinition,
 	instances []contestports.AWDServiceInstance,
 	round *model.AWDRound,
 	source string,
 ) (*awdServiceCheckOutcome, error) {
 	checkerType := effectiveAWDCheckerType(definition.CheckerType)
-	healthPath := resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath)
-	result := awdServiceCheckResult{
-		CheckedAt:            time.Now().UTC().Format(time.RFC3339),
-		CheckSource:          contestdomain.NormalizeAWDCheckSource(source),
-		CheckerType:          checkerType,
-		HealthPath:           healthPath,
-		InstanceCount:        len(instances),
-		HealthyInstanceCount: 0,
-		FailedInstanceCount:  len(instances),
-	}
-	if len(instances) == 0 {
-		outcome, err := buildAWDCheckOutcomeWithoutInstances(result)
-		if err != nil {
-			return nil, err
+	var (
+		outcome *awdServiceCheckOutcome
+		err     error
+	)
+	switch checkerType {
+	case model.AWDCheckerTypeHTTPStandard:
+		outcome, err = u.buildAWDCheckOutcomeFromHTTPStandard(ctx, contestID, round, teamID, definition, instances, source)
+	default:
+		healthPath := resolveAWDCheckerHealthPath(definition.CheckerConfig, u.cfg.CheckerHealthPath)
+		result := awdServiceCheckResult{
+			CheckedAt:            time.Now().UTC().Format(time.RFC3339),
+			CheckSource:          contestdomain.NormalizeAWDCheckSource(source),
+			CheckerType:          checkerType,
+			HealthPath:           healthPath,
+			InstanceCount:        len(instances),
+			HealthyInstanceCount: 0,
+			FailedInstanceCount:  len(instances),
 		}
-		outcome.checkerType = checkerType
-		return outcome, nil
+		if len(instances) == 0 {
+			outcome, err = buildAWDCheckOutcomeWithoutInstances(result)
+		} else {
+			outcome, err = u.buildAWDCheckOutcomeFromProbes(ctx, instances, healthPath, result)
+		}
 	}
-
-	outcome, err := u.buildAWDCheckOutcomeFromProbes(ctx, instances, healthPath, result)
 	if err != nil {
 		return nil, err
 	}

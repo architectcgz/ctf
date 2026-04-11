@@ -23,7 +23,19 @@ type awdServiceCheckResult struct {
 	LatencyMS            int64                  `json:"latency_ms,omitempty"`
 	ErrorCode            string                 `json:"error_code,omitempty"`
 	Error                string                 `json:"error,omitempty"`
+	PutFlag              *awdCheckActionResult  `json:"put_flag,omitempty"`
+	GetFlag              *awdCheckActionResult  `json:"get_flag,omitempty"`
+	Havoc                *awdCheckActionResult  `json:"havoc,omitempty"`
 	Targets              []awdCheckTargetResult `json:"targets,omitempty"`
+}
+
+type awdCheckActionResult struct {
+	Healthy    bool   `json:"healthy"`
+	Method     string `json:"method,omitempty"`
+	Path       string `json:"path,omitempty"`
+	StatusCode int    `json:"status_code,omitempty"`
+	ErrorCode  string `json:"error_code,omitempty"`
+	Error      string `json:"error,omitempty"`
 }
 
 type awdCheckTargetResult struct {
@@ -33,5 +45,8 @@ type awdCheckTargetResult struct {
 	LatencyMS int64                   `json:"latency_ms,omitempty"`
 	ErrorCode string                  `json:"error_code,omitempty"`
 	Error     string                  `json:"error,omitempty"`
+	PutFlag   *awdCheckActionResult   `json:"put_flag,omitempty"`
+	GetFlag   *awdCheckActionResult   `json:"get_flag,omitempty"`
+	Havoc     *awdCheckActionResult   `json:"havoc,omitempty"`
 	Attempts  []awdProbeAttemptResult `json:"attempts,omitempty"`
 }

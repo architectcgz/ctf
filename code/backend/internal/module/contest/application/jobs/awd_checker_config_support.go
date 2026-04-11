@@ -1,21 +1,11 @@
 package jobs
 
 import (
-	"encoding/json"
 	"strings"
 
 	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 )
-
-type awdHTTPCheckerActionConfig struct {
-	Path string `json:"path"`
-}
-
-type awdHTTPCheckerConfig struct {
-	GetFlag awdHTTPCheckerActionConfig `json:"get_flag"`
-	Havoc   awdHTTPCheckerActionConfig `json:"havoc"`
-}
 
 func effectiveAWDCheckerType(value model.AWDCheckerType) model.AWDCheckerType {
 	normalized := contestdomain.NormalizeAWDCheckerType(string(value))
@@ -37,8 +27,8 @@ func parseAWDCheckerHealthPath(value string) string {
 		return ""
 	}
 
-	var config awdHTTPCheckerConfig
-	if err := json.Unmarshal([]byte(value), &config); err != nil {
+	config, err := parseAWDHTTPCheckerConfig(value)
+	if err != nil {
 		return ""
 	}
 
