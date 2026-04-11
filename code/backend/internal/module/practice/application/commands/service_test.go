@@ -712,6 +712,52 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	}
 }
 
+func TestSubmitFlagRejectsUnknownFlagType(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   100,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: "shared_proof",
+				}, nil
+			},
+		},
+		nil,
+		&stubPracticeInstanceStore{},
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	_, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{legacy}")
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
+	}
+}
+
 func TestStartChallengeQueuesProvisioningWithoutSynchronousContainerCreation(t *testing.T) {
 	t.Parallel()
 

@@ -907,6 +907,9 @@ func (s *Service) validateSubmittedFlag(userID int64, challengeItem *model.Chall
 		return regexp.MatchString(challengeItem.FlagRegex, flag)
 	case model.FlagTypeManualReview:
 		return false, nil
+	case model.FlagTypeDynamic:
+	default:
+		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challengeItem.FlagType))
 	}
 
 	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)

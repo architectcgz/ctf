@@ -204,3 +204,28 @@ func TestFlagServiceConfigureManualReviewFlag(t *testing.T) {
 		t.Fatalf("unexpected manual review flag config: %+v", flagCfg)
 	}
 }
+
+func TestFlagServiceValidateFlagRejectsUnknownFlagType(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Challenge{
+		ID:        5,
+		Title:     "legacy-flag-type",
+		Status:    model.ChallengeStatusDraft,
+		FlagType:  "shared_proof",
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+
+	queryService, err := challengeqry.NewFlagService(challengeinfra.NewRepository(db), strings.Repeat("u", 32))
+	if err != nil {
+		t.Fatalf("NewFlagService(query) error = %v", err)
+	}
+
+	_, err = queryService.ValidateFlag(10, 5, "flag{legacy}", "")
+	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
+		t.Fatalf("expected invalid params for unknown flag type, got %v", err)
+	}
+}
