@@ -183,7 +183,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
               <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
               当前赛事概况
             </div>
-            <div class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid">
+            <div class="admin-summary-grid contest-overview-summary mt-5 metric-panel-grid metric-panel-default-surface">
               <div class="journal-note metric-panel-card">
                 <div class="journal-note-label metric-panel-label">赛事总量</div>
                 <div class="journal-note-value metric-panel-value">{{ total }}</div>

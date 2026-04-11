@@ -73,10 +73,10 @@ describe('cheat detection surface alignment', () => {
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
     expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid"'
+      'class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid metric-panel-default-surface"'
     )
     expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-kpi-summary metric-panel-grid"'
+      'class="admin-summary-grid cheat-kpi-summary metric-panel-grid metric-panel-default-surface"'
     )
     expect(cheatDetectionSource).toContain('class="journal-note metric-panel-card"')
     expect(cheatDetectionSource).toContain('class="journal-note-label metric-panel-label"')

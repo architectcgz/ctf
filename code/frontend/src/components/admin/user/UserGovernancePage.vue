@@ -220,7 +220,7 @@ function handleImportChange(event: Event): void {
             <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
             当前用户概况
           </div>
-          <div class="admin-summary-grid user-overview-grid metric-panel-grid mt-5">
+          <div class="admin-summary-grid user-overview-grid metric-panel-grid metric-panel-default-surface mt-5">
             <div class="journal-note user-overview-stat metric-panel-card">
               <div class="journal-note-label metric-panel-label">用户总量</div>
               <div class="journal-note-value metric-panel-value">{{ total }}</div>
@@ -568,12 +568,6 @@ function handleImportChange(event: Event): void {
   min-height: 140px;
   flex-direction: column;
   justify-content: space-between;
-}
-
-.user-overview-stat .journal-note-value {
-  font-size: clamp(1.35rem, 2vw, 1.9rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
 }
 
 .admin-section-head-intro {

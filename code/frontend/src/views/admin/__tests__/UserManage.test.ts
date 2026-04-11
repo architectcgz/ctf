@@ -334,7 +334,7 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toContain('user-panel-import')
     expect(userGovernanceSource).not.toContain('<main class="content-pane">')
     expect(userDirectoryPanelStart).toBeGreaterThan(-1)
-    expect(userDirectoryPanelSnippet).toContain('<div class="admin-section-head">')
+    expect(userDirectoryPanelSnippet).toContain('<div class="workspace-tab-heading">')
     expect(userDirectoryPanelSnippet).not.toContain('admin-section-head-intro')
     expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
   })

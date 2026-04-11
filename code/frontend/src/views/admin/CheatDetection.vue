@@ -187,7 +187,7 @@ onMounted(() => {
 
             <article class="journal-brief rounded-[24px] border px-5 py-5">
               <div class="journal-note-label">风险概况</div>
-              <div class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid">
+              <div class="admin-summary-grid cheat-risk-summary mt-5 metric-panel-grid metric-panel-default-surface">
                 <div class="journal-note metric-panel-card">
                   <div class="journal-note-label metric-panel-label">提交突增</div>
                   <div class="journal-note-value metric-panel-value">
@@ -210,7 +210,7 @@ onMounted(() => {
 
           <div class="journal-divider" />
 
-          <div class="admin-summary-grid cheat-kpi-summary metric-panel-grid">
+          <div class="admin-summary-grid cheat-kpi-summary metric-panel-grid metric-panel-default-surface">
             <div class="journal-note metric-panel-card">
               <div class="journal-note-label metric-panel-label">Submit Burst</div>
               <div class="journal-note-value metric-panel-value">
