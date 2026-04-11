@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ctf-platform/internal/model"
+	contestports "ctf-platform/internal/module/contest/ports"
 )
 
 func (r *AWDRepository) ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error) {
@@ -41,6 +42,27 @@ func (r *AWDRepository) ListChallengesByContest(ctx context.Context, contestID i
 		return nil, err
 	}
 	return challenges, nil
+}
+
+func (r *AWDRepository) ListServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]contestports.AWDServiceDefinition, error) {
+	var definitions []contestports.AWDServiceDefinition
+	if err := r.dbWithContext(ctx).
+		Table("contest_challenges AS cc").
+		Select(`
+			cc.challenge_id AS challenge_id,
+			c.flag_prefix AS flag_prefix,
+			cc.awd_checker_type AS awd_checker_type,
+			cc.awd_checker_config AS awd_checker_config,
+			cc.awd_sla_score AS awd_sla_score,
+			cc.awd_defense_score AS awd_defense_score
+		`).
+		Joins("JOIN challenges AS c ON c.id = cc.challenge_id").
+		Where("cc.contest_id = ?", contestID).
+		Order("cc.challenge_id ASC").
+		Scan(&definitions).Error; err != nil {
+		return nil, err
+	}
+	return definitions, nil
 }
 
 func (r *AWDRepository) ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error) {

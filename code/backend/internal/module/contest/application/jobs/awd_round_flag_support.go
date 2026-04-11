@@ -18,18 +18,18 @@ func (u *AWDRoundUpdater) buildRoundFlagAssignments(ctx context.Context, contest
 	if err != nil {
 		return nil, err
 	}
-	challenges, err := u.loadContestChallenges(ctx, contestID)
+	definitions, err := u.loadContestServiceDefinitions(ctx, contestID)
 	if err != nil {
 		return nil, err
 	}
 
-	assignments := make([]contestports.AWDFlagAssignment, 0, len(teams)*len(challenges))
+	assignments := make([]contestports.AWDFlagAssignment, 0, len(teams)*len(definitions))
 	for _, team := range teams {
-		for _, challenge := range challenges {
+		for _, definition := range definitions {
 			assignments = append(assignments, contestports.AWDFlagAssignment{
 				TeamID:      team.ID,
-				ChallengeID: challenge.ID,
-				Flag:        contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, challenge.ID, u.flagSecret, challenge.FlagPrefix),
+				ChallengeID: definition.ChallengeID,
+				Flag:        contestdomain.BuildAWDRoundFlag(contestID, round.RoundNumber, team.ID, definition.ChallengeID, u.flagSecret, definition.FlagPrefix),
 			})
 		}
 	}
@@ -48,10 +48,6 @@ func (u *AWDRoundUpdater) loadContestTeams(ctx context.Context, contestID int64)
 		}
 	}
 	return teams, nil
-}
-
-func (u *AWDRoundUpdater) loadContestChallenges(ctx context.Context, contestID int64) ([]model.Challenge, error) {
-	return u.repo.ListChallengesByContest(ctx, contestID)
 }
 
 func (u *AWDRoundUpdater) currentRoundTTL(contest *model.Contest, round *model.AWDRound, now time.Time) time.Duration {

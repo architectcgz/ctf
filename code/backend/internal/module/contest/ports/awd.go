@@ -19,6 +19,7 @@ type AWDRepository interface {
 	FindRunningRound(ctx context.Context, contestID int64) (*model.AWDRound, error)
 	ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error)
 	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
+	ListServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]AWDServiceDefinition, error)
 	ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error)
 	ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error)
 	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
@@ -41,6 +42,15 @@ type AWDFlagAssignment struct {
 	TeamID      int64
 	ChallengeID int64
 	Flag        string
+}
+
+type AWDServiceDefinition struct {
+	ChallengeID   int64                `gorm:"column:challenge_id"`
+	FlagPrefix    string               `gorm:"column:flag_prefix"`
+	CheckerType   model.AWDCheckerType `gorm:"column:awd_checker_type"`
+	CheckerConfig string               `gorm:"column:awd_checker_config"`
+	SLAScore      int                  `gorm:"column:awd_sla_score"`
+	DefenseScore  int                  `gorm:"column:awd_defense_score"`
 }
 
 type AWDContainerFileWriter interface {
