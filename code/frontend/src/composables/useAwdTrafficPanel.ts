@@ -1,4 +1,4 @@
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 
 import type { AWDTrafficStatusGroup, AWDTrafficSummaryData } from '@/api/contracts'
 
@@ -17,6 +17,7 @@ interface UseAwdTrafficPanelOptions {
   trafficEventsTotal: Ref<number>
   trafficFilters: Ref<AWDTrafficFilters>
   loadingTrafficEvents: Ref<boolean>
+  trafficPathKeyword: Readonly<Ref<string>>
   formatDateTime: (value?: string) => string
   formatPercent: (value: number) => string
   applyTrafficFilters: (patch: Partial<AWDTrafficFilters>) => void
@@ -28,12 +29,21 @@ export function useAwdTrafficPanel({
   trafficEventsTotal,
   trafficFilters,
   loadingTrafficEvents,
+  trafficPathKeyword,
   formatDateTime,
   formatPercent,
   applyTrafficFilters,
   changeTrafficPage,
 }: UseAwdTrafficPanelOptions) {
   const trafficPathKeywordInput = ref('')
+
+  watch(
+    trafficPathKeyword,
+    (keyword) => {
+      trafficPathKeywordInput.value = keyword
+    },
+    { immediate: true }
+  )
 
   const trafficErrorRate = computed(() => {
     if (!trafficSummary.value || trafficSummary.value.total_request_count <= 0) {
