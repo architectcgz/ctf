@@ -1,132 +1,23 @@
 <script setup lang="ts">
-import { computed, toRef, watch } from 'vue'
+import { computed, toRef } from 'vue'
 import { RefreshCw, Search, ShieldAlert, ShieldCheck, Sword, TimerReset } from 'lucide-vue-next'
-
-import type {
-  AWDAttackLogData,
-  AWDRoundData,
-  AWDRoundSummaryData,
-  AWDTrafficEventData,
-  AWDTrafficSummaryData,
-  AWDTeamServiceData,
-  AdminContestChallengeData,
-  ContestDetailData,
-  ScoreboardRow,
-} from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import type {
+  AWDRoundInspectorEmits,
+  AWDRoundInspectorProps,
+} from '@/components/admin/contest/awdInspector.types'
 import AppCard from '@/components/common/AppCard.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import SectionCard from '@/components/common/SectionCard.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
+import { useAwdInspectorCoreState } from '@/composables/useAwdInspectorCoreState'
 import { useAwdInspectorDerivedData } from '@/composables/useAwdInspectorDerivedData'
-import { useAwdInspectorFilters } from '@/composables/useAwdInspectorFilters'
+import { useAwdInspectorExports } from '@/composables/useAwdInspectorExports'
 import { useAwdInspectorFormatting } from '@/composables/useAwdInspectorFormatting'
-import { useAwdTrafficPanel, type AWDTrafficFilters } from '@/composables/useAwdTrafficPanel'
-import { downloadCSVFile, downloadJSONFile } from '@/utils/csv'
-
-const props = defineProps<{
-  contest: ContestDetailData
-  rounds: AWDRoundData[]
-  selectedRoundId: string | null
-  services: AWDTeamServiceData[]
-  attacks: AWDAttackLogData[]
-  challengeLinks: AdminContestChallengeData[]
-  summary: AWDRoundSummaryData | null
-  trafficSummary: AWDTrafficSummaryData | null
-  trafficEvents: AWDTrafficEventData[]
-  trafficEventsTotal: number
-  trafficFilters: AWDTrafficFilters
-  scoreboardRows: ScoreboardRow[]
-  scoreboardFrozen: boolean
-  loadingRounds: boolean
-  loadingRoundDetail: boolean
-  loadingTrafficSummary: boolean
-  loadingTrafficEvents: boolean
-  checking: boolean
-  shouldAutoRefresh: boolean
-  canRecordServiceChecks: boolean
-  canRecordAttackLogs: boolean
-  serviceCheckHint?: string
-  attackLogHint?: string
-}>()
-
-const emit = defineEmits<{
-  refresh: []
-  openCreateRoundDialog: []
-  openServiceCheckDialog: []
-  openAttackLogDialog: []
-  runSelectedRoundCheck: []
-  applyTrafficFilters: [filters: Partial<AWDTrafficFilters>]
-  changeTrafficPage: [page: number]
-  resetTrafficFilters: []
-  'update:selectedRoundId': [roundId: string]
-}>()
-
-const selectedRound = computed(
-  () => props.rounds.find((item) => item.id === props.selectedRoundId) || null
-)
-const summaryMetrics = computed(() => props.summary?.metrics || null)
-const totalServiceCount = computed(
-  () => summaryMetrics.value?.total_service_count ?? props.services.length
-)
-const totalAttackCount = computed(
-  () => summaryMetrics.value?.total_attack_count ?? props.attacks.length
-)
-const upCount = computed(
-  () =>
-    summaryMetrics.value?.service_up_count ??
-    props.services.filter((item) => item.service_status === 'up').length
-)
-const compromisedCount = computed(
-  () =>
-    summaryMetrics.value?.service_compromised_count ??
-    props.services.filter((item) => item.service_status === 'compromised').length
-)
-const downCount = computed(
-  () =>
-    summaryMetrics.value?.service_down_count ??
-    props.services.filter((item) => item.service_status === 'down').length
-)
-const successfulAttackCount = computed(
-  () =>
-    summaryMetrics.value?.successful_attack_count ??
-    props.attacks.filter((item) => item.is_success).length
-)
-const failedAttackCount = computed(
-  () =>
-    summaryMetrics.value?.failed_attack_count ??
-    props.attacks.filter((item) => !item.is_success).length
-)
-const attackedServiceCount = computed(
-  () =>
-    summaryMetrics.value?.attacked_service_count ??
-    props.services.filter((item) => item.attack_received > 0).length
-)
-const defenseSuccessCount = computed(
-  () =>
-    summaryMetrics.value?.defense_success_count ??
-    props.services.filter((item) => item.attack_received > 0 && item.service_status === 'up').length
-)
-const manualCheckCount = computed(() => {
-  if (summaryMetrics.value) {
-    return (
-      summaryMetrics.value.manual_current_round_check_count +
-      summaryMetrics.value.manual_selected_round_check_count +
-      summaryMetrics.value.manual_service_check_count
-    )
-  }
-  return props.services.filter((item) => {
-    const source = getServiceCheckSourceValue(item.check_result)
-    return (
-      source === 'manual_current_round' ||
-      source === 'manual_selected_round' ||
-      source === 'manual_service_check'
-    )
-  }).length
-})
-const contestId = computed(() => props.contest.id)
-const selectedRoundIdRef = computed(() => props.selectedRoundId)
+import { useAwdTrafficPanel } from '@/composables/useAwdTrafficPanel'
+const props = defineProps<AWDRoundInspectorProps>()
+const emit = defineEmits<AWDRoundInspectorEmits>()
 const {
   serviceTeamFilter,
   serviceStatusFilter,
@@ -136,9 +27,27 @@ const {
   attackResultFilter,
   attackSourceFilter,
   resetFilters,
-} = useAwdInspectorFilters({
-  contestId,
-  selectedRoundId: selectedRoundIdRef,
+  selectedRound,
+  summaryMetrics,
+  totalServiceCount,
+  totalAttackCount,
+  upCount,
+  compromisedCount,
+  downCount,
+  successfulAttackCount,
+  failedAttackCount,
+  attackedServiceCount,
+  defenseSuccessCount,
+  manualCheckCount,
+  checkButtonLabel,
+} = useAwdInspectorCoreState({
+  contest: toRef(props, 'contest'),
+  selectedRoundId: toRef(props, 'selectedRoundId'),
+  rounds: toRef(props, 'rounds'),
+  services: toRef(props, 'services'),
+  attacks: toRef(props, 'attacks'),
+  summary: toRef(props, 'summary'),
+  checking: toRef(props, 'checking'),
 })
 
 const {
@@ -165,28 +74,6 @@ const {
   summaryMetrics,
   manualCheckCount,
 })
-const {
-  trafficPathKeywordInput,
-  trafficTotalPages,
-  trafficTrendRows,
-  trafficSummaryStats,
-  trafficTrendNarrative,
-  trafficStatusGroupOptions,
-  applyTrafficKeywordFilter,
-  onTrafficStatusGroupChange,
-  clearTrafficKeywordFilter,
-  applyTrafficFilterPatch,
-  handleTrafficPageChange,
-} = useAwdTrafficPanel({
-  trafficSummary: toRef(props, 'trafficSummary'),
-  trafficEventsTotal: toRef(props, 'trafficEventsTotal'),
-  trafficFilters: toRef(props, 'trafficFilters'),
-  loadingTrafficEvents: toRef(props, 'loadingTrafficEvents'),
-  formatDateTime,
-  formatPercent,
-  applyTrafficFilters: (patch) => emit('applyTrafficFilters', patch),
-  changeTrafficPage: (page) => emit('changeTrafficPage', page),
-})
 
 const {
   getCheckSourceLabel,
@@ -199,27 +86,6 @@ const {
 } = useAwdCheckResultPresentation({
   formatDateTime,
 })
-
-function getTrafficTeamName(teamId: string, teamName?: string): string {
-  if (teamName && teamName.trim() !== '') {
-    return teamName
-  }
-  return trafficTeamOptions.value.find((item) => item.id === teamId)?.name || `Team #${teamId}`
-}
-
-function getTrafficChallengeTitle(challengeId: string, fallbackTitle?: string): string {
-  if (fallbackTitle && fallbackTitle.trim() !== '') {
-    return fallbackTitle
-  }
-  return getChallengeTitle(challengeId)
-}
-
-function getTrafficSourceLabel(source: string): string {
-  if (source === 'proxy_audit' || source === 'runtime_proxy') {
-    return '平台代理'
-  }
-  return source || '未标记'
-}
 
 const {
   getServiceCheckSourceValue,
@@ -251,201 +117,68 @@ const {
   getChallengeTitle,
   getCheckStatusLabel,
 })
-
-function exportFilteredServices() {
-  if (filteredServices.value.length === 0) {
-    return
-  }
-  downloadCSVFile(
-    buildExportFilename('services'),
-    filteredServices.value.map((item) => ({
-      赛事: props.contest.title,
-      轮次: getSelectedRoundLabel(),
-      筛选队伍: serviceTeamFilter.value
-        ? serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
-            ?.team_name || serviceTeamFilter.value
-        : '全部队伍',
-      筛选状态:
-        serviceStatusFilter.value === 'all'
-          ? '全部状态'
-          : getServiceStatusLabel(serviceStatusFilter.value),
-      筛选来源: serviceCheckSourceFilter.value
-        ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
-        : '全部来源',
-      筛选告警: serviceAlertReasonFilter.value
-        ? getServiceAlertLabel(serviceAlertReasonFilter.value)
-        : '全部告警',
-      队伍: item.team_name,
-      靶题: getChallengeTitle(item.challenge_id),
-      服务状态: getServiceStatusLabel(item.service_status),
-      巡检来源: getCheckSourceLabel(item.check_result.check_source) || '',
-      检查摘要: summarizeCheckResult(item.check_result),
-      防守得分: item.defense_score,
-      受攻击次数: item.attack_received,
-      更新时间: formatDateTime(item.updated_at),
-    }))
-  )
-}
-
-function exportFilteredAttacks() {
-  if (filteredAttacks.value.length === 0) {
-    return
-  }
-  downloadCSVFile(
-    buildExportFilename('attacks'),
-    filteredAttacks.value.map((item) => ({
-      赛事: props.contest.title,
-      轮次: getSelectedRoundLabel(),
-      筛选队伍: attackTeamFilter.value
-        ? attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name ||
-          attackTeamFilter.value
-        : '全部队伍',
-      筛选结果:
-        attackResultFilter.value === 'all'
-          ? '全部结果'
-          : attackResultFilter.value === 'success'
-            ? '仅成功'
-            : '仅失败',
-      筛选来源:
-        attackSourceFilter.value === 'all'
-          ? '全部来源'
-          : getAttackSourceLabel(attackSourceFilter.value),
-      时间: formatDateTime(item.created_at),
-      攻击方: item.attacker_team,
-      受害方: item.victim_team,
-      靶题: getChallengeTitle(item.challenge_id),
-      攻击类型: getAttackTypeLabel(item.attack_type),
-      记录来源: getAttackSourceLabel(item.source),
-      攻击结果: item.is_success ? '成功' : '失败',
-      得分: item.score_gained,
-      提交Flag: item.submitted_flag || '',
-    }))
-  )
-}
-
-function exportReviewPackage() {
-  if (!selectedRound.value) {
-    return
-  }
-
-  downloadJSONFile(buildExportFilename('review-package').replace(/\.csv$/, '.json'), {
-    exported_at: new Date().toISOString(),
-    contest: {
-      id: props.contest.id,
-      title: props.contest.title,
-      status: props.contest.status,
-      mode: props.contest.mode,
-    },
-    round: {
-      id: selectedRound.value.id,
-      round_number: selectedRound.value.round_number,
-      status: selectedRound.value.status,
-      attack_score: selectedRound.value.attack_score,
-      defense_score: selectedRound.value.defense_score,
-      started_at: selectedRound.value.started_at || null,
-      ended_at: selectedRound.value.ended_at || null,
-      updated_at: selectedRound.value.updated_at,
-    },
-    filters: {
-      service: {
-        team_id: serviceTeamFilter.value || null,
-        team_name:
-          serviceTeamOptions.value.find((team) => team.team_id === serviceTeamFilter.value)
-            ?.team_name || null,
-        status: serviceStatusFilter.value,
-        check_source: serviceCheckSourceFilter.value || null,
-        check_source_label: serviceCheckSourceFilter.value
-          ? getCheckSourceLabel(serviceCheckSourceFilter.value) || serviceCheckSourceFilter.value
-          : '全部来源',
-        alert_reason: serviceAlertReasonFilter.value || null,
-        alert_reason_label: serviceAlertReasonFilter.value
-          ? getServiceAlertLabel(serviceAlertReasonFilter.value)
-          : '全部告警',
-      },
-      attack: {
-        team_id: attackTeamFilter.value || null,
-        team_name:
-          attackTeamOptions.value.find((team) => team.id === attackTeamFilter.value)?.name || null,
-        result: attackResultFilter.value,
-        source: attackSourceFilter.value,
-        source_label:
-          attackSourceFilter.value === 'all'
-            ? '全部来源'
-            : getAttackSourceLabel(attackSourceFilter.value),
-      },
-    },
-    summary: {
-      round: props.summary?.round || null,
-      metrics: props.summary?.metrics || null,
-      items: props.summary?.items || [],
-      service_alerts: serviceAlerts.value.map((alert) => ({
-        key: alert.key,
-        label: alert.label,
-        count: alert.count,
-        affected_teams: alert.affected_teams,
-        samples: alert.samples,
-      })),
-    },
-    scoreboard: {
-      frozen: props.scoreboardFrozen,
-      rows: props.scoreboardRows,
-    },
-    services: filteredServices.value.map((item) => ({
-      id: item.id,
-      team_id: item.team_id,
-      team_name: item.team_name,
-      challenge_id: item.challenge_id,
-      challenge_title: getChallengeTitle(item.challenge_id),
-      service_status: item.service_status,
-      service_status_label: getServiceStatusLabel(item.service_status),
-      check_source: getServiceCheckSourceValue(item.check_result) || null,
-      check_source_label: getCheckSourceLabel(item.check_result.check_source) || '',
-      check_result: item.check_result,
-      defense_score: item.defense_score,
-      attack_received: item.attack_received,
-      attack_score: item.attack_score,
-      updated_at: item.updated_at,
-    })),
-    attacks: filteredAttacks.value.map((item) => ({
-      id: item.id,
-      attacker_team_id: item.attacker_team_id,
-      attacker_team: item.attacker_team,
-      victim_team_id: item.victim_team_id,
-      victim_team: item.victim_team,
-      challenge_id: item.challenge_id,
-      challenge_title: getChallengeTitle(item.challenge_id),
-      attack_type: item.attack_type,
-      attack_type_label: getAttackTypeLabel(item.attack_type),
-      source: item.source,
-      source_label: getAttackSourceLabel(item.source),
-      is_success: item.is_success,
-      score_gained: item.score_gained,
-      submitted_flag: item.submitted_flag || null,
-      created_at: item.created_at,
-    })),
-  })
-}
-
-watch(
-  () => props.trafficFilters.path_keyword,
-  (keyword) => {
-    trafficPathKeywordInput.value = keyword
-  },
-  { immediate: true }
-)
-
-const checkButtonLabel = computed(() => {
-  if (props.checking) {
-    return '执行巡检中...'
-  }
-  if (!selectedRound.value) {
-    return '立即巡检所选轮次'
-  }
-  if (selectedRound.value.status === 'running') {
-    return '立即巡检当前轮'
-  }
-  return `重跑第 ${selectedRound.value.round_number} 轮巡检`
+const {
+  trafficPathKeywordInput,
+  trafficTotalPages,
+  trafficTrendRows,
+  trafficSummaryStats,
+  trafficTrendNarrative,
+  trafficStatusGroupOptions,
+  applyTrafficKeywordFilter,
+  onTrafficStatusGroupChange,
+  clearTrafficKeywordFilter,
+  applyTrafficFilterPatch,
+  handleTrafficPageChange,
+} = useAwdTrafficPanel({
+  trafficSummary: toRef(props, 'trafficSummary'),
+  trafficEventsTotal: toRef(props, 'trafficEventsTotal'),
+  trafficFilters: toRef(props, 'trafficFilters'),
+  loadingTrafficEvents: toRef(props, 'loadingTrafficEvents'),
+  trafficPathKeyword: computed(() => props.trafficFilters.path_keyword),
+  formatDateTime,
+  formatPercent,
+  applyTrafficFilters: (patch) => emit('applyTrafficFilters', patch),
+  changeTrafficPage: (page) => emit('changeTrafficPage', page),
 })
+const {
+  getTrafficTeamName,
+  getTrafficChallengeTitle,
+  getTrafficSourceLabel,
+  exportFilteredServices,
+  exportFilteredAttacks,
+  exportReviewPackage,
+} = useAwdInspectorExports({
+  contest: toRef(props, 'contest'),
+  selectedRound,
+  summary: toRef(props, 'summary'),
+  scoreboardRows: toRef(props, 'scoreboardRows'),
+  scoreboardFrozen: toRef(props, 'scoreboardFrozen'),
+  serviceTeamFilter,
+  serviceStatusFilter,
+  serviceCheckSourceFilter,
+  serviceAlertReasonFilter,
+  attackTeamFilter,
+  attackResultFilter,
+  attackSourceFilter,
+  serviceTeamOptions,
+  attackTeamOptions,
+  trafficTeamOptions,
+  serviceAlerts,
+  filteredServices,
+  filteredAttacks,
+  formatDateTime,
+  getChallengeTitle,
+  getSelectedRoundLabel,
+  buildExportFilename,
+  getServiceStatusLabel,
+  getAttackTypeLabel,
+  getAttackSourceLabel,
+  getCheckSourceLabel,
+  getServiceAlertLabel,
+  summarizeCheckResult,
+  getServiceCheckSourceValue,
+})
+
 </script>
 
 <template>
