@@ -113,6 +113,14 @@ describe('ImageManage', () => {
     expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper">这一页已加载的镜像数量</div>')
   })
 
+  it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
+    expect(imageManageSource).toMatch(
+      /\.image-header\s*\{[\s\S]*border-bottom:\s*1px solid color-mix\(in srgb, var\(--journal-border\) 88%, transparent\);/s
+    )
+    expect(imageManageSource).not.toContain('<div class="journal-divider image-divider" />')
+    expect(imageManageSource).not.toMatch(/\.image-divider\s*\{/s)
+  })
+
   it('应该把镜像名称、标签和描述拆成独立列', async () => {
     const wrapper = mountPage()
 
