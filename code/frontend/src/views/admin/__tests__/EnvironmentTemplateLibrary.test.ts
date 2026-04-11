@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import EnvironmentTemplateLibrary from '../EnvironmentTemplateLibrary.vue'
 import ChallengeTopologyStudioPage from '@/components/admin/topology/ChallengeTopologyStudioPage.vue'
+import challengeTopologyStudioPageSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
 
 vi.mock('@/api/admin', () => ({
   getChallengeDetail: vi.fn(),
@@ -81,5 +82,21 @@ describe('EnvironmentTemplateLibrary', () => {
     expect(wrapper.text()).toContain('载入编辑')
     expect(wrapper.text()).toContain('新建空白模板')
     expect(wrapper.text()).not.toContain('应用到挑战')
+  })
+
+  it('模板库概览卡片应补齐统一的说明文案', () => {
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-summary-tile progress-card metric-panel-card"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain(
+      'class="topology-summary-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的网络数量')
+    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的节点数量')
+    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的连线数量')
+    expect(challengeTopologyStudioPageSource).toContain('当前模板草稿中的策略数量')
   })
 })

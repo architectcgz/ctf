@@ -176,6 +176,17 @@ describe('ChallengeManage', () => {
     )
   })
 
+  it('应使用统一的进度卡片样式展示题目概览统计', () => {
+    expect(challengeManageSource).toContain(
+      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(challengeManageSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(challengeManageSource).toContain('当前题库中可管理的题目')
+    expect(challengeManageSource).toContain('当前分页中的题目数量')
+    expect(challengeManageSource).toContain('当前页已开放训练的题目')
+    expect(challengeManageSource).toContain('导入后仍待完善或发布的题目')
+  })
+
   it('应该根据 query 切到待确认导入，并在导入标签中只保留独立示例页入口', async () => {
     routeState.query = { panel: 'queue' }
 
