@@ -18,11 +18,11 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	if err != nil {
 		return err
 	}
-	challenges, err := u.loadContestChallenges(ctx, contest.ID)
+	definitions, err := u.loadContestServiceDefinitions(ctx, contest.ID)
 	if err != nil {
 		return err
 	}
-	instances, err := u.loadContestServiceInstances(ctx, contest.ID, challenges)
+	instances, err := u.loadContestServiceInstances(ctx, contest.ID, definitions)
 	if err != nil {
 		return err
 	}
@@ -34,31 +34,29 @@ func (u *AWDRoundUpdater) runRoundServiceChecks(ctx context.Context, contest *mo
 	}
 
 	now := time.Now()
-	records := make([]model.AWDTeamService, 0, len(teams)*len(challenges))
-	statusFields := make(map[string]any, len(teams)*len(challenges))
+	records := make([]model.AWDTeamService, 0, len(teams)*len(definitions))
+	statusFields := make(map[string]any, len(teams)*len(definitions))
 	for _, team := range teams {
-		for _, challenge := range challenges {
-			key := awdServiceTargetKey{teamID: team.ID, challengeID: challenge.ID}
-			outcome, checkErr := u.checkTeamChallengeServices(ctx, grouped[key], source)
+		for _, definition := range definitions {
+			key := awdServiceTargetKey{teamID: team.ID, challengeID: definition.ChallengeID}
+			outcome, checkErr := u.checkTeamChallengeServices(ctx, definition, grouped[key], round, source)
 			if checkErr != nil {
 				return checkErr
 			}
 
-			defenseScore := 0
-			if outcome.serviceStatus == model.AWDServiceStatusUp {
-				defenseScore = round.DefenseScore
-			}
 			records = append(records, model.AWDTeamService{
 				RoundID:       round.ID,
 				TeamID:        team.ID,
-				ChallengeID:   challenge.ID,
+				ChallengeID:   definition.ChallengeID,
 				ServiceStatus: outcome.serviceStatus,
 				CheckResult:   outcome.checkResult,
-				DefenseScore:  defenseScore,
+				CheckerType:   outcome.checkerType,
+				SLAScore:      outcome.slaScore,
+				DefenseScore:  outcome.defenseScore,
 				CreatedAt:     now,
 				UpdatedAt:     now,
 			})
-			statusFields[rediskeys.AWDRoundFlagField(team.ID, challenge.ID)] = outcome.serviceStatus
+			statusFields[rediskeys.AWDRoundFlagField(team.ID, definition.ChallengeID)] = outcome.serviceStatus
 		}
 	}
 

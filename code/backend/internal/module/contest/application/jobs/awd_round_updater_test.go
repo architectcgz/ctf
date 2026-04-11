@@ -286,6 +286,9 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 	if record.DefenseScore != 40 {
 		t.Fatalf("unexpected defense score: %d", record.DefenseScore)
 	}
+	if record.SLAScore != 0 || record.CheckerType != model.AWDCheckerTypeLegacyProbe {
+		t.Fatalf("unexpected sla/checker fields: %+v", record)
+	}
 	if !strings.Contains(record.CheckResult, "\"healthy_instance_count\":1") {
 		t.Fatalf("unexpected check result: %s", record.CheckResult)
 	}
@@ -313,6 +316,86 @@ func TestAWDRoundUpdaterSyncsServiceChecksAsUp(t *testing.T) {
 	attempts, ok := target["attempts"].([]any)
 	if !ok || len(attempts) != 1 {
 		t.Fatalf("unexpected attempts: %#v", target["attempts"])
+	}
+}
+
+func TestAWDRoundUpdaterUsesContestServiceCheckerConfig(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Date(2026, 3, 10, 12, 11, 0, 0, time.UTC)
+
+	createAWDContestFixture(t, db, 104, now)
+	createAWDRoundFixture(t, db, 10401, 104, 1, 50, 40, now)
+	createAWDChallengeFixture(t, db, 104001, now)
+	createAWDContestChallengeFixture(t, db, 104, 104001, now)
+	createAWDTeamFixture(t, db, 104011, 104, "Config", now)
+	createAWDTeamMemberFixture(t, db, 104, 104011, 5401, now)
+
+	if err := db.Model(&model.ContestChallenge{}).
+		Where("contest_id = ? AND challenge_id = ?", 104, 104001).
+		Updates(map[string]any{
+			"awd_checker_type":   model.AWDCheckerTypeHTTPStandard,
+			"awd_checker_config": `{"get_flag":{"path":"/internal/flag"}}`,
+			"awd_sla_score":      18,
+			"awd_defense_score":  28,
+		}).Error; err != nil {
+		t.Fatalf("update awd contest challenge config: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/internal/flag":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	if err := db.Create(&model.Instance{
+		ID:          9401,
+		UserID:      5401,
+		ChallengeID: 104001,
+		ContainerID: "ctr-config",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   server.URL,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create awd instance: %v", err)
+	}
+
+	updater := newAWDRoundUpdaterForTest(db, nil, config.ContestAWDConfig{
+		SchedulerInterval:  time.Second,
+		SchedulerBatchSize: 10,
+		RoundInterval:      5 * time.Minute,
+		RoundLockTTL:       time.Minute,
+		CheckerTimeout:     time.Second,
+		CheckerHealthPath:  "/health",
+	}, "test-flag-secret", nil, zap.NewNop())
+	updater.SetHTTPClient(server.Client())
+
+	if err := updater.SyncRoundServiceChecks(context.Background(), &model.Contest{ID: 104}, 1); err != nil {
+		t.Fatalf("syncRoundServiceChecks() error = %v", err)
+	}
+
+	var record model.AWDTeamService
+	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 10401, 104011, 104001).First(&record).Error; err != nil {
+		t.Fatalf("load service check: %v", err)
+	}
+	if record.ServiceStatus != model.AWDServiceStatusUp || record.DefenseScore != 28 || record.SLAScore != 18 || record.CheckerType != model.AWDCheckerTypeHTTPStandard {
+		t.Fatalf("unexpected configured service record: %+v", record)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(record.CheckResult), &result); err != nil {
+		t.Fatalf("unmarshal check result: %v", err)
+	}
+	if result["health_path"] != "/internal/flag" {
+		t.Fatalf("unexpected configured health path: %#v", result["health_path"])
+	}
+	if result["checker_type"] != string(model.AWDCheckerTypeHTTPStandard) {
+		t.Fatalf("unexpected checker type: %#v", result["checker_type"])
 	}
 }
 

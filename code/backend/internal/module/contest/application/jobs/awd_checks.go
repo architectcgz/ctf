@@ -1,13 +1,19 @@
 package jobs
 
+import "ctf-platform/internal/model"
+
 type awdServiceCheckOutcome struct {
 	serviceStatus string
 	checkResult   string
+	checkerType   model.AWDCheckerType
+	slaScore      int
+	defenseScore  int
 }
 
 type awdServiceCheckResult struct {
 	CheckedAt            string                 `json:"checked_at"`
 	CheckSource          string                 `json:"check_source,omitempty"`
+	CheckerType          model.AWDCheckerType   `json:"checker_type,omitempty"`
 	HealthPath           string                 `json:"health_path"`
 	InstanceCount        int                    `json:"instance_count"`
 	HealthyInstanceCount int                    `json:"healthy_instance_count"`
