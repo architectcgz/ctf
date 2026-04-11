@@ -4,4 +4,5 @@
 
 当前包含：
 
+- `awd-engine-migration.md`：AWD 对抗引擎化迁移设计
 - `instance-sharing.md`：题目实例共享策略的最终设计
