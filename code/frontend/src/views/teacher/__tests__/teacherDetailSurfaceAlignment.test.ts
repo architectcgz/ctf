@@ -93,23 +93,32 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).not.toMatch(
       /\.insight-rate-panel\s*\{[^}]*border-top:/s
     )
-    expect(studentInsightPanelSource).toContain('class="writeup-kpi-grid metric-panel-grid"')
-    expect(studentInsightPanelSource).toContain(
-      'class="insight-kpi-card writeup-kpi-card insight-kpi-card--primary metric-panel-card"'
-    )
-    expect(studentInsightPanelSource).toContain('class="insight-kpi-label metric-panel-label"')
-    expect(studentInsightPanelSource).toContain('class="insight-kpi-value metric-panel-value"')
-    expect(studentInsightPanelSource).toContain('class="insight-kpi-hint metric-panel-helper"')
-    expect(studentInsightPanelSource).toContain('class="insight-kpi-grid metric-panel-grid')
-    expect(studentInsightPanelSource).toMatch(
-      /\.insight-kpi-card\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--teacher-card-border\)\s*88%,\s*transparent\);/s
-    )
-    expect(studentInsightPanelSource).toMatch(
-      /\.insight-kpi-card\s*\{[\s\S]*--metric-panel-radius:\s*16px;/s
-    )
     expect(studentInsightPanelSource).toMatch(
       /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
+    expect(studentInsightPanelSource).toContain(
+      'class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-label progress-card-label metric-panel-label"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-value progress-card-value metric-panel-value"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-hint progress-card-hint metric-panel-helper"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"'
+    )
+    expect(studentInsightPanelSource).toContain(
+      'class="insight-kpi-card progress-card metric-panel-card"'
+    )
+    expect(studentInsightPanelSource).not.toContain('--metric-panel-background')
+    expect(studentInsightPanelSource).not.toContain('insight-kpi-card--primary')
 
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classInsightsPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
