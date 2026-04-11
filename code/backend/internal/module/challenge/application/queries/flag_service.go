@@ -52,22 +52,23 @@ func (s *FlagService) ValidateFlag(userID, challengeID int64, input string, nonc
 		return false, err
 	}
 
-	if challenge.FlagType == model.FlagTypeStatic {
+	switch challenge.FlagType {
+	case model.FlagTypeStatic:
 		hash := crypto.HashStaticFlag(input, challenge.FlagSalt)
 		return crypto.ValidateFlag(hash, challenge.FlagHash), nil
-	}
-	if challenge.FlagType == model.FlagTypeRegex {
+	case model.FlagTypeRegex:
 		return regexp.MatchString(challenge.FlagRegex, input)
-	}
-	if challenge.FlagType == model.FlagTypeManualReview {
+	case model.FlagTypeManualReview:
 		return false, nil
+	case model.FlagTypeDynamic:
+		expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
+		if err != nil {
+			return false, err
+		}
+		return crypto.ValidateFlag(input, expectedFlag), nil
+	default:
+		return false, errcode.ErrInvalidParams.WithCause(fmt.Errorf("unsupported flag type %s", challenge.FlagType))
 	}
-
-	expectedFlag, err := s.GenerateDynamicFlag(userID, challengeID, nonce)
-	if err != nil {
-		return false, err
-	}
-	return crypto.ValidateFlag(input, expectedFlag), nil
 }
 
 func (s *FlagService) GetFlagConfig(challengeID int64) (*dto.FlagResp, error) {
