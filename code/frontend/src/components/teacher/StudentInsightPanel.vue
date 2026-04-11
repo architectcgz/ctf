@@ -258,21 +258,21 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           />
 
           <template v-else>
-            <div class="writeup-kpi-grid metric-panel-grid">
-              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--primary metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">已发布题解</div>
-                <div class="insight-kpi-value metric-panel-value">{{ publishedWriteupSubmissions.length }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">当前学员已发布的题解数量</div>
+            <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
+              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">已发布题解</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedWriteupSubmissions.length }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前学员已发布的题解数量</div>
               </article>
-              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--success metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">对应题目</div>
-                <div class="insight-kpi-value metric-panel-value">{{ publishedChallengeCount }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">覆盖到的题目总数</div>
+              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">对应题目</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedChallengeCount }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">覆盖到的题目总数</div>
               </article>
-              <article class="insight-kpi-card writeup-kpi-card insight-kpi-card--warning metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">推荐中</div>
-                <div class="insight-kpi-value metric-panel-value">{{ publishedRecommendedWriteupCount }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">发布题解中被标记为推荐的数量</div>
+              <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">推荐中</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedRecommendedWriteupCount }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">发布题解中被标记为推荐的数量</div>
               </article>
             </div>
 
@@ -359,21 +359,21 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           />
 
           <template v-else>
-            <div class="insight-kpi-grid metric-panel-grid md:grid-cols-3">
-              <article class="insight-kpi-card insight-kpi-card--primary metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">待处理</div>
-                <div class="insight-kpi-value metric-panel-value">{{ manualReviewSubmissions.length }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">当前分析页展示的题解审核提交数</div>
+            <div class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3">
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">待处理</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ manualReviewSubmissions.length }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前分析页展示的题解审核提交数</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--warning metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">待审核</div>
-                <div class="insight-kpi-value metric-panel-value">{{ manualReviewSubmissions.filter((item) => item.review_status === 'pending').length }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">尚未给出审核结果的提交</div>
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">待审核</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ manualReviewSubmissions.filter((item) => item.review_status === 'pending').length }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">尚未给出审核结果的提交</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--success metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">已通过</div>
-                <div class="insight-kpi-value metric-panel-value">{{ approvedManualReviewCount }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">已经通过审核的题解提交</div>
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">已通过</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ approvedManualReviewCount }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">已经通过审核的题解提交</div>
               </article>
             </div>
 
@@ -505,26 +505,26 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
           />
 
           <template v-else>
-            <div class="insight-kpi-grid metric-panel-grid md:grid-cols-4">
-              <article class="insight-kpi-card insight-kpi-card--primary metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">总事件数</div>
-                <div class="insight-kpi-value metric-panel-value">{{ evidence.summary.total_events }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">纳入教师复盘的动作总数</div>
+            <div class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4">
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">总事件数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.total_events }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">纳入教师复盘的动作总数</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--warning metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">利用请求</div>
-                <div class="insight-kpi-value metric-panel-value">{{ evidence.summary.proxy_request_count }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">经平台代理的利用请求次数</div>
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">利用请求</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.proxy_request_count }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">经平台代理的利用请求次数</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--success metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">提交次数</div>
-                <div class="insight-kpi-value metric-panel-value">{{ evidence.summary.submit_count }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">当前题目的提交动作统计</div>
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">提交次数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.submit_count }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前题目的提交动作统计</div>
               </article>
-              <article class="insight-kpi-card insight-kpi-card--primary metric-panel-card">
-                <div class="insight-kpi-label metric-panel-label">成功次数</div>
-                <div class="insight-kpi-value metric-panel-value">{{ evidence.summary.success_count }}</div>
-                <div class="insight-kpi-hint metric-panel-helper">提交命中或利用成功的次数</div>
+              <article class="insight-kpi-card progress-card metric-panel-card">
+                <div class="insight-kpi-label progress-card-label metric-panel-label">成功次数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.success_count }}</div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">提交命中或利用成功的次数</div>
               </article>
             </div>
 
@@ -746,18 +746,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   gap: var(--space-3);
 }
 
-.writeup-kpi-card {
-  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  border-radius: 16px;
-  background: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 95%, var(--color-bg-base))
-  );
-  box-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
-  padding: var(--space-3) var(--space-4) var(--space-3);
-}
-
 .writeup-directory-head,
 .writeup-directory-row {
   display: grid;
@@ -910,38 +898,6 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
 .insight-kpi-grid {
   --metric-panel-grid-gap: var(--space-3);
   align-items: stretch;
-}
-
-.insight-kpi-card {
-  --metric-panel-border: color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
-  --metric-panel-background: color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base));
-  --metric-panel-radius: 16px;
-  --metric-panel-padding: var(--space-3) var(--space-4) var(--space-3);
-  --metric-panel-shadow: 0 12px 22px color-mix(in srgb, var(--color-shadow-soft) 24%, transparent);
-}
-
-.insight-kpi-card--primary {
-  --metric-panel-background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-  );
-}
-
-.insight-kpi-card--success {
-  --metric-panel-background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-success) 10%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-  );
-}
-
-.insight-kpi-card--warning {
-  --metric-panel-background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-warning) 12%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base))
-  );
 }
 
 .insight-kpi-label {
