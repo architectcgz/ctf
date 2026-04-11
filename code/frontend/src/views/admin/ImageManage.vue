@@ -37,7 +37,6 @@
         </div>
       </div>
     </header>
-    <div class="journal-divider image-divider" />
 
     <section class="image-board workspace-directory-section">
       <div class="image-board__head">
@@ -414,10 +413,6 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-}
-
-.image-divider {
-  margin: var(--space-5) 0;
 }
 
 .image-board {
