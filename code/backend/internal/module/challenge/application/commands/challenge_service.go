@@ -173,8 +173,8 @@ func (s *ChallengeService) UpdateChallenge(id int64, req *dto.UpdateChallengeReq
 	return s.repo.UpdateWithHints(challenge, hints, replaceHints)
 }
 
-func normalizeInstanceSharing(value string) string {
-	switch strings.TrimSpace(value) {
+func normalizeInstanceSharing(value model.InstanceSharing) model.InstanceSharing {
+	switch model.InstanceSharing(strings.TrimSpace(string(value))) {
 	case model.InstanceSharingPerTeam:
 		return model.InstanceSharingPerTeam
 	case model.InstanceSharingShared:

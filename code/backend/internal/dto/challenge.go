@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"ctf-platform/internal/model"
+)
 
 type ChallengeHintReq struct {
 	Level   int    `json:"level" binding:"required,min=1"`
@@ -9,27 +13,27 @@ type ChallengeHintReq struct {
 }
 
 type CreateChallengeReq struct {
-	Title           string             `json:"title" binding:"required"`
-	Description     string             `json:"description" binding:"required"`
-	Category        string             `json:"category" binding:"required"`
-	Difficulty      string             `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
-	Points          int                `json:"points" binding:"required,min=1"`
-	ImageID         int64              `json:"image_id"`
-	AttachmentURL   string             `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing string             `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
-	Hints           []ChallengeHintReq `json:"hints" binding:"omitempty,dive"`
+	Title           string                `json:"title" binding:"required"`
+	Description     string                `json:"description" binding:"required"`
+	Category        string                `json:"category" binding:"required"`
+	Difficulty      string                `json:"difficulty" binding:"required,oneof=beginner easy medium hard insane"`
+	Points          int                   `json:"points" binding:"required,min=1"`
+	ImageID         int64                 `json:"image_id"`
+	AttachmentURL   string                `json:"attachment_url" binding:"omitempty,max=2048"`
+	InstanceSharing model.InstanceSharing `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
 }
 
 type UpdateChallengeReq struct {
-	Title           string             `json:"title"`
-	Description     string             `json:"description"`
-	Category        string             `json:"category"`
-	Difficulty      string             `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
-	Points          int                `json:"points" binding:"omitempty,min=1"`
-	ImageID         *int64             `json:"image_id"`
-	AttachmentURL   *string            `json:"attachment_url" binding:"omitempty,max=2048"`
-	InstanceSharing string             `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
-	Hints           []ChallengeHintReq `json:"hints" binding:"omitempty,dive"`
+	Title           string                `json:"title"`
+	Description     string                `json:"description"`
+	Category        string                `json:"category"`
+	Difficulty      string                `json:"difficulty" binding:"omitempty,oneof=beginner easy medium hard insane"`
+	Points          int                   `json:"points" binding:"omitempty,min=1"`
+	ImageID         *int64                `json:"image_id"`
+	AttachmentURL   *string               `json:"attachment_url" binding:"omitempty,max=2048"`
+	InstanceSharing model.InstanceSharing `json:"instance_sharing" binding:"omitempty,oneof=per_user per_team shared"`
+	Hints           []ChallengeHintReq    `json:"hints" binding:"omitempty,dive"`
 }
 
 type ChallengeHintAdminResp struct {
@@ -48,7 +52,7 @@ type ChallengeResp struct {
 	Points          int                       `json:"points"`
 	ImageID         int64                     `json:"image_id"`
 	AttachmentURL   string                    `json:"attachment_url,omitempty"`
-	InstanceSharing string                    `json:"instance_sharing"`
+	InstanceSharing model.InstanceSharing     `json:"instance_sharing"`
 	Hints           []*ChallengeHintAdminResp `json:"hints,omitempty"`
 	Status          string                    `json:"status"`
 	CreatedBy       *int64                    `json:"created_by,omitempty"`
@@ -82,21 +86,21 @@ type ChallengeListItem struct {
 
 // ChallengeDetailResp 学员视图靶场详情
 type ChallengeDetailResp struct {
-	ID              int64                `json:"id"`
-	Title           string               `json:"title"`
-	Description     string               `json:"description"`
-	Category        string               `json:"category"`
-	Difficulty      string               `json:"difficulty"`
-	Points          int                  `json:"points"`
-	NeedTarget      bool                 `json:"need_target"`
-	FlagType        string               `json:"flag_type"`
-	InstanceSharing string               `json:"instance_sharing"`
-	AttachmentURL   string               `json:"attachment_url,omitempty"`
-	Hints           []*ChallengeHintResp `json:"hints"`
-	SolvedCount     int64                `json:"solved_count"`
-	TotalAttempts   int64                `json:"total_attempts"`
-	IsSolved        bool                 `json:"is_solved"`
-	CreatedAt       time.Time            `json:"created_at"`
+	ID              int64                 `json:"id"`
+	Title           string                `json:"title"`
+	Description     string                `json:"description"`
+	Category        string                `json:"category"`
+	Difficulty      string                `json:"difficulty"`
+	Points          int                   `json:"points"`
+	NeedTarget      bool                  `json:"need_target"`
+	FlagType        string                `json:"flag_type"`
+	InstanceSharing model.InstanceSharing `json:"instance_sharing"`
+	AttachmentURL   string                `json:"attachment_url,omitempty"`
+	Hints           []*ChallengeHintResp  `json:"hints"`
+	SolvedCount     int64                 `json:"solved_count"`
+	TotalAttempts   int64                 `json:"total_attempts"`
+	IsSolved        bool                  `json:"is_solved"`
+	CreatedAt       time.Time             `json:"created_at"`
 }
 
 type ChallengeHintResp struct {

@@ -13,7 +13,7 @@ type InstanceScope struct {
 	ContestMode   string
 	TeamID        *int64
 	FlagSubjectID int64
-	ShareScope    string
+	ShareScope    model.ShareScope
 }
 
 type TopologyCreateNode struct {
