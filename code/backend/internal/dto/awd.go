@@ -1,6 +1,10 @@
 package dto
 
-import "time"
+import (
+	"time"
+
+	"ctf-platform/internal/model"
+)
 
 type CreateAWDRoundReq struct {
 	RoundNumber  int     `json:"round_number" binding:"required,min=1"`
@@ -30,17 +34,19 @@ type UpsertAWDServiceCheckReq struct {
 }
 
 type AWDTeamServiceResp struct {
-	ID             int64          `json:"id"`
-	RoundID        int64          `json:"round_id"`
-	TeamID         int64          `json:"team_id"`
-	TeamName       string         `json:"team_name"`
-	ChallengeID    int64          `json:"challenge_id"`
-	ServiceStatus  string         `json:"service_status"`
-	CheckResult    map[string]any `json:"check_result"`
-	AttackReceived int            `json:"attack_received"`
-	DefenseScore   int            `json:"defense_score"`
-	AttackScore    int            `json:"attack_score"`
-	UpdatedAt      time.Time      `json:"updated_at"`
+	ID             int64                `json:"id"`
+	RoundID        int64                `json:"round_id"`
+	TeamID         int64                `json:"team_id"`
+	TeamName       string               `json:"team_name"`
+	ChallengeID    int64                `json:"challenge_id"`
+	ServiceStatus  string               `json:"service_status"`
+	CheckResult    map[string]any       `json:"check_result"`
+	CheckerType    model.AWDCheckerType `json:"checker_type,omitempty"`
+	AttackReceived int                  `json:"attack_received"`
+	SLAScore       int                  `json:"sla_score"`
+	DefenseScore   int                  `json:"defense_score"`
+	AttackScore    int                  `json:"attack_score"`
+	UpdatedAt      time.Time            `json:"updated_at"`
 }
 
 type CreateAWDAttackLogReq struct {
@@ -79,6 +85,7 @@ type AWDRoundSummaryItem struct {
 	ServiceUpCount          int    `json:"service_up_count"`
 	ServiceDownCount        int    `json:"service_down_count"`
 	ServiceCompromisedCount int    `json:"service_compromised_count"`
+	SLAScore                int    `json:"sla_score"`
 	DefenseScore            int    `json:"defense_score"`
 	AttackScore             int    `json:"attack_score"`
 	SuccessfulAttackCount   int    `json:"successful_attack_count"`

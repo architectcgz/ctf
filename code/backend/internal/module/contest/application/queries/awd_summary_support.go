@@ -26,7 +26,7 @@ func buildAWDRoundSummary(
 	respItems := make([]*dto.AWDRoundSummaryItem, 0, len(items))
 	for teamID, item := range items {
 		item.UniqueAttackersAgainst = len(uniqueAttackersAgainst[teamID])
-		item.TotalScore = item.AttackScore + item.DefenseScore
+		item.TotalScore = item.AttackScore + item.DefenseScore + item.SLAScore
 		respItems = append(respItems, item)
 	}
 	contestdomain.SortAWDSummaryItems(respItems)

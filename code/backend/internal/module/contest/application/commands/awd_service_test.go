@@ -183,6 +183,9 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	if resp.DefenseScore != 40 || resp.ServiceStatus != model.AWDServiceStatusUp {
 		t.Fatalf("unexpected service resp: %+v", resp)
 	}
+	if resp.SLAScore != 0 || resp.CheckerType != "" {
+		t.Fatalf("unexpected sla/checker fields: %+v", resp)
+	}
 	if checkSource := resp.CheckResult["check_source"]; checkSource != awdCheckSourceManualService {
 		t.Fatalf("unexpected check_source: %#v", checkSource)
 	}
@@ -206,6 +209,9 @@ func TestAWDServiceUpsertServiceCheckAppliesDefenseScore(t *testing.T) {
 	}
 	if resp.DefenseScore != 0 || resp.ServiceStatus != model.AWDServiceStatusDown {
 		t.Fatalf("unexpected updated service resp: %+v", resp)
+	}
+	if resp.SLAScore != 0 || resp.CheckerType != "" {
+		t.Fatalf("unexpected second sla/checker fields: %+v", resp)
 	}
 	if checkSource := resp.CheckResult["check_source"]; checkSource != awdCheckSourceManualService {
 		t.Fatalf("unexpected second check_source: %#v", checkSource)
@@ -438,6 +444,30 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}); err != nil {
 		t.Fatalf("seed Green service check: %v", err)
 	}
+	if err := db.Model(&model.AWDTeamService{}).
+		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 311, 301).
+		Updates(map[string]any{
+			"sla_score":    10,
+			"checker_type": model.AWDCheckerTypeHTTPStandard,
+		}).Error; err != nil {
+		t.Fatalf("seed Red sla/checker fields: %v", err)
+	}
+	if err := db.Model(&model.AWDTeamService{}).
+		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 312, 301).
+		Updates(map[string]any{
+			"sla_score":    9,
+			"checker_type": model.AWDCheckerTypeHTTPStandard,
+		}).Error; err != nil {
+		t.Fatalf("seed Blue sla/checker fields: %v", err)
+	}
+	if err := db.Model(&model.AWDTeamService{}).
+		Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 313, 301).
+		Updates(map[string]any{
+			"sla_score":    8,
+			"checker_type": model.AWDCheckerTypeHTTPStandard,
+		}).Error; err != nil {
+		t.Fatalf("seed Green sla/checker fields: %v", err)
+	}
 
 	first, err := service.CreateAttackLog(context.Background(), 3, 31, &dto.CreateAWDAttackLogReq{
 		AttackerTeamID: 311,
@@ -475,7 +505,7 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	if err := db.Where("round_id = ? AND team_id = ? AND challenge_id = ?", 31, 312, 301).First(&blueService).Error; err != nil {
 		t.Fatalf("load Blue service: %v", err)
 	}
-	if blueService.ServiceStatus != model.AWDServiceStatusCompromised || blueService.AttackReceived != 2 || blueService.AttackScore != 60 || blueService.DefenseScore != 0 {
+	if blueService.ServiceStatus != model.AWDServiceStatusCompromised || blueService.AttackReceived != 2 || blueService.AttackScore != 60 || blueService.DefenseScore != 0 || blueService.SLAScore != 9 || blueService.CheckerType != model.AWDCheckerTypeHTTPStandard {
 		t.Fatalf("unexpected Blue service impact: %+v", blueService)
 	}
 
@@ -513,30 +543,30 @@ func TestAWDServiceCreateAttackLogDeduplicatesScoringAndBuildsSummary(t *testing
 	}
 
 	red := findAWDSummaryItem(summary.Items, 311)
-	if red == nil || red.AttackScore != 60 || red.DefenseScore != 25 || red.TotalScore != 85 {
+	if red == nil || red.AttackScore != 60 || red.DefenseScore != 25 || red.SLAScore != 10 || red.TotalScore != 95 {
 		t.Fatalf("unexpected red summary: %+v", red)
 	}
 	blue := findAWDSummaryItem(summary.Items, 312)
-	if blue == nil || blue.ServiceCompromisedCount != 1 || blue.DefenseScore != 0 || blue.SuccessfulBreachCount != 3 || blue.UniqueAttackersAgainst != 2 {
+	if blue == nil || blue.ServiceCompromisedCount != 1 || blue.DefenseScore != 0 || blue.SLAScore != 9 || blue.SuccessfulBreachCount != 3 || blue.UniqueAttackersAgainst != 2 || blue.TotalScore != 9 {
 		t.Fatalf("unexpected blue summary: %+v", blue)
 	}
 	green := findAWDSummaryItem(summary.Items, 313)
-	if green == nil || green.AttackScore != 60 || green.SuccessfulAttackCount != 1 || green.ServiceUpCount != 1 {
+	if green == nil || green.AttackScore != 60 || green.SuccessfulAttackCount != 1 || green.ServiceUpCount != 1 || green.SLAScore != 8 || green.TotalScore != 93 {
 		t.Fatalf("unexpected green summary: %+v", green)
 	}
-	assertTeamTotalScore(t, db, 311, 25)
-	assertTeamTotalScore(t, db, 312, 0)
-	assertTeamTotalScore(t, db, 313, 25)
-	assertContestRedisScore(t, redisClient, 3, 311, 25)
-	assertContestRedisScore(t, redisClient, 3, 313, 25)
-	assertContestRedisScoreMissing(t, redisClient, 3, 312)
+	assertTeamTotalScore(t, db, 311, 35)
+	assertTeamTotalScore(t, db, 312, 9)
+	assertTeamTotalScore(t, db, 313, 33)
+	assertContestRedisScore(t, redisClient, 3, 311, 35)
+	assertContestRedisScore(t, redisClient, 3, 312, 9)
+	assertContestRedisScore(t, redisClient, 3, 313, 33)
 
 	scoreboardService := contestqry.NewScoreboardService(contestinfra.NewRepository(db), redisClient, &config.ContestConfig{}, zap.NewNop())
 	scoreboard, err := scoreboardService.GetLiveScoreboard(context.Background(), 3, 1, 10)
 	if err != nil {
 		t.Fatalf("GetLiveScoreboard() error = %v", err)
 	}
-	if scoreboard.Scoreboard == nil || len(scoreboard.Scoreboard.List) != 2 {
+	if scoreboard.Scoreboard == nil || len(scoreboard.Scoreboard.List) != 3 {
 		t.Fatalf("unexpected live scoreboard: %+v", scoreboard)
 	}
 	if scoreboard.Scoreboard.List[0].SolvedCount != 0 || scoreboard.Scoreboard.List[1].SolvedCount != 0 {

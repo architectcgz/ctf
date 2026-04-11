@@ -29,10 +29,10 @@ func RecalculateAWDContestTeamScores(ctx context.Context, db *gorm.DB, contestID
 		return err
 	}
 
-	defenseMap := accumulateAWDDefenseScores(serviceRows)
+	serviceScoreMap := accumulateAWDServiceScores(serviceRows)
 	attackMap := accumulateAWDAttackScores(attackRows)
 
-	return applyAWDContestTeamScores(ctx, db, teams, defenseMap, attackMap)
+	return applyAWDContestTeamScores(ctx, db, teams, serviceScoreMap, attackMap)
 }
 
 func SyncAWDContestScores(ctx context.Context, db *gorm.DB, redis redisScoreboardCache, contestID int64) error {

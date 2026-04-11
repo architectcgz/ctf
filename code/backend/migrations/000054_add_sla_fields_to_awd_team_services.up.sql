@@ -1,0 +1,5 @@
+ALTER TABLE awd_team_services
+    ADD COLUMN IF NOT EXISTS sla_score INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE awd_team_services
+    ADD COLUMN IF NOT EXISTS checker_type VARCHAR(32) NOT NULL DEFAULT '';
