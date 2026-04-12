@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -85,17 +87,7 @@ func (r *testReportRepository) FindContestByID(ctx context.Context, contestID in
 		}
 		return contest, nil
 	}
-	if r == nil || r.db == nil {
-		return nil, gorm.ErrRecordNotFound
-	}
-
-	var contest model.Contest
-	if err := r.db.WithContext(ctx).
-		Where("id = ? AND deleted_at IS NULL", contestID).
-		First(&contest).Error; err != nil {
-		return nil, err
-	}
-	return &contest, nil
+	return nil, gorm.ErrRecordNotFound
 }
 
 func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*assessmentdomain.PersonalReportStats, error) {
@@ -185,6 +177,18 @@ func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context
 
 func intPtr(value int) *int {
 	return &value
+}
+
+func newTestSQLiteDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	name := strings.NewReplacer("/", "_", " ", "_").Replace(t.Name())
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", name)
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	return db
 }
 
 func findObservation(items []assessmentdomain.ReviewArchiveObservation, key string) *assessmentdomain.ReviewArchiveObservation {
@@ -555,11 +559,8 @@ func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testing.T) {
 	t.Parallel()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(&model.User{}, &model.Contest{}, &model.Report{}); err != nil {
+	db := newTestSQLiteDB(t)
+	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
@@ -581,12 +582,15 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
 		EndTime:   time.Date(2026, 4, 12, 11, 0, 0, 0, time.UTC),
 	}
-	if err := db.Create(contest).Error; err != nil {
-		t.Fatalf("seed contest: %v", err)
+	repo := &testReportRepository{
+		db: db,
+		contests: map[int64]*model.Contest{
+			contest.ID: contest,
+		},
 	}
 
 	service := NewReportService(
-		&testReportRepository{db: db},
+		repo,
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -610,16 +614,27 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 	if resp.Status != model.ReportStatusProcessing {
 		t.Fatalf("expected processing status, got %+v", resp)
 	}
+
+	var report model.Report
+	if err := db.First(&report, "id = ?", resp.ReportID).Error; err != nil {
+		t.Fatalf("load report: %v", err)
+	}
+	if report.Type != model.ReportTypeAWDReviewArchive {
+		t.Fatalf("expected report type %s, got %+v", model.ReportTypeAWDReviewArchive, report)
+	}
+	if report.Format != model.ReportFormatZIP {
+		t.Fatalf("expected report format %s, got %+v", model.ReportFormatZIP, report)
+	}
+	if report.UserID == nil || *report.UserID != teacher.ID {
+		t.Fatalf("expected report user_id %d, got %+v", teacher.ID, report)
+	}
 }
 
 func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testing.T) {
 	t.Parallel()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(&model.User{}, &model.Contest{}, &model.Report{}); err != nil {
+	db := newTestSQLiteDB(t)
+	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
 
@@ -641,12 +656,15 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
 		EndTime:   time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC),
 	}
-	if err := db.Create(contest).Error; err != nil {
-		t.Fatalf("seed contest: %v", err)
+	repo := &testReportRepository{
+		db: db,
+		contests: map[int64]*model.Contest{
+			contest.ID: contest,
+		},
 	}
 
 	service := NewReportService(
-		&testReportRepository{db: db},
+		repo,
 		nil,
 		config.ReportConfig{
 			StorageDir:    t.TempDir(),
@@ -656,10 +674,18 @@ func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testin
 		nil,
 	)
 
-	_, err = service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{})
+	_, err := service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{})
 	appErr, ok := err.(*errcode.AppError)
 	if !ok || appErr.Code != errcode.ErrInvalidParams.Code {
 		t.Fatalf("expected invalid params error, got %#v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Report{}).Count(&count).Error; err != nil {
+		t.Fatalf("count reports: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no report rows to be created, got %d", count)
 	}
 }
 
@@ -714,10 +740,7 @@ func TestValidateClassReportAccess(t *testing.T) {
 func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	t.Parallel()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := newTestSQLiteDB(t)
 	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
