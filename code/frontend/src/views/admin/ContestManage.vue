@@ -5,6 +5,7 @@ import { downloadReport } from '@/api/assessment'
 import { exportContestArchive } from '@/api/admin'
 import type { ContestDetailData } from '@/api/contracts'
 import AdminContestFormDialog from '@/components/admin/contest/AdminContestFormDialog.vue'
+import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
 import ContestOrchestrationPage from '@/components/admin/contest/ContestOrchestrationPage.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
@@ -48,9 +49,12 @@ const {
   formDraft,
   fieldLocks,
   statusOptions,
+  awdStartOverrideDialogState,
   openCreateDialog,
   openEditDialog,
   closeDialog,
+  closeAWDStartOverrideDialog,
+  confirmAWDStartOverride,
   saveContest,
 } = useAdminContests()
 
@@ -98,6 +102,12 @@ function updateSelectedAwdContestId(value: string) {
 function handleDialogOpenChange(value: boolean) {
   if (!value) {
     closeDialog()
+  }
+}
+
+function handleAwdStartOverrideDialogOpenChange(value: boolean) {
+  if (!value) {
+    closeAWDStartOverrideDialog()
   }
 }
 
@@ -186,6 +196,15 @@ async function handleExportContest(contest: ContestDetailData): Promise<void> {
       :field-locks="fieldLocks"
       @update:open="handleDialogOpenChange"
       @save="saveContest"
+    />
+
+    <AWDReadinessOverrideDialog
+      :open="awdStartOverrideDialogState.open"
+      :title="awdStartOverrideDialogState.title"
+      :readiness="awdStartOverrideDialogState.readiness"
+      :confirm-loading="awdStartOverrideDialogState.confirmLoading"
+      @update:open="handleAwdStartOverrideDialogOpenChange"
+      @confirm="confirmAWDStartOverride"
     />
   </div>
 </template>

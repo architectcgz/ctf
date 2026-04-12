@@ -5,6 +5,8 @@ import type { AdminContestChallengeData, AWDTrafficStatusGroup, ContestDetailDat
 import AWDAttackLogDialog from './AWDAttackLogDialog.vue'
 import AWDChallengeConfigDialog from './AWDChallengeConfigDialog.vue'
 import AWDChallengeConfigPanel from './AWDChallengeConfigPanel.vue'
+import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
+import AWDReadinessSummary from './AWDReadinessSummary.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
 
@@ -85,22 +87,27 @@ const {
   teams,
   challengeLinks,
   challengeCatalog,
+  readiness,
   loadingRounds,
   loadingRoundDetail,
   loadingTrafficSummary,
   loadingTrafficEvents,
   loadingChallengeCatalog,
+  loadingReadiness,
   checking,
   creatingRound,
   savingServiceCheck,
   savingAttackLog,
   savingChallengeConfig,
   shouldAutoRefresh,
+  overrideDialogState,
   refresh,
   applyTrafficFilters,
   setTrafficPage,
   resetTrafficFilters,
   runSelectedRoundCheck,
+  confirmOverrideAction,
+  closeOverrideDialog,
   createRound,
   createServiceCheck,
   createAttackLog,
@@ -223,6 +230,7 @@ function openChallengeEditDialog(challenge: AdminContestChallengeData) {
   challengeConfigMode.value = 'edit'
   editingChallengeLink.value = challenge
   challengeConfigDialogOpen.value = true
+  activePanel.value = 'challenges'
 }
 
 function updateChallengeConfigDialogOpen(value: boolean) {
@@ -303,6 +311,22 @@ async function handleResetTrafficFilters() {
   await resetTrafficFilters()
 }
 
+function handleEditReadinessConfig(challengeId: string) {
+  const matchedChallenge = challengeLinks.value.find((item) => item.challenge_id === challengeId)
+  activePanel.value = 'challenges'
+  if (matchedChallenge) {
+    openChallengeEditDialog(matchedChallenge)
+    return
+  }
+  void loadChallengeCatalog()
+}
+
+function handleOverrideDialogOpenChange(value: boolean) {
+  if (!value) {
+    closeOverrideDialog()
+  }
+}
+
 watch(
   () => selectedContest.value?.id || null,
   (contestId) => {
@@ -359,6 +383,12 @@ watch(
     />
 
     <section v-else class="space-y-6">
+      <AWDReadinessSummary
+        :readiness="readiness"
+        :loading="loadingReadiness"
+        @edit-config="handleEditReadinessConfig"
+      />
+
       <nav class="top-tabs awd-ops-tabs" role="tablist" aria-label="AWD 运维工作区切换">
         <button
           v-for="(tab, index) in operationTabs"
@@ -476,6 +506,15 @@ watch(
       :saving="savingChallengeConfig"
       @update:open="updateChallengeConfigDialogOpen"
       @save="handleSaveChallengeConfig"
+    />
+
+    <AWDReadinessOverrideDialog
+      :open="overrideDialogState.open"
+      :title="overrideDialogState.title"
+      :readiness="overrideDialogState.readiness"
+      :confirm-loading="overrideDialogState.confirmLoading"
+      @update:open="handleOverrideDialogOpenChange"
+      @confirm="confirmOverrideAction"
     />
   </div>
 </template>

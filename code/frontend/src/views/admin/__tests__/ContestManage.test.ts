@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
+import { ApiError } from '@/api/request'
 import type { AdminContestChallengeData } from '@/api/contracts'
 
 const exportMocks = vi.hoisted(() => ({
@@ -14,6 +15,7 @@ const contestMocks = vi.hoisted(() => ({
   getChallenges: vi.fn(),
   createContest: vi.fn(),
   updateContest: vi.fn(),
+  getContestAWDReadiness: vi.fn(),
   getAdminContestLiveScoreboard: vi.fn(),
   createContestAWDRound: vi.fn(),
   listContestTeams: vi.fn(),
@@ -40,6 +42,7 @@ vi.mock('@/api/admin', async () => {
     getChallenges: contestMocks.getChallenges,
     createContest: contestMocks.createContest,
     updateContest: contestMocks.updateContest,
+    getContestAWDReadiness: contestMocks.getContestAWDReadiness,
     getAdminContestLiveScoreboard: contestMocks.getAdminContestLiveScoreboard,
     createContestAWDRound: contestMocks.createContestAWDRound,
     listContestTeams: contestMocks.listContestTeams,
@@ -74,6 +77,7 @@ describe('ContestManage', () => {
     contestMocks.getChallenges.mockReset()
     contestMocks.createContest.mockReset()
     contestMocks.updateContest.mockReset()
+    contestMocks.getContestAWDReadiness.mockReset()
     contestMocks.getAdminContestLiveScoreboard.mockReset()
     contestMocks.createContestAWDRound.mockReset()
     contestMocks.listContestTeams.mockReset()
@@ -120,6 +124,30 @@ describe('ContestManage', () => {
       created_at: '2026-03-11T00:00:00.000Z',
     })
     contestMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
+    contestMocks.getContestAWDReadiness.mockResolvedValue({
+      contest_id: '1',
+      ready: false,
+      total_challenges: 1,
+      passed_challenges: 0,
+      pending_challenges: 0,
+      failed_challenges: 1,
+      stale_challenges: 0,
+      missing_checker_challenges: 0,
+      blocking_count: 1,
+      global_blocking_reasons: [],
+      blocking_actions: ['start_contest'],
+      items: [
+        {
+          challenge_id: '101',
+          title: 'Challenge 101',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
     contestMocks.createContestAWDRound.mockResolvedValue({
       id: '1',
       contest_id: '1',
@@ -235,6 +263,148 @@ describe('ContestManage', () => {
       },
       frozen: false,
     })
+  })
+
+  it('应该在 AWD 赛事启动被 gate 拦截后拉取 readiness 并允许强制继续', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'awd-start',
+          title: '2026 AWD 联赛',
+          description: '开赛门禁',
+          mode: 'awd',
+          status: 'registering',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.updateContest
+      .mockRejectedValueOnce(
+        new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 })
+      )
+      .mockResolvedValueOnce({
+        contest: {
+          id: 'awd-start',
+          title: '2026 AWD 联赛',
+          description: '开赛门禁',
+          mode: 'awd',
+          status: 'running',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<div><button id="open-awd-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑 AWD</button></div>',
+          },
+          AdminContestFormDialog: {
+            props: ['open', 'draft'],
+            template:
+              '<div><button v-if="open" id="submit-awd-contest" type="button" @click="$emit(\'save\', { ...draft, mode: \'awd\', status: \'running\' })">保存 AWD</button></div>',
+          },
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#open-awd-edit').trigger('click')
+    await flushPromises()
+    await wrapper.get('#submit-awd-contest').trigger('click')
+    await flushPromises()
+
+    expect(contestMocks.updateContest).toHaveBeenNthCalledWith(
+      1,
+      'awd-start',
+      expect.objectContaining({
+        status: 'running',
+      }),
+      { suppressErrorToast: true }
+    )
+    expect(contestMocks.getContestAWDReadiness).toHaveBeenCalledWith('awd-start')
+    expect(wrapper.text()).toContain('启动赛事')
+    expect(wrapper.text()).toContain('强制继续')
+
+    await wrapper.get('#awd-readiness-override-reason').setValue('teacher drill')
+    await wrapper.get('#awd-readiness-override-submit').trigger('click')
+    await flushPromises()
+
+    expect(contestMocks.updateContest).toHaveBeenNthCalledWith(
+      2,
+      'awd-start',
+      expect.objectContaining({
+        status: 'running',
+        force_override: true,
+        override_reason: 'teacher drill',
+      }),
+      { suppressErrorToast: true }
+    )
+  })
+
+  it('应该忽略普通 409，不误打开启动赛事 gate 弹层', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'awd-conflict',
+          title: '2026 AWD 联赛',
+          description: '普通冲突',
+          mode: 'awd',
+          status: 'registering',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.updateContest.mockRejectedValueOnce(
+      new ApiError('普通冲突', { status: 409, code: 14099 })
+    )
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<div><button id="open-awd-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑 AWD</button></div>',
+          },
+          AdminContestFormDialog: {
+            props: ['open', 'draft'],
+            template:
+              '<div><button v-if="open" id="submit-awd-contest" type="button" @click="$emit(\'save\', { ...draft, mode: \'awd\', status: \'running\' })">保存 AWD</button></div>',
+          },
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#open-awd-edit').trigger('click')
+    await flushPromises()
+    await wrapper.get('#submit-awd-contest').trigger('click')
+    await flushPromises()
+
+    expect(contestMocks.getContestAWDReadiness).not.toHaveBeenCalled()
+    expect(wrapper.text()).not.toContain('填写本次放行原因')
   })
 
   it('应该渲染真实竞赛列表', async () => {
@@ -795,7 +965,7 @@ describe('ContestManage', () => {
       },
       frozen: false,
     })
-    contestMocks.runContestAWDRoundCheck.mockResolvedValue({
+    contestMocks.runContestAWDCurrentRoundCheck.mockResolvedValue({
       round: {
         id: 'round-1',
         contest_id: 'awd-1',
@@ -1047,7 +1217,7 @@ describe('ContestManage', () => {
     await checkButton!.trigger('click')
     await flushPromises()
 
-    expect(contestMocks.runContestAWDRoundCheck).toHaveBeenCalledWith('awd-1', 'round-1')
+    expect(contestMocks.runContestAWDCurrentRoundCheck).toHaveBeenCalledWith('awd-1')
   })
 
   it('应该在运行中的 AWD 轮次上自动刷新运维面板', async () => {

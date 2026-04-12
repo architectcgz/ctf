@@ -5,6 +5,11 @@ import type {
   AWDCheckerPreviewData,
   AWDCheckerType,
   AWDCheckerRunData,
+  AWDReadinessAction,
+  AWDReadinessBlockingReason,
+  AWDReadinessData,
+  AWDReadinessGlobalReason,
+  AWDReadinessItemData,
   AWDRoundData,
   AWDRoundMetricsData,
   AWDRoundSummaryData,
@@ -313,6 +318,31 @@ interface RawAWDCheckerRunData {
   services: RawAWDTeamServiceItem[]
 }
 
+interface RawAWDReadinessItemData {
+  challenge_id: string | number
+  title: string
+  checker_type?: AWDCheckerType | null
+  validation_state: AWDReadinessItemData['validation_state']
+  last_preview_at?: string | null
+  last_access_url?: string | null
+  blocking_reason: AWDReadinessBlockingReason
+}
+
+interface RawAWDReadinessData {
+  contest_id: string | number
+  ready: boolean
+  total_challenges: number
+  passed_challenges: number
+  pending_challenges: number
+  failed_challenges: number
+  stale_challenges: number
+  missing_checker_challenges: number
+  blocking_count: number
+  blocking_actions: AWDReadinessAction[]
+  global_blocking_reasons: AWDReadinessGlobalReason[]
+  items: RawAWDReadinessItemData[]
+}
+
 interface RawAWDCheckerPreviewContext {
   access_url: string
   preview_flag: string
@@ -612,6 +642,8 @@ export interface AdminContestUpdatePayload {
   starts_at?: string
   ends_at?: string
   status?: AdminContestStatus
+  force_override?: boolean
+  override_reason?: string
 }
 
 export interface AdminAWDRoundCreatePayload {
@@ -619,6 +651,17 @@ export interface AdminAWDRoundCreatePayload {
   status?: AWDRoundData['status']
   attack_score?: number
   defense_score?: number
+  force_override?: boolean
+  override_reason?: string
+}
+
+export interface AdminAWDCurrentRoundCheckPayload {
+  force_override?: boolean
+  override_reason?: string
+}
+
+interface AdminRequestOptions {
+  suppressErrorToast?: boolean
 }
 
 export interface AdminAWDServiceCheckPayload {
@@ -941,6 +984,35 @@ function normalizeAWDCheckerPreview(item: RawAWDCheckerPreviewData): AWDCheckerP
   }
 }
 
+function normalizeAWDReadinessItem(item: RawAWDReadinessItemData): AWDReadinessItemData {
+  return {
+    challenge_id: String(item.challenge_id),
+    title: item.title,
+    checker_type: item.checker_type || undefined,
+    validation_state: item.validation_state,
+    last_preview_at: item.last_preview_at || undefined,
+    last_access_url: item.last_access_url || undefined,
+    blocking_reason: item.blocking_reason,
+  }
+}
+
+function normalizeAWDReadiness(item: RawAWDReadinessData): AWDReadinessData {
+  return {
+    contest_id: String(item.contest_id),
+    ready: item.ready,
+    total_challenges: item.total_challenges,
+    passed_challenges: item.passed_challenges,
+    pending_challenges: item.pending_challenges,
+    failed_challenges: item.failed_challenges,
+    stale_challenges: item.stale_challenges,
+    missing_checker_challenges: item.missing_checker_challenges,
+    blocking_count: item.blocking_count,
+    blocking_actions: item.blocking_actions,
+    global_blocking_reasons: item.global_blocking_reasons,
+    items: item.items.map(normalizeAWDReadinessItem),
+  }
+}
+
 function normalizeAdminContestTeam(item: RawAdminContestTeamItem): AdminContestTeamData {
   return {
     id: String(item.id),
@@ -1187,6 +1259,8 @@ function serializeContestPayload(data: AdminContestCreatePayload | AdminContestU
     start_time: data.starts_at,
     end_time: data.ends_at,
     status: 'status' in data ? serializeContestStatus(data.status) : undefined,
+    force_override: 'force_override' in data ? data.force_override : undefined,
+    override_reason: 'override_reason' in data ? data.override_reason : undefined,
   }
 }
 
@@ -1739,12 +1813,14 @@ export async function createContest(
 
 export async function updateContest(
   id: string,
-  data: AdminContestUpdatePayload
+  data: AdminContestUpdatePayload,
+  options?: AdminRequestOptions
 ): Promise<{ contest: ContestDetailData }> {
   const contest = await request<RawContestItem>({
     method: 'PUT',
     url: `/admin/contests/${encodeURIComponent(id)}`,
     data: serializeContestPayload(data),
+    suppressErrorToast: options?.suppressErrorToast,
   })
 
   return { contest: normalizeContest(contest) }
@@ -1766,8 +1842,18 @@ export async function createContestAWDRound(
     method: 'POST',
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/rounds`,
     data,
+    suppressErrorToast: true,
   })
   return normalizeAWDRound(response)
+}
+
+export async function getContestAWDReadiness(contestId: string): Promise<AWDReadinessData> {
+  const response = await request<RawAWDReadinessData>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/readiness`,
+    suppressErrorToast: true,
+  })
+  return normalizeAWDReadiness(response)
 }
 
 export async function listContestTeams(contestId: string): Promise<AdminContestTeamData[]> {
@@ -1884,10 +1970,15 @@ export async function getAdminContestLiveScoreboard(
   return normalizeContestScoreboard(response)
 }
 
-export async function runContestAWDCurrentRoundCheck(contestId: string): Promise<AWDCheckerRunData> {
+export async function runContestAWDCurrentRoundCheck(
+  contestId: string,
+  data?: AdminAWDCurrentRoundCheckPayload
+): Promise<AWDCheckerRunData> {
   const response = await request<RawAWDCheckerRunData>({
     method: 'POST',
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/current-round/check`,
+    data,
+    suppressErrorToast: true,
   })
   return normalizeAWDCheckerRun(response)
 }
