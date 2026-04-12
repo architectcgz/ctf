@@ -402,7 +402,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 26%, transparent);
 }
 
 .admin-section-head {
