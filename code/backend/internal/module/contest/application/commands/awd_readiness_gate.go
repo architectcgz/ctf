@@ -50,6 +50,7 @@ func ensureAWDReadinessGate(ctx context.Context, repo contestports.AWDRepository
 	if err != nil {
 		return err
 	}
+	recordAWDReadinessGateDecision(ctx, decision)
 	if decision.Allowed() {
 		return nil
 	}
@@ -114,4 +115,12 @@ func normalizeAWDReadinessOverride(forceOverride *bool, overrideReason *string) 
 		return false, "", errcode.ErrInvalidParams
 	}
 	return true, reason, nil
+}
+
+func recordAWDReadinessGateDecision(ctx context.Context, decision *awdReadinessGateDecision) {
+	trace := AWDReadinessGateTraceFromContext(ctx)
+	if trace == nil || decision == nil {
+		return
+	}
+	trace.RecordDecision(decision.Allowed())
 }

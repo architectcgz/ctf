@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/dto"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 )
 
@@ -21,8 +22,9 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.CreateRound(c.Request.Context(), contestID, &req)
-	writeAWDReadinessAuditPayload(c, "create_round", req.OverrideReason, readinessSnapshot, err)
+	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
+	resp, err := h.commands.CreateRound(requestCtx, contestID, &req)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionCreateRound, req.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return

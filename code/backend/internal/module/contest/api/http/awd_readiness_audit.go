@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
+	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
@@ -24,8 +25,15 @@ func loadAWDReadinessAuditSnapshot(ctx context.Context, queries awdReadinessQuer
 	return queries.GetReadiness(ctx, contestID)
 }
 
-func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideReason *string, snapshot *dto.AWDReadinessResp, err error) {
-	if c == nil || snapshot == nil || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
+func prepareAWDReadinessGateTrace(ctx context.Context, snapshot *dto.AWDReadinessResp) (context.Context, *contestcmd.AWDReadinessGateTrace) {
+	if snapshot == nil {
+		return ctx, nil
+	}
+	return contestcmd.WithAWDReadinessGateTrace(ctx)
+}
+
+func writeAWDReadinessAuditPayload(c *gin.Context, gateAction string, overrideReason *string, snapshot *dto.AWDReadinessResp, trace *contestcmd.AWDReadinessGateTrace, err error) {
+	if c == nil || snapshot == nil || trace == nil || !trace.Allowed() || snapshot.BlockingCount <= 0 || !hasNonBlankOverrideReason(overrideReason) || isAWDReadinessBlocked(err) {
 		return
 	}
 	middleware.SetAWDReadinessAuditPayload(c, middleware.BuildAWDReadinessAuditPayload(gateAction, overrideReason, snapshot, err))
