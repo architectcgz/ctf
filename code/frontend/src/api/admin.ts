@@ -674,7 +674,7 @@ function resolveUpdateContestSuppressErrorToast(
   if (data.force_override || (data.override_reason && data.override_reason.trim() !== '')) {
     return true
   }
-  return data.status === 'running' ? true : undefined
+  return undefined
 }
 
 export interface AdminAWDServiceCheckPayload {

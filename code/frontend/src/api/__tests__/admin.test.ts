@@ -1147,6 +1147,41 @@ describe('admin contest api contract', () => {
     })
   })
 
+  it('不应把所有 running 状态更新默认视为 readiness 静默请求', async () => {
+    requestMock.mockResolvedValue({
+      id: 9,
+      title: '春季赛',
+      description: '测试竞赛',
+      mode: 'awd',
+      start_time: '2026-03-12T09:00:00.000Z',
+      end_time: '2026-03-12T12:00:00.000Z',
+      freeze_time: null,
+      status: 'running',
+      created_at: '2026-03-01T00:00:00.000Z',
+      updated_at: '2026-03-02T00:00:00.000Z',
+    })
+
+    await updateContest('9', {
+      status: 'running',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/admin/contests/9',
+      data: {
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        start_time: undefined,
+        end_time: undefined,
+        status: 'running',
+        force_override: undefined,
+        override_reason: undefined,
+      },
+      suppressErrorToast: undefined,
+    })
+  })
+
   it('应该把用户列表参数和返回值归一化', async () => {
     requestMock.mockResolvedValue({
       list: [
