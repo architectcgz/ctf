@@ -79,20 +79,15 @@ const importSummary = computed(() => {
   if (!props.importResult) return '暂无导入记录'
   return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
 })
+const userStatusAccentMap: Record<UserStatus, string> = {
+  active: 'var(--color-primary)',
+  locked: 'var(--color-warning)',
+  banned: 'var(--color-danger)',
+  inactive: 'color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink))',
+}
 
 function getUserAccentColor(status: UserStatus): string {
-  switch (status) {
-    case 'active':
-      return 'var(--color-primary)'
-    case 'locked':
-      return '#f59e0b'
-    case 'banned':
-      return '#dc2626'
-    case 'inactive':
-      return '#64748b'
-    default:
-      return 'var(--color-primary)'
-  }
+  return userStatusAccentMap[status] ?? 'var(--color-primary)'
 }
 
 function getUserStatusStyle(status: UserStatus): Record<string, string> {
@@ -100,7 +95,7 @@ function getUserStatusStyle(status: UserStatus): Record<string, string> {
   return {
     color: accent,
     borderColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
-    backgroundColor: `color-mix(in srgb, ${accent} 10%, white)`,
+    backgroundColor: `color-mix(in srgb, ${accent} 10%, var(--journal-surface))`,
   }
 }
 
@@ -562,7 +557,7 @@ function handleImportChange(event: Event): void {
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
-  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
+  --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 70%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
 
@@ -661,9 +656,9 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-btn-danger {
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background: rgba(254, 242, 242, 0.9);
-  color: #dc2626;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-input {
@@ -693,7 +688,7 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   border-radius: 16px;
   padding: var(--space-4);
   font-size: var(--font-size-0-875);
