@@ -24,7 +24,7 @@ func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 	}
 
 	resp, err := h.commands.RunCurrentRoundChecks(c.Request.Context(), contestID, req)
-	writeAWDReadinessAuditPayload(c, "run_current_round_checks", req.OverrideReason, readinessSnapshot, err)
+	writeAWDReadinessAuditPayload(c, "run_current_round_check", req.OverrideReason, readinessSnapshot, err)
 	if err != nil {
 		response.FromError(c, err)
 		return
