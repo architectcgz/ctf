@@ -328,6 +328,11 @@ describe('workspace page header styles', () => {
   it('页级说明应统一接入共享页级说明类，而不是继续使用 tab copy', () => {
     const pageCopySources = [
       {
+        source: studentOverviewSource,
+        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
+        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+      },
+      {
         source: studentRecommendationSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
         exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',

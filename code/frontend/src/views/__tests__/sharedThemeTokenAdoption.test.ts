@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
+import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
@@ -29,6 +30,14 @@ describe('shared theme token adoption', () => {
     expect(studentTimelineSource).not.toContain('background: #10b981;')
     expect(studentTimelineSource).not.toContain('background: #94a3b8;')
     expect(studentTimelineSource).not.toContain('rgba(16, 185, 129, 0.38)')
+
+    expect(studentOverviewSource).not.toContain('background: #10b981;')
+    expect(studentOverviewSource).not.toContain('background: #94a3b8;')
+    expect(studentOverviewSource).not.toContain('background: #f59e0b;')
+    expect(studentOverviewSource).not.toContain('background: #22c55e;')
+    expect(studentOverviewSource).not.toContain('rgba(16, 185, 129, 0.4)')
+    expect(studentOverviewSource).not.toContain('rgba(16, 185, 129, 0.38)')
+    expect(studentOverviewSource).not.toContain('rgba(148, 163, 184, 0.2)')
 
     expect(userProfileSource).not.toContain('border: 1px solid rgba(16, 185, 129, 0.22);')
     expect(userProfileSource).not.toContain('background: rgba(16, 185, 129, 0.08);')

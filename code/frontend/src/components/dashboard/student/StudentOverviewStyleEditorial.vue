@@ -97,7 +97,7 @@ const operationsSummary = computed(() => [
       <h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">
         {{ displayName }} 的训练总览
       </h1>
-      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+      <p class="workspace-page-copy max-w-2xl">
         先看进度、短板和最近状态，再决定下一步训练。
       </p>
 
@@ -490,32 +490,32 @@ const operationsSummary = computed(() => [
 }
 
 .status-dot-ready {
-  background: #10b981;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  background: var(--color-success);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 40%, transparent);
   animation: dot-pulse 1.8s infinite;
 }
 
 .status-dot-idle {
-  background: #94a3b8;
+  background: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
 .status-dot-warning {
-  background: #f59e0b;
+  background: var(--color-warning);
 }
 
 .status-dot-solved {
-  background: #22c55e;
+  background: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
 }
 
 @keyframes dot-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 38%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px transparent;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
@@ -550,6 +550,6 @@ const operationsSummary = computed(() => [
 
 :global([data-theme='dark']) .skill-dimension-chart__frame::after {
   background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  border-color: rgba(148, 163, 184, 0.2);
+  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
 }
 </style>
