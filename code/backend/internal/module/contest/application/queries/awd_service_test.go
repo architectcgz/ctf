@@ -2,11 +2,13 @@ package queries
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"gorm.io/gorm"
 
+	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -91,6 +93,15 @@ func TestAWDQueryServiceGetReadinessCountsBlockingStates(t *testing.T) {
 	if resp.BlockingCount != 3 {
 		t.Fatalf("expected blocking count 3, got %d", resp.BlockingCount)
 	}
+	if got := readinessBlockingReasonByChallenge(resp.Items, 7011); got != "last_preview_failed" {
+		t.Fatalf("expected last_preview_failed for 7011, got %q", got)
+	}
+	if got := readinessBlockingReasonByChallenge(resp.Items, 7012); got != "pending_validation" {
+		t.Fatalf("expected pending_validation for 7012, got %q", got)
+	}
+	if got := readinessBlockingReasonByChallenge(resp.Items, 7013); got != "validation_stale" {
+		t.Fatalf("expected validation_stale for 7013, got %q", got)
+	}
 	if len(resp.Items) > 0 && resp.Items[0].LastAccessURL == nil {
 		t.Fatalf("expected last_access_url for preview-backed item: %+v", resp.Items[0])
 	}
@@ -145,8 +156,57 @@ func TestAWDQueryServiceGetReadinessTreatsBrokenCheckerConfigAsMissingChecker(t 
 	if resp.BlockingCount != 1 {
 		t.Fatalf("expected blocking count 1, got %d", resp.BlockingCount)
 	}
+	if len(resp.Items) != 1 || resp.Items[0].BlockingReason != "invalid_checker_config" {
+		t.Fatalf("unexpected readiness items: %+v", resp.Items)
+	}
+}
+
+func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Now()
+
+	createAWDReadinessContestFixture(t, db, 704, now)
+	createAWDReadinessChallengeFixture(t, db, 7041, "missing-checker", now)
+	createAWDReadinessRelationFixture(t, db, &model.ContestChallenge{
+		ContestID:                 704,
+		ChallengeID:               7041,
+		Points:                    100,
+		IsVisible:                 true,
+		AWDCheckerType:            "",
+		AWDCheckerConfig:          `{}`,
+		AWDCheckerValidationState: model.AWDCheckerValidationStatePending,
+		CreatedAt:                 now,
+		UpdatedAt:                 now,
+	})
+
+	resp, err := service.GetReadiness(context.Background(), 704)
+	if err != nil {
+		t.Fatalf("GetReadiness() error = %v", err)
+	}
+	if len(resp.BlockingActions) != 3 || resp.BlockingActions[1] != "run_current_round_check" {
+		t.Fatalf("unexpected blocking actions: %+v", resp.BlockingActions)
+	}
 	if len(resp.Items) != 1 || resp.Items[0].BlockingReason != "missing_checker" {
 		t.Fatalf("unexpected readiness items: %+v", resp.Items)
+	}
+
+	raw, err := json.Marshal(resp.Items[0])
+	if err != nil {
+		t.Fatalf("marshal readiness item: %v", err)
+	}
+
+	payload := map[string]any{}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("unmarshal readiness item: %v", err)
+	}
+	if _, ok := payload["checker_type"]; !ok {
+		t.Fatalf("expected checker_type key in payload: %s", string(raw))
+	}
+	if _, ok := payload["last_preview_at"]; !ok {
+		t.Fatalf("expected last_preview_at key in payload: %s", string(raw))
+	}
+	if _, ok := payload["last_access_url"]; !ok {
+		t.Fatalf("expected last_access_url key in payload: %s", string(raw))
 	}
 }
 
@@ -191,4 +251,13 @@ func createAWDReadinessRelationFixture(t *testing.T, db *gorm.DB, relation *mode
 	if err := db.Create(relation).Error; err != nil {
 		t.Fatalf("create contest challenge: %v", err)
 	}
+}
+
+func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, challengeID int64) string {
+	for _, item := range items {
+		if item.ChallengeID == challengeID {
+			return item.BlockingReason
+		}
+	}
+	return ""
 }

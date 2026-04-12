@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -8,15 +9,16 @@ import (
 )
 
 const (
-	AWDReadinessBlockingReasonMissingChecker = "missing_checker"
-	AWDReadinessBlockingReasonPending        = "pending"
-	AWDReadinessBlockingReasonFailed         = "failed"
-	AWDReadinessBlockingReasonStale          = "stale"
+	AWDReadinessBlockingReasonMissingChecker       = "missing_checker"
+	AWDReadinessBlockingReasonInvalidCheckerConfig = "invalid_checker_config"
+	AWDReadinessBlockingReasonPendingValidation    = "pending_validation"
+	AWDReadinessBlockingReasonLastPreviewFailed    = "last_preview_failed"
+	AWDReadinessBlockingReasonValidationStale      = "validation_stale"
 
 	AWDReadinessGlobalReasonNoChallenges = "no_challenges"
 
 	AWDReadinessActionCreateRound          = "create_round"
-	AWDReadinessActionRunCurrentRoundCheck = "run_current_round_checks"
+	AWDReadinessActionRunCurrentRoundCheck = "run_current_round_check"
 	AWDReadinessActionStartContest         = "start_contest"
 )
 
@@ -89,16 +91,20 @@ func BuildAWDReadiness(contestID int64, challenges []AWDReadinessChallenge) *AWD
 			item.BlockingReason = AWDReadinessBlockingReasonMissingChecker
 			summary.MissingCheckerChallenges++
 			summary.BlockingCount++
-		case AWDReadinessBlockingReasonPending:
-			item.BlockingReason = AWDReadinessBlockingReasonPending
+		case AWDReadinessBlockingReasonInvalidCheckerConfig:
+			item.BlockingReason = AWDReadinessBlockingReasonInvalidCheckerConfig
+			summary.MissingCheckerChallenges++
+			summary.BlockingCount++
+		case AWDReadinessBlockingReasonPendingValidation:
+			item.BlockingReason = AWDReadinessBlockingReasonPendingValidation
 			summary.PendingChallenges++
 			summary.BlockingCount++
-		case AWDReadinessBlockingReasonFailed:
-			item.BlockingReason = AWDReadinessBlockingReasonFailed
+		case AWDReadinessBlockingReasonLastPreviewFailed:
+			item.BlockingReason = AWDReadinessBlockingReasonLastPreviewFailed
 			summary.FailedChallenges++
 			summary.BlockingCount++
-		case AWDReadinessBlockingReasonStale:
-			item.BlockingReason = AWDReadinessBlockingReasonStale
+		case AWDReadinessBlockingReasonValidationStale:
+			item.BlockingReason = AWDReadinessBlockingReasonValidationStale
 			summary.StaleChallenges++
 			summary.BlockingCount++
 		default:
@@ -119,16 +125,19 @@ func resolveAWDReadinessBlockingReason(challenge AWDReadinessChallenge) string {
 	if awdReadinessCheckerMissing(challenge.CheckerType, challenge.CheckerConfig) {
 		return AWDReadinessBlockingReasonMissingChecker
 	}
+	if awdReadinessCheckerConfigInvalid(challenge.CheckerType, challenge.CheckerConfig) {
+		return AWDReadinessBlockingReasonInvalidCheckerConfig
+	}
 
 	switch NormalizeAWDCheckerValidationState(string(challenge.ValidationState)) {
 	case model.AWDCheckerValidationStatePassed:
 		return ""
 	case model.AWDCheckerValidationStateFailed:
-		return AWDReadinessBlockingReasonFailed
+		return AWDReadinessBlockingReasonLastPreviewFailed
 	case model.AWDCheckerValidationStateStale:
-		return AWDReadinessBlockingReasonStale
+		return AWDReadinessBlockingReasonValidationStale
 	default:
-		return AWDReadinessBlockingReasonPending
+		return AWDReadinessBlockingReasonPendingValidation
 	}
 }
 
@@ -142,15 +151,37 @@ func awdReadinessCheckerMissing(checkerType model.AWDCheckerType, checkerConfig 
 	if rawConfig == "" {
 		return true
 	}
+	if awdReadinessCheckerConfigInvalid(checkerType, checkerConfig) {
+		return false
+	}
 
 	parsedConfig := ParseAWDCheckerConfig(rawConfig)
-	if normalizedType == model.AWDCheckerTypeHTTPStandard && len(parsedConfig) == 0 {
+	if normalizedType == model.AWDCheckerTypeHTTPStandard && rawConfig == "{}" {
 		return true
 	}
-	if rawConfig != "{}" && len(parsedConfig) == 0 {
+	if rawConfig == "{}" {
+		return false
+	}
+	if len(parsedConfig) == 0 {
 		return true
 	}
 	return false
+}
+
+func awdReadinessCheckerConfigInvalid(checkerType model.AWDCheckerType, checkerConfig string) bool {
+	if NormalizeAWDCheckerType(string(checkerType)) == "" {
+		return false
+	}
+
+	rawConfig := strings.TrimSpace(checkerConfig)
+	if rawConfig == "" || rawConfig == "{}" {
+		return false
+	}
+
+	if !json.Valid([]byte(rawConfig)) {
+		return true
+	}
+	return len(ParseAWDCheckerConfig(rawConfig)) == 0
 }
 
 func extractAWDReadinessAccessURL(lastPreviewResult string) *string {
