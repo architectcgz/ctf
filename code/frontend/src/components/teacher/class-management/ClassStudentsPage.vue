@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowRight, ChevronLeft, Search } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 
 import type {
   TeacherClassItem,
@@ -49,12 +49,17 @@ const activeRateText = computed(() => {
 })
 
 type WorkspaceTab = 'overview' | 'trend' | 'students' | 'review' | 'insight' | 'action'
+type WorkspacePanelTab = Exclude<WorkspaceTab, 'overview' | 'students'>
 
 interface WorkspaceTabItem {
   key: WorkspaceTab
   label: string
   buttonId: string
   panelId: string
+}
+
+interface WorkspacePanelTabItem extends WorkspaceTabItem {
+  key: WorkspacePanelTab
 }
 
 const workspaceTabs: WorkspaceTabItem[] = [
@@ -67,12 +72,61 @@ const workspaceTabs: WorkspaceTabItem[] = [
 ]
 
 const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
+const panelWorkspaceTabs = workspaceTabs.filter(
+  (tab): tab is WorkspacePanelTabItem => tab.key !== 'overview' && tab.key !== 'students'
+)
 const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
   {
     orderedTabs: workspaceTabOrder,
     defaultTab: 'overview',
   }
 )
+
+function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
+  switch (tabKey) {
+    case 'trend':
+      return TeacherClassTrendPanel
+    case 'review':
+      return TeacherClassReviewPanel
+    case 'insight':
+      return TeacherClassInsightsPanel
+    case 'action':
+      return TeacherInterventionPanel
+  }
+}
+
+function resolveWorkspacePanelProps(tabKey: WorkspacePanelTab): Record<string, unknown> {
+  switch (tabKey) {
+    case 'trend':
+      return {
+        trend: props.trend,
+        title: '班级近 7 天训练趋势',
+        subtitle: '先看整体节奏，再下钻到具体学生。',
+      }
+    case 'review':
+      return {
+        review: props.review,
+        className: props.selectedClassName,
+      }
+    case 'insight':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+        splitCards: true,
+      }
+    case 'action':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+      }
+  }
+}
+
+function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] {
+  return tabKey === 'insight'
+    ? ['workspace-subpanel', 'workspace-subpanel--flat', 'workspace-subpanel--insight']
+    : ['workspace-subpanel', 'workspace-subpanel--flat']
+}
 </script>
 
 <template>
@@ -181,24 +235,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 <span>→</span>
               </button>
             </div>
-          </div>
-        </section>
-
-        <section
-          id="class-trend"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'trend' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-trend"
-          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
-          v-show="activeTab === 'trend'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherClassTrendPanel
-              :trend="trend"
-              title="班级近 7 天训练趋势"
-              subtitle="先看整体节奏，再下钻到具体学生。"
-            />
           </div>
         </section>
 
@@ -378,48 +414,21 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         </section>
 
         <section
-          id="class-review"
+          v-for="tab in panelWorkspaceTabs"
+          :id="tab.panelId"
+          :key="tab.panelId"
           class="tab-panel section"
-          :class="{ active: activeTab === 'review' }"
+          :class="{ active: activeTab === tab.key }"
           role="tabpanel"
-          aria-labelledby="class-tab-review"
-          :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
-          v-show="activeTab === 'review'"
+          :aria-labelledby="tab.buttonId"
+          :aria-hidden="activeTab === tab.key ? 'false' : 'true'"
+          v-show="activeTab === tab.key"
         >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
-          </div>
-        </section>
-
-        <section
-          id="class-insight"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'insight' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-insight"
-          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
-          v-show="activeTab === 'insight'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat workspace-subpanel--insight">
-            <TeacherClassInsightsPanel
-              :students="students"
-              :class-name="selectedClassName"
-              split-cards
+          <div :class="resolveWorkspacePanelWrapperClass(tab.key)">
+            <component
+              :is="resolveWorkspacePanelComponent(tab.key)"
+              v-bind="resolveWorkspacePanelProps(tab.key)"
             />
-          </div>
-        </section>
-
-        <section
-          id="class-action"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'action' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-action"
-          :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
-          v-show="activeTab === 'action'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
           </div>
         </section>
       </main>
