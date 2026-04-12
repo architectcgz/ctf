@@ -113,7 +113,7 @@
 - Modify: `code/backend/internal/module/contest/application/commands/contest_service_test.go`
 - Modify: `code/backend/internal/app/router_test.go`
 
-- [ ] **Step 1: 在 readiness query 测试里锁定摘要口径**
+- [x] **Step 1: 在 readiness query 测试里锁定摘要口径**
 
 在 `awd_service_test.go`（queries）新增至少 3 个用例：
 
@@ -138,7 +138,7 @@ if len(resp.Items) > 0 && resp.Items[0].LastAccessURL == nil {
 }
 ```
 
-- [ ] **Step 2: 在 AWD command 测试里锁定创建轮次与当前轮巡检 gate**
+- [x] **Step 2: 在 AWD command 测试里锁定创建轮次与当前轮巡检 gate**
 
 在 `awd_service_test.go` 新增用例：
 
@@ -158,7 +158,7 @@ if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAWDReadinessBlocked.Cod
 }
 ```
 
-- [ ] **Step 3: 在 contest command 测试里锁定 AWD 开赛 gate**
+- [x] **Step 3: 在 contest command 测试里锁定 AWD 开赛 gate**
 
 在 `contest_service_test.go` 新增：
 
@@ -177,7 +177,7 @@ resp, err := service.UpdateContest(ctx, contest.ID, &dto.UpdateContestReq{
 })
 ```
 
-- [ ] **Step 4: 给 router 测试补 readiness 路由断言**
+- [x] **Step 4: 给 router 测试补 readiness 路由断言**
 
 在 `router_test.go` 增加：
 
@@ -185,7 +185,7 @@ resp, err := service.UpdateContest(ctx, contest.ID, &dto.UpdateContestReq{
 assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/readiness", "internal/module/contest/api/http")
 ```
 
-- [ ] **Step 5: 跑后端定向测试确认 RED**
+- [x] **Step 5: 跑后端定向测试确认 RED**
 
 运行：
 
@@ -223,7 +223,7 @@ go test ./internal/app -run TestNewRouterRegistersStudentChallengeRoutes -count=
 - Modify: `code/backend/internal/app/composition/contest_module.go`
 - Modify: `code/backend/internal/app/router_routes.go`
 
-- [ ] **Step 1: 先补 DTO 与错误码**
+- [x] **Step 1: 先补 DTO 与错误码**
 
 在 `dto/awd.go` 定义 readiness 响应和 override body 字段，目标结构至少是：
 
@@ -263,7 +263,7 @@ OverrideReason *string `json:"override_reason" binding:"omitempty,max=500"`
 
 并在 `pkg/errcode/errcode.go` 增加 `ErrAWDReadinessBlocked`。
 
-- [ ] **Step 2: 实现 repo 读取与 readiness query**
+- [x] **Step 2: 实现 repo 读取与 readiness query**
 
 在 `ports/awd.go` 增加新的读取结构与方法，例如：
 
@@ -289,7 +289,7 @@ type AWDReadinessChallengeRecord struct {
 - `global_blocking_reasons = ["no_challenges"]`
 - `last_access_url = preview_context.access_url`
 
-- [ ] **Step 3: 实现共享 gate helper**
+- [x] **Step 3: 实现共享 gate helper**
 
 在 `awd_readiness_gate.go` 提供单一入口，例如：
 
@@ -306,7 +306,7 @@ decision, err := gate.Evaluate(ctx, contestID, action, forceOverride, overrideRe
   - trim 后为空时报 `ErrInvalidParams`
   - 长度合法后返回 allow + blocking snapshot
 
-- [ ] **Step 4: 把 gate 接到 3 个命令路径**
+- [x] **Step 4: 把 gate 接到 3 个命令路径**
 
 最小接入点固定为：
 
@@ -316,7 +316,7 @@ decision, err := gate.Evaluate(ctx, contestID, action, forceOverride, overrideRe
 
 其中 `RunRoundChecks(contestID, roundID)` 保持不变，不调用 gate。
 
-- [ ] **Step 5: 补 HTTP handler 与路由**
+- [x] **Step 5: 补 HTTP handler 与路由**
 
 实现：
 
@@ -330,7 +330,7 @@ decision, err := gate.Evaluate(ctx, contestID, action, forceOverride, overrideRe
 adminOnly.GET("/contests/:id/awd/readiness", middleware.ParseInt64Param("id"), deps.contest.AWDHandler.GetReadiness)
 ```
 
-- [ ] **Step 6: 跑后端定向测试转 GREEN**
+- [x] **Step 6: 跑后端定向测试转 GREEN**
 
 运行：
 
@@ -343,7 +343,7 @@ go test ./internal/app -run TestNewRouterRegistersStudentChallengeRoutes -count=
 
 预期：PASS。
 
-- [ ] **Step 7: 提交后端门禁主链路**
+- [x] **Step 7: 提交后端门禁主链路**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate
@@ -364,7 +364,7 @@ git commit -m "feat(awd): 增加开赛就绪门禁后端链路"
 - Modify: `code/backend/internal/module/contest/application/commands/awd_service_test.go`
 - Modify: `code/backend/internal/module/contest/application/commands/contest_service_test.go`
 
-- [ ] **Step 1: 先写 forced override 审计失败测试**
+- [x] **Step 1: 先写 forced override 审计失败测试**
 
 优先在 `awd_readiness_audit_test.go` 里直接覆盖 middleware 行为，至少锁定两类结果：
 
@@ -386,7 +386,7 @@ if detail["module"] != "awd_readiness_gate" {
 }
 ```
 
-- [ ] **Step 2: 用 middleware 记录附加审计，不碰现有通用审计中间件语义**
+- [x] **Step 2: 用 middleware 记录附加审计，不碰现有通用审计中间件语义**
 
 在 `awd_readiness_audit.go` 里实现一个专用 middleware：
 
@@ -401,7 +401,7 @@ if detail["module"] != "awd_readiness_gate" {
   - `execution_outcome`
   - `execution_error`
 
-- [ ] **Step 3: 在 3 个 handler 里预取 readiness snapshot 并写入 context 审计快照**
+- [x] **Step 3: 在 3 个 handler 里预取 readiness snapshot 并写入 context 审计快照**
 
 实现约定改为：
 
@@ -417,7 +417,7 @@ if detail["module"] != "awd_readiness_gate" {
 
 其中 `PUT /admin/contests/:id` 需要在 `handler.go` 里给主 `Handler` 增加 readiness query 依赖，不能只改 `contest_command_handler.go`。
 
-- [ ] **Step 4: 把专用审计 middleware 接到 3 条路由**
+- [x] **Step 4: 把专用审计 middleware 接到 3 条路由**
 
 在 `router_routes.go` 的以下路由上加 middleware：
 
@@ -427,7 +427,7 @@ if detail["module"] != "awd_readiness_gate" {
 
 顺序要求：放在业务 handler 同链路内，但不要替换现有通用审计 middleware。
 
-- [ ] **Step 5: 跑后端最小充分回归**
+- [x] **Step 5: 跑后端最小充分回归**
 
 运行：
 
@@ -440,7 +440,7 @@ go test ./internal/module/contest/... -count=1
 
 预期：PASS。
 
-- [ ] **Step 6: 提交 readiness 审计补丁**
+- [x] **Step 6: 提交 readiness 审计补丁**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate
@@ -455,7 +455,7 @@ git commit -m "feat(awd): 记录开赛门禁强制放行审计"
 - Modify: `code/frontend/src/components/admin/__tests__/AWDOperationsPanel.test.ts`
 - Modify: `code/frontend/src/views/admin/__tests__/ContestManage.test.ts`
 
-- [ ] **Step 1: 先写 admin API 契约失败测试**
+- [x] **Step 1: 先写 admin API 契约失败测试**
 
 补 4 类断言：
 
@@ -475,7 +475,7 @@ expect(requestMock).toHaveBeenCalledWith({
 })
 ```
 
-- [ ] **Step 2: 给 AWDOperationsPanel 写 readiness 摘要与被拦动作测试**
+- [x] **Step 2: 给 AWDOperationsPanel 写 readiness 摘要与被拦动作测试**
 
 至少补下面场景：
 
@@ -485,7 +485,7 @@ expect(requestMock).toHaveBeenCalledWith({
 - 点击立即巡检当前轮时同样打开确认层
 - 普通 `409` 或非 gate 错误码不会误开 readiness 弹层
 
-- [ ] **Step 3: 给 ContestManage 写 AWD 启动赛事门禁测试**
+- [x] **Step 3: 给 ContestManage 写 AWD 启动赛事门禁测试**
 
 在 `ContestManage.test.ts` 增加：
 
@@ -495,7 +495,7 @@ expect(requestMock).toHaveBeenCalledWith({
 - 填写原因后再次调用 `updateContest(..., { force_override: true, override_reason })`
 - 普通 `409` 或其他错误码不会误开“启动赛事” gate 弹层
 
-- [ ] **Step 4: 跑前端定向测试确认 RED**
+- [x] **Step 4: 跑前端定向测试确认 RED**
 
 运行：
 
@@ -518,7 +518,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 - Modify: `code/frontend/src/components/admin/contest/AWDOperationsPanel.vue`
 - Modify: `code/frontend/src/views/admin/ContestManage.vue`
 
-- [ ] **Step 1: 先接好 contract 和 admin API**
+- [x] **Step 1: 先接好 contract 和 admin API**
 
 增加前端类型：
 
@@ -564,7 +564,7 @@ suppressErrorToast: true
 
 让 UI 自己决定何时弹 gate dialog。
 
-- [ ] **Step 2: 在 useAdminContestAWD 里接入 readiness 数据和 2 个 gated action**
+- [x] **Step 2: 在 useAdminContestAWD 里接入 readiness 数据和 2 个 gated action**
 
 新增状态至少包含：
 
@@ -581,7 +581,7 @@ suppressErrorToast: true
   - 用户确认后带 `force_override` / `override_reason` 重试
 - 当前轮巡检复用同一套流程
 
-- [ ] **Step 3: 用独立组件承接摘要区和强制放行弹层**
+- [x] **Step 3: 用独立组件承接摘要区和强制放行弹层**
 
 `AWDReadinessSummary.vue` 负责：
 
@@ -603,7 +603,7 @@ suppressErrorToast: true
 - 继续使用现有 `metric-panel`、`workspace-directory-section`、flat row
 - 不引入新主题色，不脱离现有暗色工作区表面
 
-- [ ] **Step 4: 在 AWDOperationsPanel 接上新组件**
+- [x] **Step 4: 在 AWDOperationsPanel 接上新组件**
 
 布局固定为：
 
@@ -614,7 +614,7 @@ suppressErrorToast: true
 
 不要把 readiness 放进新页面或 tab。
 
-- [ ] **Step 5: 在 useAdminContests + ContestManage 接入 AWD 启动赛事门禁**
+- [x] **Step 5: 在 useAdminContests + ContestManage 接入 AWD 启动赛事门禁**
 
 要求：
 
@@ -627,7 +627,7 @@ suppressErrorToast: true
   - 打开同一款 override dialog
   - 用户确认后带 override 参数重提交流程
 
-- [ ] **Step 6: 跑前端定向测试转 GREEN**
+- [x] **Step 6: 跑前端定向测试转 GREEN**
 
 运行：
 
@@ -638,7 +638,7 @@ npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests
 
 预期：PASS。
 
-- [ ] **Step 7: 提交前端 readiness UI 与门禁交互**
+- [x] **Step 7: 提交前端 readiness UI 与门禁交互**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate
@@ -651,7 +651,7 @@ git commit -m "feat(awd): 增加开赛就绪门禁前端交互"
 **Files:**
 - Modify: `docs/superpowers/plans/2026-04-12-awd-engine-phase8-readiness-gate.md`
 
-- [ ] **Step 1: 跑后端 AWD 相关最小回归**
+- [x] **Step 1: 跑后端 AWD 相关最小回归**
 
 运行：
 
@@ -663,19 +663,19 @@ go test ./internal/app -run TestNewRouterRegistersStudentChallengeRoutes -count=
 
 预期：PASS。
 
-- [ ] **Step 2: 跑前端 AWD 管理端最小回归**
+- [x] **Step 2: 跑前端 AWD 管理端最小回归**
 
 运行：
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate/code/frontend
-npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/views/admin/__tests__/ContestManage.test.ts
+npm run test:run -- src/api/__tests__/admin.test.ts src/components/admin/__tests__/AWDChallengeConfigDialog.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/components/admin/__tests__/AWDReadinessSummary.test.ts src/composables/__tests__/useAdminContestAWD.test.ts src/views/admin/__tests__/ContestManage.test.ts
 npm run typecheck
 ```
 
 预期：PASS。
 
-- [ ] **Step 3: 更新计划执行勾选并提交收尾**
+- [x] **Step 3: 更新计划执行勾选并提交收尾**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/feat-awd-phase8-readiness-gate
