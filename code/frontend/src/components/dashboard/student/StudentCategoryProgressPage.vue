@@ -36,12 +36,15 @@ const rankedCategories = computed<RankedCategoryStat[]>(() =>
   rankCategoryActionItems(props.categoryStats)
 )
 const primaryCategory = computed(() => rankedCategories.value[0] || null)
-const headlineCategory = computed(() => primaryCategory.value?.category || '新的分类')
+const hasCategoryStats = computed(() => rankedCategories.value.length > 0)
+const headlineTitle = computed(() =>
+  primaryCategory.value ? `优先补这个分类：${primaryCategory.value.category}` : '先开始积累分类覆盖面'
+)
 const summaryCards = computed(() => [
   {
     key: 'focus',
     label: '当前优先分类',
-    value: headlineCategory.value,
+    value: primaryCategory.value?.category || '先开始训练',
     helper: primaryCategory.value
       ? `完成率 ${primaryCategory.value.rate}%，还有 ${primaryCategory.value.remaining} 道题待补，先从这里补回训练短板。`
       : '先完成几道题，这里会自动形成下一步最值得先补的分类。',
@@ -99,10 +102,14 @@ function openPrimaryCategory(): void {
     <div class="category-header">
       <div class="journal-eyebrow">Action Ranking</div>
       <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
-        优先补这个分类：{{ headlineCategory }}
+        {{ headlineTitle }}
       </h1>
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-        这一页先回答下一步做什么，再直接进入对应分类的题目列表开始训练。
+        {{
+          hasCategoryStats
+            ? '这一页先回答下一步做什么，再直接进入对应分类的题目列表开始训练。'
+            : '先做出第一批分类进度，这里就会开始按优先级告诉你接下来该补哪一类。'
+        }}
       </p>
 
       <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">
