@@ -140,6 +140,8 @@ const weakDimensionStats = computed(() => {
 </template>
 
 <style scoped>
+@import './teacher-panel-shell.css';
+
 .teacher-insight-layout {
   display: grid;
   gap: var(--space-5);
@@ -154,42 +156,6 @@ const weakDimensionStats = computed(() => {
   --showcase-panel-padding: var(--space-4) var(--space-4-5);
 }
 
-.teacher-panel {
-  --panel-ink: var(--journal-ink);
-  --panel-muted: var(--journal-muted);
-  --panel-border: color-mix(
-    in srgb,
-    var(--journal-border, var(--color-border-default)) 74%,
-    transparent
-  );
-  --panel-divider: color-mix(in srgb, var(--panel-border) 76%, transparent);
-  --panel-surface: var(--journal-surface, var(--color-bg-surface));
-  --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
-  --panel-accent: var(--journal-accent);
-  --panel-accent-strong: var(--journal-accent-strong);
-}
-
-.teacher-panel:not(.teacher-panel--shellless) {
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  background: var(--panel-surface-subtle);
-  padding: var(--space-5) var(--space-5) var(--space-5-5);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
-.teacher-panel--shellless {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-}
-
-.teacher-subsection + .teacher-subsection {
-  border-top: 1px dashed var(--panel-divider);
-  padding-top: var(--space-5);
-}
-
 .teacher-insight-layout--split-cards .teacher-subsection + .teacher-subsection {
   border-top: 0;
   padding-top: 0;
@@ -197,24 +163,6 @@ const weakDimensionStats = computed(() => {
 
 .teacher-insight-layout--split-cards .showcase-panel-card + .showcase-panel-card {
   border-top: 1px solid var(--showcase-panel-border, var(--panel-border));
-}
-
-.teacher-subsection__header {
-  margin-bottom: var(--space-4);
-}
-
-.teacher-panel__title {
-  margin-top: var(--space-3);
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--panel-ink);
-}
-
-.teacher-panel__subtitle {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-0-84);
-  line-height: 1.65;
-  color: var(--panel-muted);
 }
 
 .top-student-list {

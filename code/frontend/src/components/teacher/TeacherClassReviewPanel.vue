@@ -78,42 +78,7 @@ function getAccentClass(accent: TeacherClassReviewItemData['accent']): string {
 </template>
 
 <style scoped>
-.teacher-panel {
-  --panel-ink: var(--journal-ink);
-  --panel-muted: var(--journal-muted);
-  --panel-border: color-mix(
-    in srgb,
-    var(--journal-border, var(--color-border-default)) 74%,
-    transparent
-  );
-  --panel-surface: var(--journal-surface, var(--color-bg-surface));
-  --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
-  --panel-accent: var(--journal-accent);
-  --panel-accent-strong: var(--journal-accent-strong);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  background: var(--panel-surface-subtle);
-  padding: var(--space-5) var(--space-5) var(--space-5-5);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
-.teacher-panel__header {
-  margin-bottom: var(--space-4);
-}
-
-.teacher-panel__title {
-  margin-top: var(--space-3);
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--panel-ink);
-}
-
-.teacher-panel__subtitle {
-  margin-top: var(--space-2);
-  font-size: var(--font-size-0-84);
-  line-height: 1.65;
-  color: var(--panel-muted);
-}
+@import './teacher-panel-shell.css';
 
 .review-list {
   display: grid;
