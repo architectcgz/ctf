@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { MoveRight } from 'lucide-vue-next'
 
 import { rankCategoryActionItems } from './utils'
 
@@ -43,10 +42,10 @@ const headlineTitle = computed(() =>
 const summaryCards = computed(() => [
   {
     key: 'focus',
-    label: '当前优先分类',
-    value: primaryCategory.value?.category || '先开始训练',
+    label: '当前待补题量',
+    value: primaryCategory.value ? `${primaryCategory.value.remaining} 道` : '待生成',
     helper: primaryCategory.value
-      ? `完成率 ${primaryCategory.value.rate}%，还有 ${primaryCategory.value.remaining} 道题待补，先从这里补回训练短板。`
+      ? `${primaryCategory.value.category} 还有 ${primaryCategory.value.remaining} 道题待补，先从这里补回训练短板。`
       : '先完成几道题，这里会自动形成下一步最值得先补的分类。',
   },
   {
@@ -144,22 +143,10 @@ function openPrimaryCategory(): void {
       :class="{ 'category-board--embedded': embedded }"
     >
       <section class="category-section">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Action Directory</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">分类行动列表</h3>
-            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              按当前顺序进入，先补完成率更低、同时题量也更值得优先处理的分类。
-            </p>
-          </div>
-          <button
-            v-if="rankedCategories.length > 0"
-            class="journal-btn-outline"
-            @click="emit('openChallenges')"
-          >
-            <MoveRight class="h-3.5 w-3.5" />
-            浏览全部题目
-          </button>
+        <div v-if="rankedCategories.length > 0" class="category-toolbar">
+          <p class="category-toolbar__copy">
+            从排序最前的分类开始，完成一类再继续往后推。
+          </p>
         </div>
 
         <div
@@ -254,6 +241,19 @@ function openPrimaryCategory(): void {
 
 .category-board--embedded {
   margin-top: var(--space-5);
+}
+
+.category-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.category-toolbar__copy {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
 .category-action-list {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Flame, Layers2, MoveRight, ShieldCheck } from 'lucide-vue-next'
+import { Flame } from 'lucide-vue-next'
 
 import { difficultyLabel } from '@/utils/challenge'
 
@@ -57,10 +57,10 @@ const headlineTitle = computed(() =>
 const summaryCards = computed(() => [
   {
     key: 'focus',
-    label: '当前推进档位',
-    value: primaryDifficulty.value ? difficultyLabel(primaryDifficulty.value.difficulty) : '先开始训练',
+    label: '当前完成率',
+    value: primaryDifficulty.value ? `${primaryDifficulty.value.rate}%` : '待建立',
     helper: primaryDifficulty.value
-      ? `当前完成率 ${primaryDifficulty.value.rate}%，还有 ${primaryDifficulty.value.remaining} 道题待补，先把这一档推稳。`
+      ? `${difficultyLabel(primaryDifficulty.value.difficulty)} 还有 ${primaryDifficulty.value.remaining} 道题待补，先把这一档推稳。`
       : '先做出第一批难度分布，这里就会告诉你下一步该推哪一档。',
   },
   {
@@ -159,22 +159,10 @@ function openPrimaryDifficulty(): void {
       :class="{ 'difficulty-board--embedded': embedded }"
     >
       <section class="difficulty-section">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Action Directory</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">强度推进列表</h3>
-            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              按固定难度顺序看当前进度，再从完成率最低、最值得补的一档直接进入训练。
-            </p>
-          </div>
-          <button
-            v-if="hasDifficultyStats"
-            class="journal-btn-outline"
-            @click="emit('openChallenges')"
-          >
-            <MoveRight class="h-3.5 w-3.5" />
-            浏览全部题目
-          </button>
+        <div v-if="hasDifficultyStats" class="difficulty-toolbar">
+          <p class="difficulty-toolbar__copy">
+            难度顺序固定，主推档位已高亮，按列表从上往下看就够了。
+          </p>
         </div>
 
         <div
@@ -231,51 +219,16 @@ function openPrimaryDifficulty(): void {
         </div>
       </section>
 
-      <section class="difficulty-section difficulty-section--compact">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="max-w-3xl">
-            <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
-              <Flame class="h-4 w-4 text-[var(--journal-accent)]" />
-              为什么现在先推这一档
-            </div>
-            <p class="mt-3 text-sm leading-7 text-[var(--journal-muted)]">
-              {{
-                primaryDifficulty
-                  ? `当前最需要补的是${difficultyLabel(primaryDifficulty.difficulty)}。先把这一档补到更稳定，再往上提强度，会比直接跳到更高难度更稳。`
-                  : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
-              }}
-            </p>
-          </div>
-        </div>
-
-        <div class="difficulty-guidance mt-5">
-          <article class="difficulty-guidance-item">
-            <div class="flex items-start gap-3">
-              <div class="stat-icon stat-icon--success">
-                <ShieldCheck class="h-5 w-5" />
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">先补当前断档</div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  不要一口气跳太高。先把当前掉队的一档补稳，再决定是不是继续抬升训练强度。
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article class="difficulty-guidance-item">
-            <div class="flex items-start gap-3">
-              <div class="stat-icon stat-icon--primary">
-                <Layers2 class="h-5 w-5" />
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-[var(--journal-ink)]">按层级推进</div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-                  难度顺序保持固定，方便你判断自己是在巩固基础，还是已经具备继续往上推的条件。
-                </p>
-              </div>
-            </div>
-          </article>
+      <section v-if="hasDifficultyStats" class="difficulty-section difficulty-section--compact">
+        <div class="difficulty-note">
+          <Flame class="difficulty-note__icon h-4 w-4" />
+          <p class="difficulty-note__copy">
+            {{
+              primaryDifficulty
+                ? `当前最需要补的是${difficultyLabel(primaryDifficulty.difficulty)}。先补当前断档，再按层级继续往上推。`
+                : '先积累一批真实训练样本，这一页才会开始根据你的强度分布安排下一步动作。'
+            }}
+          </p>
         </div>
       </section>
     </div>
@@ -316,6 +269,19 @@ function openPrimaryDifficulty(): void {
   margin-top: var(--space-5);
 }
 
+.difficulty-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.difficulty-toolbar__copy {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
 .difficulty-section + .difficulty-section {
   margin-top: var(--space-6);
   padding-top: var(--space-6);
@@ -323,15 +289,14 @@ function openPrimaryDifficulty(): void {
 }
 
 .difficulty-action-list,
-.difficulty-guidance {
+.difficulty-note {
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: var(--space-4) var(--space-4-5);
 }
 
-.difficulty-action-item + .difficulty-action-item,
-.difficulty-guidance-item + .difficulty-guidance-item {
+.difficulty-action-item + .difficulty-action-item {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
   border-top: 1px solid var(--journal-divider);
@@ -429,6 +394,25 @@ function openPrimaryDifficulty(): void {
   color: var(--journal-ink);
 }
 
+.difficulty-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.difficulty-note__icon {
+  margin-top: 0.125rem;
+  flex-shrink: 0;
+  color: var(--journal-accent);
+}
+
+.difficulty-note__copy {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.8;
+  color: var(--journal-muted);
+}
+
 .difficulty-track {
   margin-top: 0.8rem;
   height: 0.5rem;
@@ -437,32 +421,8 @@ function openPrimaryDifficulty(): void {
   background: var(--journal-track);
 }
 
-.stat-icon {
-  display: flex;
-  height: 2.75rem;
-  width: 2.75rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1rem;
-  border: 1px solid var(--journal-soft-border);
-  background: var(--journal-surface-subtle);
-}
-
-.stat-icon--success {
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.2);
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.stat-icon--primary {
-  color: var(--journal-accent);
-  border-color: color-mix(in srgb, var(--journal-accent) 20%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-}
-
 :global([data-theme='dark']) .difficulty-action-list,
-:global([data-theme='dark']) .difficulty-guidance {
+:global([data-theme='dark']) .difficulty-note {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
