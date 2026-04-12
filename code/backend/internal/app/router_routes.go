@@ -544,6 +544,10 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.GET("/contests/:id/challenges", deps.contest.ChallengeHandler.ListChallenges)
 	protected.GET("/contests/:id/my-progress", deps.contest.ParticipationHandler.GetMyProgress)
+	protected.GET("/contests/:id/awd/workspace",
+		middleware.ParseInt64Param("id"),
+		deps.contest.AWDHandler.GetUserWorkspace,
+	)
 	protected.POST("/contests/:id/challenges/:cid/submissions",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,

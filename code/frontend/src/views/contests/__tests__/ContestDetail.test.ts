@@ -9,9 +9,13 @@ const contestApiMocks = vi.hoisted(() => ({
   getMyTeam: vi.fn(),
   getContestChallenges: vi.fn(),
   getAnnouncements: vi.fn(),
+  getContestAWDWorkspace: vi.fn(),
+  getScoreboard: vi.fn(),
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
   kickTeamMember: vi.fn(),
+  startContestChallengeInstance: vi.fn(),
+  submitContestAWDAttack: vi.fn(),
   submitContestFlag: vi.fn(),
 }))
 
@@ -48,13 +52,18 @@ describe('ContestDetail', () => {
   let router: any
 
   beforeEach(async () => {
+    vi.useRealTimers()
     contestApiMocks.getContestDetail.mockReset()
     contestApiMocks.getMyTeam.mockReset()
     contestApiMocks.getContestChallenges.mockReset()
     contestApiMocks.getAnnouncements.mockReset()
+    contestApiMocks.getContestAWDWorkspace.mockReset()
+    contestApiMocks.getScoreboard.mockReset()
     contestApiMocks.createTeam.mockReset()
     contestApiMocks.joinTeam.mockReset()
     contestApiMocks.kickTeamMember.mockReset()
+    contestApiMocks.startContestChallengeInstance.mockReset()
+    contestApiMocks.submitContestAWDAttack.mockReset()
     contestApiMocks.submitContestFlag.mockReset()
     webSocketMocks.connect.mockClear()
     webSocketMocks.disconnect.mockClear()
@@ -80,6 +89,68 @@ describe('ContestDetail', () => {
         created_at: '2024-03-15T09:00:00Z',
       },
     ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValue({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [],
+      targets: [],
+      recent_events: [],
+    })
+    contestApiMocks.getScoreboard.mockResolvedValue({
+      contest: {
+        id: '1',
+        title: '2026 春季校园 CTF 挑战赛',
+        status: 'running',
+        started_at: '2024-03-15T09:00:00Z',
+        ends_at: '2024-03-15T21:00:00Z',
+      },
+      scoreboard: {
+        list: [],
+        total: 0,
+        page: 1,
+        page_size: 10,
+      },
+      frozen: false,
+    })
+    contestApiMocks.startContestChallengeInstance.mockResolvedValue({
+      id: '900',
+      challenge_id: '101',
+      status: 'running',
+      share_scope: 'per_team',
+      access_url: 'http://red.internal',
+      flag_type: 'dynamic',
+      expires_at: '2024-03-15T12:00:00Z',
+      remaining_extends: 1,
+      created_at: '2024-03-15T09:02:00Z',
+    })
+    contestApiMocks.submitContestAWDAttack.mockResolvedValue({
+      id: '88',
+      round_id: '41',
+      attacker_team_id: '13',
+      attacker_team: 'Red',
+      victim_team_id: '14',
+      victim_team: 'Blue',
+      challenge_id: '101',
+      attack_type: 'flag_capture',
+      source: 'submission',
+      submitted_flag: 'flag{demo}',
+      is_success: true,
+      score_gained: 60,
+      created_at: '2024-03-15T09:03:00Z',
+    })
 
     router = createRouter({
       history: createMemoryHistory(),
@@ -145,5 +216,285 @@ describe('ContestDetail', () => {
 
     expect(contestApiMocks.getAnnouncements).toHaveBeenCalledTimes(2)
     expect(wrapper.text()).toContain('第二条公告')
+  })
+
+  it('AWD 赛事应切换到战场页签并加载学生工作台', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          challenge_id: '101',
+          access_url: 'http://red.internal',
+          service_status: 'up',
+          checker_type: 'http_standard',
+          attack_received: 0,
+          sla_score: 18,
+          defense_score: 40,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              challenge_id: '101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+    contestApiMocks.getScoreboard.mockResolvedValueOnce({
+      contest: {
+        id: '1',
+        title: '2026 春季校园 AWD 联赛',
+        status: 'running',
+        started_at: '2024-03-15T09:00:00Z',
+        ends_at: '2024-03-15T21:00:00Z',
+      },
+      scoreboard: {
+        list: [
+          {
+            rank: 1,
+            team_id: '13',
+            team_name: 'Red',
+            score: 158,
+            solved_count: 0,
+            last_submission_at: '2024-03-15T09:03:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 10,
+      },
+      frozen: false,
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('战场')
+    expect(wrapper.text()).toContain('目标目录')
+    expect(wrapper.text()).toContain('Blue')
+    expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledWith('1')
+  })
+
+  it('AWD 赛事在未入队时应显示先加入队伍的提示', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValueOnce({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: null,
+      services: [],
+      targets: [],
+      recent_events: [],
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('先在队伍页创建或加入队伍')
+    expect(wrapper.text()).toContain('战场')
+  })
+
+  it('运行中的 AWD 战场应显示防守告警、自动刷新提示，并支持筛选目标', async () => {
+    vi.useFakeTimers()
+
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '2026 春季校园 AWD 联赛',
+      description: '测试描述',
+      status: 'running',
+      mode: 'awd',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '201',
+        challenge_id: '101',
+        title: 'Service A',
+        category: 'web',
+        difficulty: 'medium',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.getContestAWDWorkspace.mockResolvedValue({
+      contest_id: '1',
+      current_round: {
+        id: '41',
+        contest_id: '1',
+        round_number: 2,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2024-03-15T09:00:00Z',
+        updated_at: '2024-03-15T09:01:00Z',
+      },
+      my_team: {
+        team_id: '13',
+        team_name: 'Red',
+      },
+      services: [
+        {
+          challenge_id: '101',
+          access_url: 'http://red.internal',
+          service_status: 'compromised',
+          checker_type: 'http_standard',
+          attack_received: 2,
+          sla_score: 0,
+          defense_score: 0,
+          attack_score: 0,
+          updated_at: '2024-03-15T09:02:00Z',
+        },
+      ],
+      targets: [
+        {
+          team_id: '14',
+          team_name: 'Blue',
+          services: [
+            {
+              challenge_id: '101',
+              access_url: 'http://blue.internal',
+            },
+          ],
+        },
+        {
+          team_id: '15',
+          team_name: 'Green',
+          services: [
+            {
+              challenge_id: '101',
+              access_url: '',
+            },
+          ],
+        },
+      ],
+      recent_events: [],
+    })
+    contestApiMocks.getScoreboard.mockResolvedValue({
+      contest: {
+        id: '1',
+        title: '2026 春季校园 AWD 联赛',
+        status: 'running',
+        started_at: '2024-03-15T09:00:00Z',
+        ends_at: '2024-03-15T21:00:00Z',
+      },
+      scoreboard: {
+        list: [
+          {
+            rank: 1,
+            team_id: '13',
+            team_name: 'Red',
+            score: 158,
+            solved_count: 0,
+            last_submission_at: '2024-03-15T09:03:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 10,
+      },
+      frozen: false,
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('防守告警')
+    expect(wrapper.text()).toContain('Service A')
+    expect(wrapper.text()).toContain('每 15 秒自动刷新')
+    expect(wrapper.text()).toContain('Blue')
+    expect(wrapper.text()).toContain('Green')
+
+    await wrapper.get('#awd-target-search').setValue('Blue')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Blue')
+    expect(wrapper.text()).not.toContain('Green')
+
+    await wrapper.get('#awd-target-search').setValue('Yellow')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('没有匹配的目标队伍')
+
+    await vi.advanceTimersByTimeAsync(15_000)
+    await flushPromises()
+
+    expect(contestApiMocks.getContestAWDWorkspace).toHaveBeenCalledTimes(2)
+    expect(contestApiMocks.getScoreboard).toHaveBeenCalledTimes(2)
   })
 })

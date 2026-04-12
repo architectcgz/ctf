@@ -408,6 +408,56 @@ export interface AWDAttackLogData {
   created_at: ISODateTime
 }
 
+export type ContestAWDWorkspaceEventDirection = 'attack_in' | 'attack_out'
+
+export interface ContestAWDWorkspaceTeamData {
+  team_id: ID
+  team_name: string
+}
+
+export interface ContestAWDWorkspaceServiceData {
+  challenge_id: ID
+  access_url?: string
+  service_status?: AWDServiceStatus
+  checker_type?: AWDCheckerType
+  attack_received: number
+  sla_score: number
+  defense_score: number
+  attack_score: number
+  updated_at?: ISODateTime
+}
+
+export interface ContestAWDWorkspaceTargetServiceData {
+  challenge_id: ID
+  access_url?: string
+}
+
+export interface ContestAWDWorkspaceTargetTeamData {
+  team_id: ID
+  team_name: string
+  services: ContestAWDWorkspaceTargetServiceData[]
+}
+
+export interface ContestAWDWorkspaceRecentEventData {
+  id: ID
+  direction: ContestAWDWorkspaceEventDirection
+  challenge_id: ID
+  peer_team_id: ID
+  peer_team_name: string
+  is_success: boolean
+  score_gained: number
+  created_at: ISODateTime
+}
+
+export interface ContestAWDWorkspaceData {
+  contest_id: ID
+  current_round?: AWDRoundData
+  my_team?: ContestAWDWorkspaceTeamData | null
+  services: ContestAWDWorkspaceServiceData[]
+  targets: ContestAWDWorkspaceTargetTeamData[]
+  recent_events: ContestAWDWorkspaceRecentEventData[]
+}
+
 export interface AWDRoundSummaryItemData {
   team_id: ID
   team_name: string
