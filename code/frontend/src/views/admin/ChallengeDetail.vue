@@ -688,8 +688,8 @@ watch(
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: var(--space-2) var(--space-3-5);
   font-size: var(--font-size-0-80);
   font-weight: 600;
@@ -723,8 +723,8 @@ watch(
 }
 
 .flag-field-input:focus {
-  border-color: rgba(37, 99, 235, 0.42);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 @media (max-width: 900px) {

@@ -17,6 +17,7 @@ import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import imageManageSource from '@/views/admin/ImageManage.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
+import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 describe('shared theme token adoption', () => {
@@ -99,6 +100,11 @@ describe('shared theme token adoption', () => {
     expect(challengeManageSource).not.toContain('#047857')
     expect(challengeManageSource).not.toContain('#dc2626')
     expect(challengeManageSource).not.toContain('#b91c1c')
+
+    expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.18)')
+    expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.08)')
+    expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.42)')
+    expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.12)')
 
     expect(userGovernanceSource).not.toContain("return '#f59e0b'")
     expect(userGovernanceSource).not.toContain("return '#dc2626'")
