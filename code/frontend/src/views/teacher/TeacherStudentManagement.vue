@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import { getClasses, getClassStudents } from '@/api/teacher'
 import type { TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
 import StudentManagementPage from '@/components/teacher/student-management/StudentManagementPage.vue'
+import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
 import { useAuthStore } from '@/stores/auth'
@@ -20,6 +21,7 @@ const loadingClasses = ref(false)
 const pageError = ref<string | null>(null)
 const page = ref(1)
 const pageSize = ref(DEFAULT_PAGE_SIZE)
+const reportDialogVisible = ref(false)
 const filters = useStudentFilters()
 const studentListQuery = useStudentListQuery({
   debounceMs: 250,
@@ -138,6 +140,10 @@ function handlePageChange(nextPage: number): void {
   page.value = normalizedPage
 }
 
+function openClassReportDialog(): void {
+  reportDialogVisible.value = true
+}
+
 watch([searchQuery, studentNoQuery], () => {
   page.value = 1
   studentListQuery.scheduleLoadStudents(resolveClassFilterKey(selectedClassName.value))
@@ -174,11 +180,15 @@ onMounted(() => {
     :error="error"
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
-    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
+    @open-report-export="openClassReportDialog"
     @update-search-query="updateSearchQuery"
     @update-student-no-query="updateStudentNoQuery"
     @select-class="selectClass"
     @change-page="handlePageChange"
     @open-student="openStudent"
+  />
+  <TeacherClassReportExportDialog
+    v-model="reportDialogVisible"
+    :default-class-name="selectedClassName"
   />
 </template>

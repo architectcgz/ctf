@@ -44,6 +44,13 @@ vi.mock('vue-router', async () => {
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('TeacherStudentAnalysis', () => {
+  const reportDialogStub = {
+    name: 'TeacherClassReportExportDialog',
+    props: ['modelValue', 'defaultClassName'],
+    template:
+      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
+  }
+
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
@@ -284,6 +291,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -328,6 +336,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -351,6 +360,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -365,6 +375,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -393,6 +404,7 @@ describe('TeacherStudentAnalysis', () => {
       global: {
         stubs: {
           SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -412,5 +424,29 @@ describe('TeacherStudentAnalysis', () => {
     expect(studentAnalysisPageSource).toMatch(
       /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
+  })
+
+  it('点击导出班级报告时应打开当前班级上下文对话框', async () => {
+    const wrapper = mount(TeacherStudentAnalysis, {
+      global: {
+        stubs: {
+          SkillRadar: true,
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('导出班级报告'))
+      ?.trigger('click')
+    await flushPromises()
+
+    const dialog = wrapper.get('[data-testid="class-report-dialog"]')
+    expect(dialog.attributes('data-open')).toBe('true')
+    expect(dialog.attributes('data-default-class-name')).toBe('Class A')
+    expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
   })
 })

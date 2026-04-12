@@ -13,7 +13,6 @@ import imageManageSource from '@/views/admin/ImageManage.vue?raw'
 import challengePackageFormatSource from '@/views/admin/ChallengePackageFormat.vue?raw'
 import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
-import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
 import studentAnalysisPageSource from '@/components/teacher/class-management/StudentAnalysisPage.vue?raw'
@@ -135,7 +134,6 @@ describe('workspace page header styles', () => {
     expectNoLocalTitleTypography(challengePackageFormatSource, '.hero-title')
     expectNoLocalTitleTypography(cheatDetectionSource, '.hero-title')
     expectNoLocalTitleTypography(skillProfileSource, '.journal-page-title')
-    expectNoLocalTitleTypography(reportExportSource, '.report-title')
     expectNoLocalTitleTypography(classManagementPageSource, '.teacher-title')
     expectNoLocalTitleTypography(classStudentsPageSource, '.teacher-title')
     expectNoLocalTitleTypography(studentAnalysisPageSource, '.teacher-title')
@@ -157,7 +155,6 @@ describe('workspace page header styles', () => {
     expectNoLocalCopyTypography(studentAnalysisPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(studentManagementPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(teacherInstanceManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(reportExportSource, '.report-copy')
     expectNoLocalCopyTypography(topologyStudioSource, '.topology-page--template-library .topology-hero-description')
   })
 

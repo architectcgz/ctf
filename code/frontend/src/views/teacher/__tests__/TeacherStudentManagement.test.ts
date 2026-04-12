@@ -33,6 +33,13 @@ function deferred<T>() {
 }
 
 describe('TeacherStudentManagement', () => {
+  const reportDialogStub = {
+    name: 'TeacherClassReportExportDialog',
+    props: ['modelValue', 'defaultClassName'],
+    template:
+      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
+  }
+
   beforeEach(() => {
     vi.useFakeTimers()
     setActivePinia(createPinia())
@@ -100,6 +107,9 @@ describe('TeacherStudentManagement', () => {
           ElTable,
           ElTableColumn,
           ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -228,6 +238,9 @@ describe('TeacherStudentManagement', () => {
           ElTableColumn,
           ElButton,
         },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
       },
     })
 
@@ -315,6 +328,9 @@ describe('TeacherStudentManagement', () => {
           ElTable,
           ElTableColumn,
           ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -423,6 +439,9 @@ describe('TeacherStudentManagement', () => {
           ElTableColumn,
           ElButton,
         },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
       },
     })
 
@@ -459,6 +478,9 @@ describe('TeacherStudentManagement', () => {
           ElTableColumn,
           ElButton,
         },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
       },
     })
 
@@ -493,5 +515,33 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toMatch(
       /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
     )
+  })
+
+  it('点击导出班级报告时应打开当前筛选班级的上下文对话框', async () => {
+    const wrapper = mount(TeacherStudentManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('导出班级报告'))
+      ?.trigger('click')
+    await flushPromises()
+
+    const dialog = wrapper.get('[data-testid="class-report-dialog"]')
+    expect(dialog.attributes('data-open')).toBe('true')
+    expect(dialog.attributes('data-default-class-name')).toBe('Class A')
+    expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
   })
 })

@@ -29,7 +29,7 @@ interface ExportRecord {
   result: ReportExportData
 }
 
-export function useTeacherReportExportPage() {
+export function useTeacherClassReportExport() {
   const authStore = useAuthStore()
   const toast = useToast()
   const { polling, start: startPolling, stop: stopPolling } = useReportStatusPolling()
@@ -42,7 +42,6 @@ export function useTeacherReportExportPage() {
   const submitting = ref(false)
   const downloading = ref(false)
   const latestExport = ref<ExportRecord | null>(null)
-  const previewDialogVisible = ref(false)
   const previewLoading = ref(false)
   const previewError = ref<string | null>(null)
   const previewClassName = ref('')
@@ -87,7 +86,7 @@ export function useTeacherReportExportPage() {
     if (!latestExport.value) {
       return {
         label: '未创建',
-        chipClass: 'report-status-chip--idle',
+        chipClass: 'class-report-task-chip--idle',
       }
     }
 
@@ -95,17 +94,17 @@ export function useTeacherReportExportPage() {
       case 'ready':
         return {
           label: '已就绪',
-          chipClass: 'report-status-chip--ready',
+          chipClass: 'class-report-task-chip--ready',
         }
       case 'failed':
         return {
           label: '失败',
-          chipClass: 'report-status-chip--failed',
+          chipClass: 'class-report-task-chip--failed',
         }
       default:
         return {
           label: polling.value ? '生成中' : '等待更新',
-          chipClass: 'report-status-chip--pending',
+          chipClass: 'class-report-task-chip--pending',
         }
     }
   })
@@ -117,18 +116,35 @@ export function useTeacherReportExportPage() {
       : '待生成完成后返回'
   })
 
+  function resolveContextClassName(className?: string): string {
+    return className?.trim() || authStore.user?.class_name?.trim() || ''
+  }
+
   function normalizeClassName(): string {
     return form.value.className.trim() || authStore.user?.class_name?.trim() || ''
+  }
+
+  function resetPreviewState(): void {
+    previewStudents.value = []
+    previewReview.value = null
+    previewSummary.value = null
+    previewTrend.value = null
+  }
+
+  function syncContextClassName(className?: string): void {
+    const nextClassName = resolveContextClassName(className)
+    form.value.className = nextClassName
+
+    if (latestExport.value && latestExport.value.className !== nextClassName) {
+      latestExport.value = null
+    }
   }
 
   async function loadPreview(): Promise<void> {
     const className = normalizeClassName()
     if (!className) {
       previewClassName.value = ''
-      previewStudents.value = []
-      previewReview.value = null
-      previewSummary.value = null
-      previewTrend.value = null
+      resetPreviewState()
       previewError.value = '请先填写班级名称'
       return
     }
@@ -149,20 +165,12 @@ export function useTeacherReportExportPage() {
       previewSummary.value = summary
       previewTrend.value = trend
     } catch (err) {
-      console.error('加载报告预览失败:', err)
-      previewStudents.value = []
-      previewReview.value = null
-      previewSummary.value = null
-      previewTrend.value = null
+      console.error('加载班级报告预览失败:', err)
+      resetPreviewState()
       previewError.value = '加载当前班级预览失败，请稍后重试'
     } finally {
       previewLoading.value = false
     }
-  }
-
-  async function openPreviewDialog(): Promise<void> {
-    previewDialogVisible.value = true
-    await loadPreview()
   }
 
   async function handleExport(): Promise<void> {
@@ -189,26 +197,33 @@ export function useTeacherReportExportPage() {
       if (result.status === 'ready') {
         stopPolling()
         toast.success('报告已生成，可立即下载')
-      } else if (result.status === 'failed') {
+        return
+      }
+
+      if (result.status === 'failed') {
         stopPolling()
         toast.error(result.error_message || '报告生成失败')
-      } else {
-        startPolling(String(result.report_id), (next) => {
-          if (!latestExport.value) return
-          latestExport.value = {
-            ...latestExport.value,
-            result: next,
-          }
-        })
-        toast.info('报告开始生成，系统会自动刷新任务状态')
+        return
       }
+
+      startPolling(String(result.report_id), (next) => {
+        if (!latestExport.value) return
+        latestExport.value = {
+          ...latestExport.value,
+          result: next,
+        }
+      })
+      toast.info('报告开始生成，系统会自动刷新任务状态')
+    } catch (err) {
+      console.error('创建班级报告导出任务失败:', err)
+      toast.error('创建导出任务失败，请稍后重试')
     } finally {
       submitting.value = false
     }
   }
 
   async function handleDownload(): Promise<void> {
-    if (!latestExport.value) return
+    if (!latestExport.value || latestExport.value.result.status !== 'ready') return
 
     downloading.value = true
     try {
@@ -222,19 +237,20 @@ export function useTeacherReportExportPage() {
       link.remove()
       URL.revokeObjectURL(objectUrl)
       toast.success('下载已开始')
+    } catch (err) {
+      console.error('下载班级报告失败:', err)
+      toast.error('下载报告失败，请稍后重试')
     } finally {
       downloading.value = false
     }
   }
 
   return {
-    authStore,
     polling,
     form,
     submitting,
     downloading,
     latestExport,
-    previewDialogVisible,
     previewLoading,
     previewError,
     previewClassName,
@@ -251,7 +267,8 @@ export function useTeacherReportExportPage() {
     activeRateText,
     latestStatusMeta,
     latestExpiresText,
-    openPreviewDialog,
+    syncContextClassName,
+    loadPreview,
     handleExport,
     handleDownload,
   }

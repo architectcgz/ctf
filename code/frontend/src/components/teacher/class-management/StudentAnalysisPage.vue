@@ -185,6 +185,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             <button
               type="button"
               class="teacher-btn teacher-btn--ghost"
+              @click="emit('openReportExport')"
+            >
+              导出班级报告
+            </button>
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
               @click="emit('openReviewArchive')"
             >
               完整复盘页

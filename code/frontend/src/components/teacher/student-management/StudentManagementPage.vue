@@ -58,7 +58,7 @@ const emit = defineEmits<{
               class="teacher-btn teacher-btn--ghost"
               @click="emit('openReportExport')"
             >
-              AWD复盘
+              导出班级报告
             </button>
           </div>
         </header>
