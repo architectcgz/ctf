@@ -48,3 +48,12 @@ func IsFrozenContest(contest *model.Contest, now time.Time) bool {
 	}
 	return !now.Before(*contest.FreezeTime) && now.Before(contest.EndTime)
 }
+
+func ShouldGateAWDContestStart(mode, currentStatus string, targetStatus *string) bool {
+	if targetStatus == nil {
+		return false
+	}
+	return mode == model.ContestModeAWD &&
+		currentStatus != model.ContestStatusRunning &&
+		*targetStatus == model.ContestStatusRunning
+}

@@ -9,7 +9,7 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/middleware"
-	"ctf-platform/internal/model"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -35,9 +35,7 @@ func shouldPrepareUpdateContestReadinessAudit(contest *dto.ContestResp, req *dto
 	if contest == nil || req == nil || req.ForceOverride == nil || !*req.ForceOverride || req.Status == nil {
 		return false
 	}
-	return contest.Mode == model.ContestModeAWD &&
-		contest.Status != model.ContestStatusRunning &&
-		*req.Status == model.ContestStatusRunning
+	return contestdomain.ShouldGateAWDContestStart(contest.Mode, contest.Status, req.Status)
 }
 
 func isAWDReadinessBlocked(err error) bool {
