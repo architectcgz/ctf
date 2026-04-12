@@ -685,7 +685,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 :global([data-theme='dark']) .skill-dimension-chart__frame::after {
   background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  border-color: rgba(148, 163, 184, 0.2);
+  border-color: color-mix(in srgb, var(--journal-muted) 20%, transparent);
 }
 
 @media (max-width: 767px) {

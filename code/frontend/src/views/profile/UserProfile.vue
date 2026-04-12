@@ -327,7 +327,7 @@ onUnmounted(() => {
   --journal-shell-hero-radial-strength: 8%;
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
-  --journal-shell-hero-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-user-button-height: 2.7rem;
   --journal-user-button-radius: 999px;
   --journal-user-button-padding: 0.62rem 1rem;

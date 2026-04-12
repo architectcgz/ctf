@@ -256,8 +256,12 @@ async function submitPasswordChange(): Promise<void> {
   --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-shell-dark-hero-radial-strength: 18%;
   --journal-shell-dark-hero-radial-size: 20rem;
-  --journal-shell-dark-hero-top: rgba(15, 23, 42, 0.95);
-  --journal-shell-dark-hero-end: rgba(2, 6, 23, 0.98);
+  --journal-shell-dark-hero-top: color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base));
+  --journal-shell-dark-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 95%,
+    var(--color-bg-base)
+  );
   --journal-note-label-size: 0.72rem;
   --journal-note-label-weight: 700;
   --journal-note-label-spacing: 0.16em;

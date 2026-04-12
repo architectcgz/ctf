@@ -7,6 +7,7 @@ import studentOverviewSource from '@/components/dashboard/student/StudentOvervie
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 
@@ -46,6 +47,9 @@ describe('shared theme token adoption', () => {
 
     expect(studentCategoryProgressSource).not.toContain('#0ea5e9')
 
+    expect(skillProfileSource).not.toContain('rgba(148, 163, 184, 0.2)')
+
+    expect(userProfileSource).not.toContain('0 18px 40px rgba(15, 23, 42, 0.05)')
     expect(userProfileSource).not.toContain('border: 1px solid rgba(16, 185, 129, 0.22);')
     expect(userProfileSource).not.toContain('background: rgba(16, 185, 129, 0.08);')
     expect(userProfileSource).not.toContain('background: #10b981;')
@@ -53,6 +57,8 @@ describe('shared theme token adoption', () => {
     expect(userProfileSource).not.toContain('background: #94a3b8;')
     expect(userProfileSource).not.toContain('background: #ef4444;')
 
+    expect(securitySettingsSource).not.toContain('rgba(15, 23, 42, 0.95)')
+    expect(securitySettingsSource).not.toContain('rgba(2, 6, 23, 0.98)')
     expect(securitySettingsSource).not.toContain('background: #10b981;')
     expect(securitySettingsSource).not.toContain('rgba(16, 185, 129, 0.2)')
   })
