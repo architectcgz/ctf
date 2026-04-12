@@ -169,6 +169,9 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
+
+    const tabTexts = wrapper.findAll('[role="tab"]').map((tab) => tab.text())
+    expect(tabTexts).toEqual(['训练总览', '训练队列', '分类补强', '训练记录', '强度推进'])
   })
 
   it('应该把当前排名区域渲染为独立卡片', async () => {
