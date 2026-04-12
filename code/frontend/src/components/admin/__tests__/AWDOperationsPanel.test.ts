@@ -141,6 +141,24 @@ describe('AWDOperationsPanel', () => {
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
+        awd_checker_validation_state: 'passed',
+        awd_checker_last_preview_at: '2026-03-18T09:05:00.000Z',
+        awd_checker_last_preview_result: {
+          checker_type: 'http_standard',
+          service_status: 'up',
+          check_result: {
+            checker_type: 'http_standard',
+            check_source: 'checker_preview',
+            status_reason: 'healthy',
+          },
+          preview_context: {
+            access_url: 'http://preview.internal',
+            preview_flag: 'flag{preview}',
+            round_number: 0,
+            team_id: '0',
+            challenge_id: 'challenge-1',
+          },
+        },
         created_at: '2026-03-18T09:00:00.000Z',
       },
     ]
@@ -174,5 +192,6 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.text()).toContain('题目配置')
     expect(wrapper.text()).toContain('新增题目')
     expect(wrapper.text()).toContain('编辑配置')
+    expect(wrapper.text()).toContain('最近通过')
   })
 })

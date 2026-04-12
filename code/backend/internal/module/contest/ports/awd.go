@@ -84,7 +84,31 @@ type AWDTrafficEventRecord struct {
 	OccurredAt       time.Time
 }
 
+type AWDCheckerPreviewContext struct {
+	AccessURL   string
+	PreviewFlag string
+	RoundNumber int
+	TeamID      int64
+	ChallengeID int64
+}
+
+type AWDServicePreviewRequest struct {
+	ChallengeID   int64
+	CheckerType   model.AWDCheckerType
+	CheckerConfig string
+	AccessURL     string
+	PreviewFlag   string
+}
+
+type AWDServicePreviewResult struct {
+	ServiceStatus  string
+	CheckerType    model.AWDCheckerType
+	CheckResult    string
+	PreviewContext AWDCheckerPreviewContext
+}
+
 type AWDRoundManager interface {
 	RunRoundServiceChecks(ctx context.Context, contest *model.Contest, round *model.AWDRound, source string) error
 	EnsureActiveRoundMaterialized(ctx context.Context, contest *model.Contest, now time.Time) error
+	PreviewServiceCheck(ctx context.Context, req AWDServicePreviewRequest) (*AWDServicePreviewResult, error)
 }

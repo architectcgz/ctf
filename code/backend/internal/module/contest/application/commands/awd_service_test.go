@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -91,6 +92,32 @@ func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID
 
 func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error) {
 	return s.commands.RunRoundChecks(ctx, contestID, roundID)
+}
+
+func setReflectedField(t *testing.T, target reflect.Value, field string, value any) {
+	t.Helper()
+	item := target.FieldByName(field)
+	if !item.IsValid() {
+		t.Fatalf("field %s not found", field)
+	}
+	if !item.CanSet() {
+		t.Fatalf("field %s cannot set", field)
+	}
+
+	next := reflect.ValueOf(value)
+	if !next.IsValid() {
+		item.Set(reflect.Zero(item.Type()))
+		return
+	}
+	if next.Type().AssignableTo(item.Type()) {
+		item.Set(next)
+		return
+	}
+	if next.Type().ConvertibleTo(item.Type()) {
+		item.Set(next.Convert(item.Type()))
+		return
+	}
+	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
 }
 
 func (s *awdServiceForTest) UpsertServiceCheck(ctx context.Context, contestID, roundID int64, req *dto.UpsertAWDServiceCheckReq) (*dto.AWDTeamServiceResp, error) {
@@ -393,6 +420,143 @@ func TestAWDServiceRunRoundChecksRefreshesSelectedRound(t *testing.T) {
 	}
 	if statusReason := resp.Services[0].CheckResult["status_reason"]; statusReason != "healthy" {
 		t.Fatalf("unexpected status_reason: %#v", statusReason)
+	}
+}
+
+func TestAWDServicePreviewCheckerRunsWithoutPersistingServices(t *testing.T) {
+	db := newAWDTestDB(t)
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 24, now)
+	createAWDChallengeFixture(t, db, 2401, now)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/flag":
+			if r.Method == http.MethodPut {
+				w.WriteHeader(http.StatusCreated)
+				return
+			}
+			if r.Method == http.MethodGet {
+				_, _ = w.Write([]byte("flag{preview}"))
+				return
+			}
+			http.Error(w, "method_not_allowed", http.StatusMethodNotAllowed)
+		case "/healthz":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{
+		CheckerTimeout:    time.Second,
+		CheckerHealthPath: "/healthz",
+	})
+
+	method := reflect.ValueOf(service.commands).MethodByName("PreviewChecker")
+	if !method.IsValid() {
+		t.Fatalf("PreviewChecker method not implemented")
+	}
+
+	reqValue := reflect.New(method.Type().In(2).Elem())
+	setReflectedField(t, reqValue.Elem(), "ChallengeID", int64(2401))
+	setReflectedField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
+	setReflectedField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
+		"put_flag": map[string]any{
+			"method":          "PUT",
+			"path":            "/api/flag",
+			"expected_status": http.StatusCreated,
+			"body_template":   "{{FLAG}}",
+		},
+		"get_flag": map[string]any{
+			"method":             "GET",
+			"path":               "/api/flag",
+			"expected_status":    http.StatusOK,
+			"expected_substring": "{{FLAG}}",
+		},
+		"havoc": map[string]any{
+			"method":          "GET",
+			"path":            "/healthz",
+			"expected_status": http.StatusOK,
+		},
+	})
+	setReflectedField(t, reqValue.Elem(), "AccessURL", server.URL)
+	setReflectedField(t, reqValue.Elem(), "PreviewFlag", "flag{preview}")
+
+	results := method.Call([]reflect.Value{
+		reflect.ValueOf(context.Background()),
+		reflect.ValueOf(int64(24)),
+		reqValue,
+	})
+
+	if len(results) != 2 {
+		t.Fatalf("unexpected result count: %d", len(results))
+	}
+	if errValue := results[1].Interface(); errValue != nil {
+		t.Fatalf("PreviewChecker() error = %v", errValue)
+	}
+
+	respValue := results[0]
+	if respValue.IsNil() {
+		t.Fatal("expected preview response")
+	}
+	resp := respValue.Elem()
+	if serviceStatus := resp.FieldByName("ServiceStatus").String(); serviceStatus != model.AWDServiceStatusUp {
+		t.Fatalf("unexpected service status: %s", serviceStatus)
+	}
+	if checkerType := resp.FieldByName("CheckerType").String(); checkerType != string(model.AWDCheckerTypeHTTPStandard) {
+		t.Fatalf("unexpected checker type: %s", checkerType)
+	}
+
+	checkResultField := resp.FieldByName("CheckResult")
+	if !checkResultField.IsValid() || checkResultField.IsNil() {
+		t.Fatal("expected check result")
+	}
+	checkResult, ok := checkResultField.Interface().(map[string]any)
+	if !ok {
+		t.Fatalf("unexpected check result type: %T", checkResultField.Interface())
+	}
+	if source := checkResult["check_source"]; source != "checker_preview" {
+		t.Fatalf("unexpected check_source: %#v", source)
+	}
+	if reason := checkResult["status_reason"]; reason != "healthy" {
+		t.Fatalf("unexpected status_reason: %#v", reason)
+	}
+
+	previewContext := resp.FieldByName("PreviewContext")
+	if !previewContext.IsValid() {
+		t.Fatal("expected preview context")
+	}
+	if accessURL := previewContext.FieldByName("AccessURL").String(); accessURL != server.URL {
+		t.Fatalf("unexpected preview access_url: %s", accessURL)
+	}
+	if previewFlag := previewContext.FieldByName("PreviewFlag").String(); previewFlag != "flag{preview}" {
+		t.Fatalf("unexpected preview flag: %s", previewFlag)
+	}
+	previewToken := resp.FieldByName("PreviewToken")
+	if !previewToken.IsValid() || strings.TrimSpace(previewToken.String()) == "" {
+		t.Fatal("expected preview_token")
+	}
+
+	var serviceCount int64
+	if err := db.Model(&model.AWDTeamService{}).Count(&serviceCount).Error; err != nil {
+		t.Fatalf("count awd team services: %v", err)
+	}
+	if serviceCount != 0 {
+		t.Fatalf("expected no persisted awd team services, got %d", serviceCount)
 	}
 }
 

@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
+import { runContestAWDCheckerPreview } from '@/api/admin'
 import type {
   AdminChallengeListItem,
   AdminContestChallengeData,
+  AWDCheckerPreviewData,
   AWDCheckerType,
+  AWDTeamServiceData,
 } from '@/api/contracts'
+import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
   AWD_HTTP_METHOD_OPTIONS,
@@ -23,6 +27,7 @@ import {
 type DialogMode = 'create' | 'edit'
 
 const props = defineProps<{
+  contestId?: string | null
   open: boolean
   mode: DialogMode
   challengeOptions: AdminChallengeListItem[]
@@ -44,6 +49,7 @@ const emit = defineEmits<{
       awd_checker_config: Record<string, unknown>
       awd_sla_score: number
       awd_defense_score: number
+      awd_checker_preview_token?: string
     },
   ]
 }>()
@@ -60,6 +66,17 @@ const form = reactive({
 
 const legacyProbeDraft = reactive<AWDLegacyProbeDraft>(createLegacyProbeDraft())
 const httpStandardDraft = reactive<AWDHTTPStandardDraft>(createHTTPStandardDraft())
+const previewForm = reactive({
+  access_url: '',
+  preview_flag: 'flag{preview}',
+})
+const previewing = ref(false)
+const previewResult = ref<AWDCheckerPreviewData | null>(null)
+const previewError = ref('')
+const previewToken = ref('')
+const previewSignature = ref('')
+const previewTokenInvalidated = ref(false)
+const syncingDialogState = ref(false)
 
 function createFieldErrorState() {
   return {
@@ -77,6 +94,7 @@ function createFieldErrorState() {
     http_get_headers_text: '',
     http_havoc_expected_status: '',
     http_havoc_headers_text: '',
+    preview_access_url: '',
   }
 }
 
@@ -113,6 +131,85 @@ const checkerPreviewText = computed(() =>
     2
   )
 )
+const previewResultJSONText = computed(() =>
+  JSON.stringify(previewResult.value?.check_result || {}, null, 2)
+)
+
+function formatPreviewDateTime(value?: string): string {
+  if (!value) {
+    return '未记录'
+  }
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}
+
+const {
+  summarizeCheckResult,
+  getCheckActions,
+  getCheckTargets,
+  getPrimaryAccessURL,
+  getTargetProbeSummary,
+  getProbeStatusText,
+  getCheckStatusLabel,
+  getValidationStateLabel,
+  formatLatency,
+} = useAwdCheckResultPresentation({
+  formatDateTime: formatPreviewDateTime,
+})
+
+function buildPresentationResult(value: AWDCheckerPreviewData | null): Record<string, unknown> {
+  if (!value) {
+    return {}
+  }
+  return {
+    ...value.check_result,
+    preview_context: value.preview_context,
+  }
+}
+
+const previewCheckResult = computed(() => previewResult.value?.check_result || {})
+const previewPresentationResult = computed(() => buildPresentationResult(previewResult.value))
+const previewSummaryText = computed(() =>
+  previewResult.value ? summarizeCheckResult(previewPresentationResult.value) : ''
+)
+const previewTargetSummaryText = computed(() =>
+  previewResult.value ? getTargetProbeSummary(previewCheckResult.value) : ''
+)
+const previewAccessURL = computed(() =>
+  previewResult.value ? getPrimaryAccessURL(previewPresentationResult.value) : ''
+)
+const previewActions = computed(() => getCheckActions(previewCheckResult.value))
+const previewTargets = computed(() => getCheckTargets(previewCheckResult.value))
+
+const savedPreviewResult = computed(() => props.draft?.awd_checker_last_preview_result || null)
+const savedPreviewPresentationResult = computed(() => buildPresentationResult(savedPreviewResult.value))
+const savedPreviewSummaryText = computed(() =>
+  savedPreviewResult.value ? summarizeCheckResult(savedPreviewPresentationResult.value) : ''
+)
+const savedPreviewAccessURL = computed(() =>
+  savedPreviewResult.value ? getPrimaryAccessURL(savedPreviewPresentationResult.value) : ''
+)
+const savedValidationStateLabel = computed(() =>
+  getValidationStateLabel(props.draft?.awd_checker_validation_state)
+)
+
+const currentCheckerSignature = computed(() =>
+  JSON.stringify({
+    challenge_id: form.challenge_id,
+    checker_type: form.awd_checker_type,
+    checker_config: buildCheckerConfig(false),
+  })
+)
+
+const canAttachPreviewToken = computed(
+  () => Boolean(previewToken.value) && previewSignature.value === currentCheckerSignature.value
+)
 
 function assignLegacyProbeDraft(next: AWDLegacyProbeDraft) {
   legacyProbeDraft.health_path = next.health_path
@@ -148,6 +245,7 @@ watch(
       return
     }
 
+    syncingDialogState.value = true
     form.challenge_id =
       props.mode === 'edit' ? props.draft?.challenge_id || '' : selectableChallenges.value[0]?.id || ''
     form.points = props.draft?.points ?? 100
@@ -158,7 +256,15 @@ watch(
     form.awd_defense_score = props.draft?.awd_defense_score ?? 0
     assignLegacyProbeDraft(createLegacyProbeDraft(props.draft?.awd_checker_config))
     assignHTTPStandardDraft(createHTTPStandardDraft(props.draft?.awd_checker_config))
+    previewForm.access_url = ''
+    previewForm.preview_flag = 'flag{preview}'
+    previewResult.value = null
+    previewError.value = ''
+    previewToken.value = ''
+    previewSignature.value = ''
+    previewTokenInvalidated.value = false
     clearErrors()
+    syncingDialogState.value = false
   },
   { immediate: true }
 )
@@ -177,6 +283,19 @@ watch(
     }
   },
   { immediate: true }
+)
+
+watch(
+  () => currentCheckerSignature.value,
+  (nextSignature, previousSignature) => {
+    if (!props.open || syncingDialogState.value || !previousSignature || !previewToken.value) {
+      return
+    }
+    if (previewSignature.value && nextSignature !== previewSignature.value) {
+      previewToken.value = ''
+      previewTokenInvalidated.value = true
+    }
+  }
 )
 
 function clearErrors() {
@@ -200,6 +319,10 @@ function clearCheckerErrors() {
   }
 }
 
+function clearPreviewErrors() {
+  fieldErrors.preview_access_url = ''
+}
+
 function validate(): boolean {
   clearErrors()
 
@@ -219,10 +342,7 @@ function validate(): boolean {
     fieldErrors.awd_defense_score = '防守分必须是大于等于 0 的整数'
   }
 
-  const checkerResult =
-    form.awd_checker_type === 'http_standard'
-      ? buildHTTPStandardCheckerConfig(httpStandardDraft, true)
-      : buildLegacyProbeCheckerConfig(legacyProbeDraft)
+  const checkerResult = buildCheckerConfigResult(true)
 
   for (const [key, value] of Object.entries(checkerResult.errors)) {
     if (value) {
@@ -233,10 +353,106 @@ function validate(): boolean {
   return Object.values(fieldErrors).every((value) => !value)
 }
 
-function buildCheckerConfig() {
+function buildCheckerConfigResult(strict = true) {
   return form.awd_checker_type === 'http_standard'
-    ? buildHTTPStandardCheckerConfig(httpStandardDraft, true).config
-    : buildLegacyProbeCheckerConfig(legacyProbeDraft).config
+    ? buildHTTPStandardCheckerConfig(httpStandardDraft, strict)
+    : buildLegacyProbeCheckerConfig(legacyProbeDraft)
+}
+
+function buildCheckerConfig(strict = true) {
+  return buildCheckerConfigResult(strict).config
+}
+
+function validatePreview(): boolean {
+  clearCheckerErrors()
+  clearPreviewErrors()
+  fieldErrors.challenge_id = ''
+
+  if (!form.challenge_id) {
+    fieldErrors.challenge_id = '请选择题目'
+  }
+  if (!previewForm.access_url.trim()) {
+    fieldErrors.preview_access_url = '请输入目标访问地址'
+  }
+
+  const checkerResult = buildCheckerConfigResult(true)
+
+  for (const [key, value] of Object.entries(checkerResult.errors)) {
+    if (value) {
+      fieldErrors[key as keyof typeof fieldErrors] = value
+    }
+  }
+
+  return (
+    !fieldErrors.challenge_id &&
+    !fieldErrors.preview_access_url &&
+    AWD_CHECKER_FIELD_ERROR_KEYS.every((key) => !fieldErrors[key])
+  )
+}
+
+async function handlePreview() {
+  if (!props.contestId) {
+    previewError.value = '当前缺少赛事上下文，无法试跑 Checker。'
+    return
+  }
+  if (!validatePreview()) {
+    return
+  }
+
+  previewing.value = true
+  previewError.value = ''
+
+  try {
+    const result = await runContestAWDCheckerPreview(props.contestId, {
+      challenge_id: Number(form.challenge_id),
+      checker_type: form.awd_checker_type,
+      checker_config: buildCheckerConfig(),
+      access_url: previewForm.access_url.trim(),
+      preview_flag: previewForm.preview_flag.trim() || undefined,
+    })
+    previewResult.value = result
+    previewToken.value = result.preview_token || ''
+    previewSignature.value = currentCheckerSignature.value
+    previewTokenInvalidated.value = false
+  } catch (error) {
+    previewError.value = error instanceof Error ? error.message : '试跑失败，请稍后重试。'
+  } finally {
+    previewing.value = false
+  }
+}
+
+function getPreviewStatusLabel(status: AWDTeamServiceData['service_status']): string {
+  const labels: Record<AWDTeamServiceData['service_status'], string> = {
+    up: '正常',
+    down: '下线',
+    compromised: '已失陷',
+  }
+  return labels[status]
+}
+
+function getPreviewStatusClass(status: AWDTeamServiceData['service_status']): string {
+  const classes: Record<AWDTeamServiceData['service_status'], string> = {
+    up: 'checker-preview-status checker-preview-status--up',
+    down: 'checker-preview-status checker-preview-status--down',
+    compromised: 'checker-preview-status checker-preview-status--compromised',
+  }
+  return classes[status]
+}
+
+function getValidationStateClass(value?: string): string {
+  const state = value || 'pending'
+  return `checker-validation-chip checker-validation-chip--${state}`
+}
+
+function getPreviewActionStateText(action: {
+  healthy: boolean
+  error_code?: string
+  error?: string
+}): string {
+  if (action.healthy) {
+    return '动作成功'
+  }
+  return getCheckStatusLabel(action.error_code) || action.error || '动作失败'
 }
 
 function handleSubmit() {
@@ -244,7 +460,7 @@ function handleSubmit() {
     return
   }
 
-  emit('save', {
+  const payload = {
     challenge_id: Number(form.challenge_id),
     points: form.points,
     order: form.order,
@@ -253,7 +469,23 @@ function handleSubmit() {
     awd_checker_config: buildCheckerConfig(),
     awd_sla_score: form.awd_sla_score,
     awd_defense_score: form.awd_defense_score,
-  })
+  } as {
+    challenge_id: number
+    points: number
+    order: number
+    is_visible: boolean
+    awd_checker_type: AWDCheckerType
+    awd_checker_config: Record<string, unknown>
+    awd_sla_score: number
+    awd_defense_score: number
+    awd_checker_preview_token?: string
+  }
+
+  if (canAttachPreviewToken.value && previewToken.value) {
+    payload.awd_checker_preview_token = previewToken.value
+  }
+
+  emit('save', payload)
 }
 </script>
 
@@ -714,6 +946,198 @@ function handleSubmit() {
 
         <pre id="awd-challenge-config-preview" class="checker-preview">{{ checkerPreviewText }}</pre>
       </section>
+
+      <section
+        v-if="mode === 'edit' && (savedValidationStateLabel || savedPreviewResult)"
+        class="checker-config-block"
+      >
+        <header class="checker-config-block__head">
+          <div>
+            <div class="journal-note-label">Saved Validation</div>
+            <h3 class="workspace-tab-heading__title checker-config-block__title">最近一次已保存校验</h3>
+          </div>
+          <p class="checker-config-block__hint">
+            这里显示已经写入赛事题目配置的校验状态；如果后续改了 Checker 草稿，需要重新试跑。
+          </p>
+        </header>
+
+        <article class="checker-validation-card">
+          <div class="checker-validation-card__top">
+            <span :class="getValidationStateClass(props.draft?.awd_checker_validation_state)">
+              {{ savedValidationStateLabel || '未验证' }}
+            </span>
+            <span
+              v-if="props.draft?.awd_checker_last_preview_at"
+              class="checker-validation-card__time"
+            >
+              {{ formatPreviewDateTime(props.draft?.awd_checker_last_preview_at) }}
+            </span>
+          </div>
+          <p v-if="savedPreviewSummaryText" class="checker-validation-card__summary">
+            {{ savedPreviewSummaryText }}
+          </p>
+          <p v-else class="checker-validation-card__summary">
+            当前配置还没有保存过试跑结果。
+          </p>
+          <p v-if="savedPreviewAccessURL" class="checker-validation-card__meta">
+            目标地址 {{ savedPreviewAccessURL }}
+          </p>
+        </article>
+      </section>
+
+      <section class="checker-config-block">
+        <header class="checker-config-block__head">
+          <div>
+            <div class="journal-note-label">Checker Preview</div>
+            <h3 class="workspace-tab-heading__title checker-config-block__title">试跑 Checker</h3>
+          </div>
+          <p class="checker-config-block__hint">
+            会按当前配置真实请求目标地址，但不会写入轮次、服务状态和排行榜数据。
+          </p>
+        </header>
+
+        <div class="checker-preview-input-grid">
+          <div class="space-y-2">
+            <label
+              class="text-sm font-medium text-[var(--color-text-primary)]"
+              for="awd-challenge-preview-access-url"
+            >
+              目标访问地址
+            </label>
+            <input
+              id="awd-challenge-preview-access-url"
+              v-model="previewForm.access_url"
+              type="text"
+              placeholder="http://team1.example.com:8080"
+              class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
+            >
+            <p v-if="fieldErrors.preview_access_url" class="text-xs text-[var(--color-danger)]">
+              {{ fieldErrors.preview_access_url }}
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <label
+              class="text-sm font-medium text-[var(--color-text-primary)]"
+              for="awd-challenge-preview-flag"
+            >
+              预览 Flag
+            </label>
+            <input
+              id="awd-challenge-preview-flag"
+              v-model="previewForm.preview_flag"
+              type="text"
+              placeholder="flag{preview}"
+              class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
+            >
+            <p class="text-xs text-[var(--color-text-secondary)]">
+              未绑定正式轮次时，这个值会替代 FLAG 模板变量。
+            </p>
+          </div>
+        </div>
+
+        <div class="checker-preview-toolbar">
+          <p class="checker-preview-toolbar__hint">
+            如果当前 checker 使用 ROUND / TEAM_ID 模板变量，试跑会固定使用 `0` 作为占位值。
+          </p>
+          <button
+            id="awd-challenge-preview-submit"
+            type="button"
+            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="previewing || !contestId"
+            @click="handlePreview"
+          >
+            {{ previewing ? '试跑中...' : '试跑 Checker' }}
+          </button>
+        </div>
+
+        <p
+          v-if="previewError"
+          id="awd-challenge-preview-error"
+          class="checker-preview-notice checker-preview-notice--error"
+        >
+          {{ previewError }}
+        </p>
+
+        <p
+          v-else-if="previewTokenInvalidated"
+          class="checker-preview-notice checker-preview-notice--warning"
+        >
+          需要重新试跑，当前 Checker 草稿已经不同于最近一次试跑配置。
+        </p>
+        <p
+          v-else-if="canAttachPreviewToken"
+          class="checker-preview-notice checker-preview-notice--success"
+        >
+          当前保存会附带最近一次试跑结果。
+        </p>
+
+        <section v-if="previewResult" class="checker-preview-result">
+          <header class="checker-preview-result__head">
+            <div class="journal-note-label">试跑结果</div>
+            <div
+              id="awd-challenge-preview-status"
+              :class="getPreviewStatusClass(previewResult.service_status)"
+            >
+              {{ getPreviewStatusLabel(previewResult.service_status) }}
+            </div>
+          </header>
+
+          <p id="awd-challenge-preview-summary" class="checker-preview-result__summary">
+            {{ previewSummaryText }}
+          </p>
+          <p v-if="previewAccessURL" class="checker-preview-result__hint">
+            目标地址 {{ previewAccessURL }}
+          </p>
+          <p v-if="previewTargetSummaryText" class="checker-preview-result__hint">
+            {{ previewTargetSummaryText }}
+          </p>
+
+          <div v-if="previewActions.length > 0" class="checker-preview-action-list">
+            <article
+              v-for="action in previewActions"
+              :id="`awd-checker-preview-action-${action.key}`"
+              :key="action.key"
+              class="checker-preview-action-card"
+            >
+              <div class="checker-preview-action-card__top">
+                <div class="journal-note-label">{{ action.label }}</div>
+                <span class="checker-preview-action-card__state">
+                  {{ getPreviewActionStateText(action) }}
+                </span>
+              </div>
+              <strong class="checker-preview-action-card__path">
+                {{ action.method || 'GET' }} {{ action.path || '/' }}
+              </strong>
+            </article>
+          </div>
+
+          <div v-if="previewTargets.length > 0" class="checker-preview-target-list">
+            <article
+              v-for="(target, index) in previewTargets"
+              :key="target.access_url || index"
+              class="checker-preview-target-card"
+            >
+              <div class="checker-preview-target-card__top">
+                <strong class="checker-preview-target-card__url">
+                  {{ target.access_url || '未返回访问地址' }}
+                </strong>
+                <span class="checker-preview-target-card__state">
+                  {{ getProbeStatusText(target.healthy, target.error_code, target.error) }}
+                </span>
+              </div>
+              <p v-if="formatLatency(target.latency_ms)" class="checker-preview-target-card__hint">
+                延迟 {{ formatLatency(target.latency_ms) }}
+              </p>
+            </article>
+          </div>
+
+          <div class="checker-preview-result__json">
+            <div class="journal-note-label">原始结果</div>
+            <pre id="awd-challenge-preview-result-json" class="checker-preview">{{ previewResultJSONText }}</pre>
+          </div>
+        </section>
+      </section>
     </form>
 
     <template #footer>
@@ -845,10 +1269,242 @@ function handleSubmit() {
   word-break: break-word;
 }
 
+.checker-preview-input-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.checker-preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.checker-preview-toolbar__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.checker-preview-notice {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.85rem;
+}
+
+.checker-preview-notice--error {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  color: var(--color-danger);
+}
+
+.checker-preview-notice--warning {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
+}
+
+.checker-preview-notice--success {
+  border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
+  color: var(--color-success);
+}
+
+.checker-validation-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+}
+
+.checker-validation-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.checker-validation-card__time,
+.checker-validation-card__meta {
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.checker-validation-card__summary {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.checker-validation-card__meta {
+  margin: 0;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  word-break: break-all;
+}
+
+.checker-validation-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.checker-validation-chip--pending {
+  border-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-surface-elevated));
+  color: var(--color-text-secondary);
+}
+
+.checker-validation-chip--passed {
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.checker-validation-chip--failed {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.checker-validation-chip--stale {
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
+}
+
+.checker-preview-result {
+  display: grid;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 70%, transparent);
+}
+
+.checker-preview-result__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.checker-preview-result__summary {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.checker-preview-result__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+}
+
+.checker-preview-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.checker-preview-status--up {
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.checker-preview-status--down {
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.checker-preview-status--compromised {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.checker-preview-action-list,
+.checker-preview-target-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.checker-preview-action-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.checker-preview-action-card,
+.checker-preview-target-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
+}
+
+.checker-preview-action-card__top,
+.checker-preview-target-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.checker-preview-action-card__state,
+.checker-preview-target-card__state {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.checker-preview-action-card__path,
+.checker-preview-target-card__url {
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+.checker-preview-target-card__hint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.checker-preview-result__json {
+  display: grid;
+  gap: 0.65rem;
+}
+
 @media (max-width: 960px) {
+  .checker-preview-input-grid,
   .checker-preset-strip,
   .checker-action-grid,
-  .checker-action-extra-grid {
+  .checker-action-extra-grid,
+  .checker-preview-action-list {
     grid-template-columns: 1fr;
   }
 }
