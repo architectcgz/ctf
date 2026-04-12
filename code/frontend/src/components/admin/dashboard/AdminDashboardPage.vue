@@ -759,7 +759,7 @@ const {
 }
 
 .admin-btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--color-primary-hover);
 }
 
 .admin-btn-ghost {
@@ -769,7 +769,7 @@ const {
 }
 
 .admin-btn-ghost:hover {
-  border-color: rgba(37, 99, 235, 0.28);
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
   color: var(--journal-accent);
 }
 
