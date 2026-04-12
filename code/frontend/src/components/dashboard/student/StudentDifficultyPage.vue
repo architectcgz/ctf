@@ -123,8 +123,8 @@ function openPrimaryDifficulty(): void {
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
         {{
           hasDifficultyStats
-            ? '先把当前最值得推进的一档补稳，再决定下一步要不要继续抬高训练强度。'
-            : '先完成几道题，把第一批强度分布跑出来，这里就会开始按节奏给出下一步动作。'
+            ? '先补当前最该推进的一档，再决定要不要继续抬强度。'
+            : '先积累几道题的样本，这里会开始告诉你下一步该推哪一档。'
         }}
       </p>
 

@@ -98,7 +98,7 @@ const operationsSummary = computed(() => [
         {{ displayName }} 的训练总览
       </h1>
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-        这里汇总了训练进度、能力分布和近期状态。
+        先看进度、短板和最近状态，再决定下一步训练。
       </p>
 
       <div class="journal-actions mt-6">
