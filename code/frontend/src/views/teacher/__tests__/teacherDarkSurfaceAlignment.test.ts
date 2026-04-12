@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
+import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -20,7 +21,8 @@ describe('teacher dark surface alignment', () => {
     expect(classManagementSource).toContain('teacher-surface')
     expect(studentManagementSource).toContain('teacher-surface')
     expect(instanceManagementSource).toContain('teacher-surface')
-    expect(reportExportSource).toContain('teacher-surface')
+    expect(awdReviewIndexSource).toContain('teacher-surface')
+    expect(awdReviewDetailSource).toContain('teacher-surface')
   })
 
   it('target pages should reuse shared journal and directory surface vocabulary instead of page-local skins', () => {
@@ -36,12 +38,12 @@ describe('teacher dark surface alignment', () => {
     expect(instanceManagementSource).toContain('teacher-controls')
     expect(instanceManagementSource).toContain('teacher-directory-head')
     expect(instanceManagementSource).toContain('teacher-directory-row')
-    expect(reportExportSource).toContain('journal-eyebrow')
-    expect(reportExportSource).toContain('journal-brief')
-    expect(reportExportSource).toContain('journal-metric')
-    expect(reportExportSource).not.toContain('report-kpi-card--success')
-    expect(reportExportSource).not.toContain('report-kpi-card--warning')
-    expect(reportExportSource).not.toContain('report-kpi-card--primary')
+    expect(awdReviewIndexSource).toContain('journal-eyebrow')
+    expect(awdReviewIndexSource).toContain('teacher-controls')
+    expect(awdReviewIndexSource).toContain('metric-panel-card')
+    expect(awdReviewDetailSource).toContain('journal-eyebrow')
+    expect(awdReviewDetailSource).toContain('teacher-controls')
+    expect(awdReviewDetailSource).toContain('metric-panel-card')
   })
 
   it('class management should not leak element-plus primary plain button chrome', () => {
@@ -76,18 +78,23 @@ describe('teacher dark surface alignment', () => {
     expect(studentManagementSource).not.toContain('teacher-kpi-card--success')
     expect(studentManagementSource).not.toContain('teacher-kpi-card--warning')
     expect(teacherSurfaceSource).toContain('.teacher-management-shell .teacher-hero')
-    expect(instanceManagementSource).toContain('--teacher-management-hero-border: var(--teacher-card-border);')
+    expect(instanceManagementSource).toContain(
+      '--teacher-management-hero-border: var(--teacher-card-border);'
+    )
     expect(instanceManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
   })
 
-  it('report export should not keep page-local teacher token duplication or bright hardcoded surfaces', () => {
-    expect(reportExportSource).not.toContain('--journal-ink: var(--color-text-primary);')
-    expect(reportExportSource).not.toContain('#ffffff')
-    expect(reportExportSource).not.toContain('#f8fafc')
-    expect(reportExportSource).not.toContain('rgba(255, 255, 255')
-    expect(reportExportSource).not.toContain('.report-card--hero')
-    expect(reportExportSource).not.toContain('.report-card--action')
-    expect(reportExportSource).not.toContain('.report-card--metric')
-    expect(reportExportSource).not.toContain('.report-btn {')
+  it('awd review pages should not keep page-local teacher token duplication or bright hardcoded surfaces', () => {
+    expect(awdReviewIndexSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewIndexSource).not.toContain('#ffffff')
+    expect(awdReviewIndexSource).not.toContain('#f8fafc')
+    expect(awdReviewIndexSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
+
+    expect(awdReviewDetailSource).not.toContain('--journal-ink: var(--color-text-primary);')
+    expect(awdReviewDetailSource).not.toContain('#ffffff')
+    expect(awdReviewDetailSource).not.toContain('#f8fafc')
+    expect(awdReviewDetailSource).not.toContain('rgba(255, 255, 255')
+    expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
   })
 })

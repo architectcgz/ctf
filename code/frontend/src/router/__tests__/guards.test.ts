@@ -57,7 +57,11 @@ function createRoute(
 
 function createRouterMock() {
   let beforeEachHandler:
-    | ((to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => Promise<void>)
+    | ((
+        to: RouteLocationNormalized,
+        from: RouteLocationNormalized,
+        next: NavigationGuardNext
+      ) => Promise<void>)
     | undefined
 
   const router = {
@@ -135,7 +139,7 @@ describe('router guards', () => {
     expect(next).toHaveBeenCalledWith('/403')
   })
 
-  it('应该在仅有 token 时自动拉取用户资料', async () => {
+  it('应该在仅有 token 时自动拉取用户资料并放行 AWD 复盘入口', async () => {
     const authStore = useAuthStore()
     authStore.updateTokens('token')
     getProfileMock.mockResolvedValue(buildUser('teacher'))
@@ -143,8 +147,8 @@ describe('router guards', () => {
     const { runBeforeEach } = createRouterMock()
     const next = await runBeforeEach(
       createRoute({
-        path: '/academy/reports',
-        fullPath: '/academy/reports',
+        path: '/academy/awd-reviews',
+        fullPath: '/academy/awd-reviews',
         meta: { requiresAuth: true, roles: ['teacher', 'admin'] },
       })
     )
@@ -168,7 +172,6 @@ describe('router guards', () => {
 
     expect(next).toHaveBeenCalledWith('/academy/overview')
   })
-
 })
 
 describe('guard helpers', () => {

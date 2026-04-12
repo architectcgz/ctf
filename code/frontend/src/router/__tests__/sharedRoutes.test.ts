@@ -24,6 +24,8 @@ describe('shared route canonical paths', () => {
     expect(findChild('academy/overview')?.name).toBe('TeacherDashboard')
     expect(findChild('academy/classes')?.name).toBe('ClassManagement')
     expect(findChild('academy/students')?.name).toBe('TeacherStudentManagement')
+    expect(findChild('academy/awd-reviews')?.name).toBe('TeacherAWDReviewIndex')
+    expect(findChild('academy/awd-reviews/:contestId')?.name).toBe('TeacherAWDReviewDetail')
     expect(findChild('academy/classes/:className')?.name).toBe('TeacherClassStudents')
     expect(findChild('academy/classes/:className/students/:studentId')?.name).toBe(
       'TeacherStudentAnalysis'
@@ -32,7 +34,7 @@ describe('shared route canonical paths', () => {
       'TeacherStudentReviewArchive'
     )
     expect(findChild('academy/instances')?.name).toBe('TeacherInstanceManagement')
-    expect(findChild('academy/reports')?.name).toBe('ReportExport')
+    expect(findChild('academy/reports')).toBeUndefined()
 
     expect(findChild('teacher/dashboard')?.redirect).toBeTruthy()
     expect(findChild('teacher/classes')?.redirect).toBeTruthy()
@@ -43,7 +45,7 @@ describe('shared route canonical paths', () => {
       findChild('teacher/classes/:className/students/:studentId/review-archive')?.redirect
     ).toBeTruthy()
     expect(findChild('teacher/instances')?.redirect).toBeTruthy()
-    expect(findChild('teacher/reports')?.redirect).toBeTruthy()
+    expect(findChild('teacher/reports')).toBeUndefined()
   })
 
   it('uses platform paths as the canonical location for shared governance pages', () => {
@@ -57,7 +59,9 @@ describe('shared route canonical paths', () => {
     expect(findChild('platform/challenges/:id')?.name).toBe('AdminChallengeDetail')
     expect(findChild('platform/challenges/:id/topology')?.name).toBe('AdminChallengeTopologyStudio')
     expect(findChild('platform/challenges/:id/writeup')?.name).toBe('AdminChallengeWriteup')
-    expect(findChild('platform/challenges/:id/writeup/view')?.name).toBe('AdminChallengeWriteupView')
+    expect(findChild('platform/challenges/:id/writeup/view')?.name).toBe(
+      'AdminChallengeWriteupView'
+    )
     expect(findChild('platform/challenges/:id/writeup')?.redirect).toBeFalsy()
     expect(findChild('platform/challenges/:id/writeup/view')?.redirect).toBeFalsy()
     expect(findChild('platform/environment-templates')?.name).toBe(
