@@ -30,7 +30,7 @@ describe('student and user surface alignment', () => {
     expect(studentOverviewSource).not.toMatch(/border:\s*1px solid var\(--journal-border\);/)
 
     expect(studentDifficultySource).toContain('journal-soft-surface')
-    expect(studentDifficultySource).toMatch(/\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s)
+    expect(studentDifficultySource).toContain('.difficulty-note')
     expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
@@ -93,6 +93,63 @@ describe('student and user surface alignment', () => {
     expect(studentOverviewSource).not.toMatch(
       /\.journal-metric,\s*\.journal-inline-item,\s*\.journal-rank-summary\s*\{/s
     )
+  })
+
+  it('student recommendation 应切换到行动优先布局和 shared metric-panel 摘要卡片栈', () => {
+    expect(studentRecommendationSource).toContain('现在先练这几道')
+    expect(studentRecommendationSource).toContain('当前目标难度')
+    expect(studentRecommendationSource).toContain('浏览全部题目')
+    expect(studentRecommendationSource).toContain(
+      'class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentRecommendationSource).toContain(
+      'class="recommendation-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentRecommendationSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentRecommendationSource).not.toContain('Top Queue')
+    expect(studentRecommendationSource).not.toContain('Full List')
+    expect(studentRecommendationSource).not.toContain('推荐摘要')
+    expect(studentRecommendationSource).not.toContain('训练动作目录')
+    expect(studentRecommendationSource).not.toContain('为什么先做这些')
+  })
+
+  it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
+    expect(studentCategoryProgressSource).toContain('优先补这个分类')
+    expect(studentCategoryProgressSource).toContain(
+      'class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentCategoryProgressSource).toContain(
+      'class="category-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentCategoryProgressSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentCategoryProgressSource).toContain(':data-test="`category-action-${item.category}`"')
+    expect(studentCategoryProgressSource).not.toContain('category-highlight')
+    expect(studentCategoryProgressSource).not.toContain('Strongest Direction')
+    expect(studentCategoryProgressSource).not.toContain('Weakest Direction')
+    expect(studentCategoryProgressSource).not.toContain('Action Directory')
+  })
+
+  it('student difficulty 应切换到强度推进工作区和 shared metric-panel 摘要卡片栈，而不是继续保留说明型双栏结构', () => {
+    expect(studentDifficultySource).toContain('先推这一档强度')
+    expect(studentDifficultySource).toContain(
+      'class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentDifficultySource).toContain(
+      'class="difficulty-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentDifficultySource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentDifficultySource).toContain(':data-test="`difficulty-action-${item.difficulty}`"')
+    expect(studentDifficultySource).not.toContain('difficulty-insight-list')
+    expect(studentDifficultySource).not.toContain('难度层级总览')
+    expect(studentDifficultySource).not.toContain('训练解读')
+    expect(studentDifficultySource).not.toContain('Action Directory')
+    expect(studentDifficultySource).not.toContain('为什么现在先推这一档')
   })
 
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {

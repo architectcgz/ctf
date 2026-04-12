@@ -77,31 +77,31 @@ const panelTabs: Array<{
 }> = [
   {
     key: 'overview',
-    label: '总览',
+    label: '训练总览',
     panelId: 'dashboard-panel-overview',
     tabId: 'dashboard-tab-overview',
   },
   {
     key: 'recommendation',
-    label: '训练建议',
+    label: '训练队列',
     panelId: 'dashboard-panel-recommendation',
     tabId: 'dashboard-tab-recommendation',
   },
   {
     key: 'category',
-    label: '分类进度',
+    label: '分类补强',
     panelId: 'dashboard-panel-category',
     tabId: 'dashboard-tab-category',
   },
   {
     key: 'timeline',
-    label: '近期动态',
+    label: '训练记录',
     panelId: 'dashboard-panel-timeline',
     tabId: 'dashboard-tab-timeline',
   },
   {
     key: 'difficulty',
-    label: '难度分布',
+    label: '强度推进',
     panelId: 'dashboard-panel-difficulty',
     tabId: 'dashboard-tab-difficulty',
   },
@@ -155,6 +155,14 @@ onMounted(() => {
 
 function openChallenges(): void {
   router.push({ name: 'Challenges' })
+}
+
+function openCategoryChallenges(category: string): void {
+  router.push({ name: 'Challenges', query: { category } })
+}
+
+function openDifficultyChallenges(difficulty: string): void {
+  router.push({ name: 'Challenges', query: { difficulty } })
 }
 
 function openSkillProfile(): void {
@@ -253,6 +261,7 @@ function openChallenge(challengeId: string): void {
             :category-stats="categoryStats"
             :completion-rate="completionRate"
             @open-challenges="openChallenges"
+            @open-category-challenges="openCategoryChallenges"
             @open-skill-profile="openSkillProfile"
           />
 
@@ -278,6 +287,8 @@ function openChallenge(challengeId: string): void {
             v-show="activePanel === 'difficulty'"
             embedded
             :difficulty-stats="difficultyStats"
+            @open-challenges="openChallenges"
+            @open-difficulty-challenges="openDifficultyChallenges"
           />
         </template>
       </main>

@@ -126,6 +126,20 @@ describe('DashboardView', () => {
         difficulty: 'medium',
         reason: '补强密码维度',
       },
+      {
+        challenge_id: '24',
+        title: 'web-xss',
+        category: 'web',
+        difficulty: 'easy',
+        reason: '保持 Web 练习节奏',
+      },
+      {
+        challenge_id: '36',
+        title: 'pwn-intro',
+        category: 'pwn',
+        difficulty: 'easy',
+        reason: '补齐基础利用动作',
+      },
     ])
     assessmentApiMocks.getSkillProfile.mockResolvedValue({
       dimensions: [
@@ -155,6 +169,9 @@ describe('DashboardView', () => {
     expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
+
+    const tabTexts = wrapper.findAll('[role="tab"]').map((tab) => tab.text())
+    expect(tabTexts).toEqual(['训练总览', '训练队列', '分类补强', '训练记录', '强度推进'])
   })
 
   it('应该把当前排名区域渲染为独立卡片', async () => {
@@ -183,7 +200,7 @@ describe('DashboardView', () => {
     expect(rankSummary.get('.progress-card-hint.metric-panel-helper').text()).toContain('积分排名')
   })
 
-  it('应该在 recommendation 子菜单下展示训练建议', async () => {
+  it('应该在 recommendation 子菜单下激活并显示训练建议面板', async () => {
     routeState.query = { panel: 'recommendation' }
 
     const authStore = useAuthStore()
@@ -201,10 +218,272 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Priority Focus')
-    expect(wrapper.text()).toContain('补短板计划')
-    expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('推荐摘要')
+    const recommendationPanel = wrapper.get('#dashboard-panel-recommendation')
+    const overviewPanel = wrapper.get('#dashboard-panel-overview')
+    const recommendationStyle = recommendationPanel.attributes('style') ?? ''
+    const overviewStyle = overviewPanel.attributes('style') ?? ''
+
+    expect(recommendationPanel.classes()).toContain('active')
+    expect(recommendationPanel.attributes('aria-hidden')).toBe('false')
+    expect(recommendationStyle).not.toContain('display: none;')
+    expect(recommendationPanel.isVisible()).toBe(true)
+
+    expect(overviewPanel.classes()).not.toContain('active')
+    expect(overviewPanel.attributes('aria-hidden')).toBe('true')
+    expect(overviewStyle).toContain('display: none;')
+    expect(overviewPanel.isVisible()).toBe(false)
+
+    expect(recommendationPanel.text()).toContain('现在先练这几道')
+    expect(recommendationPanel.text()).toContain('当前目标难度')
+    expect(recommendationPanel.text()).toContain('浏览全部题目')
+    expect(recommendationPanel.text()).toContain('crypto-lab')
+    expect(recommendationPanel.text()).toContain('web-xss')
+    expect(recommendationPanel.text()).toContain('pwn-intro')
+    expect(recommendationPanel.findAll('.recommend-item')).toHaveLength(3)
+  })
+
+  it('应该在 recommendation 空状态下保留唯一的浏览全部题目主 CTA', async () => {
+    routeState.query = { panel: 'recommendation' }
+    assessmentApiMocks.getRecommendations.mockResolvedValue([])
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const recommendationPanel = wrapper.get('#dashboard-panel-recommendation')
+    const browseButtons = recommendationPanel
+      .findAll('button')
+      .filter((button) => button.text().trim() === '浏览全部题目')
+
+    expect(recommendationPanel.attributes('aria-hidden')).toBe('false')
+    expect(recommendationPanel.isVisible()).toBe(true)
+    expect(recommendationPanel.text()).toContain('当前没有推荐题目，可以先去题目列表探索新的方向。')
+    expect(recommendationPanel.findAll('.recommend-item')).toHaveLength(0)
+    expect(browseButtons).toHaveLength(1)
+    expect(browseButtons[0].classes()).toContain('journal-btn-primary')
+  })
+
+  it('应该在 category 子菜单下展示行动优先的分类列表并支持跳转到对应分类题目', async () => {
+    routeState.query = { panel: 'category' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const categoryPanel = wrapper.get('#dashboard-panel-category')
+    const cryptoAction = categoryPanel.get('[data-test="category-action-crypto"]')
+
+    expect(categoryPanel.classes()).toContain('active')
+    expect(categoryPanel.attributes('aria-hidden')).toBe('false')
+    expect(categoryPanel.isVisible()).toBe(true)
+    expect(categoryPanel.text()).toContain('优先补这个分类')
+    expect(categoryPanel.text()).toContain('crypto')
+    expect(categoryPanel.findAll('.category-action-item')).toHaveLength(2)
+
+    await cryptoAction.get('button').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { category: 'crypto' },
+    })
+  })
+
+  it('应该在 category 空状态下避免展示虚构分类名，并保留合理的训练入口', async () => {
+    routeState.query = { panel: 'category' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [],
+      difficulty_stats: [
+        { difficulty: 'easy', solved: 0, total: 4 },
+        { difficulty: 'medium', solved: 0, total: 5 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const categoryPanel = wrapper.get('#dashboard-panel-category')
+    const primaryButton = categoryPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '去训练')
+
+    expect(categoryPanel.attributes('aria-hidden')).toBe('false')
+    expect(categoryPanel.isVisible()).toBe(true)
+    expect(categoryPanel.text()).not.toContain('新的分类')
+    expect(categoryPanel.text()).toContain('先开始积累分类覆盖面')
+    expect(categoryPanel.text()).toContain('当前还没有分类统计数据，先完成几道题再回来查看。')
+    expect(categoryPanel.findAll('.category-action-item')).toHaveLength(0)
+    expect(primaryButton).toBeTruthy()
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
+  it('应该在 difficulty 子菜单下展示强度推进工作区并支持跳转到对应难度题目', async () => {
+    routeState.query = { panel: 'difficulty' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const mediumAction = difficultyPanel.get('[data-test="difficulty-action-medium"]')
+
+    expect(difficultyPanel.classes()).toContain('active')
+    expect(difficultyPanel.attributes('aria-hidden')).toBe('false')
+    expect(difficultyPanel.isVisible()).toBe(true)
+    expect(difficultyPanel.text()).toContain('先推这一档强度')
+    expect(difficultyPanel.text()).toContain('中等')
+    expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(2)
+    expect(mediumAction.classes()).toContain('difficulty-action-item--primary')
+
+    await mediumAction.get('button').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { difficulty: 'medium' },
+    })
+  })
+
+  it('应该在 difficulty 空状态下避免展示虚构难度名，并保留合理的训练入口', async () => {
+    routeState.query = { panel: 'difficulty' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [],
+      difficulty_stats: [],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const primaryButton = difficultyPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '去训练')
+
+    expect(difficultyPanel.attributes('aria-hidden')).toBe('false')
+    expect(difficultyPanel.isVisible()).toBe(true)
+    expect(difficultyPanel.text()).toContain('先开始建立强度节奏')
+    expect(difficultyPanel.text()).toContain('当前还没有难度统计数据，先完成几道题再回来查看。')
+    expect(difficultyPanel.text()).not.toContain('待选择')
+    expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(0)
+    expect(primaryButton).toBeTruthy()
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
+  it('应该在 difficulty 同完成率时优先更低难度，并让标题主 CTA 与主推行保持一致', async () => {
+    routeState.query = { panel: 'difficulty' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [
+        { category: 'web', solved: 0, total: 2 },
+      ],
+      difficulty_stats: [
+        { difficulty: 'beginner', solved: 0, total: 1 },
+        { difficulty: 'medium', solved: 0, total: 5 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const primaryButton = difficultyPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '先做入门')
+    const beginnerAction = difficultyPanel.get('[data-test="difficulty-action-beginner"]')
+    const mediumAction = difficultyPanel.get('[data-test="difficulty-action-medium"]')
+
+    expect(difficultyPanel.text()).toContain('先推这一档强度：入门')
+    expect(primaryButton).toBeTruthy()
+    expect(beginnerAction.classes()).toContain('difficulty-action-item--primary')
+    expect(mediumAction.classes()).not.toContain('difficulty-action-item--primary')
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { difficulty: 'beginner' },
+    })
   })
 
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {

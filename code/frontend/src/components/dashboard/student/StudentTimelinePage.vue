@@ -115,7 +115,7 @@ function changeTimelinePage(page: number): void {
           训练记录总览
         </h1>
         <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          看最近训练记录和节奏变化。
+          按时间回看最近训练动作，看看节奏有没有断。
         </p>
         <div class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
           <article

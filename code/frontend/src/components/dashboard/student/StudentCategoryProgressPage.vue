@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowUpRight, Gauge, MoveRight } from 'lucide-vue-next'
 
-import { progressRate } from './utils'
+import { rankCategoryActionItems } from './utils'
 
 interface CategoryStat {
   category: string
   total: number
   solved: number
+}
+
+interface RankedCategoryStat extends CategoryStat {
+  rate: number
+  remaining: number
 }
 
 const props = withDefaults(
@@ -23,20 +27,66 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   openChallenges: []
+  openCategoryChallenges: [category: string]
   openSkillProfile: []
 }>()
 
-const rankedCategories = computed(() =>
-  [...props.categoryStats]
-    .map((item) => ({
-      ...item,
-      rate: progressRate(item.total, item.solved),
-    }))
-    .sort((left, right) => right.rate - left.rate)
+const rankedCategories = computed<RankedCategoryStat[]>(() =>
+  rankCategoryActionItems(props.categoryStats)
 )
+const primaryCategory = computed(() => rankedCategories.value[0] || null)
+const hasCategoryStats = computed(() => rankedCategories.value.length > 0)
+const headlineTitle = computed(() =>
+  primaryCategory.value ? `优先补这个分类：${primaryCategory.value.category}` : '先开始积累分类覆盖面'
+)
+const summaryCards = computed(() => [
+  {
+    key: 'focus',
+    label: '当前待补题量',
+    value: primaryCategory.value ? `${primaryCategory.value.remaining} 道` : '待生成',
+    helper: primaryCategory.value
+      ? `${primaryCategory.value.category} 还有 ${primaryCategory.value.remaining} 道题待补，先从这里补回训练短板。`
+      : '先完成几道题，这里会自动形成下一步最值得先补的分类。',
+  },
+  {
+    key: 'coverage',
+    label: '整体覆盖率',
+    value: `${props.completionRate}%`,
+    helper:
+      rankedCategories.value.length > 0
+        ? '按当前分类题量加权后的总体进度，方便判断覆盖面是否在稳定扩大。'
+        : '当前还没有足够的分类数据来衡量整体覆盖率。',
+  },
+  {
+    key: 'ranking',
+    label: '当前排序依据',
+    value: rankedCategories.value.length > 0 ? `${rankedCategories.value.length} 类` : '待生成',
+    helper:
+      rankedCategories.value.length > 0
+        ? '先按完成率找短板，再用题量打破并列，避免样本太小的分类抢到最前面。'
+        : '分类进度会在完成训练后自动更新。',
+  },
+])
 
-const strongestCategory = computed(() => rankedCategories.value[0] || null)
-const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
+function categoryActionCopy(item: RankedCategoryStat, index: number): string {
+  if (item.remaining <= 0) {
+    return '这一类已经补齐，可以放到后面用于维持训练手感。'
+  }
+
+  if (index === 0) {
+    return `还有 ${item.remaining} 道题待补，当前完成率 ${item.rate}%，这组最适合先拉回到稳定区间。`
+  }
+
+  return `还差 ${item.remaining} / ${item.total}，做完前面的分类后，可以继续沿这条线补齐覆盖面。`
+}
+
+function openPrimaryCategory(): void {
+  if (primaryCategory.value) {
+    emit('openCategoryChallenges', primaryCategory.value.category)
+    return
+  }
+  emit('openChallenges')
+}
 </script>
 
 <template>
@@ -48,45 +98,44 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
         : 'journal-shell journal-hero rounded-[30px] border px-6 py-6 md:px-8'
     "
   >
-    <div class="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-      <div>
-        <div class="journal-eyebrow">Coverage Overview</div>
-        <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
-          分类覆盖概况
-        </h1>
-        <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-          看各分类的完成情况和当前强弱项。
-        </p>
-        <div class="mt-6 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">
-          <button class="journal-btn-primary" @click="emit('openChallenges')">去训练</button>
-          <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
-        </div>
+    <div class="category-header">
+      <div class="journal-eyebrow">Action Ranking</div>
+      <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+        {{ headlineTitle }}
+      </h1>
+      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        {{
+          hasCategoryStats
+            ? '按分类找短板，先补当前最需要回填的那一类。'
+            : '先完成几道题，这里会自动排出下一步最该补的分类。'
+        }}
+      </p>
+
+      <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="分类进度快捷操作">
+        <button class="journal-btn-primary" @click="openPrimaryCategory">
+          {{ primaryCategory ? `先去 ${primaryCategory.category}` : '去训练' }}
+        </button>
+        <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
+        <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
       </div>
 
-      <article class="journal-brief rounded-[24px] border px-5 py-5">
-        <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-          <Gauge class="h-5 w-5 text-[var(--journal-accent)]" />
-          结构快照
-        </div>
-        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-          <div class="journal-note">
-            <div class="journal-note-label">整体覆盖率</div>
-            <div class="journal-note-value">{{ completionRate }}%</div>
+      <div class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+        <article
+          v-for="card in summaryCards"
+          :key="card.key"
+          class="category-summary-card progress-card metric-panel-card"
+        >
+          <div class="journal-note-label progress-card-label metric-panel-label">
+            {{ card.label }}
           </div>
-          <div class="journal-note">
-            <div class="journal-note-label">分类数量</div>
-            <div class="journal-note-value">{{ rankedCategories.length }} 类</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ card.value }}
           </div>
-          <div class="journal-note">
-            <div class="journal-note-label">当前强项</div>
-            <div class="journal-note-value">{{ strongestCategory?.category || '-' }}</div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            {{ card.helper }}
           </div>
-          <div class="journal-note">
-            <div class="journal-note-label">当前短板</div>
-            <div class="journal-note-value">{{ weakestCategory?.category || '-' }}</div>
-          </div>
-        </div>
-      </article>
+        </article>
+      </div>
     </div>
 
     <div
@@ -94,81 +143,10 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
       :class="{ 'category-board--embedded': embedded }"
     >
       <section class="category-section">
-        <div class="grid gap-6 xl:grid-cols-2">
-          <article class="category-highlight">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow journal-eyebrow-soft">Strongest Direction</div>
-                <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-                  {{ strongestCategory?.category || '-' }}
-                </h3>
-              </div>
-              <div class="direction-icon direction-icon--success">
-                <ArrowUpRight class="h-4 w-4" />
-              </div>
-            </div>
-            <div v-if="strongestCategory" class="mt-4">
-              <div class="flex items-end justify-between text-sm">
-                <span class="text-[var(--journal-muted)]">完成进度</span>
-                <span class="font-semibold text-[var(--journal-ink)]"
-                  >{{ strongestCategory.solved }} / {{ strongestCategory.total }}</span
-                >
-              </div>
-              <div class="category-track mt-2 h-2.5 rounded-full">
-                <div
-                  class="h-2.5 rounded-full bg-emerald-500"
-                  :style="{ width: `${strongestCategory.rate}%` }"
-                />
-              </div>
-              <div class="mt-2 text-right text-xs font-semibold text-emerald-600">
-                {{ strongestCategory.rate }}%
-              </div>
-            </div>
-          </article>
-
-          <article class="category-highlight">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <div class="journal-eyebrow journal-eyebrow-soft">Weakest Direction</div>
-                <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">
-                  {{ weakestCategory?.category || '-' }}
-                </h3>
-              </div>
-              <div class="direction-icon direction-icon--warning">
-                <Gauge class="h-4 w-4" />
-              </div>
-            </div>
-            <div v-if="weakestCategory" class="mt-4">
-              <div class="flex items-end justify-between text-sm">
-                <span class="text-[var(--journal-muted)]">完成进度</span>
-                <span class="font-semibold text-[var(--journal-ink)]"
-                  >{{ weakestCategory.solved }} / {{ weakestCategory.total }}</span
-                >
-              </div>
-              <div class="category-track mt-2 h-2.5 rounded-full">
-                <div
-                  class="h-2.5 rounded-full bg-amber-400"
-                  :style="{ width: `${weakestCategory.rate}%` }"
-                />
-              </div>
-              <div class="mt-2 text-right text-xs font-semibold text-amber-600">
-                {{ weakestCategory.rate }}%
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="category-section">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Category Board</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">分类进度板</h3>
-          </div>
-          <button class="journal-btn-outline" @click="emit('openChallenges')">
-            <MoveRight class="h-3.5 w-3.5" />
-            去训练
-          </button>
+        <div v-if="rankedCategories.length > 0" class="category-toolbar">
+          <p class="category-toolbar__copy">
+            从排序最前的分类开始，完成一类再继续往后推。
+          </p>
         </div>
 
         <div
@@ -178,25 +156,40 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
           当前还没有分类统计数据，先完成几道题再回来查看。
         </div>
 
-        <div v-else class="category-list mt-5">
-          <div class="category-head" aria-hidden="true">
-            <span>分类</span>
-            <span>完成率</span>
-            <span>已解 / 总量</span>
-          </div>
-          <div v-for="item in rankedCategories" :key="item.category" class="category-item">
-            <div class="category-row">
-              <span class="category-row__name">{{ item.category }}</span>
-              <span class="category-row__rate">{{ item.rate }}%</span>
-              <span class="category-row__count">{{ item.solved }}/{{ item.total }}</span>
+        <div v-else class="category-action-list mt-5">
+          <article
+            v-for="(item, index) in rankedCategories"
+            :key="item.category"
+            class="category-action-item"
+            :data-test="`category-action-${item.category}`"
+          >
+            <div class="category-action-item__body">
+              <div class="category-action-rank">
+                {{ index + 1 }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="category-action-item__name">{{ item.category }}</span>
+                  <span class="category-action-item__rate">{{ item.rate }}%</span>
+                  <span class="category-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                </div>
+                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                  {{ categoryActionCopy(item, index) }}
+                </p>
+              </div>
+              <button
+                type="button"
+                class="journal-btn-primary category-action-item__cta"
+                @click="emit('openCategoryChallenges', item.category)"
+              >
+                去做这个分类
+              </button>
             </div>
-            <div class="category-track mt-3 h-2 rounded-full">
-              <div
-                class="category-track-fill h-2 rounded-full"
-                :style="{ width: `${item.rate}%` }"
-              />
+
+            <div class="category-track mt-4 h-2 rounded-full">
+              <div class="category-track-fill h-2 rounded-full" :style="{ width: `${item.rate}%` }" />
             </div>
-          </div>
+          </article>
         </div>
       </section>
     </div>
@@ -205,7 +198,6 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
 
 <style scoped>
 .journal-soft-surface {
-  --category-cols: minmax(130px, 1fr) minmax(88px, 120px) minmax(110px, 150px);
   --journal-soft-button-height: 34px;
   --journal-soft-button-padding: var(--space-2) var(--space-4);
   --journal-soft-button-size: 0.82rem;
@@ -218,9 +210,29 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   --journal-soft-button-primary-color: var(--journal-accent);
 }
 
-.journal-brief {
-  border-color: var(--journal-shell-border);
-  background: var(--journal-surface-subtle);
+.category-header {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.category-summary-strip {
+  --metric-panel-columns: repeat(3, minmax(0, 1fr));
+}
+
+.category-summary-strip.metric-panel-default-surface {
+  --metric-panel-border: var(--journal-soft-border);
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent),
+      color-mix(in srgb, var(--journal-surface) 96%, transparent)
+    );
+  --metric-panel-shadow: 0 10px 20px color-mix(in srgb, var(--color-shadow-soft) 30%, transparent);
 }
 
 .category-board {
@@ -231,41 +243,81 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   margin-top: var(--space-5);
 }
 
-.category-section + .category-section {
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--journal-divider);
+.category-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.category-highlight,
-.category-list {
+.category-toolbar__copy {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.category-action-list {
   border-radius: 22px;
   border: 1px solid var(--journal-shell-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: var(--space-4) var(--space-4-5);
 }
 
-.category-head {
-  display: grid;
-  grid-template-columns: var(--category-cols);
-  gap: var(--space-2);
-  padding-bottom: var(--space-3);
-  font-size: var(--font-size-0-69);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.category-head > :nth-child(2),
-.category-head > :nth-child(3) {
-  text-align: right;
-}
-
-.category-item + .category-item {
+.category-action-item + .category-action-item {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
   border-top: 1px solid var(--journal-divider);
+}
+
+.category-action-item__body {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.category-action-rank {
+  display: flex;
+  min-width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent-strong);
+  font-size: var(--font-size-0-82);
+  font-weight: 700;
+}
+
+.category-action-item__name {
+  font-size: var(--font-size-0-86);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-ink);
+}
+
+.category-action-item__rate,
+.category-action-item__count {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: var(--font-size-0-74);
+  font-weight: 600;
+}
+
+.category-action-item__rate {
+  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
+  color: var(--journal-accent-strong);
+}
+
+.category-action-item__count {
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, transparent);
+  color: var(--journal-muted);
+}
+
+.category-action-item__cta {
+  flex-shrink: 0;
 }
 
 .category-track {
@@ -276,58 +328,7 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   background: color-mix(in srgb, var(--journal-accent) 68%, #0ea5e9);
 }
 
-.category-row {
-  display: grid;
-  grid-template-columns: var(--category-cols);
-  gap: var(--space-2);
-  align-items: center;
-}
-
-.category-row__name {
-  font-size: var(--font-size-0-86);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--journal-ink);
-}
-
-.category-row__rate,
-.category-row__count {
-  text-align: right;
-}
-
-.category-row__rate {
-  font-size: var(--font-size-0-90);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.category-row__count {
-  font-size: var(--font-size-0-78);
-  color: var(--journal-muted);
-}
-
-.direction-icon {
-  display: flex;
-  height: 2.5rem;
-  width: 2.5rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.9rem;
-}
-
-.direction-icon--success {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-}
-
-.direction-icon--warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-}
-
-:global([data-theme='dark']) .category-highlight,
-:global([data-theme='dark']) .category-list {
+:global([data-theme='dark']) .category-action-list {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
@@ -339,9 +340,23 @@ const weakestCategory = computed(() => rankedCategories.value.at(-1) || null)
   );
 }
 
+@media (max-width: 900px) {
+  .category-summary-strip {
+    --metric-panel-columns: 1fr;
+  }
+
+  .category-action-item__body {
+    flex-direction: column;
+  }
+
+  .category-action-item__cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 767px) {
   .journal-soft-surface {
-    --category-cols: minmax(100px, 1fr) minmax(68px, 84px) minmax(92px, 116px);
     --journal-soft-button-height: 36px;
   }
 }
