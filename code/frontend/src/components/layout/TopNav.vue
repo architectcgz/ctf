@@ -382,7 +382,11 @@ onUnmounted(() => {
 :global([data-theme="light"]) .topnav-shell {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 95%, var(--color-bg-base))),
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.06), transparent 18rem);
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
+      transparent 18rem
+    );
 }
 
 .topnav-icon-button:focus-visible {

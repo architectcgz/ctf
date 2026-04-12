@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import appCardSource from '@/components/common/AppCard.vue?raw'
+import appLayoutSource from '@/components/layout/AppLayout.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
@@ -10,6 +11,7 @@ import studentDifficultySource from '@/components/dashboard/student/StudentDiffi
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
+import topNavSource from '@/components/layout/TopNav.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -17,6 +19,9 @@ import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 describe('shared theme token adoption', () => {
   it('共享层和高频学生页不应继续写死状态色与图表主色', () => {
     expect(appCardSource).not.toContain('rgba(139,148,158,0.08)')
+    expect(appLayoutSource).not.toContain('rgba(8,145,178,0.12)')
+    expect(appLayoutSource).not.toContain('rgba(255,255,255,0.08)')
+    expect(appLayoutSource).not.toContain('rgba(0,0,0,0.16)')
 
     expect(pageHeaderSource).not.toContain('rgba(15, 23, 42, 0.05)')
     expect(pageHeaderSource).not.toContain('#f8fafc')
@@ -58,6 +63,8 @@ describe('shared theme token adoption', () => {
     expect(sidebarSource).not.toContain('0 18px 48px rgba(15, 23, 42, 0.18)')
     expect(sidebarSource).not.toContain('0 18px 48px rgba(15, 23, 42, 0.16)')
     expect(sidebarSource).not.toContain('rgba(99, 102, 241, 0.06)')
+
+    expect(topNavSource).not.toContain('rgba(99, 102, 241, 0.06)')
 
     expect(skillProfileSource).not.toContain('rgba(148, 163, 184, 0.2)')
 
