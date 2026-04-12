@@ -788,15 +788,15 @@ onMounted(() => {
 }
 
 .admin-btn-success {
-  border: 1px solid color-mix(in srgb, #059669 30%, transparent);
-  background: color-mix(in srgb, #059669 12%, var(--journal-surface));
-  color: #047857;
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-success) 88%, var(--journal-ink));
 }
 
 .admin-btn-danger {
-  border: 1px solid color-mix(in srgb, #dc2626 28%, transparent);
-  background: color-mix(in srgb, #dc2626 10%, var(--journal-surface));
-  color: #b91c1c;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-btn:hover,
@@ -939,11 +939,11 @@ onMounted(() => {
 }
 
 .upload-result-item--success {
-  border-color: color-mix(in srgb, #059669 30%, var(--journal-border));
+  border-color: color-mix(in srgb, var(--color-success) 30%, var(--journal-border));
 }
 
 .upload-result-item--error {
-  border-color: color-mix(in srgb, #dc2626 34%, var(--journal-border));
+  border-color: color-mix(in srgb, var(--color-danger) 34%, var(--journal-border));
 }
 
 .upload-result-item__head {
@@ -967,13 +967,13 @@ onMounted(() => {
 }
 
 .upload-result-item__status--success {
-  color: #047857;
-  background: color-mix(in srgb, #059669 12%, transparent);
+  color: color-mix(in srgb, var(--color-success) 88%, var(--journal-ink));
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 
 .upload-result-item__status--error {
-  color: #b91c1c;
-  background: color-mix(in srgb, #dc2626 12%, transparent);
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
 .upload-result-item__name {
