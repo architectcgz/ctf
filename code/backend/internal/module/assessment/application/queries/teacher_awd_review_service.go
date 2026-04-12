@@ -146,7 +146,7 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 
 	if req.RoundNumber != nil {
 		if selectedRound == nil {
-			return nil, errcode.New(errcode.ErrInvalidParams.Code, "round_number 无效", errcode.ErrInvalidParams.HTTPStatus)
+			return nil, errcode.New(errcode.ErrInvalidParams.Code, "round 无效", errcode.ErrInvalidParams.HTTPStatus)
 		}
 		resp.SelectedRound = &dto.TeacherAWDSelectedRoundResp{
 			Round:    selectedRoundResp,

@@ -3,7 +3,8 @@ package dto
 import "time"
 
 type GetTeacherAWDReviewArchiveReq struct {
-	RoundNumber *int `form:"round_number" binding:"omitempty,min=1"`
+	RoundNumber *int   `form:"round" binding:"omitempty,min=1"`
+	TeamID      *int64 `form:"team_id"`
 }
 
 type TeacherAWDReviewContestListResp struct {
