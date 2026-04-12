@@ -118,7 +118,7 @@ async function handleUserSearch(): Promise<void> {
             Admin Actions
           </div>
           <div class="mt-2 flex items-center justify-between">
-            <h3 class="text-2xl font-semibold text-[var(--color-text)]">发布通知</h3>
+            <h3 class="text-2xl font-semibold text-[var(--color-text-primary)]">发布通知</h3>
             <button type="button" class="publish-close-btn" @click="handleClose">关闭</button>
           </div>
           <p class="mt-2 text-sm text-[var(--color-text-muted)]">
@@ -317,12 +317,12 @@ async function handleUserSearch(): Promise<void> {
 
 <style scoped>
 .publish-panel {
-  border-color: color-mix(in srgb, var(--color-border, #d8e1ec) 78%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
 }
 
 .publish-header,
 .publish-footer {
-  border-color: color-mix(in srgb, var(--color-border, #d8e1ec) 78%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
 }
 
 .publish-field {
@@ -335,21 +335,21 @@ async function handleUserSearch(): Promise<void> {
   font-size: var(--font-size-0-78);
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-muted);
 }
 
 .publish-input {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--color-border, #d8e1ec) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
   border-radius: 0.75rem;
-  background: var(--color-bg-elevated, #fff);
+  background: var(--color-bg-elevated);
   padding: 0.58rem 0.75rem;
-  color: var(--color-text, #0f172a);
+  color: var(--color-text-primary);
   font-size: var(--font-size-0-90);
 }
 
 .publish-input:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-primary, #3b82f6) 45%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
   outline-offset: 1px;
 }
 
@@ -365,11 +365,11 @@ async function handleUserSearch(): Promise<void> {
   align-items: center;
   gap: 0.45rem;
   font-size: var(--font-size-0-88);
-  color: var(--color-text, #0f172a);
+  color: var(--color-text-primary);
 }
 
 .publish-subsection {
-  border: 1px dashed color-mix(in srgb, var(--color-border, #d8e1ec) 80%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-border-default) 80%, transparent);
   border-radius: 0.75rem;
   padding: 0.75rem;
 }
@@ -384,18 +384,18 @@ async function handleUserSearch(): Promise<void> {
 
 .publish-empty {
   font-size: var(--font-size-0-80);
-  color: var(--color-text-muted, #64748b);
+  color: var(--color-text-muted);
 }
 
 .publish-inline-btn,
 .publish-btn,
 .publish-close-btn {
-  border: 1px solid color-mix(in srgb, var(--color-border, #d8e1ec) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
   border-radius: 0.75rem;
   padding: 0.45rem 0.75rem;
   font-size: var(--font-size-0-82);
-  color: var(--color-text, #0f172a);
-  background: var(--color-bg-soft, var(--color-bg-elevated, var(--color-bg-surface)));
+  color: var(--color-text-primary);
+  background: var(--color-bg-elevated);
   cursor: pointer;
 }
 
@@ -410,9 +410,9 @@ async function handleUserSearch(): Promise<void> {
 }
 
 .publish-btn-primary {
-  border-color: color-mix(in srgb, var(--color-primary, #3b82f6) 45%, transparent);
-  background: color-mix(in srgb, var(--color-primary, #3b82f6) 14%, transparent);
-  color: var(--color-primary, #3b82f6);
+  border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
 }
 
 .publish-footer {
@@ -423,7 +423,7 @@ async function handleUserSearch(): Promise<void> {
 
 .publish-error {
   font-size: var(--font-size-0-78);
-  color: var(--color-danger, #dc2626);
+  color: var(--color-danger);
 }
 
 .publish-overlay-enter-active,

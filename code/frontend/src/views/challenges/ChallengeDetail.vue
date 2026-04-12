@@ -738,7 +738,7 @@ watch(
   --success: oklch(56% 0.13 154);
   --warning: oklch(68% 0.14 82);
   --danger: oklch(58% 0.16 28);
-  --shadow-shell: 0 24px 84px rgba(13, 23, 39, 0.06);
+  --shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
   --radius-xl: 28px;
   --radius-lg: 18px;
   --font-sans: var(--font-family-sans);
