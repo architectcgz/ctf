@@ -152,6 +152,9 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 				selectedServices = filterTeacherAWDReviewServicesByTeam(selectedServices, *req.TeamID)
 				selectedAttacks = filterTeacherAWDReviewAttacksByTeam(selectedAttacks, *req.TeamID)
 				selectedTraffic = filterTeacherAWDReviewTrafficByTeam(selectedTraffic, *req.TeamID)
+				selectedRoundResp.ServiceCount = len(selectedServices)
+				selectedRoundResp.AttackCount = len(selectedAttacks)
+				selectedRoundResp.TrafficCount = len(selectedTraffic)
 			}
 		}
 	}
