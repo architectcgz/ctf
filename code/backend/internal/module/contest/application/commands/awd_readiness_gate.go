@@ -4,8 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"ctf-platform/internal/dto"
-	"ctf-platform/internal/model"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/pkg/errcode"
@@ -116,13 +114,4 @@ func normalizeAWDReadinessOverride(forceOverride *bool, overrideReason *string) 
 		return false, "", errcode.ErrInvalidParams
 	}
 	return true, reason, nil
-}
-
-func shouldGateAWDContestStart(contest *model.Contest, req *dto.UpdateContestReq) bool {
-	if contest == nil || req == nil || req.Status == nil {
-		return false
-	}
-	return contest.Mode == model.ContestModeAWD &&
-		contest.Status != model.ContestStatusRunning &&
-		*req.Status == model.ContestStatusRunning
 }

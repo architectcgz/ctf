@@ -18,7 +18,7 @@ func (s *ContestService) UpdateContest(ctx context.Context, id int64, req *dto.U
 	if err := validateContestUpdateRequest(contest, req); err != nil {
 		return nil, err
 	}
-	if shouldGateAWDContestStart(contest, req) {
+	if domain.ShouldGateAWDContestStart(contest.Mode, contest.Status, req.Status) {
 		if err := ensureAWDReadinessGate(ctx, s.awdRepo, contest.ID, req.ForceOverride, req.OverrideReason); err != nil {
 			return nil, err
 		}
