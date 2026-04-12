@@ -197,7 +197,7 @@ describe('DashboardView', () => {
     expect(rankSummary.get('.progress-card-hint.metric-panel-helper').text()).toContain('积分排名')
   })
 
-  it('应该在 recommendation 子菜单下展示训练建议', async () => {
+  it('应该在 recommendation 子菜单下激活并显示训练建议面板', async () => {
     routeState.query = { panel: 'recommendation' }
 
     const authStore = useAuthStore()
@@ -215,13 +215,60 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('现在先练这几道')
-    expect(wrapper.text()).toContain('当前目标难度')
-    expect(wrapper.text()).toContain('浏览全部题目')
-    expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('web-xss')
-    expect(wrapper.text()).toContain('pwn-intro')
-    expect(wrapper.findAll('.recommend-item')).toHaveLength(3)
+    const recommendationPanel = wrapper.get('#dashboard-panel-recommendation')
+    const overviewPanel = wrapper.get('#dashboard-panel-overview')
+    const recommendationStyle = recommendationPanel.attributes('style') ?? ''
+    const overviewStyle = overviewPanel.attributes('style') ?? ''
+
+    expect(recommendationPanel.classes()).toContain('active')
+    expect(recommendationPanel.attributes('aria-hidden')).toBe('false')
+    expect(recommendationStyle).not.toContain('display: none;')
+    expect(recommendationPanel.isVisible()).toBe(true)
+
+    expect(overviewPanel.classes()).not.toContain('active')
+    expect(overviewPanel.attributes('aria-hidden')).toBe('true')
+    expect(overviewStyle).toContain('display: none;')
+    expect(overviewPanel.isVisible()).toBe(false)
+
+    expect(recommendationPanel.text()).toContain('现在先练这几道')
+    expect(recommendationPanel.text()).toContain('当前目标难度')
+    expect(recommendationPanel.text()).toContain('浏览全部题目')
+    expect(recommendationPanel.text()).toContain('crypto-lab')
+    expect(recommendationPanel.text()).toContain('web-xss')
+    expect(recommendationPanel.text()).toContain('pwn-intro')
+    expect(recommendationPanel.findAll('.recommend-item')).toHaveLength(3)
+  })
+
+  it('应该在 recommendation 空状态下保留唯一的浏览全部题目主 CTA', async () => {
+    routeState.query = { panel: 'recommendation' }
+    assessmentApiMocks.getRecommendations.mockResolvedValue([])
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const recommendationPanel = wrapper.get('#dashboard-panel-recommendation')
+    const browseButtons = recommendationPanel
+      .findAll('button')
+      .filter((button) => button.text().trim() === '浏览全部题目')
+
+    expect(recommendationPanel.attributes('aria-hidden')).toBe('false')
+    expect(recommendationPanel.isVisible()).toBe(true)
+    expect(recommendationPanel.text()).toContain('当前没有推荐题目，可以先去题目列表探索新的方向。')
+    expect(recommendationPanel.findAll('.recommend-item')).toHaveLength(0)
+    expect(browseButtons).toHaveLength(1)
+    expect(browseButtons[0].classes()).toContain('journal-btn-primary')
   })
 
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
