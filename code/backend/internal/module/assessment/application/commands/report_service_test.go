@@ -175,6 +175,120 @@ func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context
 	return r.resp, nil
 }
 
+type testAWDReviewExportBuilder struct {
+	wait    <-chan struct{}
+	archive *dto.TeacherAWDReviewArchiveResp
+}
+
+func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*dto.TeacherAWDReviewArchiveResp, error) {
+	if b != nil && b.wait != nil {
+		select {
+		case <-b.wait:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	if b != nil && b.archive != nil {
+		return b.archive, nil
+	}
+
+	generatedAt := time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC)
+	selectedRoundNumber := 0
+	if roundNumber != nil {
+		selectedRoundNumber = *roundNumber
+	}
+	if selectedRoundNumber <= 0 {
+		selectedRoundNumber = 1
+	}
+
+	return &dto.TeacherAWDReviewArchiveResp{
+		GeneratedAt: generatedAt,
+		Scope: dto.TeacherAWDReviewScopeResp{
+			SnapshotType: "final",
+			RequestedBy:  requesterID,
+			RequestedID:  contestID,
+		},
+		Contest: dto.TeacherAWDReviewContestMetaResp{
+			ID:         contestID,
+			Title:      "awd-review",
+			Mode:       model.ContestModeAWD,
+			Status:     model.ContestStatusEnded,
+			RoundCount: 1,
+			TeamCount:  1,
+		},
+		Overview: &dto.TeacherAWDReviewOverviewResp{
+			RoundCount:   1,
+			TeamCount:    1,
+			ServiceCount: 1,
+			AttackCount:  1,
+			TrafficCount: 1,
+		},
+		Rounds: []dto.TeacherAWDReviewRoundResp{{
+			ID:           1,
+			ContestID:    contestID,
+			RoundNumber:  selectedRoundNumber,
+			Status:       model.AWDRoundStatusFinished,
+			ServiceCount: 1,
+			AttackCount:  1,
+			TrafficCount: 1,
+		}},
+		SelectedRound: &dto.TeacherAWDSelectedRoundResp{
+			Round: dto.TeacherAWDReviewRoundResp{
+				ID:           1,
+				ContestID:    contestID,
+				RoundNumber:  selectedRoundNumber,
+				Status:       model.AWDRoundStatusFinished,
+				ServiceCount: 1,
+				AttackCount:  1,
+				TrafficCount: 1,
+			},
+			Teams: []dto.TeacherAWDReviewTeamResp{{
+				TeamID:      1,
+				TeamName:    "blue",
+				CaptainID:   1,
+				TotalScore:  100,
+				MemberCount: 1,
+			}},
+			Services: []dto.TeacherAWDReviewServiceResp{{
+				ID:             1,
+				RoundID:        1,
+				TeamID:         1,
+				TeamName:       "blue",
+				ChallengeID:    1,
+				ChallengeTitle: "web",
+				ServiceStatus:  model.AWDServiceStatusUp,
+			}},
+			Attacks: []dto.TeacherAWDReviewAttackResp{{
+				ID:               1,
+				RoundID:          1,
+				AttackerTeamID:   1,
+				AttackerTeamName: "blue",
+				VictimTeamID:     2,
+				VictimTeamName:   "red",
+				ChallengeID:      1,
+				ChallengeTitle:   "web",
+				AttackType:       model.AWDAttackTypeFlagCapture,
+				Source:           model.AWDAttackSourceManual,
+			}},
+			Traffic: []dto.TeacherAWDReviewTrafficResp{{
+				ID:               1,
+				ContestID:        contestID,
+				RoundID:          1,
+				AttackerTeamID:   1,
+				AttackerTeamName: "blue",
+				VictimTeamID:     2,
+				VictimTeamName:   "red",
+				ChallengeID:      1,
+				ChallengeTitle:   "web",
+				Method:           "GET",
+				Path:             "/health",
+				StatusCode:       200,
+				Source:           model.AWDAttackSourceSubmission,
+			}},
+		},
+	}, nil
+}
+
 func intPtr(value int) *int {
 	return &value
 }
@@ -599,7 +713,10 @@ func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testin
 		},
 		nil,
 	)
+	releaseBuilder := make(chan struct{})
+	service.SetAWDReviewExportBuilder(&testAWDReviewExportBuilder{wait: releaseBuilder})
 	t.Cleanup(func() {
+		close(releaseBuilder)
 		closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		_ = service.Close(closeCtx)
@@ -767,7 +884,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		nil,
 	)
 
-	_, err = service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
+	_, err := service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
 		ClassName: "class-b",
 		Format:    model.ReportFormatPDF,
 	})

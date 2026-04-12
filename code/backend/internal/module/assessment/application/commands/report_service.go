@@ -28,6 +28,7 @@ import (
 type ReportService struct {
 	repo              assessmentports.ReportRepository
 	assessmentService assessmentports.AssessmentProfileReader
+	awdReviewBuilder  AWDReviewExportBuilder
 	config            config.ReportConfig
 	logger            *zap.Logger
 	workerPool        chan struct{}
@@ -105,6 +106,13 @@ func NewReportService(repo assessmentports.ReportRepository, assessmentService a
 		baseCtx:           baseCtx,
 		cancel:            cancel,
 	}
+}
+
+func (s *ReportService) SetAWDReviewExportBuilder(builder AWDReviewExportBuilder) {
+	if s == nil {
+		return
+	}
+	s.awdReviewBuilder = builder
 }
 
 func (s *ReportService) CreatePersonalReport(ctx context.Context, userID int64, req *dto.CreatePersonalReportReq) (*dto.ReportExportData, error) {
@@ -254,6 +262,86 @@ func (s *ReportService) CreateStudentReviewArchive(ctx context.Context, requeste
 	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
 }
 
+func (s *ReportService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+	if req == nil {
+		req = &dto.CreateTeacherAWDReviewExportReq{}
+	}
+
+	if _, err := s.findAWDContestForExport(ctx, contestID); err != nil {
+		return nil, err
+	}
+	if s.awdReviewBuilder == nil {
+		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘归档导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
+	}
+
+	report := &model.Report{
+		Type:   model.ReportTypeAWDReviewArchive,
+		Format: model.ReportFormatZIP,
+		UserID: &requesterID,
+		Status: model.ReportStatusProcessing,
+	}
+	if err := s.repo.Create(ctx, report); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	roundNumber := req.RoundNumber
+	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
+		archive, err := s.awdReviewBuilder.BuildArchive(runCtx, requesterID, contestID, roundNumber)
+		if err != nil {
+			return err
+		}
+		filePath, expiresAt, err := s.generateTeacherAWDReviewArchive(report.ID, archive)
+		if err != nil {
+			return err
+		}
+		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+	})
+
+	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
+func (s *ReportService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+	if req == nil {
+		req = &dto.CreateTeacherAWDReviewExportReq{}
+	}
+
+	contest, err := s.findAWDContestForExport(ctx, contestID)
+	if err != nil {
+		return nil, err
+	}
+	if contest.Status != model.ContestStatusEnded {
+		return nil, errcode.New(errcode.ErrInvalidParams.Code, "教师复盘报告仅支持赛后导出", errcode.ErrInvalidParams.HTTPStatus)
+	}
+	if s.awdReviewBuilder == nil {
+		return nil, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘报告导出暂不可用", errcode.ErrServiceUnavailable.HTTPStatus)
+	}
+
+	report := &model.Report{
+		Type:   model.ReportTypeAWDReviewReport,
+		Format: model.ReportFormatPDF,
+		UserID: &requesterID,
+		Status: model.ReportStatusProcessing,
+	}
+	if err := s.repo.Create(ctx, report); err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	roundNumber := req.RoundNumber
+	s.runAsyncReport(report.ID, func(runCtx context.Context) error {
+		archive, err := s.awdReviewBuilder.BuildArchive(runCtx, requesterID, contestID, roundNumber)
+		if err != nil {
+			return err
+		}
+		filePath, expiresAt, err := s.generateTeacherAWDReviewReport(report.ID, archive)
+		if err != nil {
+			return err
+		}
+		return s.repo.MarkReady(runCtx, report.ID, filePath, expiresAt)
+	})
+
+	return buildReportExportData(report.ID, model.ReportStatusProcessing, time.Time{}), nil
+}
+
 func (s *ReportService) GetStudentReviewArchive(ctx context.Context, requesterID, studentID int64) (*ReviewArchiveData, error) {
 	requester, err := s.repo.FindUserByID(ctx, requesterID)
 	if err != nil {
@@ -301,6 +389,20 @@ func validateStudentReviewArchiveAccess(requester, student *assessmentdomain.Rep
 	return nil
 }
 
+func (s *ReportService) findAWDContestForExport(ctx context.Context, contestID int64) (*model.Contest, error) {
+	contest, err := s.repo.FindContestByID(ctx, contestID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrContestNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if contest.Mode != model.ContestModeAWD {
+		return nil, errcode.ErrContestNotFound
+	}
+	return contest, nil
+}
+
 func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID int64, role string) (*assessmentdomain.ReportDownload, error) {
 	report, err := s.repo.FindByID(ctx, reportID)
 	if err != nil {
@@ -335,15 +437,18 @@ func (s *ReportService) GetDownload(ctx context.Context, reportID, requesterID i
 	}
 
 	fileName := reportDownloadFileName(report)
-	contentType := reportContentType(report.Format)
+	format := reportOutputFormat(report)
+	contentType := reportContentType(format)
 	if contentType == "" {
-		switch report.Format {
+		switch format {
 		case model.ReportFormatJSON:
 			contentType = "application/json"
 		case model.ReportFormatPDF:
 			contentType = "application/pdf"
 		case model.ReportFormatExcel:
 			contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+		case model.ReportFormatZIP:
+			contentType = "application/zip"
 		default:
 			contentType = "application/octet-stream"
 		}
@@ -484,6 +589,28 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 		return "", time.Time{}, err
 	}
 
+	return filePath, time.Now().Add(s.config.FileTTL), nil
+}
+
+func (s *ReportService) generateTeacherAWDReviewArchive(reportID int64, archive *dto.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
+	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewArchive, model.ReportFormatZIP)
+	if err != nil {
+		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if err := RenderAWDReviewArchiveZip(filePath, archive); err != nil {
+		return "", time.Time{}, err
+	}
+	return filePath, time.Now().Add(s.config.FileTTL), nil
+}
+
+func (s *ReportService) generateTeacherAWDReviewReport(reportID int64, archive *dto.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
+	filePath, err := s.reportFilePath(reportID, model.ReportTypeAWDReviewReport, model.ReportFormatPDF)
+	if err != nil {
+		return "", time.Time{}, errcode.ErrInternal.WithCause(err)
+	}
+	if err := RenderAWDReviewReportPDF(filePath, archive); err != nil {
+		return "", time.Time{}, err
+	}
 	return filePath, time.Now().Add(s.config.FileTTL), nil
 }
 
@@ -910,14 +1037,31 @@ func reportFileExtension(format string) string {
 	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatJSON) {
 		return "json"
 	}
+	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatZIP) {
+		return "zip"
+	}
 	if strings.EqualFold(strings.TrimSpace(format), model.ReportFormatExcel) {
 		return "xlsx"
 	}
 	return "pdf"
 }
 
+func reportOutputFormat(report *model.Report) string {
+	if report == nil {
+		return model.ReportFormatPDF
+	}
+	switch report.Type {
+	case model.ReportTypeAWDReviewArchive:
+		return model.ReportFormatZIP
+	case model.ReportTypeAWDReviewReport:
+		return model.ReportFormatPDF
+	default:
+		return report.Format
+	}
+}
+
 func reportDownloadFileName(report *model.Report) string {
-	return fmt.Sprintf("%s-report-%d.%s", report.Type, report.ID, reportFileExtension(report.Format))
+	return fmt.Sprintf("%s-report-%d.%s", report.Type, report.ID, reportFileExtension(reportOutputFormat(report)))
 }
 
 func reportContentType(format string) string {
