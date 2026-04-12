@@ -12,7 +12,7 @@ import type {
 } from '@/api/contracts'
 import StudentCategoryProgressPage from '@/components/dashboard/student/StudentCategoryProgressPage.vue'
 import StudentDifficultyPage from '@/components/dashboard/student/StudentDifficultyPage.vue'
-import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'
+import StudentOverviewPage from '@/components/dashboard/student/StudentOverviewPage.vue'
 import StudentRecommendationPage from '@/components/dashboard/student/StudentRecommendationPage.vue'
 import StudentTimelinePage from '@/components/dashboard/student/StudentTimelinePage.vue'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
@@ -210,7 +210,7 @@ function openChallenge(challengeId: string): void {
         </div>
 
         <template v-else-if="progress">
-          <StudentOverviewStyleEditorial
+          <StudentOverviewPage
             id="dashboard-panel-overview"
             class="tab-panel"
             :class="{ active: activePanel === 'overview' }"

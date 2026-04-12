@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StudentOverviewStyleEditorial from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue'
+import StudentOverviewPage from '@/components/dashboard/student/StudentOverviewPage.vue'
 import type { StudentOverviewProps } from './overviewProps'
 
 defineProps<StudentOverviewProps>()
@@ -12,7 +12,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <StudentOverviewStyleEditorial
+  <StudentOverviewPage
     v-bind="$props"
     @open-challenge="emit('openChallenge', $event)"
     @open-challenges="emit('openChallenges')"
