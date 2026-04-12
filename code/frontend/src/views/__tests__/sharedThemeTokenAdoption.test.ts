@@ -12,6 +12,7 @@ import studentTimelineSource from '@/components/dashboard/student/StudentTimelin
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
+import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -60,6 +61,9 @@ describe('shared theme token adoption', () => {
     expect(studentRecommendationSource).not.toContain('#15803d')
 
     expect(studentCategoryProgressSource).not.toContain('#0ea5e9')
+
+    expect(challengePackageImportEntrySource).not.toContain('#2563eb')
+    expect(challengePackageImportEntrySource).not.toContain('rgba(37, 99, 235, 0.12)')
 
     expect(notificationDropdownSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.04)')
     expect(notificationDropdownSource).not.toContain('0 18px 42px rgba(15, 23, 42, 0.14)')
