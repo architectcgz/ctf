@@ -2,6 +2,7 @@ package http
 
 import (
 	"ctf-platform/internal/dto"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -47,8 +48,9 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		}
 	}
 
-	resp, err := h.commands.UpdateContest(c.Request.Context(), id, &req)
-	writeAWDReadinessAuditPayload(c, "start_contest", req.OverrideReason, readinessSnapshot, err)
+	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
+	resp, err := h.commands.UpdateContest(requestCtx, id, &req)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionStartContest, req.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return

@@ -2,6 +2,7 @@ package http
 
 import (
 	"ctf-platform/internal/dto"
+	contestdomain "ctf-platform/internal/module/contest/domain"
 	"ctf-platform/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -23,8 +24,9 @@ func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.commands.RunCurrentRoundChecks(c.Request.Context(), contestID, req)
-	writeAWDReadinessAuditPayload(c, "run_current_round_check", req.OverrideReason, readinessSnapshot, err)
+	requestCtx, gateTrace := prepareAWDReadinessGateTrace(c.Request.Context(), readinessSnapshot)
+	resp, err := h.commands.RunCurrentRoundChecks(requestCtx, contestID, req)
+	writeAWDReadinessAuditPayload(c, contestdomain.AWDReadinessActionRunCurrentRoundCheck, req.OverrideReason, readinessSnapshot, gateTrace, err)
 	if err != nil {
 		response.FromError(c, err)
 		return
