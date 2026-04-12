@@ -13,6 +13,8 @@ import imageManageSource from '@/views/admin/ImageManage.vue?raw'
 import challengePackageFormatSource from '@/views/admin/ChallengePackageFormat.vue?raw'
 import cheatDetectionSource from '@/views/admin/CheatDetection.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
+import userProfileSource from '@/views/profile/UserProfile.vue?raw'
+import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
 import classManagementPageSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
 import classStudentsPageSource from '@/components/teacher/class-management/ClassStudentsPage.vue?raw'
@@ -224,7 +226,7 @@ describe('workspace page header styles', () => {
       },
       {
         source: challengeImportPreviewSource,
-        include: '<h1 class="workspace-page-title">导入预览</h1>',
+        include: /<PageHeader[\s\S]*title="导入预览"/,
         exclude: '<h1 class="workspace-tab-heading__title">导入预览</h1>',
       },
       {
@@ -239,12 +241,12 @@ describe('workspace page header styles', () => {
       },
       {
         source: writeupEditorSource,
-        include: '<h1 class="workspace-page-title">题解管理</h1>',
+        include: /<PageHeader[\s\S]*title="题解管理"/,
         exclude: '<h1 class="workspace-tab-heading__title">题解管理</h1>',
       },
       {
         source: writeupViewSource,
-        include: /<h1 class="workspace-page-title">\{\{ writeup\.title \}\}<\/h1>/,
+        include: /<PageHeader[\s\S]*:title="writeup\.title"/,
         exclude: /<h1 class="workspace-tab-heading__title">\{\{ writeup\.title \}\}<\/h1>/,
       },
       {
@@ -321,5 +323,74 @@ describe('workspace page header styles', () => {
     expect(errorStatusShellSource).toContain(
       '<p class="error-status-text workspace-page-copy">'
     )
+  })
+
+  it('页级说明应统一接入共享页级说明类，而不是继续使用 tab copy', () => {
+    const pageCopySources = [
+      {
+        source: studentRecommendationSource,
+        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
+        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+      },
+      {
+        source: studentCategoryProgressSource,
+        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
+        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+      },
+      {
+        source: studentDifficultySource,
+        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
+        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+      },
+      {
+        source: studentTimelineSource,
+        include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
+        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+      },
+      {
+        source: userGovernanceSource,
+        include: '<p class="workspace-page-copy">',
+        exclude: '<p class="workspace-tab-copy">',
+      },
+      {
+        source: challengeManageSource,
+        include: '<p class="workspace-page-copy">',
+        exclude: '<p class="workspace-tab-copy">',
+      },
+      {
+        source: adminChallengeDetailSource,
+        include: '<p class="workspace-page-copy">',
+        exclude: '<p class="workspace-tab-copy">',
+      },
+      {
+        source: topologyStudioSource,
+        include: '<p class="workspace-page-copy topology-page-copy">',
+        exclude: '<p class="workspace-tab-copy topology-page-copy">',
+      },
+    ]
+
+    for (const entry of pageCopySources) {
+      expectSourceToContain(entry.source, entry.include)
+      expectSourceNotToContain(entry.source, entry.exclude)
+    }
+  })
+
+  it('典型工作区页头应复用 PageHeader 组件，而不是继续手写同构头部', () => {
+    expect(challengeImportPreviewSource).toContain('<PageHeader')
+    expect(userProfileSource).toContain('<PageHeader')
+    expect(securitySettingsSource).toContain('<PageHeader')
+    expect(writeupEditorSource).toContain('<PageHeader')
+    expect(writeupViewSource).toContain('<PageHeader')
+  })
+
+  it('高频详情页顶部 tab 触控高度应回到共享默认值', () => {
+    expect(challengeDetailSource).toMatch(
+      /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 3rem;/s
+    )
+    expect(challengeDetailSource).not.toMatch(
+      /\.challenge-subtabs\s*\{[\s\S]*--page-top-tab-min-height: 2\.5rem;/s
+    )
+    expect(contestDetailSource).toContain('--page-top-tab-min-height: 3rem;')
+    expect(contestDetailSource).not.toContain('--page-top-tab-min-height: 2.5rem;')
   })
 })

@@ -1139,7 +1139,7 @@ const {
             <div class="topology-page-kicker">{{ heroEyebrow }}</div>
             <h1 class="hero-title">{{ heroTitle }}</h1>
           </div>
-          <p class="workspace-tab-copy topology-page-copy">
+          <p class="workspace-page-copy topology-page-copy">
             {{ heroDescription }}
           </p>
 

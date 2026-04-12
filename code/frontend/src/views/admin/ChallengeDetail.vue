@@ -62,7 +62,7 @@
               <div class="journal-note-label">Question Ops</div>
               <h1 class="workspace-page-title">题目管理</h1>
             </div>
-            <p class="workspace-tab-copy">
+            <p class="workspace-page-copy">
               查看题目基础信息、提示与附件，并维护当前判题模式配置。
             </p>
           </div>

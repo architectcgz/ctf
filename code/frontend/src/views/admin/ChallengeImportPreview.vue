@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import ChallengePackageImportReview from '@/components/admin/challenge/ChallengePackageImportReview.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
 
 const route = useRoute()
@@ -71,15 +72,12 @@ watch(importId, () => {
       </button>
     </header>
 
-    <div class="workspace-tab-heading">
-      <div class="workspace-tab-heading__main">
-        <div class="journal-note-label">Import Preview</div>
-        <h1 class="workspace-page-title">导入预览</h1>
-      </div>
-      <p class="workspace-tab-copy">
-        请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。
-      </p>
-    </div>
+    <PageHeader
+      class="import-preview-page-header"
+      eyebrow="Import Preview"
+      title="导入预览"
+      description="请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。"
+    />
 
     <div v-if="uploading" class="import-preview-loading flex items-center justify-center py-12">
       <div

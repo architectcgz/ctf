@@ -486,7 +486,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <p class="workspace-tab-copy">
+        <p class="workspace-page-copy">
           这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
         </p>
 

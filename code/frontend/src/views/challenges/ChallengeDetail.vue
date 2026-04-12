@@ -855,7 +855,7 @@ watch(
   --page-top-tabs-margin: 0;
   --page-top-tabs-padding: 0 0 var(--space-2-5);
   --page-top-tabs-border: var(--line-soft);
-  --page-top-tab-min-height: 2.5rem;
+  --page-top-tab-min-height: 3rem;
   --page-top-tab-padding: 0 0 var(--space-2);
   --page-top-tab-font-size: var(--font-size-14);
   --page-top-tab-font-weight: 600;

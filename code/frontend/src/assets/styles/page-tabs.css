@@ -137,8 +137,9 @@
 }
 
 .workspace-tab-copy {
-  margin: var(--workspace-tab-copy-margin-top, var(--space-2)) 0 0;
+  margin: var(--workspace-tab-copy-margin-top, var(--workspace-page-copy-margin-top, var(--space-2))) 0 0;
   max-width: 54rem;
-  line-height: 1.7;
+  font-size: var(--workspace-page-copy-font-size);
+  line-height: var(--workspace-page-copy-line-height);
   color: var(--journal-muted, var(--color-text-secondary));
 }
