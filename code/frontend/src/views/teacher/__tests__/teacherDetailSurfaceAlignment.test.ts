@@ -15,6 +15,10 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
+const teacherPanelShellSource = readFileSync(
+  `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`,
+  'utf-8'
+)
 
 describe('teacher detail surface alignment', () => {
   it('class students and student analysis pages should soften control and section borders', () => {
@@ -78,15 +82,13 @@ describe('teacher detail surface alignment', () => {
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
-    expect(classTrendPanelSource).toMatch(
+    expect(teacherPanelShellSource).toMatch(
       /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
-    expect(classInsightsPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
-    )
-    expect(classReviewPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
-    )
+    expect(classTrendPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(classInsightsPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(classReviewPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(interventionPanelSource).toContain("@import './teacher-panel-shell.css';")
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
     expect(studentInsightPanelSource).toMatch(
@@ -145,5 +147,10 @@ describe('teacher detail surface alignment', () => {
       expect(source).not.toContain('--panel-accent: var(--journal-accent, #4f46e5);')
       expect(source).not.toContain('--panel-accent-strong: var(--journal-accent-strong, #4338ca);')
     }
+
+    expect(teacherPanelShellSource).toContain('--panel-ink: var(--journal-ink);')
+    expect(teacherPanelShellSource).toContain('--panel-muted: var(--journal-muted);')
+    expect(teacherPanelShellSource).toContain('--panel-accent: var(--journal-accent);')
+    expect(teacherPanelShellSource).toContain('--panel-accent-strong: var(--journal-accent-strong);')
   })
 })
