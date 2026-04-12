@@ -105,6 +105,7 @@ select {
 :where(
   .workspace-page-title,
   .journal-page-title,
+  .challenge-page .challenge-title,
   .contest-page .contest-title,
   .instance-page .instance-title,
   .scoreboard-page .scoreboard-title,
@@ -127,6 +128,7 @@ select {
 
 :where(
   .workspace-page-copy,
+  .challenge-page .challenge-subtitle,
   .contest-page .contest-subtitle,
   .instance-page .instance-subtitle,
   .scoreboard-page .scoreboard-subtitle,
