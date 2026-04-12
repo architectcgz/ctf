@@ -20,9 +20,9 @@
   --workspace-directory-gap-top: 0.75rem;
   --workspace-directory-gap-pagination: 0.5rem;
   --workspace-page-title-margin-top: 0.85rem;
-  --workspace-page-title-font-size: clamp(32px, 4vw, 46px);
-  --workspace-page-title-line-height: 1.02;
-  --workspace-page-title-letter-spacing: -0.04em;
+  --workspace-page-title-font-size: clamp(24px, 3vw, 34px);
+  --workspace-page-title-line-height: 1.08;
+  --workspace-page-title-letter-spacing: -0.03em;
   --workspace-page-copy-margin-top: 0.8rem;
   --workspace-page-copy-font-size: var(--font-size-0-94);
   --workspace-page-copy-line-height: 1.75;

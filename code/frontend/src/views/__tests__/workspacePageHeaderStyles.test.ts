@@ -20,6 +20,7 @@ import studentAnalysisPageSource from '@/components/teacher/class-management/Stu
 import studentManagementPageSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
+import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -80,6 +81,10 @@ describe('workspace page header styles', () => {
     for (const selector of sharedCopySelectors) {
       expect(sharedStylesSource).toContain(selector)
     }
+
+    expect(sharedStylesSource).toContain('--workspace-page-title-font-size: clamp(24px, 3vw, 34px);')
+    expect(sharedStylesSource).toContain('--workspace-page-title-line-height: 1.08;')
+    expect(sharedStylesSource).toContain('--workspace-page-title-letter-spacing: -0.03em;')
   })
 
   it('不应在页面局部重复声明公共标题排版', () => {
@@ -118,5 +123,14 @@ describe('workspace page header styles', () => {
     expectNoLocalCopyTypography(teacherInstanceManagementPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(reportExportSource, '.report-copy')
     expectNoLocalCopyTypography(topologyStudioSource, '.topology-page--template-library .topology-hero-description')
+  })
+
+  it('student overview 标题应接入共享页级标题类，而不是继续混用 tab 标题类', () => {
+    expect(studentOverviewSource).toContain(
+      '<h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">'
+    )
+    expect(studentOverviewSource).not.toContain(
+      '<h1 class="journal-page-title workspace-tab-heading__title max-w-3xl text-[var(--journal-ink)]">'
+    )
   })
 })
