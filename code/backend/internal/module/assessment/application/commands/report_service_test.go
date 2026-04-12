@@ -23,6 +23,7 @@ import (
 type testReportRepository struct {
 	db              *gorm.DB
 	users           map[int64]*assessmentdomain.ReportUser
+	contests        map[int64]*model.Contest
 	personalStats   *assessmentdomain.PersonalReportStats
 	totalChallenges int64
 	timeline        []assessmentdomain.ReviewArchiveTimelineEvent
@@ -76,8 +77,25 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 	return &user, nil
 }
 
-func (r *testReportRepository) FindContestByID(context.Context, int64) (*model.Contest, error) {
-	return nil, gorm.ErrRecordNotFound
+func (r *testReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+	if r != nil && r.contests != nil {
+		contest, ok := r.contests[contestID]
+		if !ok {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return contest, nil
+	}
+	if r == nil || r.db == nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var contest model.Contest
+	if err := r.db.WithContext(ctx).
+		Where("id = ? AND deleted_at IS NULL", contestID).
+		First(&contest).Error; err != nil {
+		return nil, err
+	}
+	return &contest, nil
 }
 
 func (r *testReportRepository) GetPersonalStats(context.Context, int64) (*assessmentdomain.PersonalReportStats, error) {
@@ -531,6 +549,145 @@ func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 
 	if got := reportDownloadFileName(report); got != "contest_export-report-9.json" {
 		t.Fatalf("expected json download filename, got %s", got)
+	}
+}
+
+func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testing.T) {
+	t.Parallel()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.User{}, &model.Contest{}, &model.Report{}); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+
+	teacher := &model.User{
+		ID:        11,
+		Username:  "teacher-awd",
+		Role:      model.RoleTeacher,
+		ClassName: "class-a",
+		Status:    model.UserStatusActive,
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("seed teacher: %v", err)
+	}
+	contest := &model.Contest{
+		ID:        21,
+		Title:     "awd-ended",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusEnded,
+		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 4, 12, 11, 0, 0, 0, time.UTC),
+	}
+	if err := db.Create(contest).Error; err != nil {
+		t.Fatalf("seed contest: %v", err)
+	}
+
+	service := NewReportService(
+		&testReportRepository{db: db},
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+	t.Cleanup(func() {
+		closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = service.Close(closeCtx)
+	})
+
+	resp, err := service.CreateTeacherAWDReviewArchive(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{
+		RoundNumber: intPtr(2),
+	})
+	if err != nil {
+		t.Fatalf("CreateTeacherAWDReviewArchive() error = %v", err)
+	}
+	if resp.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected processing status, got %+v", resp)
+	}
+}
+
+func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testing.T) {
+	t.Parallel()
+
+	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.User{}, &model.Contest{}, &model.Report{}); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+
+	teacher := &model.User{
+		ID:        12,
+		Username:  "teacher-running",
+		Role:      model.RoleTeacher,
+		ClassName: "class-a",
+		Status:    model.UserStatusActive,
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("seed teacher: %v", err)
+	}
+	contest := &model.Contest{
+		ID:        22,
+		Title:     "awd-running",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC),
+	}
+	if err := db.Create(contest).Error; err != nil {
+		t.Fatalf("seed contest: %v", err)
+	}
+
+	service := NewReportService(
+		&testReportRepository{db: db},
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	_, err = service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{})
+	appErr, ok := err.(*errcode.AppError)
+	if !ok || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %#v", err)
+	}
+}
+
+func TestReportDownloadFileNameUsesZIPForAWDReviewArchive(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     10,
+		Type:   model.ReportTypeAWDReviewArchive,
+		Format: model.ReportFormatJSON,
+	}
+
+	if got := reportDownloadFileName(report); got != "awd_review_archive-report-10.zip" {
+		t.Fatalf("expected zip download filename, got %s", got)
+	}
+}
+
+func TestReportDownloadFileNameUsesPDFForAWDReviewReport(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     11,
+		Type:   model.ReportTypeAWDReviewReport,
+		Format: model.ReportFormatJSON,
+	}
+
+	if got := reportDownloadFileName(report); got != "awd_review_report-report-11.pdf" {
+		t.Fatalf("expected pdf download filename, got %s", got)
 	}
 }
 
