@@ -890,7 +890,7 @@ git commit -m "refactor(teacher): 移除独立报告导出页"
 - Modify: `docs/superpowers/plans/2026-04-12-awd-phase9-review-archive-implementation.md`
 - Modify: any touched source files from Tasks 1-6 only if verification暴露问题
 
-- [ ] **Step 1: 运行后端完整定向验证**
+- [x] **Step 1: 运行后端完整定向验证**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/awd-phase9-review-archive-design/code/backend
@@ -899,7 +899,7 @@ go test ./internal/module/assessment/application/commands -count=1
 go test ./internal/app -run 'TestNewRouter|TestFullRouter' -count=1
 ```
 
-- [ ] **Step 2: 运行前端定向验证**
+- [x] **Step 2: 运行前端定向验证**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/awd-phase9-review-archive-design/code/frontend
@@ -920,18 +920,18 @@ npx vitest run src/api/__tests__/teacher.test.ts \
   src/views/teacher/__tests__/teacherEyebrowSharedStyles.test.ts
 ```
 
-- [ ] **Step 3: 跑前端类型检查**
+- [x] **Step 3: 跑前端类型检查**
 
 ```bash
 cd /home/azhi/workspace/projects/ctf/.worktrees/awd-phase9-review-archive-design/code/frontend
 npx vue-tsc --noEmit
 ```
 
-- [ ] **Step 4: 记录计划勾选状态并整理 commit**
+- [x] **Step 4: 记录计划勾选状态并整理 commit**
 
 确认每个任务都已勾选、worktree 干净，再准备合并或后续执行方式。
 
-- [ ] **Step 5: 最终提交**
+- [x] **Step 5: 最终提交**
 
 ```bash
 git status --short
