@@ -16,6 +16,7 @@ import challengePackageImportEntrySource from '@/components/admin/challenge/Chal
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/admin/topology/TopologyCanvasBoard.vue?raw'
 import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
@@ -88,6 +89,11 @@ describe('shared theme token adoption', () => {
 
     expect(topologyStudioSource).not.toContain('rgba(15, 23, 42, 0.96)')
     expect(topologyStudioSource).not.toContain('rgba(15, 23, 42, 0.9)')
+
+    expect(awdRoundInspectorSource).not.toContain('rgba(8,145,178,0.06)')
+    expect(awdRoundInspectorSource).not.toContain('rgba(8,145,178,0)')
+
+    expect(contestOrchestrationSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.035);')
 
     expect(notificationDropdownSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.04)')
     expect(notificationDropdownSource).not.toContain('0 18px 42px rgba(15, 23, 42, 0.14)')

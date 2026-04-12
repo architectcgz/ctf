@@ -496,7 +496,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
             </div>
             <template v-else>
               <div
-                class="border-y border-border/80 bg-[linear-gradient(180deg,rgba(8,145,178,0.06),rgba(8,145,178,0))]"
+                class="awd-traffic-summary-strip border-y border-border/80"
               >
                 <div class="grid gap-0 md:grid-cols-2 xl:grid-cols-5">
                   <div
@@ -1446,5 +1446,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 .awd-round-hero-chip {
   border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
   background: color-mix(in srgb, var(--color-bg-surface) 24%, transparent);
+}
+
+.awd-traffic-summary-strip {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 6%, transparent),
+    color-mix(in srgb, var(--color-primary) 0%, transparent)
+  );
 }
 </style>
