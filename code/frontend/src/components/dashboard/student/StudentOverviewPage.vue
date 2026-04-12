@@ -36,33 +36,37 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
 <template>
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-      <div class="border-b border-cyan-500/25 bg-[linear-gradient(145deg,rgba(8,47,73,0.35),rgba(15,23,42,0.55))] pb-6">
-        <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/75">
+      <div class="student-overview-legacy-hero pb-6">
+        <div class="student-overview-legacy-eyebrow flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em]">
           <span>Student Workspace</span>
-          <span class="border-l border-white/20 px-2 py-1">
+          <span class="student-overview-legacy-eyebrow-separator px-2 py-1">
             {{ className || '自由训练' }}
           </span>
         </div>
-        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-white">为 {{ displayName }} 定制的训练概览</h2>
-        <p class="mt-3 text-sm leading-7 text-cyan-50/80">
+        <h2 class="student-overview-legacy-title mt-3 text-3xl font-semibold tracking-tight">
+          为 {{ displayName }} 定制的训练概览
+        </h2>
+        <p class="student-overview-legacy-copy mt-3 text-sm leading-7">
           先看当前排名、完成率和待加强维度，再决定今天优先推进哪一类训练。
         </p>
 
         <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="border-l border-white/20 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">当前排名</div>
-            <div class="mt-2 text-2xl font-semibold text-white">#{{ progress.rank ?? '-' }}</div>
-            <div class="mt-2 text-sm text-cyan-50/70">综合全站训练表现计算</div>
+          <div class="student-overview-legacy-stat px-4 py-4">
+            <div class="student-overview-legacy-stat-label text-[11px] uppercase tracking-[0.18em]">当前排名</div>
+            <div class="student-overview-legacy-stat-value mt-2 text-2xl font-semibold">#{{ progress.rank ?? '-' }}</div>
+            <div class="student-overview-legacy-stat-copy mt-2 text-sm">综合全站训练表现计算</div>
           </div>
-          <div class="border-l border-white/20 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">完成率</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ completionRate }}%</div>
-            <div class="mt-2 text-sm text-cyan-50/70">按当前题量估算的覆盖程度</div>
+          <div class="student-overview-legacy-stat px-4 py-4">
+            <div class="student-overview-legacy-stat-label text-[11px] uppercase tracking-[0.18em]">完成率</div>
+            <div class="student-overview-legacy-stat-value mt-2 text-2xl font-semibold">{{ completionRate }}%</div>
+            <div class="student-overview-legacy-stat-copy mt-2 text-sm">按当前题量估算的覆盖程度</div>
           </div>
-          <div class="border-l border-white/20 px-4 py-4">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-cyan-100/60">待加强维度</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ weakDimensions[0] || '暂无明显短板' }}</div>
-            <div class="mt-2 text-sm text-cyan-50/70">建议从左侧“训练建议”进入细看</div>
+          <div class="student-overview-legacy-stat px-4 py-4">
+            <div class="student-overview-legacy-stat-label text-[11px] uppercase tracking-[0.18em]">待加强维度</div>
+            <div class="student-overview-legacy-stat-value mt-2 text-2xl font-semibold">
+              {{ weakDimensions[0] || '暂无明显短板' }}
+            </div>
+            <div class="student-overview-legacy-stat-copy mt-2 text-sm">建议从左侧“训练建议”进入细看</div>
           </div>
         </div>
 
@@ -208,3 +212,40 @@ const recentTimeline = computed(() => props.timeline.slice(0, 3))
     </section>
   </div>
 </template>
+
+<style scoped>
+.student-overview-legacy-hero {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base))
+  );
+}
+
+.student-overview-legacy-eyebrow {
+  color: color-mix(in srgb, var(--color-text-primary) 75%, transparent);
+}
+
+.student-overview-legacy-eyebrow-separator,
+.student-overview-legacy-stat {
+  border-left: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+}
+
+.student-overview-legacy-title,
+.student-overview-legacy-stat-value {
+  color: var(--color-text-primary);
+}
+
+.student-overview-legacy-copy {
+  color: color-mix(in srgb, var(--color-text-primary) 80%, var(--color-text-secondary));
+}
+
+.student-overview-legacy-stat-label {
+  color: color-mix(in srgb, var(--color-text-primary) 60%, transparent);
+}
+
+.student-overview-legacy-stat-copy {
+  color: color-mix(in srgb, var(--color-text-primary) 70%, var(--color-text-secondary));
+}
+</style>
