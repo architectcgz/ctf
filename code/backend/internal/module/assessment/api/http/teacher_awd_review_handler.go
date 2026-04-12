@@ -2,19 +2,19 @@ package http
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/dto"
-	"ctf-platform/pkg/errcode"
 	"ctf-platform/pkg/response"
 )
 
 type teacherAWDReviewService interface {
 	ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error)
 	GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error)
+	CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error)
+	CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error)
 }
 
 type TeacherAWDReviewHandler struct {
@@ -54,9 +54,41 @@ func (h *TeacherAWDReviewHandler) GetReview(c *gin.Context) {
 }
 
 func (h *TeacherAWDReviewHandler) ExportArchive(c *gin.Context) {
-	response.Error(c, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘归档导出暂未实现", http.StatusNotImplemented))
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+
+	var req dto.CreateTeacherAWDReviewExportReq
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.ValidationError(c, err)
+			return
+		}
+	}
+
+	resp, err := h.service.CreateTeacherAWDReviewArchive(c.Request.Context(), currentUser.UserID, contestID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
 }
 
 func (h *TeacherAWDReviewHandler) ExportReport(c *gin.Context) {
-	response.Error(c, errcode.New(errcode.ErrServiceUnavailable.Code, "教师 AWD 复盘报告导出暂未实现", http.StatusNotImplemented))
+	currentUser := authctx.MustCurrentUser(c)
+	contestID := c.GetInt64("id")
+
+	var req dto.CreateTeacherAWDReviewExportReq
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			response.ValidationError(c, err)
+			return
+		}
+	}
+
+	resp, err := h.service.CreateTeacherAWDReviewReport(c.Request.Context(), currentUser.UserID, contestID, &req)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+	response.Success(c, resp)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
@@ -42,7 +43,7 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps, externalDeps)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
 	reportService, reportHandler := buildAssessmentReportHandler(root, cfg, deps, profileQueryService)
-	teacherAWDReviewHandler := buildAssessmentTeacherAWDReviewHandler(deps)
+	teacherAWDReviewHandler := buildAssessmentTeacherAWDReviewHandler(deps, reportService)
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"assessment_cleaner",
@@ -106,10 +107,39 @@ func buildAssessmentReportHandler(root *Root, cfg *config.Config, deps assessmen
 		cfg.Report,
 		root.Logger().Named("report_service"),
 	)
+	reportService.SetAWDReviewExportBuilder(
+		assessmentcmd.NewAWDReviewExportBuilder(
+			assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo),
+		),
+	)
 	return reportService, assessmenthttp.NewReportHandler(reportService)
 }
 
-func buildAssessmentTeacherAWDReviewHandler(deps assessmentModuleDeps) *assessmenthttp.TeacherAWDReviewHandler {
+func buildAssessmentTeacherAWDReviewHandler(deps assessmentModuleDeps, reportService *assessmentcmd.ReportService) *assessmenthttp.TeacherAWDReviewHandler {
 	service := assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo)
-	return assessmenthttp.NewTeacherAWDReviewHandler(service)
+	return assessmenthttp.NewTeacherAWDReviewHandler(&teacherAWDReviewHandlerService{
+		queryService:  service,
+		reportService: reportService,
+	})
+}
+
+type teacherAWDReviewHandlerService struct {
+	queryService  *assessmentqry.TeacherAWDReviewService
+	reportService *assessmentcmd.ReportService
+}
+
+func (s *teacherAWDReviewHandlerService) ListContests(ctx context.Context, requesterID int64) (*dto.TeacherAWDReviewContestListResp, error) {
+	return s.queryService.ListContests(ctx, requesterID)
+}
+
+func (s *teacherAWDReviewHandlerService) GetContestArchive(ctx context.Context, requesterID, contestID int64, req *dto.GetTeacherAWDReviewArchiveReq) (*dto.TeacherAWDReviewArchiveResp, error) {
+	return s.queryService.GetContestArchive(ctx, requesterID, contestID, req)
+}
+
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewArchive(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+	return s.reportService.CreateTeacherAWDReviewArchive(ctx, requesterID, contestID, req)
+}
+
+func (s *teacherAWDReviewHandlerService) CreateTeacherAWDReviewReport(ctx context.Context, requesterID, contestID int64, req *dto.CreateTeacherAWDReviewExportReq) (*dto.ReportExportData, error) {
+	return s.reportService.CreateTeacherAWDReviewReport(ctx, requesterID, contestID, req)
 }
