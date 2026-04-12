@@ -95,6 +95,24 @@ describe('student and user surface alignment', () => {
     )
   })
 
+  it('student recommendation 应切换到行动优先布局和 shared metric-panel 摘要卡片栈', () => {
+    expect(studentRecommendationSource).toContain('现在先练这几道')
+    expect(studentRecommendationSource).toContain('当前目标难度')
+    expect(studentRecommendationSource).toContain('浏览全部题目')
+    expect(studentRecommendationSource).toContain(
+      'class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentRecommendationSource).toContain(
+      'class="recommendation-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentRecommendationSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentRecommendationSource).not.toContain('Top Queue')
+    expect(studentRecommendationSource).not.toContain('Full List')
+    expect(studentRecommendationSource).not.toContain('推荐摘要')
+  })
+
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('--journal-border:')

@@ -126,6 +126,20 @@ describe('DashboardView', () => {
         difficulty: 'medium',
         reason: '补强密码维度',
       },
+      {
+        challenge_id: '24',
+        title: 'web-xss',
+        category: 'web',
+        difficulty: 'easy',
+        reason: '保持 Web 练习节奏',
+      },
+      {
+        challenge_id: '36',
+        title: 'pwn-intro',
+        category: 'pwn',
+        difficulty: 'easy',
+        reason: '补齐基础利用动作',
+      },
     ])
     assessmentApiMocks.getSkillProfile.mockResolvedValue({
       dimensions: [
@@ -201,10 +215,13 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Priority Focus')
-    expect(wrapper.text()).toContain('补短板计划')
+    expect(wrapper.text()).toContain('现在先练这几道')
+    expect(wrapper.text()).toContain('当前目标难度')
+    expect(wrapper.text()).toContain('浏览全部题目')
     expect(wrapper.text()).toContain('crypto-lab')
-    expect(wrapper.text()).toContain('推荐摘要')
+    expect(wrapper.text()).toContain('web-xss')
+    expect(wrapper.text()).toContain('pwn-intro')
+    expect(wrapper.findAll('.recommend-item')).toHaveLength(3)
   })
 
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
