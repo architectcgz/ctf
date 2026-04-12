@@ -15,6 +15,7 @@ type AddContestChallengeReq struct {
 	AWDCheckerConfig map[string]any       `json:"awd_checker_config"`
 	AWDSLAScore      int                  `json:"awd_sla_score" binding:"omitempty,min=0"`
 	AWDDefenseScore  int                  `json:"awd_defense_score" binding:"omitempty,min=0"`
+	AWDCheckerPreviewToken string         `json:"awd_checker_preview_token" binding:"omitempty,max=200"`
 }
 
 type UpdateContestChallengeReq struct {
@@ -25,6 +26,7 @@ type UpdateContestChallengeReq struct {
 	AWDCheckerConfig map[string]any `json:"awd_checker_config"`
 	AWDSLAScore      *int           `json:"awd_sla_score" binding:"omitempty,min=0"`
 	AWDDefenseScore  *int           `json:"awd_defense_score" binding:"omitempty,min=0"`
+	AWDCheckerPreviewToken *string  `json:"awd_checker_preview_token" binding:"omitempty,max=200"`
 }
 
 type ContestChallengeResp struct {
@@ -41,6 +43,9 @@ type ContestChallengeResp struct {
 	AWDCheckerConfig map[string]any       `json:"awd_checker_config,omitempty"`
 	AWDSLAScore      int                  `json:"awd_sla_score"`
 	AWDDefenseScore  int                  `json:"awd_defense_score"`
+	AWDCheckerValidationState model.AWDCheckerValidationState `json:"awd_checker_validation_state,omitempty"`
+	AWDCheckerLastPreviewAt   *time.Time                      `json:"awd_checker_last_preview_at,omitempty"`
+	AWDCheckerLastPreviewResult *AWDCheckerPreviewResp        `json:"awd_checker_last_preview_result,omitempty"`
 	CreatedAt        time.Time            `json:"created_at"`
 }
 

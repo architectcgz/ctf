@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ContestManage from '../ContestManage.vue'
+import type { AdminContestChallengeData } from '@/api/contracts'
 
 const exportMocks = vi.hoisted(() => ({
   downloadCSVFile: vi.fn(),
@@ -113,6 +114,9 @@ describe('ContestManage', () => {
       awd_checker_config: {},
       awd_sla_score: 0,
       awd_defense_score: 0,
+      awd_checker_validation_state: 'pending',
+      awd_checker_last_preview_at: undefined,
+      awd_checker_last_preview_result: undefined,
       created_at: '2026-03-11T00:00:00.000Z',
     })
     contestMocks.updateAdminContestChallenge.mockResolvedValue(undefined)
@@ -1529,7 +1533,7 @@ describe('ContestManage', () => {
   })
 
   it('应该允许管理员在 AWD 运维页新增并编辑题目配置', async () => {
-    const challengeLinksState = [
+    const challengeLinksState: AdminContestChallengeData[] = [
       {
         id: 'link-1',
         contest_id: 'awd-config',
@@ -1557,6 +1561,24 @@ describe('ContestManage', () => {
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
+        awd_checker_validation_state: 'passed',
+        awd_checker_last_preview_at: '2026-03-24T09:12:00.000Z',
+        awd_checker_last_preview_result: {
+          checker_type: 'http_standard',
+          service_status: 'up',
+          check_result: {
+            checker_type: 'http_standard',
+            check_source: 'checker_preview',
+            status_reason: 'healthy',
+          },
+          preview_context: {
+            access_url: 'http://preview.internal',
+            preview_flag: 'flag{preview}',
+            round_number: 0,
+            team_id: '0',
+            challenge_id: '101',
+          },
+        },
         created_at: '2026-03-24T09:00:00.000Z',
       },
     ]
@@ -1634,7 +1656,7 @@ describe('ContestManage', () => {
       page_size: 20,
     })
     contestMocks.createAdminContestChallenge.mockImplementation(async (_contestId, payload) => {
-      const created = {
+      const created: AdminContestChallengeData = {
         id: 'link-2',
         contest_id: 'awd-config',
         challenge_id: String(payload.challenge_id),
@@ -1648,6 +1670,9 @@ describe('ContestManage', () => {
         awd_checker_config: payload.awd_checker_config ?? {},
         awd_sla_score: payload.awd_sla_score ?? 0,
         awd_defense_score: payload.awd_defense_score ?? 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
         created_at: '2026-03-24T09:10:00.000Z',
       }
       challengeLinksState.push(created)
@@ -1662,7 +1687,10 @@ describe('ContestManage', () => {
       if (typeof payload.order === 'number') target.order = payload.order
       if (typeof payload.is_visible === 'boolean') target.is_visible = payload.is_visible
       if (payload.awd_checker_type) target.awd_checker_type = payload.awd_checker_type
-      if (payload.awd_checker_config) target.awd_checker_config = payload.awd_checker_config
+      if (payload.awd_checker_config) {
+        target.awd_checker_config = payload.awd_checker_config
+        target.awd_checker_validation_state = 'stale'
+      }
       if (typeof payload.awd_sla_score === 'number') target.awd_sla_score = payload.awd_sla_score
       if (typeof payload.awd_defense_score === 'number') {
         target.awd_defense_score = payload.awd_defense_score
@@ -1691,6 +1719,7 @@ describe('ContestManage', () => {
     expect(wrapper.text()).toContain('Web Checker')
     expect(wrapper.text()).toContain('HTTP 标准 Checker')
     expect(wrapper.text()).toContain('SLA 18 / 防守 28')
+    expect(wrapper.text()).toContain('最近通过')
 
     await wrapper.find('#awd-challenge-config-edit-link-1').trigger('click')
     await flushPromises()
@@ -1721,6 +1750,7 @@ describe('ContestManage', () => {
 
     expect(wrapper.text()).toContain('基础探活')
     expect(wrapper.text()).toContain('SLA 20 / 防守 30')
+    expect(wrapper.text()).toContain('待重新验证')
 
     await wrapper.find('#awd-challenge-config-create').trigger('click')
     await flushPromises()
@@ -1771,6 +1801,7 @@ describe('ContestManage', () => {
 
     expect(wrapper.text()).toContain('Upload Service')
     expect(wrapper.text()).toContain('SLA 22 / 防守 35')
+    expect(wrapper.text()).toContain('未验证')
   })
 
   it('应该恢复 AWD 赛事、轮次与筛选状态', async () => {

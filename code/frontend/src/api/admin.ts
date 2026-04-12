@@ -2,6 +2,7 @@ import { ApiError, request } from './request'
 
 import type {
   AWDAttackLogData,
+  AWDCheckerPreviewData,
   AWDCheckerType,
   AWDCheckerRunData,
   AWDRoundData,
@@ -100,6 +101,7 @@ export interface AdminContestChallengeCreatePayload {
   awd_checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
+  awd_checker_preview_token?: string
 }
 
 export interface AdminContestChallengeUpdatePayload {
@@ -110,6 +112,15 @@ export interface AdminContestChallengeUpdatePayload {
   awd_checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
+  awd_checker_preview_token?: string
+}
+
+export interface AdminAWDCheckerPreviewPayload {
+  challenge_id: number
+  checker_type: AWDCheckerType
+  checker_config: Record<string, unknown>
+  access_url: string
+  preview_flag?: string
 }
 
 export async function exportContestArchive(
@@ -302,6 +313,22 @@ interface RawAWDCheckerRunData {
   services: RawAWDTeamServiceItem[]
 }
 
+interface RawAWDCheckerPreviewContext {
+  access_url: string
+  preview_flag: string
+  round_number: number
+  team_id: string | number
+  challenge_id: string | number
+}
+
+interface RawAWDCheckerPreviewData {
+  checker_type?: string | null
+  service_status: AWDCheckerPreviewData['service_status']
+  check_result?: Record<string, unknown> | null
+  preview_context?: RawAWDCheckerPreviewContext | null
+  preview_token?: string | null
+}
+
 interface RawAdminContestTeamItem {
   id: string | number
   contest_id: string | number
@@ -327,6 +354,9 @@ interface RawAdminContestChallengeItem {
   awd_checker_config?: Record<string, unknown> | null
   awd_sla_score?: number | null
   awd_defense_score?: number | null
+  awd_checker_validation_state?: AdminContestChallengeData['awd_checker_validation_state'] | null
+  awd_checker_last_preview_at?: string | null
+  awd_checker_last_preview_result?: RawAWDCheckerPreviewData | null
   created_at: string
 }
 
@@ -895,6 +925,22 @@ function normalizeAWDCheckerRun(item: RawAWDCheckerRunData): AWDCheckerRunData {
   }
 }
 
+function normalizeAWDCheckerPreview(item: RawAWDCheckerPreviewData): AWDCheckerPreviewData {
+  return {
+    checker_type: normalizeAWDCheckerType(item.checker_type),
+    service_status: item.service_status,
+    check_result: item.check_result || {},
+    preview_context: {
+      access_url: item.preview_context?.access_url || '',
+      preview_flag: item.preview_context?.preview_flag || '',
+      round_number: item.preview_context?.round_number ?? 0,
+      team_id: String(item.preview_context?.team_id ?? 0),
+      challenge_id: String(item.preview_context?.challenge_id ?? 0),
+    },
+    preview_token: item.preview_token || undefined,
+  }
+}
+
 function normalizeAdminContestTeam(item: RawAdminContestTeamItem): AdminContestTeamData {
   return {
     id: String(item.id),
@@ -923,6 +969,11 @@ function normalizeAdminContestChallenge(item: RawAdminContestChallengeItem): Adm
     awd_checker_config: item.awd_checker_config || {},
     awd_sla_score: typeof item.awd_sla_score === 'number' ? item.awd_sla_score : 0,
     awd_defense_score: typeof item.awd_defense_score === 'number' ? item.awd_defense_score : 0,
+    awd_checker_validation_state: item.awd_checker_validation_state || 'pending',
+    awd_checker_last_preview_at: item.awd_checker_last_preview_at || undefined,
+    awd_checker_last_preview_result: item.awd_checker_last_preview_result
+      ? normalizeAWDCheckerPreview(item.awd_checker_last_preview_result)
+      : undefined,
     created_at: item.created_at,
   }
 }
@@ -1850,6 +1901,18 @@ export async function runContestAWDRoundCheck(
     url: `/admin/contests/${encodeURIComponent(contestId)}/awd/rounds/${encodeURIComponent(roundId)}/check`,
   })
   return normalizeAWDCheckerRun(response)
+}
+
+export async function runContestAWDCheckerPreview(
+  contestId: string,
+  data: AdminAWDCheckerPreviewPayload
+): Promise<AWDCheckerPreviewData> {
+  const response = await request<RawAWDCheckerPreviewData>({
+    method: 'POST',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/awd/checker-preview`,
+    data,
+  })
+  return normalizeAWDCheckerPreview(response)
 }
 
 export async function createContestAWDServiceCheck(

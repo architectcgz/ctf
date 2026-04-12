@@ -515,6 +515,24 @@ export interface AWDCheckerRunData {
   services: AWDTeamServiceData[]
 }
 
+export interface AWDCheckerPreviewContextData {
+  access_url: string
+  preview_flag: string
+  round_number: number
+  team_id: ID
+  challenge_id: ID
+}
+
+export type AWDCheckerValidationState = 'pending' | 'passed' | 'failed' | 'stale'
+
+export interface AWDCheckerPreviewData {
+  checker_type?: AWDCheckerType
+  service_status: AWDTeamServiceData['service_status']
+  check_result: Record<string, unknown>
+  preview_context: AWDCheckerPreviewContextData
+  preview_token?: string
+}
+
 export interface AdminContestTeamData {
   id: ID
   contest_id: ID
@@ -540,6 +558,9 @@ export interface AdminContestChallengeData {
   awd_checker_config?: Record<string, unknown>
   awd_sla_score?: number
   awd_defense_score?: number
+  awd_checker_validation_state?: AWDCheckerValidationState
+  awd_checker_last_preview_at?: ISODateTime
+  awd_checker_last_preview_result?: AWDCheckerPreviewData
   created_at: ISODateTime
 }
 
