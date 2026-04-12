@@ -87,9 +87,6 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
 		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
 	}
-	awdReadinessAudit := func() gin.HandlerFunc {
-		return middleware.AWDReadinessAudit(deps.auditRecorder, deps.auditLogger)
-	}
 	ownerGuard := challengeOwnerGuard(deps.challenge.Catalog)
 
 	adminAuthoring.POST("/challenge-imports",
@@ -282,6 +279,9 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
 		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
+	}
+	awdReadinessAudit := func() gin.HandlerFunc {
+		return middleware.AWDReadinessAudit(deps.auditRecorder, deps.auditLogger)
 	}
 
 	adminOnly.GET("/audit-logs", deps.ops.AuditHandler.ListAuditLogs)
