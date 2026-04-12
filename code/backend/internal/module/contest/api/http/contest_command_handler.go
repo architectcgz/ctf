@@ -31,7 +31,24 @@ func (h *Handler) UpdateContest(c *gin.Context) {
 		return
 	}
 
+	var readinessSnapshot *dto.AWDReadinessResp
+	if h.readinessQueries != nil && h.queries != nil {
+		contest, err := h.queries.GetContest(c.Request.Context(), id)
+		if err != nil {
+			response.FromError(c, err)
+			return
+		}
+		if shouldPrepareUpdateContestReadinessAudit(contest, &req) {
+			readinessSnapshot, err = loadAWDReadinessAuditSnapshot(c.Request.Context(), h.readinessQueries, id, req.ForceOverride)
+			if err != nil {
+				response.FromError(c, err)
+				return
+			}
+		}
+	}
+
 	resp, err := h.commands.UpdateContest(c.Request.Context(), id, &req)
+	writeAWDReadinessAuditPayload(c, "start_contest", req.OverrideReason, readinessSnapshot, err)
 	if err != nil {
 		response.FromError(c, err)
 		return

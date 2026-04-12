@@ -29,14 +29,16 @@ type scoreboardCommandService interface {
 type Handler struct {
 	commands          contestService
 	queries           contestQueryService
+	readinessQueries  awdReadinessQueryService
 	scoreboardQueries scoreboardQueryService
 	scoreboardCommand scoreboardCommandService
 }
 
-func NewHandler(commands contestService, queries contestQueryService, scoreboardQueries scoreboardQueryService, scoreboardCommand scoreboardCommandService) *Handler {
+func NewHandler(commands contestService, queries contestQueryService, readinessQueries awdReadinessQueryService, scoreboardQueries scoreboardQueryService, scoreboardCommand scoreboardCommandService) *Handler {
 	return &Handler{
 		commands:          commands,
 		queries:           queries,
+		readinessQueries:  readinessQueries,
 		scoreboardQueries: scoreboardQueries,
 		scoreboardCommand: scoreboardCommand,
 	}

@@ -113,6 +113,7 @@ func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *co
 	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
 	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))
 	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
+	readinessQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
 	statusUpdater := contestjobs.NewStatusUpdater(
 		deps.contestStatus,
 		cache,
@@ -122,7 +123,7 @@ func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *co
 		log.Named("contest_status_updater"),
 	)
 
-	return contesthttp.NewHandler(contestCommands, contestQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater
+	return contesthttp.NewHandler(contestCommands, contestQueries, readinessQueries, scoreboardQueries, scoreboardCommands), scoreboardCommands, statusUpdater
 }
 
 func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *contestjobs.AWDRoundUpdater) {
