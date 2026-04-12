@@ -307,6 +307,52 @@ describe('DashboardView', () => {
     })
   })
 
+  it('应该在 category 空状态下避免展示虚构分类名，并保留合理的训练入口', async () => {
+    routeState.query = { panel: 'category' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [],
+      difficulty_stats: [
+        { difficulty: 'easy', solved: 0, total: 4 },
+        { difficulty: 'medium', solved: 0, total: 5 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const categoryPanel = wrapper.get('#dashboard-panel-category')
+    const primaryButton = categoryPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '去训练')
+
+    expect(categoryPanel.attributes('aria-hidden')).toBe('false')
+    expect(categoryPanel.isVisible()).toBe(true)
+    expect(categoryPanel.text()).not.toContain('新的分类')
+    expect(categoryPanel.text()).toContain('先开始积累分类覆盖面')
+    expect(categoryPanel.text()).toContain('当前还没有分类统计数据，先完成几道题再回来查看。')
+    expect(categoryPanel.findAll('.category-action-item')).toHaveLength(0)
+    expect(primaryButton).toBeTruthy()
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
     routeState.params = { variant: '2' }
 
