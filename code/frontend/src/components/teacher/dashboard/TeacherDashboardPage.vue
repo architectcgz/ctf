@@ -384,6 +384,8 @@ const {
 </template>
 
 <style scoped>
+@import '../teacher-workspace-subpanel.css';
+
 .workspace-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
@@ -415,6 +417,16 @@ const {
   --workspace-radius-md: 14px;
   --workspace-font-sans: var(--font-family-sans);
   --workspace-font-mono: var(--font-family-mono);
+  --teacher-workspace-panel-border: var(--workspace-line-soft);
+  --teacher-workspace-panel-background: color-mix(in srgb, var(--workspace-panel) 90%, transparent);
+  --teacher-workspace-panel-shadow: var(--workspace-shadow-panel);
+  --teacher-workspace-panel-padding: var(--space-5);
+  --teacher-workspace-panel-header-gap: var(--space-4);
+  --teacher-workspace-eyebrow-color: color-mix(in srgb, var(--workspace-brand) 60%, var(--workspace-faint));
+  --teacher-workspace-line-soft: var(--workspace-line-soft);
+  --teacher-workspace-chart-background: color-mix(in srgb, var(--workspace-panel-soft) 82%, transparent);
+  --teacher-workspace-review-background: color-mix(in srgb, var(--workspace-panel-soft) 86%, transparent);
+  --teacher-workspace-mono-font: var(--workspace-font-mono);
 }
 
 .tab-panel.section {
@@ -862,73 +874,6 @@ const {
   flex-wrap: wrap;
   gap: var(--space-2-5);
   margin-top: var(--space-3-5);
-}
-
-.workspace-subpanel :deep(.teacher-panel) {
-  border: 1px solid var(--workspace-line-soft);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--workspace-panel) 90%, transparent);
-  box-shadow: var(--workspace-shadow-panel);
-  padding: var(--space-5);
-}
-
-.workspace-subpanel :deep(.teacher-panel.teacher-panel--shellless) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.workspace-subpanel :deep(.teacher-panel__header),
-.workspace-subpanel :deep(.teacher-subsection__header) {
-  margin-bottom: var(--space-4);
-}
-
-.workspace-subpanel :deep(.journal-eyebrow) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--workspace-brand) 60%, var(--workspace-faint));
-}
-
-.workspace-subpanel :deep(.teacher-panel__title) {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-22);
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.workspace-subpanel :deep(.teacher-subsection + .teacher-subsection) {
-  border-top-color: var(--workspace-line-soft);
-}
-
-.workspace-subpanel :deep(.top-student-item),
-.workspace-subpanel :deep(.dimension-item),
-.workspace-subpanel :deep(.review-item__recommendation),
-.workspace-subpanel :deep(.review-item),
-.workspace-subpanel :deep(.intervention-item) {
-  border-color: var(--workspace-line-soft);
-}
-
-.workspace-subpanel :deep(.teacher-panel__chart) {
-  border-color: var(--workspace-line-soft);
-  background: color-mix(in srgb, var(--workspace-panel-soft) 82%, transparent);
-}
-
-.workspace-subpanel :deep(.review-item) {
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--workspace-panel-soft) 86%, transparent);
-}
-
-.workspace-subpanel :deep(.top-student-item__rank),
-.workspace-subpanel :deep(.teacher-tip-index) {
-  font-family: var(--workspace-font-mono);
 }
 
 .empty-inline {

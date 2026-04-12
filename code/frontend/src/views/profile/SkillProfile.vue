@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { ChevronRight, Flame, Loader2, TriangleAlert } from 'lucide-vue-next'
 
 import RadarChart from '@/components/charts/RadarChart.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useSkillProfilePage } from '@/composables/useSkillProfilePage'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
 
 const {
@@ -52,70 +52,13 @@ const contentTabs: Array<{
   },
 ]
 
-const skillProfileTabSet = new Set<SkillProfileTabKey>(contentTabs.map((tab) => tab.key))
-
-function resolveTabFromLocation(): SkillProfileTabKey {
-  if (typeof window === 'undefined') return 'analysis'
-  if (!window.location.pathname || window.location.pathname === '/') return 'analysis'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && skillProfileTabSet.has(panel as SkillProfileTabKey)) {
-    return panel as SkillProfileTabKey
+const contentTabOrder = contentTabs.map((tab) => tab.key) as SkillProfileTabKey[]
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<SkillProfileTabKey>(
+  {
+    orderedTabs: contentTabOrder,
+    defaultTab: 'analysis',
   }
-  return 'analysis'
-}
-
-function syncPanelToLocation(tabKey: SkillProfileTabKey): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', tabKey)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activeTab = ref<SkillProfileTabKey>(resolveTabFromLocation())
-const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
-
-function selectTab(tabKey: SkillProfileTabKey): void {
-  if (activeTab.value === tabKey) return
-  activeTab.value = tabKey
-  syncPanelToLocation(tabKey)
-}
-
-function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
-  tabButtonRefs.value[index] = element
-}
-
-function focusTab(index: number): void {
-  const normalizedIndex = (index + contentTabs.length) % contentTabs.length
-  const nextTab = contentTabs[normalizedIndex]
-  if (!nextTab) {
-    return
-  }
-  selectTab(nextTab.key)
-  tabButtonRefs.value[normalizedIndex]?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  switch (event.key) {
-    case 'ArrowRight':
-    case 'ArrowDown':
-      event.preventDefault()
-      focusTab(index + 1)
-      break
-    case 'ArrowLeft':
-    case 'ArrowUp':
-      event.preventDefault()
-      focusTab(index - 1)
-      break
-    case 'Home':
-      event.preventDefault()
-      focusTab(0)
-      break
-    case 'End':
-      event.preventDefault()
-      focusTab(contentTabs.length - 1)
-      break
-  }
-}
+)
 </script>
 
 <template>
@@ -159,7 +102,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
             v-for="(tab, index) in contentTabs"
             :id="tab.buttonId"
             :key="tab.key"
-            :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+            :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
             class="top-tab"
             :class="{ active: activeTab === tab.key }"
             type="button"

@@ -437,6 +437,8 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 </template>
 
 <style scoped>
+@import '../teacher-workspace-subpanel.css';
+
 .workspace-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
@@ -467,6 +469,16 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   --teacher-directory-margin-top: var(--space-4);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
+  --teacher-workspace-panel-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-workspace-panel-background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  --teacher-workspace-panel-shadow: 0 14px 34px var(--color-shadow-soft);
+  --teacher-workspace-panel-padding: var(--space-8);
+  --teacher-workspace-panel-header-gap: var(--space-8);
+  --teacher-workspace-eyebrow-color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
+  --teacher-workspace-line-soft: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  --teacher-workspace-chart-background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
+  --teacher-workspace-review-background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
+  --teacher-workspace-mono-font: var(--font-family-mono);
 }
 
 .teacher-eyebrow-row {
@@ -575,87 +587,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 .teacher-table-shell {
   border: 1px solid var(--teacher-card-border);
-}
-
-.workspace-subpanel :deep(.teacher-panel) {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
-  box-shadow: 0 14px 34px var(--color-shadow-soft);
-  padding: var(--space-8);
-}
-
-.workspace-subpanel :deep(.teacher-panel__header),
-.workspace-subpanel :deep(.teacher-subsection__header) {
-  margin-bottom: var(--space-8);
-}
-
-.workspace-subpanel :deep(.journal-eyebrow) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
-}
-
-.workspace-subpanel :deep(.teacher-panel__title) {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-22);
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.workspace-subpanel :deep(.teacher-subsection + .teacher-subsection) {
-  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.workspace-subpanel :deep(.top-student-item),
-.workspace-subpanel :deep(.dimension-item),
-.workspace-subpanel :deep(.review-item__recommendation),
-.workspace-subpanel :deep(.review-item),
-.workspace-subpanel :deep(.intervention-item) {
-  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.workspace-subpanel :deep(.teacher-panel__chart) {
-  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
-}
-
-.workspace-subpanel--flat :deep(.teacher-panel) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.workspace-subpanel--flat :deep(.teacher-panel__chart) {
-  margin-top: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-  overflow: visible;
-}
-
-.workspace-subpanel--insight {
-  margin-top: var(--space-6);
-}
-
-.workspace-subpanel :deep(.review-item) {
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
-}
-
-.workspace-subpanel :deep(.top-student-item__rank),
-.workspace-subpanel :deep(.teacher-tip-index) {
-  font-family: var(--font-family-mono);
 }
 
 .teacher-anchor-section {
