@@ -10,6 +10,7 @@ import type {
   TeacherClassTrendData,
 } from '@/api/contracts'
 import ClassStudentsPage from '@/components/teacher/class-management/ClassStudentsPage.vue'
+import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useStudentFilters } from '@/composables/useStudentFilters'
 import { useStudentListQuery } from '@/composables/useStudentListQuery'
 
@@ -21,6 +22,7 @@ const review = ref<TeacherClassReviewData | null>(null)
 const summary = ref<TeacherClassSummaryData | null>(null)
 const trend = ref<TeacherClassTrendData | null>(null)
 const workspaceError = ref<string | null>(null)
+const reportDialogVisible = ref(false)
 const filters = useStudentFilters()
 const studentListQuery = useStudentListQuery({
   errorMessage: '加载班级学生失败，请稍后重试',
@@ -138,6 +140,10 @@ function openStudent(studentId: string): void {
   })
 }
 
+function openClassReportDialog(): void {
+  reportDialogVisible.value = true
+}
+
 watch(
   () => route.params.className,
   () => {
@@ -169,9 +175,13 @@ onMounted(() => {
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
-    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
+    @open-report-export="openClassReportDialog"
     @select-class="selectClass"
     @update-student-no-query="updateStudentNoQuery"
     @open-student="openStudent"
+  />
+  <TeacherClassReportExportDialog
+    v-model="reportDialogVisible"
+    :default-class-name="selectedClassName"
   />
 </template>

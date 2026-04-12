@@ -5,6 +5,7 @@ import { ElButton, ElTable, ElTableColumn } from 'element-plus'
 
 import ClassManagement from '../ClassManagement.vue'
 import classManagementSource from '@/components/teacher/class-management/ClassManagementPage.vue?raw'
+import { useAuthStore } from '@/stores/auth'
 
 const pushMock = vi.fn()
 
@@ -23,6 +24,13 @@ vi.mock('vue-router', async () => {
 vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('ClassManagement', () => {
+  const reportDialogStub = {
+    name: 'TeacherClassReportExportDialog',
+    props: ['modelValue', 'defaultClassName'],
+    template:
+      '<div data-testid="class-report-dialog" :data-open="String(modelValue)" :data-default-class-name="defaultClassName || \'\'" />',
+  }
+
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
@@ -37,6 +45,17 @@ describe('ClassManagement', () => {
       page: 1,
       page_size: 20,
     })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        class_name: 'Class A',
+      },
+      'token'
+    )
   })
 
   it('应该展示班级列表并支持进入班级学生页', async () => {
@@ -46,6 +65,9 @@ describe('ClassManagement', () => {
           ElTable,
           ElTableColumn,
           ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
         },
       },
     })
@@ -118,6 +140,9 @@ describe('ClassManagement', () => {
           ElTableColumn,
           ElButton,
         },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
       },
     })
 
@@ -172,6 +197,9 @@ describe('ClassManagement', () => {
           ElTableColumn,
           ElButton,
         },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
       },
     })
 
@@ -222,5 +250,33 @@ describe('ClassManagement', () => {
     expect(classManagementSource).not.toContain(
       '<h1 class="teacher-title workspace-tab-heading__title">班级管理</h1>'
     )
+  })
+
+  it('点击导出班级报告时应打开上下文对话框', async () => {
+    const wrapper = mount(ClassManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+        stubs: {
+          TeacherClassReportExportDialog: reportDialogStub,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    await wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('导出班级报告'))
+      ?.trigger('click')
+    await flushPromises()
+
+    const dialog = wrapper.get('[data-testid="class-report-dialog"]')
+    expect(dialog.attributes('data-open')).toBe('true')
+    expect(dialog.attributes('data-default-class-name')).toBe('Class A')
+    expect(pushMock).not.toHaveBeenCalledWith({ name: 'TeacherAWDReviewIndex' })
   })
 })

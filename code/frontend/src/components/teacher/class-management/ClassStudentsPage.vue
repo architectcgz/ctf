@@ -163,7 +163,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 class="teacher-btn teacher-btn--primary"
                 @click="emit('openReportExport')"
               >
-                AWD复盘
+                导出班级报告
               </button>
             </div>
           </header>

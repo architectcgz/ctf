@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import StudentAnalysisPage from '@/components/teacher/class-management/StudentAnalysisPage.vue'
+import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
 import { useTeacherStudentAnalysisPage } from '@/composables/useTeacherStudentAnalysisPage'
+
+const reportDialogVisible = ref(false)
 
 const {
   router,
@@ -40,6 +45,10 @@ const {
   reviewManualReview,
   changeWriteupPage,
 } = useTeacherStudentAnalysisPage()
+
+function openClassReportDialog(): void {
+  reportDialogVisible.value = true
+}
 </script>
 
 <template>
@@ -72,7 +81,7 @@ const {
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-class-students="router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })"
-    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
+    @open-report-export="openClassReportDialog"
     @open-review-archive="openReviewArchivePage"
     @export-review-archive="handleExportReviewArchive"
     @select-class="selectClass"
@@ -82,5 +91,9 @@ const {
     @moderate-writeup="moderateWriteup"
     @review-manual-review="reviewManualReview"
     @change-writeup-page="changeWriteupPage"
+  />
+  <TeacherClassReportExportDialog
+    v-model="reportDialogVisible"
+    :default-class-name="selectedClassName"
   />
 </template>

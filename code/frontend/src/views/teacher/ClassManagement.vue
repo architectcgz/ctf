@@ -5,9 +5,12 @@ import { useRouter } from 'vue-router'
 import { getClasses } from '@/api/teacher'
 import type { TeacherClassItem } from '@/api/contracts'
 import ClassManagementPage from '@/components/teacher/class-management/ClassManagementPage.vue'
+import TeacherClassReportExportDialog from '@/components/teacher/reports/TeacherClassReportExportDialog.vue'
+import { useAuthStore } from '@/stores/auth'
 import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const classes = ref<TeacherClassItem[]>([])
 const total = ref(0)
@@ -15,8 +18,10 @@ const page = ref(1)
 const pageSize = ref(DEFAULT_PAGE_SIZE)
 const loading = ref(false)
 const error = ref<string | null>(null)
+const reportDialogVisible = ref(false)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
+const defaultReportClassName = computed(() => authStore.user?.class_name ?? '')
 
 async function loadClasses(nextPage = page.value): Promise<void> {
   loading.value = true
@@ -50,6 +55,10 @@ function openClass(className: string): void {
   router.push({ name: 'TeacherClassStudents', params: { className } })
 }
 
+function openClassReportDialog(): void {
+  reportDialogVisible.value = true
+}
+
 onMounted(() => {
   loadClasses()
 })
@@ -66,7 +75,11 @@ onMounted(() => {
     @retry="loadClasses"
     @change-page="handlePageChange"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
-    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
+    @open-report-export="openClassReportDialog"
     @open-class="openClass"
+  />
+  <TeacherClassReportExportDialog
+    v-model="reportDialogVisible"
+    :default-class-name="defaultReportClassName"
   />
 </template>
