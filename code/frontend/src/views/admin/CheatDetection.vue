@@ -396,7 +396,7 @@ onMounted(() => {
   --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
   --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
   --journal-divider-border: 1px dashed var(--cheat-divider);
-  --journal-shell-dark-accent: #60a5fa;
+  --journal-shell-dark-accent: var(--color-primary-hover);
 }
 
 .journal-brief {
@@ -453,7 +453,7 @@ onMounted(() => {
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   border-radius: 16px;
   padding: var(--space-4);
   font-size: var(--font-size-0-875);
