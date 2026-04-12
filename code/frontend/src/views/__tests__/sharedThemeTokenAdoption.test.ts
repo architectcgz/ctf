@@ -15,6 +15,7 @@ import topNavSource from '@/components/layout/TopNav.vue?raw'
 import challengePackageImportEntrySource from '@/components/admin/challenge/ChallengePackageImportEntry.vue?raw'
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
+import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -73,6 +74,11 @@ describe('shared theme token adoption', () => {
     expect(writeupManageSource).not.toContain('#38bdf8')
     expect(writeupManageSource).not.toContain('#ef4444')
     expect(writeupManageSource).not.toContain('#b91c1c')
+
+    expect(awdRoundInspectorSource).not.toContain('rgba(8,145,178,0.15)')
+    expect(awdRoundInspectorSource).not.toContain('rgba(15,23,42,0.94)')
+    expect(awdRoundInspectorSource).not.toContain('border-white/10')
+    expect(awdRoundInspectorSource).not.toContain('bg-white/5')
 
     expect(notificationDropdownSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.04)')
     expect(notificationDropdownSource).not.toContain('0 18px 42px rgba(15, 23, 42, 0.14)')

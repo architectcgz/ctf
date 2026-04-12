@@ -197,13 +197,13 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
   <div class="space-y-6">
     <section class="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
       <div
-        class="rounded-[28px] border border-[var(--color-primary)]/20 bg-[linear-gradient(145deg,rgba(8,145,178,0.15),rgba(15,23,42,0.94))] p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+        class="awd-round-hero rounded-[28px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
       >
         <div
           class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75"
         >
           <span>AWD Operations</span>
-          <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1">真实接口</span>
+          <span class="awd-round-hero-chip rounded-full px-2 py-1">真实接口</span>
         </div>
         <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -1432,3 +1432,19 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     </section>
   </div>
 </template>
+
+<style scoped>
+.awd-round-hero {
+  border-color: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-primary) 15%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base))
+  );
+}
+
+.awd-round-hero-chip {
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 24%, transparent);
+}
+</style>
