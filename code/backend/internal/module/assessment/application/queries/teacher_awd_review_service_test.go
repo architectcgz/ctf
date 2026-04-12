@@ -214,14 +214,23 @@ func TestTeacherAWDReviewServiceGetContestArchiveFiltersSelectedRoundByTeam(t *t
 	if len(resp.SelectedRound.Services) != 1 || resp.SelectedRound.Services[0].TeamID != 3401 {
 		t.Fatalf("expected selected team services only, got %+v", resp.SelectedRound.Services)
 	}
+	if resp.SelectedRound.Round.ServiceCount != len(resp.SelectedRound.Services) {
+		t.Fatalf("expected service count %d, got %d", len(resp.SelectedRound.Services), resp.SelectedRound.Round.ServiceCount)
+	}
 	if len(resp.SelectedRound.Attacks) != 1 {
 		t.Fatalf("expected 1 related attack, got %+v", resp.SelectedRound.Attacks)
+	}
+	if resp.SelectedRound.Round.AttackCount != len(resp.SelectedRound.Attacks) {
+		t.Fatalf("expected attack count %d, got %d", len(resp.SelectedRound.Attacks), resp.SelectedRound.Round.AttackCount)
 	}
 	if resp.SelectedRound.Attacks[0].AttackerTeamID != 3401 && resp.SelectedRound.Attacks[0].VictimTeamID != 3401 {
 		t.Fatalf("expected attack involving selected team, got %+v", resp.SelectedRound.Attacks[0])
 	}
 	if len(resp.SelectedRound.Traffic) != 1 {
 		t.Fatalf("expected 1 related traffic event, got %+v", resp.SelectedRound.Traffic)
+	}
+	if resp.SelectedRound.Round.TrafficCount != len(resp.SelectedRound.Traffic) {
+		t.Fatalf("expected traffic count %d, got %d", len(resp.SelectedRound.Traffic), resp.SelectedRound.Round.TrafficCount)
 	}
 	if resp.SelectedRound.Traffic[0].AttackerTeamID != 3401 && resp.SelectedRound.Traffic[0].VictimTeamID != 3401 {
 		t.Fatalf("expected traffic involving selected team, got %+v", resp.SelectedRound.Traffic[0])
