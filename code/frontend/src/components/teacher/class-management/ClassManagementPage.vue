@@ -193,7 +193,7 @@ const currentPageStudentCount = computed(() =>
                 class="teacher-btn teacher-btn--ghost"
                 @click="emit('openReportExport')"
               >
-                导出报告
+                AWD复盘
               </button>
             </div>
           </header>

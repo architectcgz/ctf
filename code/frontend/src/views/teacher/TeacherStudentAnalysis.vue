@@ -72,7 +72,7 @@ const {
     @retry="initialize"
     @open-class-management="router.push({ name: 'ClassManagement' })"
     @open-class-students="router.push({ name: 'TeacherClassStudents', params: { className: selectedClassName } })"
-    @open-report-export="router.push({ name: 'ReportExport' })"
+    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
     @open-review-archive="openReviewArchivePage"
     @export-review-archive="handleExportReviewArchive"
     @select-class="selectClass"

@@ -1,0 +1,291 @@
+<script setup lang="ts">
+import { X } from 'lucide-vue-next'
+
+import type { TeacherAWDReviewAttackItemData, TeacherAWDReviewServiceItemData, TeacherAWDReviewTeamItemData, TeacherAWDReviewTrafficItemData } from '@/api/contracts'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import { formatDate } from '@/utils/format'
+
+defineProps<{
+  visible: boolean
+  team: TeacherAWDReviewTeamItemData | null
+  services: TeacherAWDReviewServiceItemData[]
+  attacks: TeacherAWDReviewAttackItemData[]
+  traffic: TeacherAWDReviewTrafficItemData[]
+}>()
+
+const emit = defineEmits<{
+  close: []
+}>()
+</script>
+
+<template>
+  <Teleport to="body">
+    <transition name="awd-review-drawer-fade">
+      <div
+        v-if="visible"
+        class="awd-review-drawer-shell"
+        @click.self="emit('close')"
+      >
+        <aside class="awd-review-drawer teacher-surface-dialog">
+          <header class="awd-review-drawer__header">
+            <div>
+              <div class="teacher-surface-eyebrow journal-eyebrow">Team Focus</div>
+              <h3 class="awd-review-drawer__title">{{ team?.team_name || '队伍详情' }}</h3>
+              <p class="awd-review-drawer__copy">
+                查看当前队伍在所选轮次内的服务状态、攻击记录和流量证据。
+              </p>
+            </div>
+
+            <button type="button" class="teacher-btn teacher-btn--ghost awd-review-drawer__close" @click="emit('close')">
+              <X class="h-4 w-4" />
+            </button>
+          </header>
+
+          <section v-if="team" class="awd-review-drawer__summary metric-panel-default-surface">
+            <div class="awd-review-drawer__metrics metric-panel-grid">
+              <article class="metric-panel-card">
+                <div class="metric-panel-label">总分</div>
+                <div class="metric-panel-value">{{ team.total_score }}</div>
+                <div class="metric-panel-helper">队伍当前累计分数</div>
+              </article>
+              <article class="metric-panel-card">
+                <div class="metric-panel-label">成员数</div>
+                <div class="metric-panel-value">{{ team.member_count }}</div>
+                <div class="metric-panel-helper">当前队伍成员数量</div>
+              </article>
+              <article class="metric-panel-card">
+                <div class="metric-panel-label">最近命中</div>
+                <div class="metric-panel-value awd-review-drawer__time">
+                  {{ team.last_solve_at ? formatDate(team.last_solve_at) : '--' }}
+                </div>
+                <div class="metric-panel-helper">最近一次有效命中时间</div>
+              </article>
+            </div>
+          </section>
+
+          <section class="awd-review-drawer__section">
+            <div class="awd-review-drawer__section-head">
+              <h4>服务视图</h4>
+              <span>{{ services.length }} 条</span>
+            </div>
+            <AppEmpty
+              v-if="services.length === 0"
+              icon="Server"
+              title="暂无服务记录"
+              description="当前筛选下还没有可展示的服务状态。"
+            />
+            <div v-else class="awd-review-drawer__list">
+              <article v-for="service in services" :key="service.id" class="awd-review-drawer__item">
+                <div>
+                  <strong>{{ service.challenge_title }}</strong>
+                  <p>{{ service.team_name }} · {{ service.service_status }}</p>
+                </div>
+                <div class="awd-review-drawer__item-meta">
+                  <span>SLA {{ service.sla_score }}</span>
+                  <span>Def {{ service.defense_score }}</span>
+                  <span>Atk {{ service.attack_score }}</span>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="awd-review-drawer__section">
+            <div class="awd-review-drawer__section-head">
+              <h4>攻击记录</h4>
+              <span>{{ attacks.length }} 条</span>
+            </div>
+            <AppEmpty
+              v-if="attacks.length === 0"
+              icon="Crosshair"
+              title="暂无攻击记录"
+              description="当前筛选下还没有与该队伍相关的攻击事件。"
+            />
+            <div v-else class="awd-review-drawer__list">
+              <article v-for="attack in attacks" :key="attack.id" class="awd-review-drawer__item">
+                <div>
+                  <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
+                  <p>{{ attack.challenge_title }} · {{ attack.attack_type }} · {{ attack.source }}</p>
+                </div>
+                <div class="awd-review-drawer__item-meta">
+                  <span>{{ attack.is_success ? '成功' : '失败' }}</span>
+                  <span>+{{ attack.score_gained }}</span>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="awd-review-drawer__section">
+            <div class="awd-review-drawer__section-head">
+              <h4>流量证据</h4>
+              <span>{{ traffic.length }} 条</span>
+            </div>
+            <AppEmpty
+              v-if="traffic.length === 0"
+              icon="Waypoints"
+              title="暂无流量证据"
+              description="当前筛选下还没有与该队伍相关的流量事件。"
+            />
+            <div v-else class="awd-review-drawer__list">
+              <article v-for="event in traffic" :key="event.id" class="awd-review-drawer__item">
+                <div>
+                  <strong>{{ event.method }} {{ event.path }}</strong>
+                  <p>{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.challenge_title }}</p>
+                </div>
+                <div class="awd-review-drawer__item-meta">
+                  <span>{{ event.status_code }}</span>
+                  <span>{{ event.source }}</span>
+                </div>
+              </article>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </transition>
+  </Teleport>
+</template>
+
+<style scoped>
+.awd-review-drawer-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-end;
+  background: color-mix(in srgb, var(--color-bg-base) 52%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.awd-review-drawer {
+  width: min(34rem, 100vw);
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--space-6);
+  border-left: 1px solid var(--journal-border);
+}
+
+.awd-review-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.awd-review-drawer__title {
+  margin: var(--space-3) 0 var(--space-2);
+  font-size: var(--font-size-1-35);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.awd-review-drawer__copy {
+  margin: 0;
+  color: var(--journal-muted);
+  line-height: 1.7;
+}
+
+.awd-review-drawer__close {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+}
+
+.awd-review-drawer__summary {
+  margin-top: var(--space-6);
+}
+
+.awd-review-drawer__metrics {
+  margin-top: var(--space-4);
+}
+
+.awd-review-drawer__time {
+  font-size: var(--font-size-0-90);
+}
+
+.awd-review-drawer__section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px dashed var(--teacher-divider);
+}
+
+.awd-review-drawer__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: var(--journal-ink);
+}
+
+.awd-review-drawer__section-head h4 {
+  margin: 0;
+  font-size: var(--font-size-1-00);
+  font-weight: 700;
+}
+
+.awd-review-drawer__section-head span {
+  color: var(--journal-muted);
+  font-size: var(--font-size-0-82);
+}
+
+.awd-review-drawer__list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.awd-review-drawer__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--teacher-card-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
+}
+
+.awd-review-drawer__item strong {
+  display: block;
+  color: var(--journal-ink);
+}
+
+.awd-review-drawer__item p {
+  margin: var(--space-1-5) 0 0;
+  color: var(--journal-muted);
+  line-height: 1.6;
+}
+
+.awd-review-drawer__item-meta {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: end;
+  color: var(--journal-muted);
+  font-size: var(--font-size-0-80);
+  text-align: right;
+}
+
+.awd-review-drawer-fade-enter-active,
+.awd-review-drawer-fade-leave-active {
+  transition: opacity 160ms ease;
+}
+
+.awd-review-drawer-fade-enter-from,
+.awd-review-drawer-fade-leave-to {
+  opacity: 0;
+}
+
+@media (max-width: 720px) {
+  .awd-review-drawer {
+    width: 100vw;
+    padding: var(--space-4);
+  }
+
+  .awd-review-drawer__item {
+    flex-direction: column;
+  }
+
+  .awd-review-drawer__item-meta {
+    justify-items: start;
+    text-align: left;
+  }
+}
+</style>

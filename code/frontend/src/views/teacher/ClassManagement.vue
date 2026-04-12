@@ -66,7 +66,7 @@ onMounted(() => {
     @retry="loadClasses"
     @change-page="handlePageChange"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
-    @open-report-export="router.push({ name: 'ReportExport' })"
+    @open-report-export="router.push({ name: 'TeacherAWDReviewIndex' })"
     @open-class="openClass"
   />
 </template>
