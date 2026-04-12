@@ -123,9 +123,13 @@ function handleFileChange(event: Event) {
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
-      color-mix(in srgb, #2563eb 8%, var(--journal-surface-subtle))
+      color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface-subtle))
     ),
-    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 45%);
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 45%
+    );
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
   cursor: pointer;
 }
