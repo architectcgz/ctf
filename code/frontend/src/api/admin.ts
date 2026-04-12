@@ -664,6 +664,19 @@ interface AdminRequestOptions {
   suppressErrorToast?: boolean
 }
 
+function resolveUpdateContestSuppressErrorToast(
+  data: AdminContestUpdatePayload,
+  options?: AdminRequestOptions
+): boolean | undefined {
+  if (typeof options?.suppressErrorToast === 'boolean') {
+    return options.suppressErrorToast
+  }
+  if (data.force_override || (data.override_reason && data.override_reason.trim() !== '')) {
+    return true
+  }
+  return data.status === 'running' ? true : undefined
+}
+
 export interface AdminAWDServiceCheckPayload {
   team_id: number
   challenge_id: number
@@ -1820,7 +1833,7 @@ export async function updateContest(
     method: 'PUT',
     url: `/admin/contests/${encodeURIComponent(id)}`,
     data: serializeContestPayload(data),
-    suppressErrorToast: options?.suppressErrorToast,
+    suppressErrorToast: resolveUpdateContestSuppressErrorToast(data, options),
   })
 
   return { contest: normalizeContest(contest) }

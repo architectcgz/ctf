@@ -508,17 +508,17 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       return
     }
 
+    const shouldRunCurrentRound = selectedRound.value?.status === 'running' || !selectedRoundId.value
     checking.value = true
     try {
-      const shouldRunCurrentRound = selectedRound.value?.status === 'running'
       const result =
-        shouldRunCurrentRound || !selectedRoundId.value
+        shouldRunCurrentRound
           ? await runContestAWDCurrentRoundCheck(selectedContest.value.id)
           : await runContestAWDRoundCheck(selectedContest.value.id, selectedRoundId.value)
       toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
       await refresh(result.round.id)
     } catch (error) {
-      if (isAWDReadinessBlockedError(error)) {
+      if (shouldRunCurrentRound && isAWDReadinessBlockedError(error)) {
         await openOverrideDialog('run_current_round_check', '立即巡检当前轮')
         return
       }
