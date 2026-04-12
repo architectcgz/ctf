@@ -461,17 +461,17 @@ watch(
   --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 78%, var(--color-bg-base));
   --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
   --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary) 74%, var(--journal-ink));
-  --challenge-tone-web: color-mix(in srgb, var(--color-primary) 82%, var(--journal-ink));
-  --challenge-tone-pwn: color-mix(in srgb, var(--color-danger) 72%, var(--journal-ink));
-  --challenge-tone-reverse: color-mix(in srgb, var(--color-success) 74%, var(--journal-ink));
-  --challenge-tone-crypto: color-mix(in srgb, #0f766e 76%, var(--journal-ink));
-  --challenge-tone-misc: color-mix(in srgb, #7c3aed 78%, var(--journal-ink));
-  --challenge-tone-forensics: color-mix(in srgb, #ea580c 78%, var(--journal-ink));
-  --challenge-diff-beginner: color-mix(in srgb, var(--color-success) 76%, var(--journal-ink));
-  --challenge-diff-easy: color-mix(in srgb, #0891b2 78%, var(--journal-ink));
-  --challenge-diff-medium: color-mix(in srgb, #2563eb 80%, var(--journal-ink));
-  --challenge-diff-hard: color-mix(in srgb, #d97706 80%, var(--journal-ink));
-  --challenge-diff-insane: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
+  --challenge-tone-web: color-mix(in srgb, var(--color-cat-web) 82%, var(--journal-ink));
+  --challenge-tone-pwn: color-mix(in srgb, var(--color-cat-pwn) 72%, var(--journal-ink));
+  --challenge-tone-reverse: color-mix(in srgb, var(--color-cat-reverse) 74%, var(--journal-ink));
+  --challenge-tone-crypto: color-mix(in srgb, var(--color-cat-crypto) 76%, var(--journal-ink));
+  --challenge-tone-misc: color-mix(in srgb, var(--color-cat-misc) 78%, var(--journal-ink));
+  --challenge-tone-forensics: color-mix(in srgb, var(--color-cat-forensics) 78%, var(--journal-ink));
+  --challenge-diff-beginner: color-mix(in srgb, var(--color-diff-beginner) 76%, var(--journal-ink));
+  --challenge-diff-easy: color-mix(in srgb, var(--color-diff-easy) 78%, var(--journal-ink));
+  --challenge-diff-medium: color-mix(in srgb, var(--color-diff-medium) 80%, var(--journal-ink));
+  --challenge-diff-hard: color-mix(in srgb, var(--color-diff-hard) 80%, var(--journal-ink));
+  --challenge-diff-insane: color-mix(in srgb, var(--color-diff-insane) 84%, var(--journal-ink));
 }
 
 .challenge-page {

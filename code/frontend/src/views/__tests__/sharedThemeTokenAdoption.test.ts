@@ -13,6 +13,7 @@ import studentRecommendationSource from '@/components/dashboard/student/StudentR
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
@@ -86,6 +87,13 @@ describe('shared theme token adoption', () => {
     expect(scoreboardSource).not.toContain('#b45309')
     expect(scoreboardSource).not.toContain('#475569')
     expect(scoreboardSource).not.toContain('#92400e')
+
+    expect(challengeListSource).not.toContain('#0f766e')
+    expect(challengeListSource).not.toContain('#7c3aed')
+    expect(challengeListSource).not.toContain('#ea580c')
+    expect(challengeListSource).not.toContain('#0891b2')
+    expect(challengeListSource).not.toContain('#2563eb')
+    expect(challengeListSource).not.toContain('#d97706')
 
     expect(challengePackageImportEntrySource).not.toContain('#2563eb')
     expect(challengePackageImportEntrySource).not.toContain('rgba(37, 99, 235, 0.12)')
