@@ -15,7 +15,14 @@ func (h *AWDHandler) CreateRound(c *gin.Context) {
 		return
 	}
 
+	readinessSnapshot, err := loadAWDReadinessAuditSnapshot(c.Request.Context(), h.queries, contestID, req.ForceOverride)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
 	resp, err := h.commands.CreateRound(c.Request.Context(), contestID, &req)
+	writeAWDReadinessAuditPayload(c, "create_round", req.OverrideReason, readinessSnapshot, err)
 	if err != nil {
 		response.FromError(c, err)
 		return

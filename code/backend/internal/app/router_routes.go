@@ -87,6 +87,9 @@ func registerTeacherAuthoringRoutes(adminAuthoring *gin.RouterGroup, deps adminR
 	audit := func(options middleware.AuditOptions) gin.HandlerFunc {
 		return routeAudit(deps.auditRecorder, deps.auditLogger, options)
 	}
+	awdReadinessAudit := func() gin.HandlerFunc {
+		return middleware.AWDReadinessAudit(deps.auditRecorder, deps.auditLogger)
+	}
 	ownerGuard := challengeOwnerGuard(deps.challenge.Catalog)
 
 	adminAuthoring.POST("/challenge-imports",
@@ -339,6 +342,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			ResourceType:    "contest",
 			ResourceIDParam: "id",
 		}),
+		awdReadinessAudit(),
 		deps.contest.Handler.UpdateContest,
 	)
 	adminOnly.GET("/contests", deps.contest.Handler.ListContests)
@@ -440,6 +444,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			ResourceType:  "awd_round",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
+		awdReadinessAudit(),
 		deps.contest.AWDHandler.CreateRound,
 	)
 	adminOnly.POST("/contests/:id/awd/current-round/check",
@@ -449,6 +454,7 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 			ResourceType:  "awd_checker_run",
 			DetailBuilder: middleware.DetailFromParams("id"),
 		}),
+		awdReadinessAudit(),
 		deps.contest.AWDHandler.RunCurrentRoundChecks,
 	)
 	adminOnly.POST("/contests/:id/awd/checker-preview",
