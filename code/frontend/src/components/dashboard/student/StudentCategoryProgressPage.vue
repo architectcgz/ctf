@@ -325,7 +325,7 @@ function openPrimaryCategory(): void {
 }
 
 .category-track-fill {
-  background: color-mix(in srgb, var(--journal-accent) 68%, #0ea5e9);
+  background: color-mix(in srgb, var(--journal-accent) 68%, var(--color-primary-hover));
 }
 
 :global([data-theme='dark']) .category-action-list {
