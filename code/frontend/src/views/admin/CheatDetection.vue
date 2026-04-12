@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getCheatDetection } from '@/api/admin'
 import type { AdminCheatDetectionData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 
 type CheatPanelKey = 'overview' | 'suspects' | 'shared-ip' | 'actions'
-const validPanelKeys = new Set<CheatPanelKey>(['overview', 'suspects', 'shared-ip', 'actions'])
 
 const route = useRoute()
 const router = useRouter()
@@ -55,13 +55,17 @@ const panelTabs: Array<{ key: CheatPanelKey; label: string; panelId: string; tab
     tabId: 'cheat-tab-actions',
   },
 ]
-
-const activePanel = computed<CheatPanelKey>(() => {
-  const panel = route.query.panel
-  if (typeof panel === 'string' && validPanelKeys.has(panel as CheatPanelKey)) {
-    return panel as CheatPanelKey
-  }
-  return 'overview'
+const panelTabOrder = panelTabs.map((tab) => tab.key) as CheatPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<CheatPanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'overview',
 })
 
 async function loadRiskData() {
@@ -79,52 +83,6 @@ async function loadRiskData() {
 
 function openAudit(query: Record<string, string>) {
   return router.push({ name: 'AuditLog', query })
-}
-
-async function switchPanel(panelKey: CheatPanelKey): Promise<void> {
-  const nextQuery =
-    panelKey === 'overview'
-      ? (({ panel: _panel, ...restQuery }) => restQuery)(route.query)
-      : { ...route.query, panel: panelKey }
-  await router.replace({ name: 'CheatDetection', query: nextQuery })
-}
-
-function focusTabByIndex(index: number): void {
-  const safeIndex = Math.max(0, Math.min(index, panelTabs.length - 1))
-  const targetTab = panelTabs[safeIndex]
-  if (!targetTab) return
-  document.getElementById(targetTab.tabId)?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (
-    event.key !== 'ArrowRight' &&
-    event.key !== 'ArrowLeft' &&
-    event.key !== 'Home' &&
-    event.key !== 'End'
-  ) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    void switchPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    void switchPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  void switchPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
 }
 
 onMounted(() => {
@@ -148,6 +106,7 @@ onMounted(() => {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.tabId"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"

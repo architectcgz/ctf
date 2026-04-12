@@ -29,7 +29,8 @@ export function useRouteQueryTabs<T extends string>({
   const tabButtonRefs: Partial<Record<T, HTMLButtonElement | null>> = {}
 
   const activeTab = computed<T>(() => {
-    const panel = route.query[queryKey]
+    const rawPanel = route.query[queryKey]
+    const panel = Array.isArray(rawPanel) ? rawPanel[0] : rawPanel
     if (typeof panel === 'string' && tabSet.has(panel as T)) {
       return panel as T
     }

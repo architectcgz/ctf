@@ -7,6 +7,7 @@ import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/c
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
@@ -60,14 +61,17 @@ const panelTabs: Array<{ key: UserPanelKey; label: string; panelId: string; tabI
   },
   { key: 'import', label: '导入用户', panelId: 'user-import-start', tabId: 'user-tab-import' },
 ]
-const validPanelKeys = new Set<UserPanelKey>(panelTabs.map((item) => item.key))
-
-const activePanel = computed<UserPanelKey>(() => {
-  const panel = route.query.panel
-  if (typeof panel === 'string' && validPanelKeys.has(panel as UserPanelKey)) {
-    return panel as UserPanelKey
-  }
-  return 'overview'
+const panelTabOrder = panelTabs.map((tab) => tab.key) as UserPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<UserPanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'overview',
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
@@ -109,52 +113,6 @@ function getUserIdentity(user: AdminUserListItem): string {
   return '未设置'
 }
 
-async function switchPanel(panelKey: UserPanelKey): Promise<void> {
-  const nextQuery =
-    panelKey === 'overview'
-      ? (({ panel: _panel, ...restQuery }) => restQuery)(route.query)
-      : { ...route.query, panel: panelKey }
-  await router.replace({ name: 'UserManage', query: nextQuery })
-}
-
-function focusTabByIndex(index: number): void {
-  const safeIndex = Math.max(0, Math.min(index, panelTabs.length - 1))
-  const targetTab = panelTabs[safeIndex]
-  if (!targetTab) return
-  document.getElementById(targetTab.tabId)?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (
-    event.key !== 'ArrowRight' &&
-    event.key !== 'ArrowLeft' &&
-    event.key !== 'Home' &&
-    event.key !== 'End'
-  ) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    void switchPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    void switchPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  void switchPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
-}
-
 function triggerImport(): void {
   importInput.value?.click()
 }
@@ -180,6 +138,7 @@ function handleImportChange(event: Event): void {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.tabId"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"
