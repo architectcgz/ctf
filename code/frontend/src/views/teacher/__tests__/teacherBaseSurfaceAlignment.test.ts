@@ -6,7 +6,8 @@ import classManagementSource from '@/components/teacher/class-management/ClassMa
 import studentManagementSource from '@/components/teacher/student-management/StudentManagementPage.vue?raw'
 import dashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
 import instanceManagementSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
-import reportExportSource from '@/views/teacher/ReportExport.vue?raw'
+import awdReviewIndexSource from '@/views/teacher/TeacherAWDReviewIndex.vue?raw'
+import awdReviewDetailSource from '@/views/teacher/TeacherAWDReviewDetail.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
@@ -56,7 +57,9 @@ describe('teacher base surface alignment', () => {
 
     expect(instanceManagementSource).toContain('teacher-management-shell')
     expect(instanceManagementSource).not.toContain('.teacher-btn {')
-    expect(instanceManagementSource).toContain('--teacher-management-hero-border: var(--teacher-card-border);')
+    expect(instanceManagementSource).toContain(
+      '--teacher-management-hero-border: var(--teacher-card-border);'
+    )
     expect(instanceManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(instanceManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(instanceManagementSource).toMatch(
@@ -74,8 +77,12 @@ describe('teacher base surface alignment', () => {
     expect(classManagementSource).toContain('class="teacher-summary-value metric-panel-value"')
     expect(classManagementSource).toContain('class="teacher-summary-helper metric-panel-helper"')
 
-    expect(studentManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
-    expect(studentManagementSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid"')
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary metric-panel-default-surface"'
+    )
+    expect(studentManagementSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+    )
     expect(studentManagementSource).toContain(
       'class="teacher-summary-item progress-card metric-panel-card"'
     )
@@ -89,8 +96,12 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
-    expect(instanceManagementSource).toContain('class="teacher-summary-grid progress-strip metric-panel-grid"')
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary metric-panel-default-surface"'
+    )
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+    )
     expect(instanceManagementSource).toContain(
       'class="teacher-summary-item progress-card metric-panel-card"'
     )
@@ -104,29 +115,17 @@ describe('teacher base surface alignment', () => {
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
-    expect(reportExportSource).toContain('class="report-summary metric-panel-default-surface"')
-    expect(reportExportSource).toContain('class="report-summary-grid progress-strip metric-panel-grid"')
-    expect(reportExportSource).toContain(
-      'class="report-summary-item progress-card metric-panel-card"'
-    )
-    expect(reportExportSource).toContain(
-      'class="report-summary-label progress-card-label metric-panel-label"'
-    )
-    expect(reportExportSource).toContain(
-      'class="report-summary-value progress-card-value metric-panel-value"'
-    )
-    expect(reportExportSource).toContain(
-      'class="report-summary-helper progress-card-hint metric-panel-helper"'
-    )
-    expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface"'
-    )
-    expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--dialog metric-panel-grid metric-panel-workspace-surface"'
-    )
+    expect(awdReviewIndexSource).toContain('metric-panel-default-surface')
+    expect(awdReviewIndexSource).toContain('metric-panel-grid')
+    expect(awdReviewIndexSource).toContain('metric-panel-card')
+    expect(awdReviewDetailSource).toContain('metric-panel-default-surface')
+    expect(awdReviewDetailSource).toContain('metric-panel-grid')
+    expect(awdReviewDetailSource).toContain('metric-panel-card')
 
     expect(teacherSurfaceSource).not.toContain('--metric-panel-border: var(--teacher-card-border);')
-    expect(teacherSurfaceSource).not.toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
+    expect(teacherSurfaceSource).not.toContain(
+      '--metric-panel-radius: var(--workspace-radius-lg, 18px);'
+    )
     expect(teacherSurfaceSource).not.toContain('--metric-panel-value-size: var(--font-size-26);')
     expect(teacherSurfaceSource).not.toContain('--metric-panel-helper-line-height: 1.7;')
     expect(teacherSurfaceSource).not.toMatch(
@@ -140,34 +139,15 @@ describe('teacher base surface alignment', () => {
     )
   })
 
-  it('report export should soften page header, cards, divider, and dialog borders', () => {
-    expect(reportExportSource).toContain('--report-card-border:')
-    expect(reportExportSource).toContain('--report-divider:')
-    expect(reportExportSource).not.toMatch(/^\.report-hero\s*\{/m)
-    expect(reportExportSource).not.toMatch(/^\.report-summary\s*\{/m)
-    expect(reportExportSource).toContain(
-      'class="report-kpi-grid report-kpi-grid--task metric-panel-grid metric-panel-workspace-surface"'
-    )
-    expect(reportExportSource).toContain('class="journal-brief journal-metric report-kpi-card metric-panel-card"')
-    expect(reportExportSource).toContain('class="report-kpi-label metric-panel-label"')
-    expect(reportExportSource).toContain('class="report-kpi-value metric-panel-value"')
-    expect(reportExportSource).toContain('class="report-kpi-hint metric-panel-helper"')
-    expect(reportExportSource).not.toContain('--metric-panel-background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));')
-    expect(reportExportSource).not.toContain('--metric-panel-value-size: var(--font-size-1-08);')
-    expect(reportExportSource).toMatch(
-      /:deep\(\.page-header\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
-    )
-    expect(reportExportSource).toMatch(
-      /\.report-note\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
-    )
-    expect(reportExportSource).toMatch(
-      /\.report-hero-divider\s*\{[\s\S]*border-top:\s*1px dashed var\(--report-divider\);/s
-    )
-    expect(reportExportSource).toMatch(
-      /:deep\(\.report-preview-dialog \.el-dialog\)\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
-    )
-    expect(reportExportSource).not.toMatch(
-      /\.report-kpi-card\s*\{[\s\S]*border:\s*1px solid var\(--report-card-border\);/s
-    )
+  it('awd review pages should soften page header, cards, and divider borders through shared teacher shells', () => {
+    expect(awdReviewIndexSource).toContain('teacher-management-shell')
+    expect(awdReviewIndexSource).not.toContain('.teacher-btn {')
+    expect(awdReviewIndexSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(awdReviewIndexSource).not.toMatch(/^\.teacher-summary\s*\{/m)
+
+    expect(awdReviewDetailSource).toContain('teacher-management-shell')
+    expect(awdReviewDetailSource).not.toContain('.teacher-btn {')
+    expect(awdReviewDetailSource).not.toMatch(/^\.teacher-hero\s*\{/m)
+    expect(awdReviewDetailSource).not.toMatch(/^\.teacher-summary\s*\{/m)
   })
 })

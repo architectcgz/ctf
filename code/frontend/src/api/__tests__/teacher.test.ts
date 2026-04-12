@@ -6,7 +6,15 @@ vi.mock('@/api/request', () => ({
   request: requestMock,
 }))
 
-import { destroyTeacherInstance, getClasses, getTeacherWriteupSubmissions } from '@/api/teacher'
+import {
+  destroyTeacherInstance,
+  exportTeacherAWDReviewArchive,
+  exportTeacherAWDReviewReport,
+  getClasses,
+  getTeacherAWDReview,
+  getTeacherWriteupSubmissions,
+  listTeacherAWDReviews,
+} from '@/api/teacher'
 
 describe('teacher api contract', () => {
   beforeEach(() => {
@@ -137,5 +145,97 @@ describe('teacher api contract', () => {
       page: 2,
       page_size: 6,
     })
+  })
+
+  it('获取教师 AWD 复盘列表时应透传筛选参数', async () => {
+    requestMock.mockResolvedValue({
+      contests: [],
+    })
+
+    await listTeacherAWDReviews({ status: 'running', keyword: '春季' })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/awd/reviews',
+      params: {
+        status: 'running',
+        keyword: '春季',
+      },
+    })
+  })
+
+  it('获取教师 AWD 复盘详情时应透传轮次和队伍筛选', async () => {
+    requestMock.mockResolvedValue({
+      generated_at: '2026-04-12T10:00:00Z',
+      scope: {
+        snapshot_type: 'live',
+        requested_by: 3,
+        requested_id: 9,
+      },
+      contest: {
+        id: 9,
+        title: '春季 AWD',
+        mode: 'awd',
+        status: 'running',
+        round_count: 3,
+        team_count: 6,
+        export_ready: false,
+      },
+      rounds: [],
+    })
+
+    const result = await getTeacherAWDReview('9', { round: 2, team_id: 'team-2' })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/teacher/awd/reviews/9',
+      params: {
+        round: 2,
+        team_id: 'team-2',
+      },
+    })
+    expect(result.contest.id).toBe('9')
+  })
+
+  it('创建教师 AWD 复盘归档导出时应标准化 report_id', async () => {
+    requestMock.mockResolvedValue({
+      report_id: 21,
+      status: 'processing',
+    })
+
+    const result = await exportTeacherAWDReviewArchive('9', {
+      round_number: 2,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/teacher/awd/reviews/9/export/archive',
+      data: {
+        round_number: 2,
+      },
+    })
+    expect(result.report_id).toBe('21')
+    expect(result.status).toBe('processing')
+  })
+
+  it('创建教师 AWD 复盘报告导出时应标准化 report_id', async () => {
+    requestMock.mockResolvedValue({
+      report_id: 22,
+      status: 'processing',
+    })
+
+    const result = await exportTeacherAWDReviewReport('9', {
+      round_number: 3,
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/teacher/awd/reviews/9/export/report',
+      data: {
+        round_number: 3,
+      },
+    })
+    expect(result.report_id).toBe('22')
+    expect(result.status).toBe('processing')
   })
 })
