@@ -65,6 +65,10 @@ describe('shared theme token adoption', () => {
     expect(sidebarSource).not.toContain('rgba(99, 102, 241, 0.06)')
 
     expect(topNavSource).not.toContain('rgba(99, 102, 241, 0.06)')
+    expect(topNavSource).not.toContain('#16a34a')
+    expect(topNavSource).not.toContain('#0891b2')
+    expect(topNavSource).not.toContain('#2563eb')
+    expect(topNavSource).not.toContain('#e18a2a')
 
     expect(skillProfileSource).not.toContain('rgba(148, 163, 184, 0.2)')
 

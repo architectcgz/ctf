@@ -257,19 +257,19 @@ onUnmounted(() => {
 }
 
 .topnav-brand-dot[data-brand="green"] {
-  --brand-dot-color: #16a34a;
+  --brand-dot-color: var(--color-brand-swatch-green);
 }
 
 .topnav-brand-dot[data-brand="cyan"] {
-  --brand-dot-color: #0891b2;
+  --brand-dot-color: var(--color-brand-swatch-cyan);
 }
 
 .topnav-brand-dot[data-brand="blue"] {
-  --brand-dot-color: #2563eb;
+  --brand-dot-color: var(--color-brand-swatch-blue);
 }
 
 .topnav-brand-dot[data-brand="orange"] {
-  --brand-dot-color: #e18a2a;
+  --brand-dot-color: var(--color-brand-swatch-orange);
 }
 
 .topnav-brand-dot--active {
