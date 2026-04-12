@@ -174,7 +174,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         <header class="panel-head panel-head--overview">
           <div class="panel-copy workspace-tab-heading__main">
             <div class="journal-eyebrow">Contest Orchestration</div>
-            <h1 class="hero-title workspace-tab-heading__title">赛事编排台</h1>
+            <h1 class="hero-title">赛事编排台</h1>
             <p class="admin-page-copy">在这里查看赛事窗口、状态筛选和 AWD 运维入口。</p>
           </div>
 

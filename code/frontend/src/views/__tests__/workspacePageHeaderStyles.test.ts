@@ -21,6 +21,20 @@ import studentManagementPageSource from '@/components/teacher/student-management
 import teacherInstanceManagementPageSource from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue?raw'
 import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
+import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
+import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
+import teacherDashboardSource from '@/components/teacher/dashboard/TeacherDashboardPage.vue?raw'
+import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
+import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
+import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
+import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
+import writeupEditorSource from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue?raw'
+import writeupViewSource from '@/components/admin/writeup/ChallengeWriteupViewPage.vue?raw'
+import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
+import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
+import challengeImportPreviewSource from '@/views/admin/ChallengeImportPreview.vue?raw'
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -38,6 +52,22 @@ function expectNoLocalCopyTypography(source: string, selector: string): void {
   const escapedSelector = escapeRegExp(selector)
   expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*font-size:`, 's'))
   expect(source).not.toMatch(new RegExp(`${escapedSelector}\\s*\\{[^}]*line-height:`, 's'))
+}
+
+function expectSourceToContain(source: string, pattern: string | RegExp): void {
+  if (typeof pattern === 'string') {
+    expect(source).toContain(pattern)
+    return
+  }
+  expect(source).toMatch(pattern)
+}
+
+function expectSourceNotToContain(source: string, pattern: string | RegExp): void {
+  if (typeof pattern === 'string') {
+    expect(source).not.toContain(pattern)
+    return
+  }
+  expect(source).not.toMatch(pattern)
 }
 
 describe('workspace page header styles', () => {
@@ -131,6 +161,106 @@ describe('workspace page header styles', () => {
     )
     expect(studentOverviewSource).not.toContain(
       '<h1 class="journal-page-title workspace-tab-heading__title max-w-3xl text-[var(--journal-ink)]">'
+    )
+  })
+
+  it('workspace 页级标题应统一接入共享页头类，而不是继续使用 tab 标题类', () => {
+    const pageTitleSources = [
+      {
+        source: studentRecommendationSource,
+        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
+        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
+      },
+      {
+        source: studentCategoryProgressSource,
+        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
+        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
+      },
+      {
+        source: studentTimelineSource,
+        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
+        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
+      },
+      {
+        source: studentDifficultySource,
+        include: /<h1 class="journal-page-title workspace-page-title[\s\S]*?>/,
+        exclude: /<h1 class="journal-page-title workspace-tab-heading__title[\s\S]*?>/,
+      },
+      {
+        source: teacherDashboardSource,
+        include: '<h1 class="hero-title">教学介入台</h1>',
+        exclude: '<h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>',
+      },
+      {
+        source: studentAnalysisPageSource,
+        include: /<h1 class="teacher-title">[\s\S]*?<\/h1>/,
+        exclude: /<h1 class="teacher-title workspace-tab-heading__title">[\s\S]*?<\/h1>/,
+      },
+      {
+        source: adminDashboardSource,
+        include: '<h1 class="hero-title">系统值守台</h1>',
+        exclude: '<h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>',
+      },
+      {
+        source: userGovernanceSource,
+        include: '<h1 class="workspace-page-title">用户治理台</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">用户治理台</h1>',
+      },
+      {
+        source: contestOrchestrationSource,
+        include: '<h1 class="hero-title">赛事编排台</h1>',
+        exclude: '<h1 class="hero-title workspace-tab-heading__title">赛事编排台</h1>',
+      },
+      {
+        source: challengeManageSource,
+        include: /<h1 class="workspace-page-title">(?:题目管理|导入题目包|待确认导入)<\/h1>/,
+        exclude: /<h1 class="workspace-tab-heading__title">(?:题目管理|导入题目包|待确认导入)<\/h1>/,
+      },
+      {
+        source: challengeImportPreviewSource,
+        include: '<h1 class="workspace-page-title">导入预览</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">导入预览</h1>',
+      },
+      {
+        source: adminChallengeDetailSource,
+        include: '<h1 class="workspace-page-title">题目管理</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">题目管理</h1>',
+      },
+      {
+        source: writeupManageSource,
+        include: '<h1 class="workspace-page-title">题解管理</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">题解管理</h1>',
+      },
+      {
+        source: writeupEditorSource,
+        include: '<h1 class="workspace-page-title">题解管理</h1>',
+        exclude: '<h1 class="workspace-tab-heading__title">题解管理</h1>',
+      },
+      {
+        source: writeupViewSource,
+        include: /<h1 class="workspace-page-title">\{\{ writeup\.title \}\}<\/h1>/,
+        exclude: /<h1 class="workspace-tab-heading__title">\{\{ writeup\.title \}\}<\/h1>/,
+      },
+      {
+        source: topologyStudioSource,
+        include: /<h1 class="hero-title">\{\{ heroTitle \}\}<\/h1>/,
+        exclude: /<h1 class="hero-title workspace-tab-heading__title">\{\{ heroTitle \}\}<\/h1>/,
+      },
+      {
+        source: pageHeaderSource,
+        include: '<h1 class="workspace-page-title">{{ title }}</h1>',
+        exclude: '<h1 class="text-3xl font-semibold tracking-tight text-text-primary">{{ title }}</h1>',
+      },
+    ]
+
+    for (const entry of pageTitleSources) {
+      expectSourceToContain(entry.source, entry.include)
+      expectSourceNotToContain(entry.source, entry.exclude)
+    }
+
+    expect(pageHeaderSource).toContain('class="workspace-page-copy"')
+    expect(pageHeaderSource).not.toContain(
+      'class="max-w-3xl text-sm leading-6 text-text-secondary"'
     )
   })
 })

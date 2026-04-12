@@ -53,7 +53,7 @@ const {
     <header v-if="writeup" class="writeup-reading-card__hero writeup-reading-card__hero--page">
       <div class="writeup-reading-card__intro">
         <div class="journal-note-label">Admin Writeup</div>
-        <h1 class="workspace-tab-heading__title">{{ writeup.title }}</h1>
+        <h1 class="workspace-page-title">{{ writeup.title }}</h1>
         <p class="workspace-tab-copy">
           当前保存版本会按这里的正文与公开范围对外展示，适合用于复核发布前的阅读效果。
         </p>

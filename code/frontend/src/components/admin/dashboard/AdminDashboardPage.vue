@@ -82,7 +82,7 @@ const {
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Operations Workspace</div>
-            <h1 class="hero-title workspace-tab-heading__title">系统值守台</h1>
+            <h1 class="hero-title">系统值守台</h1>
             <p class="hero-summary">在这里查看平台状态、异常和当前资源热点。</p>
 
             <div class="meta-strip">

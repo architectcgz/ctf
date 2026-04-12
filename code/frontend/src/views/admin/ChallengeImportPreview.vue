@@ -74,7 +74,7 @@ watch(importId, () => {
     <div class="workspace-tab-heading">
       <div class="workspace-tab-heading__main">
         <div class="journal-note-label">Import Preview</div>
-        <h1 class="workspace-tab-heading__title">导入预览</h1>
+        <h1 class="workspace-page-title">导入预览</h1>
       </div>
       <p class="workspace-tab-copy">
         请仔细检查题目，确认题头、运行信息和提示内容后再正式导入题库。

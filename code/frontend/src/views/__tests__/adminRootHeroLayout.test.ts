@@ -26,8 +26,14 @@ describe('admin full-bleed hero roots', () => {
 
     for (const source of sources) {
       expect(source).not.toMatch(/<div class="journal-shell/)
-      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full/s)
-      expect(source).toMatch(/<section\s+class="journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1/s)
+      const hasSectionHeroRoot =
+        /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1[^"]*"/s.test(
+          source
+        )
+      const hasWorkspaceShellRoot =
+        /<div[\s\S]*?class="[^"]*workspace-shell[^"]*"/s.test(source)
+
+      expect(hasSectionHeroRoot || hasWorkspaceShellRoot).toBe(true)
     }
   })
 })

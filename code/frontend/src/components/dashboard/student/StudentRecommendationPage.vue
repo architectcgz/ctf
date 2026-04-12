@@ -69,7 +69,7 @@ const summaryCards = computed(() => [
   >
     <div class="recommendation-header">
       <div class="journal-eyebrow">Action Queue</div>
-      <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         现在先练这几道
       </h1>
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">

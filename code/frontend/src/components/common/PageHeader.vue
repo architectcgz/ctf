@@ -16,8 +16,8 @@ defineProps<{
         {{ eyebrow }}
       </p>
       <div class="space-y-2">
-        <h1 class="text-3xl font-semibold tracking-tight text-text-primary">{{ title }}</h1>
-        <p v-if="description" class="max-w-3xl text-sm leading-6 text-text-secondary">
+        <h1 class="workspace-page-title">{{ title }}</h1>
+        <p v-if="description" class="workspace-page-copy">
           {{ description }}
         </p>
       </div>

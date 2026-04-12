@@ -257,7 +257,7 @@ onMounted(() => {
       <div class="workspace-tab-heading">
         <div class="workspace-tab-heading__main">
           <div class="journal-note-label">Writeup Directory</div>
-          <h1 class="workspace-tab-heading__title">题解管理</h1>
+          <h1 class="workspace-page-title">题解管理</h1>
         </div>
       </div>
 

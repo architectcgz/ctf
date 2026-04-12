@@ -154,7 +154,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               <div class="journal-eyebrow">Student Analysis</div>
               <span class="teacher-student-chip">@{{ selectedStudent?.username || '未选择' }}</span>
             </div>
-            <h1 class="teacher-title workspace-tab-heading__title">
+            <h1 class="teacher-title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
             <p class="teacher-copy">

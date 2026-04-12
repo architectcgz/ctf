@@ -159,7 +159,7 @@ onMounted(() => {
         <header class="manage-header">
           <div class="manage-header__intro workspace-tab-heading__main">
             <div class="journal-note-label">Challenge Library</div>
-            <h1 class="workspace-tab-heading__title">题目管理</h1>
+            <h1 class="workspace-page-title">题目管理</h1>
           </div>
 
           <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
@@ -383,7 +383,7 @@ onMounted(() => {
         <div class="workspace-tab-heading">
           <div class="workspace-tab-heading__main">
             <div class="journal-note-label">Challenge Package</div>
-            <h1 class="workspace-tab-heading__title">导入题目包</h1>
+            <h1 class="workspace-page-title">导入题目包</h1>
           </div>
         </div>
 
@@ -482,7 +482,7 @@ onMounted(() => {
         <div class="workspace-tab-heading">
           <div class="workspace-tab-heading__main">
             <div class="journal-note-label">Import Review</div>
-            <h1 class="workspace-tab-heading__title">待确认导入</h1>
+            <h1 class="workspace-page-title">待确认导入</h1>
           </div>
         </div>
 
