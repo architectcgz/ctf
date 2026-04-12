@@ -62,7 +62,7 @@ const {
     <div class="workspace-tab-heading" :class="{ 'writeup-tab-heading': isEmbedded }">
       <div class="workspace-tab-heading__main">
         <div class="journal-note-label">Admin Writeup</div>
-        <h1 class="workspace-tab-heading__title">题解管理</h1>
+        <h1 class="workspace-page-title">题解管理</h1>
       </div>
       <p class="workspace-tab-copy">
         {{

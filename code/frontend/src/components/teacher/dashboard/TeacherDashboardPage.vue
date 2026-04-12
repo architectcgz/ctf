@@ -130,7 +130,7 @@ const {
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Progress Signal</div>
-            <h1 class="hero-title workspace-tab-heading__title">教学介入台</h1>
+            <h1 class="hero-title">教学介入台</h1>
             <p class="hero-summary">{{ overviewDescription }}</p>
 
             <div class="meta-strip">

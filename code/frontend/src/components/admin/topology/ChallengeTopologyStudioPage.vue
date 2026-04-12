@@ -1137,7 +1137,7 @@ const {
         <section class="workspace-tab-heading topology-page-heading">
           <div class="workspace-tab-heading__main">
             <div class="topology-page-kicker">{{ heroEyebrow }}</div>
-            <h1 class="hero-title workspace-tab-heading__title">{{ heroTitle }}</h1>
+            <h1 class="hero-title">{{ heroTitle }}</h1>
           </div>
           <p class="workspace-tab-copy topology-page-copy">
             {{ heroDescription }}

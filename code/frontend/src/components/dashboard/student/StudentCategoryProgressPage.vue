@@ -100,7 +100,7 @@ function openPrimaryCategory(): void {
   >
     <div class="category-header">
       <div class="journal-eyebrow">Action Ranking</div>
-      <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+      <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
       </h1>
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">

@@ -209,7 +209,7 @@ function handleImportChange(event: Event): void {
       <template v-if="activePanel === 'overview'">
         <div class="workspace-tab-heading__main">
           <div class="journal-note-label">User Governance</div>
-          <h1 class="workspace-tab-heading__title">用户治理台</h1>
+          <h1 class="workspace-page-title">用户治理台</h1>
         </div>
         <p class="workspace-tab-copy">
           在这里筛选账号、批量导入并处理用户状态。

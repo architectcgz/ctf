@@ -111,7 +111,7 @@ function changeTimelinePage(page: number): void {
   >
     <div class="timeline-header">
       <div>
-        <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+        <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
           训练记录总览
         </h1>
         <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">

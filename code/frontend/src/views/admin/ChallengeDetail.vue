@@ -60,7 +60,7 @@
           <div class="workspace-tab-heading">
             <div class="workspace-tab-heading__main">
               <div class="journal-note-label">Question Ops</div>
-              <h1 class="workspace-tab-heading__title">题目管理</h1>
+              <h1 class="workspace-page-title">题目管理</h1>
             </div>
             <p class="workspace-tab-copy">
               查看题目基础信息、提示与附件，并维护当前判题模式配置。
