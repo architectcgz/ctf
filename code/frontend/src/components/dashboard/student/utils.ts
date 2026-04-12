@@ -75,8 +75,8 @@ export function selectDifficultyPriority<T extends DifficultyProgressStat>(
   if (orderedItems.length === 0) return null
 
   return [...orderedItems].sort((left, right) => {
-    const priorityDiff = compareProgressPriority(left, right)
-    if (priorityDiff !== 0) return priorityDiff
+    const rateDiff = left.rate - right.rate
+    if (rateDiff !== 0) return rateDiff
     return difficultyOrderIndex(left.difficulty) - difficultyOrderIndex(right.difficulty)
   })[0]
 }

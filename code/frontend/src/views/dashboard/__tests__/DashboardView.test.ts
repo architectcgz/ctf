@@ -380,6 +380,7 @@ describe('DashboardView', () => {
     expect(difficultyPanel.text()).toContain('先推这一档强度')
     expect(difficultyPanel.text()).toContain('中等')
     expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(2)
+    expect(mediumAction.classes()).toContain('difficulty-action-item--primary')
 
     await mediumAction.get('button').trigger('click')
 
@@ -430,6 +431,56 @@ describe('DashboardView', () => {
     await primaryButton!.trigger('click')
 
     expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
+  it('应该在 difficulty 同完成率时优先更低难度，并让标题主 CTA 与主推行保持一致', async () => {
+    routeState.query = { panel: 'difficulty' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [
+        { category: 'web', solved: 0, total: 2 },
+      ],
+      difficulty_stats: [
+        { difficulty: 'beginner', solved: 0, total: 1 },
+        { difficulty: 'medium', solved: 0, total: 5 },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const primaryButton = difficultyPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '先做入门')
+    const beginnerAction = difficultyPanel.get('[data-test="difficulty-action-beginner"]')
+    const mediumAction = difficultyPanel.get('[data-test="difficulty-action-medium"]')
+
+    expect(difficultyPanel.text()).toContain('先推这一档强度：入门')
+    expect(primaryButton).toBeTruthy()
+    expect(beginnerAction.classes()).toContain('difficulty-action-item--primary')
+    expect(mediumAction.classes()).not.toContain('difficulty-action-item--primary')
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { difficulty: 'beginner' },
+    })
   })
 
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {

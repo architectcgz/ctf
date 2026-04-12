@@ -189,6 +189,9 @@ function openPrimaryDifficulty(): void {
             v-for="(item, index) in orderedStats"
             :key="item.difficulty"
             class="difficulty-action-item"
+            :class="{
+              'difficulty-action-item--primary': primaryDifficulty?.difficulty === item.difficulty,
+            }"
             :data-test="`difficulty-action-${item.difficulty}`"
           >
             <div class="difficulty-action-item__body">
@@ -328,6 +331,12 @@ function openPrimaryDifficulty(): void {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
   border-top: 1px solid var(--journal-divider);
+}
+
+.difficulty-action-item--primary {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--journal-accent) 24%, transparent);
 }
 
 .difficulty-action-item__body {
