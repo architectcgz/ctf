@@ -442,6 +442,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     awd_checker_config?: Record<string, unknown>
     awd_sla_score?: number
     awd_defense_score?: number
+    awd_checker_preview_token?: string
   }) {
     if (!selectedContest.value) {
       return
@@ -467,6 +468,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       awd_checker_config?: Record<string, unknown>
       awd_sla_score?: number
       awd_defense_score?: number
+      awd_checker_preview_token?: string
     }
   ) {
     if (!selectedContest.value) {

@@ -20,6 +20,16 @@ func (r *ChallengeRepository) AddChallenge(ctx context.Context, cc *model.Contes
 	return r.db.WithContext(ctx).Create(cc).Error
 }
 
+func (r *ChallengeRepository) FindChallenge(ctx context.Context, contestID, challengeID int64) (*model.ContestChallenge, error) {
+	var challenge model.ContestChallenge
+	if err := r.db.WithContext(ctx).
+		Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
+		First(&challenge).Error; err != nil {
+		return nil, err
+	}
+	return &challenge, nil
+}
+
 func (r *ChallengeRepository) RemoveChallenge(ctx context.Context, contestID, challengeID int64) error {
 	return r.db.WithContext(ctx).Where("contest_id = ? AND challenge_id = ?", contestID, challengeID).
 		Delete(&model.ContestChallenge{}).Error

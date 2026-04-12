@@ -32,6 +32,9 @@ func ContestChallengeRespFromModel(cc *model.ContestChallenge, challenge *model.
 		AWDCheckerConfig: ParseAWDCheckerConfig(cc.AWDCheckerConfig),
 		AWDSLAScore:      cc.AWDSLAScore,
 		AWDDefenseScore:  cc.AWDDefenseScore,
+		AWDCheckerValidationState: NormalizeAWDCheckerValidationState(string(cc.AWDCheckerValidationState)),
+		AWDCheckerLastPreviewAt:   cc.AWDCheckerLastPreviewAt,
+		AWDCheckerLastPreviewResult: ParseAWDCheckerPreviewResult(cc.AWDCheckerLastPreviewResult),
 		CreatedAt:        cc.CreatedAt,
 	}
 	if challenge != nil {

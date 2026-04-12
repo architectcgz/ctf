@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import type { AdminContestChallengeData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 
 const props = defineProps<{
   challengeLinks: AdminContestChallengeData[]
@@ -54,6 +55,23 @@ const summaryItems = computed(() => [
   },
 ])
 
+function formatValidationDateTime(value?: string): string {
+  if (!value) {
+    return '未记录'
+  }
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const { getPrimaryAccessURL, getValidationStateLabel } = useAwdCheckResultPresentation({
+  formatDateTime: formatValidationDateTime,
+})
+
 function getCheckerTypeLabel(value?: string): string {
   switch (value) {
     case 'legacy_probe':
@@ -92,6 +110,50 @@ function readActionSummary(value: unknown, label: string): string {
 
 function getChallengeTitle(item: AdminContestChallengeData): string {
   return item.title?.trim() || `Challenge #${item.challenge_id}`
+}
+
+function buildPresentationResult(item: AdminContestChallengeData): Record<string, unknown> {
+  const preview = item.awd_checker_last_preview_result
+  if (!preview) {
+    return {}
+  }
+  return {
+    ...preview.check_result,
+    preview_context: preview.preview_context,
+  }
+}
+
+function getValidationStateText(item: AdminContestChallengeData): string {
+  return getValidationStateLabel(item.awd_checker_validation_state) || '未验证'
+}
+
+function getValidationStateClass(item: AdminContestChallengeData): string {
+  const state = item.awd_checker_validation_state || 'pending'
+  return `config-validation-chip config-validation-chip--${state}`
+}
+
+function getValidationHint(item: AdminContestChallengeData): string {
+  const previewAccessURL = getPrimaryAccessURL(buildPresentationResult(item))
+  const entries = [
+    item.awd_checker_last_preview_at ? `最近校验 ${formatValidationDateTime(item.awd_checker_last_preview_at)}` : '',
+    previewAccessURL ? `目标 ${previewAccessURL}` : '',
+  ].filter(Boolean)
+
+  if (entries.length > 0) {
+    return entries.join(' · ')
+  }
+
+  switch (item.awd_checker_validation_state) {
+    case 'stale':
+      return 'Checker 草稿已变化，需要重新试跑。'
+    case 'failed':
+      return '最近一次保存的试跑结果未通过。'
+    case 'passed':
+      return '最近一次保存的试跑结果已通过。'
+    case 'pending':
+    default:
+      return '保存后可通过试跑绑定最近一次校验结果。'
+  }
 }
 </script>
 
@@ -168,10 +230,14 @@ function getChallengeTitle(item: AdminContestChallengeData): string {
             <p class="config-row__scores-sub">SLA {{ item.awd_sla_score ?? 0 }} / 防守 {{ item.awd_defense_score ?? 0 }}</p>
           </div>
           <div class="config-row__checker">
-            {{ getCheckerTypeLabel(item.awd_checker_type) }}
+            <div class="config-row__checker-main">{{ getCheckerTypeLabel(item.awd_checker_type) }}</div>
+            <span :class="getValidationStateClass(item)">
+              {{ getValidationStateText(item) }}
+            </span>
           </div>
           <div class="config-row__summary">
-            {{ getConfigSummary(item) }}
+            <p class="config-row__summary-main">{{ getConfigSummary(item) }}</p>
+            <p class="config-row__summary-sub">{{ getValidationHint(item) }}</p>
           </div>
           <div class="config-row__actions" role="group" :aria-label="`题目 ${getChallengeTitle(item)} 操作`">
             <button
@@ -250,7 +316,6 @@ function getChallengeTitle(item: AdminContestChallengeData): string {
 
 .config-row__visibility,
 .config-row__scores,
-.config-row__checker,
 .config-row__summary {
   color: var(--color-text-secondary);
   font-size: 0.9rem;
@@ -260,8 +325,66 @@ function getChallengeTitle(item: AdminContestChallengeData): string {
   margin: 0;
 }
 
+.config-row__checker,
+.config-row__summary {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.config-row__checker-main {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
 .config-row__summary {
   line-height: 1.6;
+}
+
+.config-row__summary-main,
+.config-row__summary-sub {
+  margin: 0;
+}
+
+.config-row__summary-sub {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.config-validation-chip {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.9rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.config-validation-chip--pending {
+  border-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-surface-elevated));
+  color: var(--color-text-secondary);
+}
+
+.config-validation-chip--passed {
+  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.config-validation-chip--failed {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.config-validation-chip--stale {
+  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
 }
 
 .config-row__actions {

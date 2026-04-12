@@ -45,6 +45,8 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
 
   function getCheckSourceLabel(value: unknown): string {
     switch (value) {
+      case 'checker_preview':
+        return '配置试跑'
       case 'manual_current_round':
         return '当前轮手动巡检'
       case 'manual_selected_round':
@@ -64,6 +66,21 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
         return '基础探活'
       case 'http_standard':
         return 'HTTP 标准 Checker'
+      default:
+        return ''
+    }
+  }
+
+  function getValidationStateLabel(value: unknown): string {
+    switch (value) {
+      case 'pending':
+        return '未验证'
+      case 'passed':
+        return '最近通过'
+      case 'failed':
+        return '最近失败'
+      case 'stale':
+        return '待重新验证'
       default:
         return ''
     }
@@ -187,6 +204,21 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
       }))
   }
 
+  function getPrimaryAccessURL(result: Record<string, unknown>): string {
+    const previewContext =
+      result.preview_context && typeof result.preview_context === 'object'
+        ? (result.preview_context as Record<string, unknown>)
+        : null
+    const previewAccessURL =
+      previewContext && typeof previewContext.access_url === 'string'
+        ? previewContext.access_url.trim()
+        : ''
+    if (previewAccessURL) {
+      return previewAccessURL
+    }
+    return getCheckTargets(result)[0]?.access_url || ''
+  }
+
   function getTargetProbeSummary(result: Record<string, unknown>): string {
     const targets = getCheckTargets(result)
     if (targets.length === 0) {
@@ -213,10 +245,12 @@ export function useAwdCheckResultPresentation({ formatDateTime }: UseAwdCheckRes
   return {
     getCheckSourceLabel,
     getCheckerTypeLabel,
+    getValidationStateLabel,
     getCheckStatusLabel,
     summarizeCheckResult,
     getCheckActions,
     getCheckTargets,
+    getPrimaryAccessURL,
     getTargetActions,
     getTargetProbeSummary,
     getProbeStatusText,

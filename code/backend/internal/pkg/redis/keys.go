@@ -282,6 +282,8 @@ const (
 	keyAWDServiceStatusFmt = "awd:%d:service_status"
 	// keyAWDScoreboardFmt AWD 实时计分板缓存
 	keyAWDScoreboardFmt = "awd:%d:scoreboard"
+	// keyAWDCheckerPreviewTokenFmt AWD checker 试跑令牌缓存
+	keyAWDCheckerPreviewTokenFmt = "awd:%d:checker_preview:%s"
 )
 
 // AWDCurrentRoundKey 当前轮次编号
@@ -312,6 +314,12 @@ func AWDServiceStatusKey(contestID int64) string {
 // 数据结构: STRING (JSON) | TTL: 10s
 func AWDScoreboardKey(contestID int64) string {
 	return withNS(fmt.Sprintf(keyAWDScoreboardFmt, contestID))
+}
+
+// AWDCheckerPreviewTokenKey AWD checker 试跑令牌缓存
+// 数据结构: STRING (JSON) | TTL: 30min（默认）
+func AWDCheckerPreviewTokenKey(contestID int64, token string) string {
+	return withNS(fmt.Sprintf(keyAWDCheckerPreviewTokenFmt, contestID, token))
 }
 
 // ============================================================
