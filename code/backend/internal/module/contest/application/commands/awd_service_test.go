@@ -2,6 +2,7 @@ package commands_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -86,8 +87,8 @@ func (s *awdServiceForTest) ListRounds(ctx context.Context, contestID int64) ([]
 	return s.queries.ListRounds(ctx, contestID)
 }
 
-func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64) (*dto.AWDCheckerRunResp, error) {
-	return s.commands.RunCurrentRoundChecks(ctx, contestID)
+func (s *awdServiceForTest) RunCurrentRoundChecks(ctx context.Context, contestID int64, req *dto.RunCurrentAWDCheckerReq) (*dto.AWDCheckerRunResp, error) {
+	return s.commands.RunCurrentRoundChecks(ctx, contestID, req)
 }
 
 func (s *awdServiceForTest) RunRoundChecks(ctx context.Context, contestID, roundID int64) (*dto.AWDCheckerRunResp, error) {
@@ -150,6 +151,17 @@ func TestAWDServiceCreateRoundAndListRounds(t *testing.T) {
 	now := time.Now()
 
 	createAWDContestFixture(t, db, 1, now)
+	createAWDChallengeFixture(t, db, 101, now)
+	createAWDContestChallengeFixture(t, db, 1, 101, now)
+	if err := db.Model(&model.ContestChallenge{}).
+		Where("contest_id = ? AND challenge_id = ?", 1, 101).
+		Updates(map[string]any{
+			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
+			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
+			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
+		}).Error; err != nil {
+		t.Fatalf("update readiness challenge: %v", err)
+	}
 
 	round, err := service.CreateRound(context.Background(), 1, &dto.CreateAWDRoundReq{
 		RoundNumber:  1,
@@ -267,6 +279,15 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 	createAWDRoundFixture(t, db, 221, 22, 1, 70, 35, now)
 	createAWDChallengeFixture(t, db, 2201, now)
 	createAWDContestChallengeFixture(t, db, 22, 2201, now)
+	if err := db.Model(&model.ContestChallenge{}).
+		Where("contest_id = ? AND challenge_id = ?", 22, 2201).
+		Updates(map[string]any{
+			"awd_checker_type":             model.AWDCheckerTypeHTTPStandard,
+			"awd_checker_config":           `{"get_flag":{"path":"/health"}}`,
+			"awd_checker_validation_state": model.AWDCheckerValidationStatePassed,
+		}).Error; err != nil {
+		t.Fatalf("update readiness challenge: %v", err)
+	}
 	createAWDTeamFixture(t, db, 2211, 22, "Ops", now)
 	createAWDTeamMemberFixture(t, db, 22, 2211, 8201, now)
 
@@ -298,7 +319,7 @@ func TestAWDServiceRunCurrentRoundChecksRefreshesServices(t *testing.T) {
 		CheckerHealthPath: "/health",
 	})
 
-	resp, err := service.RunCurrentRoundChecks(context.Background(), 22)
+	resp, err := service.RunCurrentRoundChecks(context.Background(), 22, nil)
 	if err != nil {
 		t.Fatalf("RunCurrentRoundChecks() error = %v", err)
 	}
@@ -357,9 +378,110 @@ func TestAWDServiceRunCurrentRoundChecksRejectsEndedContest(t *testing.T) {
 
 	service := newAWDServiceForTest(db, redisClient, "", config.ContestAWDConfig{})
 
-	_, err = service.RunCurrentRoundChecks(context.Background(), 222)
+	_, err = service.RunCurrentRoundChecks(context.Background(), 222, nil)
 	if err != errcode.ErrContestEnded {
 		t.Fatalf("expected ErrContestEnded, got %v", err)
+	}
+}
+
+func TestAWDServiceCreateRoundBlocksWhenReadinessNotReady(t *testing.T) {
+	db := newAWDTestDB(t)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 110, now)
+
+	_, err := service.CreateRound(context.Background(), 110, &dto.CreateAWDRoundReq{
+		RoundNumber: 1,
+	})
+	assertAWDReadinessBlocked(t, err)
+}
+
+func TestAWDServiceCreateRoundAllowsForceOverrideWithReason(t *testing.T) {
+	db := newAWDTestDB(t)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 111, now)
+
+	resp, err := service.CreateRound(context.Background(), 111, &dto.CreateAWDRoundReq{
+		RoundNumber:    1,
+		ForceOverride:  boolPtr(true),
+		OverrideReason: strPtr("teacher drill"),
+		AttackScore:    intPtr(80),
+		DefenseScore:   intPtr(30),
+	})
+	if err != nil {
+		t.Fatalf("CreateRound() error = %v", err)
+	}
+	if resp == nil || resp.RoundNumber != 1 {
+		t.Fatalf("unexpected round response: %+v", resp)
+	}
+}
+
+func TestAWDServiceCreateRoundRejectsBlankOverrideReason(t *testing.T) {
+	db := newAWDTestDB(t)
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 112, now)
+
+	_, err := service.CreateRound(context.Background(), 112, &dto.CreateAWDRoundReq{
+		RoundNumber:    1,
+		ForceOverride:  boolPtr(true),
+		OverrideReason: strPtr("   "),
+	})
+	if err != errcode.ErrInvalidParams {
+		t.Fatalf("expected ErrInvalidParams, got %v", err)
+	}
+}
+
+func TestAWDServiceRunCurrentRoundChecksBlocksWhenReadinessNotReady(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 240, now)
+	createAWDRoundFixture(t, db, 2401, 240, 1, 70, 35, now)
+
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+
+	_, err := service.RunCurrentRoundChecks(context.Background(), 240, nil)
+	assertAWDReadinessBlocked(t, err)
+}
+
+func TestAWDServiceRunCurrentRoundChecksRejectsBlankOverrideReason(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 241, now)
+	createAWDRoundFixture(t, db, 2411, 241, 1, 70, 35, now)
+
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+
+	_, err := service.RunCurrentRoundChecks(context.Background(), 241, &dto.RunCurrentAWDCheckerReq{
+		ForceOverride:  boolPtr(true),
+		OverrideReason: strPtr("  "),
+	})
+	if err != errcode.ErrInvalidParams {
+		t.Fatalf("expected ErrInvalidParams, got %v", err)
+	}
+}
+
+func TestAWDServiceRunRoundChecksSkipsReadinessGate(t *testing.T) {
+	db := newAWDTestDB(t)
+	now := time.Now()
+
+	createAWDContestFixture(t, db, 242, now)
+	createAWDRoundFixture(t, db, 2421, 242, 1, 70, 35, now)
+
+	service := newAWDServiceForTest(db, nil, "", config.ContestAWDConfig{})
+
+	resp, err := service.RunRoundChecks(context.Background(), 242, 2421)
+	if err != nil {
+		t.Fatalf("RunRoundChecks() error = %v", err)
+	}
+	if resp == nil || resp.Round == nil || resp.Round.ID != 2421 {
+		t.Fatalf("unexpected selected round response: %+v", resp)
 	}
 }
 
@@ -1468,6 +1590,19 @@ func findAWDSummaryItem(items []*dto.AWDRoundSummaryItem, teamID int64) *dto.AWD
 func intPtr(v int) *int { return &v }
 
 func int64Ptr(v int64) *int64 { return &v }
+
+func boolPtr(v bool) *bool { return &v }
+
+func strPtr(v string) *string { return &v }
+
+func assertAWDReadinessBlocked(t *testing.T, err error) {
+	t.Helper()
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) || appErr.Code != errcode.ErrAWDReadinessBlocked.Code {
+		t.Fatalf("expected ErrAWDReadinessBlocked, got %v", err)
+	}
+}
 
 func mustCreateAWDTrafficEvent(
 	t *testing.T,

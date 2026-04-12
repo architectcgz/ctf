@@ -112,6 +112,7 @@ var (
 	ErrAWDTeamRequired             = New(14022, "AWD 竞赛要求以队伍身份参赛", http.StatusForbidden)
 	ErrAWDRoundNotActive           = New(14023, "当前没有可用的 AWD 轮次", http.StatusConflict)
 	ErrAWDFlagUnavailable          = New(14024, "当前轮 Flag 暂不可用", http.StatusServiceUnavailable)
+	ErrAWDReadinessBlocked         = New(14025, "AWD 开赛就绪检查未通过", http.StatusConflict)
 )
 
 // 通知与 WebSocket 相关错误码 (15000-15999)

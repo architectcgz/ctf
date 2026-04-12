@@ -7,10 +7,12 @@ import (
 )
 
 type CreateAWDRoundReq struct {
-	RoundNumber  int     `json:"round_number" binding:"required,min=1"`
-	Status       *string `json:"status" binding:"omitempty,oneof=pending running finished"`
-	AttackScore  *int    `json:"attack_score" binding:"omitempty,min=0"`
-	DefenseScore *int    `json:"defense_score" binding:"omitempty,min=0"`
+	RoundNumber    int     `json:"round_number" binding:"required,min=1"`
+	Status         *string `json:"status" binding:"omitempty,oneof=pending running finished"`
+	AttackScore    *int    `json:"attack_score" binding:"omitempty,min=0"`
+	DefenseScore   *int    `json:"defense_score" binding:"omitempty,min=0"`
+	ForceOverride  *bool   `json:"force_override"`
+	OverrideReason *string `json:"override_reason" binding:"omitempty,max=500"`
 }
 
 type AWDRoundResp struct {
@@ -122,6 +124,36 @@ type AWDRoundSummaryResp struct {
 type AWDCheckerRunResp struct {
 	Round    *AWDRoundResp         `json:"round"`
 	Services []*AWDTeamServiceResp `json:"services"`
+}
+
+type RunCurrentAWDCheckerReq struct {
+	ForceOverride  *bool   `json:"force_override"`
+	OverrideReason *string `json:"override_reason" binding:"omitempty,max=500"`
+}
+
+type AWDReadinessResp struct {
+	ContestID                int64                   `json:"contest_id"`
+	Ready                    bool                    `json:"ready"`
+	TotalChallenges          int                     `json:"total_challenges"`
+	PassedChallenges         int                     `json:"passed_challenges"`
+	PendingChallenges        int                     `json:"pending_challenges"`
+	FailedChallenges         int                     `json:"failed_challenges"`
+	StaleChallenges          int                     `json:"stale_challenges"`
+	MissingCheckerChallenges int                     `json:"missing_checker_challenges"`
+	BlockingCount            int                     `json:"blocking_count"`
+	BlockingActions          []string                `json:"blocking_actions"`
+	GlobalBlockingReasons    []string                `json:"global_blocking_reasons"`
+	Items                    []*AWDReadinessItemResp `json:"items"`
+}
+
+type AWDReadinessItemResp struct {
+	ChallengeID     int64                `json:"challenge_id"`
+	Title           string               `json:"title"`
+	CheckerType     model.AWDCheckerType `json:"checker_type,omitempty"`
+	ValidationState string               `json:"validation_state"`
+	LastPreviewAt   *time.Time           `json:"last_preview_at,omitempty"`
+	LastAccessURL   *string              `json:"last_access_url,omitempty"`
+	BlockingReason  string               `json:"blocking_reason"`
 }
 
 type PreviewAWDCheckerReq struct {

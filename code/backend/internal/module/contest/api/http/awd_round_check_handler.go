@@ -9,7 +9,15 @@ import (
 
 func (h *AWDHandler) RunCurrentRoundChecks(c *gin.Context) {
 	contestID := c.GetInt64("id")
-	resp, err := h.commands.RunCurrentRoundChecks(c.Request.Context(), contestID)
+	req := &dto.RunCurrentAWDCheckerReq{}
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(req); err != nil {
+			response.ValidationError(c, err)
+			return
+		}
+	}
+
+	resp, err := h.commands.RunCurrentRoundChecks(c.Request.Context(), contestID, req)
 	if err != nil {
 		response.FromError(c, err)
 		return

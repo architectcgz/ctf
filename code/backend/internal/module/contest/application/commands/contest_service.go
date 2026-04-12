@@ -7,13 +7,14 @@ import (
 )
 
 type ContestService struct {
-	repo contestports.ContestCommandRepository
-	log  *zap.Logger
+	repo    contestports.ContestCommandRepository
+	awdRepo contestports.AWDRepository
+	log     *zap.Logger
 }
 
-func NewContestService(repo contestports.ContestCommandRepository, log *zap.Logger) *ContestService {
+func NewContestService(repo contestports.ContestCommandRepository, awdRepo contestports.AWDRepository, log *zap.Logger) *ContestService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &ContestService{repo: repo, log: log}
+	return &ContestService{repo: repo, awdRepo: awdRepo, log: log}
 }

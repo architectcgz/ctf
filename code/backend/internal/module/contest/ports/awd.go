@@ -20,6 +20,7 @@ type AWDRepository interface {
 	ListSchedulableAWDContests(ctx context.Context, now, recentCutoff time.Time, limit int) ([]model.Contest, error)
 	FindTeamsByContest(ctx context.Context, contestID int64) ([]*model.Team, error)
 	ListServiceDefinitionsByContest(ctx context.Context, contestID int64) ([]AWDServiceDefinition, error)
+	ListReadinessChallengesByContest(ctx context.Context, contestID int64) ([]AWDReadinessChallengeRecord, error)
 	ListChallengesByContest(ctx context.Context, contestID int64) ([]model.Challenge, error)
 	ContestHasChallenge(ctx context.Context, contestID, challengeID int64) (bool, error)
 	FindRegistration(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
@@ -51,6 +52,16 @@ type AWDServiceDefinition struct {
 	CheckerConfig string               `gorm:"column:awd_checker_config"`
 	SLAScore      int                  `gorm:"column:awd_sla_score"`
 	DefenseScore  int                  `gorm:"column:awd_defense_score"`
+}
+
+type AWDReadinessChallengeRecord struct {
+	ChallengeID       int64                           `gorm:"column:challenge_id"`
+	Title             string                          `gorm:"column:title"`
+	CheckerType       model.AWDCheckerType            `gorm:"column:awd_checker_type"`
+	CheckerConfig     string                          `gorm:"column:awd_checker_config"`
+	ValidationState   model.AWDCheckerValidationState `gorm:"column:awd_checker_validation_state"`
+	LastPreviewAt     *time.Time                      `gorm:"column:awd_checker_last_preview_at"`
+	LastPreviewResult string                          `gorm:"column:awd_checker_last_preview_result"`
 }
 
 type AWDContainerFileWriter interface {

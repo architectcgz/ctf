@@ -111,7 +111,7 @@ func buildContestCoreHandler(deps *contestModuleDeps) (*contesthttp.Handler, *co
 
 	scoreboardCommands := contestcmd.NewScoreboardAdminService(deps.contestAdmin, cache, &cfg.Contest)
 	scoreboardQueries := contestqry.NewScoreboardService(deps.contestScoreboard, cache, &cfg.Contest, log.Named("contest_scoreboard_service"))
-	contestCommands := contestcmd.NewContestService(deps.contestCommands, log.Named("contest_service"))
+	contestCommands := contestcmd.NewContestService(deps.contestCommands, deps.awdRepo, log.Named("contest_service"))
 	contestQueries := contestqry.NewContestService(deps.contestList, log.Named("contest_service"))
 	statusUpdater := contestjobs.NewStatusUpdater(
 		deps.contestStatus,
