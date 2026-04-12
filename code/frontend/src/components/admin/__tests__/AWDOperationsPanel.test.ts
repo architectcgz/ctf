@@ -148,6 +148,11 @@ describe('AWDOperationsPanel', () => {
       },
       global: {
         stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
           AWDRoundInspector: true,
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
@@ -180,6 +185,11 @@ describe('AWDOperationsPanel', () => {
       },
       global: {
         stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
           AWDRoundInspector: true,
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
@@ -253,6 +263,11 @@ describe('AWDOperationsPanel', () => {
       },
       global: {
         stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
           AWDRoundInspector: true,
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,
@@ -292,6 +307,11 @@ describe('AWDOperationsPanel', () => {
       },
       global: {
         stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
           AWDRoundInspector: true,
           AWDRoundCreateDialog: true,
           AWDServiceCheckDialog: true,

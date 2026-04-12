@@ -50,8 +50,14 @@ const summaryItems = computed(() => {
 })
 
 const blockingItems = computed(() => props.readiness?.items || [])
+const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0)
 const blockingActionLabels = computed(() =>
   (props.readiness?.blocking_actions || []).map((action) => getBlockingActionLabel(action))
+)
+const blockingEmptyDescription = computed(() =>
+  hasGlobalBlockingReasons.value
+    ? '当前没有题目级阻塞项，系统级阻塞仍会拦截开赛关键动作。'
+    : '题目侧的 checker 校验已经满足开赛关键动作要求。'
 )
 
 function getBlockingActionLabel(action: string): string {
@@ -88,10 +94,6 @@ function getValidationStateLabel(item: AWDReadinessItemData): string {
     default:
       return '未验证'
   }
-}
-
-function getValidationStateClass(item: AWDReadinessItemData): string {
-  return `readiness-status-chip readiness-status-chip--${item.validation_state}`
 }
 
 function getBlockingReasonLabel(item: AWDReadinessItemData): string {
@@ -151,7 +153,7 @@ function formatDateTime(value?: string): string {
 
     <template v-else>
       <section
-        v-if="readiness?.global_blocking_reasons?.length"
+        v-if="hasGlobalBlockingReasons"
         class="workspace-directory-section readiness-alert"
       >
         <header class="workspace-tab-heading">
@@ -190,7 +192,7 @@ function formatDateTime(value?: string): string {
         <AppEmpty
           v-if="blockingItems.length === 0"
           title="当前没有题目级阻塞项"
-          description="题目侧的 checker 校验已经满足开赛关键动作要求。"
+          :description="blockingEmptyDescription"
           icon="ShieldCheck"
         />
 
@@ -212,7 +214,7 @@ function formatDateTime(value?: string): string {
               </p>
             </div>
             <div class="readiness-row__status">
-              <span :class="getValidationStateClass(item)">
+              <span class="readiness-status-chip">
                 {{ getValidationStateLabel(item) }}
               </span>
             </div>
@@ -375,28 +377,11 @@ function formatDateTime(value?: string): string {
   min-height: 30px;
   padding: 0 0.8rem;
   border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  color: var(--journal-ink);
   font-size: 0.8rem;
   font-weight: 600;
-}
-
-.readiness-status-chip--pending {
-  color: #9a6700;
-  background: color-mix(in srgb, #fbbc04 16%, transparent);
-}
-
-.readiness-status-chip--failed {
-  color: #a33a35;
-  background: color-mix(in srgb, #ef6b5b 16%, transparent);
-}
-
-.readiness-status-chip--stale {
-  color: #6e56cf;
-  background: color-mix(in srgb, #7c6cff 15%, transparent);
-}
-
-.readiness-status-chip--passed {
-  color: #1d7a46;
-  background: color-mix(in srgb, #35c16d 16%, transparent);
 }
 
 @media (max-width: 1100px) {
