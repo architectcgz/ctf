@@ -7,6 +7,7 @@ import studentAnalysisSource from '@/components/teacher/class-management/Student
 import classTrendPanelSource from '@/components/teacher/TeacherClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
+import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
@@ -130,5 +131,19 @@ describe('teacher detail surface alignment', () => {
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classInsightsPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classReviewPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
+  })
+
+  it('teacher detail panels should inherit shared journal tokens instead of carrying local hex fallbacks', () => {
+    for (const source of [
+      classTrendPanelSource,
+      classInsightsPanelSource,
+      classReviewPanelSource,
+      interventionPanelSource,
+    ]) {
+      expect(source).not.toContain('--panel-ink: var(--journal-ink, #0f172a);')
+      expect(source).not.toContain('--panel-muted: var(--journal-muted, #64748b);')
+      expect(source).not.toContain('--panel-accent: var(--journal-accent, #4f46e5);')
+      expect(source).not.toContain('--panel-accent-strong: var(--journal-accent-strong, #4338ca);')
+    }
   })
 })

@@ -155,8 +155,8 @@ const weakDimensionStats = computed(() => {
 }
 
 .teacher-panel {
-  --panel-ink: var(--journal-ink, #0f172a);
-  --panel-muted: var(--journal-muted, #64748b);
+  --panel-ink: var(--journal-ink);
+  --panel-muted: var(--journal-muted);
   --panel-border: color-mix(
     in srgb,
     var(--journal-border, var(--color-border-default)) 74%,
@@ -165,8 +165,8 @@ const weakDimensionStats = computed(() => {
   --panel-divider: color-mix(in srgb, var(--panel-border) 76%, transparent);
   --panel-surface: var(--journal-surface, var(--color-bg-surface));
   --panel-surface-subtle: var(--journal-surface-subtle, var(--color-bg-elevated));
-  --panel-accent: var(--journal-accent, #4f46e5);
-  --panel-accent-strong: var(--journal-accent-strong, #4338ca);
+  --panel-accent: var(--journal-accent);
+  --panel-accent-strong: var(--journal-accent-strong);
 }
 
 .teacher-panel:not(.teacher-panel--shellless) {
