@@ -321,9 +321,9 @@ const summaryCards = computed(() => [
 }
 
 .journal-weak-tag--stable {
-  border-color: color-mix(in srgb, #16a34a 22%, transparent);
-  background: color-mix(in srgb, #16a34a 10%, transparent);
-  color: #15803d;
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
 }
 
 :global([data-theme='dark']) .recommend-list {
