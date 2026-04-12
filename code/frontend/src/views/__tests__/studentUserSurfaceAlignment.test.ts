@@ -130,6 +130,23 @@ describe('student and user surface alignment', () => {
     expect(studentCategoryProgressSource).not.toContain('Weakest Direction')
   })
 
+  it('student difficulty 应切换到强度推进工作区和 shared metric-panel 摘要卡片栈，而不是继续保留说明型双栏结构', () => {
+    expect(studentDifficultySource).toContain('先推这一档强度')
+    expect(studentDifficultySource).toContain(
+      'class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentDifficultySource).toContain(
+      'class="difficulty-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentDifficultySource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentDifficultySource).toContain(':data-test="`difficulty-action-${item.difficulty}`"')
+    expect(studentDifficultySource).not.toContain('difficulty-insight-list')
+    expect(studentDifficultySource).not.toContain('难度层级总览')
+    expect(studentDifficultySource).not.toContain('训练解读')
+  })
+
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('--journal-border:')

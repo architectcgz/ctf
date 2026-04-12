@@ -353,6 +353,85 @@ describe('DashboardView', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
   })
 
+  it('应该在 difficulty 子菜单下展示强度推进工作区并支持跳转到对应难度题目', async () => {
+    routeState.query = { panel: 'difficulty' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const mediumAction = difficultyPanel.get('[data-test="difficulty-action-medium"]')
+
+    expect(difficultyPanel.classes()).toContain('active')
+    expect(difficultyPanel.attributes('aria-hidden')).toBe('false')
+    expect(difficultyPanel.isVisible()).toBe(true)
+    expect(difficultyPanel.text()).toContain('先推这一档强度')
+    expect(difficultyPanel.text()).toContain('中等')
+    expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(2)
+
+    await mediumAction.get('button').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { difficulty: 'medium' },
+    })
+  })
+
+  it('应该在 difficulty 空状态下避免展示虚构难度名，并保留合理的训练入口', async () => {
+    routeState.query = { panel: 'difficulty' }
+    assessmentApiMocks.getMyProgress.mockResolvedValue({
+      total_score: 320,
+      total_solved: 0,
+      rank: 7,
+      category_stats: [],
+      difficulty_stats: [],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const difficultyPanel = wrapper.get('#dashboard-panel-difficulty')
+    const primaryButton = difficultyPanel
+      .findAll('button')
+      .find((button) => button.text().trim() === '去训练')
+
+    expect(difficultyPanel.attributes('aria-hidden')).toBe('false')
+    expect(difficultyPanel.isVisible()).toBe(true)
+    expect(difficultyPanel.text()).toContain('先开始建立强度节奏')
+    expect(difficultyPanel.text()).toContain('当前还没有难度统计数据，先完成几道题再回来查看。')
+    expect(difficultyPanel.text()).not.toContain('待选择')
+    expect(difficultyPanel.findAll('.difficulty-action-item')).toHaveLength(0)
+    expect(primaryButton).toBeTruthy()
+
+    await primaryButton!.trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'Challenges' })
+  })
+
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
     routeState.params = { variant: '2' }
 

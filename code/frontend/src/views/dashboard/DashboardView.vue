@@ -161,6 +161,10 @@ function openCategoryChallenges(category: string): void {
   router.push({ name: 'Challenges', query: { category } })
 }
 
+function openDifficultyChallenges(difficulty: string): void {
+  router.push({ name: 'Challenges', query: { difficulty } })
+}
+
 function openSkillProfile(): void {
   router.push({ name: 'SkillProfile' })
 }
@@ -283,6 +287,8 @@ function openChallenge(challengeId: string): void {
             v-show="activePanel === 'difficulty'"
             embedded
             :difficulty-stats="difficultyStats"
+            @open-challenges="openChallenges"
+            @open-difficulty-challenges="openDifficultyChallenges"
           />
         </template>
       </main>
