@@ -30,7 +30,7 @@ describe('student and user surface alignment', () => {
     expect(studentOverviewSource).not.toMatch(/border:\s*1px solid var\(--journal-border\);/)
 
     expect(studentDifficultySource).toContain('journal-soft-surface')
-    expect(studentDifficultySource).toMatch(/\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s)
+    expect(studentDifficultySource).toContain('.difficulty-note')
     expect(studentDifficultySource).not.toContain('rgba(226, 232, 240, 0.72)')
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
@@ -111,6 +111,8 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('Top Queue')
     expect(studentRecommendationSource).not.toContain('Full List')
     expect(studentRecommendationSource).not.toContain('推荐摘要')
+    expect(studentRecommendationSource).not.toContain('训练动作目录')
+    expect(studentRecommendationSource).not.toContain('为什么先做这些')
   })
 
   it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
@@ -128,6 +130,7 @@ describe('student and user surface alignment', () => {
     expect(studentCategoryProgressSource).not.toContain('category-highlight')
     expect(studentCategoryProgressSource).not.toContain('Strongest Direction')
     expect(studentCategoryProgressSource).not.toContain('Weakest Direction')
+    expect(studentCategoryProgressSource).not.toContain('Action Directory')
   })
 
   it('student difficulty 应切换到强度推进工作区和 shared metric-panel 摘要卡片栈，而不是继续保留说明型双栏结构', () => {
@@ -145,6 +148,8 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toContain('difficulty-insight-list')
     expect(studentDifficultySource).not.toContain('难度层级总览')
     expect(studentDifficultySource).not.toContain('训练解读')
+    expect(studentDifficultySource).not.toContain('Action Directory')
+    expect(studentDifficultySource).not.toContain('为什么现在先推这一档')
   })
 
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowRight, ShieldAlert, Sparkles } from 'lucide-vue-next'
+import { ArrowRight, ShieldAlert } from 'lucide-vue-next'
 
 import type { RecommendationItem } from '@/api/contracts'
 import { difficultyClass, difficultyLabel } from '@/utils/challenge'
@@ -56,11 +56,6 @@ const summaryCards = computed(() => [
         : '当前没有推荐任务，可以先浏览全部题目。',
   },
 ])
-const rationaleText = computed(() =>
-  visibleWeakDimensions.value.length > 0
-    ? `这些题目优先围绕 ${visibleWeakDimensions.value.join(' / ')} 排布，方便你用连续几道题集中补强同一段训练链路。`
-    : '当前没有明显短板，这一页会优先维持训练连续性，并帮你继续扩大题目覆盖面。'
-)
 </script>
 
 <template>
@@ -119,21 +114,18 @@ const rationaleText = computed(() =>
       :class="{ 'recommend-board--embedded': embedded }"
     >
       <section class="recommend-section">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Action Directory</div>
-            <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练动作目录</h3>
-            <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
-              按当前顺序进入，先把这批最贴近目标的题目做掉。
-            </p>
+        <div v-if="recommendations.length > 0" class="recommend-toolbar">
+          <p class="recommend-toolbar__copy">
+            按当前顺序直接推进，做完这组再回来刷新下一批建议。
+          </p>
+          <div class="recommend-toolbar__actions">
+            <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
+              能力画像
+            </button>
+            <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
+              浏览全部题目
+            </button>
           </div>
-          <button
-            v-if="recommendations.length > 0"
-            class="journal-btn-primary"
-            @click="emit('openChallenges')"
-          >
-            浏览全部题目
-          </button>
         </div>
 
         <div
@@ -148,7 +140,7 @@ const rationaleText = computed(() =>
           </div>
         </div>
 
-        <div v-else class="recommend-list mt-5">
+        <div v-else class="recommend-list mt-4">
           <button
             v-for="(item, index) in recommendations"
             :key="item.challenge_id"
@@ -187,26 +179,6 @@ const rationaleText = computed(() =>
         </div>
       </section>
 
-      <section class="recommend-section recommend-section--compact">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="max-w-3xl">
-            <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
-              <Sparkles class="h-4 w-4 text-[var(--journal-accent)]" />
-              为什么先做这些
-            </div>
-            <p class="mt-3 text-sm leading-7 text-[var(--journal-muted)]">
-              {{ rationaleText }}
-            </p>
-          </div>
-          <button
-            v-if="recommendations.length > 0"
-            class="journal-btn-outline"
-            @click="emit('openSkillProfile')"
-          >
-            查看能力画像
-          </button>
-        </div>
-      </section>
     </div>
   </section>
 </template>
@@ -261,17 +233,24 @@ const rationaleText = computed(() =>
   margin-top: var(--space-5);
 }
 
-.recommend-section + .recommend-section {
-  margin-top: var(--space-6);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--journal-divider);
+.recommend-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
 }
 
-.recommend-section--compact {
-  border-radius: 22px;
-  border: 1px solid var(--journal-shell-border);
-  background: color-mix(in srgb, var(--journal-surface) 95%, transparent);
-  padding: var(--space-4-5);
+.recommend-toolbar__copy {
+  margin: 0;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.recommend-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .recommend-list {
@@ -351,13 +330,20 @@ const rationaleText = computed(() =>
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
 }
 
-@media (max-width: 767px) {
-  .journal-soft-surface {
-    --journal-soft-button-height: 36px;
+@media (max-width: 900px) {
+  .recommend-toolbar {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .recommendation-summary-strip {
     --metric-panel-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .journal-soft-surface {
+    --journal-soft-button-height: 36px;
   }
 }
 </style>
