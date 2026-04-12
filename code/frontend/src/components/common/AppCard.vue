@@ -60,7 +60,7 @@ const accentMap: Record<AppCardAccent, AccentMeta> = {
   },
   neutral: {
     color: 'var(--color-text-secondary)',
-    softColor: 'rgba(139,148,158,0.08)',
+    softColor: 'color-mix(in srgb, var(--color-text-secondary) 8%, transparent)',
     borderColor: 'var(--color-border-default)',
   },
 }
