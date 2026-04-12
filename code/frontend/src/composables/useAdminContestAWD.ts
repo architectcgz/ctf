@@ -5,6 +5,7 @@ import {
   createContestAWDRound,
   createContestAWDAttackLog,
   createContestAWDServiceCheck,
+  getContestAWDReadiness,
   getChallenges,
   getAdminContestLiveScoreboard,
   getContestAWDRoundSummary,
@@ -19,8 +20,11 @@ import {
   runContestAWDCurrentRoundCheck,
   updateAdminContestChallenge,
 } from '@/api/admin'
+import { ApiError } from '@/api/request'
 import type {
   AWDAttackLogData,
+  AWDReadinessAction,
+  AWDReadinessData,
   AWDRoundData,
   AWDRoundSummaryData,
   AWDTrafficEventData,
@@ -37,6 +41,7 @@ import { useToast } from '@/composables/useToast'
 
 const AWD_AUTO_REFRESH_INTERVAL_MS = 15_000
 const AWD_TRAFFIC_DEFAULT_PAGE_SIZE = 20
+const ERR_AWD_READINESS_BLOCKED = 14025
 
 interface AWDTrafficFilterState {
   attacker_team_id: string
@@ -46,6 +51,20 @@ interface AWDTrafficFilterState {
   path_keyword: string
   page: number
   page_size: number
+}
+
+interface AWDReadinessOverrideDialogState {
+  open: boolean
+  action: AWDReadinessAction | null
+  title: string
+  readiness: AWDReadinessData | null
+  confirmLoading: boolean
+  pendingRoundPayload?: {
+    round_number: number
+    status?: AWDRoundData['status']
+    attack_score?: number
+    defense_score?: number
+  }
 }
 
 function createDefaultTrafficFilters(): AWDTrafficFilterState {
@@ -95,6 +114,30 @@ function pickRoundId(rounds: AWDRoundData[], currentRoundId: string | null, pref
   return runningRound?.id || rounds[rounds.length - 1]?.id || null
 }
 
+function createDefaultOverrideDialogState(): AWDReadinessOverrideDialogState {
+  return {
+    open: false,
+    action: null,
+    title: '',
+    readiness: null,
+    confirmLoading: false,
+  }
+}
+
+function isAWDReadinessBlockedError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === ERR_AWD_READINESS_BLOCKED
+}
+
+function humanizeRequestError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError && error.message.trim()) {
+    return error.message
+  }
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+  return fallback
+}
+
 export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailData | null>>) {
   const toast = useToast()
   const rounds = ref<AWDRoundData[]>([])
@@ -111,16 +154,21 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
   const teams = ref<AdminContestTeamData[]>([])
   const challengeLinks = ref<AdminContestChallengeData[]>([])
   const challengeCatalog = ref<AdminChallengeListItem[]>([])
+  const readiness = ref<AWDReadinessData | null>(null)
   const loadingRounds = ref(false)
   const loadingRoundDetail = ref(false)
   const loadingTrafficSummary = ref(false)
   const loadingTrafficEvents = ref(false)
   const loadingChallengeCatalog = ref(false)
+  const loadingReadiness = ref(false)
   const checking = ref(false)
   const creatingRound = ref(false)
   const savingServiceCheck = ref(false)
   const savingAttackLog = ref(false)
   const savingChallengeConfig = ref(false)
+  const overrideDialogState = ref<AWDReadinessOverrideDialogState>(
+    createDefaultOverrideDialogState()
+  )
 
   const selectedRound = computed(() =>
     rounds.value.find((item) => item.id === selectedRoundId.value) || null
@@ -166,6 +214,101 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       path_keyword: filters.path_keyword.trim() || undefined,
       page: filters.page,
       page_size: filters.page_size,
+    }
+  }
+
+  function resetOverrideDialog() {
+    overrideDialogState.value = createDefaultOverrideDialogState()
+  }
+
+  async function refreshReadiness() {
+    if (!selectedContest.value || selectedContest.value.mode !== 'awd') {
+      readiness.value = null
+      resetOverrideDialog()
+      return null
+    }
+
+    loadingReadiness.value = true
+    try {
+      const nextReadiness = await getContestAWDReadiness(selectedContest.value.id)
+      readiness.value = nextReadiness
+      return nextReadiness
+    } finally {
+      loadingReadiness.value = false
+    }
+  }
+
+  async function openOverrideDialog(
+    action: Extract<AWDReadinessAction, 'create_round' | 'run_current_round_check'>,
+    title: string,
+    pendingRoundPayload?: AWDReadinessOverrideDialogState['pendingRoundPayload']
+  ) {
+    const snapshot = await refreshReadiness()
+    overrideDialogState.value = {
+      open: true,
+      action,
+      title,
+      readiness: snapshot || readiness.value,
+      confirmLoading: false,
+      pendingRoundPayload,
+    }
+  }
+
+  function closeOverrideDialog() {
+    resetOverrideDialog()
+  }
+
+  async function confirmOverrideAction(reason: string) {
+    if (!selectedContest.value) {
+      return
+    }
+
+    const normalizedReason = reason.trim()
+    const currentAction = overrideDialogState.value.action
+    const currentTitle = overrideDialogState.value.title
+    const pendingRoundPayload = overrideDialogState.value.pendingRoundPayload
+    if (!normalizedReason || !currentAction) {
+      return
+    }
+
+    overrideDialogState.value = {
+      ...overrideDialogState.value,
+      confirmLoading: true,
+    }
+
+    try {
+      if (currentAction === 'create_round' && pendingRoundPayload) {
+        const round = await createContestAWDRound(selectedContest.value.id, {
+          ...pendingRoundPayload,
+          force_override: true,
+          override_reason: normalizedReason,
+        })
+        toast.success(`第 ${round.round_number} 轮已创建`)
+        resetOverrideDialog()
+        await refresh(round.id)
+        return
+      }
+
+      const result = await runContestAWDCurrentRoundCheck(selectedContest.value.id, {
+        force_override: true,
+        override_reason: normalizedReason,
+      })
+      toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
+      resetOverrideDialog()
+      await refresh(result.round.id)
+    } catch (error) {
+      if (isAWDReadinessBlockedError(error)) {
+        await openOverrideDialog(currentAction, currentTitle || '强制继续', pendingRoundPayload)
+        return
+      }
+      toast.error(humanizeRequestError(error, '执行强制放行失败'))
+    } finally {
+      if (overrideDialogState.value.open) {
+        overrideDialogState.value = {
+          ...overrideDialogState.value,
+          confirmLoading: false,
+        }
+      }
     }
   }
 
@@ -293,20 +436,25 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       trafficFilters.value = createDefaultTrafficFilters()
       teams.value = []
       challengeLinks.value = []
+      readiness.value = null
+      loadingReadiness.value = false
+      resetOverrideDialog()
       clearRoundDetail()
       return
     }
 
     const requestToken = ++roundsRequestToken
     loadingRounds.value = true
+    loadingReadiness.value = true
     try {
       const previousSelectedRound = selectedRound.value
       const wasFollowingRunningRound = previousSelectedRound?.status === 'running'
       const storedRoundId = loadStoredSelectedRoundId(selectedContest.value.id)
-      const [nextRounds, nextTeams, nextChallengeLinks] = await Promise.all([
+      const [nextRounds, nextTeams, nextChallengeLinks, nextReadiness] = await Promise.all([
         listContestAWDRounds(selectedContest.value.id),
         listContestTeams(selectedContest.value.id),
         listAdminContestChallenges(selectedContest.value.id),
+        getContestAWDReadiness(selectedContest.value.id),
       ])
       if (requestToken !== roundsRequestToken) {
         return
@@ -315,6 +463,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       rounds.value = nextRounds
       teams.value = nextTeams
       challengeLinks.value = nextChallengeLinks
+      readiness.value = nextReadiness
       let nextPreferredRoundId = preferredRoundId || storedRoundId || undefined
       if (wasFollowingRunningRound) {
         const previousRoundStillRunning = nextRounds.some(
@@ -335,6 +484,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     } finally {
       if (requestToken === roundsRequestToken) {
         loadingRounds.value = false
+        loadingReadiness.value = false
       }
     }
   }
@@ -360,11 +510,19 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
 
     checking.value = true
     try {
-      const result = selectedRoundId.value
-        ? await runContestAWDRoundCheck(selectedContest.value.id, selectedRoundId.value)
-        : await runContestAWDCurrentRoundCheck(selectedContest.value.id)
+      const shouldRunCurrentRound = selectedRound.value?.status === 'running'
+      const result =
+        shouldRunCurrentRound || !selectedRoundId.value
+          ? await runContestAWDCurrentRoundCheck(selectedContest.value.id)
+          : await runContestAWDRoundCheck(selectedContest.value.id, selectedRoundId.value)
       toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
       await refresh(result.round.id)
+    } catch (error) {
+      if (isAWDReadinessBlockedError(error)) {
+        await openOverrideDialog('run_current_round_check', '立即巡检当前轮')
+        return
+      }
+      toast.error(humanizeRequestError(error, '执行巡检失败'))
     } finally {
       checking.value = false
     }
@@ -386,6 +544,12 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       toast.success(`第 ${round.round_number} 轮已创建`)
       await refresh(round.id)
       return round
+    } catch (error) {
+      if (isAWDReadinessBlockedError(error)) {
+        await openOverrideDialog('create_round', '创建轮次', payload)
+        return
+      }
+      toast.error(humanizeRequestError(error, '创建轮次失败'))
     } finally {
       creatingRound.value = false
     }
@@ -453,6 +617,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       await createAdminContestChallenge(selectedContest.value.id, payload)
       toast.success('赛事题目已关联')
       await refreshChallengeLinks()
+      await refreshReadiness()
     } finally {
       savingChallengeConfig.value = false
     }
@@ -480,6 +645,7 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       await updateAdminContestChallenge(selectedContest.value.id, challengeId, payload)
       toast.success('题目配置已更新')
       await refreshChallengeLinks()
+      await refreshReadiness()
     } finally {
       savingChallengeConfig.value = false
     }
@@ -564,25 +730,31 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     teams,
     challengeLinks,
     challengeCatalog,
+    readiness,
     loadingRounds,
     loadingRoundDetail,
     loadingTrafficSummary,
     loadingTrafficEvents,
     loadingChallengeCatalog,
+    loadingReadiness,
     checking,
     creatingRound,
     savingServiceCheck,
     savingAttackLog,
     savingChallengeConfig,
+    overrideDialogState,
     hasSelectedContest,
     shouldAutoRefresh,
     refresh,
+    refreshReadiness,
     refreshRoundDetail,
     refreshTrafficEvents,
     applyTrafficFilters,
     setTrafficPage,
     resetTrafficFilters,
     runSelectedRoundCheck,
+    confirmOverrideAction,
+    closeOverrideDialog,
     createRound,
     createServiceCheck,
     createAttackLog,

@@ -21,6 +21,7 @@ import {
   createChallenge,
   createChallengePublishRequest,
   createContest,
+  createContestAWDRound,
   configureChallengeFlag,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
@@ -32,6 +33,7 @@ import {
   getLatestChallengePublishRequest,
   getContestAWDRoundSummary,
   getContestAWDRoundTrafficSummary,
+  getContestAWDReadiness,
   getChallengeWriteup,
   getChallenges,
   getCheatDetection,
@@ -45,6 +47,7 @@ import {
   listContestAWDRoundTrafficEvents,
   publishAdminNotification,
   recommendChallengeWriteup,
+  runContestAWDCurrentRoundCheck,
   runContestAWDRoundCheck,
   saveChallengeTopology,
   saveChallengeWriteup,
@@ -974,6 +977,173 @@ describe('admin contest api contract', () => {
         end_time: '2026-03-12T12:00:00.000Z',
         status: 'registration',
       },
+    })
+  })
+
+  it('应该请求 AWD readiness 并归一化阻塞摘要', async () => {
+    requestMock.mockResolvedValue({
+      contest_id: 9,
+      ready: false,
+      total_challenges: 3,
+      passed_challenges: 1,
+      pending_challenges: 1,
+      failed_challenges: 1,
+      stale_challenges: 0,
+      missing_checker_challenges: 1,
+      blocking_count: 2,
+      global_blocking_reasons: ['no_challenges'],
+      blocking_actions: ['create_round', 'run_current_round_check'],
+      items: [
+        {
+          challenge_id: 101,
+          title: 'web-checker',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
+
+    const result = await getContestAWDReadiness('9')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'GET',
+      url: '/admin/contests/9/awd/readiness',
+      suppressErrorToast: true,
+    })
+    expect(result).toEqual({
+      contest_id: '9',
+      ready: false,
+      total_challenges: 3,
+      passed_challenges: 1,
+      pending_challenges: 1,
+      failed_challenges: 1,
+      stale_challenges: 0,
+      missing_checker_challenges: 1,
+      blocking_count: 2,
+      global_blocking_reasons: ['no_challenges'],
+      blocking_actions: ['create_round', 'run_current_round_check'],
+      items: [
+        {
+          challenge_id: '101',
+          title: 'web-checker',
+          checker_type: 'http_standard',
+          validation_state: 'failed',
+          last_preview_at: '2026-04-12T08:00:00.000Z',
+          last_access_url: 'http://checker.internal/flag',
+          blocking_reason: 'last_preview_failed',
+        },
+      ],
+    })
+  })
+
+  it('应该在创建轮次时透传 readiness override 字段', async () => {
+    requestMock.mockResolvedValue({
+      id: 21,
+      contest_id: 9,
+      round_number: 4,
+      status: 'pending',
+      attack_score: 60,
+      defense_score: 40,
+      created_at: '2026-04-12T09:00:00.000Z',
+      updated_at: '2026-04-12T09:00:00.000Z',
+    })
+
+    await createContestAWDRound('awd-1', {
+      round_number: 4,
+      status: 'pending',
+      attack_score: 60,
+      defense_score: 40,
+      force_override: true,
+      override_reason: 'teacher drill',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/awd-1/awd/rounds',
+      data: {
+        round_number: 4,
+        status: 'pending',
+        attack_score: 60,
+        defense_score: 40,
+        force_override: true,
+        override_reason: 'teacher drill',
+      },
+      suppressErrorToast: true,
+    })
+  })
+
+  it('应该允许当前轮巡检请求携带可选 override body', async () => {
+    requestMock.mockResolvedValue({
+      round: {
+        id: 21,
+        contest_id: 9,
+        round_number: 4,
+        status: 'running',
+        attack_score: 60,
+        defense_score: 40,
+        created_at: '2026-04-12T09:00:00.000Z',
+        updated_at: '2026-04-12T09:00:00.000Z',
+      },
+      services: [],
+    })
+
+    await runContestAWDCurrentRoundCheck('awd-1', {
+      force_override: true,
+      override_reason: 'teacher drill',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/awd-1/awd/current-round/check',
+      data: {
+        force_override: true,
+        override_reason: 'teacher drill',
+      },
+      suppressErrorToast: true,
+    })
+  })
+
+  it('应该在更新赛事时透传 override 字段并允许关闭错误 toast', async () => {
+    requestMock.mockResolvedValue({
+      id: 9,
+      title: '春季赛',
+      description: '测试竞赛',
+      mode: 'awd',
+      start_time: '2026-03-12T09:00:00.000Z',
+      end_time: '2026-03-12T12:00:00.000Z',
+      freeze_time: null,
+      status: 'running',
+      created_at: '2026-03-01T00:00:00.000Z',
+      updated_at: '2026-03-02T00:00:00.000Z',
+    })
+
+    await updateContest(
+      '9',
+      {
+        status: 'running',
+        force_override: true,
+        override_reason: 'teacher drill',
+      },
+      { suppressErrorToast: true }
+    )
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'PUT',
+      url: '/admin/contests/9',
+      data: {
+        title: undefined,
+        description: undefined,
+        mode: undefined,
+        start_time: undefined,
+        end_time: undefined,
+        status: 'running',
+        force_override: true,
+        override_reason: 'teacher drill',
+      },
+      suppressErrorToast: true,
     })
   })
 

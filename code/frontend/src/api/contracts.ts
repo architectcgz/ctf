@@ -354,6 +354,14 @@ export type AWDServiceStatus = 'up' | 'down' | 'compromised'
 export type AWDAttackType = 'flag_capture' | 'service_exploit'
 export type AWDAttackSource = 'legacy' | 'manual_attack_log' | 'submission'
 export type AWDCheckerType = 'legacy_probe' | 'http_standard'
+export type AWDReadinessAction = 'create_round' | 'run_current_round_check' | 'start_contest'
+export type AWDReadinessBlockingReason =
+  | 'missing_checker'
+  | 'invalid_checker_config'
+  | 'pending_validation'
+  | 'last_preview_failed'
+  | 'validation_stale'
+export type AWDReadinessGlobalReason = 'no_challenges'
 
 export interface AWDRoundData {
   id: ID
@@ -531,6 +539,31 @@ export interface AWDCheckerPreviewData {
   check_result: Record<string, unknown>
   preview_context: AWDCheckerPreviewContextData
   preview_token?: string
+}
+
+export interface AWDReadinessItemData {
+  challenge_id: ID
+  title: string
+  checker_type?: AWDCheckerType
+  validation_state: 'pending' | 'failed' | 'stale' | 'passed'
+  last_preview_at?: ISODateTime
+  last_access_url?: string
+  blocking_reason: AWDReadinessBlockingReason
+}
+
+export interface AWDReadinessData {
+  contest_id: ID
+  ready: boolean
+  total_challenges: number
+  passed_challenges: number
+  pending_challenges: number
+  failed_challenges: number
+  stale_challenges: number
+  missing_checker_challenges: number
+  blocking_count: number
+  global_blocking_reasons: AWDReadinessGlobalReason[]
+  blocking_actions: AWDReadinessAction[]
+  items: AWDReadinessItemData[]
 }
 
 export interface AdminContestTeamData {

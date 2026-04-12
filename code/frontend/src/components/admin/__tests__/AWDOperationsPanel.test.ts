@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 
 import AWDOperationsPanel from '../contest/AWDOperationsPanel.vue'
 
@@ -12,6 +12,15 @@ vi.mock('@/composables/useAdminContestAWD', async () => {
   awdMockModule.state = {
     rounds: ref([]),
     selectedRoundId: ref<string | null>(null),
+    readiness: ref(null),
+    loadingReadiness: ref(false),
+    overrideDialogState: ref({
+      open: false,
+      action: null,
+      title: '',
+      reason: '',
+      readiness: null,
+    }),
     services: ref([]),
     attacks: ref([]),
     summary: ref(null),
@@ -41,6 +50,8 @@ vi.mock('@/composables/useAdminContestAWD', async () => {
     resetTrafficFilters: vi.fn(),
     runSelectedRoundCheck: vi.fn(),
     createRound: vi.fn(),
+    confirmOverrideAction: vi.fn(),
+    closeOverrideDialog: vi.fn(),
     createServiceCheck: vi.fn(),
     createAttackLog: vi.fn(),
     loadChallengeCatalog: vi.fn(),
@@ -56,15 +67,77 @@ function getAwdState() {
   return awdMockModule.state
 }
 
+function buildReadinessState(overrides: Record<string, unknown> = {}) {
+  return {
+    contest_id: 'awd-1',
+    ready: false,
+    total_challenges: 3,
+    passed_challenges: 1,
+    pending_challenges: 1,
+    failed_challenges: 1,
+    stale_challenges: 0,
+    missing_checker_challenges: 1,
+    blocking_count: 2,
+    global_blocking_reasons: [],
+    blocking_actions: ['create_round', 'run_current_round_check'],
+    items: [
+      {
+        challenge_id: 'challenge-1',
+        title: 'Web Checker',
+        checker_type: 'http_standard',
+        validation_state: 'failed',
+        last_preview_at: '2026-04-12T08:00:00.000Z',
+        last_access_url: 'http://checker.internal/flag',
+        blocking_reason: 'last_preview_failed',
+      },
+    ],
+    ...overrides,
+  }
+}
+
+function buildDialogState(overrides: Record<string, unknown> = {}) {
+  return {
+    open: true,
+    action: 'create_round',
+    title: '创建轮次',
+    reason: '',
+    readiness: buildReadinessState(),
+    ...overrides,
+  }
+}
+
 describe('AWDOperationsPanel', () => {
   beforeEach(() => {
     const awdState = getAwdState()
     awdState.challengeLinks.value = []
     awdState.challengeCatalog.value = []
     awdState.teams.value = []
+    awdState.rounds.value = []
+    awdState.selectedRoundId.value = null
+    awdState.readiness.value = null
+    awdState.loadingReadiness.value = false
+    awdState.overrideDialogState.value = {
+      open: false,
+      action: null,
+      title: '',
+      reason: '',
+      readiness: null,
+    }
     awdState.loadChallengeCatalog.mockReset()
     awdState.createChallengeLink.mockReset()
     awdState.updateChallengeLink.mockReset()
+    awdState.createRound.mockReset()
+    awdState.runSelectedRoundCheck.mockReset()
+    awdState.confirmOverrideAction.mockReset()
+    awdState.closeOverrideDialog.mockImplementation(() => {
+      awdState.overrideDialogState.value = {
+        open: false,
+        action: null,
+        title: '',
+        reason: '',
+        readiness: null,
+      }
+    })
   })
 
   it('应该在没有 AWD 赛事时展示空态', () => {
@@ -193,5 +266,194 @@ describe('AWDOperationsPanel', () => {
     expect(wrapper.text()).toContain('新增题目')
     expect(wrapper.text()).toContain('编辑配置')
     expect(wrapper.text()).toContain('最近通过')
+  })
+
+  it('应该渲染 readiness 摘要与系统级阻塞提示', () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState({
+      global_blocking_reasons: ['no_challenges'],
+      items: [],
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          AWDRoundInspector: true,
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('开赛就绪摘要')
+    expect(wrapper.text()).toContain('未配 Checker')
+    expect(wrapper.text()).toContain('当前赛事还没有关联题目')
+  })
+
+  it('应该在创建轮次被 gate 拦截时打开强制继续弹层', async () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState()
+    awdState.createRound.mockImplementation(async () => {
+      awdState.overrideDialogState.value = buildDialogState()
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: {
+            template:
+              '<div><button id="stub-open-create-round" type="button" @click="$emit(\'openCreateRoundDialog\')">创建轮次</button></div>',
+          },
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigPanel: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    await wrapper.get('#stub-open-create-round').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-round-create-submit').trigger('click')
+    await flushPromises()
+
+    expect(awdState.createRound).toHaveBeenCalled()
+    expect(wrapper.text()).toContain('强制继续')
+    expect(wrapper.text()).toContain('创建轮次')
+  })
+
+  it('应该在当前轮巡检被 gate 拦截时打开强制继续弹层', async () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState()
+    awdState.runSelectedRoundCheck.mockImplementation(async () => {
+      awdState.overrideDialogState.value = buildDialogState({
+        action: 'run_current_round_check',
+        title: '立即巡检当前轮',
+      })
+    })
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: {
+            template:
+              '<div><button id="stub-run-current-check" type="button" @click="$emit(\'runSelectedRoundCheck\')">立即巡检当前轮</button></div>',
+          },
+          AWDRoundCreateDialog: true,
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigPanel: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    await wrapper.get('#stub-run-current-check').trigger('click')
+    await flushPromises()
+
+    expect(awdState.runSelectedRoundCheck).toHaveBeenCalled()
+    expect(wrapper.text()).toContain('强制继续')
+    expect(wrapper.text()).toContain('立即巡检当前轮')
+  })
+
+  it('应该在普通失败未进入 gate 状态时保持弹层关闭', async () => {
+    const awdState = getAwdState()
+    awdState.readiness.value = buildReadinessState()
+    awdState.createRound.mockResolvedValue(undefined)
+
+    const wrapper = mount(AWDOperationsPanel, {
+      props: {
+        contests: [
+          {
+            id: 'awd-1',
+            title: '2026 AWD 联赛',
+            description: '攻防赛',
+            mode: 'awd',
+            status: 'running',
+            starts_at: '2026-03-18T09:00:00.000Z',
+            ends_at: '2026-03-18T18:00:00.000Z',
+          },
+        ],
+        selectedContestId: 'awd-1',
+      },
+      global: {
+        stubs: {
+          ElDialog: {
+            props: ['modelValue', 'title'],
+            template:
+              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+          },
+          AWDRoundInspector: {
+            template:
+              '<div><button id="stub-open-create-round" type="button" @click="$emit(\'openCreateRoundDialog\')">创建轮次</button></div>',
+          },
+          AWDServiceCheckDialog: true,
+          AWDAttackLogDialog: true,
+          AWDChallengeConfigPanel: true,
+          AWDChallengeConfigDialog: true,
+        },
+      },
+    })
+
+    await wrapper.get('#stub-open-create-round').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-round-create-submit').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).not.toContain('填写本次放行原因')
   })
 })
