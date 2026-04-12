@@ -7,6 +7,7 @@ import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
 import radarChartSource from '@/components/charts/RadarChart.vue?raw'
 import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
+import studentLegacyOverviewSource from '@/components/dashboard/student/StudentOverviewPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
@@ -73,6 +74,9 @@ describe('shared theme token adoption', () => {
     expect(studentOverviewSource).not.toContain('rgba(16, 185, 129, 0.4)')
     expect(studentOverviewSource).not.toContain('rgba(16, 185, 129, 0.38)')
     expect(studentOverviewSource).not.toContain('rgba(148, 163, 184, 0.2)')
+
+    expect(studentLegacyOverviewSource).not.toContain('rgba(8,47,73,0.35)')
+    expect(studentLegacyOverviewSource).not.toContain('rgba(15,23,42,0.55)')
 
     expect(studentRecommendationSource).not.toContain('#16a34a')
     expect(studentRecommendationSource).not.toContain('#15803d')
