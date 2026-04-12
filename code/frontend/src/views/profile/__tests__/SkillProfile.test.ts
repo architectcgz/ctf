@@ -131,7 +131,7 @@ describe('SkillProfile', () => {
       skillProfileSource.indexOf('<div class="journal-eyebrow">Skill Profile</div>')
     )
     expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
-      skillProfileSource.indexOf('<h1 class="journal-page-title')
+      skillProfileSource.indexOf('<h1 class="journal-page-title workspace-page-title')
     )
     expect(skillProfileSource.indexOf('class="top-tabs"')).toBeLessThan(
       skillProfileSource.indexOf('class="skill-teacher-panel')
@@ -140,7 +140,7 @@ describe('SkillProfile', () => {
       skillProfileSource.indexOf('class="skill-board')
     )
     expect(skillProfileSource).toMatch(
-      /id="skill-profile-panel-analysis"[\s\S]*class="skill-overview-head"[\s\S]*<h1 class="journal-page-title[\s\S]*<p class="skill-overview-copy[\s\S]*class="skill-overview-actions"/s
+      /id="skill-profile-panel-analysis"[\s\S]*class="skill-overview-head"[\s\S]*<h1 class="journal-page-title workspace-page-title[\s\S]*<p class="skill-overview-copy workspace-page-copy[\s\S]*class="skill-overview-actions"/s
     )
     expect(skillProfileSource).toContain('class="skill-board px-1 md:px-2"')
     expect(skillProfileSource).not.toContain('class="skill-board mt-6')

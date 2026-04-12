@@ -203,10 +203,12 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
           <div class="skill-analysis-stack">
             <div>
               <div class="skill-overview-head">
-                <h1 class="journal-page-title workspace-tab-heading__title text-[var(--journal-ink)]">
+                <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
                   能力画像
                 </h1>
-                <p class="skill-overview-copy">查看当前能力维度表现，并根据薄弱项获取推荐靶场。</p>
+                <p class="skill-overview-copy workspace-page-copy">
+                  查看当前能力维度表现，并根据薄弱项获取推荐靶场。
+                </p>
                 <div class="skill-overview-actions" role="group" aria-label="能力画像快捷操作">
                   <button type="button" class="journal-btn" @click="loadCurrentData">刷新</button>
                   <button
@@ -493,8 +495,6 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
 
 .skill-overview-copy {
   max-width: 42rem;
-  font-size: var(--font-size-0-875);
-  line-height: 1.75;
   color: var(--journal-muted);
 }
 
