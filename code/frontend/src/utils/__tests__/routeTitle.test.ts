@@ -10,6 +10,6 @@ describe('resolveRouteTitle', () => {
         path: '/student/dashboard',
         query: { panel: 'timeline' },
       })
-    ).toBe('近期动态')
+    ).toBe('训练记录')
   })
 })

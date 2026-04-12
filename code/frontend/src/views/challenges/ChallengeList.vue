@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ArrowRight, Filter, LayoutDashboard, Search, Target } from 'lucide-vue-next'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { getChallenges } from '@/api/challenge'
 import { ApiError } from '@/api/request'
@@ -10,10 +10,51 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import { usePagination } from '@/composables/usePagination'
 
+const route = useRoute()
 const router = useRouter()
 const searchQuery = ref('')
 const categoryFilter = ref<ChallengeCategory | ''>('')
 const difficultyFilter = ref<ChallengeDifficulty | ''>('')
+const validCategories = ['web', 'pwn', 'reverse', 'crypto', 'misc', 'forensics'] satisfies ChallengeCategory[]
+const validDifficulties = ['beginner', 'easy', 'medium', 'hard', 'insane'] satisfies ChallengeDifficulty[]
+
+function getQueryValue(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value) && typeof value[0] === 'string') return value[0]
+  return ''
+}
+
+function parseCategoryFilter(value: unknown): ChallengeCategory | '' {
+  const queryValue = getQueryValue(value)
+  return validCategories.includes(queryValue as ChallengeCategory) ? (queryValue as ChallengeCategory) : ''
+}
+
+function parseDifficultyFilter(value: unknown): ChallengeDifficulty | '' {
+  const queryValue = getQueryValue(value)
+  return validDifficulties.includes(queryValue as ChallengeDifficulty)
+    ? (queryValue as ChallengeDifficulty)
+    : ''
+}
+
+async function syncFilterQuery(): Promise<boolean> {
+  const nextQuery = { ...route.query }
+
+  if (categoryFilter.value) nextQuery.category = categoryFilter.value
+  else delete nextQuery.category
+
+  if (difficultyFilter.value) nextQuery.difficulty = difficultyFilter.value
+  else delete nextQuery.difficulty
+
+  if (
+    getQueryValue(route.query.category) === getQueryValue(nextQuery.category) &&
+    getQueryValue(route.query.difficulty) === getQueryValue(nextQuery.difficulty)
+  ) {
+    return false
+  }
+
+  await router.replace({ query: nextQuery })
+  return true
+}
 
 const { list, total, page, pageSize, loading, error, changePage, refresh } = usePagination(
   (params) => {
@@ -66,7 +107,11 @@ function onSearch(): void {
 
 function onFilterChange(): void {
   page.value = 1
-  void refresh()
+  void syncFilterQuery().then((updated) => {
+    if (!updated) {
+      void refresh()
+    }
+  })
 }
 
 function resetFilters(): void {
@@ -74,7 +119,11 @@ function resetFilters(): void {
   categoryFilter.value = ''
   difficultyFilter.value = ''
   page.value = 1
-  void refresh()
+  void syncFilterQuery().then((updated) => {
+    if (!updated) {
+      void refresh()
+    }
+  })
 }
 
 function goToDashboard(): void {
@@ -135,9 +184,28 @@ function getDifficultyColor(difficulty: ChallengeDifficulty): string {
   return map[difficulty]
 }
 
-onMounted(() => {
-  void refresh()
-})
+watch(
+  () => [route.query.category, route.query.difficulty] as const,
+  ([nextCategoryQuery, nextDifficultyQuery], previousQuery) => {
+    const nextCategory = parseCategoryFilter(nextCategoryQuery)
+    const nextDifficulty = parseDifficultyFilter(nextDifficultyQuery)
+    const previousCategory = parseCategoryFilter(previousQuery?.[0])
+    const previousDifficulty = parseDifficultyFilter(previousQuery?.[1])
+
+    categoryFilter.value = nextCategory
+    difficultyFilter.value = nextDifficulty
+
+    if (
+      previousQuery === undefined ||
+      previousCategory !== nextCategory ||
+      previousDifficulty !== nextDifficulty
+    ) {
+      page.value = 1
+      void refresh()
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

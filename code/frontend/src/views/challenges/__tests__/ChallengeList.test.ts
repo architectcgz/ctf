@@ -32,9 +32,9 @@ function createTestRouter() {
   })
 }
 
-async function mountPage() {
+async function mountPageWithRouter(initialPath = '/challenges') {
   const router = createTestRouter()
-  await router.push('/challenges')
+  await router.push(initialPath)
   await router.isReady()
 
   const wrapper = mount(ChallengeList, {
@@ -44,6 +44,11 @@ async function mountPage() {
   })
 
   await flushPromises()
+  return { wrapper, router }
+}
+
+async function mountPage(initialPath = '/challenges') {
+  const { wrapper } = await mountPageWithRouter(initialPath)
   return wrapper
 }
 
@@ -80,7 +85,7 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('当前题库概况')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目总数')
-    expect(wrapper.text()).toContain('开始挑战')
+    expect(wrapper.text()).toContain('开始做题')
     expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
   })
 
@@ -242,7 +247,7 @@ describe('ChallengeList', () => {
 
     const wrapper = await mountPage()
 
-    expect(wrapper.text()).toContain('挑战列表加载失败')
+    expect(wrapper.text()).toContain('题目列表加载失败')
     expect(wrapper.text()).toContain('服务暂时不可用，请稍后重试')
     expect(wrapper.text()).not.toContain('请求ID')
   })
@@ -303,13 +308,77 @@ describe('ChallengeList', () => {
     expect(wrapper.find('.challenge-row-points').text()).toContain('100 pts')
   })
 
+  it('应从路由 query 初始化分类和难度筛选', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = await mountPage('/challenges?category=crypto&difficulty=medium')
+
+    expect((wrapper.get('#challenge-category-filter').element as HTMLSelectElement).value).toBe('crypto')
+    expect((wrapper.get('#challenge-difficulty-filter').element as HTMLSelectElement).value).toBe('medium')
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+        difficulty: 'medium',
+      })
+    )
+  })
+
+  it('切换分类和难度时应回写到路由 query', async () => {
+    mockedGetChallenges.mockResolvedValue({
+      list: [],
+      total: 0,
+      page: 1,
+      page_size: 20,
+    })
+
+    const { wrapper, router } = await mountPageWithRouter()
+    mockedGetChallenges.mockClear()
+
+    await wrapper.get('#challenge-category-filter').setValue('crypto')
+    await flushPromises()
+    expect(router.currentRoute.value.query).toEqual({ category: 'crypto' })
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+      })
+    )
+    expect(mockedGetChallenges.mock.lastCall?.[0]).not.toHaveProperty('difficulty')
+
+    await wrapper.get('#challenge-difficulty-filter').setValue('medium')
+    await flushPromises()
+    expect(router.currentRoute.value.query).toEqual({
+      category: 'crypto',
+      difficulty: 'medium',
+    })
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(2)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+        difficulty: 'medium',
+      })
+    )
+  })
+
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
     expect(challengeListSource).not.toContain('</section>\n\n        <div v-if="total > 0" class="challenge-pagination">')
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
-    expect(challengeListSource).toContain('搜索挑战标题或描述')
+    expect(challengeListSource).toContain('搜索题目标题或描述')
     expect(challengeListSource).not.toContain('challenge-row-index')
     expect(challengeListSource).not.toContain('CH-{{ challengeIndex(index) }}')
     expect(challengeListSource).toContain('<span>分类</span>')
