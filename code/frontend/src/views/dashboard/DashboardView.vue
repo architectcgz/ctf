@@ -157,6 +157,10 @@ function openChallenges(): void {
   router.push({ name: 'Challenges' })
 }
 
+function openCategoryChallenges(category: string): void {
+  router.push({ name: 'Challenges', query: { category } })
+}
+
 function openSkillProfile(): void {
   router.push({ name: 'SkillProfile' })
 }
@@ -253,6 +257,7 @@ function openChallenge(challengeId: string): void {
             :category-stats="categoryStats"
             :completion-rate="completionRate"
             @open-challenges="openChallenges"
+            @open-category-challenges="openCategoryChallenges"
             @open-skill-profile="openSkillProfile"
           />
 

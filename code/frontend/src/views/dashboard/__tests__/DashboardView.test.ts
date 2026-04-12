@@ -271,6 +271,42 @@ describe('DashboardView', () => {
     expect(browseButtons[0].classes()).toContain('journal-btn-primary')
   })
 
+  it('应该在 category 子菜单下展示行动优先的分类列表并支持跳转到对应分类题目', async () => {
+    routeState.query = { panel: 'category' }
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const categoryPanel = wrapper.get('#dashboard-panel-category')
+    const cryptoAction = categoryPanel.get('[data-test="category-action-crypto"]')
+
+    expect(categoryPanel.classes()).toContain('active')
+    expect(categoryPanel.attributes('aria-hidden')).toBe('false')
+    expect(categoryPanel.isVisible()).toBe(true)
+    expect(categoryPanel.text()).toContain('优先补这个分类')
+    expect(categoryPanel.text()).toContain('crypto')
+    expect(categoryPanel.findAll('.category-action-item')).toHaveLength(2)
+
+    await cryptoAction.get('button').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({
+      name: 'Challenges',
+      query: { category: 'crypto' },
+    })
+  })
+
   it('应该在带 variant 参数时继续展示当前首页风格', async () => {
     routeState.params = { variant: '2' }
 
