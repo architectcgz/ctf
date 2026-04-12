@@ -195,7 +195,11 @@ interface RawTeacherAWDReviewTrafficItem extends Omit<
   challenge_id: string | number
 }
 
-interface RawTeacherAWDReviewSelectedRound extends Omit<TeacherAWDReviewSelectedRoundData, 'round'> {
+interface RawTeacherAWDReviewSelectedRound
+  extends Omit<
+    TeacherAWDReviewSelectedRoundData,
+    'round' | 'teams' | 'services' | 'attacks' | 'traffic'
+  > {
   round: RawTeacherAWDReviewRoundItem
   teams: RawTeacherAWDReviewTeamItem[]
   services: RawTeacherAWDReviewServiceItem[]
