@@ -13,17 +13,19 @@ import (
 )
 
 type AssessmentModule struct {
-	BackgroundCloser asyncTaskCloser
-	Handler          *assessmenthttp.Handler
-	ProfileService   assessmentcontracts.ProfileService
-	Recommendations  assessmentcontracts.RecommendationProvider
-	ReportHandler    *assessmenthttp.ReportHandler
+	BackgroundCloser        asyncTaskCloser
+	Handler                 *assessmenthttp.Handler
+	ProfileService          assessmentcontracts.ProfileService
+	Recommendations         assessmentcontracts.RecommendationProvider
+	ReportHandler           *assessmenthttp.ReportHandler
+	TeacherAWDReviewHandler *assessmenthttp.TeacherAWDReviewHandler
 }
 
 type assessmentModuleDeps struct {
 	profileRepo        assessmentports.ProfileRepository
 	recommendationRepo assessmentports.RecommendationRepository
 	reportRepo         assessmentports.ReportRepository
+	awdReviewRepo      assessmentports.TeacherAWDReviewRepository
 }
 
 type assessmentModuleExternalDeps struct {
@@ -40,6 +42,7 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps, externalDeps)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
 	reportService, reportHandler := buildAssessmentReportHandler(root, cfg, deps, profileQueryService)
+	teacherAWDReviewHandler := buildAssessmentTeacherAWDReviewHandler(deps)
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))
 	root.RegisterBackgroundJob(NewBackgroundJob(
 		"assessment_cleaner",
@@ -50,11 +53,12 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 	))
 
 	return &AssessmentModule{
-		BackgroundCloser: reportService,
-		Handler:          assessmenthttp.NewHandler(profileQueryService, recommendationService),
-		ProfileService:   profileCommandService,
-		Recommendations:  recommendationService,
-		ReportHandler:    reportHandler,
+		BackgroundCloser:        reportService,
+		Handler:                 assessmenthttp.NewHandler(profileQueryService, recommendationService),
+		ProfileService:          profileCommandService,
+		Recommendations:         recommendationService,
+		ReportHandler:           reportHandler,
+		TeacherAWDReviewHandler: teacherAWDReviewHandler,
 	}
 }
 
@@ -64,6 +68,7 @@ func buildAssessmentModuleDeps(root *Root) assessmentModuleDeps {
 		profileRepo:        repo,
 		recommendationRepo: repo,
 		reportRepo:         assessmentinfra.NewReportRepository(root.DB()),
+		awdReviewRepo:      assessmentinfra.NewTeacherAWDReviewRepository(root.DB()),
 	}
 }
 
@@ -102,4 +107,9 @@ func buildAssessmentReportHandler(root *Root, cfg *config.Config, deps assessmen
 		root.Logger().Named("report_service"),
 	)
 	return reportService, assessmenthttp.NewReportHandler(reportService)
+}
+
+func buildAssessmentTeacherAWDReviewHandler(deps assessmentModuleDeps) *assessmenthttp.TeacherAWDReviewHandler {
+	service := assessmentqry.NewTeacherAWDReviewService(deps.awdReviewRepo)
+	return assessmenthttp.NewTeacherAWDReviewHandler(service)
 }
