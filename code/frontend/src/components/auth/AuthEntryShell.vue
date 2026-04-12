@@ -38,8 +38,8 @@ const signals: AuthSignalItem[] = [
     <div class="auth-entry-shell__frame">
       <section class="auth-entry-shell__overview">
         <div class="auth-entry-shell__kicker">Teaching Platform Access</div>
-        <h1 class="auth-entry-shell__title">教学平台入口</h1>
-        <p class="auth-entry-shell__copy">
+        <h1 class="auth-entry-shell__title workspace-page-title">教学平台入口</h1>
+        <p class="auth-entry-shell__copy workspace-page-copy">
           学生训练、教师教学和管理员值守共用同一套账号体系。登录后按角色进入对应工作台。
         </p>
 
@@ -170,13 +170,9 @@ const signals: AuthSignalItem[] = [
 
 .auth-entry-shell__title {
   margin: 1.1rem 0 0.6rem;
-  font-size: clamp(1.8rem, 2.6vw, 2.45rem);
-  line-height: 1.1;
   font-weight: 700;
-  letter-spacing: -0.03em;
 }
 
-.auth-entry-shell__copy,
 .auth-entry-shell__panel-copy,
 .auth-entry-shell__signal-copy {
   color: var(--color-text-secondary);
@@ -185,7 +181,7 @@ const signals: AuthSignalItem[] = [
 
 .auth-entry-shell__copy {
   max-width: 34rem;
-  font-size: var(--font-size-0-92);
+  color: var(--color-text-secondary);
 }
 
 .auth-entry-shell__signals {

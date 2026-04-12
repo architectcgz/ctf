@@ -64,10 +64,10 @@ const accentVars = computed(() => ({
 
     <div class="error-status-grid">
       <div class="error-status-copy">
-        <h1 class="error-status-title">
+        <h1 class="error-status-title workspace-page-title">
           {{ title }}
         </h1>
-        <p class="error-status-text">
+        <p class="error-status-text workspace-page-copy">
           {{ description }}
         </p>
 
@@ -127,18 +127,13 @@ const accentVars = computed(() => ({
 }
 
 .error-status-title {
-  font-size: clamp(1.7rem, 3.2vw, 2.35rem);
   font-weight: 700;
-  line-height: 1.18;
-  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 
 .error-status-text {
   margin-top: 0.8rem;
   max-width: 56ch;
-  font-size: var(--font-size-0-95);
-  line-height: 1.85;
   color: var(--color-text-secondary);
 }
 

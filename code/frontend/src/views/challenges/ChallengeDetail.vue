@@ -42,7 +42,7 @@
             <div class="question-hero">
               <div class="question-hero-main">
                 <div class="overline">Question</div>
-                <h1 class="question-title">
+                <h1 class="question-title workspace-page-title">
                   {{ challenge.title }}
                 </h1>
                 <div class="meta-strip">
@@ -940,9 +940,6 @@ watch(
 
 .question-title {
   margin: var(--space-3) 0 0;
-  font-size: clamp(30px, 4vw, 46px);
-  line-height: 1.04;
-  letter-spacing: -0.03em;
   color: var(--text-main);
 }
 

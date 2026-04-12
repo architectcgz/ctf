@@ -27,8 +27,8 @@ const statItems = [
       <div class="archive-hero__meta">
         <div>
           <div class="archive-hero__eyebrow">Teaching Review Archive</div>
-          <h1 class="archive-hero__title">教学复盘归档</h1>
-          <p class="archive-hero__description">
+          <h1 class="archive-hero__title workspace-page-title">教学复盘归档</h1>
+          <p class="archive-hero__description workspace-page-copy">
             将学生训练摘要、攻防证据、Writeup 与评阅记录收束为一份可讲解、可导出的课堂复盘视图。
           </p>
         </div>
@@ -119,8 +119,6 @@ const statItems = [
 
 .archive-hero__title {
   margin-top: var(--space-3);
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1.05;
   color: var(--journal-ink);
   font-family: var(--font-family-sans);
 }
@@ -129,7 +127,6 @@ const statItems = [
   max-width: 48rem;
   margin-top: var(--space-3);
   color: var(--color-text-secondary);
-  line-height: 1.7;
 }
 
 .archive-hero__actions {

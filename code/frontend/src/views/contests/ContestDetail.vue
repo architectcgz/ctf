@@ -141,8 +141,8 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <header class="contest-hero">
             <div class="contest-hero__main">
               <div class="contest-overline">Contest</div>
-              <h1 class="contest-hero__title">{{ contest.title }}</h1>
-              <p class="contest-hero__desc">
+              <h1 class="contest-hero__title workspace-page-title">{{ contest.title }}</h1>
+              <p class="contest-hero__desc workspace-page-copy">
                 {{ contest.description || '当前竞赛暂未提供描述。' }}
               </p>
 
@@ -638,17 +638,13 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-hero__title {
   margin-top: 0.85rem;
-  font-size: clamp(2rem, 3vw, 2.9rem);
   font-weight: 700;
-  line-height: 1.08;
   color: var(--journal-ink);
 }
 
 .contest-hero__desc {
   margin-top: 0.8rem;
   max-width: 60ch;
-  font-size: var(--font-size-0-95);
-  line-height: 1.8;
   color: var(--journal-muted);
 }
 
