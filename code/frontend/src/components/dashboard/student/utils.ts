@@ -5,6 +5,40 @@ export function progressRate(total: number, solved: number): number {
   return Math.round((solved / total) * 100)
 }
 
+interface ProgressStat {
+  total: number
+  solved: number
+}
+
+interface CategoryProgressStat extends ProgressStat {
+  category: string
+}
+
+export function compareProgressPriority(left: ProgressStat, right: ProgressStat): number {
+  const rateDiff = progressRate(left.total, left.solved) - progressRate(right.total, right.solved)
+  if (rateDiff !== 0) return rateDiff
+
+  const totalDiff = right.total - left.total
+  if (totalDiff !== 0) return totalDiff
+
+  return left.solved - right.solved
+}
+
+export function rankCategoryActionItems<T extends CategoryProgressStat>(
+  categoryStats: T[]
+): Array<T & { rate: number; remaining: number }> {
+  return [...categoryStats]
+    .map((item) => ({
+      ...item,
+      rate: progressRate(item.total, item.solved),
+      remaining: Math.max(item.total - item.solved, 0),
+    }))
+    .sort(
+      (left, right) =>
+        compareProgressPriority(left, right) || left.category.localeCompare(right.category)
+    )
+}
+
 export function timelineSummary(event: TimelineEvent): string {
   if (event.detail) {
     return event.detail

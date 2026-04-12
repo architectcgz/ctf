@@ -113,6 +113,23 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('推荐摘要')
   })
 
+  it('student category progress 应切换到 shared metric-panel 摘要卡片栈和行动列表，而不是继续保留强弱高亮双卡', () => {
+    expect(studentCategoryProgressSource).toContain('优先补这个分类')
+    expect(studentCategoryProgressSource).toContain(
+      'class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(studentCategoryProgressSource).toContain(
+      'class="category-summary-card progress-card metric-panel-card"'
+    )
+    expect(studentCategoryProgressSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
+    expect(studentCategoryProgressSource).toContain(':data-test="`category-action-${item.category}`"')
+    expect(studentCategoryProgressSource).not.toContain('category-highlight')
+    expect(studentCategoryProgressSource).not.toContain('Strongest Direction')
+    expect(studentCategoryProgressSource).not.toContain('Weakest Direction')
+  })
+
   it('instance and notification pages should soften list shells, controls, and empty-state separators', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('--journal-border:')
