@@ -803,6 +803,7 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 		"buildAssessmentProfileHandler(",
 		"buildAssessmentRecommendationHandler(",
 		"buildAssessmentReportHandler(",
+		"buildAssessmentTeacherAWDReviewHandler(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

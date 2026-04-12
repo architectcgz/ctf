@@ -717,6 +717,19 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		}),
 		deps.assessment.ReportHandler.CreateStudentReviewArchive,
 	)
+	teacherOrAbove.GET("/awd/reviews", deps.assessment.TeacherAWDReviewHandler.ListReviews)
+	teacherOrAbove.GET("/awd/reviews/:id",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.GetReview,
+	)
+	teacherOrAbove.POST("/awd/reviews/:id/export/archive",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.ExportArchive,
+	)
+	teacherOrAbove.POST("/awd/reviews/:id/export/report",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.ExportReport,
+	)
 	teacherOrAbove.GET("/manual-review-submissions", deps.practice.Handler.ListTeacherManualReviewSubmissions)
 	teacherOrAbove.GET("/manual-review-submissions/:id", deps.practice.Handler.GetTeacherManualReviewSubmission)
 	teacherOrAbove.PUT("/manual-review-submissions/:id/review",
