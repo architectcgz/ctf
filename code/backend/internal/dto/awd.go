@@ -149,10 +149,10 @@ type AWDReadinessResp struct {
 type AWDReadinessItemResp struct {
 	ChallengeID     int64                `json:"challenge_id"`
 	Title           string               `json:"title"`
-	CheckerType     model.AWDCheckerType `json:"checker_type,omitempty"`
+	CheckerType     model.AWDCheckerType `json:"checker_type"`
 	ValidationState string               `json:"validation_state"`
-	LastPreviewAt   *time.Time           `json:"last_preview_at,omitempty"`
-	LastAccessURL   *string              `json:"last_access_url,omitempty"`
+	LastPreviewAt   *time.Time           `json:"last_preview_at"`
+	LastAccessURL   *string              `json:"last_access_url"`
 	BlockingReason  string               `json:"blocking_reason"`
 }
 
