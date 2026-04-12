@@ -54,6 +54,10 @@ describe('teacher detail surface alignment', () => {
 
     expect(reviewArchiveSource).toContain('--teacher-card-border:')
     expect(reviewArchiveSource).toContain('--teacher-divider:')
+    expect(reviewArchiveSource).toContain('--journal-accent: var(--color-primary);')
+    expect(reviewArchiveSource).toContain(
+      '--journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));'
+    )
     expect(reviewArchiveSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -67,6 +71,9 @@ describe('teacher detail surface alignment', () => {
     expect(reviewArchiveSource).toContain('class="summary-card__label metric-panel-label"')
     expect(reviewArchiveSource).toContain('class="summary-card__value metric-panel-value"')
     expect(reviewArchiveSource).toContain('class="summary-card__hint metric-panel-helper"')
+    expect(reviewArchiveSource).not.toContain('--journal-accent: #2563eb;')
+    expect(reviewArchiveSource).not.toContain('--journal-accent-strong: #1d4ed8;')
+    expect(reviewArchiveSource).not.toContain('color-mix(in srgb, #f59e0b 14%, var(--journal-surface))')
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
