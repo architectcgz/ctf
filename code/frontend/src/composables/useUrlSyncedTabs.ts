@@ -1,4 +1,5 @@
 import { ref, type Ref } from 'vue'
+import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 interface UseUrlSyncedTabsOptions<T extends string> {
   orderedTabs: readonly T[]
@@ -38,57 +39,16 @@ export function useUrlSyncedTabs<T extends string>({
   }
 
   const activeTab = ref(resolveTabFromLocation()) as Ref<T>
-  const tabButtonRefs: Partial<Record<T, HTMLButtonElement | null>> = {}
-
-  function setTabButtonRef(tab: T, element: HTMLButtonElement | null): void {
-    tabButtonRefs[tab] = element
-  }
-
-  function focusTab(tab: T): void {
-    tabButtonRefs[tab]?.focus()
-  }
 
   function selectTab(tab: T): void {
     if (activeTab.value === tab) return
     activeTab.value = tab
     syncPanelToLocation(tab)
   }
-
-  function handleTabKeydown(event: KeyboardEvent, index: number): void {
-    if (
-      event.key !== 'ArrowRight' &&
-      event.key !== 'ArrowLeft' &&
-      event.key !== 'Home' &&
-      event.key !== 'End'
-    ) {
-      return
-    }
-
-    event.preventDefault()
-
-    if (event.key === 'Home') {
-      const firstTab = orderedTabs[0]
-      if (!firstTab) return
-      selectTab(firstTab)
-      focusTab(firstTab)
-      return
-    }
-
-    if (event.key === 'End') {
-      const lastTab = orderedTabs[orderedTabs.length - 1]
-      if (!lastTab) return
-      selectTab(lastTab)
-      focusTab(lastTab)
-      return
-    }
-
-    const direction = event.key === 'ArrowRight' ? 1 : -1
-    const nextIndex = (index + direction + orderedTabs.length) % orderedTabs.length
-    const nextTab = orderedTabs[nextIndex]
-    if (!nextTab) return
-    selectTab(nextTab)
-    focusTab(nextTab)
-  }
+  const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<T>({
+    orderedTabs,
+    selectTab,
+  })
 
   return {
     activeTab,
