@@ -50,6 +50,9 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 	if req == nil {
 		req = &dto.GetTeacherAWDReviewArchiveReq{}
 	}
+	if req.TeamID != nil && req.RoundNumber == nil {
+		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 需要配合 round 使用", errcode.ErrInvalidParams.HTTPStatus)
+	}
 
 	contest, err := s.repo.FindTeacherAWDReviewContest(ctx, contestID)
 	if err != nil {
@@ -66,6 +69,10 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 	teams, err := s.repo.ListTeacherAWDReviewTeams(ctx, contestID)
 	if err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	selectedTeam, hasSelectedTeam := findTeacherAWDReviewTeam(teams, req.TeamID)
+	if req.TeamID != nil && !hasSelectedTeam {
+		return nil, errcode.New(errcode.ErrInvalidParams.Code, "team_id 无效", errcode.ErrInvalidParams.HTTPStatus)
 	}
 
 	resp := &dto.TeacherAWDReviewArchiveResp{
@@ -141,6 +148,11 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 			selectedServices = services
 			selectedAttacks = attacks
 			selectedTraffic = traffic
+			if req.TeamID != nil {
+				selectedServices = filterTeacherAWDReviewServicesByTeam(selectedServices, *req.TeamID)
+				selectedAttacks = filterTeacherAWDReviewAttacksByTeam(selectedAttacks, *req.TeamID)
+				selectedTraffic = filterTeacherAWDReviewTrafficByTeam(selectedTraffic, *req.TeamID)
+			}
 		}
 	}
 
@@ -148,9 +160,13 @@ func (s *TeacherAWDReviewService) GetContestArchive(ctx context.Context, request
 		if selectedRound == nil {
 			return nil, errcode.New(errcode.ErrInvalidParams.Code, "round 无效", errcode.ErrInvalidParams.HTTPStatus)
 		}
+		selectedTeams := teams
+		if req.TeamID != nil {
+			selectedTeams = []assessmentdomain.TeacherAWDReviewTeamSummary{*selectedTeam}
+		}
 		resp.SelectedRound = &dto.TeacherAWDSelectedRoundResp{
 			Round:    selectedRoundResp,
-			Teams:    toTeacherAWDReviewTeams(teams),
+			Teams:    toTeacherAWDReviewTeams(selectedTeams),
 			Services: toTeacherAWDReviewServices(selectedServices),
 			Attacks:  toTeacherAWDReviewAttacks(selectedAttacks),
 			Traffic:  toTeacherAWDReviewTraffic(selectedTraffic),
@@ -247,4 +263,47 @@ func toTeacherAWDReviewTraffic(items []assessmentdomain.TeacherAWDReviewTrafficR
 		})
 	}
 	return resp
+}
+
+func findTeacherAWDReviewTeam(items []assessmentdomain.TeacherAWDReviewTeamSummary, teamID *int64) (*assessmentdomain.TeacherAWDReviewTeamSummary, bool) {
+	if teamID == nil {
+		return nil, false
+	}
+	for _, item := range items {
+		if item.TeamID == *teamID {
+			team := item
+			return &team, true
+		}
+	}
+	return nil, false
+}
+
+func filterTeacherAWDReviewServicesByTeam(items []assessmentdomain.TeacherAWDReviewServiceRecord, teamID int64) []assessmentdomain.TeacherAWDReviewServiceRecord {
+	filtered := make([]assessmentdomain.TeacherAWDReviewServiceRecord, 0, len(items))
+	for _, item := range items {
+		if item.TeamID == teamID {
+			filtered = append(filtered, item)
+		}
+	}
+	return filtered
+}
+
+func filterTeacherAWDReviewAttacksByTeam(items []assessmentdomain.TeacherAWDReviewAttackRecord, teamID int64) []assessmentdomain.TeacherAWDReviewAttackRecord {
+	filtered := make([]assessmentdomain.TeacherAWDReviewAttackRecord, 0, len(items))
+	for _, item := range items {
+		if item.AttackerTeamID == teamID || item.VictimTeamID == teamID {
+			filtered = append(filtered, item)
+		}
+	}
+	return filtered
+}
+
+func filterTeacherAWDReviewTrafficByTeam(items []assessmentdomain.TeacherAWDReviewTrafficRecord, teamID int64) []assessmentdomain.TeacherAWDReviewTrafficRecord {
+	filtered := make([]assessmentdomain.TeacherAWDReviewTrafficRecord, 0, len(items))
+	for _, item := range items {
+		if item.AttackerTeamID == teamID || item.VictimTeamID == teamID {
+			filtered = append(filtered, item)
+		}
+	}
+	return filtered
 }

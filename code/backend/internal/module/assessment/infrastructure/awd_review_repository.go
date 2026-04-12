@@ -2,13 +2,37 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/model"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 )
+
+type teacherAWDReviewContestCardRow struct {
+	ID           int64
+	Title        string
+	Mode         string
+	Status       string
+	CurrentRound *int
+	RoundCount   int
+	TeamCount    int
+	ExportReady  bool
+}
+
+type teacherAWDReviewContestMetaRow struct {
+	ID           int64
+	Title        string
+	Mode         string
+	Status       string
+	CurrentRound *int
+	RoundCount   int
+	TeamCount    int
+	ExportReady  bool
+}
 
 type TeacherAWDReviewRepository struct {
 	db *gorm.DB
@@ -26,7 +50,7 @@ func (r *TeacherAWDReviewRepository) dbWithContext(ctx context.Context) *gorm.DB
 }
 
 func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Context) ([]assessmentdomain.TeacherAWDReviewContestCard, error) {
-	rows := make([]assessmentdomain.TeacherAWDReviewContestCard, 0)
+	rows := make([]teacherAWDReviewContestCardRow, 0)
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.id,
@@ -61,7 +85,7 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Co
 					FROM awd_attack_logs al
 					JOIN awd_rounds ar ON ar.id = al.round_id
 					WHERE ar.contest_id = c.id
-				)
+				) AS evidence_events
 			) AS latest_evidence_at,
 			CASE WHEN c.status = ? THEN 1 ELSE 0 END AS export_ready
 		FROM contests c
@@ -71,11 +95,29 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewContests(ctx context.Co
 	if err != nil {
 		return nil, fmt.Errorf("list teacher awd review contests: %w", err)
 	}
-	return rows, nil
+	items := make([]assessmentdomain.TeacherAWDReviewContestCard, 0, len(rows))
+	for _, row := range rows {
+		latestEvidenceAt, err := r.findLatestEvidenceAt(ctx, row.ID)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, assessmentdomain.TeacherAWDReviewContestCard{
+			ID:               row.ID,
+			Title:            row.Title,
+			Mode:             row.Mode,
+			Status:           row.Status,
+			CurrentRound:     row.CurrentRound,
+			RoundCount:       row.RoundCount,
+			TeamCount:        row.TeamCount,
+			LatestEvidenceAt: latestEvidenceAt,
+			ExportReady:      row.ExportReady,
+		})
+	}
+	return items, nil
 }
 
 func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Context, contestID int64) (*assessmentdomain.TeacherAWDReviewContestMeta, error) {
-	var row assessmentdomain.TeacherAWDReviewContestMeta
+	var row teacherAWDReviewContestMetaRow
 	err := r.dbWithContext(ctx).Raw(`
 		SELECT
 			c.id,
@@ -110,7 +152,7 @@ func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Con
 					FROM awd_attack_logs al
 					JOIN awd_rounds ar ON ar.id = al.round_id
 					WHERE ar.contest_id = c.id
-				)
+				) AS evidence_events
 			) AS latest_evidence_at,
 			CASE WHEN c.status = ? THEN 1 ELSE 0 END AS export_ready
 		FROM contests c
@@ -122,7 +164,21 @@ func (r *TeacherAWDReviewRepository) FindTeacherAWDReviewContest(ctx context.Con
 	if row.ID == 0 {
 		return nil, nil
 	}
-	return &row, nil
+	latestEvidenceAt, err := r.findLatestEvidenceAt(ctx, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &assessmentdomain.TeacherAWDReviewContestMeta{
+		ID:               row.ID,
+		Title:            row.Title,
+		Mode:             row.Mode,
+		Status:           row.Status,
+		CurrentRound:     row.CurrentRound,
+		RoundCount:       row.RoundCount,
+		TeamCount:        row.TeamCount,
+		LatestEvidenceAt: latestEvidenceAt,
+		ExportReady:      row.ExportReady,
+	}, nil
 }
 
 func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRounds(ctx context.Context, contestID int64) ([]assessmentdomain.TeacherAWDReviewRoundSummary, error) {
@@ -249,4 +305,65 @@ func (r *TeacherAWDReviewRepository) ListTeacherAWDReviewRoundTraffic(ctx contex
 		return nil, fmt.Errorf("list teacher awd review round traffic: %w", err)
 	}
 	return rows, nil
+}
+
+func (r *TeacherAWDReviewRepository) findLatestEvidenceAt(ctx context.Context, contestID int64) (*time.Time, error) {
+	trafficAt, err := r.findLatestTrafficAt(ctx, contestID)
+	if err != nil {
+		return nil, err
+	}
+	attackAt, err := r.findLatestAttackAt(ctx, contestID)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case trafficAt == nil:
+		return attackAt, nil
+	case attackAt == nil:
+		return trafficAt, nil
+	case trafficAt.After(*attackAt):
+		return trafficAt, nil
+	default:
+		return attackAt, nil
+	}
+}
+
+func (r *TeacherAWDReviewRepository) findLatestTrafficAt(ctx context.Context, contestID int64) (*time.Time, error) {
+	var row struct {
+		CreatedAt time.Time
+	}
+	err := r.dbWithContext(ctx).Model(&model.AWDTrafficEvent{}).
+		Select("created_at").
+		Where("contest_id = ?", contestID).
+		Order("created_at DESC").
+		Limit(1).
+		Take(&row).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find latest traffic evidence for contest %d: %w", contestID, err)
+	}
+	return &row.CreatedAt, nil
+}
+
+func (r *TeacherAWDReviewRepository) findLatestAttackAt(ctx context.Context, contestID int64) (*time.Time, error) {
+	var row struct {
+		CreatedAt time.Time
+	}
+	err := r.dbWithContext(ctx).Model(&model.AWDAttackLog{}).
+		Select("awd_attack_logs.created_at").
+		Joins("JOIN awd_rounds ON awd_rounds.id = awd_attack_logs.round_id").
+		Where("awd_rounds.contest_id = ?", contestID).
+		Order("awd_attack_logs.created_at DESC").
+		Limit(1).
+		Take(&row).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find latest attack evidence for contest %d: %w", contestID, err)
+	}
+	return &row.CreatedAt, nil
 }
