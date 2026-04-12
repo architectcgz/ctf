@@ -89,6 +89,13 @@ describe('ChallengeList', () => {
     expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
   })
 
+  it('页头标题与说明应接入共享工作区排版类', () => {
+    expect(challengeListSource).toContain('<h1 class="workspace-page-title challenge-title">靶场训练</h1>')
+    expect(challengeListSource).toContain(
+      '<p class="workspace-page-copy challenge-subtitle">按关键词、分类与难度筛选题目，直接进入训练。</p>'
+    )
+  })
+
   it('题目列表不应显示编号前缀', async () => {
     mockedGetChallenges.mockResolvedValue({
       list: [

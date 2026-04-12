@@ -6,6 +6,7 @@ import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
 import scoreboardViewSource from '@/views/scoreboard/ScoreboardView.vue?raw'
+import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
 import auditLogSource from '@/views/admin/AuditLog.vue?raw'
 import imageManageSource from '@/views/admin/ImageManage.vue?raw'
@@ -43,6 +44,7 @@ describe('workspace page header styles', () => {
     const sharedTitleSelectors = [
       '.workspace-page-title',
       '.journal-page-title',
+      '.challenge-title',
       '.contest-title',
       '.instance-title',
       '.scoreboard-title',
@@ -58,6 +60,7 @@ describe('workspace page header styles', () => {
 
     const sharedCopySelectors = [
       '.workspace-page-copy',
+      '.challenge-subtitle',
       '.contest-subtitle',
       '.instance-subtitle',
       '.scoreboard-subtitle',
@@ -81,6 +84,7 @@ describe('workspace page header styles', () => {
 
   it('不应在页面局部重复声明公共标题排版', () => {
     expectNoLocalTitleTypography(contestListSource, '.contest-title')
+    expectNoLocalTitleTypography(challengeListSource, '.challenge-title')
     expectNoLocalTitleTypography(instanceListSource, '.instance-title')
     expectNoLocalTitleTypography(notificationListSource, '.notification-title')
     expectNoLocalTitleTypography(scoreboardViewSource, '.scoreboard-title')
@@ -101,6 +105,7 @@ describe('workspace page header styles', () => {
 
   it('不应在页面局部重复声明公共说明排版', () => {
     expectNoLocalCopyTypography(contestListSource, '.contest-subtitle')
+    expectNoLocalCopyTypography(challengeListSource, '.challenge-subtitle')
     expectNoLocalCopyTypography(instanceListSource, '.instance-subtitle')
     expectNoLocalCopyTypography(notificationListSource, '.notification-subtitle')
     expectNoLocalCopyTypography(scoreboardViewSource, '.scoreboard-subtitle')
