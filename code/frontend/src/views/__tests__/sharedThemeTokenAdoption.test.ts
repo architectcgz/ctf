@@ -15,6 +15,8 @@ import topNavSource from '@/components/layout/TopNav.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import imageManageSource from '@/views/admin/ImageManage.vue?raw'
+import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 describe('shared theme token adoption', () => {
   it('共享层和高频学生页不应继续写死状态色与图表主色', () => {
@@ -84,5 +86,20 @@ describe('shared theme token adoption', () => {
     expect(securitySettingsSource).not.toContain('rgba(2, 6, 23, 0.98)')
     expect(securitySettingsSource).not.toContain('background: #10b981;')
     expect(securitySettingsSource).not.toContain('rgba(16, 185, 129, 0.2)')
+
+    expect(imageManageSource).not.toContain("pending: '#8b949e'")
+    expect(imageManageSource).not.toContain("building: '#f59e0b'")
+    expect(imageManageSource).not.toContain("available: '#10b981'")
+    expect(imageManageSource).not.toContain("failed: '#ef4444'")
+    expect(imageManageSource).not.toContain('rgba(15, 23, 42, 0.96)')
+    expect(imageManageSource).not.toContain('rgba(15, 23, 42, 0.9)')
+
+    expect(userGovernanceSource).not.toContain("return '#f59e0b'")
+    expect(userGovernanceSource).not.toContain("return '#dc2626'")
+    expect(userGovernanceSource).not.toContain("return '#64748b'")
+    expect(userGovernanceSource).not.toContain('rgba(148, 163, 184, 0.7)')
+    expect(userGovernanceSource).not.toContain('rgba(239, 68, 68, 0.2)')
+    expect(userGovernanceSource).not.toContain('rgba(254, 242, 242, 0.9)')
+    expect(userGovernanceSource).not.toContain('rgba(148, 163, 184, 0.72)')
   })
 })
