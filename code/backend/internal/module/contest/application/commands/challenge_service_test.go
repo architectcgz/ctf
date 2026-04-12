@@ -3,11 +3,20 @@ package commands
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
-	"ctf-platform/internal/dto"
+	"github.com/alicebob/miniredis/v2"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
+
 	"ctf-platform/internal/model"
+	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
+	contestjobs "ctf-platform/internal/module/contest/application/jobs"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
@@ -17,11 +26,18 @@ import (
 func newContestChallengeCommandService(t *testing.T) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
 	t.Helper()
 
+	return newContestChallengeCommandServiceWithRedis(t, nil)
+}
+
+func newContestChallengeCommandServiceWithRedis(t *testing.T, redisClient *redis.Client) (*ChallengeService, *challengeinfra.Repository, *contestinfra.Repository, *contestinfra.ChallengeRepository) {
+	t.Helper()
+
 	db := contesttestsupport.SetupContestTestDB(t)
 	return NewChallengeService(
 			contestinfra.NewChallengeRepository(db),
 			challengeinfra.NewRepository(db),
 			contestinfra.NewRepository(db),
+			redisClient,
 		),
 		challengeinfra.NewRepository(db),
 		contestinfra.NewRepository(db),
@@ -196,6 +212,337 @@ func TestChallengeServiceUpdateChallengePersistsAWDServiceConfig(t *testing.T) {
 	if items[0].AWDCheckerType != model.AWDCheckerTypeHTTPStandard || items[0].AWDSLAScore != 18 || items[0].AWDDefenseScore != 28 {
 		t.Fatalf("unexpected updated contest challenge: %+v", items[0])
 	}
+}
+
+func TestChallengeServiceAddChallengeConsumesCheckerPreviewToken(t *testing.T) {
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandServiceWithRedis(t, redisClient)
+
+	now := time.Now()
+	contest := &model.Contest{
+		ID:        504,
+		Title:     "awd-preview-token",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := contestRepo.Create(context.Background(), contest); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(&model.Challenge{
+		ID:         9004,
+		Title:      "token-preview",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	previewServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/flag":
+			if r.Method == http.MethodPut {
+				w.WriteHeader(http.StatusCreated)
+				return
+			}
+			if r.Method == http.MethodGet {
+				_, _ = w.Write([]byte("flag{preview}"))
+				return
+			}
+			http.Error(w, "method_not_allowed", http.StatusMethodNotAllowed)
+		case "/healthz":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(previewServer.Close)
+
+	previewDB := contesttestsupport.SetupAWDTestDB(t)
+	if err := contestinfra.NewRepository(previewDB).Create(context.Background(), &model.Contest{
+		ID:        contest.ID,
+		Title:     contest.Title,
+		Mode:      contest.Mode,
+		Status:    model.ContestStatusRunning,
+		StartTime: now.Add(-time.Hour),
+		EndTime:   now.Add(time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}); err != nil {
+		t.Fatalf("create preview contest: %v", err)
+	}
+	if err := challengeinfra.NewRepository(previewDB).Create(&model.Challenge{
+		ID:         9004,
+		Title:      "token-preview",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create preview challenge: %v", err)
+	}
+
+	previewService := NewAWDService(
+		contestinfra.NewAWDRepository(previewDB),
+		contestinfra.NewRepository(previewDB),
+		redisClient,
+		"",
+		config.ContestAWDConfig{
+		CheckerTimeout:    time.Second,
+		CheckerHealthPath: "/healthz",
+		},
+		zap.NewNop(),
+		contestjobs.NewAWDRoundUpdater(
+			contestinfra.NewAWDRepository(previewDB),
+			redisClient,
+			config.ContestAWDConfig{
+				CheckerTimeout:    time.Second,
+				CheckerHealthPath: "/healthz",
+			},
+			"",
+			nil,
+			zap.NewNop(),
+		),
+	)
+
+	method := reflect.ValueOf(previewService).MethodByName("PreviewChecker")
+	if !method.IsValid() {
+		t.Fatalf("PreviewChecker method not implemented")
+	}
+	reqValue := reflect.New(method.Type().In(2).Elem())
+	setAnyField(t, reqValue.Elem(), "ChallengeID", int64(9004))
+	setAnyField(t, reqValue.Elem(), "CheckerType", string(model.AWDCheckerTypeHTTPStandard))
+	setAnyField(t, reqValue.Elem(), "CheckerConfig", map[string]any{
+		"put_flag": map[string]any{
+			"method":          "PUT",
+			"path":            "/api/flag",
+			"expected_status": http.StatusCreated,
+			"body_template":   "{{FLAG}}",
+		},
+		"get_flag": map[string]any{
+			"method":             "GET",
+			"path":               "/api/flag",
+			"expected_status":    http.StatusOK,
+			"expected_substring": "{{FLAG}}",
+		},
+		"havoc": map[string]any{
+			"method":          "GET",
+			"path":            "/healthz",
+			"expected_status": http.StatusOK,
+		},
+	})
+	setAnyField(t, reqValue.Elem(), "AccessURL", previewServer.URL)
+
+	results := method.Call([]reflect.Value{
+		reflect.ValueOf(context.Background()),
+		reflect.ValueOf(int64(504)),
+		reqValue,
+	})
+	if errValue := results[1].Interface(); errValue != nil {
+		t.Fatalf("PreviewChecker() error = %v", errValue)
+	}
+	previewResp := results[0]
+	if previewResp.IsNil() {
+		t.Fatal("expected preview response")
+	}
+	previewTokenField := previewResp.Elem().FieldByName("PreviewToken")
+	if !previewTokenField.IsValid() || previewTokenField.String() == "" {
+		t.Fatal("expected preview token")
+	}
+
+	req := &dto.AddContestChallengeReq{
+		ChallengeID:    9004,
+		Points:         130,
+		AWDCheckerType: model.AWDCheckerTypeHTTPStandard,
+		AWDCheckerConfig: map[string]any{
+			"put_flag": map[string]any{
+				"method":          "PUT",
+				"path":            "/api/flag",
+				"expected_status": http.StatusCreated,
+				"body_template":   "{{FLAG}}",
+			},
+			"get_flag": map[string]any{
+				"method":             "GET",
+				"path":               "/api/flag",
+				"expected_status":    http.StatusOK,
+				"expected_substring": "{{FLAG}}",
+			},
+			"havoc": map[string]any{
+				"method":          "GET",
+				"path":            "/healthz",
+				"expected_status": http.StatusOK,
+			},
+		},
+	}
+	setAnyField(t, reflect.ValueOf(req).Elem(), "AWDCheckerPreviewToken", previewTokenField.String())
+
+	resp, err := service.AddChallengeToContest(context.Background(), contest.ID, req)
+	if err != nil {
+		t.Fatalf("AddChallengeToContest() error = %v", err)
+	}
+	respValue := reflect.ValueOf(resp).Elem()
+	stateField := respValue.FieldByName("AWDCheckerValidationState")
+	if !stateField.IsValid() || stateField.String() != "passed" {
+		t.Fatalf("expected passed validation state, got %#v", stateField)
+	}
+
+	items, err := challengeRelationRepo.ListChallenges(context.Background(), contest.ID, false)
+	if err != nil {
+		t.Fatalf("ListChallenges() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("unexpected challenge count: %d", len(items))
+	}
+	itemValue := reflect.ValueOf(items[0]).Elem()
+	if state := itemValue.FieldByName("AWDCheckerValidationState"); !state.IsValid() || state.String() != "passed" {
+		t.Fatalf("expected persisted passed validation state, got %#v", state)
+	}
+	if previewAt := itemValue.FieldByName("AWDCheckerLastPreviewAt"); !previewAt.IsValid() || previewAt.IsNil() {
+		t.Fatal("expected persisted preview time")
+	}
+	if previewResult := itemValue.FieldByName("AWDCheckerLastPreviewResult"); !previewResult.IsValid() || previewResult.String() == "" {
+		t.Fatal("expected persisted preview result")
+	}
+}
+
+func TestChallengeServiceUpdateChallengeMarksValidationStateStaleWhenCheckerConfigChanges(t *testing.T) {
+	service, challengeRepo, contestRepo, challengeRelationRepo := newContestChallengeCommandService(t)
+
+	now := time.Now()
+	contest := &model.Contest{
+		ID:        505,
+		Title:     "awd-stale",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusDraft,
+		StartTime: now.Add(time.Hour),
+		EndTime:   now.Add(2 * time.Hour),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := contestRepo.Create(context.Background(), contest); err != nil {
+		t.Fatalf("create contest: %v", err)
+	}
+	if err := challengeRepo.Create(&model.Challenge{
+		ID:         9005,
+		Title:      "stale-checker",
+		Category:   "web",
+		Difficulty: model.ChallengeDifficultyMedium,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}); err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	existing := &model.ContestChallenge{
+		ContestID:        contest.ID,
+		ChallengeID:      9005,
+		Points:           100,
+		IsVisible:        true,
+		AWDCheckerType:   model.AWDCheckerTypeHTTPStandard,
+		AWDCheckerConfig: `{"get_flag":{"path":"/api/flag"}}`,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+	setChallengeModelField(t, existing, "AWDCheckerValidationState", "passed")
+	setChallengeModelField(t, existing, "AWDCheckerLastPreviewAt", &now)
+	setChallengeModelField(t, existing, "AWDCheckerLastPreviewResult", `{"service_status":"up"}`)
+	if err := challengeRelationRepo.AddChallenge(context.Background(), existing); err != nil {
+		t.Fatalf("add challenge: %v", err)
+	}
+
+	err := service.UpdateChallenge(context.Background(), contest.ID, 9005, &dto.UpdateContestChallengeReq{
+		AWDCheckerType:   stringPtr(string(model.AWDCheckerTypeLegacyProbe)),
+		AWDCheckerConfig: map[string]any{"health_path": "/healthz"},
+	})
+	if err != nil {
+		t.Fatalf("UpdateChallenge() error = %v", err)
+	}
+
+	items, err := challengeRelationRepo.ListChallenges(context.Background(), contest.ID, false)
+	if err != nil {
+		t.Fatalf("ListChallenges() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("unexpected challenge count: %d", len(items))
+	}
+	itemValue := reflect.ValueOf(items[0]).Elem()
+	if state := itemValue.FieldByName("AWDCheckerValidationState"); !state.IsValid() || state.String() != "stale" {
+		t.Fatalf("expected stale validation state, got %#v", state)
+	}
+}
+
+func setChallengeModelField(t *testing.T, target *model.ContestChallenge, field string, value any) {
+	t.Helper()
+
+	item := reflect.ValueOf(target).Elem().FieldByName(field)
+	if !item.IsValid() {
+		t.Fatalf("field %s not found", field)
+	}
+	if !item.CanSet() {
+		t.Fatalf("field %s cannot set", field)
+	}
+
+	next := reflect.ValueOf(value)
+	if next.Type().AssignableTo(item.Type()) {
+		item.Set(next)
+		return
+	}
+	if next.Type().ConvertibleTo(item.Type()) {
+		item.Set(next.Convert(item.Type()))
+		return
+	}
+	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
+}
+
+func setAnyField(t *testing.T, target reflect.Value, field string, value any) {
+	t.Helper()
+
+	item := target.FieldByName(field)
+	if !item.IsValid() {
+		t.Fatalf("field %s not found", field)
+	}
+	if !item.CanSet() {
+		t.Fatalf("field %s cannot set", field)
+	}
+
+	next := reflect.ValueOf(value)
+	if !next.IsValid() {
+		item.Set(reflect.Zero(item.Type()))
+		return
+	}
+	if next.Type().AssignableTo(item.Type()) {
+		item.Set(next)
+		return
+	}
+	if next.Type().ConvertibleTo(item.Type()) {
+		item.Set(next.Convert(item.Type()))
+		return
+	}
+	t.Fatalf("field %s type mismatch: have %s want %s", field, next.Type(), item.Type())
 }
 
 func intPtr(value int) *int {

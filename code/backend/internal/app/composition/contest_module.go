@@ -154,7 +154,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 }
 
 func buildContestChallengeHandler(deps *contestModuleDeps) *contesthttp.ChallengeHandler {
-	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup)
+	contestChallengeCommands := contestcmd.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup, deps.root.Cache())
 	contestChallengeQueries := contestqry.NewChallengeService(deps.challengeRepo, deps.challengeCatalog, deps.contestLookup)
 	return contesthttp.NewChallengeHandler(contestChallengeCommands, contestChallengeQueries)
 }

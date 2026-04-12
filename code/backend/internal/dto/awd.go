@@ -124,6 +124,30 @@ type AWDCheckerRunResp struct {
 	Services []*AWDTeamServiceResp `json:"services"`
 }
 
+type PreviewAWDCheckerReq struct {
+	ChallengeID   int64          `json:"challenge_id" binding:"required,min=1"`
+	CheckerType   string         `json:"checker_type" binding:"required,oneof=legacy_probe http_standard"`
+	CheckerConfig map[string]any `json:"checker_config"`
+	AccessURL     string         `json:"access_url" binding:"required,max=1024"`
+	PreviewFlag   string         `json:"preview_flag" binding:"omitempty,max=512"`
+}
+
+type AWDCheckerPreviewContextResp struct {
+	AccessURL   string `json:"access_url"`
+	PreviewFlag string `json:"preview_flag"`
+	RoundNumber int    `json:"round_number"`
+	TeamID      int64  `json:"team_id"`
+	ChallengeID int64  `json:"challenge_id"`
+}
+
+type AWDCheckerPreviewResp struct {
+	CheckerType    model.AWDCheckerType         `json:"checker_type,omitempty"`
+	ServiceStatus  string                       `json:"service_status"`
+	CheckResult    map[string]any               `json:"check_result"`
+	PreviewContext AWDCheckerPreviewContextResp `json:"preview_context"`
+	PreviewToken   string                       `json:"preview_token,omitempty"`
+}
+
 type ListAWDTrafficEventsReq struct {
 	AttackerTeamID int64  `form:"attacker_team_id" binding:"omitempty,min=1"`
 	VictimTeamID   int64  `form:"victim_team_id" binding:"omitempty,min=1"`

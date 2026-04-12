@@ -52,6 +52,7 @@ import {
   updateAdminContestChallenge,
   updateContest,
 } from '@/api/admin'
+import * as adminApi from '@/api/admin'
 
 describe('admin contest api contract', () => {
   beforeEach(() => {
@@ -188,6 +189,24 @@ describe('admin contest api contract', () => {
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
+        awd_checker_validation_state: 'passed',
+        awd_checker_last_preview_at: '2026-03-12T00:10:00.000Z',
+        awd_checker_last_preview_result: {
+          checker_type: 'http_standard',
+          service_status: 'up',
+          check_result: {
+            checker_type: 'http_standard',
+            check_source: 'checker_preview',
+            status_reason: 'healthy',
+          },
+          preview_context: {
+            access_url: 'http://preview.internal',
+            preview_flag: 'flag{preview}',
+            round_number: 0,
+            team_id: 0,
+            challenge_id: 11,
+          },
+        },
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
@@ -216,6 +235,24 @@ describe('admin contest api contract', () => {
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
+        awd_checker_validation_state: 'passed',
+        awd_checker_last_preview_at: '2026-03-12T00:10:00.000Z',
+        awd_checker_last_preview_result: {
+          checker_type: 'http_standard',
+          service_status: 'up',
+          check_result: {
+            checker_type: 'http_standard',
+            check_source: 'checker_preview',
+            status_reason: 'healthy',
+          },
+          preview_context: {
+            access_url: 'http://preview.internal',
+            preview_flag: 'flag{preview}',
+            round_number: 0,
+            team_id: '0',
+            challenge_id: '11',
+          },
+        },
         created_at: '2026-03-12T00:00:00.000Z',
       },
     ])
@@ -252,6 +289,7 @@ describe('admin contest api contract', () => {
       },
       awd_sla_score: 18,
       awd_defense_score: 28,
+      awd_checker_preview_token: 'preview-token-1',
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -268,6 +306,7 @@ describe('admin contest api contract', () => {
         },
         awd_sla_score: 18,
         awd_defense_score: 28,
+        awd_checker_preview_token: 'preview-token-1',
       },
     })
     expect(result).toEqual({
@@ -286,6 +325,9 @@ describe('admin contest api contract', () => {
       },
       awd_sla_score: 18,
       awd_defense_score: 28,
+      awd_checker_validation_state: 'pending',
+      awd_checker_last_preview_at: undefined,
+      awd_checker_last_preview_result: undefined,
       created_at: '2026-03-12T00:00:00.000Z',
     })
   })
@@ -303,6 +345,7 @@ describe('admin contest api contract', () => {
       },
       awd_sla_score: 10,
       awd_defense_score: 20,
+      awd_checker_preview_token: 'preview-token-2',
     })
 
     expect(requestMock).toHaveBeenCalledWith({
@@ -318,6 +361,7 @@ describe('admin contest api contract', () => {
         },
         awd_sla_score: 10,
         awd_defense_score: 20,
+        awd_checker_preview_token: 'preview-token-2',
       },
     })
   })
@@ -391,6 +435,78 @@ describe('admin contest api contract', () => {
           updated_at: '2026-03-12T10:06:00.000Z',
         },
       ],
+    })
+  })
+
+  it('应该请求 AWD checker 试跑接口并归一化返回值', async () => {
+    requestMock.mockResolvedValue({
+      checker_type: 'http_standard',
+      service_status: 'up',
+      check_result: {
+        checker_type: 'http_standard',
+        check_source: 'checker_preview',
+        status_reason: 'healthy',
+      },
+      preview_context: {
+        access_url: 'http://preview.internal',
+        preview_flag: 'flag{preview}',
+        round_number: 0,
+        team_id: 0,
+        challenge_id: 101,
+      },
+      preview_token: 'preview-token-9',
+    })
+
+    const previewFn = (
+      adminApi as typeof adminApi & {
+        runContestAWDCheckerPreview: (
+          contestId: string,
+          data: Record<string, unknown>
+        ) => Promise<Record<string, unknown>>
+      }
+    ).runContestAWDCheckerPreview
+
+    const result = await previewFn('7', {
+      challenge_id: 101,
+      checker_type: 'http_standard',
+      checker_config: {
+        put_flag: { method: 'PUT', path: '/api/flag' },
+        get_flag: { method: 'GET', path: '/api/flag' },
+      },
+      access_url: 'http://preview.internal',
+      preview_flag: 'flag{preview}',
+    })
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'POST',
+      url: '/admin/contests/7/awd/checker-preview',
+      data: {
+        challenge_id: 101,
+        checker_type: 'http_standard',
+        checker_config: {
+          put_flag: { method: 'PUT', path: '/api/flag' },
+          get_flag: { method: 'GET', path: '/api/flag' },
+        },
+        access_url: 'http://preview.internal',
+        preview_flag: 'flag{preview}',
+      },
+    })
+    expect(result).toEqual({
+      checker_type: 'http_standard',
+      service_status: 'up',
+      check_result: {
+        checker_type: 'http_standard',
+        check_source: 'checker_preview',
+        status_reason: 'healthy',
+      },
+      preview_context: {
+        access_url: 'http://preview.internal',
+        preview_flag: 'flag{preview}',
+        round_number: 0,
+        team_id: '0',
+        challenge_id: '101',
+      },
+      preview_token: 'preview-token-9',
     })
   })
 

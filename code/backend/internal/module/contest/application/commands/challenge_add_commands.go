@@ -55,17 +55,32 @@ func (s *ChallengeService) AddChallengeToContest(ctx context.Context, contestID 
 	if err != nil {
 		return nil, err
 	}
+	validationState, lastPreviewAt, lastPreviewResult, err := consumeCheckerPreviewValidationState(
+		ctx,
+		s.redis,
+		contestID,
+		req.ChallengeID,
+		checkerType,
+		checkerConfig,
+		req.AWDCheckerPreviewToken,
+	)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
 
 	cc := &model.ContestChallenge{
-		ContestID:        contestID,
-		ChallengeID:      req.ChallengeID,
-		Points:           points,
-		Order:            req.Order,
-		IsVisible:        isVisible,
-		AWDCheckerType:   checkerType,
-		AWDCheckerConfig: checkerConfig,
-		AWDSLAScore:      req.AWDSLAScore,
-		AWDDefenseScore:  req.AWDDefenseScore,
+		ContestID:                   contestID,
+		ChallengeID:                 req.ChallengeID,
+		Points:                      points,
+		Order:                       req.Order,
+		IsVisible:                   isVisible,
+		AWDCheckerType:              checkerType,
+		AWDCheckerConfig:            checkerConfig,
+		AWDSLAScore:                 req.AWDSLAScore,
+		AWDDefenseScore:             req.AWDDefenseScore,
+		AWDCheckerValidationState:   validationState,
+		AWDCheckerLastPreviewAt:     lastPreviewAt,
+		AWDCheckerLastPreviewResult: lastPreviewResult,
 	}
 	if err := s.repo.AddChallenge(ctx, cc); err != nil {
 		return nil, errcode.ErrInternal.WithCause(err)

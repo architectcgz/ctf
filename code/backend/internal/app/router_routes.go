@@ -447,6 +447,15 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.contest.AWDHandler.RunCurrentRoundChecks,
 	)
+	adminOnly.POST("/contests/:id/awd/checker-preview",
+		middleware.ParseInt64Param("id"),
+		audit(middleware.AuditOptions{
+			Action:        model.AuditActionUpdate,
+			ResourceType:  "awd_checker_preview",
+			DetailBuilder: middleware.DetailFromParams("id"),
+		}),
+		deps.contest.AWDHandler.PreviewChecker,
+	)
 	adminOnly.POST("/contests/:id/awd/rounds/:rid/check",
 		middleware.ParseInt64Param("id"),
 		middleware.ParseInt64Param("rid"),

@@ -2,8 +2,12 @@ package commands
 
 import (
 	"context"
+	"strings"
+
+	redis "github.com/redis/go-redis/v9"
 
 	"ctf-platform/internal/dto"
+	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -44,6 +48,10 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 	if !exists {
 		return errcode.ErrChallengeNotInContest
 	}
+	current, err := s.repo.FindChallenge(ctx, contestID, challengeID)
+	if err != nil {
+		return errcode.ErrInternal.WithCause(err)
+	}
 
 	updates := make(map[string]any)
 	if req.Points != nil {
@@ -81,6 +89,34 @@ func (s *ChallengeService) UpdateChallenge(ctx context.Context, contestID, chall
 	if req.AWDDefenseScore != nil {
 		updates["awd_defense_score"] = *req.AWDDefenseScore
 	}
+	nextCheckerType := current.AWDCheckerType
+	if req.AWDCheckerType != nil {
+		nextCheckerType = checkerType
+	}
+	nextCheckerConfig := current.AWDCheckerConfig
+	if req.AWDCheckerConfig != nil {
+		nextCheckerConfig = checkerConfig
+	}
+	previewToken := ""
+	if req.AWDCheckerPreviewToken != nil {
+		previewToken = *req.AWDCheckerPreviewToken
+	}
+	if validationUpdates, ok, validationErr := buildCheckerValidationUpdate(
+		ctx,
+		s.redis,
+		current,
+		contestID,
+		challengeID,
+		nextCheckerType,
+		nextCheckerConfig,
+		previewToken,
+	); validationErr != nil {
+		return errcode.ErrInternal.WithCause(validationErr)
+	} else if ok {
+		for key, value := range validationUpdates {
+			updates[key] = value
+		}
+	}
 
 	return s.repo.UpdateChallenge(ctx, contestID, challengeID, updates)
 }
@@ -90,4 +126,60 @@ func zeroIfNil(value *int) int {
 		return 0
 	}
 	return *value
+}
+
+func buildCheckerValidationUpdate(
+	ctx context.Context,
+	redisClient *redis.Client,
+	current *model.ContestChallenge,
+	contestID, challengeID int64,
+	nextCheckerType model.AWDCheckerType,
+	nextCheckerConfig string,
+	previewToken string,
+) (map[string]any, bool, error) {
+	state, previewAt, previewResult, err := consumeCheckerPreviewValidationState(
+		ctx,
+		redisClient,
+		contestID,
+		challengeID,
+		nextCheckerType,
+		nextCheckerConfig,
+		previewToken,
+	)
+	if err != nil {
+		return nil, false, err
+	}
+	if strings.TrimSpace(previewToken) != "" && previewResult != "" {
+		return map[string]any{
+			"awd_checker_validation_state":    state,
+			"awd_checker_last_preview_at":     previewAt,
+			"awd_checker_last_preview_result": previewResult,
+		}, true, nil
+	}
+
+	configChanged := current.AWDCheckerType != nextCheckerType || current.AWDCheckerConfig != nextCheckerConfig
+	if !configChanged {
+		return nil, false, nil
+	}
+
+	nextState := model.AWDCheckerValidationStatePending
+	if hasPersistedCheckerValidation(current) {
+		nextState = model.AWDCheckerValidationStateStale
+	}
+	return map[string]any{
+		"awd_checker_validation_state": nextState,
+	}, true, nil
+}
+
+func hasPersistedCheckerValidation(value *model.ContestChallenge) bool {
+	if value == nil {
+		return false
+	}
+	if value.AWDCheckerLastPreviewAt != nil {
+		return true
+	}
+	if strings.TrimSpace(value.AWDCheckerLastPreviewResult) != "" {
+		return true
+	}
+	return value.AWDCheckerValidationState != "" && value.AWDCheckerValidationState != model.AWDCheckerValidationStatePending
 }

@@ -273,6 +273,7 @@ async function handleSaveChallengeConfig(payload: {
   awd_checker_config: Record<string, unknown>
   awd_sla_score: number
   awd_defense_score: number
+  awd_checker_preview_token?: string
 }) {
   if (challengeConfigMode.value === 'create') {
     await createChallengeLink(payload)
@@ -465,6 +466,7 @@ watch(
     />
 
     <AWDChallengeConfigDialog
+      :contest-id="selectedContest?.id || null"
       :open="challengeConfigDialogOpen"
       :mode="challengeConfigMode"
       :challenge-options="challengeCatalog"
