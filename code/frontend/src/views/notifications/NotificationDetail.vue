@@ -144,7 +144,7 @@ watch(
             </button>
 
             <div class="notification-overline">Notification</div>
-            <h1 class="notification-detail-title">
+            <h1 class="notification-detail-title workspace-page-title">
               {{ notification.title }}
             </h1>
 
@@ -321,10 +321,7 @@ watch(
 
 .notification-detail-title {
   margin-top: 1rem;
-  font-size: clamp(1.85rem, 2.6vw, 2.6rem);
   font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
   color: var(--journal-ink);
 }
 

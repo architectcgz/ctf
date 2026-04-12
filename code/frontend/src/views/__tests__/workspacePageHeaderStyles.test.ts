@@ -35,6 +35,12 @@ import writeupViewSource from '@/components/admin/writeup/ChallengeWriteupViewPa
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
 import challengeImportPreviewSource from '@/views/admin/ChallengeImportPreview.vue?raw'
+import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
+import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
+import notificationDetailSource from '@/views/notifications/NotificationDetail.vue?raw'
+import reviewArchiveHeroSource from '@/components/teacher/review-archive/ReviewArchiveHero.vue?raw'
+import authEntryShellSource from '@/components/auth/AuthEntryShell.vue?raw'
+import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
 
 const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8')
 
@@ -261,6 +267,59 @@ describe('workspace page header styles', () => {
     expect(pageHeaderSource).toContain('class="workspace-page-copy"')
     expect(pageHeaderSource).not.toContain(
       'class="max-w-3xl text-sm leading-6 text-text-secondary"'
+    )
+  })
+
+  it('独立详情和状态页标题也应接入共享页级标题类', () => {
+    const specialPageTitleSources = [
+      {
+        source: challengeDetailSource,
+        include: '<h1 class="question-title workspace-page-title">',
+        exclude: '<h1 class="question-title">',
+      },
+      {
+        source: contestDetailSource,
+        include: '<h1 class="contest-hero__title workspace-page-title">{{ contest.title }}</h1>',
+        exclude: '<h1 class="contest-hero__title">{{ contest.title }}</h1>',
+      },
+      {
+        source: notificationDetailSource,
+        include: '<h1 class="notification-detail-title workspace-page-title">',
+        exclude: '<h1 class="notification-detail-title">',
+      },
+      {
+        source: reviewArchiveHeroSource,
+        include: '<h1 class="archive-hero__title workspace-page-title">教学复盘归档</h1>',
+        exclude: '<h1 class="archive-hero__title">教学复盘归档</h1>',
+      },
+      {
+        source: authEntryShellSource,
+        include: '<h1 class="auth-entry-shell__title workspace-page-title">教学平台入口</h1>',
+        exclude: '<h1 class="auth-entry-shell__title">教学平台入口</h1>',
+      },
+      {
+        source: errorStatusShellSource,
+        include: '<h1 class="error-status-title workspace-page-title">',
+        exclude: '<h1 class="error-status-title">',
+      },
+    ]
+
+    for (const entry of specialPageTitleSources) {
+      expectSourceToContain(entry.source, entry.include)
+      expectSourceNotToContain(entry.source, entry.exclude)
+    }
+
+    expect(contestDetailSource).toContain(
+      '<p class="contest-hero__desc workspace-page-copy">'
+    )
+    expect(reviewArchiveHeroSource).toContain(
+      '<p class="archive-hero__description workspace-page-copy">'
+    )
+    expect(authEntryShellSource).toContain(
+      '<p class="auth-entry-shell__copy workspace-page-copy">'
+    )
+    expect(errorStatusShellSource).toContain(
+      '<p class="error-status-text workspace-page-copy">'
     )
   })
 })
