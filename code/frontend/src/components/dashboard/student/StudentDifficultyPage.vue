@@ -193,35 +193,39 @@ function openPrimaryDifficulty(): void {
               'difficulty-action-item--primary': primaryDifficulty?.difficulty === item.difficulty,
             }"
             :data-test="`difficulty-action-${item.difficulty}`"
+            :aria-current="primaryDifficulty?.difficulty === item.difficulty ? 'step' : undefined"
           >
             <div class="difficulty-action-item__body">
               <div class="difficulty-action-rank">
-                {{ index + 1 }}
+                {{ String(index + 1).padStart(2, '0') }}
               </div>
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
+              <div class="difficulty-action-item__content">
+                <div class="difficulty-action-item__meta">
                   <span class="difficulty-action-item__name">{{ difficultyLabel(item.difficulty) }}</span>
                   <span class="difficulty-action-item__rate">{{ item.rate }}%</span>
                   <span class="difficulty-action-item__count">{{ item.solved }}/{{ item.total }}</span>
                 </div>
-                <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
+                <p class="difficulty-action-item__copy">
                   {{ difficultyActionCopy(item) }}
                 </p>
+                <div class="difficulty-track">
+                  <div
+                    class="difficulty-track-fill h-2 rounded-full"
+                    :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
+                  />
+                </div>
               </div>
               <button
                 type="button"
                 class="journal-btn-primary difficulty-action-item__cta"
+                :class="{
+                  'difficulty-action-item__cta--secondary':
+                    primaryDifficulty?.difficulty !== item.difficulty,
+                }"
                 @click="emit('openDifficultyChallenges', item.difficulty)"
               >
                 去做这一档
               </button>
-            </div>
-
-            <div class="difficulty-track mt-4 h-2 rounded-full">
-              <div
-                class="difficulty-track-fill h-2 rounded-full"
-                :style="{ width: `${item.rate}%`, background: barColorMap[item.difficulty] }"
-              />
             </div>
           </article>
         </div>
@@ -333,36 +337,65 @@ function openPrimaryDifficulty(): void {
   border-top: 1px solid var(--journal-divider);
 }
 
-.difficulty-action-item--primary {
+.difficulty-action-item {
   border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  padding: var(--space-2) var(--space-2-5);
+}
+
+.difficulty-action-item--primary {
+  background: color-mix(in srgb, var(--journal-accent) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--journal-accent) 18%, transparent);
 }
 
 .difficulty-action-item__body {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--space-4);
 }
 
 .difficulty-action-rank {
   display: flex;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-accent-strong);
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, transparent);
+  color: var(--journal-muted);
   font-size: var(--font-size-0-82);
   font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.difficulty-action-item--primary .difficulty-action-rank {
+  background: color-mix(in srgb, var(--journal-accent) 14%, transparent);
+  color: var(--journal-accent-strong);
+}
+
+.difficulty-action-item__content {
+  min-width: 0;
+}
+
+.difficulty-action-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
 }
 
 .difficulty-action-item__name {
-  font-size: var(--font-size-0-86);
+  font-size: var(--font-size-0-82);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--journal-ink);
+}
+
+.difficulty-action-item__copy {
+  margin-top: 0.7rem;
+  font-size: var(--font-size-0-82);
+  line-height: 1.7;
+  color: var(--journal-muted);
 }
 
 .difficulty-action-item__rate,
@@ -370,7 +403,7 @@ function openPrimaryDifficulty(): void {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.2rem 0.55rem;
+  padding: 0.25rem 0.6rem;
   font-size: var(--font-size-0-74);
   font-weight: 600;
 }
@@ -387,6 +420,21 @@ function openPrimaryDifficulty(): void {
 
 .difficulty-action-item__cta {
   flex-shrink: 0;
+  min-width: 6rem;
+}
+
+.difficulty-action-item__cta--secondary {
+  border-color: var(--journal-control-border);
+  background: color-mix(in srgb, var(--journal-surface) 96%, transparent);
+  color: var(--journal-ink);
+}
+
+.difficulty-track {
+  margin-top: 0.8rem;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--journal-track);
 }
 
 .stat-icon {
@@ -413,10 +461,6 @@ function openPrimaryDifficulty(): void {
   background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
 }
 
-.difficulty-track {
-  background: var(--journal-track);
-}
-
 :global([data-theme='dark']) .difficulty-action-list,
 :global([data-theme='dark']) .difficulty-guidance {
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
@@ -428,7 +472,12 @@ function openPrimaryDifficulty(): void {
   }
 
   .difficulty-action-item__body {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .difficulty-action-rank {
+    width: 2.5rem;
   }
 
   .difficulty-action-item__cta {
