@@ -413,7 +413,11 @@ describe('AWDOperationsPanel', () => {
   it('应该在普通失败未进入 gate 状态时保持弹层关闭', async () => {
     const awdState = getAwdState()
     awdState.readiness.value = buildReadinessState()
-    awdState.createRound.mockResolvedValue(undefined)
+    awdState.createRound.mockImplementation(async () => {
+      await Promise.reject(
+        Object.assign(new Error('普通冲突'), { name: 'ApiError', status: 409, code: 14099 })
+      ).catch(() => undefined)
+    })
 
     const wrapper = mount(AWDOperationsPanel, {
       props: {

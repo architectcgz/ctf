@@ -149,7 +149,6 @@ export function useAdminContests() {
   const saving = ref(false)
   const editingContestId = ref<string | null>(null)
   const editingBaseStatus = ref<AdminContestStatus | null>(null)
-  const editingContestMode = ref<ContestDetailData['mode'] | null>(null)
   const formDraft = ref<ContestFormDraft>(createEmptyDraft())
   const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(
     createDefaultAWDStartOverrideDialogState()
@@ -179,7 +178,6 @@ export function useAdminContests() {
   function openCreateDialog() {
     editingContestId.value = null
     editingBaseStatus.value = null
-    editingContestMode.value = null
     formDraft.value = createEmptyDraft()
     awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
     dialogOpen.value = true
@@ -188,7 +186,6 @@ export function useAdminContests() {
   function openEditDialog(contest: ContestDetailData) {
     editingContestId.value = contest.id
     editingBaseStatus.value = normalizeEditableStatus(contest.status)
-    editingContestMode.value = contest.mode
     formDraft.value = createDraftFromContest(contest)
     awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
     dialogOpen.value = true
@@ -284,7 +281,7 @@ export function useAdminContests() {
           ends_at: toISOString(draft.ends_at),
           status: draft.status,
         }
-        if (shouldGateAWDContestStart(editingContestMode.value, draft.status)) {
+        if (shouldGateAWDContestStart(draft.mode, draft.status)) {
           try {
             await updateContest(editingContestId.value, payload, { suppressErrorToast: true })
             await finalizeContestUpdateSuccess()
