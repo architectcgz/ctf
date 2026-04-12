@@ -16,6 +16,7 @@ import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import imageManageSource from '@/views/admin/ImageManage.vue?raw'
+import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 describe('shared theme token adoption', () => {
@@ -93,6 +94,11 @@ describe('shared theme token adoption', () => {
     expect(imageManageSource).not.toContain("failed: '#ef4444'")
     expect(imageManageSource).not.toContain('rgba(15, 23, 42, 0.96)')
     expect(imageManageSource).not.toContain('rgba(15, 23, 42, 0.9)')
+
+    expect(challengeManageSource).not.toContain('#059669')
+    expect(challengeManageSource).not.toContain('#047857')
+    expect(challengeManageSource).not.toContain('#dc2626')
+    expect(challengeManageSource).not.toContain('#b91c1c')
 
     expect(userGovernanceSource).not.toContain("return '#f59e0b'")
     expect(userGovernanceSource).not.toContain("return '#dc2626'")
