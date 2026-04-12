@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { FileChartColumnIncreasing, Rocket, ShieldAlert } from 'lucide-vue-next'
 
@@ -172,6 +172,72 @@ function openSkillProfile(): void {
 function openChallenge(challengeId: string): void {
   router.push(`/challenges/${challengeId}`)
 }
+
+function resolveDashboardPanelComponent(panelKey: DashboardPanelKey): Component {
+  switch (panelKey) {
+    case 'overview':
+      return StudentOverviewPage
+    case 'recommendation':
+      return StudentRecommendationPage
+    case 'category':
+      return StudentCategoryProgressPage
+    case 'timeline':
+      return StudentTimelinePage
+    case 'difficulty':
+      return StudentDifficultyPage
+  }
+}
+
+function resolveDashboardPanelBindings(panelKey: DashboardPanelKey): Record<string, unknown> {
+  switch (panelKey) {
+    case 'overview':
+      return {
+        embedded: true,
+        displayName: displayName.value,
+        className: authStore.user?.class_name,
+        progress: progress.value,
+        completionRate: completionRate.value,
+        highlightItems: highlightItems.value,
+        recommendations: recommendations.value,
+        timeline: timeline.value,
+        weakDimensions: weakDimensions.value,
+        skillDimensions: skillProfile.value?.dimensions ?? [],
+        onOpenChallenge: openChallenge,
+        onOpenChallenges: openChallenges,
+        onOpenSkillProfile: openSkillProfile,
+      }
+    case 'recommendation':
+      return {
+        embedded: true,
+        weakDimensions: weakDimensions.value,
+        recommendations: recommendations.value,
+        onOpenChallenge: openChallenge,
+        onOpenChallenges: openChallenges,
+        onOpenSkillProfile: openSkillProfile,
+      }
+    case 'category':
+      return {
+        embedded: true,
+        categoryStats: categoryStats.value,
+        completionRate: completionRate.value,
+        onOpenChallenges: openChallenges,
+        onOpenCategoryChallenges: openCategoryChallenges,
+        onOpenSkillProfile: openSkillProfile,
+      }
+    case 'timeline':
+      return {
+        embedded: true,
+        timeline: timeline.value,
+      }
+    case 'difficulty':
+      return {
+        embedded: true,
+        difficultyStats: difficultyStats.value,
+        onOpenChallenges: openChallenges,
+        onOpenDifficultyChallenges: openDifficultyChallenges,
+      }
+  }
+}
 </script>
 
 <template>
@@ -210,85 +276,18 @@ function openChallenge(challengeId: string): void {
         </div>
 
         <template v-else-if="progress">
-          <StudentOverviewPage
-            id="dashboard-panel-overview"
+          <component
+            v-for="tab in panelTabs"
+            :is="resolveDashboardPanelComponent(tab.key)"
+            :id="tab.panelId"
+            :key="tab.panelId"
             class="tab-panel"
-            :class="{ active: activePanel === 'overview' }"
+            :class="{ active: activePanel === tab.key }"
             role="tabpanel"
-            aria-labelledby="dashboard-tab-overview"
-            :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
-            v-show="activePanel === 'overview'"
-            embedded
-            :display-name="displayName"
-            :class-name="authStore.user?.class_name"
-            :progress="progress"
-            :completion-rate="completionRate"
-            :highlight-items="highlightItems"
-            :recommendations="recommendations"
-            :timeline="timeline"
-            :weak-dimensions="weakDimensions"
-            :skill-dimensions="skillProfile?.dimensions ?? []"
-            @open-challenge="openChallenge"
-            @open-challenges="openChallenges"
-            @open-skill-profile="openSkillProfile"
-          />
-
-          <StudentRecommendationPage
-            id="dashboard-panel-recommendation"
-            class="tab-panel"
-            :class="{ active: activePanel === 'recommendation' }"
-            role="tabpanel"
-            aria-labelledby="dashboard-tab-recommendation"
-            :aria-hidden="activePanel === 'recommendation' ? 'false' : 'true'"
-            v-show="activePanel === 'recommendation'"
-            embedded
-            :weak-dimensions="weakDimensions"
-            :recommendations="recommendations"
-            @open-challenge="openChallenge"
-            @open-challenges="openChallenges"
-            @open-skill-profile="openSkillProfile"
-          />
-
-          <StudentCategoryProgressPage
-            id="dashboard-panel-category"
-            class="tab-panel"
-            :class="{ active: activePanel === 'category' }"
-            role="tabpanel"
-            aria-labelledby="dashboard-tab-category"
-            :aria-hidden="activePanel === 'category' ? 'false' : 'true'"
-            v-show="activePanel === 'category'"
-            embedded
-            :category-stats="categoryStats"
-            :completion-rate="completionRate"
-            @open-challenges="openChallenges"
-            @open-category-challenges="openCategoryChallenges"
-            @open-skill-profile="openSkillProfile"
-          />
-
-          <StudentTimelinePage
-            id="dashboard-panel-timeline"
-            class="tab-panel"
-            :class="{ active: activePanel === 'timeline' }"
-            role="tabpanel"
-            aria-labelledby="dashboard-tab-timeline"
-            :aria-hidden="activePanel === 'timeline' ? 'false' : 'true'"
-            v-show="activePanel === 'timeline'"
-            embedded
-            :timeline="timeline"
-          />
-
-          <StudentDifficultyPage
-            id="dashboard-panel-difficulty"
-            class="tab-panel"
-            :class="{ active: activePanel === 'difficulty' }"
-            role="tabpanel"
-            aria-labelledby="dashboard-tab-difficulty"
-            :aria-hidden="activePanel === 'difficulty' ? 'false' : 'true'"
-            v-show="activePanel === 'difficulty'"
-            embedded
-            :difficulty-stats="difficultyStats"
-            @open-challenges="openChallenges"
-            @open-difficulty-challenges="openDifficultyChallenges"
+            :aria-labelledby="tab.tabId"
+            :aria-hidden="activePanel === tab.key ? 'false' : 'true'"
+            v-show="activePanel === tab.key"
+            v-bind="resolveDashboardPanelBindings(tab.key)"
           />
         </template>
       </main>
