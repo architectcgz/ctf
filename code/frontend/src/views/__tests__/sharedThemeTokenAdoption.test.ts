@@ -4,11 +4,14 @@ import appCardSource from '@/components/common/AppCard.vue?raw'
 import appLayoutSource from '@/components/layout/AppLayout.vue?raw'
 import pageHeaderSource from '@/components/common/PageHeader.vue?raw'
 import skillRadarSource from '@/components/common/SkillRadar.vue?raw'
+import radarChartSource from '@/components/charts/RadarChart.vue?raw'
+import errorStatusShellSource from '@/components/errors/ErrorStatusShell.vue?raw'
 import studentCategoryProgressSource from '@/components/dashboard/student/StudentCategoryProgressPage.vue?raw'
 import studentOverviewSource from '@/components/dashboard/student/StudentOverviewStyleEditorial.vue?raw'
 import studentRecommendationSource from '@/components/dashboard/student/StudentRecommendationPage.vue?raw'
 import studentDifficultySource from '@/components/dashboard/student/StudentDifficultyPage.vue?raw'
 import studentTimelineSource from '@/components/dashboard/student/StudentTimelinePage.vue?raw'
+import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 import notificationDropdownSource from '@/components/layout/NotificationDropdown.vue?raw'
 import sidebarSource from '@/components/layout/Sidebar.vue?raw'
 import topNavSource from '@/components/layout/TopNav.vue?raw'
@@ -19,12 +22,14 @@ import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspecto
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import topologyCanvasBoardSource from '@/components/admin/topology/TopologyCanvasBoard.vue?raw'
 import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
+import adminNotificationPublishDrawerSource from '@/components/notifications/AdminNotificationPublishDrawer.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
 import imageManageSource from '@/views/admin/ImageManage.vue?raw'
 import challengeManageSource from '@/views/admin/ChallengeManage.vue?raw'
 import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
+import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 describe('shared theme token adoption', () => {
@@ -41,6 +46,12 @@ describe('shared theme token adoption', () => {
     expect(skillRadarSource).not.toContain('stroke="#0891b2"')
     expect(skillRadarSource).not.toContain('fill="#06b6d4"')
     expect(skillRadarSource).not.toContain('fill="#cbd5e1"')
+
+    expect(radarChartSource).not.toContain("|| '#475569'")
+
+    expect(errorStatusShellSource).not.toContain('#0b4f60')
+    expect(errorStatusShellSource).not.toContain('#f8feff')
+    expect(errorStatusShellSource).not.toContain('#f1f5f9')
 
     expect(studentDifficultySource).not.toContain("beginner: '#10b981'")
     expect(studentDifficultySource).not.toContain("easy: '#22d3ee'")
@@ -68,6 +79,10 @@ describe('shared theme token adoption', () => {
 
     expect(studentCategoryProgressSource).not.toContain('#0ea5e9')
 
+    expect(scoreboardSource).not.toContain('#b45309')
+    expect(scoreboardSource).not.toContain('#475569')
+    expect(scoreboardSource).not.toContain('#92400e')
+
     expect(challengePackageImportEntrySource).not.toContain('#2563eb')
     expect(challengePackageImportEntrySource).not.toContain('rgba(37, 99, 235, 0.12)')
 
@@ -94,6 +109,13 @@ describe('shared theme token adoption', () => {
     expect(awdRoundInspectorSource).not.toContain('rgba(8,145,178,0)')
 
     expect(contestOrchestrationSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.035);')
+
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-border, #d8e1ec)')
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-text-muted, #64748b)')
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-text, #0f172a)')
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-primary, #3b82f6)')
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-danger, #dc2626)')
+    expect(adminNotificationPublishDrawerSource).not.toContain('var(--color-bg-elevated, #fff)')
 
     expect(notificationDropdownSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.04)')
     expect(notificationDropdownSource).not.toContain('0 18px 42px rgba(15, 23, 42, 0.14)')
@@ -139,6 +161,8 @@ describe('shared theme token adoption', () => {
     expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.08)')
     expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.42)')
     expect(adminChallengeDetailSource).not.toContain('rgba(37, 99, 235, 0.12)')
+
+    expect(challengeDetailSource).not.toContain('rgba(13, 23, 39, 0.06)')
 
     expect(userGovernanceSource).not.toContain("return '#f59e0b'")
     expect(userGovernanceSource).not.toContain("return '#dc2626'")

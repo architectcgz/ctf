@@ -427,17 +427,17 @@ function getCardDescription(
 
 .sb-row--top1 td,
 .sb-rank-pill--top1 {
-  color: color-mix(in srgb, #b45309 84%, var(--journal-ink));
+  color: color-mix(in srgb, var(--color-warning) 84%, var(--journal-ink));
 }
 
 .sb-row--top2 td,
 .sb-rank-pill--top2 {
-  color: color-mix(in srgb, #475569 80%, var(--journal-ink));
+  color: color-mix(in srgb, var(--color-text-secondary) 80%, var(--journal-ink));
 }
 
 .sb-row--top3 td,
 .sb-rank-pill--top3 {
-  color: color-mix(in srgb, #92400e 80%, var(--journal-ink));
+  color: color-mix(in srgb, var(--color-danger) 42%, var(--color-warning));
 }
 
 .sb-cell--rank,
