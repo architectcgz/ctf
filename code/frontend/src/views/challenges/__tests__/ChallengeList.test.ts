@@ -320,6 +320,15 @@ describe('ChallengeList', () => {
 
     expect((wrapper.get('#challenge-category-filter').element as HTMLSelectElement).value).toBe('crypto')
     expect((wrapper.get('#challenge-difficulty-filter').element as HTMLSelectElement).value).toBe('medium')
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+        difficulty: 'medium',
+      })
+    )
   })
 
   it('切换分类和难度时应回写到路由 query', async () => {
@@ -336,6 +345,15 @@ describe('ChallengeList', () => {
     await wrapper.get('#challenge-category-filter').setValue('crypto')
     await flushPromises()
     expect(router.currentRoute.value.query).toEqual({ category: 'crypto' })
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+      })
+    )
+    expect(mockedGetChallenges.mock.lastCall?.[0]).not.toHaveProperty('difficulty')
 
     await wrapper.get('#challenge-difficulty-filter').setValue('medium')
     await flushPromises()
@@ -343,6 +361,15 @@ describe('ChallengeList', () => {
       category: 'crypto',
       difficulty: 'medium',
     })
+    expect(mockedGetChallenges).toHaveBeenCalledTimes(2)
+    expect(mockedGetChallenges).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        page_size: 20,
+        category: 'crypto',
+        difficulty: 'medium',
+      })
+    )
   })
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
