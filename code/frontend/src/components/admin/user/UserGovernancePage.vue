@@ -211,7 +211,7 @@ function handleImportChange(event: Event): void {
           <div class="journal-note-label">User Governance</div>
           <h1 class="workspace-page-title">用户治理台</h1>
         </div>
-        <p class="workspace-tab-copy">
+        <p class="workspace-page-copy">
           在这里筛选账号、批量导入并处理用户状态。
         </p>
 

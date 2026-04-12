@@ -11,6 +11,11 @@ const props = defineProps({
 const center = 140
 const radius = 96
 const rings = [0.25, 0.5, 0.75, 1]
+const gridStroke = 'color-mix(in srgb, var(--color-text-muted) 18%, transparent)'
+const polygonFill = 'color-mix(in srgb, var(--color-primary) 22%, transparent)'
+const polygonStroke = 'var(--color-primary)'
+const centerFill = 'color-mix(in srgb, var(--color-primary-hover) 82%, var(--color-primary))'
+const labelFill = 'var(--color-text-muted)'
 
 const points = computed(() => {
   const total = props.scores.length
@@ -52,7 +57,7 @@ function ringPoints(scale) {
         :key="scale"
         :points="ringPoints(scale)"
         fill="none"
-        stroke="rgba(148, 163, 184, 0.18)"
+        :stroke="gridStroke"
         stroke-width="1"
       />
       <line
@@ -62,16 +67,16 @@ function ringPoints(scale) {
         :y1="center"
         :x2="point.labelX - ((point.labelX - center) * 0.12)"
         :y2="point.labelY - ((point.labelY - center) * 0.12)"
-        stroke="rgba(148, 163, 184, 0.18)"
+        :stroke="gridStroke"
       />
-      <polygon :points="polygon" fill="rgba(8, 145, 178, 0.22)" stroke="#0891b2" stroke-width="2" />
-      <circle cx="140" cy="140" r="4" fill="#06b6d4" />
+      <polygon :points="polygon" :fill="polygonFill" :stroke="polygonStroke" stroke-width="2" />
+      <circle cx="140" cy="140" r="4" :fill="centerFill" />
       <g v-for="point in points" :key="point.name">
         <circle :cx="point.x" :cy="point.y" r="4" :fill="point.color" />
         <text
           :x="point.labelX"
           :y="point.labelY"
-          fill="#cbd5e1"
+          :fill="labelFill"
           font-size="12"
           text-anchor="middle"
         >

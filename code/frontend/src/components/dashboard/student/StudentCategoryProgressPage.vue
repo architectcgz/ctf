@@ -103,7 +103,7 @@ function openPrimaryCategory(): void {
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
       </h1>
-      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+      <p class="workspace-page-copy max-w-2xl">
         {{
           hasCategoryStats
             ? '按分类找短板，先补当前最需要回填的那一类。'
