@@ -2892,7 +2892,11 @@ const {
 :global([data-theme='dark']) .topology-page--template-library :deep(.page-header) {
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 10%, transparent), transparent 18rem),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.9));
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
+      color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
+    );
 }
 
 :global([data-theme='dark']) .topology-page--template-library .topology-toolbar-btn--ghost,

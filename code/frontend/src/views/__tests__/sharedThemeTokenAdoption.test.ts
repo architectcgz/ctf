@@ -16,6 +16,8 @@ import challengePackageImportEntrySource from '@/components/admin/challenge/Chal
 import adminDashboardSource from '@/components/admin/dashboard/AdminDashboardPage.vue?raw'
 import writeupManageSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import topologyCanvasBoardSource from '@/components/admin/topology/TopologyCanvasBoard.vue?raw'
+import topologyStudioSource from '@/components/admin/topology/ChallengeTopologyStudioPage.vue?raw'
 import skillProfileSource from '@/views/profile/SkillProfile.vue?raw'
 import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
@@ -79,6 +81,13 @@ describe('shared theme token adoption', () => {
     expect(awdRoundInspectorSource).not.toContain('rgba(15,23,42,0.94)')
     expect(awdRoundInspectorSource).not.toContain('border-white/10')
     expect(awdRoundInspectorSource).not.toContain('bg-white/5')
+
+    expect(topologyCanvasBoardSource).not.toContain('var(--color-primary) 74%, white')
+    expect(topologyCanvasBoardSource).not.toContain('var(--color-warning) 90%, white')
+    expect(topologyCanvasBoardSource).not.toContain('var(--color-warning) 90%, #f8fafc')
+
+    expect(topologyStudioSource).not.toContain('rgba(15, 23, 42, 0.96)')
+    expect(topologyStudioSource).not.toContain('rgba(15, 23, 42, 0.9)')
 
     expect(notificationDropdownSource).not.toContain('0 8px 18px rgba(15, 23, 42, 0.04)')
     expect(notificationDropdownSource).not.toContain('0 18px 42px rgba(15, 23, 42, 0.14)')
