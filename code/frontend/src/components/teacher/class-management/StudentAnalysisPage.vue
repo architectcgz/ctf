@@ -66,7 +66,13 @@ const emit = defineEmits<{
   changeWriteupPage: [page: number]
 }>()
 
-type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'timeline'
+type WorkspaceTab =
+  | 'overview'
+  | 'recommendations'
+  | 'writeups'
+  | 'manual-review'
+  | 'evidence'
+  | 'timeline'
 
 interface WorkspaceTabItem {
   key: WorkspaceTab
@@ -93,6 +99,12 @@ const workspaceTabs: WorkspaceTabItem[] = [
     label: '发布的题解',
     buttonId: 'student-tab-writeups',
     panelId: 'student-writeups',
+  },
+  {
+    key: 'manual-review',
+    label: '人工审核',
+    buttonId: 'student-tab-manual-review',
+    panelId: 'student-manual-review',
   },
   {
     key: 'evidence',
@@ -301,6 +313,42 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         >
           <StudentInsightPanel
             active-section="writeups"
+            :student="selectedStudent"
+            :progress="progress"
+            :profile="skillProfile"
+            :recommendations="recommendations"
+            :timeline="timeline"
+            :evidence="evidence"
+            :writeup-submissions="writeupSubmissions"
+            :writeup-page="writeupPage"
+            :writeup-total="writeupTotal"
+            :writeup-total-pages="writeupTotalPages"
+            :writeup-pagination-loading="writeupPaginationLoading"
+            :manual-review-submissions="manualReviewSubmissions"
+            :active-manual-review="activeManualReview"
+            :manual-review-loading="manualReviewLoading"
+            :manual-review-saving="manualReviewSaving"
+            :loading="loadingDetails"
+            empty-text="请先选择一名学生。"
+            @open-challenge="emit('openChallenge', $event)"
+            @open-manual-review="emit('openManualReview', $event)"
+            @moderate-writeup="emit('moderateWriteup', $event)"
+            @review-manual-review="emit('reviewManualReview', $event)"
+            @change-writeup-page="emit('changeWriteupPage', $event)"
+          />
+        </section>
+
+        <section
+          id="student-manual-review"
+          class="tab-panel section"
+          :class="{ active: activeTab === 'manual-review' }"
+          role="tabpanel"
+          aria-labelledby="student-tab-manual-review"
+          :aria-hidden="activeTab === 'manual-review' ? 'false' : 'true'"
+          v-show="activeTab === 'manual-review'"
+        >
+          <StudentInsightPanel
+            active-section="manual-review"
             :student="selectedStudent"
             :progress="progress"
             :profile="skillProfile"

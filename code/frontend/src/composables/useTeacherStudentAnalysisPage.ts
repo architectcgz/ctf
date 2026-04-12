@@ -154,8 +154,6 @@ export function useTeacherStudentAnalysisPage() {
         getStudentEvidence(studentId),
         getTeacherWriteupSubmissions({
           student_id: studentId,
-          submission_status: 'published',
-          page: 1,
           page_size: writeupPageSize.value,
         }),
         getTeacherManualReviewSubmissions({ student_id: studentId, page_size: 6 }),
