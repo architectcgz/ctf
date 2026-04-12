@@ -7,10 +7,11 @@ type RouteLike = {
 }
 
 const dashboardPanelTitleMap = {
-  recommendation: '训练建议',
-  category: '分类进度',
-  timeline: '近期动态',
-  difficulty: '难度分布',
+  overview: '训练总览',
+  recommendation: '训练队列',
+  category: '分类补强',
+  timeline: '训练记录',
+  difficulty: '强度推进',
 } as const
 
 export function resolveRouteTitle(route: RouteLike): string {
