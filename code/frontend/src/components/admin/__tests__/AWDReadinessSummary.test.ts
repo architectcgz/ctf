@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import AWDReadinessSummary from '../contest/AWDReadinessSummary.vue'
+import type { AWDReadinessData } from '@/api/contracts'
 
-function buildReadiness(overrides: Record<string, unknown> = {}) {
+function buildReadiness(overrides: Partial<AWDReadinessData> = {}): AWDReadinessData {
   return {
     contest_id: 'awd-1',
     ready: false,

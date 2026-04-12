@@ -55,7 +55,7 @@ interface AWDTrafficFilterState {
 
 interface AWDReadinessOverrideDialogState {
   open: boolean
-  action: AWDReadinessAction | null
+  action: Extract<AWDReadinessAction, 'create_round' | 'run_current_round_check'> | null
   title: string
   readiness: AWDReadinessData | null
   confirmLoading: boolean
@@ -508,13 +508,16 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
       return
     }
 
-    const shouldRunCurrentRound = selectedRound.value?.status === 'running' || !selectedRoundId.value
+    const activeRoundId = selectedRoundId.value
+    const shouldRunCurrentRound = selectedRound.value?.status === 'running' || !activeRoundId
     checking.value = true
     try {
-      const result =
-        shouldRunCurrentRound
-          ? await runContestAWDCurrentRoundCheck(selectedContest.value.id)
-          : await runContestAWDRoundCheck(selectedContest.value.id, selectedRoundId.value)
+      let result
+      if (shouldRunCurrentRound) {
+        result = await runContestAWDCurrentRoundCheck(selectedContest.value.id)
+      } else {
+        result = await runContestAWDRoundCheck(selectedContest.value.id, activeRoundId)
+      }
       toast.success(`第 ${result.round.round_number} 轮服务巡检已执行`)
       await refresh(result.round.id)
     } catch (error) {

@@ -50,6 +50,7 @@ const summaryItems = computed(() => {
 })
 
 const blockingItems = computed(() => props.readiness?.items || [])
+const globalBlockingReasons = computed(() => props.readiness?.global_blocking_reasons ?? [])
 const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0)
 const blockingActionLabels = computed(() =>
   (props.readiness?.blocking_actions || []).map((action) => getBlockingActionLabel(action))
@@ -164,7 +165,7 @@ function formatDateTime(value?: string): string {
         </header>
         <ul class="readiness-alert-list">
           <li
-            v-for="reason in readiness.global_blocking_reasons"
+            v-for="reason in globalBlockingReasons"
             :key="reason"
             class="readiness-alert-item"
           >
