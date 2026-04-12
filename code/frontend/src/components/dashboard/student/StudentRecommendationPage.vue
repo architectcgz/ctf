@@ -73,7 +73,7 @@ const summaryCards = computed(() => [
         现在先练这几道
       </h1>
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
-        第一屏只回答接下来做什么，先把最适合当前阶段的题目按顺序推进。
+        按当前顺序直接开练，做完这一组再回来刷新下一批建议。
       </p>
 
       <div class="mt-5 flex flex-wrap gap-2">

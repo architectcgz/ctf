@@ -106,8 +106,8 @@ function openPrimaryCategory(): void {
       <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
         {{
           hasCategoryStats
-            ? '这一页先回答下一步做什么，再直接进入对应分类的题目列表开始训练。'
-            : '先做出第一批分类进度，这里就会开始按优先级告诉你接下来该补哪一类。'
+            ? '按分类找短板，先补当前最需要回填的那一类。'
+            : '先完成几道题，这里会自动排出下一步最该补的分类。'
         }}
       </p>
 
