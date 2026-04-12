@@ -580,9 +580,9 @@ onMounted(() => {
 }
 
 .writeup-row__source-pill--student {
-  border-color: color-mix(in srgb, #38bdf8 24%, transparent);
-  background: color-mix(in srgb, #38bdf8 12%, var(--journal-surface));
-  color: color-mix(in srgb, #38bdf8 78%, white);
+  border-color: color-mix(in srgb, var(--color-primary) 24%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-primary) 78%, white);
 }
 
 .writeup-row__author-name {
@@ -650,9 +650,9 @@ onMounted(() => {
 }
 
 .admin-btn-danger {
-  border-color: color-mix(in srgb, #ef4444 28%, transparent);
-  background: color-mix(in srgb, #ef4444 16%, var(--journal-surface));
-  color: #b91c1c;
+  border-color: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-btn-compact {
