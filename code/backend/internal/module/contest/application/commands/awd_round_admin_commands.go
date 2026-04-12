@@ -10,7 +10,13 @@ import (
 )
 
 func (s *AWDService) CreateRound(ctx context.Context, contestID int64, req *dto.CreateAWDRoundReq) (*dto.AWDRoundResp, error) {
+	if req == nil {
+		return nil, errcode.ErrInvalidParams
+	}
 	if _, err := s.ensureAWDContest(ctx, contestID); err != nil {
+		return nil, err
+	}
+	if err := ensureAWDReadinessGate(ctx, s.repo, contestID, req.ForceOverride, req.OverrideReason); err != nil {
 		return nil, err
 	}
 

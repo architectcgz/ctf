@@ -11,12 +11,14 @@ type CreateContestReq struct {
 }
 
 type UpdateContestReq struct {
-	Title       *string    `json:"title" binding:"omitempty,min=1,max=200"`
-	Description *string    `json:"description" binding:"omitempty,max=5000"`
-	Mode        *string    `json:"mode" binding:"omitempty,oneof=jeopardy awd"`
-	StartTime   *time.Time `json:"start_time"`
-	EndTime     *time.Time `json:"end_time"`
-	Status      *string    `json:"status" binding:"omitempty,oneof=draft registration running frozen ended"`
+	Title          *string    `json:"title" binding:"omitempty,min=1,max=200"`
+	Description    *string    `json:"description" binding:"omitempty,max=5000"`
+	Mode           *string    `json:"mode" binding:"omitempty,oneof=jeopardy awd"`
+	StartTime      *time.Time `json:"start_time"`
+	EndTime        *time.Time `json:"end_time"`
+	Status         *string    `json:"status" binding:"omitempty,oneof=draft registration running frozen ended"`
+	ForceOverride  *bool      `json:"force_override"`
+	OverrideReason *string    `json:"override_reason" binding:"omitempty,max=500"`
 }
 
 type ContestResp struct {
