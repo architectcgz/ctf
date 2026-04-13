@@ -158,7 +158,7 @@ function remainingExtends(item: TeacherInstanceItem): number {
               <div class="teacher-surface-eyebrow journal-eyebrow">Instance Filters</div>
               <h3 class="teacher-controls-title">实例筛选</h3>
               <p class="teacher-controls-copy">
-                {{ selectedClassLabel }}。支持按班级、用户名关键字、学号精确筛选。
+                {{ selectedClassLabel }}。支持按班级、用户名或学号关键字筛选，也可用学号精确筛选。
               </p>
             </div>
           </div>
@@ -180,13 +180,13 @@ function remainingExtends(item: TeacherInstanceItem): number {
             </label>
 
             <label class="teacher-field">
-              <span class="teacher-field-label">用户名关键字</span>
+              <span class="teacher-field-label">用户关键字</span>
               <div class="teacher-field-control teacher-filter-control">
                 <Search class="h-4 w-4 text-text-muted" />
                 <input
                   :value="keyword"
                   type="text"
-                  placeholder="按用户名关键字搜索"
+                  placeholder="按用户名或学号搜索"
                   class="teacher-input"
                   @input="emit('updateKeyword', ($event.target as HTMLInputElement).value)"
                 />

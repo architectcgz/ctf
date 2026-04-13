@@ -917,6 +917,16 @@ func TestServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T)
 	if len(filtered) != 1 || filtered[0].ID != 101 {
 		t.Fatalf("unexpected filtered result: %+v", filtered)
 	}
+
+	byStudentNoKeyword, err := service.ListTeacherInstances(context.Background(), 1, model.RoleTeacher, &dto.TeacherInstanceQuery{
+		Keyword: "1001",
+	})
+	if err != nil {
+		t.Fatalf("ListTeacherInstances() with student_no keyword error = %v", err)
+	}
+	if len(byStudentNoKeyword) != 1 || byStudentNoKeyword[0].ID != 101 {
+		t.Fatalf("expected keyword to match student_no, got %+v", byStudentNoKeyword)
+	}
 }
 
 func TestServiceListTeacherInstancesRejectsTeacherCrossClassFilter(t *testing.T) {

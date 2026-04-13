@@ -99,6 +99,7 @@ describe('InstanceManagement', () => {
     expect(wrapper.text()).toContain('@alice')
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice')
     expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('Web SQLi 101')
+    expect(wrapper.text()).toContain('支持按班级、用户名或学号关键字筛选，也可用学号精确筛选。')
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {
@@ -157,6 +158,8 @@ describe('InstanceManagement', () => {
   })
 
   it('应该为教师实例列表长文本保留省略样式与完整提示', () => {
+    expect(instanceManagementSource).toContain('用户关键字')
+    expect(instanceManagementSource).toContain('按用户名或学号搜索')
     expect(instanceManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="item\.student_name \|\| item\.student_username"/s)
     expect(instanceManagementSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="item\.challenge_title"/s)
     expect(instanceManagementSource).toMatch(/class="teacher-directory-row-copy"[\s\S]*:title="/s)
