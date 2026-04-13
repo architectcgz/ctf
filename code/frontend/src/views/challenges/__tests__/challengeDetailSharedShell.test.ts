@@ -4,6 +4,10 @@ import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import challengeInstanceCardSource from '@/components/challenge/ChallengeInstanceCard.vue?raw'
 
 describe('challenge detail shared shell alignment', () => {
+  it('题目详情页应通过 journal-shell-user 接入共享学生侧 shell', () => {
+    expect(challengeDetailSource).toContain('class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full"')
+  })
+
   it('通过变量接入共享 workspace shell，而不是继续本地重写整套壳层样式', () => {
     expect(challengeDetailSource).toContain('--workspace-shell-border: var(--journal-line-soft);')
     expect(challengeDetailSource).toContain('--workspace-shell-bg: var(--bg-shell);')
@@ -58,13 +62,11 @@ describe('challenge detail shared shell alignment', () => {
 
   it('题目头部主信息块与右侧提交按钮应从统一主题主色链取色', () => {
     expect(challengeDetailSource).toContain('class="question-hero-main"')
-    expect(challengeDetailSource).toContain('--brand: var(--color-primary);')
+    expect(challengeDetailSource).toContain('--brand: var(--journal-accent);')
     expect(challengeDetailSource).toContain(
-      '--brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);'
+      '--brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);'
     )
-    expect(challengeDetailSource).toContain(
-      '--brand-ink: color-mix(in srgb, var(--color-primary) 78%, var(--text-main));'
-    )
+    expect(challengeDetailSource).toContain('--brand-ink: var(--journal-accent-strong);')
     expect(challengeDetailSource).toContain(
       'class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
@@ -80,9 +82,6 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeDetailSource).toMatch(
       /\.challenge-input,[\s\S]*\.flag-input\s*\{[\s\S]*background:\s*var\(--bg-panel\);/s
     )
-    expect(challengeDetailSource).toMatch(
-      /:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{[\s\S]*color-scheme:\s*dark;/s
-    )
     expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-panel) 95%, white)')
     expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-shell) 92%, white)')
     expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-panel) 72%, white)')
@@ -95,8 +94,9 @@ describe('challenge detail shared shell alignment', () => {
   })
 
   it('题目详情夜间模式应覆盖 workspace page 底色，避免外层主内容区继续发亮', () => {
-    expect(challengeDetailSource).toMatch(
-      /:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{[\s\S]*--bg-page:\s*color-mix\(in srgb,\s*var\(--color-bg-base\)\s*94%,\s*var\(--color-bg-surface\)\);/s
+    expect(challengeDetailSource).toContain(
+      '--bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));'
     )
+    expect(challengeDetailSource).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
   })
 })

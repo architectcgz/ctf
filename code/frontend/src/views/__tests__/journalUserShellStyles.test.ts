@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
+import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import contestDetailSource from '@/views/contests/ContestDetail.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
@@ -41,6 +42,7 @@ describe('journal user shell shared styles', () => {
   it('列表页和 profile 页应通过 journal-shell-user 接入共享 shell', () => {
     for (const source of [
       challengeListSource,
+      challengeDetailSource,
       contestListSource,
       contestDetailSource,
       instanceListSource,
@@ -58,6 +60,7 @@ describe('journal user shell shared styles', () => {
   it('除 skill profile 的圆角补充外，目标页面不应继续本地重写 hero 背景壳子', () => {
     for (const source of [
       challengeListSource,
+      challengeDetailSource,
       contestListSource,
       contestDetailSource,
       instanceListSource,

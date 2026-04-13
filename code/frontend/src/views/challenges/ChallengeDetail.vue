@@ -1,5 +1,5 @@
 <template>
-  <section class="journal-shell journal-hero workspace-shell min-h-full">
+  <section class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full">
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div
         class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
@@ -738,40 +738,31 @@ watch(
 }
 
 .journal-shell {
-  color-scheme: light;
-  --bg-page: oklch(97.8% 0.006 247);
-  --bg-shell: color-mix(in srgb, white 88%, oklch(95.5% 0.011 245));
-  --bg-panel: color-mix(in srgb, white 92%, oklch(94.9% 0.014 245));
-  --bg-muted: color-mix(in srgb, white 80%, oklch(95.1% 0.01 245));
-  --line-soft: color-mix(in srgb, oklch(38% 0.014 252) 12%, transparent);
-  --line-strong: color-mix(in srgb, oklch(38% 0.014 252) 20%, transparent);
-  --text-main: oklch(24% 0.014 252);
-  --text-subtle: oklch(49% 0.016 252);
-  --text-faint: oklch(61% 0.012 252);
-  --brand: var(--color-primary);
-  --brand-soft: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
+  --bg-shell: var(--journal-surface);
+  --bg-panel: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  --bg-muted: color-mix(in srgb, var(--journal-surface-subtle) 90%, var(--color-bg-base));
+  --line-soft: var(--journal-border);
+  --line-strong: color-mix(in srgb, var(--journal-border) 92%, var(--color-border-default));
+  --text-main: var(--journal-ink);
+  --text-subtle: var(--journal-muted);
+  --text-faint: color-mix(in srgb, var(--journal-muted) 84%, var(--color-bg-base));
+  --brand: var(--journal-accent);
+  --brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   --brand-soft-strong: color-mix(in srgb, var(--brand) 14%, transparent);
-  --brand-ink: color-mix(in srgb, var(--color-primary) 78%, var(--text-main));
-  --success: oklch(56% 0.13 154);
-  --warning: oklch(68% 0.14 82);
-  --danger: oklch(58% 0.16 28);
-  --shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
+  --brand-ink: var(--journal-accent-strong);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --shadow-shell: var(--journal-shell-hero-shadow, 0 22px 50px var(--color-shadow-soft));
   --radius-xl: 28px;
   --radius-lg: 18px;
   --font-sans: var(--font-family-sans);
   --font-mono: var(--font-family-mono);
-  --journal-ink: var(--text-main);
-  --journal-muted: var(--text-subtle);
   --journal-faint: var(--text-faint);
-  --journal-accent: var(--brand);
-  --journal-accent-strong: var(--brand-ink);
   --journal-accent-soft: var(--brand-soft);
   --journal-line-soft: var(--line-soft);
   --journal-line-strong: var(--line-strong);
-  --journal-border: var(--line-soft);
-  --journal-surface: var(--bg-shell);
-  --journal-surface-panel: var(--bg-panel);
-  --journal-surface-muted: var(--bg-muted);
   --journal-shadow: var(--shadow-shell);
   --journal-success-ink: color-mix(in srgb, var(--color-success) 80%, var(--journal-ink));
   --journal-success-soft: color-mix(in srgb, var(--color-success) 12%, transparent);
@@ -1513,22 +1504,6 @@ watch(
     animation: none !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-:global([data-theme='dark']) .journal-shell {
-  color-scheme: dark;
-  --bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
-  --bg-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
-  --bg-panel: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
-  --bg-muted: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
-  --line-soft: color-mix(in srgb, var(--color-border-default) 78%, transparent);
-  --line-strong: color-mix(in srgb, var(--color-border-default) 92%, transparent);
-  --text-main: var(--color-text-primary);
-  --text-subtle: var(--color-text-secondary);
-  --text-faint: color-mix(in srgb, var(--color-text-secondary) 82%, var(--color-bg-base));
-  --brand: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
-  --brand-soft: color-mix(in srgb, var(--brand) 12%, transparent);
-  --brand-ink: color-mix(in srgb, var(--brand) 84%, var(--text-main));
 }
 
 :global([data-theme='dark']) .workspace-shell {
