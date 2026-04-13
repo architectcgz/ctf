@@ -123,8 +123,9 @@ describe('TeacherStudentManagement', () => {
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学生名称')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('昵称')
     expect(wrapper.find('.teacher-directory-head').text()).toContain('薄弱项')
-    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('标签')
-    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('状态')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('做题数')
+    expect(wrapper.find('.teacher-directory-head').text()).toContain('得分数')
+    expect(wrapper.find('.teacher-directory-head').text()).not.toContain('数据')
     const headChildren = Array.from(wrapper.find('.teacher-directory-head').element.children).map(
       (element) => element.className.toString()
     )
@@ -145,11 +146,15 @@ describe('TeacherStudentManagement', () => {
     expect(rows[0].find('.teacher-directory-row-title').attributes('title')).toBe('Alice Zhang')
     expect(rows[0].find('.teacher-directory-row-points').attributes('title')).toBe('alice')
     expect(rows[0].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
+    expect(rows[0].find('.teacher-directory-row-solved').text()).toBe('0')
+    expect(rows[0].find('.teacher-directory-row-score').text()).toBe('0')
     expect(rows[0].find('.teacher-directory-row-tags').text()).not.toContain('Student')
     expect(rows[1].find('.teacher-directory-cell-student-no').text()).toContain('未设置学号')
     expect(rows[1].find('.teacher-directory-cell-name').text()).toContain('未设置姓名')
     expect(rows[1].find('.teacher-directory-cell-alias').text()).toContain('bob')
     expect(rows[1].find('.teacher-directory-row-tags').text()).toContain('暂无薄弱项')
+    expect(rows[1].find('.teacher-directory-row-solved').text()).toBe('1')
+    expect(rows[1].find('.teacher-directory-row-score').text()).toBe('0')
     expect(rows[1].find('.teacher-directory-row-status').exists()).toBe(false)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
@@ -503,6 +508,12 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
+    expect(studentManagementSource).toContain('<span>做题数</span>')
+    expect(studentManagementSource).toContain('<span>得分数</span>')
+    expect(studentManagementSource).toContain('class="teacher-directory-row-solved"')
+    expect(studentManagementSource).toContain('class="teacher-directory-row-score"')
+    expect(studentManagementSource).not.toContain('<span>数据</span>')
+    expect(studentManagementSource).not.toContain('class="teacher-directory-row-metrics"')
     expect(studentManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
     )

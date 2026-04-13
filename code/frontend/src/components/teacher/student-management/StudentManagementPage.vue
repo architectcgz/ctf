@@ -185,7 +185,8 @@ const emit = defineEmits<{
             >
             <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
             <span>薄弱项</span>
-            <span>数据</span>
+            <span>做题数</span>
+            <span>得分数</span>
             <span>操作</span>
           </div>
 
@@ -219,10 +220,9 @@ const emit = defineEmits<{
               </span>
             </div>
 
-            <div class="teacher-directory-row-metrics">
-              <span>{{ student.solved_count ?? 0 }} 题</span>
-              <span>{{ student.total_score ?? 0 }} 分</span>
-            </div>
+            <div class="teacher-directory-row-solved">{{ student.solved_count ?? 0 }}</div>
+
+            <div class="teacher-directory-row-score">{{ student.total_score ?? 0 }}</div>
 
             <div class="teacher-directory-row-cta">
               <span>查看学员分析</span>
@@ -263,7 +263,7 @@ const emit = defineEmits<{
   );
   --teacher-directory-columns: var(--teacher-student-directory-columns);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
-    minmax(12rem, 0.95fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
+    minmax(12rem, 0.95fr) minmax(6rem, 0.55fr) minmax(6rem, 0.55fr) minmax(8.5rem, 0.85fr);
   --teacher-management-font: var(--font-family-sans);
 }
 
@@ -416,9 +416,8 @@ const emit = defineEmits<{
   color: var(--journal-muted);
 }
 
-.teacher-directory-row-metrics {
-  display: grid;
-  gap: var(--space-1);
+.teacher-directory-row-solved,
+.teacher-directory-row-score {
   font-size: var(--font-size-0-81);
   line-height: 1.5;
   color: var(--journal-muted);
