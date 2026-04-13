@@ -3,6 +3,9 @@ package commands_test
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -36,7 +39,7 @@ func TestServiceStartContestChallengeAWDCreatesAndReusesTeamInstance(t *testing.
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5001, now)
 	seedContestInstanceTeamMember(t, db, 3001, 4001, 5002, now)
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 
 	first, err := service.StartContestChallenge(context.Background(), 5001, 3001, 2001)
 	if err != nil {
@@ -116,7 +119,7 @@ func TestServiceStartContestChallengeAWDReturnsExistingTeamInstance(t *testing.T
 		t.Fatalf("seed shared instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 	resp, err := service.StartContestChallenge(context.Background(), 5004, 3002, 2002)
 	if err != nil {
 		t.Fatalf("StartContestChallenge() error = %v", err)
@@ -139,7 +142,7 @@ func TestServiceStartChallengeSharedReusesPracticeInstance(t *testing.T) {
 		t.Fatalf("update challenge sharing: %v", err)
 	}
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 
 	first, err := service.StartChallengeWithContext(context.Background(), 5101, 2101)
 	if err != nil {
@@ -183,7 +186,7 @@ func TestServiceStartChallengeSharedReusesPracticeInstanceAndRefreshesExpiry(t *
 		t.Fatalf("seed shared instance: %v", err)
 	}
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 	resp, err := service.StartChallengeWithContext(context.Background(), 5202, 2201)
 	if err != nil {
 		t.Fatalf("StartChallengeWithContext() error = %v", err)
@@ -220,7 +223,7 @@ func TestServiceStartContestChallengePerTeamReusesTeamInstance(t *testing.T) {
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5103, now)
 	seedContestInstanceTeamMember(t, db, 3102, 4102, 5104, now)
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 
 	first, err := service.StartContestChallenge(context.Background(), 5103, 3102, 2102)
 	if err != nil {
@@ -254,7 +257,7 @@ func TestServiceStartChallengeRejectsNoTargetChallenge(t *testing.T) {
 		t.Fatalf("create challenge: %v", err)
 	}
 
-	service := newContestInstanceTestService(db)
+	service := newContestInstanceTestService(t, db)
 	_, err := service.StartChallengeWithContext(context.Background(), 5001, 2201)
 	if err == nil || err.Error() != errcode.ErrInvalidParams.Error() {
 		t.Fatalf("expected invalid params for no-target challenge, got %v", err)
@@ -290,7 +293,21 @@ func newContestInstanceTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-func newContestInstanceTestService(db *gorm.DB) *practicecmd.Service {
+func newContestInstanceTestService(t *testing.T, db *gorm.DB) *practicecmd.Service {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:30000")
+	if err != nil {
+		t.Fatalf("listen readiness server: %v", err)
+	}
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	}))
+	server.Listener = listener
+	server.Start()
+	t.Cleanup(server.Close)
+
 	challengeRepo := challengeinfra.NewRepository(db)
 	imageRepo := challengeinfra.NewImageRepository(db)
 	instanceRepo := runtimeinfrarepo.NewRepository(db)
