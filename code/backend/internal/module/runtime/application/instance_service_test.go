@@ -126,6 +126,45 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 	}
 }
 
+func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         104,
+		Title:      "Failed Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1004,
+		UserID:      2,
+		ChallengeID: 104,
+		Status:      model.InstanceStatusFailed,
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1004 || items[0].Status != model.InstanceStatusFailed {
+		t.Fatalf("expected failed instance to be visible, got %+v", items)
+	}
+}
+
 func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T) {
 	t.Parallel()
 
