@@ -40,8 +40,10 @@ func BuildAssessmentModule(root *Root, challenge *ChallengeModule) *AssessmentMo
 
 	profileCommandService, profileQueryService := buildAssessmentProfileHandler(root, deps)
 	profileCommandService.RegisterPracticeEventConsumers(root.Events)
+	profileCommandService.RegisterContestEventConsumers(root.Events)
 	recommendationService := buildAssessmentRecommendationHandler(root, cfg, deps, externalDeps)
 	recommendationService.RegisterPracticeEventConsumers(root.Events)
+	recommendationService.RegisterContestEventConsumers(root.Events)
 	reportService, reportHandler := buildAssessmentReportHandler(root, cfg, deps, profileQueryService)
 	teacherAWDReviewHandler := buildAssessmentTeacherAWDReviewHandler(deps, reportService)
 	cleaner := assessmentcmd.NewCleaner(profileCommandService, root.Logger().Named("assessment_cleaner"))

@@ -13,6 +13,7 @@ import (
 type submitAttackContext struct {
 	attackerTeamID int64
 	round          *model.AWDRound
+	challenge      *model.Challenge
 	acceptedFlags  []string
 }
 
@@ -52,6 +53,7 @@ func (s *AWDService) prepareSubmitAttackContext(ctx context.Context, userID, con
 	return &submitAttackContext{
 		attackerTeamID: attackerTeamID,
 		round:          round,
+		challenge:      challengeItem,
 		acceptedFlags:  acceptedFlags,
 	}, nil
 }

@@ -16,6 +16,8 @@ import (
 	"ctf-platform/internal/model"
 	assessmentcmd "ctf-platform/internal/module/assessment/application/commands"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -30,6 +32,7 @@ func setupAssessmentTestDB(t *testing.T) *gorm.DB {
 		&model.User{},
 		&model.Challenge{},
 		&model.Submission{},
+		&model.AWDAttackLog{},
 		&model.SkillProfile{},
 	); err != nil {
 		t.Fatalf("migrate tables: %v", err)
@@ -115,6 +118,95 @@ func TestCalculateSkillProfileWithContextPersistsComputedScores(t *testing.T) {
 	}
 	if len(profiles) != 2 {
 		t.Fatalf("expected 2 persisted profiles, got %+v", profiles)
+	}
+}
+
+func TestCalculateSkillProfileWithContextCountsSuccessfulAWDAttacks(t *testing.T) {
+	db := setupAssessmentTestDB(t)
+	service := newAssessmentTestService(db, nil)
+	now := time.Now()
+
+	student := model.User{
+		ID:        3,
+		Username:  "awd-student",
+		Role:      model.RoleStudent,
+		ClassName: "Class A",
+		Status:    model.UserStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := db.Create(&student).Error; err != nil {
+		t.Fatalf("seed student: %v", err)
+	}
+
+	challenges := []model.Challenge{
+		{ID: 31, Title: "web-practice", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyEasy, Points: 100, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 32, Title: "web-awd", Category: model.DimensionWeb, Difficulty: model.ChallengeDifficultyMedium, Points: 50, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+		{ID: 33, Title: "crypto-awd", Category: model.DimensionCrypto, Difficulty: model.ChallengeDifficultyEasy, Points: 200, Status: model.ChallengeStatusPublished, CreatedAt: now, UpdatedAt: now},
+	}
+	for _, challenge := range challenges {
+		if err := db.Create(&challenge).Error; err != nil {
+			t.Fatalf("seed challenge: %v", err)
+		}
+	}
+
+	if err := db.Create(&model.Submission{
+		UserID:      student.ID,
+		ChallengeID: 31,
+		IsCorrect:   true,
+		SubmittedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("seed practice submission: %v", err)
+	}
+
+	awdLogs := []model.AWDAttackLog{
+		{
+			ID:                1,
+			RoundID:           301,
+			AttackerTeamID:    401,
+			VictimTeamID:      402,
+			ChallengeID:       31,
+			AttackType:        model.AWDAttackTypeFlagCapture,
+			Source:            model.AWDAttackSourceSubmission,
+			IsSuccess:         true,
+			ScoreGained:       80,
+			SubmittedByUserID: ptrInt64(student.ID),
+			CreatedAt:         now,
+		},
+		{
+			ID:                2,
+			RoundID:           302,
+			AttackerTeamID:    401,
+			VictimTeamID:      403,
+			ChallengeID:       32,
+			AttackType:        model.AWDAttackTypeFlagCapture,
+			Source:            model.AWDAttackSourceSubmission,
+			IsSuccess:         true,
+			ScoreGained:       80,
+			SubmittedByUserID: ptrInt64(student.ID),
+			CreatedAt:         now,
+		},
+	}
+	for _, item := range awdLogs {
+		if err := db.Create(&item).Error; err != nil {
+			t.Fatalf("seed awd attack log: %v", err)
+		}
+	}
+
+	dimensions, err := service.CalculateSkillProfileWithContext(context.Background(), student.ID)
+	if err != nil {
+		t.Fatalf("CalculateSkillProfileWithContext() error = %v", err)
+	}
+
+	scoreByDimension := make(map[string]float64, len(dimensions))
+	for _, item := range dimensions {
+		scoreByDimension[item.Dimension] = item.Score
+	}
+	if scoreByDimension[model.DimensionWeb] != 1 {
+		t.Fatalf("expected web score 1.0 after unioning practice and awd evidence, got %+v", scoreByDimension)
+	}
+	if scoreByDimension[model.DimensionCrypto] != 0 {
+		t.Fatalf("expected crypto score 0, got %+v", scoreByDimension)
 	}
 }
 
@@ -232,4 +324,65 @@ func TestGetSkillProfileWithContextHonorsCancellation(t *testing.T) {
 	if err == nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
+}
+
+func TestProfileServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
+	db := setupAssessmentTestDB(t)
+	service := newAssessmentTestService(db, nil)
+	bus := platformevents.NewBus()
+	service.RegisterContestEventConsumers(bus)
+
+	now := time.Now()
+	if err := db.Create(&model.Challenge{
+		ID:         51,
+		Title:      "web-awd",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		Status:     model.ChallengeStatusPublished,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("seed challenge: %v", err)
+	}
+	if err := db.Create(&model.AWDAttackLog{
+		ID:                51,
+		RoundID:           501,
+		AttackerTeamID:    601,
+		VictimTeamID:      602,
+		ChallengeID:       51,
+		AttackType:        model.AWDAttackTypeFlagCapture,
+		Source:            model.AWDAttackSourceSubmission,
+		IsSuccess:         true,
+		ScoreGained:       80,
+		SubmittedByUserID: ptrInt64(77),
+		CreatedAt:         now,
+	}).Error; err != nil {
+		t.Fatalf("seed awd attack log: %v", err)
+	}
+
+	if err := bus.Publish(context.Background(), platformevents.Event{
+		Name: contestcontracts.EventAWDAttackAccepted,
+		Payload: contestcontracts.AWDAttackAcceptedEvent{
+			UserID:      77,
+			ContestID:   99,
+			ChallengeID: 51,
+			Dimension:   model.DimensionWeb,
+			OccurredAt:  now,
+		},
+	}); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+
+	var profile model.SkillProfile
+	if err := db.Where("user_id = ? AND dimension = ?", 77, model.DimensionWeb).First(&profile).Error; err != nil {
+		t.Fatalf("query profile after event: %v", err)
+	}
+	if profile.Score != 1 {
+		t.Fatalf("expected profile score 1 after awd event, got %+v", profile)
+	}
+}
+
+func ptrInt64(value int64) *int64 {
+	return &value
 }
