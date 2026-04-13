@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BellRing, LogIn, ShieldEllipsis } from 'lucide-vue-next'
+import { ArrowLeft, LogIn, ShieldEllipsis } from 'lucide-vue-next'
 
 import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
 </script>
@@ -13,8 +13,9 @@ import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
     accent="warning"
     :icon="ShieldEllipsis"
     :primary-icon="LogIn"
-    :secondary-icon="BellRing"
+    :secondary-icon="ArrowLeft"
     primary-to="/login"
     primary-label="返回登录页"
+    secondary-action="back"
   />
 </template>
