@@ -363,7 +363,11 @@ func (r *Repository) ListTeacherInstances(ctx context.Context, filter runtimepor
 	}
 	if filter.Keyword != "" {
 		pattern := "%" + strings.ToLower(filter.Keyword) + "%"
-		query = query.Where("LOWER(u.username) LIKE ?", pattern)
+		query = query.Where(
+			"(LOWER(u.username) LIKE ? OR LOWER(COALESCE(NULLIF(u.student_no, ''), '')) LIKE ?)",
+			pattern,
+			pattern,
+		)
 	}
 
 	if err := query.Order("i.created_at DESC").Scan(&rows).Error; err != nil {
