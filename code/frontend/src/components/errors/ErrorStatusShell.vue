@@ -3,6 +3,8 @@ import { computed, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
+import { redirectTo, reloadPage } from '@/utils/browser'
+import { resolveErrorStatusRetryTarget } from '@/utils/errorStatusPage'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
 interface Props {
@@ -86,12 +88,17 @@ function navigateBack() {
     window.history.back()
     return
   }
-  window.location.assign(resolvedPrimaryTo.value)
+  redirectTo(resolvedPrimaryTo.value)
 }
 
 function executeAction(action: NonNullable<Props['primaryAction'] | Props['secondaryAction']>) {
   if (action === 'reload') {
-    window.location.reload()
+    const retryTarget = resolveErrorStatusRetryTarget(window.location.search)
+    if (retryTarget && retryTarget !== window.location.pathname) {
+      redirectTo(retryTarget)
+      return
+    }
+    reloadPage()
     return
   }
 
