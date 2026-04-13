@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue'
+import { computed, onMounted, type Component } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
-import { redirectTo, reloadPage } from '@/utils/browser'
+import { getNavigationType, redirectTo, reloadPage } from '@/utils/browser'
 import { resolveErrorStatusRetryTarget } from '@/utils/errorStatusPage'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
@@ -83,6 +83,22 @@ const accentVars = computed(() => ({
   '--error-accent': accentValueMap[props.accent],
 }))
 
+function getReloadRetryTarget(): string | null {
+  const retryTarget = resolveErrorStatusRetryTarget(window.location.search)
+  if (!retryTarget || retryTarget === window.location.pathname) return null
+  return retryTarget
+}
+
+onMounted(() => {
+  if (getNavigationType() !== 'reload') return
+  if (props.primaryAction !== 'reload' && props.secondaryAction !== 'reload') return
+
+  const retryTarget = getReloadRetryTarget()
+  if (retryTarget) {
+    redirectTo(retryTarget)
+  }
+})
+
 function navigateBack() {
   if (window.history.length > 1) {
     window.history.back()
@@ -93,8 +109,8 @@ function navigateBack() {
 
 function executeAction(action: NonNullable<Props['primaryAction'] | Props['secondaryAction']>) {
   if (action === 'reload') {
-    const retryTarget = resolveErrorStatusRetryTarget(window.location.search)
-    if (retryTarget && retryTarget !== window.location.pathname) {
+    const retryTarget = getReloadRetryTarget()
+    if (retryTarget) {
       redirectTo(retryTarget)
       return
     }

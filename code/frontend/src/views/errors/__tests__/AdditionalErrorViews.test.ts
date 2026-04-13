@@ -4,6 +4,7 @@ import { mount, RouterLinkStub } from '@vue/test-utils'
 
 vi.mock('@/utils/browser', () => ({
   redirectTo: vi.fn(),
+  getNavigationType: vi.fn(() => null),
   reloadPage: vi.fn(),
 }))
 
@@ -13,7 +14,7 @@ import InternalServerErrorView from '../InternalServerErrorView.vue'
 import BadGatewayView from '../BadGatewayView.vue'
 import ServiceUnavailableView from '../ServiceUnavailableView.vue'
 import GatewayTimeoutView from '../GatewayTimeoutView.vue'
-import { redirectTo, reloadPage } from '@/utils/browser'
+import { getNavigationType, redirectTo, reloadPage } from '@/utils/browser'
 
 describe('additional error views', () => {
   beforeEach(() => {
@@ -102,6 +103,22 @@ describe('additional error views', () => {
     })
 
     await wrapper.get('button.error-status-action-primary').trigger('click')
+
+    expect(redirectTo).toHaveBeenCalledWith('/challenges/5')
+    expect(reloadPage).not.toHaveBeenCalled()
+  })
+
+  it('automatically retries the recorded source route when the browser reloads /500', () => {
+    vi.mocked(getNavigationType).mockReturnValue('reload')
+    window.history.replaceState({}, '', '/500?from=%2Fchallenges%2F5')
+
+    mount(InternalServerErrorView, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
 
     expect(redirectTo).toHaveBeenCalledWith('/challenges/5')
     expect(reloadPage).not.toHaveBeenCalled()
