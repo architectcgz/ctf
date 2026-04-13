@@ -407,6 +407,7 @@ components:
         message: { type: string }
         points: { type: integer, nullable: true, minimum: 0 }
         submitted_at: { $ref: "#/components/schemas/ISODateTime" }
+        instance_shutdown_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
 
     ApiEnvelopeSubmitFlagData:
       allOf:

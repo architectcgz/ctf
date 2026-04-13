@@ -15,11 +15,12 @@ type SubmitFlagReq struct {
 
 // SubmissionResp Flag 提交响应
 type SubmissionResp struct {
-	IsCorrect   bool      `json:"is_correct"`
-	Status      string    `json:"status"`
-	Message     string    `json:"message"`
-	Points      int       `json:"points,omitempty"`
-	SubmittedAt time.Time `json:"submitted_at"`
+	IsCorrect          bool       `json:"is_correct"`
+	Status             string     `json:"status"`
+	Message            string     `json:"message"`
+	Points             int        `json:"points,omitempty"`
+	SubmittedAt        time.Time  `json:"submitted_at"`
+	InstanceShutdownAt *time.Time `json:"instance_shutdown_at,omitempty"`
 }
 
 type TeacherManualReviewSubmissionQuery struct {

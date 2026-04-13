@@ -618,13 +618,22 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		})
 	}
 
+	var instanceShutdownAt *time.Time
+	if submission.IsCorrect {
+		instanceShutdownAt = s.applySolveGracePeriod(ctx, userID, challengeItem, submission.SubmittedAt)
+	}
+
 	resp := &dto.SubmissionResp{
-		IsCorrect:   submission.IsCorrect,
-		Status:      status,
-		SubmittedAt: submission.SubmittedAt,
+		IsCorrect:          submission.IsCorrect,
+		Status:             status,
+		SubmittedAt:        submission.SubmittedAt,
+		InstanceShutdownAt: instanceShutdownAt,
 	}
 	if submission.IsCorrect {
 		resp.Message = "恭喜你，Flag 正确！"
+		if instanceShutdownAt != nil {
+			resp.Message = fmt.Sprintf("恭喜你，Flag 正确！当前实例将在 %s后自动关闭", formatSolveGracePeriod(instanceShutdownAt.Sub(submission.SubmittedAt)))
+		}
 		resp.Points = challengeItem.Points
 		if s.scoreService != nil {
 			s.triggerScoreUpdate(userID)
@@ -636,6 +645,53 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	return resp, nil
+}
+
+func (s *Service) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *model.Challenge, solvedAt time.Time) *time.Time {
+	if s == nil || s.instanceRepo == nil || challengeItem == nil {
+		return nil
+	}
+
+	gracePeriod := s.config.Container.SolveGracePeriod
+	if gracePeriod <= 0 {
+		return nil
+	}
+
+	instance, err := s.instanceRepo.FindByUserAndChallenge(userID, challengeItem.ID)
+	if err != nil {
+		s.logger.Warn("查询解题后实例失败", zap.Int64("user_id", userID), zap.Int64("challenge_id", challengeItem.ID), zap.Error(err))
+		return nil
+	}
+	if instance == nil || instance.ShareScope != model.InstanceSharingPerUser {
+		return nil
+	}
+
+	shutdownAt := instance.ExpiresAt
+	graceExpiry := solvedAt.Add(gracePeriod)
+	if shutdownAt.After(graceExpiry) {
+		shutdownAt = graceExpiry
+		if err := s.instanceRepo.RefreshInstanceExpiry(instance.ID, shutdownAt); err != nil {
+			s.logger.Warn("收缩解题后实例生命周期失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+			return nil
+		}
+	}
+
+	return &shutdownAt
+}
+
+func formatSolveGracePeriod(delay time.Duration) string {
+	if delay <= 0 || delay < time.Minute {
+		return "1 分钟内"
+	}
+	if delay%time.Hour == 0 {
+		return fmt.Sprintf("%d 小时", int(delay/time.Hour))
+	}
+
+	minutes := int(delay.Round(time.Minute) / time.Minute)
+	if minutes <= 1 {
+		return "1 分钟"
+	}
+	return fmt.Sprintf("%d 分钟", minutes)
 }
 
 func (s *Service) ReviewManualReviewSubmissionWithContext(

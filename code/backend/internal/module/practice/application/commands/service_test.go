@@ -180,6 +180,10 @@ func (s *stubPracticeInstanceStore) UpdateRuntime(instance *model.Instance) erro
 	return nil
 }
 
+func (s *stubPracticeInstanceStore) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+	return nil
+}
+
 func (s *stubPracticeInstanceStore) UpdateStatusAndReleasePort(id int64, status string) error {
 	return nil
 }
@@ -743,6 +747,113 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	}
 	if !resp.IsCorrect || resp.Status != dto.SubmissionStatusCorrect {
 		t.Fatalf("expected shared static submission success, got %+v", resp)
+	}
+}
+
+func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	flagSalt := "solve-grace-salt"
+
+	if err := db.Create(&model.User{
+		ID:        7,
+		Username:  "student7",
+		Role:      model.RoleStudent,
+		Status:    model.UserStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	originalExpiry := now.Add(2 * time.Hour)
+	if err := db.Create(&model.Instance{
+		ID:          1001,
+		UserID:      7,
+		ChallengeID: 11,
+		Status:      model.InstanceStatusRunning,
+		ShareScope:  model.InstanceSharingPerUser,
+		ExpiresAt:   originalExpiry,
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:              id,
+					Category:        model.DimensionWeb,
+					Points:          100,
+					Status:          model.ChallengeStatusPublished,
+					FlagType:        model.FlagTypeStatic,
+					FlagSalt:        flagSalt,
+					FlagHash:        flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
+					InstanceSharing: model.InstanceSharingPerUser,
+				}, nil
+			},
+		},
+		nil,
+		runtimeinfrarepo.NewRepository(db),
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+			Container: config.ContainerConfig{
+				SolveGracePeriod: 10 * time.Minute,
+			},
+		},
+		nil,
+	)
+
+	beforeSubmit := time.Now()
+	resp, err := service.SubmitFlagWithContext(context.Background(), 7, 11, "flag{correct}")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected correct submission response, got %+v", resp)
+	}
+	if resp.InstanceShutdownAt == nil {
+		t.Fatalf("expected shutdown hint, got %+v", resp)
+	}
+	if !strings.Contains(resp.Message, "10 分钟后自动关闭") {
+		t.Fatalf("expected shutdown notice in message, got %q", resp.Message)
+	}
+
+	expectedMax := beforeSubmit.Add(10*time.Minute + 5*time.Second)
+	expectedMin := beforeSubmit.Add(9*time.Minute + 50*time.Second)
+	if resp.InstanceShutdownAt.Before(expectedMin) || resp.InstanceShutdownAt.After(expectedMax) {
+		t.Fatalf("unexpected shutdown time: got %v, want around %v", resp.InstanceShutdownAt, beforeSubmit.Add(10*time.Minute))
+	}
+
+	var stored model.Instance
+	if err := db.First(&stored, 1001).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if !stored.ExpiresAt.Equal(*resp.InstanceShutdownAt) {
+		t.Fatalf("expected instance expiry to match response: stored=%v response=%v", stored.ExpiresAt, *resp.InstanceShutdownAt)
+	}
+	if !stored.ExpiresAt.Before(originalExpiry) {
+		t.Fatalf("expected instance expiry to shrink: before=%v after=%v", originalExpiry, stored.ExpiresAt)
 	}
 }
 
