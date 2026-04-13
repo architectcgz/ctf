@@ -165,6 +165,86 @@ func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 	}
 }
 
+func TestInstanceServiceGetUserInstancesMarksExpiredRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         105,
+		Title:      "Expired Challenge",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1005,
+		UserID:      2,
+		ChallengeID: 105,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30005",
+		ExpiresAt:   now.Add(-2 * time.Minute),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	items, err := service.GetUserInstancesWithContext(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstancesWithContext() error = %v", err)
+	}
+	if len(items) != 1 || items[0].ID != 1005 {
+		t.Fatalf("expected expired instance to remain visible, got %+v", items)
+	}
+	if items[0].Status != model.InstanceStatusExpired {
+		t.Fatalf("expected expired status, got %+v", items[0])
+	}
+}
+
+func TestInstanceServiceGetAccessURLRejectsExpiredRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &model.Challenge{
+		ID:         106,
+		Title:      "Expired Access",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		FlagType:   model.FlagTypeStatic,
+		Status:     model.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &model.Instance{
+		ID:          1006,
+		UserID:      2,
+		ChallengeID: 106,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30006",
+		ExpiresAt:   now.Add(-time.Minute),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+
+	service := runtimeqry.NewInstanceService(runtimeinfrarepo.NewRepository(db))
+
+	_, err := service.GetAccessURLWithContext(context.Background(), 1006, 2)
+	if err == nil || err.Error() != errcode.ErrInstanceExpired.Error() {
+		t.Fatalf("expected instance expired error, got %v", err)
+	}
+}
+
 func TestInstanceServiceListTeacherInstancesScopesTeacherAndAppliesFilters(t *testing.T) {
 	t.Parallel()
 

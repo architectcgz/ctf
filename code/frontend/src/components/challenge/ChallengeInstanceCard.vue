@@ -25,24 +25,30 @@ const emit = defineEmits<{
 
 const { formatted, isExpired, isUrgent } = useCountdown(() => props.instance?.expires_at)
 
+const effectiveStatus = computed<InstanceStatus | null>(() => {
+  if (!props.instance) return null
+  if (props.instance.status === 'running' && isExpired.value) return 'expired'
+  return props.instance.status
+})
+
 const statusLabel = computed(() => {
-  if (!props.instance) return '未创建'
+  if (!effectiveStatus.value) return '未创建'
 
   const labels: Record<InstanceStatus, string> = {
     pending: '等待中',
     creating: '创建中',
     running: '运行中',
-    expired: '已过期',
+    expired: '已自动回收',
     destroying: '销毁中',
     destroyed: '已销毁',
     failed: '启动失败',
     crashed: '运行异常',
   }
-  return labels[props.instance.status]
+  return labels[effectiveStatus.value]
 })
 
 const statusClass = computed(() => {
-  if (!props.instance) return 'text-[var(--color-text-muted)]'
+  if (!effectiveStatus.value) return 'text-[var(--color-text-muted)]'
 
   const classes: Record<InstanceStatus, string> = {
     pending: 'text-[var(--color-warning)]',
@@ -54,12 +60,12 @@ const statusClass = computed(() => {
     failed: 'text-[var(--color-danger)]',
     crashed: 'text-[var(--color-danger)]',
   }
-  return classes[props.instance.status]
+  return classes[effectiveStatus.value]
 })
 
 const remainingLabel = computed(() => {
   if (!props.instance) return '--:--:--'
-  if (isExpired.value) return '已过期'
+  if (effectiveStatus.value === 'expired') return '已自动回收'
   return formatted.value
 })
 
@@ -71,13 +77,17 @@ function formatEta(seconds?: number) {
   return `${minutes} 分 ${secs} 秒`
 }
 
-const canOpen = computed(() => props.instance?.status === 'running')
+const canOpen = computed(() => effectiveStatus.value === 'running')
 const isWaiting = computed(
-  () => props.instance?.status === 'pending' || props.instance?.status === 'creating'
+  () => effectiveStatus.value === 'pending' || effectiveStatus.value === 'creating'
 )
 const isFailed = computed(
-  () => props.instance?.status === 'failed' || props.instance?.status === 'crashed'
+  () => effectiveStatus.value === 'failed' || effectiveStatus.value === 'crashed'
 )
+const isReclaimingState = computed(
+  () => effectiveStatus.value === 'expired' || effectiveStatus.value === 'destroyed'
+)
+const isRestartable = computed(() => isFailed.value || isReclaimingState.value)
 const createdAtLabel = computed(() => {
   if (!props.instance?.created_at) return ''
   return formatTime(props.instance.created_at)
@@ -116,8 +126,14 @@ const accessLabel = computed(() => {
   if (isWaiting.value) {
     return '实例仍在排队/创建中，完成后可打开目标'
   }
+  if (effectiveStatus.value === 'expired') {
+    return '实例已自动回收，请重新启动'
+  }
   if (isFailed.value) {
-    return '实例不可访问，请销毁后重新启动'
+    return '实例不可访问，请重新启动'
+  }
+  if (effectiveStatus.value === 'destroyed') {
+    return '实例已销毁，请重新启动'
   }
   return props.instance.access_url || '--'
 })
@@ -144,6 +160,22 @@ const sharedStrategyLabel = computed(() => {
 const canExtend = computed(
   () => !isSharedInstance.value && canOpen.value && (props.instance?.remaining_extends ?? 0) > 0
 )
+
+const restartButtonLabel = computed(() => {
+  if (props.creating) return '正在创建实例...'
+  if (props.instanceSharing === 'shared' || isSharedInstance.value) {
+    return '重新进入共享靶机'
+  }
+  return '重启实例'
+})
+
+const startButtonLabel = computed(() => {
+  if (props.creating) return '正在创建实例...'
+  if (props.challengeSolved) {
+    return props.instanceSharing === 'shared' ? '重新进入共享靶机' : '重启实例'
+  }
+  return props.instanceSharing === 'shared' ? '进入共享靶机' : '启动靶机'
+})
 </script>
 
 <template>
@@ -194,43 +226,63 @@ const canExtend = computed(
         <div v-if="progressLabel">{{ progressLabel }}</div>
       </div>
       <div
+        v-else-if="isReclaimingState"
+        class="instance-callout instance-callout--success"
+      >
+        <div>
+          {{ effectiveStatus === 'expired' ? '实例已到期，系统已自动回收当前环境。' : '实例已结束，可直接重新启动。' }}
+        </div>
+        <div>如需继续验证，可直接重启实例。</div>
+      </div>
+      <div
         v-else-if="isFailed"
         class="instance-callout instance-callout--danger"
       >
         <div>{{ props.instance?.status === 'failed' ? '实例启动失败，当前目标不可访问。' : '实例运行异常，当前目标不可访问。' }}</div>
-        <div>建议先销毁当前实例，再重新启动。</div>
+        <div>可直接重启实例，系统会为你申请新的环境。</div>
       </div>
 
-      <div class="tool-actions">
+      <div class="tool-actions" :class="{ 'tool-actions--single': isRestartable }">
         <button
+          v-if="isRestartable"
           type="button"
-          class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="!canOpen || opening"
-          @click="emit('open')"
+          class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="creating"
+          @click="emit('start')"
         >
-          {{ openButtonLabel }}
+          {{ restartButtonLabel }}
         </button>
-        <button
-          v-if="!isSharedInstance"
-          type="button"
-          class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="!canExtend || extending"
-          @click="emit('extend')"
-        >
-          {{ extending ? '延时中...' : '延时' }}
-        </button>
-        <button
-          v-if="!isSharedInstance"
-          type="button"
-          class="instance-btn instance-action-danger disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="destroying"
-          @click="emit('destroy')"
-        >
-          {{ destroying ? '销毁中...' : '销毁' }}
-        </button>
-        <div v-if="isSharedInstance" class="instance-note instance-note--managed">
-          共享实例由系统统一保活与回收。
-        </div>
+        <template v-else>
+          <button
+            type="button"
+            class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!canOpen || opening"
+            @click="emit('open')"
+          >
+            {{ openButtonLabel }}
+          </button>
+          <button
+            v-if="!isSharedInstance"
+            type="button"
+            class="instance-btn disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!canExtend || extending"
+            @click="emit('extend')"
+          >
+            {{ extending ? '延时中...' : '延时' }}
+          </button>
+          <button
+            v-if="!isSharedInstance"
+            type="button"
+            class="instance-btn instance-action-danger disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="destroying"
+            @click="emit('destroy')"
+          >
+            {{ destroying ? '销毁中...' : '销毁' }}
+          </button>
+          <div v-if="isSharedInstance" class="instance-note instance-note--managed">
+            共享实例由系统统一保活与回收。
+          </div>
+        </template>
       </div>
     </div>
 
@@ -240,25 +292,23 @@ const canExtend = computed(
           {{
             props.instanceSharing === 'shared'
               ? '该题使用共享实例，再次启动会进入同一环境并自动刷新有效期。'
-              : '实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或销毁。'
+              : '实例会在当前题目页右侧保持可见，便于一边读题一边打开目标、延时或重启。'
           }}
         </div>
-        <div>默认有效期 2 小时。</div>
+        <div>
+          {{
+            props.challengeSolved ? '题目已解出后仍可继续起环境验证，重复正确提交不会重复计分。' : '默认有效期 2 小时。'
+          }}
+        </div>
       </div>
       <button
-        v-if="!challengeSolved"
         type="button"
         class="instance-btn instance-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
         :disabled="creating"
         @click="emit('start')"
       >
-        {{
-          creating ? '正在创建实例...' : props.instanceSharing === 'shared' ? '进入共享靶机' : '启动靶机'
-        }}
+        {{ startButtonLabel }}
       </button>
-      <div v-else class="instance-callout instance-callout--success">
-        当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。
-      </div>
     </div>
   </section>
 </template>
@@ -412,6 +462,10 @@ const canExtend = computed(
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 18px;
+}
+
+.tool-actions--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .tool-actions .instance-btn,

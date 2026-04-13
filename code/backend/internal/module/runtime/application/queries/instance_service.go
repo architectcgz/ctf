@@ -30,7 +30,7 @@ func (s *InstanceService) GetAccessURLWithContext(ctx context.Context, instanceI
 	if instance == nil {
 		return "", errcode.ErrForbidden
 	}
-	if instance.Status != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
+	if visibleInstanceStatus(instance.Status, instance.ExpiresAt, time.Now()) != model.InstanceStatusRunning || strings.TrimSpace(instance.AccessURL) == "" {
 		return "", errcode.ErrInstanceExpired
 	}
 
@@ -99,7 +99,7 @@ func (s *InstanceService) ListTeacherInstances(ctx context.Context, requesterID 
 			ClassName:       item.ClassName,
 			ChallengeID:     item.ChallengeID,
 			ChallengeTitle:  item.ChallengeTitle,
-			Status:          item.Status,
+			Status:          visibleInstanceStatus(item.Status, item.ExpiresAt, now),
 			AccessURL:       item.AccessURL,
 			ExpiresAt:       item.ExpiresAt,
 			RemainingTime:   runtimedomain.RemainingTime(item.ExpiresAt, now),
@@ -120,7 +120,7 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 		Category:         inst.Category,
 		Difficulty:       inst.Difficulty,
 		FlagType:         inst.FlagType,
-		Status:           inst.Status,
+		Status:           visibleInstanceStatus(inst.Status, inst.ExpiresAt, now),
 		ShareScope:       inst.ShareScope,
 		AccessURL:        inst.AccessURL,
 		ExpiresAt:        inst.ExpiresAt,
@@ -130,6 +130,13 @@ func toInstanceInfo(inst runtimeports.UserVisibleInstanceRow, now time.Time) *dt
 		RemainingExtends: runtimedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
 		CreatedAt:        inst.CreatedAt,
 	}
+}
+
+func visibleInstanceStatus(status string, expiresAt, now time.Time) string {
+	if status == model.InstanceStatusRunning && !expiresAt.After(now) {
+		return model.InstanceStatusExpired
+	}
+	return status
 }
 
 func normalizeContext(ctx context.Context) context.Context {
