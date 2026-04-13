@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import ChallengeManage from '../ChallengeManage.vue'
@@ -40,6 +40,7 @@ vi.mock('@/api/admin', () => adminApiMocks)
 
 describe('ChallengeManage', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     pushMock.mockReset()
     replaceMock.mockReset()
     routeState.query = {}
@@ -105,6 +106,10 @@ describe('ChallengeManage', () => {
     ])
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('应该默认显示题目管理 tab，并提供导入和队列标签', async () => {
     const wrapper = mount(ChallengeManage)
     await flushPromises()
@@ -150,6 +155,64 @@ describe('ChallengeManage', () => {
     expect(row.find('.challenge-row__actions-menu').text()).toContain('删除')
   })
 
+  it('应支持按关键词、分类、难度和发布状态自动筛选题目', async () => {
+    const wrapper = mount(ChallengeManage)
+    await flushPromises()
+
+    expect(adminApiMocks.getChallenges).toHaveBeenCalledWith({ page: 1, page_size: 20 })
+
+    const keywordInput = wrapper.get('input[placeholder="搜索题目标题"]')
+    const selects = wrapper.findAll('.challenge-manage-filter-select')
+
+    await keywordInput.setValue('Test')
+    expect(adminApiMocks.getChallenges).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'Test',
+    })
+
+    await selects[0].setValue('web')
+    await flushPromises()
+
+    expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'Test',
+      category: 'web',
+    })
+
+    await selects[1].setValue('easy')
+    await flushPromises()
+
+    expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'Test',
+      category: 'web',
+      difficulty: 'easy',
+    })
+
+    await selects[2].setValue('draft')
+    await flushPromises()
+
+    expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'Test',
+      category: 'web',
+      difficulty: 'easy',
+      status: 'draft',
+    })
+    expect(wrapper.text()).toContain('题目筛选')
+    expect(wrapper.text()).toContain('激活筛选 4 项')
+    expect(wrapper.text()).not.toContain('应用筛选')
+  })
+
   it('不应该在 1200px 断点把题目列表强制折成单列', () => {
     expect(challengeManageSource).not.toMatch(
       /\.challenge-row,\s*\.queue-row\s*\{\s*grid-template-columns: minmax\(0, 1fr\);/s
@@ -185,6 +248,14 @@ describe('ChallengeManage', () => {
     expect(challengeManageSource).toContain('当前分页中的题目数量')
     expect(challengeManageSource).toContain('当前页已开放训练的题目')
     expect(challengeManageSource).toContain('导入后仍待完善或发布的题目')
+  })
+
+  it('题目管理源码应包含平铺筛选区，并避免显式应用按钮', () => {
+    expect(challengeManageSource).toContain('题目筛选')
+    expect(challengeManageSource).toContain('placeholder="搜索题目标题"')
+    expect(challengeManageSource).toContain('class="challenge-manage-filter-grid"')
+    expect(challengeManageSource).toContain('class="challenge-manage-filter-select"')
+    expect(challengeManageSource).not.toContain('应用筛选')
   })
 
   it('应该根据 query 切到待确认导入，并在导入标签中只保留独立示例页入口', async () => {
