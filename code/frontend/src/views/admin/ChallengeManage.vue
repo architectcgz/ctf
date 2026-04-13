@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Filter, Search } from 'lucide-vue-next'
-import { computed, onMounted } from 'vue'
+import { Search } from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
@@ -72,15 +72,17 @@ const hasActiveFilters = computed(() =>
     keyword.value.trim() || categoryFilter.value || difficultyFilter.value || statusFilter.value
   )
 )
-const activeFilterCount = computed(
-  () =>
-    [
-      keyword.value.trim(),
-      categoryFilter.value,
-      difficultyFilter.value,
-      statusFilter.value,
-    ].filter(Boolean).length
-)
+const advancedFiltersExpanded = ref(false)
+const advancedFilterCount = computed(() => Number(Boolean(difficultyFilter.value)))
+const advancedFilterToggleLabel = computed(() => {
+  if (advancedFiltersExpanded.value) {
+    return '收起筛选'
+  }
+  if (advancedFilterCount.value > 0) {
+    return `更多筛选（${advancedFilterCount.value}）`
+  }
+  return '更多筛选'
+})
 const manageEmptyMessage = computed(() =>
   hasActiveFilters.value ? '当前筛选条件下没有匹配题目。' : '当前还没有题目，请先导入题目包。'
 )
@@ -241,42 +243,7 @@ onMounted(() => {
           </header>
 
           <section class="challenge-manage-filters" aria-label="题目筛选">
-            <div class="challenge-manage-filters__bar">
-              <div class="challenge-manage-filters__heading">
-                <div class="journal-note-label">Challenge Filters</div>
-                <h3 class="challenge-manage-filters__title">题目筛选</h3>
-                <p class="challenge-manage-filters__copy">
-                  支持按关键词、分类、难度和发布状态快速收束题库范围。
-                </p>
-              </div>
-
-              <div class="challenge-manage-filter-pill">
-                <Filter class="h-4 w-4" />
-                激活筛选 {{ activeFilterCount }} 项
-              </div>
-
-              <button
-                v-if="hasActiveFilters"
-                type="button"
-                class="admin-btn admin-btn-ghost admin-btn-compact"
-                @click="void clearFilters()"
-              >
-                清空筛选
-              </button>
-            </div>
-
             <div class="challenge-manage-filter-grid">
-              <label class="challenge-manage-filter-search" for="challenge-manage-keyword">
-                <Search class="challenge-manage-filter-search__icon h-4 w-4" />
-                <input
-                  id="challenge-manage-keyword"
-                  v-model="keyword"
-                  type="text"
-                  class="challenge-manage-filter-input"
-                  placeholder="搜索题目标题"
-                />
-              </label>
-
               <label class="challenge-manage-filter-field">
                 <span class="challenge-manage-filter-label">分类</span>
                 <select v-model="categoryFilter" class="challenge-manage-filter-select">
@@ -291,6 +258,72 @@ onMounted(() => {
               </label>
 
               <label class="challenge-manage-filter-field">
+                <span class="challenge-manage-filter-label">发布状态</span>
+                <select v-model="statusFilter" class="challenge-manage-filter-select">
+                  <option value="">全部状态</option>
+                  <option value="draft">草稿</option>
+                  <option value="published">已发布</option>
+                  <option value="archived">已归档</option>
+                </select>
+              </label>
+
+              <div class="challenge-manage-filter-search">
+                <label class="challenge-manage-filter-search__label" for="challenge-manage-keyword">
+                  <span
+                    class="challenge-manage-filter-label challenge-manage-filter-label--ghost"
+                    aria-hidden="true"
+                  >
+                    搜索
+                  </span>
+                  <span class="challenge-manage-filter-search__control">
+                    <Search class="challenge-manage-filter-search__icon h-4 w-4" />
+                    <input
+                      id="challenge-manage-keyword"
+                      v-model="keyword"
+                      type="text"
+                      class="challenge-manage-filter-input"
+                      placeholder="搜索题目标题"
+                    />
+                  </span>
+                </label>
+              </div>
+
+              <div class="challenge-manage-filter-actions">
+                <span
+                  class="challenge-manage-filter-label challenge-manage-filter-label--ghost"
+                  aria-hidden="true"
+                >
+                  操作
+                </span>
+                <div class="challenge-manage-filter-action-row">
+                  <button
+                    id="challenge-manage-filter-toggle"
+                    type="button"
+                    class="admin-btn admin-btn-ghost admin-btn-compact challenge-manage-filter-toggle"
+                    :aria-expanded="advancedFiltersExpanded ? 'true' : 'false'"
+                    aria-controls="challenge-manage-filter-advanced"
+                    @click="advancedFiltersExpanded = !advancedFiltersExpanded"
+                  >
+                    {{ advancedFilterToggleLabel }}
+                  </button>
+                  <button
+                    type="button"
+                    class="admin-btn admin-btn-ghost admin-btn-compact challenge-manage-filter-clear"
+                    :disabled="!hasActiveFilters"
+                    @click="void clearFilters()"
+                  >
+                    清空筛选
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <section
+              v-if="advancedFiltersExpanded"
+              id="challenge-manage-filter-advanced"
+              class="challenge-manage-filter-advanced"
+            >
+              <label class="challenge-manage-filter-field">
                 <span class="challenge-manage-filter-label">难度</span>
                 <select v-model="difficultyFilter" class="challenge-manage-filter-select">
                   <option value="">全部难度</option>
@@ -301,17 +334,7 @@ onMounted(() => {
                   <option value="insane">地狱</option>
                 </select>
               </label>
-
-              <label class="challenge-manage-filter-field">
-                <span class="challenge-manage-filter-label">发布状态</span>
-                <select v-model="statusFilter" class="challenge-manage-filter-select">
-                  <option value="">全部状态</option>
-                  <option value="draft">草稿</option>
-                  <option value="published">已发布</option>
-                  <option value="archived">已归档</option>
-                </select>
-              </label>
-            </div>
+            </section>
           </section>
 
           <div
@@ -694,7 +717,6 @@ onMounted(() => {
   display: grid;
   gap: var(--space-6);
   padding-bottom: var(--space-6);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
 }
 
 .list-heading {
@@ -717,32 +739,6 @@ onMounted(() => {
   padding: var(--space-5) 0;
 }
 
-.challenge-manage-filters__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
-}
-
-.challenge-manage-filters__heading {
-  display: grid;
-  gap: var(--space-1-5);
-  margin-right: auto;
-}
-
-.challenge-manage-filters__title {
-  margin: 0;
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.challenge-manage-filters__copy {
-  margin: 0;
-  color: var(--journal-muted);
-  line-height: 1.6;
-}
-
 .challenge-manage-filter-pill {
   display: inline-flex;
   align-items: center;
@@ -760,17 +756,65 @@ onMounted(() => {
 .challenge-manage-filter-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: minmax(16rem, 1.5fr) repeat(3, minmax(10rem, 0.75fr));
+  grid-template-columns: repeat(2, minmax(16rem, 18rem)) minmax(15rem, 1.35fr) auto;
 }
 
+.challenge-manage-filter-actions,
 .challenge-manage-filter-search,
 .challenge-manage-filter-field {
   display: grid;
   gap: var(--space-2);
 }
 
-.challenge-manage-filter-search {
+.challenge-manage-filter-search__label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.challenge-manage-filter-label {
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+  color: var(--journal-muted);
+}
+
+.challenge-manage-filter-label--ghost {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.challenge-manage-filter-search__control {
   position: relative;
+}
+
+.challenge-manage-filter-actions {
+  justify-items: end;
+}
+
+.challenge-manage-filter-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2-5);
+}
+
+.challenge-manage-filter-advanced {
+  display: inline-grid;
+  gap: var(--space-4);
+  justify-self: start;
+  grid-template-columns: minmax(16rem, 18rem);
+}
+
+.challenge-manage-filter-toggle,
+.challenge-manage-filter-clear {
+  min-width: 7rem;
+}
+
+.challenge-manage-filter-clear:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  border-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
+  color: var(--journal-muted);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
 }
 
 .challenge-manage-filter-search__icon {
@@ -780,12 +824,6 @@ onMounted(() => {
   transform: translateY(-50%);
   color: var(--journal-muted);
   pointer-events: none;
-}
-
-.challenge-manage-filter-label {
-  font-size: var(--font-size-0-78);
-  font-weight: 700;
-  color: var(--journal-muted);
 }
 
 .challenge-manage-filter-input,
@@ -1293,6 +1331,21 @@ onMounted(() => {
 
   .challenge-manage-filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .challenge-manage-filter-advanced {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .challenge-manage-filter-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .challenge-manage-filter-action-row > * {
+    flex: 1 1 0;
   }
 
   .challenge-row {
