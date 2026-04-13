@@ -15,6 +15,8 @@ const teacherApiMocks = vi.hoisted(() => ({
   destroyTeacherInstance: vi.fn(),
 }))
 
+const confirmMock = vi.hoisted(() => vi.fn())
+
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
@@ -24,6 +26,9 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/teacher', () => teacherApiMocks)
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: confirmMock,
+}))
 
 describe('InstanceManagement', () => {
   beforeEach(() => {
@@ -54,8 +59,8 @@ describe('InstanceManagement', () => {
       },
     ])
     teacherApiMocks.destroyTeacherInstance.mockResolvedValue(undefined)
-
-    vi.stubGlobal('confirm', vi.fn(() => true))
+    confirmMock.mockReset()
+    confirmMock.mockResolvedValue(true)
 
     const authStore = useAuthStore()
     authStore.setAuth({
@@ -124,8 +129,31 @@ describe('InstanceManagement', () => {
     await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
     await flushPromises()
 
+    expect(confirmMock).toHaveBeenCalled()
     expect(teacherApiMocks.destroyTeacherInstance).toHaveBeenCalledWith('inst-1')
     expect(wrapper.text()).not.toContain('Web SQLi 101')
+  })
+
+  it('取消危险确认后不应继续销毁实例', async () => {
+    confirmMock.mockResolvedValue(false)
+
+    const wrapper = mount(InstanceManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+    await flushPromises()
+
+    await wrapper.find('[data-instance-id="inst-1"]').trigger('click')
+    await flushPromises()
+
+    expect(confirmMock).toHaveBeenCalled()
+    expect(teacherApiMocks.destroyTeacherInstance).not.toHaveBeenCalled()
+    expect(wrapper.text()).toContain('Web SQLi 101')
   })
 
   it('应该为教师实例列表长文本保留省略样式与完整提示', () => {

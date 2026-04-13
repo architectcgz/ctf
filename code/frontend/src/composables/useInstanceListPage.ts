@@ -8,6 +8,7 @@ import {
 } from '@/api/instance'
 import type { InstanceListItem, InstanceStatus } from '@/api/contracts'
 import { useClipboard } from '@/composables/useClipboard'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
 export const MAX_INSTANCES = 3
@@ -200,7 +201,13 @@ export function useInstanceListPage() {
       toast.error('共享实例不支持手动销毁')
       return
     }
-    if (!window.confirm('确定要销毁该实例吗？此操作不可恢复。')) {
+    const confirmed = await confirmDestructiveAction({
+      title: '确认销毁实例',
+      message: '确定要销毁该实例吗？此操作不可恢复。',
+      confirmButtonText: '确认销毁',
+      cancelButtonText: '取消',
+    })
+    if (!confirmed) {
       return
     }
 
