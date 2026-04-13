@@ -166,6 +166,15 @@ func (r *Repository) FindByContestTeamAndChallenge(contestID, teamID, challengeI
 	return &instance, nil
 }
 
+func (r *Repository) RefreshInstanceExpiry(instanceID int64, expiresAt time.Time) error {
+	return r.db.Model(&model.Instance{}).
+		Where("id = ?", instanceID).
+		Updates(map[string]any{
+			"expires_at": expiresAt,
+			"updated_at": time.Now(),
+		}).Error
+}
+
 func (r *Repository) UpdateStatusAndReleasePort(id int64, status string) error {
 	if id <= 0 {
 		return nil
