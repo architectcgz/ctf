@@ -7,6 +7,7 @@ import type { AdminUserImportData, AdminUserListItem, UserStatus } from '@/api/c
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import type { UserRole } from '@/utils/constants'
 
 type UserFilterRole = UserRole | 'all'
@@ -60,14 +61,17 @@ const panelTabs: Array<{ key: UserPanelKey; label: string; panelId: string; tabI
   },
   { key: 'import', label: '导入用户', panelId: 'user-import-start', tabId: 'user-tab-import' },
 ]
-const validPanelKeys = new Set<UserPanelKey>(panelTabs.map((item) => item.key))
-
-const activePanel = computed<UserPanelKey>(() => {
-  const panel = route.query.panel
-  if (typeof panel === 'string' && validPanelKeys.has(panel as UserPanelKey)) {
-    return panel as UserPanelKey
-  }
-  return 'overview'
+const panelTabOrder = panelTabs.map((tab) => tab.key) as UserPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<UserPanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'overview',
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
@@ -79,20 +83,15 @@ const importSummary = computed(() => {
   if (!props.importResult) return '暂无导入记录'
   return `创建 ${props.importResult.created} / 更新 ${props.importResult.updated}`
 })
+const userStatusAccentMap: Record<UserStatus, string> = {
+  active: 'var(--color-primary)',
+  locked: 'var(--color-warning)',
+  banned: 'var(--color-danger)',
+  inactive: 'color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink))',
+}
 
 function getUserAccentColor(status: UserStatus): string {
-  switch (status) {
-    case 'active':
-      return 'var(--color-primary)'
-    case 'locked':
-      return '#f59e0b'
-    case 'banned':
-      return '#dc2626'
-    case 'inactive':
-      return '#64748b'
-    default:
-      return 'var(--color-primary)'
-  }
+  return userStatusAccentMap[status] ?? 'var(--color-primary)'
 }
 
 function getUserStatusStyle(status: UserStatus): Record<string, string> {
@@ -100,7 +99,7 @@ function getUserStatusStyle(status: UserStatus): Record<string, string> {
   return {
     color: accent,
     borderColor: `color-mix(in srgb, ${accent} 18%, transparent)`,
-    backgroundColor: `color-mix(in srgb, ${accent} 10%, white)`,
+    backgroundColor: `color-mix(in srgb, ${accent} 10%, var(--journal-surface))`,
   }
 }
 
@@ -112,52 +111,6 @@ function getUserIdentity(user: AdminUserListItem): string {
     return user.student_no || '未设置'
   }
   return '未设置'
-}
-
-async function switchPanel(panelKey: UserPanelKey): Promise<void> {
-  const nextQuery =
-    panelKey === 'overview'
-      ? (({ panel: _panel, ...restQuery }) => restQuery)(route.query)
-      : { ...route.query, panel: panelKey }
-  await router.replace({ name: 'UserManage', query: nextQuery })
-}
-
-function focusTabByIndex(index: number): void {
-  const safeIndex = Math.max(0, Math.min(index, panelTabs.length - 1))
-  const targetTab = panelTabs[safeIndex]
-  if (!targetTab) return
-  document.getElementById(targetTab.tabId)?.focus()
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (
-    event.key !== 'ArrowRight' &&
-    event.key !== 'ArrowLeft' &&
-    event.key !== 'Home' &&
-    event.key !== 'End'
-  ) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    void switchPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    void switchPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  void switchPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
 }
 
 function triggerImport(): void {
@@ -185,6 +138,7 @@ function handleImportChange(event: Event): void {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.tabId"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"
@@ -211,7 +165,7 @@ function handleImportChange(event: Event): void {
           <div class="journal-note-label">User Governance</div>
           <h1 class="workspace-page-title">用户治理台</h1>
         </div>
-        <p class="workspace-tab-copy">
+        <p class="workspace-page-copy">
           在这里筛选账号、批量导入并处理用户状态。
         </p>
 
@@ -562,7 +516,7 @@ function handleImportChange(event: Event): void {
   --journal-note-label-weight: 600;
   --journal-note-label-spacing: 0.15em;
   --journal-note-label-color: var(--journal-muted);
-  --journal-divider-border: 1px dashed rgba(148, 163, 184, 0.7);
+  --journal-divider-border: 1px dashed color-mix(in srgb, var(--journal-border) 70%, transparent);
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
 
@@ -661,9 +615,9 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-btn-danger {
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  background: rgba(254, 242, 242, 0.9);
-  color: #dc2626;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
 }
 
 .admin-input {
@@ -693,7 +647,7 @@ function handleImportChange(event: Event): void {
 }
 
 .admin-empty {
-  border: 1px dashed rgba(148, 163, 184, 0.72);
+  border: 1px dashed color-mix(in srgb, var(--journal-border) 72%, transparent);
   border-radius: 16px;
   padding: var(--space-4);
   font-size: var(--font-size-0-875);

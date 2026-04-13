@@ -114,7 +114,7 @@ function changeTimelinePage(page: number): void {
         <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
           训练记录总览
         </h1>
-        <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+        <p class="workspace-page-copy max-w-2xl">
           按时间回看最近训练动作，看看节奏有没有断。
         </p>
         <div class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
@@ -350,15 +350,15 @@ function changeTimelinePage(page: number): void {
 }
 
 .stat-icon--success {
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.2);
-  background: rgba(16, 185, 129, 0.08);
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
 }
 
 .stat-icon--warning {
-  color: #f59e0b;
-  border-color: rgba(245, 158, 11, 0.2);
-  background: rgba(245, 158, 11, 0.08);
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 8%, transparent);
 }
 
 .stat-icon--primary {
@@ -375,16 +375,16 @@ function changeTimelinePage(page: number): void {
 }
 
 .status-dot-solved {
-  background: #22c55e;
+  background: var(--color-success);
 }
 
 .status-dot-ready {
-  background: #10b981;
+  background: color-mix(in srgb, var(--color-success) 92%, var(--journal-ink));
   animation: dot-pulse 1.8s infinite;
 }
 
 .status-dot-idle {
-  background: #94a3b8;
+  background: var(--color-text-muted);
 }
 
 .tech-font {
@@ -393,13 +393,13 @@ function changeTimelinePage(page: number): void {
 
 @keyframes dot-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.38);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 38%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-success) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-success) 0%, transparent);
   }
 }
 

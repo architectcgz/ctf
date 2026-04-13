@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowRight, ChevronLeft, Search } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 
 import type {
   TeacherClassItem,
@@ -49,12 +49,17 @@ const activeRateText = computed(() => {
 })
 
 type WorkspaceTab = 'overview' | 'trend' | 'students' | 'review' | 'insight' | 'action'
+type WorkspacePanelTab = Exclude<WorkspaceTab, 'overview' | 'students'>
 
 interface WorkspaceTabItem {
   key: WorkspaceTab
   label: string
   buttonId: string
   panelId: string
+}
+
+interface WorkspacePanelTabItem extends WorkspaceTabItem {
+  key: WorkspacePanelTab
 }
 
 const workspaceTabs: WorkspaceTabItem[] = [
@@ -67,12 +72,61 @@ const workspaceTabs: WorkspaceTabItem[] = [
 ]
 
 const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
+const panelWorkspaceTabs = workspaceTabs.filter(
+  (tab): tab is WorkspacePanelTabItem => tab.key !== 'overview' && tab.key !== 'students'
+)
 const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
   {
     orderedTabs: workspaceTabOrder,
     defaultTab: 'overview',
   }
 )
+
+function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
+  switch (tabKey) {
+    case 'trend':
+      return TeacherClassTrendPanel
+    case 'review':
+      return TeacherClassReviewPanel
+    case 'insight':
+      return TeacherClassInsightsPanel
+    case 'action':
+      return TeacherInterventionPanel
+  }
+}
+
+function resolveWorkspacePanelProps(tabKey: WorkspacePanelTab): Record<string, unknown> {
+  switch (tabKey) {
+    case 'trend':
+      return {
+        trend: props.trend,
+        title: '班级近 7 天训练趋势',
+        subtitle: '先看整体节奏，再下钻到具体学生。',
+      }
+    case 'review':
+      return {
+        review: props.review,
+        className: props.selectedClassName,
+      }
+    case 'insight':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+        splitCards: true,
+      }
+    case 'action':
+      return {
+        students: props.students,
+        className: props.selectedClassName,
+      }
+  }
+}
+
+function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] {
+  return tabKey === 'insight'
+    ? ['workspace-subpanel', 'workspace-subpanel--flat', 'workspace-subpanel--insight']
+    : ['workspace-subpanel', 'workspace-subpanel--flat']
+}
 </script>
 
 <template>
@@ -181,24 +235,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
                 <span>→</span>
               </button>
             </div>
-          </div>
-        </section>
-
-        <section
-          id="class-trend"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'trend' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-trend"
-          :aria-hidden="activeTab === 'trend' ? 'false' : 'true'"
-          v-show="activeTab === 'trend'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherClassTrendPanel
-              :trend="trend"
-              title="班级近 7 天训练趋势"
-              subtitle="先看整体节奏，再下钻到具体学生。"
-            />
           </div>
         </section>
 
@@ -378,48 +414,21 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         </section>
 
         <section
-          id="class-review"
+          v-for="tab in panelWorkspaceTabs"
+          :id="tab.panelId"
+          :key="tab.panelId"
           class="tab-panel section"
-          :class="{ active: activeTab === 'review' }"
+          :class="{ active: activeTab === tab.key }"
           role="tabpanel"
-          aria-labelledby="class-tab-review"
-          :aria-hidden="activeTab === 'review' ? 'false' : 'true'"
-          v-show="activeTab === 'review'"
+          :aria-labelledby="tab.buttonId"
+          :aria-hidden="activeTab === tab.key ? 'false' : 'true'"
+          v-show="activeTab === tab.key"
         >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherClassReviewPanel :review="review" :class-name="selectedClassName" />
-          </div>
-        </section>
-
-        <section
-          id="class-insight"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'insight' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-insight"
-          :aria-hidden="activeTab === 'insight' ? 'false' : 'true'"
-          v-show="activeTab === 'insight'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat workspace-subpanel--insight">
-            <TeacherClassInsightsPanel
-              :students="students"
-              :class-name="selectedClassName"
-              split-cards
+          <div :class="resolveWorkspacePanelWrapperClass(tab.key)">
+            <component
+              :is="resolveWorkspacePanelComponent(tab.key)"
+              v-bind="resolveWorkspacePanelProps(tab.key)"
             />
-          </div>
-        </section>
-
-        <section
-          id="class-action"
-          class="tab-panel section"
-          :class="{ active: activeTab === 'action' }"
-          role="tabpanel"
-          aria-labelledby="class-tab-action"
-          :aria-hidden="activeTab === 'action' ? 'false' : 'true'"
-          v-show="activeTab === 'action'"
-        >
-          <div class="workspace-subpanel workspace-subpanel--flat">
-            <TeacherInterventionPanel :students="students" :class-name="selectedClassName" />
           </div>
         </section>
       </main>
@@ -428,6 +437,8 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 </template>
 
 <style scoped>
+@import '../teacher-workspace-subpanel.css';
+
 .workspace-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
@@ -458,6 +469,16 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
   --teacher-directory-margin-top: var(--space-4);
   --teacher-student-directory-columns: minmax(7.5rem, 0.7fr) minmax(10rem, 1fr) minmax(10rem, 0.9fr)
     minmax(8rem, 0.8fr) minmax(8rem, 0.8fr) minmax(8.5rem, 0.85fr);
+  --teacher-workspace-panel-border: color-mix(in srgb, var(--journal-border) 74%, transparent);
+  --teacher-workspace-panel-background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  --teacher-workspace-panel-shadow: 0 14px 34px var(--color-shadow-soft);
+  --teacher-workspace-panel-padding: var(--space-8);
+  --teacher-workspace-panel-header-gap: var(--space-8);
+  --teacher-workspace-eyebrow-color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
+  --teacher-workspace-line-soft: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  --teacher-workspace-chart-background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
+  --teacher-workspace-review-background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
+  --teacher-workspace-mono-font: var(--font-family-mono);
 }
 
 .teacher-eyebrow-row {
@@ -566,87 +587,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 
 .teacher-table-shell {
   border: 1px solid var(--teacher-card-border);
-}
-
-.workspace-subpanel :deep(.teacher-panel) {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
-  box-shadow: 0 14px 34px var(--color-shadow-soft);
-  padding: var(--space-8);
-}
-
-.workspace-subpanel :deep(.teacher-panel__header),
-.workspace-subpanel :deep(.teacher-subsection__header) {
-  margin-bottom: var(--space-8);
-}
-
-.workspace-subpanel :deep(.journal-eyebrow) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  font-size: var(--font-size-11);
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
-}
-
-.workspace-subpanel :deep(.teacher-panel__title) {
-  margin-top: var(--space-2-5);
-  font-size: var(--font-size-22);
-  line-height: 1.15;
-  color: var(--journal-ink);
-}
-
-.workspace-subpanel :deep(.teacher-subsection + .teacher-subsection) {
-  border-top-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.workspace-subpanel :deep(.top-student-item),
-.workspace-subpanel :deep(.dimension-item),
-.workspace-subpanel :deep(.review-item__recommendation),
-.workspace-subpanel :deep(.review-item),
-.workspace-subpanel :deep(.intervention-item) {
-  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.workspace-subpanel :deep(.teacher-panel__chart) {
-  border-color: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
-}
-
-.workspace-subpanel--flat :deep(.teacher-panel) {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
-}
-
-.workspace-subpanel--flat :deep(.teacher-panel__chart) {
-  margin-top: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
-  box-shadow: none;
-  overflow: visible;
-}
-
-.workspace-subpanel--insight {
-  margin-top: var(--space-6);
-}
-
-.workspace-subpanel :deep(.review-item) {
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
-}
-
-.workspace-subpanel :deep(.top-student-item__rank),
-.workspace-subpanel :deep(.teacher-tip-index) {
-  font-family: var(--font-family-mono);
 }
 
 .teacher-anchor-section {

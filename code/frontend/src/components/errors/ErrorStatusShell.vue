@@ -160,8 +160,12 @@ const accentVars = computed(() => ({
 .error-status-action-primary {
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 94%, #0b4f60), color-mix(in srgb, var(--color-primary-hover) 78%, #0b4f60));
-  color: #f8feff;
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 94%, var(--color-bg-surface)),
+      color-mix(in srgb, var(--color-primary-hover) 78%, var(--color-bg-surface))
+    );
+  color: var(--color-text-primary);
 }
 
 .error-status-action-primary:hover {
@@ -188,6 +192,6 @@ const accentVars = computed(() => ({
 }
 
 :global([data-theme='light']) .error-status-action-secondary {
-  background: color-mix(in srgb, var(--color-bg-surface) 92%, #f1f5f9);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-elevated));
 }
 </style>

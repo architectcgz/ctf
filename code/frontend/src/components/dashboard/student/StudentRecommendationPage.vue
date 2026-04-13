@@ -72,7 +72,7 @@ const summaryCards = computed(() => [
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         现在先练这几道
       </h1>
-      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+      <p class="workspace-page-copy max-w-2xl">
         按当前顺序直接开练，做完这一组再回来刷新下一批建议。
       </p>
 
@@ -321,9 +321,9 @@ const summaryCards = computed(() => [
 }
 
 .journal-weak-tag--stable {
-  border-color: color-mix(in srgb, #16a34a 22%, transparent);
-  background: color-mix(in srgb, #16a34a 10%, transparent);
-  color: #15803d;
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
 }
 
 :global([data-theme='dark']) .recommend-list {

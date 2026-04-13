@@ -38,21 +38,21 @@ defineProps<{
     color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface)),
     color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base))
   );
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-shadow-soft) 36%, transparent);
 }
 
 .page-header__eyebrow {
-  border-left-color: color-mix(in srgb, var(--color-primary) 90%, white);
+  border-left-color: color-mix(in srgb, var(--color-primary) 90%, var(--color-bg-surface));
 }
 
 :global([data-theme='light']) .page-header {
   border-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-border-default));
   background: linear-gradient(
     145deg,
-    color-mix(in srgb, var(--color-primary) 4%, white),
-    color-mix(in srgb, #f8fafc 96%, white)
+    color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-bg-elevated) 94%, var(--color-bg-surface))
   );
-  box-shadow: 0 10px 24px rgba(148, 163, 184, 0.12);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--color-shadow-soft) 72%, transparent);
 }
 
 @media (max-width: 767px) {

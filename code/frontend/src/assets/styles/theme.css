@@ -130,6 +130,10 @@
   --color-warning: var(--theme-warning);
   --color-shadow-strong: var(--theme-shadow-strong);
   --color-shadow-soft: var(--theme-shadow-soft);
+  --color-brand-swatch-green: #16a34a;
+  --color-brand-swatch-cyan: #0891b2;
+  --color-brand-swatch-blue: #2563eb;
+  --color-brand-swatch-orange: #e18a2a;
   /* 分类色 */
   --color-cat-web: #3b82f6;
   --color-cat-pwn: #ef4444;

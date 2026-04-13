@@ -4,6 +4,7 @@ import { Edit3, RefreshCw } from 'lucide-vue-next'
 import ChallengeDescriptionPanel from '@/components/admin/challenge/ChallengeDescriptionPanel.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
 const props = defineProps<{
@@ -50,15 +51,13 @@ const {
       </div>
     </header>
 
-    <header v-if="writeup" class="writeup-reading-card__hero writeup-reading-card__hero--page">
-      <div class="writeup-reading-card__intro">
-        <div class="journal-note-label">Admin Writeup</div>
-        <h1 class="workspace-page-title">{{ writeup.title }}</h1>
-        <p class="workspace-tab-copy">
-          当前保存版本会按这里的正文与公开范围对外展示，适合用于复核发布前的阅读效果。
-        </p>
-      </div>
-    </header>
+    <PageHeader
+      v-if="writeup"
+      class="writeup-reading-page-header"
+      eyebrow="Admin Writeup"
+      :title="writeup.title"
+      description="当前保存版本会按这里的正文与公开范围对外展示，适合用于复核发布前的阅读效果。"
+    />
 
     <div v-if="writeup" class="journal-divider" />
 
@@ -130,23 +129,6 @@ const {
 .writeup-workspace {
   display: grid;
   gap: var(--space-4);
-}
-
-.writeup-reading-card__hero {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.writeup-reading-card__hero--page {
-  padding-bottom: var(--space-4);
-}
-
-.writeup-reading-card__intro {
-  display: grid;
-  gap: var(--space-2);
-  max-width: min(42rem, 100%);
 }
 
 .writeup-editor-head {

@@ -9,6 +9,7 @@ import AWDReadinessOverrideDialog from './AWDReadinessOverrideDialog.vue'
 import AWDReadinessSummary from './AWDReadinessSummary.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAdminContestAWD } from '@/composables/useAdminContestAWD'
+import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 
 import AWDRoundCreateDialog from './AWDRoundCreateDialog.vue'
 import AWDRoundInspector from './AWDRoundInspector.vue'
@@ -49,6 +50,7 @@ const operationTabs = [
 ] as const
 
 type AWDOperationsPanelKey = (typeof operationTabs)[number]['key']
+const operationTabOrder = operationTabs.map((tab) => tab.key) as AWDOperationsPanelKey[]
 
 function getOperationsPanelStorageKey(contestId: string): string {
   return `ctf_admin_awd_ops_panel:${contestId}`
@@ -70,7 +72,6 @@ function persistOperationsPanel(contestId: string, value: AWDOperationsPanelKey)
 }
 
 const activePanel = ref<AWDOperationsPanelKey>('inspector')
-const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
 
 const {
   rounds,
@@ -181,43 +182,14 @@ function updateAttackLogDialogOpen(value: boolean) {
   attackLogDialogOpen.value = value
 }
 
-function setTabButtonRef(index: number, element: HTMLButtonElement | null) {
-  tabButtonRefs.value[index] = element
-}
-
-function focusTabByIndex(index: number) {
-  tabButtonRefs.value[index]?.focus()
-}
-
 function selectPanel(panel: AWDOperationsPanelKey) {
   activePanel.value = panel
 }
 
-function handlePanelKeydown(event: KeyboardEvent, index: number) {
-  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-    return
-  }
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    activePanel.value = operationTabs[0].key
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = operationTabs.length - 1
-    activePanel.value = operationTabs[endIndex].key
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + operationTabs.length) % operationTabs.length
-  activePanel.value = operationTabs[nextIndex].key
-  focusTabByIndex(nextIndex)
-}
+const { setTabButtonRef, handleTabKeydown } = useTabKeyboardNavigation<AWDOperationsPanelKey>({
+  orderedTabs: operationTabOrder,
+  selectTab: selectPanel,
+})
 
 function openChallengeCreateDialog() {
   challengeConfigMode.value = 'create'
@@ -394,7 +366,7 @@ watch(
           v-for="(tab, index) in operationTabs"
           :id="tab.tabId"
           :key="tab.key"
-          :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+          :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
           type="button"
           role="tab"
           class="top-tab"
@@ -403,7 +375,7 @@ watch(
           :aria-controls="tab.panelId"
           :tabindex="activePanel === tab.key ? 0 : -1"
           @click="selectPanel(tab.key)"
-          @keydown="handlePanelKeydown($event, index)"
+          @keydown="handleTabKeydown($event, index)"
         >
           {{ tab.label }}
         </button>

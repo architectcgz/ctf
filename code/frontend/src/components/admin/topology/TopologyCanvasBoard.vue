@@ -330,9 +330,21 @@ onBeforeUnmount(() => {
     var(--color-primary) 20%,
     var(--topology-canvas-node-shell)
   );
-  --topology-canvas-node-active: color-mix(in srgb, var(--color-primary) 74%, white);
-  --topology-canvas-node-pending: color-mix(in srgb, var(--color-warning) 90%, white);
-  --topology-canvas-node-entry: color-mix(in srgb, var(--color-warning) 90%, #f8fafc);
+  --topology-canvas-node-active: color-mix(
+    in srgb,
+    var(--color-primary) 74%,
+    var(--topology-canvas-node-shell)
+  );
+  --topology-canvas-node-pending: color-mix(
+    in srgb,
+    var(--color-warning) 90%,
+    var(--topology-canvas-node-shell)
+  );
+  --topology-canvas-node-entry: color-mix(
+    in srgb,
+    var(--color-warning) 90%,
+    var(--topology-canvas-node-shell)
+  );
   --topology-canvas-node-ring: color-mix(in srgb, var(--color-text-secondary) 44%, transparent);
   --topology-canvas-node-core-ring: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --topology-canvas-tier-public: color-mix(in srgb, var(--color-primary) 12%, transparent);

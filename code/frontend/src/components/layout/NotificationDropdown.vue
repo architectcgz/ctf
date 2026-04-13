@@ -214,7 +214,7 @@ const {
   background: color-mix(in srgb, var(--color-bg-surface) 72%, var(--color-bg-base));
   color: var(--color-text-secondary);
   transition: all 0.2s ease;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 36%, transparent);
 }
 
 .notification-trigger:hover,
@@ -226,7 +226,7 @@ const {
 }
 
 .notification-panel {
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--color-shadow-soft) 84%, transparent);
 }
 
 .notification-timeline {

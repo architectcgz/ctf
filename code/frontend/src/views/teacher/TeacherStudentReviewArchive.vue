@@ -210,8 +210,8 @@ async function handleExportArchive(): Promise<void> {
 .review-archive-shell {
   --journal-ink: var(--color-text-primary);
   --journal-muted: var(--color-text-secondary);
-  --journal-accent: #2563eb;
-  --journal-accent-strong: #1d4ed8;
+  --journal-accent: var(--color-primary);
+  --journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
   --journal-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
   --journal-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
@@ -282,7 +282,7 @@ async function handleExportArchive(): Promise<void> {
 .summary-card--warning {
   --metric-panel-background: linear-gradient(
     180deg,
-    color-mix(in srgb, #f59e0b 14%, var(--journal-surface)),
+    color-mix(in srgb, var(--color-warning) 14%, var(--journal-surface)),
     color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base))
   );
 }

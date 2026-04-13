@@ -315,6 +315,8 @@ describe('TeacherStudentAnalysis', () => {
     expect(teacherApiMocks.getStudentEvidence).toHaveBeenCalledWith('stu-1')
     expect(teacherApiMocks.getTeacherWriteupSubmissions).toHaveBeenCalledWith({
       student_id: 'stu-1',
+      submission_status: 'published',
+      page: 1,
       page_size: 6,
     })
     expect(teacherApiMocks.getTeacherManualReviewSubmissions).toHaveBeenCalledWith({
