@@ -53,7 +53,6 @@ export function useChallengeDetailPresentation({
   sanitizeHtml,
 }: UseChallengeDetailPresentationOptions) {
   const activeSolutionTab = ref<ChallengeSolutionTab>('recommended')
-  const solutionTabs: ChallengeSolutionTab[] = ['recommended', 'community']
 
   function renderRichContent(source?: string): string {
     if (!source) return ''
@@ -162,31 +161,6 @@ export function useChallengeDetailPresentation({
     communitySolutions.value = []
     activeSolutionTab.value = 'recommended'
     selectedSolutionId.value = null
-  }
-
-  function handleSolutionTabKeydown(
-    event: KeyboardEvent,
-    currentTab: ChallengeSolutionTab,
-    focusTab: (tabId: string) => void
-  ): void {
-    const currentIndex = solutionTabs.findIndex((item) => item === currentTab)
-    if (currentIndex < 0) return
-
-    if (event.key === 'ArrowRight') {
-      activeSolutionTab.value = solutionTabs[(currentIndex + 1) % solutionTabs.length]
-    } else if (event.key === 'ArrowLeft') {
-      activeSolutionTab.value =
-        solutionTabs[(currentIndex - 1 + solutionTabs.length) % solutionTabs.length]
-    } else if (event.key === 'Home') {
-      activeSolutionTab.value = solutionTabs[0]
-    } else if (event.key === 'End') {
-      activeSolutionTab.value = solutionTabs[solutionTabs.length - 1]
-    } else {
-      return
-    }
-
-    focusTab(`challenge-solutions-tab-${activeSolutionTab.value}`)
-    event.preventDefault()
   }
 
   function buildMetaPillStyle(color: string): Record<string, string> {
@@ -331,7 +305,6 @@ export function useChallengeDetailPresentation({
     submitFieldLabel,
     submitInputClass,
     clearSolutions,
-    handleSolutionTabKeydown,
     buildMetaPillStyle,
     submissionStatusLabel,
     submissionStatusText,

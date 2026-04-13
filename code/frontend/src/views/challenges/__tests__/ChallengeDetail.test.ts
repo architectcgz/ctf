@@ -311,6 +311,70 @@ describe('ChallengeDetail', () => {
     expect(wrapper.find('[role="tabpanel"]').exists()).toBe(true)
   })
 
+  it('题解子标签应支持 End、Home 和方向键切换', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      attachTo: document.body,
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
+    expect(solutionTab).toBeTruthy()
+
+    await solutionTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const recommendedTab = wrapper.get('#challenge-solutions-tab-recommended')
+    const communityTab = wrapper.get('#challenge-solutions-tab-community')
+    const recommendedButton = recommendedTab.element as HTMLButtonElement
+    const communityButton = communityTab.element as HTMLButtonElement
+
+    recommendedButton.focus()
+    expect(recommendedTab.attributes('aria-selected')).toBe('true')
+    expect(communityTab.attributes('aria-selected')).toBe('false')
+
+    await recommendedTab.trigger('keydown', { key: 'End' })
+    await wrapper.vm.$nextTick()
+    expect(recommendedTab.attributes('aria-selected')).toBe('false')
+    expect(communityTab.attributes('aria-selected')).toBe('true')
+    expect(document.activeElement).toBe(communityButton)
+
+    await communityTab.trigger('keydown', { key: 'Home' })
+    await wrapper.vm.$nextTick()
+    expect(recommendedTab.attributes('aria-selected')).toBe('true')
+    expect(communityTab.attributes('aria-selected')).toBe('false')
+    expect(document.activeElement).toBe(recommendedButton)
+
+    await recommendedTab.trigger('keydown', { key: 'ArrowRight' })
+    await wrapper.vm.$nextTick()
+    expect(recommendedTab.attributes('aria-selected')).toBe('false')
+    expect(communityTab.attributes('aria-selected')).toBe('true')
+    expect(document.activeElement).toBe(communityButton)
+
+    wrapper.unmount()
+  })
+
   it('应该支持保存个人题解草稿', async () => {
     challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
       id: '1',
