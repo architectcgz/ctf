@@ -25,7 +25,10 @@ describe('student and user surface alignment', () => {
     expect(journalSoftSurfacesSource).toContain('--journal-shell-border: color-mix')
     expect(journalSoftSurfacesSource).toContain('--journal-soft-border: color-mix')
     expect(journalSoftSurfacesSource).toContain('--journal-divider: color-mix')
-    expect(studentOverviewSource).toMatch(/\.journal-metric,[\s\S]*\.journal-rank-summary\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s)
+    expect(studentOverviewSource).toMatch(
+      /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
+    )
+    expect(studentOverviewSource).toContain('story-metric-grid')
     expect(studentOverviewSource).not.toContain('border-[var(--journal-border)]')
     expect(studentOverviewSource).not.toMatch(/border:\s*1px solid var\(--journal-border\);/)
 
@@ -88,10 +91,25 @@ describe('student and user surface alignment', () => {
       'class="journal-rank-summary__helper progress-card-hint metric-panel-helper"'
     )
     expect(studentOverviewSource).toMatch(
-      /\.journal-metric,\s*\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
+      /\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
     )
     expect(studentOverviewSource).not.toMatch(
       /\.journal-metric,\s*\.journal-inline-item,\s*\.journal-rank-summary\s*\{/s
+    )
+  })
+
+  it('student overview 竞技表现统计卡片应复用 shared metric-panel 样式栈，而不是继续使用本地 journal-metric 表面', () => {
+    expect(studentOverviewSource).toContain(
+      "'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface'"
+    )
+    expect(studentOverviewSource).toContain(':class="storyMetricGridClass"')
+    expect(studentOverviewSource).toContain('class="journal-metric progress-card metric-panel-card"')
+    expect(studentOverviewSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(studentOverviewSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(studentOverviewSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(studentOverviewSource).not.toMatch(/\.journal-metric-accent\s*\{/)
+    expect(studentOverviewSource).not.toMatch(
+      /\.journal-metric,\s*\.journal-inline-item\s*\{[\s\S]*border:\s*1px solid var\(--journal-shell-border\);/s
     )
   })
 

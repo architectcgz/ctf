@@ -174,6 +174,37 @@ describe('DashboardView', () => {
     expect(tabTexts).toEqual(['训练总览', '训练队列', '分类补强', '训练记录', '强度推进'])
   })
 
+  it('应该把竞技表现统计区域渲染为共享摘要卡片', async () => {
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'student-1',
+        username: 'alice',
+        role: 'student',
+        class_name: 'Class A',
+      },
+      'token'
+    )
+
+    const wrapper = mountDashboard()
+
+    await flushPromises()
+
+    const summary = wrapper.get('.story-metric-grid')
+
+    expect(summary.classes()).toContain('progress-strip')
+    expect(summary.classes()).toContain('metric-panel-grid')
+    expect(summary.classes()).toContain('metric-panel-default-surface')
+    expect(summary.findAll('.journal-metric.progress-card.metric-panel-card')).toHaveLength(4)
+    expect(summary.findAll('.progress-card-label.metric-panel-label')).toHaveLength(4)
+    expect(summary.findAll('.progress-card-value.metric-panel-value')).toHaveLength(4)
+    expect(summary.findAll('.progress-card-hint.metric-panel-helper')).toHaveLength(4)
+    expect(summary.text()).toContain('总得分')
+    expect(summary.text()).toContain('当前累计获得的训练积分')
+    expect(summary.text()).toContain('完成率')
+    expect(summary.text()).toContain('按当前分类题量计算的覆盖比例')
+  })
+
   it('应该把当前排名区域渲染为独立卡片', async () => {
     const authStore = useAuthStore()
     authStore.setAuth(
