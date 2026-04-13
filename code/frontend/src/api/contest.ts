@@ -1,12 +1,22 @@
 import { request } from './request'
+import { normalizeInstanceData, type RawInstanceData } from './instance'
 
 import type {
+  AWDAttackLogData,
+  AWDRoundData,
   ContestAnnouncement,
+  ContestAWDWorkspaceData,
+  ContestAWDWorkspaceRecentEventData,
+  ContestAWDWorkspaceServiceData,
+  ContestAWDWorkspaceTargetServiceData,
+  ContestAWDWorkspaceTargetTeamData,
+  ContestAWDWorkspaceTeamData,
   ContestChallengeItem,
   ContestDetailData,
   ContestListItem,
   ContestMyProgressData,
   ContestScoreboardData,
+  InstanceData,
   PageResult,
   SubmitFlagData,
   TeamData,
@@ -50,6 +60,60 @@ interface RawTeamCreateResp {
   created_at: string
 }
 
+interface RawAWDRoundData extends Omit<AWDRoundData, 'id' | 'contest_id'> {
+  id: string | number
+  contest_id: string | number
+}
+
+interface RawAWDAttackLogData extends Omit<
+  AWDAttackLogData,
+  'id' | 'round_id' | 'attacker_team_id' | 'victim_team_id' | 'challenge_id'
+> {
+  id: string | number
+  round_id: string | number
+  attacker_team_id: string | number
+  victim_team_id: string | number
+  challenge_id: string | number
+}
+
+interface RawContestAWDWorkspaceTeamData extends Omit<ContestAWDWorkspaceTeamData, 'team_id'> {
+  team_id: string | number
+}
+
+interface RawContestAWDWorkspaceServiceData extends Omit<ContestAWDWorkspaceServiceData, 'challenge_id'> {
+  challenge_id: string | number
+}
+
+interface RawContestAWDWorkspaceTargetServiceData
+  extends Omit<ContestAWDWorkspaceTargetServiceData, 'challenge_id'> {
+  challenge_id: string | number
+}
+
+interface RawContestAWDWorkspaceTargetTeamData
+  extends Omit<ContestAWDWorkspaceTargetTeamData, 'team_id' | 'services'> {
+  team_id: string | number
+  services: RawContestAWDWorkspaceTargetServiceData[]
+}
+
+interface RawContestAWDWorkspaceRecentEventData
+  extends Omit<ContestAWDWorkspaceRecentEventData, 'id' | 'challenge_id' | 'peer_team_id'> {
+  id: string | number
+  challenge_id: string | number
+  peer_team_id: string | number
+}
+
+interface RawContestAWDWorkspaceData extends Omit<
+  ContestAWDWorkspaceData,
+  'contest_id' | 'current_round' | 'my_team' | 'services' | 'targets' | 'recent_events'
+> {
+  contest_id: string | number
+  current_round?: RawAWDRoundData
+  my_team?: RawContestAWDWorkspaceTeamData | null
+  services: RawContestAWDWorkspaceServiceData[]
+  targets: RawContestAWDWorkspaceTargetTeamData[]
+  recent_events: RawContestAWDWorkspaceRecentEventData[]
+}
+
 export type GetContestsData = PageResult<ContestListItem>
 
 function normalizeContestStatus(status: RawContestStatus): ContestListItem['status'] {
@@ -87,6 +151,73 @@ function normalizeTeam(payload: RawTeamData | null): TeamData | null {
       username: member.username,
       joined_at: member.joined_at,
     })),
+  }
+}
+
+function normalizeAWDRound(item: RawAWDRoundData): AWDRoundData {
+  return {
+    ...item,
+    id: String(item.id),
+    contest_id: String(item.contest_id),
+  }
+}
+
+function normalizeAWDAttackLog(item: RawAWDAttackLogData): AWDAttackLogData {
+  return {
+    ...item,
+    id: String(item.id),
+    round_id: String(item.round_id),
+    attacker_team_id: String(item.attacker_team_id),
+    victim_team_id: String(item.victim_team_id),
+    challenge_id: String(item.challenge_id),
+  }
+}
+
+function normalizeContestAWDWorkspaceTeam(
+  item: RawContestAWDWorkspaceTeamData
+): ContestAWDWorkspaceTeamData {
+  return {
+    ...item,
+    team_id: String(item.team_id),
+  }
+}
+
+function normalizeContestAWDWorkspaceService(
+  item: RawContestAWDWorkspaceServiceData
+): ContestAWDWorkspaceServiceData {
+  return {
+    ...item,
+    challenge_id: String(item.challenge_id),
+  }
+}
+
+function normalizeContestAWDWorkspaceTargetService(
+  item: RawContestAWDWorkspaceTargetServiceData
+): ContestAWDWorkspaceTargetServiceData {
+  return {
+    ...item,
+    challenge_id: String(item.challenge_id),
+  }
+}
+
+function normalizeContestAWDWorkspaceTargetTeam(
+  item: RawContestAWDWorkspaceTargetTeamData
+): ContestAWDWorkspaceTargetTeamData {
+  return {
+    ...item,
+    team_id: String(item.team_id),
+    services: item.services.map(normalizeContestAWDWorkspaceTargetService),
+  }
+}
+
+function normalizeContestAWDWorkspaceEvent(
+  item: RawContestAWDWorkspaceRecentEventData
+): ContestAWDWorkspaceRecentEventData {
+  return {
+    ...item,
+    id: String(item.id),
+    challenge_id: String(item.challenge_id),
+    peer_team_id: String(item.peer_team_id),
   }
 }
 
@@ -179,6 +310,47 @@ export async function getMyTeam(contestId: string): Promise<TeamData | null> {
     url: `/contests/${encodeURIComponent(contestId)}/my-team`,
   })
   return normalizeTeam(response)
+}
+
+export async function getContestAWDWorkspace(contestId: string): Promise<ContestAWDWorkspaceData> {
+  const response = await request<RawContestAWDWorkspaceData>({
+    method: 'GET',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/workspace`,
+  })
+
+  return {
+    contest_id: String(response.contest_id),
+    current_round: response.current_round ? normalizeAWDRound(response.current_round) : undefined,
+    my_team: response.my_team ? normalizeContestAWDWorkspaceTeam(response.my_team) : response.my_team,
+    services: response.services.map(normalizeContestAWDWorkspaceService),
+    targets: response.targets.map(normalizeContestAWDWorkspaceTargetTeam),
+    recent_events: response.recent_events.map(normalizeContestAWDWorkspaceEvent),
+  }
+}
+
+export async function startContestChallengeInstance(
+  contestId: string,
+  challengeId: string
+): Promise<InstanceData> {
+  const payload = await request<RawInstanceData>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}/instances`,
+    suppressErrorToast: true,
+  })
+  return normalizeInstanceData(payload)
+}
+
+export async function submitContestAWDAttack(
+  contestId: string,
+  challengeId: string,
+  data: { victim_team_id: number; flag: string }
+): Promise<AWDAttackLogData> {
+  const response = await request<RawAWDAttackLogData>({
+    method: 'POST',
+    url: `/contests/${encodeURIComponent(contestId)}/awd/challenges/${encodeURIComponent(challengeId)}/submissions`,
+    data,
+  })
+  return normalizeAWDAttackLog(response)
 }
 
 export async function kickTeamMember(contestId: string, teamId: string, userId: string) {

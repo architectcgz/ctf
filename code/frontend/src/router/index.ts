@@ -257,6 +257,41 @@ const routes: RouteRecordRaw[] = [
         }),
       },
       {
+        path: 'academy/awd-reviews',
+        name: 'TeacherAWDReviewIndex',
+        component: () => import('@/views/teacher/TeacherAWDReviewIndex.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: 'AWD复盘',
+          icon: 'ScanEye',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'teacher/awd-reviews',
+        redirect: redirectWithQuery('/academy/awd-reviews'),
+      },
+      {
+        path: 'academy/awd-reviews/:contestId',
+        name: 'TeacherAWDReviewDetail',
+        component: () => import('@/views/teacher/TeacherAWDReviewDetail.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['teacher', 'admin'],
+          title: 'AWD复盘详情',
+          contentLayout: 'bleed',
+        },
+      },
+      {
+        path: 'teacher/awd-reviews/:contestId',
+        redirect: (to) => ({
+          path: `/academy/awd-reviews/${encodeURIComponent(String(to.params.contestId || ''))}`,
+          query: to.query,
+          hash: to.hash,
+        }),
+      },
+      {
         path: 'academy/instances',
         name: 'TeacherInstanceManagement',
         component: () => import('@/views/teacher/InstanceManagement.vue'),
@@ -271,22 +306,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'teacher/instances',
         redirect: redirectWithQuery('/academy/instances'),
-      },
-      {
-        path: 'academy/reports',
-        name: 'ReportExport',
-        component: () => import('@/views/teacher/ReportExport.vue'),
-        meta: {
-          requiresAuth: true,
-          roles: ['teacher', 'admin'],
-          title: '报告导出',
-          icon: 'FileDown',
-          contentLayout: 'bleed',
-        },
-      },
-      {
-        path: 'teacher/reports',
-        redirect: redirectWithQuery('/academy/reports'),
       },
 
       // Platform Governance

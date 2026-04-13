@@ -20,5 +20,5 @@ func (s *AWDService) SubmitAttack(ctx context.Context, userID, contestID, challe
 		AttackType:     model.AWDAttackTypeFlagCapture,
 		SubmittedFlag:  req.Flag,
 		IsSuccess:      validateSubmittedAttackFlag(req.Flag, attackContext.acceptedFlags),
-	}, model.AWDAttackSourceSubmission)
+	}, model.AWDAttackSourceSubmission, &userID)
 }

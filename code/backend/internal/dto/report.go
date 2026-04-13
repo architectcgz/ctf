@@ -17,6 +17,10 @@ type CreateStudentReviewArchiveReq struct {
 	Format string `json:"format" binding:"omitempty,oneof=json"`
 }
 
+type CreateTeacherAWDReviewExportReq struct {
+	RoundNumber *int `json:"round_number,omitempty"`
+}
+
 type ReportExportData struct {
 	ReportID     int64   `json:"report_id"`
 	Status       string  `json:"status"`

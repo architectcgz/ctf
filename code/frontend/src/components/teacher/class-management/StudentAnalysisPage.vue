@@ -66,7 +66,13 @@ const emit = defineEmits<{
   changeWriteupPage: [page: number]
 }>()
 
-type WorkspaceTab = 'overview' | 'recommendations' | 'writeups' | 'evidence' | 'timeline'
+type WorkspaceTab =
+  | 'overview'
+  | 'recommendations'
+  | 'writeups'
+  | 'manual-review'
+  | 'evidence'
+  | 'timeline'
 
 interface WorkspaceTabItem {
   key: WorkspaceTab
@@ -93,6 +99,12 @@ const workspaceTabs: WorkspaceTabItem[] = [
     label: '发布的题解',
     buttonId: 'student-tab-writeups',
     panelId: 'student-writeups',
+  },
+  {
+    key: 'manual-review',
+    label: '人工审核',
+    buttonId: 'student-tab-manual-review',
+    panelId: 'student-manual-review',
   },
   {
     key: 'evidence',
@@ -169,6 +181,13 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
               @click="emit('openClassStudents')"
             >
               返回学生列表
+            </button>
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
+              @click="emit('openReportExport')"
+            >
+              导出班级报告
             </button>
             <button
               type="button"

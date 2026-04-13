@@ -210,6 +210,179 @@ func TestAWDQueryServiceGetReadinessItemJSONIncludesRequiredNullableKeys(t *test
 	}
 }
 
+func TestAWDServiceGetUserWorkspaceBuildsOwnServicesTargetsAndRecentEvents(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 15, 0, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 801, now)
+	contesttestsupport.CreateAWDRoundFixture(t, db, 80101, 801, 2, 60, 40, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8011, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8012, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8011, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 801, 8012, now)
+
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8101, 801, "Red", now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8102, 801, "Blue", now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8103, 801, "Green", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 801, 8101, 9001, now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 801, 8102, 9002, now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 801, 8103, 9003, now)
+
+	seedAWDWorkspaceInstance(t, db, 1, 9001, 801, 8101, 8011, "http://red-1.internal", now)
+	seedAWDWorkspaceInstance(t, db, 2, 9002, 801, 8102, 8011, "http://blue-1.internal", now)
+	seedAWDWorkspaceInstance(t, db, 3, 9003, 801, 8103, 8012, "http://green-2.internal", now)
+
+	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+		RoundID:        80101,
+		TeamID:         8101,
+		ChallengeID:    8011,
+		ServiceStatus:  model.AWDServiceStatusUp,
+		CheckResult:    `{"status_reason":"healthy"}`,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		AttackReceived: 0,
+		SLAScore:       18,
+		DefenseScore:   40,
+		AttackScore:    0,
+		CreatedAt:      now,
+		UpdatedAt:      now.Add(2 * time.Minute),
+	})
+	seedAWDWorkspaceServiceRecord(t, db, &model.AWDTeamService{
+		RoundID:        80101,
+		TeamID:         8101,
+		ChallengeID:    8012,
+		ServiceStatus:  model.AWDServiceStatusCompromised,
+		CheckResult:    `{"status_reason":"flag_mismatch"}`,
+		CheckerType:    model.AWDCheckerTypeHTTPStandard,
+		AttackReceived: 1,
+		SLAScore:       0,
+		DefenseScore:   0,
+		AttackScore:    0,
+		CreatedAt:      now,
+		UpdatedAt:      now.Add(3 * time.Minute),
+	})
+	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+		ID:             1,
+		RoundID:        80101,
+		AttackerTeamID: 8101,
+		VictimTeamID:   8102,
+		ChallengeID:    8011,
+		AttackType:     model.AWDAttackTypeFlagCapture,
+		Source:         model.AWDAttackSourceSubmission,
+		IsSuccess:      true,
+		ScoreGained:    60,
+		CreatedAt:      now.Add(4 * time.Minute),
+	})
+	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+		ID:             2,
+		RoundID:        80101,
+		AttackerTeamID: 8102,
+		VictimTeamID:   8101,
+		ChallengeID:    8012,
+		AttackType:     model.AWDAttackTypeFlagCapture,
+		Source:         model.AWDAttackSourceSubmission,
+		IsSuccess:      false,
+		ScoreGained:    0,
+		CreatedAt:      now.Add(5 * time.Minute),
+	})
+	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+		ID:             3,
+		RoundID:        80101,
+		AttackerTeamID: 8102,
+		VictimTeamID:   8103,
+		ChallengeID:    8011,
+		AttackType:     model.AWDAttackTypeFlagCapture,
+		Source:         model.AWDAttackSourceSubmission,
+		IsSuccess:      true,
+		ScoreGained:    60,
+		CreatedAt:      now.Add(6 * time.Minute),
+	})
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9001, 801)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if resp.CurrentRound == nil || resp.CurrentRound.RoundNumber != 2 {
+		t.Fatalf("expected current round 2, got %+v", resp.CurrentRound)
+	}
+	if resp.MyTeam == nil || resp.MyTeam.TeamID != 8101 {
+		t.Fatalf("expected red team, got %+v", resp.MyTeam)
+	}
+	if len(resp.Services) != 2 {
+		t.Fatalf("expected 2 own services, got %+v", resp.Services)
+	}
+	if resp.Services[0].ChallengeID != 8011 || resp.Services[0].AccessURL != "http://red-1.internal" {
+		t.Fatalf("expected first own service to include red access url, got %+v", resp.Services[0])
+	}
+	if len(resp.Targets) != 2 {
+		t.Fatalf("expected 2 target teams, got %+v", resp.Targets)
+	}
+	for _, item := range resp.Targets {
+		if item.TeamID == 8101 {
+			t.Fatalf("expected self team filtered from targets: %+v", resp.Targets)
+		}
+	}
+	if len(resp.RecentEvents) != 2 {
+		t.Fatalf("expected 2 related recent events, got %+v", resp.RecentEvents)
+	}
+
+	outgoing := findAWDWorkspaceEventByDirection(resp.RecentEvents, "attack_out")
+	if outgoing == nil || outgoing.PeerTeamID != 8102 || !outgoing.IsSuccess {
+		t.Fatalf("expected outgoing event against blue, got %+v", outgoing)
+	}
+	incoming := findAWDWorkspaceEventByDirection(resp.RecentEvents, "attack_in")
+	if incoming == nil || incoming.PeerTeamID != 8102 || incoming.IsSuccess {
+		t.Fatalf("expected incoming failed event from blue, got %+v", incoming)
+	}
+}
+
+func TestAWDServiceGetUserWorkspaceWithoutTeamHidesTargets(t *testing.T) {
+	service, db := newAWDQueryServiceForTest(t)
+	now := time.Date(2026, 4, 12, 15, 30, 0, 0, time.UTC)
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 802, now)
+	contesttestsupport.CreateAWDRoundFixture(t, db, 80201, 802, 1, 50, 50, now)
+	contesttestsupport.CreateAWDChallengeFixture(t, db, 8021, now)
+	contesttestsupport.CreateAWDContestChallengeFixture(t, db, 802, 8021, now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8201, 802, "Alpha", now)
+	contesttestsupport.CreateAWDTeamFixture(t, db, 8202, 802, "Beta", now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 802, 8201, 9201, now)
+	contesttestsupport.CreateAWDTeamMemberFixture(t, db, 802, 8202, 9202, now)
+	seedAWDWorkspaceInstance(t, db, 4, 9201, 802, 8201, 8021, "http://alpha.internal", now)
+	seedAWDWorkspaceInstance(t, db, 5, 9202, 802, 8202, 8021, "http://beta.internal", now)
+	seedAWDWorkspaceAttackLog(t, db, &model.AWDAttackLog{
+		ID:             4,
+		RoundID:        80201,
+		AttackerTeamID: 8201,
+		VictimTeamID:   8202,
+		ChallengeID:    8021,
+		AttackType:     model.AWDAttackTypeFlagCapture,
+		Source:         model.AWDAttackSourceSubmission,
+		IsSuccess:      true,
+		ScoreGained:    50,
+		CreatedAt:      now.Add(time.Minute),
+	})
+
+	resp, err := service.GetUserWorkspace(context.Background(), 9999, 802)
+	if err != nil {
+		t.Fatalf("GetUserWorkspace() error = %v", err)
+	}
+	if resp.CurrentRound == nil || resp.CurrentRound.RoundNumber != 1 {
+		t.Fatalf("expected current round 1, got %+v", resp.CurrentRound)
+	}
+	if resp.MyTeam != nil {
+		t.Fatalf("expected no team for outsider, got %+v", resp.MyTeam)
+	}
+	if len(resp.Services) != 0 {
+		t.Fatalf("expected no own services for outsider, got %+v", resp.Services)
+	}
+	if len(resp.Targets) != 0 {
+		t.Fatalf("expected no targets for outsider, got %+v", resp.Targets)
+	}
+	if len(resp.RecentEvents) != 0 {
+		t.Fatalf("expected no events for outsider, got %+v", resp.RecentEvents)
+	}
+}
+
 func createAWDReadinessContestFixture(t *testing.T, db *gorm.DB, contestID int64, now time.Time) {
 	t.Helper()
 
@@ -260,4 +433,50 @@ func readinessBlockingReasonByChallenge(items []*dto.AWDReadinessItemResp, chall
 		}
 	}
 	return ""
+}
+
+func seedAWDWorkspaceInstance(t *testing.T, db *gorm.DB, instanceID, userID, contestID, teamID, challengeID int64, accessURL string, now time.Time) {
+	t.Helper()
+
+	if err := db.Create(&model.Instance{
+		ID:          instanceID,
+		UserID:      userID,
+		ContestID:   &contestID,
+		TeamID:      &teamID,
+		ChallengeID: challengeID,
+		ContainerID: "container",
+		ShareScope:  model.InstanceSharingPerTeam,
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   accessURL,
+		ExpiresAt:   now.Add(time.Hour),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}).Error; err != nil {
+		t.Fatalf("create awd workspace instance: %v", err)
+	}
+}
+
+func seedAWDWorkspaceServiceRecord(t *testing.T, db *gorm.DB, record *model.AWDTeamService) {
+	t.Helper()
+
+	if err := db.Create(record).Error; err != nil {
+		t.Fatalf("create awd workspace service record: %v", err)
+	}
+}
+
+func seedAWDWorkspaceAttackLog(t *testing.T, db *gorm.DB, record *model.AWDAttackLog) {
+	t.Helper()
+
+	if err := db.Create(record).Error; err != nil {
+		t.Fatalf("create awd workspace attack log: %v", err)
+	}
+}
+
+func findAWDWorkspaceEventByDirection(items []*dto.ContestAWDWorkspaceRecentEventResp, direction string) *dto.ContestAWDWorkspaceRecentEventResp {
+	for _, item := range items {
+		if item.Direction == direction {
+			return item
+		}
+	}
+	return nil
 }

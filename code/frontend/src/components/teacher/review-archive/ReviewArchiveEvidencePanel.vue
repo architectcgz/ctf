@@ -1,58 +1,213 @@
 <script setup lang="ts">
-import type { ReviewArchiveEvidenceItemData, TimelineEvent } from '@/api/contracts'
+import { computed, ref } from 'vue'
 
-defineProps<{
+import type {
+  ReviewArchiveEvidenceItemData,
+  ReviewArchiveManualReviewItemData,
+  ReviewArchiveWriteupItemData,
+  TimelineEvent,
+} from '@/api/contracts'
+import { buildReviewArchiveCaseGroups, type ReviewArchiveCase } from './reviewArchiveCases'
+
+const props = defineProps<{
   timeline: TimelineEvent[]
   evidence: ReviewArchiveEvidenceItemData[]
+  writeups: ReviewArchiveWriteupItemData[]
+  manualReviews: ReviewArchiveManualReviewItemData[]
 }>()
+
+const expandedCases = ref<string[]>([])
+
+const caseGroups = computed(() =>
+  buildReviewArchiveCaseGroups({
+    timeline: props.timeline,
+    evidence: props.evidence,
+    writeups: props.writeups,
+    manualReviews: props.manualReviews,
+  })
+)
+
+function isExpanded(caseId: string): boolean {
+  return expandedCases.value.includes(caseId)
+}
+
+function toggleCase(caseId: string): void {
+  expandedCases.value = isExpanded(caseId)
+    ? expandedCases.value.filter((item) => item !== caseId)
+    : [...expandedCases.value, caseId]
+}
+
+function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string[] {
+  return [
+    'archive-case',
+    `archive-case--${section}`,
+    `archive-case--${item.tone}`,
+  ]
+}
 </script>
 
 <template>
-  <section class="archive-grid">
+  <section class="archive-section-stack">
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">Timeline</div>
-          <h3 class="archive-panel__title">训练记录</h3>
+          <div class="archive-panel__eyebrow">Practice Review</div>
+          <h3 class="archive-panel__title">练习复盘</h3>
         </div>
+        <p class="archive-panel__hint">
+          以练习题为单位整理接入、利用、提交和复盘材料，优先还原训练闭环。
+        </p>
       </header>
-      <div v-if="timeline.length === 0" class="archive-panel__empty">暂无训练记录事件。</div>
-      <ol v-else class="timeline-list">
-        <li v-for="item in timeline" :key="item.id" class="timeline-item">
-          <div class="timeline-item__dot" />
-          <div class="timeline-item__body">
-            <div class="timeline-item__head">
-              <strong>{{ item.title }}</strong>
-              <span>{{ item.created_at }}</span>
+      <div
+        v-if="caseGroups.practiceCases.length === 0"
+        class="archive-panel__empty"
+      >
+        暂无练习复盘案例。
+      </div>
+      <div v-else class="case-list">
+        <article
+          v-for="item in caseGroups.practiceCases"
+          :key="item.id"
+          :class="cardClass(item, 'practice')"
+          data-testid="practice-case-card"
+        >
+          <div class="archive-case__summary">
+            <div class="archive-case__identity">
+              <div class="archive-case__title-row">
+                <strong>{{ item.title }}</strong>
+                <span class="archive-case__status">{{ item.statusLabel }}</span>
+              </div>
+              <p class="archive-case__subtitle">{{ item.subtitle }}</p>
             </div>
-            <p>{{ item.detail || item.type }}</p>
+            <div class="archive-case__meta-grid">
+              <div
+                v-for="metric in item.metrics"
+                :key="metric.label"
+                class="archive-case__metric"
+              >
+                <span>{{ metric.label }}</span>
+                <strong>{{ metric.value }}</strong>
+              </div>
+            </div>
           </div>
-        </li>
-      </ol>
+          <div class="archive-case__stages">
+            <span
+              v-for="stage in item.stages"
+              :key="stage.key"
+              class="archive-case__stage"
+            >
+              {{ stage.label }} {{ stage.count }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="archive-case__toggle"
+            :aria-expanded="isExpanded(item.id)"
+            data-testid="practice-case-toggle"
+            @click="toggleCase(item.id)"
+          >
+            {{ isExpanded(item.id) ? '收起案例' : '展开案例' }}
+          </button>
+          <div v-if="isExpanded(item.id)" class="archive-case__details">
+            <ol class="archive-event-list">
+              <li
+                v-for="event in item.events"
+                :key="event.id"
+                class="archive-event"
+              >
+                <div class="archive-event__head">
+                  <strong>{{ event.label }}</strong>
+                  <span>{{ event.timestamp }}</span>
+                </div>
+                <p class="archive-event__detail">{{ event.detail }}</p>
+                <div class="archive-event__meta">
+                  <span>{{ event.stageLabel }}</span>
+                  <span v-if="event.meta">{{ event.meta }}</span>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </article>
+      </div>
     </article>
 
     <article class="archive-panel teacher-surface-section">
       <header class="archive-panel__header">
         <div>
-          <div class="archive-panel__eyebrow">Evidence</div>
-          <h3 class="archive-panel__title">攻防证据链</h3>
+          <div class="archive-panel__eyebrow">AWD Review</div>
+          <h3 class="archive-panel__title">AWD 复盘</h3>
         </div>
+        <p class="archive-panel__hint">
+          以题目和目标队伍为单位收束对抗过程，突出命中结果、得分和攻击节奏。
+        </p>
       </header>
-      <div v-if="evidence.length === 0" class="archive-panel__empty">暂无证据链事件。</div>
-      <div v-else class="evidence-list">
+      <div
+        v-if="caseGroups.awdCases.length === 0"
+        class="archive-panel__empty"
+      >
+        暂无 AWD 对抗案例。
+      </div>
+      <div v-else class="case-list">
         <article
-          v-for="item in evidence"
-          :key="`${item.type}-${item.challenge_id}-${item.timestamp}`"
-          class="evidence-item"
+          v-for="item in caseGroups.awdCases"
+          :key="item.id"
+          :class="cardClass(item, 'awd')"
+          data-testid="awd-case-card"
         >
-          <div class="evidence-item__head">
-            <strong>{{ item.title }}</strong>
-            <span>{{ item.timestamp }}</span>
+          <div class="archive-case__summary">
+            <div class="archive-case__identity">
+              <div class="archive-case__title-row">
+                <strong>{{ item.title }}</strong>
+                <span class="archive-case__status">{{ item.statusLabel }}</span>
+              </div>
+              <p class="archive-case__subtitle">{{ item.subtitle }}</p>
+            </div>
+            <div class="archive-case__meta-grid">
+              <div
+                v-for="metric in item.metrics"
+                :key="metric.label"
+                class="archive-case__metric"
+              >
+                <span>{{ metric.label }}</span>
+                <strong>{{ metric.value }}</strong>
+              </div>
+            </div>
           </div>
-          <p class="evidence-item__detail">{{ item.detail || item.type }}</p>
-          <div class="evidence-item__meta">
-            <span>challenge #{{ item.challenge_id }}</span>
-            <span>{{ item.type }}</span>
+          <div class="archive-case__stages">
+            <span
+              v-for="stage in item.stages"
+              :key="stage.key"
+              class="archive-case__stage"
+            >
+              {{ stage.label }} {{ stage.count }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="archive-case__toggle"
+            :aria-expanded="isExpanded(item.id)"
+            @click="toggleCase(item.id)"
+          >
+            {{ isExpanded(item.id) ? '收起案例' : '展开案例' }}
+          </button>
+          <div v-if="isExpanded(item.id)" class="archive-case__details">
+            <ol class="archive-event-list">
+              <li
+                v-for="event in item.events"
+                :key="event.id"
+                class="archive-event"
+              >
+                <div class="archive-event__head">
+                  <strong>{{ event.label }}</strong>
+                  <span>{{ event.timestamp }}</span>
+                </div>
+                <p class="archive-event__detail">{{ event.detail }}</p>
+                <div class="archive-event__meta">
+                  <span>{{ event.stageLabel }}</span>
+                  <span v-if="event.meta">{{ event.meta }}</span>
+                </div>
+              </li>
+            </ol>
           </div>
         </article>
       </div>
@@ -61,10 +216,9 @@ defineProps<{
 </template>
 
 <style scoped>
-.archive-grid {
+.archive-section-stack {
   display: grid;
   gap: var(--space-5);
-  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
 }
 
 .archive-panel {
@@ -93,75 +247,172 @@ defineProps<{
   color: var(--journal-ink);
 }
 
+.archive-panel__hint {
+  max-width: 30rem;
+  color: var(--journal-muted);
+  font-size: var(--font-size-0-92);
+  line-height: 1.7;
+}
+
 .archive-panel__empty {
   padding: var(--space-4) 0;
   color: var(--color-text-secondary);
 }
 
-.timeline-list {
+.case-list {
+  display: grid;
+  gap: var(--space-4);
   margin-top: var(--space-4);
 }
 
-.timeline-item {
+.archive-case {
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 97%, var(--color-bg-base))
+  );
+  padding: var(--space-4);
+}
+
+.archive-case--practice.archive-case--success {
+  border-color: color-mix(in srgb, var(--journal-accent) 28%, var(--journal-border));
+}
+
+.archive-case--practice.archive-case--warning,
+.archive-case--awd.archive-case--warning {
+  border-color: color-mix(in srgb, var(--color-warning) 22%, var(--journal-border));
+}
+
+.archive-case--awd.archive-case--success {
+  border-color: color-mix(in srgb, var(--color-success) 24%, var(--journal-border));
+}
+
+.archive-case__summary {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: var(--space-3-5);
-  padding-bottom: var(--space-4);
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
 }
 
-.timeline-item__dot {
-  width: 10px;
-  height: 10px;
-  margin-top: var(--space-2);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--journal-accent) 8%, transparent);
-}
-
-.timeline-item__head,
-.evidence-item__head,
-.evidence-item__meta {
+.archive-case__title-row,
+.archive-event__head,
+.archive-event__meta {
   display: flex;
-  gap: var(--space-3);
   justify-content: space-between;
+  gap: var(--space-3);
   align-items: center;
   flex-wrap: wrap;
 }
 
-.timeline-item__head span,
-.evidence-item__head span,
-.evidence-item__meta {
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
-  font-family: var(--font-family-mono);
+.archive-case__title-row strong {
+  font-size: var(--font-size-1-10);
+  color: var(--journal-ink);
 }
 
-.timeline-item__body p,
-.evidence-item__detail {
-  margin-top: var(--space-2);
-  line-height: 1.75;
+.archive-case__status,
+.archive-case__stage,
+.archive-event__meta,
+.archive-case__metric span,
+.archive-event__head span {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-0-80);
+  color: var(--journal-muted);
+}
+
+.archive-case__subtitle {
+  margin-top: var(--space-1-5);
   color: color-mix(in srgb, var(--journal-muted) 82%, var(--journal-ink));
 }
 
-.evidence-list {
+.archive-case__meta-grid {
   display: grid;
-  gap: var(--space-3-5);
+  gap: var(--space-3);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.archive-case__metric {
+  padding: var(--space-3) var(--space-3-5);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+  background: color-mix(in srgb, var(--journal-surface-subtle) 92%, var(--color-bg-base));
+}
+
+.archive-case__metric strong {
+  display: block;
+  margin-top: var(--space-1-5);
+  color: var(--journal-ink);
+  font-size: var(--font-size-0-95);
+}
+
+.archive-case__stages {
+  display: flex;
+  gap: var(--space-2-5);
+  flex-wrap: wrap;
   margin-top: var(--space-4);
 }
 
-.evidence-item {
-  padding: var(--space-4) var(--space-4);
+.archive-case__stage {
+  padding: var(--space-1-5) var(--space-3);
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  border-radius: 18px;
-  background: var(--journal-surface);
+  background: color-mix(in srgb, var(--journal-surface) 90%, var(--color-bg-base));
 }
 
-.evidence-item__meta {
+.archive-case__toggle {
+  margin-top: var(--space-4);
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  background: transparent;
+  color: var(--journal-ink);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.archive-case__toggle:hover,
+.archive-case__toggle:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 36%, var(--journal-border));
+  background: color-mix(in srgb, var(--journal-accent) 6%, transparent);
+}
+
+.archive-case__details {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed color-mix(in srgb, var(--journal-border) 84%, transparent);
+}
+
+.archive-event-list {
+  display: grid;
+  gap: var(--space-3-5);
+}
+
+.archive-event {
+  padding: var(--space-3-5) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--journal-surface-subtle) 93%, var(--color-bg-base));
+}
+
+.archive-event__detail {
+  margin-top: var(--space-2);
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--journal-muted) 80%, var(--journal-ink));
+}
+
+.archive-event__meta {
   margin-top: var(--space-2-5);
 }
 
 @media (max-width: 1023px) {
-  .archive-grid {
+  .archive-panel__header,
+  .archive-case__summary {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .archive-case__meta-grid {
     grid-template-columns: 1fr;
   }
 }

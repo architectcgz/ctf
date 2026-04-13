@@ -137,7 +137,6 @@ describe('workspace page header styles', () => {
     expectNoLocalTitleTypography(challengePackageFormatSource, '.hero-title')
     expectNoLocalTitleTypography(cheatDetectionSource, '.hero-title')
     expectNoLocalTitleTypography(skillProfileSource, '.journal-page-title')
-    expectNoLocalTitleTypography(reportExportSource, '.report-title')
     expectNoLocalTitleTypography(classManagementPageSource, '.teacher-title')
     expectNoLocalTitleTypography(classStudentsPageSource, '.teacher-title')
     expectNoLocalTitleTypography(studentAnalysisPageSource, '.teacher-title')
@@ -159,7 +158,6 @@ describe('workspace page header styles', () => {
     expectNoLocalCopyTypography(studentAnalysisPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(studentManagementPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(teacherInstanceManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(reportExportSource, '.report-copy')
     expectNoLocalCopyTypography(topologyStudioSource, '.topology-page--template-library .topology-hero-description')
   })
 

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -23,6 +25,7 @@ import (
 type testReportRepository struct {
 	db              *gorm.DB
 	users           map[int64]*assessmentdomain.ReportUser
+	contests        map[int64]*model.Contest
 	personalStats   *assessmentdomain.PersonalReportStats
 	totalChallenges int64
 	timeline        []assessmentdomain.ReviewArchiveTimelineEvent
@@ -76,7 +79,14 @@ func (r *testReportRepository) FindUserByID(ctx context.Context, userID int64) (
 	return &user, nil
 }
 
-func (r *testReportRepository) FindContestByID(context.Context, int64) (*model.Contest, error) {
+func (r *testReportRepository) FindContestByID(ctx context.Context, contestID int64) (*model.Contest, error) {
+	if r != nil && r.contests != nil {
+		contest, ok := r.contests[contestID]
+		if !ok {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return contest, nil
+	}
 	return nil, gorm.ErrRecordNotFound
 }
 
@@ -165,8 +175,134 @@ func (r *testAssessmentProfileReader) GetSkillProfileWithContext(context.Context
 	return r.resp, nil
 }
 
+type testAWDReviewExportBuilder struct {
+	wait    <-chan struct{}
+	archive *dto.TeacherAWDReviewArchiveResp
+}
+
+func (b *testAWDReviewExportBuilder) BuildArchive(ctx context.Context, requesterID, contestID int64, roundNumber *int) (*dto.TeacherAWDReviewArchiveResp, error) {
+	if b != nil && b.wait != nil {
+		select {
+		case <-b.wait:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	if b != nil && b.archive != nil {
+		return b.archive, nil
+	}
+
+	generatedAt := time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC)
+	selectedRoundNumber := 0
+	if roundNumber != nil {
+		selectedRoundNumber = *roundNumber
+	}
+	if selectedRoundNumber <= 0 {
+		selectedRoundNumber = 1
+	}
+
+	return &dto.TeacherAWDReviewArchiveResp{
+		GeneratedAt: generatedAt,
+		Scope: dto.TeacherAWDReviewScopeResp{
+			SnapshotType: "final",
+			RequestedBy:  requesterID,
+			RequestedID:  contestID,
+		},
+		Contest: dto.TeacherAWDReviewContestMetaResp{
+			ID:         contestID,
+			Title:      "awd-review",
+			Mode:       model.ContestModeAWD,
+			Status:     model.ContestStatusEnded,
+			RoundCount: 1,
+			TeamCount:  1,
+		},
+		Overview: &dto.TeacherAWDReviewOverviewResp{
+			RoundCount:   1,
+			TeamCount:    1,
+			ServiceCount: 1,
+			AttackCount:  1,
+			TrafficCount: 1,
+		},
+		Rounds: []dto.TeacherAWDReviewRoundResp{{
+			ID:           1,
+			ContestID:    contestID,
+			RoundNumber:  selectedRoundNumber,
+			Status:       model.AWDRoundStatusFinished,
+			ServiceCount: 1,
+			AttackCount:  1,
+			TrafficCount: 1,
+		}},
+		SelectedRound: &dto.TeacherAWDSelectedRoundResp{
+			Round: dto.TeacherAWDReviewRoundResp{
+				ID:           1,
+				ContestID:    contestID,
+				RoundNumber:  selectedRoundNumber,
+				Status:       model.AWDRoundStatusFinished,
+				ServiceCount: 1,
+				AttackCount:  1,
+				TrafficCount: 1,
+			},
+			Teams: []dto.TeacherAWDReviewTeamResp{{
+				TeamID:      1,
+				TeamName:    "blue",
+				CaptainID:   1,
+				TotalScore:  100,
+				MemberCount: 1,
+			}},
+			Services: []dto.TeacherAWDReviewServiceResp{{
+				ID:             1,
+				RoundID:        1,
+				TeamID:         1,
+				TeamName:       "blue",
+				ChallengeID:    1,
+				ChallengeTitle: "web",
+				ServiceStatus:  model.AWDServiceStatusUp,
+			}},
+			Attacks: []dto.TeacherAWDReviewAttackResp{{
+				ID:               1,
+				RoundID:          1,
+				AttackerTeamID:   1,
+				AttackerTeamName: "blue",
+				VictimTeamID:     2,
+				VictimTeamName:   "red",
+				ChallengeID:      1,
+				ChallengeTitle:   "web",
+				AttackType:       model.AWDAttackTypeFlagCapture,
+				Source:           model.AWDAttackSourceManual,
+			}},
+			Traffic: []dto.TeacherAWDReviewTrafficResp{{
+				ID:               1,
+				ContestID:        contestID,
+				RoundID:          1,
+				AttackerTeamID:   1,
+				AttackerTeamName: "blue",
+				VictimTeamID:     2,
+				VictimTeamName:   "red",
+				ChallengeID:      1,
+				ChallengeTitle:   "web",
+				Method:           "GET",
+				Path:             "/health",
+				StatusCode:       200,
+				Source:           model.AWDAttackSourceSubmission,
+			}},
+		},
+	}, nil
+}
+
 func intPtr(value int) *int {
 	return &value
+}
+
+func newTestSQLiteDB(t *testing.T) *gorm.DB {
+	t.Helper()
+
+	name := strings.NewReplacer("/", "_", " ", "_").Replace(t.Name())
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared", name)
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	return db
 }
 
 func findObservation(items []assessmentdomain.ReviewArchiveObservation, key string) *assessmentdomain.ReviewArchiveObservation {
@@ -520,6 +656,84 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 	}
 }
 
+func TestBuildReviewArchiveSummaryCountsAWDAttackEvents(t *testing.T) {
+	t.Parallel()
+
+	success := true
+	now := time.Date(2026, 4, 13, 15, 0, 0, 0, time.UTC)
+
+	summary := buildReviewArchiveSummary(
+		6,
+		&assessmentdomain.PersonalReportStats{
+			TotalScore:    150,
+			TotalSolved:   1,
+			TotalAttempts: 3,
+			Rank:          1,
+		},
+		[]assessmentdomain.ReviewArchiveTimelineEvent{
+			{
+				Type:        "awd_attack_submit",
+				ChallengeID: 91,
+				Title:       "awd-web",
+				Timestamp:   now,
+				IsCorrect:   &success,
+				Points:      intPtr(150),
+				Detail:      "AWD 攻击命中 blue-team，得分 150",
+			},
+		},
+		nil,
+		nil,
+		nil,
+	)
+
+	if summary.CorrectSubmissionCount != 1 {
+		t.Fatalf("expected AWD timeline event counted as correct submission, got %+v", summary)
+	}
+	if summary.LastActivityAt == nil || !summary.LastActivityAt.Equal(now) {
+		t.Fatalf("expected last activity at %s, got %+v", now, summary.LastActivityAt)
+	}
+}
+
+func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 4, 13, 15, 30, 0, 0, time.UTC)
+	evidence := []assessmentdomain.ReviewArchiveEvidenceEvent{
+		{
+			Type:        "awd_attack_submission",
+			ChallengeID: 101,
+			Title:       "awd-pwn",
+			Timestamp:   now.Add(-2 * time.Minute),
+			Detail:      "AWD 攻击未命中 red-team",
+			Meta:        map[string]any{"is_success": false, "event_stage": "exploit"},
+		},
+		{
+			Type:        "awd_attack_submission",
+			ChallengeID: 101,
+			Title:       "awd-pwn",
+			Timestamp:   now.Add(-1 * time.Minute),
+			Detail:      "AWD 攻击未命中 blue-team",
+			Meta:        map[string]any{"is_success": false, "event_stage": "exploit"},
+		},
+	}
+
+	observations := buildReviewArchiveObservations(
+		assessmentdomain.ReviewArchiveSummary{
+			CorrectSubmissionCount: 0,
+		},
+		evidence,
+		nil,
+		nil,
+	)
+
+	if findObservation(observations.Items, "submission_stability") == nil {
+		t.Fatalf("expected submission_stability observation from repeated AWD failures, got %+v", observations.Items)
+	}
+	if findObservation(observations.Items, "hands_on_activity") == nil {
+		t.Fatalf("expected hands_on_activity observation from AWD exploit evidence, got %+v", observations.Items)
+	}
+}
+
 func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 	t.Parallel()
 
@@ -531,6 +745,170 @@ func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 
 	if got := reportDownloadFileName(report); got != "contest_export-report-9.json" {
 		t.Fatalf("expected json download filename, got %s", got)
+	}
+}
+
+func TestReportServiceCreateAWDReviewArchiveExportStartsProcessingTask(t *testing.T) {
+	t.Parallel()
+
+	db := newTestSQLiteDB(t)
+	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+
+	teacher := &model.User{
+		ID:        11,
+		Username:  "teacher-awd",
+		Role:      model.RoleTeacher,
+		ClassName: "class-a",
+		Status:    model.UserStatusActive,
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("seed teacher: %v", err)
+	}
+	contest := &model.Contest{
+		ID:        21,
+		Title:     "awd-ended",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusEnded,
+		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 4, 12, 11, 0, 0, 0, time.UTC),
+	}
+	repo := &testReportRepository{
+		db: db,
+		contests: map[int64]*model.Contest{
+			contest.ID: contest,
+		},
+	}
+
+	service := NewReportService(
+		repo,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+	releaseBuilder := make(chan struct{})
+	service.SetAWDReviewExportBuilder(&testAWDReviewExportBuilder{wait: releaseBuilder})
+	t.Cleanup(func() {
+		close(releaseBuilder)
+		closeCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = service.Close(closeCtx)
+	})
+
+	resp, err := service.CreateTeacherAWDReviewArchive(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{
+		RoundNumber: intPtr(2),
+	})
+	if err != nil {
+		t.Fatalf("CreateTeacherAWDReviewArchive() error = %v", err)
+	}
+	if resp.Status != model.ReportStatusProcessing {
+		t.Fatalf("expected processing status, got %+v", resp)
+	}
+
+	var report model.Report
+	if err := db.First(&report, "id = ?", resp.ReportID).Error; err != nil {
+		t.Fatalf("load report: %v", err)
+	}
+	if report.Type != model.ReportTypeAWDReviewArchive {
+		t.Fatalf("expected report type %s, got %+v", model.ReportTypeAWDReviewArchive, report)
+	}
+	if report.Format != model.ReportFormatZIP {
+		t.Fatalf("expected report format %s, got %+v", model.ReportFormatZIP, report)
+	}
+	if report.UserID == nil || *report.UserID != teacher.ID {
+		t.Fatalf("expected report user_id %d, got %+v", teacher.ID, report)
+	}
+}
+
+func TestReportServiceCreateAWDReviewReportExportRejectsRunningContest(t *testing.T) {
+	t.Parallel()
+
+	db := newTestSQLiteDB(t)
+	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
+		t.Fatalf("migrate sqlite: %v", err)
+	}
+
+	teacher := &model.User{
+		ID:        12,
+		Username:  "teacher-running",
+		Role:      model.RoleTeacher,
+		ClassName: "class-a",
+		Status:    model.UserStatusActive,
+	}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("seed teacher: %v", err)
+	}
+	contest := &model.Contest{
+		ID:        22,
+		Title:     "awd-running",
+		Mode:      model.ContestModeAWD,
+		Status:    model.ContestStatusRunning,
+		StartTime: time.Date(2026, 4, 12, 9, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2026, 4, 12, 12, 0, 0, 0, time.UTC),
+	}
+	repo := &testReportRepository{
+		db: db,
+		contests: map[int64]*model.Contest{
+			contest.ID: contest,
+		},
+	}
+
+	service := NewReportService(
+		repo,
+		nil,
+		config.ReportConfig{
+			StorageDir:    t.TempDir(),
+			DefaultFormat: model.ReportFormatPDF,
+			MaxWorkers:    1,
+		},
+		nil,
+	)
+
+	_, err := service.CreateTeacherAWDReviewReport(context.Background(), teacher.ID, contest.ID, &dto.CreateTeacherAWDReviewExportReq{})
+	appErr, ok := err.(*errcode.AppError)
+	if !ok || appErr.Code != errcode.ErrInvalidParams.Code {
+		t.Fatalf("expected invalid params error, got %#v", err)
+	}
+
+	var count int64
+	if err := db.Model(&model.Report{}).Count(&count).Error; err != nil {
+		t.Fatalf("count reports: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected no report rows to be created, got %d", count)
+	}
+}
+
+func TestReportDownloadFileNameUsesZIPForAWDReviewArchive(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     10,
+		Type:   model.ReportTypeAWDReviewArchive,
+		Format: model.ReportFormatJSON,
+	}
+
+	if got := reportDownloadFileName(report); got != "awd_review_archive-report-10.zip" {
+		t.Fatalf("expected zip download filename, got %s", got)
+	}
+}
+
+func TestReportDownloadFileNameUsesPDFForAWDReviewReport(t *testing.T) {
+	t.Parallel()
+
+	report := &model.Report{
+		ID:     11,
+		Type:   model.ReportTypeAWDReviewReport,
+		Format: model.ReportFormatJSON,
+	}
+
+	if got := reportDownloadFileName(report); got != "awd_review_report-report-11.pdf" {
+		t.Fatalf("expected pdf download filename, got %s", got)
 	}
 }
 
@@ -557,10 +935,7 @@ func TestValidateClassReportAccess(t *testing.T) {
 func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 	t.Parallel()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
+	db := newTestSQLiteDB(t)
 	if err := db.AutoMigrate(&model.User{}, &model.Report{}); err != nil {
 		t.Fatalf("migrate sqlite: %v", err)
 	}
@@ -587,7 +962,7 @@ func TestCreateClassReportRejectsCrossClassTeacherRequest(t *testing.T) {
 		nil,
 	)
 
-	_, err = service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
+	_, err := service.CreateClassReport(context.Background(), teacher.ID, &dto.CreateClassReportReq{
 		ClassName: "class-b",
 		Format:    model.ReportFormatPDF,
 	})

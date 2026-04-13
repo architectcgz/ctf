@@ -14,6 +14,7 @@ import (
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
 	assessmentdomain "ctf-platform/internal/module/assessment/domain"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
 	platformevents "ctf-platform/internal/platform/events"
@@ -49,6 +50,13 @@ func (s *RecommendationService) RegisterPracticeEventConsumers(bus platformevent
 	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeCacheRefreshEvent)
 }
 
+func (s *RecommendationService) RegisterContestEventConsumers(bus platformevents.Bus) {
+	if s == nil || bus == nil {
+		return
+	}
+	bus.Subscribe(contestcontracts.EventAWDAttackAccepted, s.handleContestCacheRefreshEvent)
+}
+
 func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
 	if s.redis == nil {
 		return nil
@@ -65,6 +73,21 @@ func (s *RecommendationService) handlePracticeCacheRefreshEvent(ctx context.Cont
 		return nil
 	}
 	return s.redis.Del(ctx, rediskeys.RecommendationKey(userID)).Err()
+}
+
+func (s *RecommendationService) handleContestCacheRefreshEvent(ctx context.Context, evt platformevents.Event) error {
+	if s.redis == nil {
+		return nil
+	}
+
+	payload, ok := evt.Payload.(contestcontracts.AWDAttackAcceptedEvent)
+	if !ok {
+		return fmt.Errorf("unexpected contest awd cache refresh payload: %T", evt.Payload)
+	}
+	if payload.UserID <= 0 {
+		return nil
+	}
+	return s.redis.Del(ctx, rediskeys.RecommendationKey(payload.UserID)).Err()
 }
 
 func (s *RecommendationService) GetWeakDimensions(userID int64) ([]string, error) {

@@ -22,6 +22,34 @@ func NewReportRepository(db *gorm.DB) *ReportRepository {
 	return &ReportRepository{db: db}
 }
 
+func reportSolvedChallengesCTE() string {
+	return fmt.Sprintf(`
+		solved_challenges AS (
+			SELECT DISTINCT s.user_id AS user_id, s.challenge_id AS challenge_id
+			FROM submissions s
+			WHERE s.is_correct = TRUE AND s.contest_id IS NULL
+			UNION
+			SELECT DISTINCT aal.submitted_by_user_id AS user_id, aal.challenge_id AS challenge_id
+			FROM awd_attack_logs aal
+			WHERE aal.submitted_by_user_id IS NOT NULL
+				AND aal.source = '%s'
+				AND aal.is_success = TRUE
+				AND aal.score_gained > 0
+		)
+	`, model.AWDAttackSourceSubmission)
+}
+
+func reportAWDAttackDetailSQL(successExpr, victimTeamNameExpr, scoreExpr string) string {
+	return fmt.Sprintf(
+		"CASE WHEN %s THEN 'AWD 攻击命中 ' || COALESCE(%s, '目标队伍') || CASE WHEN %s > 0 THEN '，得分 ' || CAST(%s AS TEXT) ELSE '' END ELSE 'AWD 攻击未命中 ' || COALESCE(%s, '目标队伍') END",
+		successExpr,
+		victimTeamNameExpr,
+		scoreExpr,
+		scoreExpr,
+		victimTeamNameExpr,
+	)
+}
+
 func (r *ReportRepository) Create(ctx context.Context, report *model.Report) error {
 	return r.db.WithContext(ctx).Create(report).Error
 }
@@ -84,23 +112,20 @@ func (r *ReportRepository) FindContestByID(ctx context.Context, contestID int64)
 
 func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (*assessmentdomain.PersonalReportStats, error) {
 	var stats assessmentdomain.PersonalReportStats
-	err := r.db.WithContext(ctx).Raw(`
-		WITH solved AS (
-			SELECT DISTINCT challenge_id
-			FROM submissions
-			WHERE user_id = ? AND is_correct = TRUE AND contest_id IS NULL
+	query := fmt.Sprintf(`
+		WITH %s,
+		user_solved AS (
+			SELECT sc.challenge_id
+			FROM solved_challenges sc
+			WHERE sc.user_id = ?
 		),
 		user_scores AS (
 			SELECT
 				u.id AS user_id,
 				COALESCE(SUM(c.points), 0) AS total_score
 			FROM users u
-			LEFT JOIN (
-				SELECT DISTINCT user_id, challenge_id
-				FROM submissions
-				WHERE is_correct = TRUE AND contest_id IS NULL
-			) solved_challenges ON solved_challenges.user_id = u.id
-			LEFT JOIN challenges c ON c.id = solved_challenges.challenge_id AND c.status = 'published'
+			LEFT JOIN solved_challenges sc ON sc.user_id = u.id
+			LEFT JOIN challenges c ON c.id = sc.challenge_id AND c.status = 'published'
 			WHERE u.deleted_at IS NULL
 			GROUP BY u.id
 		),
@@ -111,17 +136,27 @@ func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (
 		SELECT
 			COALESCE((
 				SELECT SUM(c.points)
-				FROM solved s
-				JOIN challenges c ON c.id = s.challenge_id AND c.status = 'published'
+				FROM user_solved us
+				JOIN challenges c ON c.id = us.challenge_id AND c.status = 'published'
 			), 0) AS total_score,
-			COALESCE((SELECT COUNT(*) FROM solved), 0) AS total_solved,
+			COALESCE((
+				SELECT COUNT(*)
+				FROM user_solved us
+				JOIN challenges c ON c.id = us.challenge_id AND c.status = 'published'
+			), 0) AS total_solved,
 			COALESCE((
 				SELECT COUNT(*)
 				FROM submissions
 				WHERE user_id = ? AND contest_id IS NULL
+			), 0) + COALESCE((
+				SELECT COUNT(*)
+				FROM awd_attack_logs aal
+				WHERE aal.submitted_by_user_id = ?
+					AND aal.source = '%s'
 			), 0) AS total_attempts,
 			COALESCE((SELECT rank FROM ranked WHERE user_id = ?), 1) AS rank
-	`, userID, userID, userID).Scan(&stats).Error
+	`, reportSolvedChallengesCTE(), model.AWDAttackSourceSubmission)
+	err := r.db.WithContext(ctx).Raw(query, userID, userID, userID, userID).Scan(&stats).Error
 	if err != nil {
 		return nil, err
 	}
@@ -130,20 +165,24 @@ func (r *ReportRepository) GetPersonalStats(ctx context.Context, userID int64) (
 
 func (r *ReportRepository) ListPersonalDimensionStats(ctx context.Context, userID int64) ([]assessmentdomain.ReportDimensionStat, error) {
 	stats := make([]assessmentdomain.ReportDimensionStat, 0)
-	err := r.db.WithContext(ctx).Raw(`
+	query := fmt.Sprintf(`
+		WITH %s,
+		user_solved AS (
+			SELECT sc.challenge_id
+			FROM solved_challenges sc
+			WHERE sc.user_id = ?
+		)
 		SELECT
 			c.category AS dimension,
-			COUNT(DISTINCT CASE
-				WHEN s.user_id = ? AND s.is_correct = TRUE AND s.contest_id IS NULL
-				THEN c.id
-			END) AS solved,
+			COUNT(DISTINCT CASE WHEN us.challenge_id IS NOT NULL THEN c.id END) AS solved,
 			COUNT(DISTINCT c.id) AS total
 		FROM challenges c
-		LEFT JOIN submissions s ON s.challenge_id = c.id
+		LEFT JOIN user_solved us ON us.challenge_id = c.id
 		WHERE c.status = 'published'
 		GROUP BY c.category
 		ORDER BY c.category
-	`, userID).Scan(&stats).Error
+	`, reportSolvedChallengesCTE())
+	err := r.db.WithContext(ctx).Raw(query, userID).Scan(&stats).Error
 	return stats, err
 }
 
@@ -157,24 +196,22 @@ func (r *ReportRepository) CountClassStudents(ctx context.Context, className str
 
 func (r *ReportRepository) GetClassAverageScore(ctx context.Context, className string) (float64, error) {
 	var avgScore float64
-	err := r.db.WithContext(ctx).Raw(`
-		WITH user_scores AS (
+	query := fmt.Sprintf(`
+		WITH %s,
+		user_scores AS (
 			SELECT
 				u.id AS user_id,
 				COALESCE(SUM(c.points), 0) AS total_score
 			FROM users u
-			LEFT JOIN (
-				SELECT DISTINCT user_id, challenge_id
-				FROM submissions
-				WHERE is_correct = TRUE AND contest_id IS NULL
-			) solved ON solved.user_id = u.id
-			LEFT JOIN challenges c ON c.id = solved.challenge_id AND c.status = 'published'
+			LEFT JOIN solved_challenges sc ON sc.user_id = u.id
+			LEFT JOIN challenges c ON c.id = sc.challenge_id AND c.status = 'published'
 			WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
 			GROUP BY u.id
 		)
 		SELECT COALESCE(AVG(total_score), 0) AS avg_score
 		FROM user_scores
-	`, className, model.RoleStudent).Scan(&avgScore).Error
+	`, reportSolvedChallengesCTE())
+	err := r.db.WithContext(ctx).Raw(query, className, model.RoleStudent).Scan(&avgScore).Error
 	return avgScore, err
 }
 
@@ -193,19 +230,16 @@ func (r *ReportRepository) ListClassDimensionAverages(ctx context.Context, class
 
 func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className string, limit int) ([]assessmentdomain.ClassTopStudent, error) {
 	rows := make([]assessmentdomain.ClassTopStudent, 0)
-	err := r.db.WithContext(ctx).Raw(`
-		WITH user_scores AS (
+	query := fmt.Sprintf(`
+		WITH %s,
+		user_scores AS (
 			SELECT
 				u.id AS user_id,
 				u.username,
 				COALESCE(SUM(c.points), 0) AS total_score
 			FROM users u
-			LEFT JOIN (
-				SELECT DISTINCT user_id, challenge_id
-				FROM submissions
-				WHERE is_correct = TRUE AND contest_id IS NULL
-			) solved ON solved.user_id = u.id
-			LEFT JOIN challenges c ON c.id = solved.challenge_id AND c.status = 'published'
+			LEFT JOIN solved_challenges sc ON sc.user_id = u.id
+			LEFT JOIN challenges c ON c.id = sc.challenge_id AND c.status = 'published'
 			WHERE u.class_name = ? AND u.role = ? AND u.deleted_at IS NULL
 			GROUP BY u.id, u.username
 		)
@@ -217,7 +251,8 @@ func (r *ReportRepository) ListClassTopStudents(ctx context.Context, className s
 		FROM user_scores
 		ORDER BY total_score DESC, user_id ASC
 		LIMIT ?
-	`, className, model.RoleStudent, limit).Scan(&rows).Error
+	`, reportSolvedChallengesCTE())
+	err := r.db.WithContext(ctx).Raw(query, className, model.RoleStudent, limit).Scan(&rows).Error
 	return rows, err
 }
 
@@ -396,7 +431,7 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 	}
 
 	rows := make([]assessmentdomain.ReviewArchiveTimelineEvent, 0)
-	err := r.db.WithContext(ctx).Raw(`
+	err := r.db.WithContext(ctx).Raw(fmt.Sprintf(`
 		SELECT
 			events.type,
 			events.challenge_id,
@@ -436,11 +471,22 @@ func (r *ReportRepository) GetStudentTimeline(ctx context.Context, userID int64,
 				'结束练习实例' AS detail
 			FROM instances i
 			WHERE i.user_id = ? AND i.status IN ('stopped', 'expired', 'destroyed')
+			UNION ALL
+			SELECT
+				'awd_attack_submit' AS type,
+				al.challenge_id,
+				al.created_at AS timestamp,
+				al.is_success AS is_correct,
+				CASE WHEN al.score_gained > 0 THEN al.score_gained ELSE NULL END AS points,
+				%s AS detail
+			FROM awd_attack_logs al
+			LEFT JOIN teams vt ON vt.id = al.victim_team_id
+			WHERE al.submitted_by_user_id = ? AND al.source = '%s'
 		) events
 		LEFT JOIN challenges c ON c.id = events.challenge_id
 		ORDER BY events.timestamp DESC
 		LIMIT ? OFFSET ?
-	`, userID, userID, userID, limit, offset).Scan(&rows).Error
+	`, reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained"), model.AWDAttackSourceSubmission), userID, userID, userID, userID, limit, offset).Scan(&rows).Error
 	return rows, err
 }
 
@@ -551,6 +597,56 @@ func (r *ReportRepository) GetStudentEvidence(ctx context.Context, userID int64,
 				"event_stage": "submit",
 				"is_correct":  row.IsCorrect,
 				"points":      row.Points,
+			},
+		})
+	}
+
+	awdRows := make([]struct {
+		RoundID        int64     `gorm:"column:round_id"`
+		VictimTeamID   int64     `gorm:"column:victim_team_id"`
+		VictimTeamName string    `gorm:"column:victim_team_name"`
+		ChallengeID    int64     `gorm:"column:challenge_id"`
+		Title          string    `gorm:"column:title"`
+		Timestamp      time.Time `gorm:"column:timestamp"`
+		IsSuccess      bool      `gorm:"column:is_success"`
+		ScoreGained    int       `gorm:"column:score_gained"`
+		Detail         string    `gorm:"column:detail"`
+	}, 0)
+	awdQuery := r.db.WithContext(ctx).Table("awd_attack_logs AS al").
+		Select(strings.Join([]string{
+			"al.round_id AS round_id",
+			"al.victim_team_id AS victim_team_id",
+			"COALESCE(vt.name, '') AS victim_team_name",
+			"al.challenge_id AS challenge_id",
+			"COALESCE(c.title, '') AS title",
+			"al.created_at AS timestamp",
+			"al.is_success AS is_success",
+			"al.score_gained AS score_gained",
+			reportAWDAttackDetailSQL("al.is_success", "vt.name", "al.score_gained") + " AS detail",
+		}, ", ")).
+		Joins("LEFT JOIN teams vt ON vt.id = al.victim_team_id").
+		Joins("LEFT JOIN challenges c ON c.id = al.challenge_id").
+		Where("al.submitted_by_user_id = ? AND al.source = ?", userID, model.AWDAttackSourceSubmission)
+	if challengeID != nil {
+		awdQuery = awdQuery.Where("al.challenge_id = ?", *challengeID)
+	}
+	if err := awdQuery.Order("al.created_at ASC").Scan(&awdRows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range awdRows {
+		events = append(events, assessmentdomain.ReviewArchiveEvidenceEvent{
+			Type:        "awd_attack_submission",
+			ChallengeID: row.ChallengeID,
+			Title:       row.Title,
+			Timestamp:   row.Timestamp,
+			Detail:      row.Detail,
+			Meta: map[string]any{
+				"event_stage":      "exploit",
+				"is_success":       row.IsSuccess,
+				"score_gained":     row.ScoreGained,
+				"round_id":         row.RoundID,
+				"victim_team_id":   row.VictimTeamID,
+				"victim_team_name": row.VictimTeamName,
 			},
 		})
 	}

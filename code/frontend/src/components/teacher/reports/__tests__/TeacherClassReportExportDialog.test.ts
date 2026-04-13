@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { flushPromises, mount } from '@vue/test-utils'
 
-import ReportExport from '../ReportExport.vue'
+import TeacherClassReportExportDialog from '../TeacherClassReportExportDialog.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const {
@@ -36,12 +36,12 @@ vi.mock('@/api/assessment', () => ({
   getReportStatus: getReportStatusMock,
 }))
 
-describe('ReportExport', () => {
+describe('TeacherClassReportExportDialog', () => {
   let pinia: ReturnType<typeof createPinia>
 
   const dialogStub = {
     props: ['modelValue'],
-    template: '<div v-if="modelValue"><slot name="header" /><slot /></div>',
+    template: '<div v-if="modelValue"><slot name="header" /><slot /><slot name="footer" /></div>',
   }
 
   beforeEach(() => {
@@ -119,7 +119,31 @@ describe('ReportExport', () => {
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
   })
 
-  it('应该使用默认班级创建导出任务', async () => {
+  it('打开后会加载班级预览', async () => {
+    const wrapper = mount(TeacherClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+      },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          ElDialog: dialogStub,
+          LineChart: true,
+        },
+      },
+    })
+
+    await flushPromises()
+
+    expect(getClassStudentsMock).toHaveBeenCalledWith('Class A')
+    expect(getClassReviewMock).toHaveBeenCalledWith('Class A')
+    expect(getClassSummaryMock).toHaveBeenCalledWith('Class A')
+    expect(getClassTrendMock).toHaveBeenCalledWith('Class A')
+    expect(wrapper.text()).toContain('当前班级报告预览')
+  })
+
+  it('点击创建导出任务会调用 exportClassReport', async () => {
     exportClassReportMock.mockResolvedValue({
       report_id: '101',
       status: 'processing',
@@ -130,7 +154,11 @@ describe('ReportExport', () => {
       expires_at: '2026-03-07T12:00:00Z',
     })
 
-    const wrapper = mount(ReportExport, {
+    const wrapper = mount(TeacherClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+      },
       global: {
         plugins: [pinia],
         stubs: {
@@ -142,44 +170,19 @@ describe('ReportExport', () => {
 
     await flushPromises()
 
-    expect(wrapper.element.tagName).toBe('SECTION')
-    expect(wrapper.classes()).toContain('report-shell')
-    expect(wrapper.classes()).toContain('report-hero')
-    expect(wrapper.classes()).toContain('min-h-full')
-    expect(wrapper.findAll('.report-summary-item')).toHaveLength(4)
-
-    const classInput = wrapper.find('input[type="text"]')
-    expect((classInput.element as HTMLInputElement).value).toBe('Class A')
-
-    const previewButton = wrapper
-      .findAll('button')
-      .find((button) => button.text().includes('打开报告预览'))
-    expect(previewButton).toBeTruthy()
-
-    await previewButton!.trigger('click')
-    await flushPromises()
-
-    expect(getClassStudentsMock).toHaveBeenCalledWith('Class A')
-    expect(getClassReviewMock).toHaveBeenCalledWith('Class A')
-    expect(wrapper.text()).toContain('Live Preview')
-    expect(wrapper.text()).toContain('班级活跃度需要补强')
-
-    const exportButton = wrapper
+    await wrapper
       .findAll('button')
       .find((button) => button.text().includes('创建导出任务'))
-    expect(exportButton).toBeTruthy()
-
-    await exportButton!.trigger('click')
+      ?.trigger('click')
     await flushPromises()
 
     expect(exportClassReportMock).toHaveBeenCalledWith({
       class_name: 'Class A',
       format: 'pdf',
     })
-    expect(wrapper.text()).toContain('101')
   })
 
-  it('应该在报告就绪后触发下载', async () => {
+  it('ready 状态下可下载', async () => {
     exportClassReportMock.mockResolvedValue({
       report_id: '102',
       status: 'ready',
@@ -190,7 +193,11 @@ describe('ReportExport', () => {
       filename: 'class-a-report.pdf',
     })
 
-    const wrapper = mount(ReportExport, {
+    const wrapper = mount(TeacherClassReportExportDialog, {
+      props: {
+        modelValue: true,
+        defaultClassName: 'Class A',
+      },
       global: {
         plugins: [pinia],
         stubs: {
@@ -202,16 +209,16 @@ describe('ReportExport', () => {
 
     await flushPromises()
 
-    const exportButton = wrapper
+    await wrapper
       .findAll('button')
       .find((button) => button.text().includes('创建导出任务'))
-    expect(exportButton).toBeTruthy()
-
-    await exportButton!.trigger('click')
+      ?.trigger('click')
     await flushPromises()
 
-    const actionButtons = wrapper.findAll('button')
-    await actionButtons[actionButtons.length - 1].trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载报告'))
+      ?.trigger('click')
     await flushPromises()
 
     expect(downloadReportMock).toHaveBeenCalledWith('102')
