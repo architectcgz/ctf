@@ -57,12 +57,14 @@ describe('additional error views', () => {
     expect(wrapper.text()).toContain('429')
     expect(wrapper.text()).toContain('请求过于频繁')
     expect(wrapper.text()).toContain('返回上一页')
+    expect(wrapper.text()).toContain('返回登录页')
     expect(wrapper.text()).not.toContain('通知中心')
     expect(links[0]?.props('to')).toBe('/login')
     expect(links).toHaveLength(1)
+    expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
   })
 
-  it('renders server-side failure pages with retry-first recovery actions', () => {
+  it('renders server-side failure pages with retry-first and back recovery actions', () => {
     const pages = [
       { component: InternalServerErrorView, code: '500', text: '系统内部错误' },
       { component: BadGatewayView, code: '502', text: '上游服务响应异常' },
@@ -84,10 +86,11 @@ describe('additional error views', () => {
       expect(wrapper.text()).toContain(page.code)
       expect(wrapper.text()).toContain(page.text)
       expect(wrapper.text()).toContain('刷新页面')
-      expect(wrapper.text()).toContain('返回登录页')
+      expect(wrapper.text()).toContain('返回上一页')
       expect(wrapper.text()).not.toContain('通知中心')
-      expect(links[0]?.props('to')).toBe('/login')
-      expect(links).toHaveLength(1)
+      expect(links).toHaveLength(0)
+      expect(wrapper.get('button.error-status-action-primary').text()).toContain('刷新页面')
+      expect(wrapper.get('button.error-status-action-secondary').text()).toContain('返回上一页')
     }
   })
 
