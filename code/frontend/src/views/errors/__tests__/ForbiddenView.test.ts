@@ -24,9 +24,10 @@ describe('ForbiddenView', () => {
 
     expect(wrapper.text()).toContain('403')
     expect(wrapper.text()).toContain('你当前没有访问这个区域的权限')
+    expect(wrapper.text()).toContain('返回上一页')
     expect(wrapper.find('aside').exists()).toBe(false)
     expect(links[0]?.props('to')).toBe('/login')
-    expect(links[1]?.props('to')).toBe('/notifications')
+    expect(links).toHaveLength(1)
   })
 
   it('管理员登录时应引导回管理工作台', () => {

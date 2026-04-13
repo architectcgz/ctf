@@ -1,6 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, RouterLinkStub } from '@vue/test-utils'
+
+vi.mock('@/utils/browser', () => ({
+  redirectTo: vi.fn(),
+  reloadPage: vi.fn(),
+}))
 
 import UnauthorizedView from '../UnauthorizedView.vue'
 import TooManyRequestsView from '../TooManyRequestsView.vue'
@@ -8,11 +13,14 @@ import InternalServerErrorView from '../InternalServerErrorView.vue'
 import BadGatewayView from '../BadGatewayView.vue'
 import ServiceUnavailableView from '../ServiceUnavailableView.vue'
 import GatewayTimeoutView from '../GatewayTimeoutView.vue'
+import { redirectTo, reloadPage } from '@/utils/browser'
 
 describe('additional error views', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    vi.clearAllMocks()
+    window.history.replaceState({}, '', '/')
   })
 
   it('renders 401 with login-oriented recovery action', () => {
@@ -80,5 +88,22 @@ describe('additional error views', () => {
       expect(links[0]?.props('to')).toBe('/login')
       expect(links).toHaveLength(1)
     }
+  })
+
+  it('prefers navigating back to the recorded source route when retrying from /500', async () => {
+    window.history.replaceState({}, '', '/500?from=%2Fchallenges%2F5')
+
+    const wrapper = mount(InternalServerErrorView, {
+      global: {
+        stubs: {
+          RouterLink: RouterLinkStub,
+        },
+      },
+    })
+
+    await wrapper.get('button.error-status-action-primary').trigger('click')
+
+    expect(redirectTo).toHaveBeenCalledWith('/challenges/5')
+    expect(reloadPage).not.toHaveBeenCalled()
   })
 })

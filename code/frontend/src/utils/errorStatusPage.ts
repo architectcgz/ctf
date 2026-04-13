@@ -10,6 +10,7 @@ const ERROR_STATUS_ROUTE_MAP: Record<number, string> = {
 }
 
 const AUTH_FLOW_PREFIXES = ['/auth/login', '/auth/register']
+const ERROR_STATUS_RETRY_QUERY_KEY = 'from'
 
 export function resolveErrorStatusPage(status: number | undefined): string | null {
   if (!status) return null
@@ -31,6 +32,24 @@ export function shouldRedirectToErrorStatusPage(
   return true
 }
 
+export function resolveErrorStatusRetryTarget(search: string): string | null {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+  const from = params.get(ERROR_STATUS_RETRY_QUERY_KEY)
+  if (!from || !from.startsWith('/')) return null
+  return from
+}
+
+function getCurrentLocationPath(): string {
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`
+}
+
+function buildErrorStatusRoute(route: string, currentPath: string): string {
+  const params = new URLSearchParams({
+    [ERROR_STATUS_RETRY_QUERY_KEY]: currentPath,
+  })
+  return `${route}?${params.toString()}`
+}
+
 export function redirectToErrorStatusPage(
   status: number | undefined,
   requestUrl?: string
@@ -39,6 +58,7 @@ export function redirectToErrorStatusPage(
   const route = resolveErrorStatusPage(status)
   if (!route) return false
   if (window.location.pathname === route) return false
-  redirectTo(route)
+  const currentPath = getCurrentLocationPath()
+  redirectTo(buildErrorStatusRoute(route, currentPath))
   return true
 }
