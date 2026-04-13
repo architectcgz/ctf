@@ -206,6 +206,7 @@ export interface SubmitFlagData {
   message: string
   points?: number
   submitted_at: ISODateTime
+  instance_shutdown_at?: ISODateTime
 }
 
 export type TeacherManualReviewStatus = 'pending' | 'approved' | 'rejected'

@@ -12,6 +12,8 @@ docs/*
 !docs/architecture/
 !docs/architecture/*.md
 !docs/contracts/
+!docs/refs/
+!docs/refs/*.md
 
 frontend/dist/
 frontend/node_modules/
