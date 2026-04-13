@@ -801,7 +801,7 @@ func countCorrectSubmissions(
 ) int {
 	count := 0
 	for _, item := range timeline {
-		if item.Type == "flag_submit" && item.IsCorrect != nil && *item.IsCorrect {
+		if isCorrectTimelineSubmission(item) {
 			count++
 		}
 	}
@@ -809,14 +809,7 @@ func countCorrectSubmissions(
 		return count
 	}
 	for _, item := range evidence {
-		if item.Type != "challenge_submission" {
-			continue
-		}
-		if item.Meta == nil {
-			continue
-		}
-		isCorrect, ok := item.Meta["is_correct"].(bool)
-		if ok && isCorrect {
+		if isCorrectEvidenceSubmission(item) {
 			count++
 		}
 	}
@@ -909,7 +902,7 @@ func buildReviewArchiveObservations(
 			Label:    "实操参与",
 			Level:    "good",
 			Summary:  "实操交互记录充分，具备课堂演示价值。",
-			Evidence: "证据链中包含实例访问或平台代理请求。",
+			Evidence: "证据链中包含实例访问、平台代理请求或 AWD 攻击日志。",
 		})
 	}
 
@@ -937,11 +930,8 @@ func hasApprovedManualReview(items []assessmentdomain.ReviewArchiveManualReviewI
 func hasRepeatedWrongSubmissions(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {
 	streak := 0
 	for _, item := range evidence {
-		if item.Type != "challenge_submission" || item.Meta == nil {
-			continue
-		}
-		isCorrect, ok := item.Meta["is_correct"].(bool)
-		if !ok {
+		isCorrect, tracked := extractEvidenceSubmissionResult(item)
+		if !tracked {
 			continue
 		}
 		if isCorrect {
@@ -958,11 +948,40 @@ func hasRepeatedWrongSubmissions(evidence []assessmentdomain.ReviewArchiveEviden
 
 func hasHandsOnExploit(evidence []assessmentdomain.ReviewArchiveEvidenceEvent) bool {
 	for _, item := range evidence {
-		if item.Type == "instance_access" || item.Type == "instance_proxy_request" {
+		if item.Type == "instance_access" || item.Type == "instance_proxy_request" || item.Type == "awd_attack_submission" {
 			return true
 		}
 	}
 	return false
+}
+
+func isCorrectTimelineSubmission(item assessmentdomain.ReviewArchiveTimelineEvent) bool {
+	if item.IsCorrect == nil || !*item.IsCorrect {
+		return false
+	}
+	return item.Type == "flag_submit" || item.Type == "awd_attack_submit"
+}
+
+func isCorrectEvidenceSubmission(item assessmentdomain.ReviewArchiveEvidenceEvent) bool {
+	isCorrect, tracked := extractEvidenceSubmissionResult(item)
+	return tracked && isCorrect
+}
+
+func extractEvidenceSubmissionResult(item assessmentdomain.ReviewArchiveEvidenceEvent) (bool, bool) {
+	if item.Meta == nil {
+		return false, false
+	}
+
+	switch item.Type {
+	case "challenge_submission":
+		isCorrect, ok := item.Meta["is_correct"].(bool)
+		return isCorrect, ok
+	case "awd_attack_submission":
+		isCorrect, ok := item.Meta["is_success"].(bool)
+		return isCorrect, ok
+	default:
+		return false, false
+	}
 }
 
 func (s *ReportService) renderReport(filePath, format string, data any) error {

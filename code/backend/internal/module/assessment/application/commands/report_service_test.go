@@ -656,6 +656,84 @@ func TestBuildStudentReviewArchiveDataIncludesTeachingObservations(t *testing.T)
 	}
 }
 
+func TestBuildReviewArchiveSummaryCountsAWDAttackEvents(t *testing.T) {
+	t.Parallel()
+
+	success := true
+	now := time.Date(2026, 4, 13, 15, 0, 0, 0, time.UTC)
+
+	summary := buildReviewArchiveSummary(
+		6,
+		&assessmentdomain.PersonalReportStats{
+			TotalScore:    150,
+			TotalSolved:   1,
+			TotalAttempts: 3,
+			Rank:          1,
+		},
+		[]assessmentdomain.ReviewArchiveTimelineEvent{
+			{
+				Type:        "awd_attack_submit",
+				ChallengeID: 91,
+				Title:       "awd-web",
+				Timestamp:   now,
+				IsCorrect:   &success,
+				Points:      intPtr(150),
+				Detail:      "AWD 攻击命中 blue-team，得分 150",
+			},
+		},
+		nil,
+		nil,
+		nil,
+	)
+
+	if summary.CorrectSubmissionCount != 1 {
+		t.Fatalf("expected AWD timeline event counted as correct submission, got %+v", summary)
+	}
+	if summary.LastActivityAt == nil || !summary.LastActivityAt.Equal(now) {
+		t.Fatalf("expected last activity at %s, got %+v", now, summary.LastActivityAt)
+	}
+}
+
+func TestBuildReviewArchiveObservationsTreatsAWDAttacksAsHandsOnEvidence(t *testing.T) {
+	t.Parallel()
+
+	now := time.Date(2026, 4, 13, 15, 30, 0, 0, time.UTC)
+	evidence := []assessmentdomain.ReviewArchiveEvidenceEvent{
+		{
+			Type:        "awd_attack_submission",
+			ChallengeID: 101,
+			Title:       "awd-pwn",
+			Timestamp:   now.Add(-2 * time.Minute),
+			Detail:      "AWD 攻击未命中 red-team",
+			Meta:        map[string]any{"is_success": false, "event_stage": "exploit"},
+		},
+		{
+			Type:        "awd_attack_submission",
+			ChallengeID: 101,
+			Title:       "awd-pwn",
+			Timestamp:   now.Add(-1 * time.Minute),
+			Detail:      "AWD 攻击未命中 blue-team",
+			Meta:        map[string]any{"is_success": false, "event_stage": "exploit"},
+		},
+	}
+
+	observations := buildReviewArchiveObservations(
+		assessmentdomain.ReviewArchiveSummary{
+			CorrectSubmissionCount: 0,
+		},
+		evidence,
+		nil,
+		nil,
+	)
+
+	if findObservation(observations.Items, "submission_stability") == nil {
+		t.Fatalf("expected submission_stability observation from repeated AWD failures, got %+v", observations.Items)
+	}
+	if findObservation(observations.Items, "hands_on_activity") == nil {
+		t.Fatalf("expected hands_on_activity observation from AWD exploit evidence, got %+v", observations.Items)
+	}
+}
+
 func TestReportDownloadFileNameUsesJSONExtension(t *testing.T) {
 	t.Parallel()
 
