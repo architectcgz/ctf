@@ -66,10 +66,24 @@ func (r *Repository) FindByUserIDWithContext(ctx context.Context, userID int64) 
 
 func (r *Repository) ListSolvedChallengeIDsWithContext(ctx context.Context, userID int64) ([]int64, error) {
 	var ids []int64
-	err := r.dbWithContext(ctx).Model(&model.Submission{}).
-		Where("user_id = ? AND is_correct = ?", userID, true).
-		Distinct("challenge_id").
-		Pluck("challenge_id", &ids).Error
+	err := r.dbWithContext(ctx).Raw(`
+		SELECT challenge_id
+		FROM (
+			SELECT DISTINCT s.challenge_id AS challenge_id
+			FROM submissions s
+			WHERE s.user_id = ?
+				AND s.is_correct = TRUE
+				AND s.contest_id IS NULL
+			UNION
+			SELECT DISTINCT aal.challenge_id AS challenge_id
+			FROM awd_attack_logs aal
+			WHERE aal.submitted_by_user_id = ?
+				AND aal.source = ?
+				AND aal.is_success = TRUE
+				AND aal.score_gained > 0
+		) AS solved
+		ORDER BY challenge_id ASC
+	`, userID, userID, model.AWDAttackSourceSubmission).Scan(&ids).Error
 	return ids, err
 }
 
@@ -119,13 +133,21 @@ func (r *Repository) GetDimensionScoresWithContext(ctx context.Context, userID i
 						AND s.user_id = ?
 						AND s.is_correct = TRUE
 						AND s.contest_id IS NULL
+				) OR EXISTS (
+					SELECT 1
+					FROM awd_attack_logs aal
+					WHERE aal.challenge_id = c.id
+						AND aal.submitted_by_user_id = ?
+						AND aal.source = ?
+						AND aal.is_success = TRUE
+						AND aal.score_gained > 0
 				) THEN c.points ELSE 0 END
 			), 0) AS user_score
 		FROM challenges c
 		WHERE c.status = 'published'
 		GROUP BY c.category
 		ORDER BY c.category
-	`, userID).Scan(&scores).Error
+	`, userID, userID, model.AWDAttackSourceSubmission).Scan(&scores).Error
 	return scores, err
 }
 
@@ -148,12 +170,20 @@ func (r *Repository) GetDimensionScoreWithContext(ctx context.Context, userID in
 						AND s.user_id = ?
 						AND s.is_correct = TRUE
 						AND s.contest_id IS NULL
+				) OR EXISTS (
+					SELECT 1
+					FROM awd_attack_logs aal
+					WHERE aal.challenge_id = c.id
+						AND aal.submitted_by_user_id = ?
+						AND aal.source = ?
+						AND aal.is_success = TRUE
+						AND aal.score_gained > 0
 				) THEN c.points ELSE 0 END
 			), 0) AS user_score
 		FROM challenges c
 		WHERE c.status = 'published' AND c.category = ?
 		GROUP BY c.category
-	`, userID, dimension).Scan(&score).Error
+	`, userID, userID, model.AWDAttackSourceSubmission, dimension).Scan(&score).Error
 	if err != nil {
 		return nil, err
 	}

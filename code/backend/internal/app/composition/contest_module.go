@@ -149,6 +149,7 @@ func buildContestAWDHandler(deps *contestModuleDeps) (*contesthttp.AWDHandler, *
 		log.Named("contest_awd_service"),
 		awdUpdater,
 	)
+	awdCommands.SetEventBus(deps.root.Events)
 	awdQueries := contestqry.NewAWDService(deps.awdRepo, deps.contestLookup)
 
 	return contesthttp.NewAWDHandler(awdCommands, awdQueries), awdUpdater

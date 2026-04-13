@@ -18,7 +18,9 @@ import (
 	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type stubChallengeRecommendationRepo struct {
@@ -48,7 +50,7 @@ func setupRecommendationTestDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&model.SkillProfile{}, &model.Submission{}); err != nil {
+	if err := db.AutoMigrate(&model.SkillProfile{}, &model.Submission{}, &model.AWDAttackLog{}); err != nil {
 		t.Fatalf("migrate recommendation tables: %v", err)
 	}
 	return db
@@ -125,6 +127,21 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 			t.Fatalf("seed submission: %v", err)
 		}
 	}
+	if err := db.Create(&model.AWDAttackLog{
+		ID:                1,
+		RoundID:           701,
+		AttackerTeamID:    801,
+		VictimTeamID:      802,
+		ChallengeID:       303,
+		AttackType:        model.AWDAttackTypeFlagCapture,
+		Source:            model.AWDAttackSourceSubmission,
+		IsSuccess:         true,
+		ScoreGained:       80,
+		SubmittedByUserID: ptrRecommendationInt64(7),
+		CreatedAt:         now,
+	}).Error; err != nil {
+		t.Fatalf("seed awd attack log: %v", err)
+	}
 
 	stubRepo := &stubChallengeRecommendationRepo{
 		challenges: []*model.Challenge{
@@ -150,7 +167,7 @@ func TestRecommendationServiceRecommendChallengesUsesWeakDimensionsAndSolvedFilt
 	if len(stubRepo.lastDims) != 2 || stubRepo.lastDims[0] != model.DimensionWeb || stubRepo.lastDims[1] != model.DimensionPwn {
 		t.Fatalf("unexpected weak dimensions: %+v", stubRepo.lastDims)
 	}
-	if len(stubRepo.lastSolved) != 1 || stubRepo.lastSolved[0] != 101 {
+	if len(stubRepo.lastSolved) != 2 || stubRepo.lastSolved[0] != 101 || stubRepo.lastSolved[1] != 303 {
 		t.Fatalf("unexpected solved challenge ids: %+v", stubRepo.lastSolved)
 	}
 	if items[0].Reason == "" || items[1].Reason == "" {
@@ -206,4 +223,42 @@ func TestRecommendationServiceRecommendChallengesWithContextHonorsCancellation(t
 	if err == nil || err != context.Canceled {
 		t.Fatalf("expected context canceled, got %v", err)
 	}
+}
+
+func TestRecommendationServiceRegistersContestAttackAcceptedConsumer(t *testing.T) {
+	db := setupRecommendationTestDB(t)
+
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cacheKey := rediskeys.RecommendationKey(17)
+	if err := redisClient.Set(context.Background(), cacheKey, `[{"id":"cached"}]`, time.Hour).Err(); err != nil {
+		t.Fatalf("seed recommendation cache: %v", err)
+	}
+
+	service := newRecommendationTestService(db, &stubChallengeRecommendationRepo{}, redisClient)
+	bus := platformevents.NewBus()
+	service.RegisterContestEventConsumers(bus)
+
+	if err := bus.Publish(context.Background(), platformevents.Event{
+		Name: contestcontracts.EventAWDAttackAccepted,
+		Payload: contestcontracts.AWDAttackAcceptedEvent{
+			UserID:      17,
+			ContestID:   99,
+			ChallengeID: 501,
+			Dimension:   model.DimensionWeb,
+			OccurredAt:  time.Now(),
+		},
+	}); err != nil {
+		t.Fatalf("Publish() error = %v", err)
+	}
+
+	if redisClient.Exists(context.Background(), cacheKey).Val() != 0 {
+		t.Fatalf("expected recommendation cache to be cleared after awd event")
+	}
+}
+
+func ptrRecommendationInt64(value int64) *int64 {
+	return &value
 }

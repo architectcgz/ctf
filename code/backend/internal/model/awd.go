@@ -59,17 +59,18 @@ func (AWDTeamService) TableName() string {
 }
 
 type AWDAttackLog struct {
-	ID             int64     `gorm:"column:id;primaryKey"`
-	RoundID        int64     `gorm:"column:round_id;not null;index"`
-	AttackerTeamID int64     `gorm:"column:attacker_team_id;not null;index"`
-	VictimTeamID   int64     `gorm:"column:victim_team_id;not null;index"`
-	ChallengeID    int64     `gorm:"column:challenge_id;not null"`
-	AttackType     string    `gorm:"column:attack_type;size:32;not null"`
-	Source         string    `gorm:"column:source;size:32;not null;default:legacy"`
-	SubmittedFlag  string    `gorm:"column:submitted_flag;size:512"`
-	IsSuccess      bool      `gorm:"column:is_success;not null;default:false;index"`
-	ScoreGained    int       `gorm:"column:score_gained;not null;default:0"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
+	ID                int64     `gorm:"column:id;primaryKey"`
+	RoundID           int64     `gorm:"column:round_id;not null;index"`
+	AttackerTeamID    int64     `gorm:"column:attacker_team_id;not null;index"`
+	VictimTeamID      int64     `gorm:"column:victim_team_id;not null;index"`
+	ChallengeID       int64     `gorm:"column:challenge_id;not null"`
+	AttackType        string    `gorm:"column:attack_type;size:32;not null"`
+	Source            string    `gorm:"column:source;size:32;not null;default:legacy"`
+	SubmittedFlag     string    `gorm:"column:submitted_flag;size:512"`
+	SubmittedByUserID *int64    `gorm:"column:submitted_by_user_id"`
+	IsSuccess         bool      `gorm:"column:is_success;not null;default:false;index"`
+	ScoreGained       int       `gorm:"column:score_gained;not null;default:0"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
 }
 
 func (AWDAttackLog) TableName() string {
