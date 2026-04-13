@@ -25,10 +25,31 @@ const emit = defineEmits<{
 }>()
 
 const storyMetrics = computed(() => [
-  { label: '总得分', value: props.progress.total_score ?? 0, tone: 'default' },
-  { label: '已解题数', value: props.progress.total_solved ?? 0, tone: 'success' },
-  { label: '当前排名', value: `#${props.progress.rank ?? '-'}`, tone: 'accent' },
-  { label: '完成率', value: `${props.completionRate}%`, tone: 'accent' },
+  {
+    label: '总得分',
+    value: props.progress.total_score ?? 0,
+    helper: '当前累计获得的训练积分',
+  },
+  {
+    label: '已解题数',
+    value: props.progress.total_solved ?? 0,
+    helper: '累计提交成功并完成的题目数量',
+  },
+  {
+    label: '当前排名',
+    value: `#${props.progress.rank ?? '-'}`,
+    helper: '按当前积分统计的实时名次',
+  },
+  {
+    label: '完成率',
+    value: `${props.completionRate}%`,
+    helper: '按当前分类题量计算的覆盖比例',
+  },
+])
+const hasStoryMetrics = computed(() => storyMetrics.value.length > 0)
+const storyMetricGridClass = computed(() => [
+  'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface',
+  props.embedded ? 'story-metric-grid--embedded' : '',
 ])
 const normalizedSkillDimensions = computed<SkillDimensionScore[]>(() =>
   props.skillDimensions
@@ -164,21 +185,19 @@ const operationsSummary = computed(() => [
             </div>
             <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
           </div>
-          <div class="mt-6 grid gap-3 md:grid-cols-2">
+          <div v-if="hasStoryMetrics" :class="storyMetricGridClass">
             <article
               v-for="item in storyMetrics"
               :key="item.label"
-              class="journal-metric px-4 py-4"
-              :class="item.tone === 'accent' ? 'journal-metric-accent' : ''"
+              class="journal-metric progress-card metric-panel-card"
             >
-              <div
-                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--journal-muted)]"
-              >
+              <div class="progress-card-label metric-panel-label">
                 {{ item.label }}
               </div>
-              <div class="mt-3 text-[30px] font-semibold tracking-tight text-[var(--journal-ink)]">
+              <div class="progress-card-value metric-panel-value">
                 {{ item.value }}
               </div>
+              <div class="progress-card-hint metric-panel-helper">{{ item.helper }}</div>
             </article>
           </div>
           <div
@@ -274,12 +293,19 @@ const operationsSummary = computed(() => [
   box-shadow: none;
 }
 
-.journal-metric,
 .journal-inline-item {
   border: 1px solid var(--journal-shell-border);
   border-radius: 16px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   box-shadow: none;
+}
+
+.story-metric-grid {
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
+}
+
+.story-metric-grid--embedded {
+  --metric-panel-columns: repeat(2, minmax(0, 1fr));
 }
 
 .journal-rank-summary {
@@ -466,14 +492,6 @@ const operationsSummary = computed(() => [
   }
 }
 
-.journal-metric-accent {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, transparent)
-  );
-}
-
 .journal-inline-item + .journal-inline-item {
   margin-top: 0.75rem;
 }
@@ -523,6 +541,11 @@ const operationsSummary = computed(() => [
   .journal-soft-surface {
     --journal-soft-button-height: 38px;
     --journal-soft-button-padding: var(--space-2) var(--space-4);
+  }
+
+  .story-metric-grid,
+  .story-metric-grid--embedded {
+    --metric-panel-columns: minmax(0, 1fr);
   }
 
   .journal-radar-dimensions {
