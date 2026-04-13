@@ -29,6 +29,8 @@ const toastMocks = vi.hoisted(() => ({
   success: vi.fn(),
 }))
 
+const confirmMock = vi.hoisted(() => vi.fn())
+
 vi.mock('@/api/instance', () => ({
   destroyInstance: instanceApiMocks.destroyInstance,
   extendInstance: instanceApiMocks.extendInstance,
@@ -54,6 +56,10 @@ vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
 
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: confirmMock,
+}))
+
 describe('instance action errors', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -67,8 +73,9 @@ describe('instance action errors', () => {
     toastMocks.error.mockReset()
     toastMocks.info.mockReset()
     toastMocks.success.mockReset()
+    confirmMock.mockReset()
+    confirmMock.mockResolvedValue(true)
     instanceApiMocks.getMyInstances.mockResolvedValue([])
-    vi.stubGlobal('confirm', vi.fn(() => true))
   })
 
   it('实例列表销毁失败时应优先展示接口返回消息', async () => {
@@ -92,6 +99,46 @@ describe('instance action errors', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('实例正在回收中，请稍后再试')
     expect(toastMocks.error).not.toHaveBeenCalledWith('销毁失败，请稍后重试')
+    wrapper.unmount()
+  })
+
+  it('实例列表销毁前应先经过统一危险确认，取消后不应继续请求', async () => {
+    confirmMock.mockResolvedValue(false)
+
+    let composable!: ReturnType<typeof useInstanceListPage>
+    const Harness = defineComponent({
+      setup() {
+        composable = useInstanceListPage()
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    composable.instances.value = [
+      {
+        id: 'inst-1',
+        challenge_id: 'chal-1',
+        challenge_title: 'SQL 注入基础',
+        category: 'web',
+        difficulty: 'easy',
+        status: 'running',
+        access_url: 'http://example.test',
+        flag_type: 'static',
+        share_scope: 'per_user',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 1,
+        created_at: '2026-03-05T00:00:00Z',
+        remaining: 1200,
+      },
+    ]
+
+    await composable.destroyInstance('inst-1')
+    await flushPromises()
+
+    expect(confirmMock).toHaveBeenCalled()
+    expect(instanceApiMocks.destroyInstance).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 
@@ -129,6 +176,41 @@ describe('instance action errors', () => {
 
     expect(toastMocks.error).toHaveBeenCalledWith('实例仍在创建中，暂时不能销毁')
     expect(toastMocks.error).not.toHaveBeenCalledWith('销毁实例失败')
+    wrapper.unmount()
+  })
+
+  it('题目详情销毁前应先经过统一危险确认，取消后不应继续请求', async () => {
+    confirmMock.mockResolvedValue(false)
+
+    let composable!: ReturnType<typeof useChallengeInstance>
+    const challengeId = ref('challenge-1')
+    const Harness = defineComponent({
+      setup() {
+        composable = useChallengeInstance(challengeId)
+        return () => null
+      },
+    })
+
+    const wrapper = mount(Harness)
+    await flushPromises()
+
+    composable.instance.value = {
+      id: 'inst-1',
+      challenge_id: 'challenge-1',
+      status: 'running',
+      share_scope: 'per_user',
+      access_url: 'http://target.test',
+      flag_type: 'dynamic',
+      expires_at: '2099-01-01T00:00:00Z',
+      remaining_extends: 1,
+      created_at: '2026-04-09T00:00:00.000Z',
+    }
+
+    await composable.destroy()
+    await flushPromises()
+
+    expect(confirmMock).toHaveBeenCalled()
+    expect(instanceApiMocks.destroyInstance).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 

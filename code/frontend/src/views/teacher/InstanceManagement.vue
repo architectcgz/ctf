@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useTeacherInstances } from '@/composables/useTeacherInstances'
 
 const router = useRouter()
@@ -27,7 +28,13 @@ const {
 } = useTeacherInstances()
 
 async function handleDestroy(id: string): Promise<void> {
-  if (!window.confirm('确定要销毁该实例吗？此操作不可恢复。')) {
+  const confirmed = await confirmDestructiveAction({
+    title: '确认销毁实例',
+    message: '确定要销毁该实例吗？此操作不可恢复。',
+    confirmButtonText: '确认销毁',
+    cancelButtonText: '取消',
+  })
+  if (!confirmed) {
     return
   }
   await removeInstance(id)

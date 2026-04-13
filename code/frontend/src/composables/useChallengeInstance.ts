@@ -9,6 +9,7 @@ import {
 } from '@/api/instance'
 import type { InstanceData } from '@/api/contracts'
 import { ApiError } from '@/api/request'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useToast } from '@/composables/useToast'
 
 const CHALLENGE_INSTANCE_POLL_INTERVAL_MS = 3000
@@ -151,6 +152,15 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     if (!instance.value) return
     if (instance.value.share_scope === 'shared') {
       toast.error('共享实例不支持手动销毁')
+      return
+    }
+    const confirmed = await confirmDestructiveAction({
+      title: '确认销毁实例',
+      message: '确定要销毁该实例吗？此操作不可恢复。',
+      confirmButtonText: '确认销毁',
+      cancelButtonText: '取消',
+    })
+    if (!confirmed) {
       return
     }
 
