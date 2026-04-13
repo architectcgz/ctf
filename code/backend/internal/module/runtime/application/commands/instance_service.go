@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"strings"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -68,7 +69,7 @@ func (s *InstanceService) ExtendInstanceWithContext(ctx context.Context, instanc
 	if instance.ShareScope == model.InstanceSharingShared {
 		return nil, errcode.ErrForbidden
 	}
-	if instance.Status != model.InstanceStatusRunning {
+	if instance.Status != model.InstanceStatusRunning || !instance.ExpiresAt.After(time.Now()) {
 		return nil, errcode.ErrInstanceExpired
 	}
 
