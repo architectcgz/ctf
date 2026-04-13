@@ -69,4 +69,28 @@ describe('challenge detail shared shell alignment', () => {
       'class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"'
     )
   })
+
+  it('题目详情右侧工具栏与实例卡应避免浅色混入，并在夜间模式切到 dark color-scheme', () => {
+    expect(challengeDetailSource).toMatch(
+      /\.tool-pane\s*\{[\s\S]*background:\s*linear-gradient\([\s\S]*var\(--bg-panel\)[\s\S]*var\(--color-bg-base\)[\s\S]*var\(--bg-shell\)[\s\S]*var\(--color-bg-base\)[\s\S]*\);/s
+    )
+    expect(challengeDetailSource).toMatch(
+      /\.challenge-prose :deep\(pre\)\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--bg-panel\)\s*72%,\s*var\(--color-bg-base\)\);/s
+    )
+    expect(challengeDetailSource).toMatch(
+      /\.challenge-input,[\s\S]*\.flag-input\s*\{[\s\S]*background:\s*var\(--bg-panel\);/s
+    )
+    expect(challengeDetailSource).toMatch(
+      /:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{[\s\S]*color-scheme:\s*dark;/s
+    )
+    expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-panel) 95%, white)')
+    expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-shell) 92%, white)')
+    expect(challengeDetailSource).not.toContain('color-mix(in srgb, var(--bg-panel) 72%, white)')
+    expect(challengeDetailSource).not.toContain('background: white;')
+
+    expect(challengeInstanceCardSource).toMatch(
+      /:global\(\[data-theme='dark'\]\) \.instance-shell\s*\{[\s\S]*--brand:\s*color-mix\(in srgb,\s*var\(--color-primary\)\s*88%,\s*var\(--color-text-primary\)\);/s
+    )
+    expect(challengeInstanceCardSource).not.toContain("var(--color-primary) 88%, white")
+  })
 })
