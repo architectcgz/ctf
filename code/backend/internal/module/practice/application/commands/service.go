@@ -630,18 +630,10 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		InstanceShutdownAt: instanceShutdownAt,
 	}
 	if submission.IsCorrect {
-		resp.Message = "恭喜你，Flag 正确！"
-		if instanceShutdownAt != nil {
-			resp.Message = fmt.Sprintf("恭喜你，Flag 正确！当前实例将在 %s后自动关闭", formatSolveGracePeriod(instanceShutdownAt.Sub(submission.SubmittedAt)))
-		}
 		resp.Points = challengeItem.Points
 		if s.scoreService != nil {
 			s.triggerScoreUpdate(userID)
 		}
-	} else if submission.ReviewStatus == model.SubmissionReviewStatusPending {
-		resp.Message = "答案已提交，等待教师审核"
-	} else {
-		resp.Message = "Flag 错误，请重试"
 	}
 
 	return resp, nil
@@ -818,6 +810,30 @@ func (s *Service) GetTeacherManualReviewSubmission(
 	return manualReviewDetailRespFromRecord(*record, record.Submission), nil
 }
 
+func (s *Service) ListMyChallengeSubmissions(userID, challengeID int64) ([]*dto.ChallengeSubmissionRecordResp, error) {
+	challengeItem, err := s.challengeRepo.FindByID(challengeID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errcode.ErrChallengeNotFound
+		}
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if challengeItem.Status != model.ChallengeStatusPublished {
+		return nil, errcode.ErrChallengeNotPublish
+	}
+
+	items, err := s.repo.ListChallengeSubmissions(userID, challengeID, 20)
+	if err != nil {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+
+	resp := make([]*dto.ChallengeSubmissionRecordResp, 0, len(items))
+	for _, item := range items {
+		resp = append(resp, challengeSubmissionRecordRespFromModel(item))
+	}
+	return resp, nil
+}
+
 func ensureTeacherCanAccessManualReviewSubmission(
 	repo practiceports.PracticeCommandRepository,
 	requesterID int64,
@@ -917,6 +933,25 @@ func manualReviewListItemRespFromRecord(record practiceports.TeacherManualReview
 		SubmittedAt:     record.Submission.SubmittedAt,
 		ReviewedAt:      record.Submission.ReviewedAt,
 		UpdatedAt:       record.Submission.UpdatedAt,
+	}
+}
+
+func challengeSubmissionRecordRespFromModel(item model.Submission) *dto.ChallengeSubmissionRecordResp {
+	status := dto.SubmissionStatusIncorrect
+	answer := ""
+
+	if item.ReviewStatus == model.SubmissionReviewStatusPending {
+		status = dto.SubmissionStatusPendingReview
+		answer = item.Flag
+	} else if item.IsCorrect {
+		status = dto.SubmissionStatusCorrect
+	}
+
+	return &dto.ChallengeSubmissionRecordResp{
+		ID:          item.ID,
+		Status:      status,
+		Answer:      answer,
+		SubmittedAt: item.SubmittedAt,
 	}
 }
 

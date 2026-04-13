@@ -409,6 +409,29 @@ components:
         submitted_at: { $ref: "#/components/schemas/ISODateTime" }
         instance_shutdown_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
 
+    PracticeSubmitFlagData:
+      type: object
+      required: [is_correct, status, submitted_at]
+      properties:
+        is_correct: { type: boolean }
+        status:
+          type: string
+          enum: [correct, incorrect, pending_review]
+        points: { type: integer, nullable: true, minimum: 0 }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime" }
+        instance_shutdown_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }
+
+    ChallengeSubmissionRecordData:
+      type: object
+      required: [id, status, submitted_at]
+      properties:
+        id: { $ref: "#/components/schemas/ID" }
+        status:
+          type: string
+          enum: [correct, incorrect, pending_review]
+        answer: { type: string, nullable: true }
+        submitted_at: { $ref: "#/components/schemas/ISODateTime" }
+
     ApiEnvelopeSubmitFlagData:
       allOf:
         - $ref: "#/components/schemas/ApiEnvelopeBase"
@@ -416,6 +439,35 @@ components:
           required: [data]
           properties:
             data: { $ref: "#/components/schemas/SubmitFlagData" }
+
+    ApiEnvelopePracticeSubmitFlagData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: "#/components/schemas/PracticeSubmitFlagData" }
+
+    ApiEnvelopeChallengeSubmissionRecordListData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: array
+              items: { $ref: "#/components/schemas/ChallengeSubmissionRecordData" }
+
+    ApiEnvelopeNullableSubmissionWriteupData:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelopeBase"
+        - type: object
+          required: [data]
+          properties:
+            data:
+              allOf:
+                - $ref: "#/components/schemas/SubmissionWriteupData"
+              nullable: true
 
     AdminChallengeFlagConfigData:
       type: object
@@ -2500,12 +2552,12 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopePracticeSubmitFlagData" }
         "400":
           description: Bad Request
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmitFlagData" }
+              schema: { $ref: "#/components/schemas/ApiEnvelopePracticeSubmitFlagData" }
 
   /challenges/{id}/writeup-submissions:
     post:
@@ -2546,9 +2598,25 @@ paths:
           description: OK
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/ApiEnvelopeSubmissionWriteupData" }
-        "404":
-          description: Not Found
+              schema: { $ref: "#/components/schemas/ApiEnvelopeNullableSubmissionWriteupData" }
+
+  /challenges/{id}/submissions/mine:
+    get:
+      tags: [Challenges]
+      summary: 获取我的题目提交记录
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { $ref: "#/components/schemas/ID" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ApiEnvelopeChallengeSubmissionRecordListData" }
 
   /challenges/{id}/hints/{level}/unlock:
     post:

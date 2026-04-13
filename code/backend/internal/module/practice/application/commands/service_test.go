@@ -835,8 +835,8 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	if resp.InstanceShutdownAt == nil {
 		t.Fatalf("expected shutdown hint, got %+v", resp)
 	}
-	if !strings.Contains(resp.Message, "10 分钟后自动关闭") {
-		t.Fatalf("expected shutdown notice in message, got %q", resp.Message)
+	if resp.Message != "" {
+		t.Fatalf("expected practice submit message to be omitted, got %q", resp.Message)
 	}
 
 	expectedMax := beforeSubmit.Add(10*time.Minute + 5*time.Second)
@@ -854,6 +854,87 @@ func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T)
 	}
 	if !stored.ExpiresAt.Before(originalExpiry) {
 		t.Fatalf("expected instance expiry to shrink: before=%v after=%v", originalExpiry, stored.ExpiresAt)
+	}
+}
+
+func TestListMyChallengeSubmissionsMapsStoredHistory(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	service := NewService(
+		&stubPracticeRepository{
+			listChallengeSubmissionsFn: func(userID, challengeID int64, limit int) ([]model.Submission, error) {
+				if userID != 7 || challengeID != 11 {
+					t.Fatalf("unexpected query: user=%d challenge=%d", userID, challengeID)
+				}
+				if limit <= 0 {
+					t.Fatalf("expected positive limit, got %d", limit)
+				}
+				return []model.Submission{
+					{
+						ID:           3,
+						UserID:       7,
+						ChallengeID:  11,
+						IsCorrect:    true,
+						ReviewStatus: model.SubmissionReviewStatusNotRequired,
+						SubmittedAt:  now.Add(-time.Minute),
+					},
+					{
+						ID:           2,
+						UserID:       7,
+						ChallengeID:  11,
+						IsCorrect:    false,
+						ReviewStatus: model.SubmissionReviewStatusPending,
+						Flag:         "answer with reasoning",
+						SubmittedAt:  now.Add(-2 * time.Minute),
+					},
+					{
+						ID:           1,
+						UserID:       7,
+						ChallengeID:  11,
+						IsCorrect:    false,
+						ReviewStatus: model.SubmissionReviewStatusNotRequired,
+						SubmittedAt:  now.Add(-3 * time.Minute),
+					},
+				}, nil
+			},
+		},
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:     id,
+					Status: model.ChallengeStatusPublished,
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&config.Config{},
+		nil,
+	)
+
+	items, err := service.ListMyChallengeSubmissions(7, 11)
+	if err != nil {
+		t.Fatalf("ListMyChallengeSubmissions() error = %v", err)
+	}
+	if len(items) != 3 {
+		t.Fatalf("expected 3 records, got %d", len(items))
+	}
+	if items[0].Status != dto.SubmissionStatusCorrect {
+		t.Fatalf("unexpected correct record: %+v", items[0])
+	}
+	if items[1].Status != dto.SubmissionStatusPendingReview {
+		t.Fatalf("unexpected pending record: %+v", items[1])
+	}
+	if items[1].Answer != "answer with reasoning" {
+		t.Fatalf("expected manual review answer to be preserved, got %+v", items[1])
+	}
+	if items[2].Status != dto.SubmissionStatusIncorrect {
+		t.Fatalf("unexpected incorrect record: %+v", items[2])
 	}
 }
 

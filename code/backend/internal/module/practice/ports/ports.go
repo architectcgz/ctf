@@ -63,6 +63,7 @@ type PracticeCommandRepository interface {
 	FindContestRegistrationWithContext(ctx context.Context, contestID, userID int64) (*model.ContestRegistration, error)
 	CreateSubmission(submission *model.Submission) error
 	FindCorrectSubmission(userID, challengeID int64) (*model.Submission, error)
+	ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error)
 	UpdateSubmission(submission *model.Submission) error
 	FindUserByID(userID int64) (*model.User, error)
 	ListTeacherManualReviewSubmissions(query *dto.TeacherManualReviewSubmissionQuery) ([]TeacherManualReviewSubmissionRecord, int64, error)

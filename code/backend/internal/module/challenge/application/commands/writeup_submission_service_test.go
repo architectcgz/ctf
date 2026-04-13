@@ -64,6 +64,14 @@ func TestWriteupServiceUpsertSubmissionCommunityLifecycle(t *testing.T) {
 	service := NewWriteupService(repo)
 	queryService := challengeqry.NewWriteupService(repo)
 
+	emptyMine, err := queryService.GetMySubmission(student.ID, challengeItem.ID)
+	if err != nil {
+		t.Fatalf("GetMySubmission() before upsert error = %v", err)
+	}
+	if emptyMine != nil {
+		t.Fatalf("expected nil submission before upsert, got %+v", emptyMine)
+	}
+
 	draft, err := service.UpsertSubmission(challengeItem.ID, student.ID, &dto.UpsertSubmissionWriteupReq{
 		Title:            "草稿版解题记录",
 		Content:          "先枚举路由，再找注入点",

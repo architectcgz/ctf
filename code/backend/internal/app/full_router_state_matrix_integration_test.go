@@ -1032,6 +1032,16 @@ func TestFullRouter_AdminChallengeManagementStateMatrix(t *testing.T) {
 		t.Fatalf("expected spoiler warning to clear after solve, got %+v", solvedWriteup)
 	}
 
+	resp = performFullRouterRequest(t, env.router, http.MethodGet, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions/me", createdChallenge.ID), nil, studentHeaders)
+	assertFullRouterStatus(t, resp, http.StatusOK)
+	var emptyWriteupEnvelope fullRouterEnvelope
+	if err := json.Unmarshal(resp.Body.Bytes(), &emptyWriteupEnvelope); err != nil {
+		t.Fatalf("decode empty writeup envelope: %v body=%s", err, resp.Body.String())
+	}
+	if string(emptyWriteupEnvelope.Data) != "null" {
+		t.Fatalf("expected empty writeup submission before upsert")
+	}
+
 	resp = performFullRouterRequest(t, env.router, http.MethodPost, fmt.Sprintf("/api/v1/challenges/%d/writeup-submissions", createdChallenge.ID), map[string]any{
 		"title":             "首版草稿",
 		"content":           "先记录思路，再整理利用链。",

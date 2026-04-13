@@ -185,6 +185,14 @@ export function useChallengeDetailPresentation({
     return '未知'
   }
 
+  function submissionRecordMessage(status: ChallengeSubmissionRecordStatus): string {
+    if (status === 'correct') return '恭喜你，Flag 正确！'
+    if (status === 'incorrect') return 'Flag 错误，请重试'
+    if (status === 'pending_review') return '答案已提交，等待教师审核'
+    if (status === 'error') return '提交失败，请重试'
+    return '提交状态未知'
+  }
+
   function visibilityStatusLabel(status?: SubmissionWriteupVisibilityStatus): string {
     if (status === 'hidden') return '已隐藏'
     if (
@@ -308,6 +316,7 @@ export function useChallengeDetailPresentation({
     buildMetaPillStyle,
     submissionStatusLabel,
     submissionStatusText,
+    submissionRecordMessage,
     visibilityStatusLabel,
     formatWriteupTime,
     formatSubmissionTime,

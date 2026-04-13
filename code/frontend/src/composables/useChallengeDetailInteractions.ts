@@ -2,11 +2,12 @@ import { ref, type Ref } from 'vue'
 
 import {
   downloadAttachment as downloadChallengeAttachment,
+  getMyChallengeSubmissionRecords,
   getMyChallengeWriteupSubmission,
   submitFlag,
   upsertChallengeWriteupSubmission,
 } from '@/api/challenge'
-import type { ChallengeDetailData, SubmissionWriteupData } from '@/api/contracts'
+import type { ChallengeDetailData, SubmissionWriteupData, SubmitFlagData } from '@/api/contracts'
 import type { ChallengeSubmissionRecordStatus } from '@/composables/useChallengeDetailPresentation'
 import { useToast } from '@/composables/useToast'
 
@@ -14,9 +15,8 @@ type EditableWriteupStatus = 'draft' | 'published'
 
 interface SubmissionRecordItem {
   id: string
-  answer: string
+  answer?: string
   status: ChallengeSubmissionRecordStatus
-  message: string
   submittedAt?: string
 }
 
@@ -80,6 +80,55 @@ export function useChallengeDetailInteractions({
     }
   }
 
+  async function loadSubmissionRecords(): Promise<void> {
+    if (!challengeId.value) return
+
+    try {
+      const records = await getMyChallengeSubmissionRecords(challengeId.value)
+      submissionRecords.value = records.map((item) => ({
+        id: item.id,
+        answer: item.answer,
+        status: item.status,
+        submittedAt: item.submitted_at,
+      }))
+    } catch {
+      toast.error('加载提交记录失败')
+    }
+  }
+
+  function formatShutdownCountdown(result: SubmitFlagData): string | null {
+    if (!result.instance_shutdown_at) return null
+
+    const submittedAt = new Date(result.submitted_at).getTime()
+    const shutdownAt = new Date(result.instance_shutdown_at).getTime()
+    if (Number.isNaN(submittedAt) || Number.isNaN(shutdownAt) || shutdownAt <= submittedAt) {
+      return null
+    }
+
+    const deltaMs = shutdownAt - submittedAt
+    const totalMinutes = Math.round(deltaMs / 60000)
+    if (totalMinutes >= 1) {
+      return `${totalMinutes} 分钟`
+    }
+
+    const totalSeconds = Math.max(1, Math.round(deltaMs / 1000))
+    return `${totalSeconds} 秒`
+  }
+
+  function buildSubmitResultMessage(result: SubmitFlagData): string {
+    if (result.status === 'correct') {
+      const countdown = formatShutdownCountdown(result)
+      if (countdown) {
+        return `恭喜你，Flag 正确！当前实例将在 ${countdown}后自动关闭`
+      }
+      return '恭喜你，Flag 正确！'
+    }
+    if (result.status === 'pending_review') {
+      return '答案已提交，等待教师审核'
+    }
+    return 'Flag 错误，请重试'
+  }
+
   function isHintExpanded(level: number): boolean {
     return expandedHintLevels.value.includes(level)
   }
@@ -101,12 +150,12 @@ export function useChallengeDetailInteractions({
     submitResult.value = null
     try {
       const result = await submitFlag(currentChallenge.id, answer)
+      const submitMessage = buildSubmitResultMessage(result)
       submissionRecords.value = [
         {
           id: `${result.submitted_at}-${submissionRecords.value.length}`,
           answer,
           status: result.status,
-          message: result.message,
           submittedAt: result.submitted_at,
         },
         ...submissionRecords.value,
@@ -116,9 +165,9 @@ export function useChallengeDetailInteractions({
           submitResult.value = {
             variant: 'success',
             className: 'text-[var(--color-success)]',
-            message: result.message,
+            message: submitMessage,
           }
-          toast.success(result.message)
+          toast.success(submitMessage)
           currentChallenge.is_solved = true
           await loadSolutions(currentChallenge.id)
           break
@@ -126,15 +175,15 @@ export function useChallengeDetailInteractions({
           submitResult.value = {
             variant: 'pending',
             className: 'text-[var(--color-warning)]',
-            message: result.message,
+            message: submitMessage,
           }
-          toast.info('答案已提交，等待教师审核')
+          toast.info(submitMessage)
           break
         default:
           submitResult.value = {
             variant: 'error',
             className: 'text-[var(--color-danger)]',
-            message: result.message,
+            message: submitMessage,
           }
           break
       }
@@ -144,7 +193,6 @@ export function useChallengeDetailInteractions({
           id: `error-${Date.now()}`,
           answer,
           status: 'error',
-          message: '提交失败，请重试',
           submittedAt: new Date().toISOString(),
         },
         ...submissionRecords.value,
@@ -229,6 +277,7 @@ export function useChallengeDetailInteractions({
     submissionRecords,
     resetChallengeInteractions,
     loadMyWriteupSubmission,
+    loadSubmissionRecords,
     isHintExpanded,
     toggleHint,
     submitFlagHandler,

@@ -92,7 +92,7 @@ func (s *WriteupService) GetMySubmission(userID, challengeID int64) (*dto.Submis
 	item, err := s.repo.FindSubmissionWriteupByUserChallenge(userID, challengeID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errcode.ErrNotFound
+			return nil, nil
 		}
 		return nil, err
 	}

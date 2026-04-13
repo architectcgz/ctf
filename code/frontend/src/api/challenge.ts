@@ -2,6 +2,7 @@ import { ApiError, getAxiosInstance, request } from './request'
 import { normalizeInstanceData } from './instance'
 
 import type {
+  ChallengeSubmissionRecordData,
   CommunityChallengeSolutionData,
   ChallengeDetailData,
   ChallengeListItem,
@@ -44,6 +45,10 @@ interface RawSubmissionWriteupData extends Omit<
   challenge_id: string | number
   contest_id?: string | number
   recommended_by?: string | number
+}
+
+interface RawChallengeSubmissionRecordData extends Omit<ChallengeSubmissionRecordData, 'id'> {
+  id: string | number
 }
 
 interface RawRecommendedChallengeSolutionData extends Omit<RecommendedChallengeSolutionData, 'id' | 'source_id' | 'challenge_id'> {
@@ -93,6 +98,15 @@ function normalizeSubmissionWriteup(item: RawSubmissionWriteupData): SubmissionW
     challenge_id: String(item.challenge_id),
     contest_id: item.contest_id !== undefined ? String(item.contest_id) : undefined,
     recommended_by: item.recommended_by !== undefined ? String(item.recommended_by) : undefined,
+  }
+}
+
+function normalizeChallengeSubmissionRecord(
+  item: RawChallengeSubmissionRecordData
+): ChallengeSubmissionRecordData {
+  return {
+    ...item,
+    id: String(item.id),
   }
 }
 
@@ -149,11 +163,14 @@ export async function getChallengeWriteup(id: string): Promise<ChallengeWriteupD
 
 export async function getMyChallengeWriteupSubmission(id: string): Promise<SubmissionWriteupData | null> {
   try {
-    const payload = await request<RawSubmissionWriteupData>({
+    const payload = await request<RawSubmissionWriteupData | null>({
       method: 'GET',
       url: `/challenges/${encodeURIComponent(id)}/writeup-submissions/me`,
       suppressErrorToast: true,
     })
+    if (!payload) {
+      return null
+    }
     return normalizeSubmissionWriteup(payload)
   } catch (error) {
     if (
@@ -165,6 +182,14 @@ export async function getMyChallengeWriteupSubmission(id: string): Promise<Submi
     }
     throw error
   }
+}
+
+export async function getMyChallengeSubmissionRecords(id: string): Promise<ChallengeSubmissionRecordData[]> {
+  const payload = await request<RawChallengeSubmissionRecordData[]>({
+    method: 'GET',
+    url: `/challenges/${encodeURIComponent(id)}/submissions/mine`,
+  })
+  return payload.map(normalizeChallengeSubmissionRecord)
 }
 
 export async function upsertChallengeWriteupSubmission(

@@ -301,7 +301,7 @@
                     {{ formatSubmissionTime(item.submittedAt) }}
                   </div>
                   <div class="submission-record-answer record-answer">
-                    {{ item.answer }}
+                    {{ item.answer || submissionRecordMessage(item.status) }}
                   </div>
                   <div
                     class="submission-record-status status-chip"
@@ -584,6 +584,7 @@ const {
   submissionRecords,
   resetChallengeInteractions,
   loadMyWriteupSubmission,
+  loadSubmissionRecords,
   isHintExpanded,
   toggleHint,
   submitFlagHandler,
@@ -611,6 +612,7 @@ const {
   buildMetaPillStyle,
   submissionStatusLabel,
   submissionStatusText,
+  submissionRecordMessage,
   visibilityStatusLabel,
   formatWriteupTime,
   formatSubmissionTime,
@@ -682,7 +684,7 @@ watch(
     resetChallengeInteractions()
     clearSolutions()
     selectWorkspaceTab('question')
-    void Promise.all([loadChallenge(), loadMyWriteupSubmission()])
+    void Promise.all([loadChallenge(), loadMyWriteupSubmission(), loadSubmissionRecords()])
   },
   { immediate: true }
 )
