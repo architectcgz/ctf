@@ -698,6 +698,66 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('打开目标')
   })
 
+  it('排队中的实例轮询后若变为 failed 应显示启动失败提示', async () => {
+    vi.useFakeTimers()
+    challengeApiMocks.createInstance.mockResolvedValueOnce({
+      id: 'inst-failed',
+      challenge_id: '1',
+      status: 'pending',
+      access_url: '',
+      flag_type: 'static',
+      expires_at: '2099-01-01T00:00:00Z',
+      remaining_extends: 2,
+      created_at: '2026-03-12T00:00:00.000Z',
+      queue_position: 2,
+      eta_seconds: 90,
+      progress: 12,
+    })
+    instanceApiMocks.getMyInstances.mockReset()
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        id: 'inst-failed',
+        challenge_id: 1,
+        status: 'failed',
+        access_url: '',
+        flag_type: 'static',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 2,
+        created_at: '2026-03-12T00:00:00.000Z',
+        challenge_title: 'Test Challenge',
+        category: 'web',
+        difficulty: 'easy',
+      },
+    ])
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await vi.advanceTimersByTimeAsync(100)
+
+    const startButton = wrapper.findAll('button').find((node) => node.text().includes('启动靶机'))
+    expect(startButton).toBeTruthy()
+
+    await startButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('实例正在排队创建')
+
+    await vi.advanceTimersByTimeAsync(3000)
+    await wrapper.vm.$nextTick()
+
+    expect(instanceApiMocks.getMyInstances).toHaveBeenCalledTimes(2)
+    expect(wrapper.text()).toContain('实例启动失败，当前目标不可访问')
+    expect(wrapper.text()).not.toContain('打开目标')
+  })
+
   it('已存在实例时应直接显示实例信息', async () => {
     instanceApiMocks.getMyInstances.mockResolvedValue([
       {
