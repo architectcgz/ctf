@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"regexp"
 	"strings"
 	"sync"
@@ -379,6 +381,11 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 		s.markInstanceFailed(instance)
 		return err
 	}
+	if err := s.waitForInstanceReadiness(createCtx, instance.AccessURL); err != nil {
+		s.logger.Error("实例访问地址未就绪", zap.Error(err), zap.Int64("instance_id", instance.ID), zap.String("access_url", instance.AccessURL))
+		s.markInstanceFailed(instance)
+		return errcode.ErrContainerStartFailed.WithCause(err)
+	}
 
 	instance.Status = model.InstanceStatusRunning
 	if err := s.instanceRepo.UpdateRuntime(instance); err != nil {
@@ -391,6 +398,53 @@ func (s *Service) provisionInstance(ctx context.Context, instance *model.Instanc
 		zap.Int64("user_id", instance.UserID),
 		zap.Int64("challenge_id", instance.ChallengeID),
 		zap.Int64("instance_id", instance.ID))
+	return nil
+}
+
+func (s *Service) waitForInstanceReadiness(ctx context.Context, accessURL string) error {
+	if strings.TrimSpace(accessURL) == "" {
+		return fmt.Errorf("instance access url is empty")
+	}
+
+	attempts := s.startProbeAttempts()
+	client := &http.Client{Timeout: s.startProbeTimeout()}
+	var lastErr error
+	for attempt := 0; attempt < attempts; attempt++ {
+		lastErr = s.probeInstanceAccessURL(ctx, client, accessURL)
+		if lastErr == nil {
+			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if attempt == attempts-1 {
+			break
+		}
+
+		timer := time.NewTimer(s.startProbeInterval())
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+	return lastErr
+}
+
+func (s *Service) probeInstanceAccessURL(ctx context.Context, client *http.Client, accessURL string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, accessURL, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 512))
 	return nil
 }
 
@@ -449,6 +503,27 @@ func (s *Service) schedulerMaxActiveInstances() int {
 		return 0
 	}
 	return s.config.Container.Scheduler.MaxActiveInstances
+}
+
+func (s *Service) startProbeTimeout() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.StartProbeTimeout <= 0 {
+		return 800 * time.Millisecond
+	}
+	return s.config.Container.StartProbeTimeout
+}
+
+func (s *Service) startProbeInterval() time.Duration {
+	if s == nil || s.config == nil || s.config.Container.StartProbeInterval <= 0 {
+		return 300 * time.Millisecond
+	}
+	return s.config.Container.StartProbeInterval
+}
+
+func (s *Service) startProbeAttempts() int {
+	if s == nil || s.config == nil || s.config.Container.StartProbeAttempts <= 0 {
+		return 5
+	}
+	return s.config.Container.StartProbeAttempts
 }
 
 func (s *Service) SubmitFlag(userID, challengeID int64, flag string) (*dto.SubmissionResp, error) {

@@ -141,6 +141,9 @@ type ContainerConfig struct {
 	CleanupLockTTL       time.Duration            `mapstructure:"cleanup_lock_ttl"`
 	OrphanGracePeriod    time.Duration            `mapstructure:"orphan_grace_period"`
 	CreateTimeout        time.Duration            `mapstructure:"create_timeout"`
+	StartProbeTimeout    time.Duration            `mapstructure:"start_probe_timeout"`
+	StartProbeInterval   time.Duration            `mapstructure:"start_probe_interval"`
+	StartProbeAttempts   int                      `mapstructure:"start_probe_attempts"`
 	FlagGlobalSecret     string                   `mapstructure:"flag_global_secret"`
 	PublicHost           string                   `mapstructure:"public_host"`
 	ProxyTicketTTL       time.Duration            `mapstructure:"proxy_ticket_ttl"`
@@ -514,6 +517,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.cleanup_lock_ttl", 2*time.Minute)
 	v.SetDefault("container.orphan_grace_period", 5*time.Minute)
 	v.SetDefault("container.create_timeout", 30*time.Second)
+	v.SetDefault("container.start_probe_timeout", 800*time.Millisecond)
+	v.SetDefault("container.start_probe_interval", 300*time.Millisecond)
+	v.SetDefault("container.start_probe_attempts", 5)
 	v.SetDefault("container.flag_global_secret", "")
 	v.SetDefault("container.public_host", "localhost")
 	v.SetDefault("container.proxy_ticket_ttl", 15*time.Minute)

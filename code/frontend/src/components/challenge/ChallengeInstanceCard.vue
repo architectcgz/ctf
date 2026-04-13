@@ -35,8 +35,8 @@ const statusLabel = computed(() => {
     expired: '已过期',
     destroying: '销毁中',
     destroyed: '已销毁',
-    failed: '失败',
-    crashed: '崩溃',
+    failed: '启动失败',
+    crashed: '运行异常',
   }
   return labels[props.instance.status]
 })
@@ -197,7 +197,7 @@ const canExtend = computed(
         v-else-if="isFailed"
         class="instance-callout instance-callout--danger"
       >
-        <div>实例创建失败或运行异常，当前目标不可访问。</div>
+        <div>{{ props.instance?.status === 'failed' ? '实例启动失败，当前目标不可访问。' : '实例运行异常，当前目标不可访问。' }}</div>
         <div>建议先销毁当前实例，再重新启动。</div>
       </div>
 
