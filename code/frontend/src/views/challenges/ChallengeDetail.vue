@@ -164,13 +164,20 @@
                           id="challenge-solutions-tab-recommended"
                           type="button"
                           role="tab"
+                          :ref="
+                            (element) =>
+                              setSolutionTabButtonRef(
+                                'recommended',
+                                element as HTMLButtonElement | null
+                              )
+                          "
                           class="solution-tab top-tab challenge-subtab"
                           :class="{ active: activeSolutionTab === 'recommended' }"
                           :aria-selected="activeSolutionTab === 'recommended'"
                           aria-controls="challenge-solutions-panel-recommended"
                           :tabindex="activeSolutionTab === 'recommended' ? 0 : -1"
-                          @click="activeSolutionTab = 'recommended'"
-                          @keydown="handleSolutionTabKeydown($event, 'recommended')"
+                          @click="selectSolutionTab('recommended')"
+                          @keydown="handleSolutionTabKeydown($event, 0)"
                         >
                           推荐题解
                         </button>
@@ -178,13 +185,20 @@
                           id="challenge-solutions-tab-community"
                           type="button"
                           role="tab"
+                          :ref="
+                            (element) =>
+                              setSolutionTabButtonRef(
+                                'community',
+                                element as HTMLButtonElement | null
+                              )
+                          "
                           class="solution-tab top-tab challenge-subtab"
                           :class="{ active: activeSolutionTab === 'community' }"
                           :aria-selected="activeSolutionTab === 'community'"
                           aria-controls="challenge-solutions-panel-community"
                           :tabindex="activeSolutionTab === 'community' ? 0 : -1"
-                          @click="activeSolutionTab = 'community'"
-                          @keydown="handleSolutionTabKeydown($event, 'community')"
+                          @click="selectSolutionTab('community')"
+                          @keydown="handleSolutionTabKeydown($event, 1)"
                         >
                           社区题解
                         </button>
@@ -510,6 +524,7 @@ import {
 } from '@/composables/useChallengeDetailPresentation'
 import { useChallengeInstance } from '@/composables/useChallengeInstance'
 import { useSanitize } from '@/composables/useSanitize'
+import { useTabKeyboardNavigation } from '@/composables/useTabKeyboardNavigation'
 import { useToast } from '@/composables/useToast'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
@@ -555,6 +570,7 @@ const {
   orderedTabs: workspaceTabOrder,
   defaultTab: 'question',
 })
+const solutionTabOrder: ChallengeSolutionTab[] = ['recommended', 'community']
 
 const {
   myWriteup,
@@ -592,7 +608,6 @@ const {
   submitFieldLabel,
   submitInputClass,
   clearSolutions,
-  handleSolutionTabKeydown: handleSolutionTabKeydownWithFocus,
   buildMetaPillStyle,
   submissionStatusLabel,
   submissionStatusText,
@@ -611,6 +626,18 @@ const {
   selectedSolutionId,
   submitResult,
   sanitizeHtml,
+})
+
+function selectSolutionTab(tab: ChallengeSolutionTab): void {
+  activeSolutionTab.value = tab
+}
+
+const {
+  setTabButtonRef: setSolutionTabButtonRef,
+  handleTabKeydown: handleSolutionTabKeydown,
+} = useTabKeyboardNavigation<ChallengeSolutionTab>({
+  orderedTabs: solutionTabOrder,
+  selectTab: selectSolutionTab,
 })
 
 async function loadSolutions(id: string): Promise<void> {
@@ -646,16 +673,6 @@ async function loadChallenge(): Promise<void> {
   } finally {
     loading.value = false
   }
-}
-
-function focusTab(id: string): void {
-  requestAnimationFrame(() => {
-    document.getElementById(id)?.focus()
-  })
-}
-
-function handleSolutionTabKeydown(event: KeyboardEvent, currentTab: ChallengeSolutionTab): void {
-  handleSolutionTabKeydownWithFocus(event, currentTab, focusTab)
 }
 
 watch(
@@ -738,7 +755,7 @@ watch(
   --success: oklch(56% 0.13 154);
   --warning: oklch(68% 0.14 82);
   --danger: oklch(58% 0.16 28);
-  --shadow-shell: 0 24px 84px rgba(13, 23, 39, 0.06);
+  --shadow-shell: 0 24px 84px color-mix(in srgb, var(--color-shadow-soft) 34%, transparent);
   --radius-xl: 28px;
   --radius-lg: 18px;
   --font-sans: var(--font-family-sans);
@@ -855,7 +872,7 @@ watch(
   --page-top-tabs-margin: 0;
   --page-top-tabs-padding: 0 0 var(--space-2-5);
   --page-top-tabs-border: var(--line-soft);
-  --page-top-tab-min-height: 2.5rem;
+  --page-top-tab-min-height: 3rem;
   --page-top-tab-padding: 0 0 var(--space-2);
   --page-top-tab-font-size: var(--font-size-14);
   --page-top-tab-font-weight: 600;

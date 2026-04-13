@@ -257,19 +257,19 @@ onUnmounted(() => {
 }
 
 .topnav-brand-dot[data-brand="green"] {
-  --brand-dot-color: #16a34a;
+  --brand-dot-color: var(--color-brand-swatch-green);
 }
 
 .topnav-brand-dot[data-brand="cyan"] {
-  --brand-dot-color: #0891b2;
+  --brand-dot-color: var(--color-brand-swatch-cyan);
 }
 
 .topnav-brand-dot[data-brand="blue"] {
-  --brand-dot-color: #2563eb;
+  --brand-dot-color: var(--color-brand-swatch-blue);
 }
 
 .topnav-brand-dot[data-brand="orange"] {
-  --brand-dot-color: #e18a2a;
+  --brand-dot-color: var(--color-brand-swatch-orange);
 }
 
 .topnav-brand-dot--active {
@@ -382,7 +382,11 @@ onUnmounted(() => {
 :global([data-theme="light"]) .topnav-shell {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 95%, var(--color-bg-base))),
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.06), transparent 18rem);
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
+      transparent 18rem
+    );
 }
 
 .topnav-icon-button:focus-visible {

@@ -34,11 +34,11 @@ const emit = defineEmits<{
 }>()
 
 const barColorMap: Record<string, string> = {
-  beginner: '#10b981',
-  easy: '#22d3ee',
-  medium: '#f59e0b',
-  hard: '#f97316',
-  insane: '#ef4444',
+  beginner: 'var(--color-success)',
+  easy: 'color-mix(in srgb, var(--color-primary) 72%, white)',
+  medium: 'var(--color-warning)',
+  hard: 'color-mix(in srgb, var(--color-warning) 72%, var(--color-danger))',
+  insane: 'var(--color-danger)',
 }
 
 const orderedStats = computed<RankedDifficultyStat[]>(() =>
@@ -120,7 +120,7 @@ function openPrimaryDifficulty(): void {
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
       </h1>
-      <p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">
+      <p class="workspace-page-copy max-w-2xl">
         {{
           hasDifficultyStats
             ? '先补当前最该推进的一档，再决定要不要继续抬强度。'

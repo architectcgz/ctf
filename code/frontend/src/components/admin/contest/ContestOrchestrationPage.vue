@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed } from 'vue'
 import { Trophy } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
@@ -7,6 +7,7 @@ import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
 import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 type StatusFilter =
   | 'all'
@@ -55,28 +56,12 @@ const panelTabs = [
 ] as const
 
 type ContestPanelKey = (typeof panelTabs)[number]['key']
-
-const contestPanelSet = new Set<ContestPanelKey>(panelTabs.map((tab) => tab.key))
-
-function resolvePanelFromLocation(): ContestPanelKey {
-  if (typeof window === 'undefined') return 'overview'
-  if (!window.location.pathname || window.location.pathname === '/') return 'overview'
-  const panel = new URLSearchParams(window.location.search).get('panel')
-  if (panel && contestPanelSet.has(panel as ContestPanelKey)) {
-    return panel as ContestPanelKey
-  }
-  return 'overview'
-}
-
-function syncPanelToLocation(panelKey: ContestPanelKey): void {
-  if (typeof window === 'undefined') return
-  const url = new URL(window.location.href)
-  url.searchParams.set('panel', panelKey)
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
-const activePanel = ref<ContestPanelKey>(resolvePanelFromLocation())
-const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])
+const contestPanelOrder = panelTabs.map((tab) => tab.key) as ContestPanelKey[]
+const { activeTab: activePanel, setTabButtonRef, selectTab: selectPanel, handleTabKeydown } =
+  useUrlSyncedTabs<ContestPanelKey>({
+    orderedTabs: contestPanelOrder,
+    defaultTab: 'overview',
+  })
 
 const registeringCount = computed(
   () => props.list.filter((item) => item.status === 'registering').length
@@ -84,46 +69,6 @@ const registeringCount = computed(
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
 const awdCount = computed(() => props.awdContests.length)
 const listCount = computed(() => props.list.length)
-
-function setTabButtonRef(index: number, element: HTMLButtonElement | null): void {
-  tabButtonRefs.value[index] = element
-}
-
-function selectPanel(panelKey: ContestPanelKey): void {
-  if (activePanel.value === panelKey) return
-  activePanel.value = panelKey
-  syncPanelToLocation(panelKey)
-}
-
-function focusTabByIndex(index: number): void {
-  nextTick(() => {
-    tabButtonRefs.value[index]?.focus()
-  })
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-
-  event.preventDefault()
-
-  if (event.key === 'Home') {
-    selectPanel(panelTabs[0].key)
-    focusTabByIndex(0)
-    return
-  }
-
-  if (event.key === 'End') {
-    const endIndex = panelTabs.length - 1
-    selectPanel(panelTabs[endIndex].key)
-    focusTabByIndex(endIndex)
-    return
-  }
-
-  const direction = event.key === 'ArrowRight' ? 1 : -1
-  const nextIndex = (index + direction + panelTabs.length) % panelTabs.length
-  selectPanel(panelTabs[nextIndex].key)
-  focusTabByIndex(nextIndex)
-}
 </script>
 
 <template>
@@ -147,7 +92,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.key"
-        :ref="(element) => setTabButtonRef(index, element as HTMLButtonElement | null)"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"
@@ -402,7 +347,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number): void {
   background: var(--journal-surface-subtle);
   border-color: var(--journal-border);
   border-radius: 16px !important;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 26%, transparent);
 }
 
 .admin-section-head {

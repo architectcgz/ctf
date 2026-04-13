@@ -39,7 +39,7 @@ function cssVar(name: string): string {
 const option = computed<EChartsOption>(() => {
   const primary = cssVar('--color-primary')
   const primaryHover = cssVar('--color-primary-hover')
-  const axisLabelColor = cssVar('--color-text-primary') || cssVar('--color-text-secondary') || '#475569'
+  const axisLabelColor = cssVar('--color-text-primary') || cssVar('--color-text-secondary') || primary
   return {
     tooltip: { trigger: 'item' },
     radar: {

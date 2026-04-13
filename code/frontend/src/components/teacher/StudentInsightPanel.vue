@@ -100,6 +100,13 @@ function changeWriteupPage(page: number): void {
   emit('changeWriteupPage', page)
 }
 
+function moderateWriteup(
+  submissionId: string,
+  action: 'recommend' | 'unrecommend' | 'hide' | 'restore'
+): void {
+  emit('moderateWriteup', { submissionId, action })
+}
+
 function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
@@ -141,6 +148,15 @@ function submitManualReview(reviewStatus: 'approved' | 'rejected'): void {
 
 function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boolean {
   return !props.activeSection || props.activeSection === 'all' || props.activeSection === section
+}
+
+function isManualReviewVisible(): boolean {
+  return (
+    !props.activeSection ||
+    props.activeSection === 'all' ||
+    props.activeSection === 'manual-review' ||
+    props.activeSection === 'writeups'
+  )
 }
 </script>
 
@@ -280,7 +296,7 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
               <header class="writeup-directory-head">
                 <span>题目</span>
                 <span>题解</span>
-                <span>状态</span>
+                <span>社区题解状态</span>
                 <span>发布时间</span>
                 <span>操作</span>
               </header>
@@ -319,14 +335,30 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
                 </div>
 
                 <div class="writeup-directory-cell writeup-directory-action">
-                  <button
-                    type="button"
-                    class="writeup-open-link inline-flex items-center gap-1 font-medium"
-                    @click="openChallenge(item.challenge_id)"
-                  >
-                    查看题目
-                    <ArrowRight class="h-4 w-4" />
-                  </button>
+                  <div class="writeup-action-stack">
+                    <button
+                      type="button"
+                      class="writeup-open-link inline-flex items-center gap-1 font-medium"
+                      @click="openChallenge(item.challenge_id)"
+                    >
+                      查看题目
+                      <ArrowRight class="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      class="writeup-action-button"
+                      @click="moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
+                    >
+                      {{ item.is_recommended ? '取消推荐' : '推荐题解' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="writeup-action-button writeup-action-button--warning"
+                      @click="moderateWriteup(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')"
+                    >
+                      {{ item.visibility_status === 'hidden' ? '恢复公开' : '隐藏题解' }}
+                    </button>
+                  </div>
                 </div>
               </article>
             </section>
@@ -346,10 +378,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
         </SectionCard>
 
         <SectionCard
-          v-if="isSectionVisible('manual-review')"
+          v-if="isManualReviewVisible()"
           class="insight-tab-section-card"
-          title="审核题解"
-          subtitle="查看该学员待教师评阅的题解内容。"
+          title="人工审核题"
+          subtitle="查看当前学员需要教师判定的题解内容。"
         >
           <AppEmpty
             v-if="manualReviewSubmissions.length === 0"
@@ -814,6 +846,13 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   justify-content: flex-end;
 }
 
+.writeup-action-stack {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .writeup-pagination {
   padding-top: var(--space-1-5);
 }
@@ -839,6 +878,36 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   outline: none;
 }
 
+.writeup-action-button {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--teacher-card-border) 88%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 90%, transparent);
+  font-size: var(--font-size-0-78);
+  font-weight: 600;
+  color: var(--journal-ink);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.writeup-action-button:hover,
+.writeup-action-button:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+  color: var(--journal-accent-strong);
+  outline: none;
+}
+
+.writeup-action-button--warning:hover,
+.writeup-action-button--warning:focus-visible {
+  border-color: color-mix(in srgb, var(--color-warning) 36%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-warning) 86%, var(--journal-ink));
+}
+
 @media (max-width: 1023px) {
   .writeup-kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -854,6 +923,10 @@ function isSectionVisible(section: Exclude<StudentInsightSection, 'all'>): boole
   }
 
   .writeup-directory-action {
+    justify-content: flex-start;
+  }
+
+  .writeup-action-stack {
     justify-content: flex-start;
   }
 }

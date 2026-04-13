@@ -6,6 +6,7 @@ import { downloadReport, exportPersonalReport } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -134,12 +135,8 @@ onUnmounted(() => {
     </div>
 
     <div v-else class="flex flex-1 flex-col">
-      <header class="profile-header">
-        <div class="profile-header__intro">
-          <div class="journal-eyebrow">Profile</div>
-          <h1 class="workspace-page-title">个人资料</h1>
-          <p class="workspace-page-copy">{{ pageCopy }}</p>
-
+      <div class="profile-header">
+        <PageHeader class="profile-page-header" eyebrow="Profile" title="个人资料" :description="pageCopy">
           <div class="profile-header__actions">
             <div class="profile-pill">
               <span class="status-dot status-dot-ready" />
@@ -150,7 +147,7 @@ onUnmounted(() => {
               刷新
             </button>
           </div>
-        </div>
+        </PageHeader>
 
         <div v-if="canManagePersonalReport" class="profile-summary-grid metric-panel-grid">
           <article class="profile-summary-item metric-panel-card">
@@ -174,7 +171,7 @@ onUnmounted(() => {
             </div>
           </article>
         </div>
-      </header>
+      </div>
 
       <div class="journal-divider profile-divider" />
 
@@ -330,7 +327,7 @@ onUnmounted(() => {
   --journal-shell-hero-radial-strength: 8%;
   --journal-shell-hero-radial-size: 18rem;
   --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
-  --journal-shell-hero-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+  --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-user-button-height: 2.7rem;
   --journal-user-button-radius: 999px;
   --journal-user-button-padding: 0.62rem 1rem;
@@ -358,7 +355,6 @@ onUnmounted(() => {
 }
 
 .profile-header__actions {
-  margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -369,8 +365,8 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid color-mix(in srgb, var(--color-success) 22%, transparent);
+  background: color-mix(in srgb, var(--color-success) 8%, transparent);
   padding: 0.55rem 0.95rem;
   font-size: var(--font-size-0-875);
   font-weight: 500;
@@ -575,23 +571,23 @@ onUnmounted(() => {
 }
 
 .status-dot-ready {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success) 20%, transparent);
 }
 
 .status-dot-warning {
-  background: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+  background: var(--color-warning);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-warning) 18%, transparent);
 }
 
 .status-dot-idle {
-  background: #94a3b8;
-  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.18);
+  background: var(--color-text-muted);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-text-muted) 18%, transparent);
 }
 
 .status-dot-danger {
-  background: #ef4444;
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.16);
+  background: var(--color-danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 16%, transparent);
 }
 
 @media (max-width: 1024px) {

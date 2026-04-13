@@ -4,6 +4,7 @@ import { computed } from 'vue'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useChallengeWriteupEditorPage } from '@/composables/useChallengeWriteupEditorPage'
 
 const props = withDefaults(defineProps<{
@@ -59,12 +60,23 @@ const {
       </div>
     </header>
 
-    <div class="workspace-tab-heading" :class="{ 'writeup-tab-heading': isEmbedded }">
+    <PageHeader
+      v-if="!isEmbedded"
+      class="writeup-page-header"
+      eyebrow="Admin Writeup"
+      title="题解管理"
+      :description="
+        challenge
+          ? `为《${challenge.title}》维护管理员题解，控制公开范围。`
+          : '为题目维护管理员题解，控制公开范围。'
+      "
+    />
+    <div v-else class="workspace-tab-heading writeup-tab-heading">
       <div class="workspace-tab-heading__main">
         <div class="journal-note-label">Admin Writeup</div>
         <h1 class="workspace-page-title">题解管理</h1>
       </div>
-      <p class="workspace-tab-copy">
+      <p class="workspace-page-copy">
         {{
           challenge
             ? `为《${challenge.title}》维护管理员题解，控制公开范围。`

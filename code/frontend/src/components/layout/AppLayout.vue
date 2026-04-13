@@ -1,15 +1,9 @@
 <template>
   <div class="relative min-h-screen overflow-x-hidden bg-base text-text-primary">
     <div class="pointer-events-none absolute inset-0">
-      <div
-        class="absolute inset-x-0 top-0 h-44 bg-[linear-gradient(180deg,rgba(8,145,178,0.12),transparent)]"
-      />
-      <div
-        class="absolute inset-y-0 left-0 w-px bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.08),transparent)]"
-      />
-      <div
-        class="absolute inset-x-0 bottom-0 h-56 bg-[linear-gradient(0deg,rgba(0,0,0,0.16),transparent)]"
-      />
+      <div class="app-layout-top-glow absolute inset-x-0 top-0 h-44" />
+      <div class="app-layout-side-rail absolute inset-y-0 left-0 w-px" />
+      <div class="app-layout-bottom-shadow absolute inset-x-0 bottom-0 h-56" />
     </div>
     <div class="relative flex min-h-screen">
       <Sidebar
@@ -73,6 +67,31 @@ watch(
 </script>
 
 <style scoped>
+.app-layout-top-glow {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary-hover) 12%, transparent),
+    transparent
+  );
+}
+
+.app-layout-side-rail {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--color-text-primary) 8%, transparent),
+    transparent
+  );
+}
+
+.app-layout-bottom-shadow {
+  background: linear-gradient(
+    0deg,
+    color-mix(in srgb, var(--color-shadow-strong) 16%, transparent),
+    transparent
+  );
+}
+
 .workspace-main {
   flex: 1 1 auto;
   position: relative;

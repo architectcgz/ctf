@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
@@ -102,19 +103,20 @@ async function submitPasswordChange(): Promise<void> {
   <section
     class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <header class="security-header">
-      <div class="security-header__intro">
-        <div class="journal-eyebrow">Security</div>
-        <h1 class="workspace-page-title">安全设置</h1>
-        <p class="workspace-page-copy">更新账号密码并检查当前安全策略。</p>
-
+    <div class="security-header">
+      <PageHeader
+        class="security-page-header"
+        eyebrow="Security"
+        title="安全设置"
+        description="更新账号密码并检查当前安全策略。"
+      >
         <div class="security-header__actions">
           <div class="security-pill">
             <span class="status-dot status-dot-active" />
             密码策略已启用
           </div>
         </div>
-      </div>
+      </PageHeader>
 
       <div class="security-summary-grid metric-panel-grid">
         <article
@@ -137,7 +139,7 @@ async function submitPasswordChange(): Promise<void> {
           </div>
         </article>
       </div>
-    </header>
+    </div>
 
     <div class="journal-divider security-divider" />
 
@@ -254,8 +256,12 @@ async function submitPasswordChange(): Promise<void> {
   --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-shell-dark-hero-radial-strength: 18%;
   --journal-shell-dark-hero-radial-size: 20rem;
-  --journal-shell-dark-hero-top: rgba(15, 23, 42, 0.95);
-  --journal-shell-dark-hero-end: rgba(2, 6, 23, 0.98);
+  --journal-shell-dark-hero-top: color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base));
+  --journal-shell-dark-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 95%,
+    var(--color-bg-base)
+  );
   --journal-note-label-size: 0.72rem;
   --journal-note-label-weight: 700;
   --journal-note-label-spacing: 0.16em;
@@ -286,7 +292,6 @@ async function submitPasswordChange(): Promise<void> {
 }
 
 .security-header__actions {
-  margin-top: 1rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
@@ -410,8 +415,8 @@ async function submitPasswordChange(): Promise<void> {
 }
 
 .status-dot-active {
-  background: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+  background: var(--color-success);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-success) 20%, transparent);
   animation: pulse-dot 2s infinite;
 }
 

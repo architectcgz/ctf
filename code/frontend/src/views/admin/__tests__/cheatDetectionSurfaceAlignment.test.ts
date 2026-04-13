@@ -36,6 +36,15 @@ describe('cheat detection surface alignment', () => {
     expect(cheatDetectionSource).not.toMatch(/\.journal-divider\s*\{/s)
   })
 
+  it('uses shared admin shell accent and empty-state border tokens', () => {
+    expect(cheatDetectionSource).toContain('--journal-shell-dark-accent: var(--color-primary-hover);')
+    expect(cheatDetectionSource).toMatch(
+      /\.admin-empty\s*\{[\s\S]*border:\s*1px dashed color-mix\(in srgb,\s*var\(--journal-border\) 72%, transparent\);/s
+    )
+    expect(cheatDetectionSource).not.toContain('--journal-shell-dark-accent: #60a5fa;')
+    expect(cheatDetectionSource).not.toContain('border: 1px dashed rgba(148, 163, 184, 0.72);')
+  })
+
   it('overrides the empty state top and bottom borders instead of inheriting AppEmpty bright border-y lines', () => {
     expect(cheatDetectionSource).toMatch(
       /<AppEmpty[\s\S]*class="cheat-empty-state"[\s\S]*title="当前没有超过阈值的高频提交账号"/s

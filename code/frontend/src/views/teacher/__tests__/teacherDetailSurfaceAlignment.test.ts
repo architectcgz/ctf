@@ -7,11 +7,16 @@ import studentAnalysisSource from '@/components/teacher/class-management/Student
 import classTrendPanelSource from '@/components/teacher/TeacherClassTrendPanel.vue?raw'
 import classInsightsPanelSource from '@/components/teacher/TeacherClassInsightsPanel.vue?raw'
 import classReviewPanelSource from '@/components/teacher/TeacherClassReviewPanel.vue?raw'
+import interventionPanelSource from '@/components/teacher/TeacherInterventionPanel.vue?raw'
 import studentInsightPanelSource from '@/components/teacher/StudentInsightPanel.vue?raw'
 import reviewArchiveSource from '@/views/teacher/TeacherStudentReviewArchive.vue?raw'
 
 const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
+  'utf-8'
+)
+const teacherPanelShellSource = readFileSync(
+  `${process.cwd()}/src/components/teacher/teacher-panel-shell.css`,
   'utf-8'
 )
 
@@ -54,6 +59,10 @@ describe('teacher detail surface alignment', () => {
 
     expect(reviewArchiveSource).toContain('--teacher-card-border:')
     expect(reviewArchiveSource).toContain('--teacher-divider:')
+    expect(reviewArchiveSource).toContain('--journal-accent: var(--color-primary);')
+    expect(reviewArchiveSource).toContain(
+      '--journal-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));'
+    )
     expect(reviewArchiveSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -67,18 +76,19 @@ describe('teacher detail surface alignment', () => {
     expect(reviewArchiveSource).toContain('class="summary-card__label metric-panel-label"')
     expect(reviewArchiveSource).toContain('class="summary-card__value metric-panel-value"')
     expect(reviewArchiveSource).toContain('class="summary-card__hint metric-panel-helper"')
+    expect(reviewArchiveSource).not.toContain('--journal-accent: #2563eb;')
+    expect(reviewArchiveSource).not.toContain('--journal-accent-strong: #1d4ed8;')
+    expect(reviewArchiveSource).not.toContain('color-mix(in srgb, #f59e0b 14%, var(--journal-surface))')
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
-    expect(classTrendPanelSource).toMatch(
+    expect(teacherPanelShellSource).toMatch(
       /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
     )
-    expect(classInsightsPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
-    )
-    expect(classReviewPanelSource).toMatch(
-      /--panel-border:\s*color-mix\(\s*in srgb,\s*var\(--journal-border,\s*var\(--color-border-default\)\) 74%,\s*transparent\s*\);/
-    )
+    expect(classTrendPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(classInsightsPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(classReviewPanelSource).toContain("@import './teacher-panel-shell.css';")
+    expect(interventionPanelSource).toContain("@import './teacher-panel-shell.css';")
     expect(studentInsightPanelSource).toContain('--teacher-card-border:')
     expect(studentInsightPanelSource).toContain('--teacher-divider:')
     expect(studentInsightPanelSource).toMatch(
@@ -123,5 +133,24 @@ describe('teacher detail surface alignment', () => {
     expect(classTrendPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classInsightsPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
     expect(classReviewPanelSource).not.toContain('rgba(226, 232, 240, 0.8)')
+  })
+
+  it('teacher detail panels should inherit shared journal tokens instead of carrying local hex fallbacks', () => {
+    for (const source of [
+      classTrendPanelSource,
+      classInsightsPanelSource,
+      classReviewPanelSource,
+      interventionPanelSource,
+    ]) {
+      expect(source).not.toContain('--panel-ink: var(--journal-ink, #0f172a);')
+      expect(source).not.toContain('--panel-muted: var(--journal-muted, #64748b);')
+      expect(source).not.toContain('--panel-accent: var(--journal-accent, #4f46e5);')
+      expect(source).not.toContain('--panel-accent-strong: var(--journal-accent-strong, #4338ca);')
+    }
+
+    expect(teacherPanelShellSource).toContain('--panel-ink: var(--journal-ink);')
+    expect(teacherPanelShellSource).toContain('--panel-muted: var(--journal-muted);')
+    expect(teacherPanelShellSource).toContain('--panel-accent: var(--journal-accent);')
+    expect(teacherPanelShellSource).toContain('--panel-accent-strong: var(--journal-accent-strong);')
   })
 })

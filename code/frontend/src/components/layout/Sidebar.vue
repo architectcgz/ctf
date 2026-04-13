@@ -404,7 +404,7 @@ async function navigate(item: NavItem): Promise<void> {
 }
 
 .sidebar-shell-mobile {
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--color-shadow-soft) 92%, transparent);
 }
 
 .sidebar-brand-row {
@@ -637,10 +637,14 @@ async function navigate(item: NavItem): Promise<void> {
 :global([data-theme="light"]) .sidebar-shell {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 95%, var(--color-bg-base))),
-    radial-gradient(circle at top left, rgba(99, 102, 241, 0.06), transparent 14rem);
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary-hover) 6%, transparent),
+      transparent 14rem
+    );
 }
 
 :global([data-theme="light"]) .sidebar-shell-mobile {
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--color-shadow-soft) 84%, transparent);
 }
 </style>

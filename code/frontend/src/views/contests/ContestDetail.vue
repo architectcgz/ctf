@@ -569,7 +569,7 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   --page-top-tabs-margin: 0;
   --page-top-tabs-padding: 0;
   --page-top-tabs-border: color-mix(in srgb, var(--journal-border) 86%, transparent);
-  --page-top-tab-min-height: 2.5rem;
+  --page-top-tab-min-height: 3rem;
   --page-top-tab-padding: 0.4rem 0.1rem 0.65rem;
   --page-top-tab-font-size: var(--font-size-0-90);
   --page-top-tab-font-weight: 600;

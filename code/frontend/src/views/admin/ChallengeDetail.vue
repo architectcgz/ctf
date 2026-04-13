@@ -27,6 +27,7 @@
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
         :key="tab.key"
+        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
         type="button"
         role="tab"
         class="top-tab"
@@ -62,7 +63,7 @@
               <div class="journal-note-label">Question Ops</div>
               <h1 class="workspace-page-title">题目管理</h1>
             </div>
-            <p class="workspace-tab-copy">
+            <p class="workspace-page-copy">
               查看题目基础信息、提示与附件，并维护当前判题模式配置。
             </p>
           </div>
@@ -254,6 +255,7 @@ import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/admin/challenge/ChallengeDescriptionPanel.vue'
 import ChallengeWriteupManagePanel from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue'
+import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useToast } from '@/composables/useToast'
 
 type ChallengePanelKey = 'detail' | 'writeup'
@@ -286,7 +288,18 @@ const flagRegex = ref('')
 const flagPrefix = ref('')
 
 const challengeId = computed(() => String(route.params.id || ''))
-const activePanel = computed<ChallengePanelKey>(() => resolvePanel(route.query.panel))
+const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: switchPanel,
+  handleTabKeydown,
+} = useRouteQueryTabs<ChallengePanelKey>({
+  route,
+  router,
+  orderedTabs: panelTabOrder,
+  defaultTab: 'detail',
+})
 const workspaceLabel = computed(() => challenge.value?.title || '题目管理')
 const flagConfigSummary = computed(() => summarizeFlagConfig(challenge.value?.flag_config))
 const isSharedInstanceChallenge = computed(() => challenge.value?.instance_sharing === 'shared')
@@ -298,55 +311,6 @@ const flagDraftSummary = computed(() =>
     flag_prefix: flagPrefix.value.trim() || undefined,
   })
 )
-
-function resolvePanel(rawPanel: unknown): ChallengePanelKey {
-  const panel = Array.isArray(rawPanel) ? rawPanel[0] : rawPanel
-  return panel === 'writeup' ? 'writeup' : 'detail'
-}
-
-function buildPanelQuery(panel: ChallengePanelKey) {
-  const nextQuery = { ...route.query }
-  if (panel === 'detail') {
-    delete nextQuery.panel
-  } else {
-    nextQuery.panel = panel
-  }
-  return nextQuery
-}
-
-function switchPanel(panel: ChallengePanelKey): void {
-  if (!challengeId.value || panel === activePanel.value) return
-
-  void router.replace({
-    name: 'AdminChallengeDetail',
-    params: { id: challengeId.value },
-    query: buildPanelQuery(panel),
-  })
-}
-
-function handleTabKeydown(event: KeyboardEvent, index: number): void {
-  let targetIndex = index
-
-  switch (event.key) {
-    case 'ArrowRight':
-      targetIndex = (index + 1) % panelTabs.length
-      break
-    case 'ArrowLeft':
-      targetIndex = (index - 1 + panelTabs.length) % panelTabs.length
-      break
-    case 'Home':
-      targetIndex = 0
-      break
-    case 'End':
-      targetIndex = panelTabs.length - 1
-      break
-    default:
-      return
-  }
-
-  event.preventDefault()
-  switchPanel(panelTabs[targetIndex].key)
-}
 
 function openTopology(): void {
   if (!challengeId.value) return
@@ -688,8 +652,8 @@ watch(
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 20%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
   padding: var(--space-2) var(--space-3-5);
   font-size: var(--font-size-0-80);
   font-weight: 600;
@@ -723,8 +687,8 @@ watch(
 }
 
 .flag-field-input:focus {
-  border-color: rgba(37, 99, 235, 0.42);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
 @media (max-width: 900px) {
