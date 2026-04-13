@@ -98,8 +98,16 @@ describe('InstanceManagement', () => {
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
     expect(wrapper.find('.teacher-directory-row-title').attributes('title')).toBe('Alice')
-    expect(wrapper.find('.teacher-directory-row-points').attributes('title')).toBe('Web SQLi 101')
-    expect(wrapper.text()).toContain('支持按班级、用户名或学号关键字筛选，也可用学号精确筛选。')
+    expect(wrapper.find('.teacher-directory-row-challenge').attributes('title')).toBe('Web SQLi 101')
+    expect(wrapper.find('.teacher-directory-row-extends').text()).toBe('1 / 3')
+    expect(wrapper.find('.teacher-directory-row-remaining').text()).toBe('00:20:00')
+    expect(wrapper.find('.teacher-directory-row-url').text()).toContain('http://127.0.0.1:30001')
+    expect(wrapper.text()).not.toContain('重置筛选')
+    expect(
+      wrapper.findAll('button').some((node) => node.text().includes('查询实例'))
+    ).toBe(false)
+    expect(wrapper.text()).not.toContain('实例筛选')
+    expect(wrapper.text()).not.toContain('支持按班级、用户名或学号关键字筛选，也可用学号精确筛选。')
   })
 
   it('应该支持输入后自动筛选并销毁实例', async () => {
@@ -157,14 +165,89 @@ describe('InstanceManagement', () => {
     expect(wrapper.text()).toContain('Web SQLi 101')
   })
 
+  it('应该支持实例目录分页切换', async () => {
+    teacherApiMocks.getTeacherInstances.mockResolvedValue(
+      Array.from({ length: 21 }, (_, index) => ({
+        id: `inst-${index + 1}`,
+        student_id: `stu-${index + 1}`,
+        student_name: `Student ${index + 1}`,
+        student_username: `student-${index + 1}`,
+        student_no: `S-${String(index + 1).padStart(4, '0')}`,
+        class_name: 'Class A',
+        challenge_id: `challenge-${index + 1}`,
+        challenge_title: `Challenge ${index + 1}`,
+        status: 'running',
+        access_url: `http://127.0.0.1:30${String(index + 1).padStart(3, '0')}`,
+        expires_at: '2026-03-09T10:30:00Z',
+        remaining_time: 1200,
+        extend_count: 1,
+        max_extends: 3,
+        created_at: '2026-03-09T09:30:00Z',
+      }))
+    )
+
+    const wrapper = mount(InstanceManagement, {
+      global: {
+        components: {
+          ElTable,
+          ElTableColumn,
+          ElButton,
+        },
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(20)
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('共 21 条实例')
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
+    expect(wrapper.text()).toContain('Challenge 20')
+    expect(wrapper.text()).not.toContain('Challenge 21')
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
+    expect(wrapper.find('.teacher-directory-pagination').text()).toContain('2 / 2')
+    expect(wrapper.text()).toContain('Challenge 21')
+    expect(wrapper.text()).not.toContain('Challenge 20')
+  })
+
   it('应该为教师实例列表长文本保留省略样式与完整提示', () => {
+    expect(instanceManagementSource).toContain('class="workspace-directory-section teacher-directory-section"')
+    expect(instanceManagementSource).toContain('class="list-heading"')
+    expect(instanceManagementSource).not.toContain('teacher-controls-title')
+    expect(instanceManagementSource).not.toContain('teacher-controls-copy')
     expect(instanceManagementSource).toContain('用户关键字')
     expect(instanceManagementSource).toContain('按用户名或学号搜索')
+    expect(instanceManagementSource).toContain('<span>学生</span>')
+    expect(instanceManagementSource).toContain('<span>题目</span>')
+    expect(instanceManagementSource).not.toContain('<span>学生 / 题目</span>')
+    expect(instanceManagementSource).toContain('<span>创建时间</span>')
+    expect(instanceManagementSource).toContain('<span>到期时间</span>')
+    expect(instanceManagementSource).toContain('<span>延期</span>')
+    expect(instanceManagementSource).toContain('<span>剩余时间</span>')
+    expect(instanceManagementSource).toContain('<span>访问地址</span>')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-challenge"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-created"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-expires-at"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-extends"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-remaining"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-row-url"')
+    expect(instanceManagementSource).toContain('class="teacher-directory-pagination workspace-directory-pagination"')
+    expect(instanceManagementSource).not.toContain('重置筛选')
+    expect(instanceManagementSource).not.toContain('查询实例')
+    expect(instanceManagementSource).not.toContain('创建于 {{ formatDateTime(item.created_at) }}')
+    expect(instanceManagementSource).not.toContain('到期 {{ formatDateTime(item.expires_at) }}')
+    expect(instanceManagementSource).not.toContain('延期 {{ item.extend_count }} / {{ item.max_extends }}')
+    expect(instanceManagementSource).not.toContain('剩余 {{ formatRemainingTime(item.remaining_time) }}')
+    expect(instanceManagementSource).not.toContain('class="teacher-directory-chip teacher-directory-chip-muted"')
+    expect(instanceManagementSource).not.toContain('class="teacher-directory-row-metrics"')
     expect(instanceManagementSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="item\.student_name \|\| item\.student_username"/s)
-    expect(instanceManagementSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="item\.challenge_title"/s)
+    expect(instanceManagementSource).toMatch(/class="teacher-directory-row-challenge"[\s\S]*:title="item\.challenge_title"/s)
     expect(instanceManagementSource).toMatch(/class="teacher-directory-row-copy"[\s\S]*:title="/s)
     expect(instanceManagementSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(instanceManagementSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(instanceManagementSource).toMatch(/\.teacher-directory-row-challenge\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
     expect(instanceManagementSource).toMatch(/\.teacher-directory-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
   })
 })

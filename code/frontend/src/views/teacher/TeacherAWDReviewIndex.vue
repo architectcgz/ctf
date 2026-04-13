@@ -89,138 +89,129 @@ function contestStatusLabel(status: string): string {
           </div>
         </section>
 
-        <section class="teacher-controls">
-          <div class="teacher-controls-bar">
-            <div class="teacher-controls-heading">
-              <div class="teacher-surface-eyebrow journal-eyebrow">Review Filters</div>
-              <h3 class="teacher-controls-title">赛事筛选</h3>
-              <p class="teacher-controls-copy">支持按状态或关键字快速定位要进入的 AWD 赛事。</p>
+        <section class="workspace-directory-section teacher-directory-section" aria-label="AWD 赛事目录">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Review Directory</div>
+              <h3 class="list-heading__title">赛事目录</h3>
             </div>
-          </div>
-
-          <form class="awd-review-filter-grid" @submit.prevent="loadContests">
-            <label class="awd-review-field">
-              <span class="awd-review-field__label">赛事状态</span>
-              <select v-model="filters.status" class="awd-review-field__control">
-                <option
-                  v-for="option in statusOptions"
-                  :key="option.value || 'all'"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-            </label>
-
-            <label class="awd-review-field awd-review-field--wide">
-              <span class="awd-review-field__label">关键词</span>
-              <input
-                v-model="filters.keyword"
-                type="text"
-                class="awd-review-field__control"
-                placeholder="搜索赛事标题"
-              />
-            </label>
-
-            <div class="awd-review-filter-actions">
-              <button type="submit" class="teacher-btn teacher-btn--primary">应用筛选</button>
-            </div>
-          </form>
-        </section>
-
-        <div class="teacher-hero-divider" />
-
-        <div v-if="loading" class="teacher-skeleton-list">
-          <div
-            v-for="index in 3"
-            :key="index"
-            class="h-28 animate-pulse rounded-[22px] bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]"
-          />
-        </div>
-
-        <AppEmpty
-          v-else-if="error"
-          class="teacher-empty-state"
-          icon="AlertTriangle"
-          title="AWD复盘目录加载失败"
-          :description="error"
-        >
-          <template #action>
-            <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
-              重新加载
-            </button>
-          </template>
-        </AppEmpty>
-
-        <AppEmpty
-          v-else-if="!hasContests"
-          class="teacher-empty-state"
-          icon="Waypoints"
-          title="暂无 AWD 赛事"
-          description="当前还没有可进入复盘的 AWD 赛事。"
-        />
-
-        <section v-else class="teacher-directory" aria-label="AWD 赛事目录">
-          <div class="teacher-directory-top">
-            <h3 class="teacher-directory-title">赛事目录</h3>
             <div class="teacher-directory-meta">共 {{ contests.length }} 场赛事</div>
+          </header>
+
+          <section class="teacher-directory-filters" aria-label="赛事过滤">
+            <div class="awd-review-filter-grid">
+              <label class="awd-review-field">
+                <span class="awd-review-field__label">赛事状态</span>
+                <select v-model="filters.status" class="awd-review-field__control">
+                  <option
+                    v-for="option in statusOptions"
+                    :key="option.value || 'all'"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="awd-review-field awd-review-field--wide">
+                <span class="awd-review-field__label">关键词</span>
+                <input
+                  v-model="filters.keyword"
+                  type="text"
+                  class="awd-review-field__control"
+                  placeholder="搜索赛事标题"
+                />
+              </label>
+            </div>
+          </section>
+
+          <div v-if="loading" class="teacher-skeleton-list workspace-directory-loading">
+            <div
+              v-for="index in 3"
+              :key="index"
+              class="h-28 animate-pulse rounded-[22px] bg-[color-mix(in_srgb,var(--journal-surface-subtle)_92%,transparent)]"
+            />
           </div>
 
-          <div class="teacher-directory-head">
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-code">代号</span>
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-name">赛事</span>
-            <span>轮次</span>
-            <span>队伍</span>
-            <span>状态</span>
-            <span>操作</span>
-          </div>
-
-          <button
-            v-for="contest in contests"
-            :key="contest.id"
-            type="button"
-            class="teacher-directory-row"
-            @click="openContest(contest.id)"
+          <AppEmpty
+            v-else-if="error"
+            class="teacher-empty-state workspace-directory-empty"
+            icon="AlertTriangle"
+            title="AWD复盘目录加载失败"
+            :description="error"
           >
-            <div class="teacher-directory-cell teacher-directory-cell-code">
-              AWD-{{ contest.id }}
+            <template #action>
+              <button type="button" class="teacher-btn teacher-btn--primary" @click="loadContests">
+                重新加载
+              </button>
+            </template>
+          </AppEmpty>
+
+          <AppEmpty
+            v-else-if="!hasContests"
+            class="teacher-empty-state workspace-directory-empty"
+            icon="Waypoints"
+            title="暂无 AWD 赛事"
+            description="当前还没有可进入复盘的 AWD 赛事。"
+          />
+
+          <section v-else class="teacher-directory">
+            <div class="teacher-directory-head">
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-code">代号</span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-name">赛事</span>
+              <span>轮次</span>
+              <span>队伍</span>
+              <span>状态</span>
+              <span>操作</span>
             </div>
 
-            <div class="teacher-directory-cell teacher-directory-cell-name">
-              <h4 class="teacher-directory-row-title">{{ contest.title }}</h4>
-              <p class="teacher-directory-row-copy">
-                最近信号
-                {{ contest.latest_evidence_at ? formatDate(contest.latest_evidence_at) : '暂无' }}
-              </p>
-            </div>
+            <button
+              v-for="contest in contests"
+              :key="contest.id"
+              type="button"
+              class="teacher-directory-row"
+              @click="openContest(contest.id)"
+            >
+              <div class="teacher-directory-cell teacher-directory-cell-code">
+                AWD-{{ contest.id }}
+              </div>
 
-            <div class="teacher-directory-row-metrics">
-              <span>{{ contest.current_round ? `第 ${contest.current_round} 轮` : '未开始' }}</span>
-              <span>共 {{ contest.round_count }} 轮</span>
-            </div>
+              <div class="teacher-directory-cell teacher-directory-cell-name">
+                <h4 class="teacher-directory-row-title">{{ contest.title }}</h4>
+                <p class="teacher-directory-row-copy">
+                  最近信号
+                  {{ contest.latest_evidence_at ? formatDate(contest.latest_evidence_at) : '暂无' }}
+                </p>
+              </div>
 
-            <div class="teacher-directory-row-metrics">
-              <span>{{ contest.team_count }} 支队伍</span>
-              <span>{{ contest.mode.toUpperCase() }}</span>
-            </div>
+              <div class="teacher-directory-row-metrics">
+                <span>{{ contest.current_round ? `第 ${contest.current_round} 轮` : '未开始' }}</span>
+                <span>共 {{ contest.round_count }} 轮</span>
+              </div>
 
-            <div class="teacher-directory-row-tags">
-              <span class="teacher-directory-chip">
-                {{ contestStatusLabel(contest.status) }}
-              </span>
-              <span
-                class="teacher-directory-chip"
-                :class="contest.export_ready ? '' : 'teacher-directory-chip-muted'"
-              >
-                {{ contest.export_ready ? '可导出' : '实时复盘' }}
-              </span>
-            </div>
+              <div class="teacher-directory-row-metrics">
+                <span>{{ contest.team_count }} 支队伍</span>
+                <span>{{ contest.mode.toUpperCase() }}</span>
+              </div>
 
-            <div class="teacher-directory-row-cta">
-              <span>进入复盘</span>
-              <ArrowRight class="h-4 w-4" />
-            </div>
-          </button>
+              <div class="teacher-directory-row-tags">
+                <span class="teacher-directory-chip">
+                  {{ contestStatusLabel(contest.status) }}
+                </span>
+                <span
+                  class="teacher-directory-chip"
+                  :class="contest.export_ready ? '' : 'teacher-directory-chip-muted'"
+                >
+                  {{ contest.export_ready ? '可导出' : '实时复盘' }}
+                </span>
+              </div>
+
+              <div class="teacher-directory-row-cta">
+                <span>进入复盘</span>
+                <ArrowRight class="h-4 w-4" />
+              </div>
+            </button>
+          </section>
         </section>
       </div>
     </section>
@@ -236,19 +227,39 @@ function contestStatusLabel(status: string): string {
   --awd-review-directory-columns: minmax(0, 7rem) minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1fr) auto;
 }
 
-.teacher-controls-heading {
-  max-width: 40rem;
-}
-
 .teacher-summary--flat {
   border-bottom: 0;
+}
+
+.teacher-directory-section {
+  margin-top: var(--space-6);
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-filters {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
 }
 
 .awd-review-filter-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) auto;
-  margin-top: var(--space-5);
+  grid-template-columns: minmax(14rem, 16rem) minmax(16rem, 1fr);
 }
 
 .awd-review-field {
@@ -285,45 +296,14 @@ function contestStatusLabel(status: string): string {
   color: color-mix(in srgb, var(--journal-muted) 80%, transparent);
 }
 
-.awd-review-filter-actions {
-  display: flex;
-  align-items: end;
-}
-
-.teacher-hero-divider {
-  margin-top: var(--space-6);
-  border-top: 1px dashed var(--teacher-divider);
-}
-
 .teacher-skeleton-list {
-  margin-top: var(--space-6);
   display: grid;
   gap: var(--space-3);
-}
-
-.teacher-empty-state {
-  margin-top: var(--space-6);
 }
 
 .teacher-directory {
   display: flex;
   flex-direction: column;
-  margin-top: var(--space-6);
-}
-
-.teacher-directory-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.teacher-directory-title {
-  margin: 0;
-  font-size: var(--font-size-1-08);
-  font-weight: 700;
-  color: var(--journal-ink);
 }
 
 .teacher-directory-meta {
@@ -444,7 +424,8 @@ function contestStatusLabel(status: string): string {
 }
 
 @media (max-width: 1080px) {
-  .teacher-topbar {
+  .teacher-topbar,
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
