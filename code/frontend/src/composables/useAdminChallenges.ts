@@ -1,4 +1,5 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 
 import {
   createChallengePublishRequest,
@@ -9,6 +10,9 @@ import {
 import type {
   AdminChallengeListItem,
   AdminChallengePublishRequestData,
+  ChallengeCategory,
+  ChallengeDifficulty,
+  ChallengeStatus,
 } from '@/api/contracts'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
@@ -20,9 +24,25 @@ export interface AdminChallengeListRow extends AdminChallengeListItem {
   latestPublishRequest: AdminChallengePublishRequestData | null
 }
 
+type ChallengeManageStatusFilter = Extract<ChallengeStatus, 'draft' | 'published' | 'archived'>
+
 export function useAdminChallenges() {
   const toast = useToast()
-  const pagination = usePagination(getChallenges)
+  const keyword = ref('')
+  const categoryFilter = ref<ChallengeCategory | ''>('')
+  const difficultyFilter = ref<ChallengeDifficulty | ''>('')
+  const statusFilter = ref<ChallengeManageStatusFilter | ''>('')
+  const autoFilterReady = ref(false)
+  const pagination = usePagination(({ page, page_size }) =>
+    getChallenges({
+      page,
+      page_size,
+      keyword: keyword.value.trim() || undefined,
+      category: categoryFilter.value || undefined,
+      difficulty: difficultyFilter.value || undefined,
+      status: statusFilter.value || undefined,
+    })
+  )
   const latestPublishRequests = ref<Record<string, AdminChallengePublishRequestData | null>>({})
   let pollTimer: number | null = null
 
@@ -140,20 +160,59 @@ export function useAdminChallenges() {
     await refreshLatestPublishRequests()
   }
 
-  onMounted(() => {
+  type DebouncedRefresh = ReturnType<typeof useDebounceFn> & {
+    cancel?: () => void
+  }
+  const scheduleKeywordRefresh = useDebounceFn(() => {
+    pagination.page.value = 1
     void refresh()
+  }, 250) as DebouncedRefresh
+
+  async function clearFilters() {
+    autoFilterReady.value = false
+    scheduleKeywordRefresh.cancel?.()
+    keyword.value = ''
+    categoryFilter.value = ''
+    difficultyFilter.value = ''
+    statusFilter.value = ''
+    pagination.page.value = 1
+    await refresh()
+    autoFilterReady.value = true
+  }
+
+  watch(keyword, () => {
+    if (!autoFilterReady.value) return
+    scheduleKeywordRefresh()
+  })
+
+  watch([categoryFilter, difficultyFilter, statusFilter], async () => {
+    if (!autoFilterReady.value) return
+    scheduleKeywordRefresh.cancel?.()
+    pagination.page.value = 1
+    await refresh()
+  })
+
+  onMounted(async () => {
+    await refresh()
+    autoFilterReady.value = true
   })
 
   onUnmounted(() => {
+    scheduleKeywordRefresh.cancel?.()
     stopPolling()
   })
 
   return {
     ...pagination,
     list,
+    keyword,
+    categoryFilter,
+    difficultyFilter,
+    statusFilter,
     changePage,
     changePageSize,
     refresh,
+    clearFilters,
     publish,
     remove,
   }

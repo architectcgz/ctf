@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Filter, Search } from 'lucide-vue-next'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -36,7 +37,21 @@ const panelTabs: Array<{ key: ChallengePanelKey; label: string; panelId: string;
 const route = useRoute()
 const router = useRouter()
 
-const { list, total, page, pageSize, loading, changePage, publish, remove } = useAdminChallenges()
+const {
+  list,
+  total,
+  page,
+  pageSize,
+  loading,
+  keyword,
+  categoryFilter,
+  difficultyFilter,
+  statusFilter,
+  clearFilters,
+  changePage,
+  publish,
+  remove,
+} = useAdminChallenges()
 
 const {
   uploading,
@@ -52,6 +67,23 @@ const publishedCount = computed(
   () => list.value.filter((item) => item.status === 'published').length
 )
 const draftCount = computed(() => list.value.filter((item) => item.status === 'draft').length)
+const hasActiveFilters = computed(() =>
+  Boolean(
+    keyword.value.trim() || categoryFilter.value || difficultyFilter.value || statusFilter.value
+  )
+)
+const activeFilterCount = computed(
+  () =>
+    [
+      keyword.value.trim(),
+      categoryFilter.value,
+      difficultyFilter.value,
+      statusFilter.value,
+    ].filter(Boolean).length
+)
+const manageEmptyMessage = computed(() =>
+  hasActiveFilters.value ? '当前筛选条件下没有匹配题目。' : '当前还没有题目，请先导入题目包。'
+)
 
 const panelTabOrder = panelTabs.map((tab) => tab.key) as ChallengePanelKey[]
 const {
@@ -208,6 +240,80 @@ onMounted(() => {
             </div>
           </header>
 
+          <section class="challenge-manage-filters" aria-label="题目筛选">
+            <div class="challenge-manage-filters__bar">
+              <div class="challenge-manage-filters__heading">
+                <div class="journal-note-label">Challenge Filters</div>
+                <h3 class="challenge-manage-filters__title">题目筛选</h3>
+                <p class="challenge-manage-filters__copy">
+                  支持按关键词、分类、难度和发布状态快速收束题库范围。
+                </p>
+              </div>
+
+              <div class="challenge-manage-filter-pill">
+                <Filter class="h-4 w-4" />
+                激活筛选 {{ activeFilterCount }} 项
+              </div>
+
+              <button
+                v-if="hasActiveFilters"
+                type="button"
+                class="admin-btn admin-btn-ghost admin-btn-compact"
+                @click="void clearFilters()"
+              >
+                清空筛选
+              </button>
+            </div>
+
+            <div class="challenge-manage-filter-grid">
+              <label class="challenge-manage-filter-search" for="challenge-manage-keyword">
+                <Search class="challenge-manage-filter-search__icon h-4 w-4" />
+                <input
+                  id="challenge-manage-keyword"
+                  v-model="keyword"
+                  type="text"
+                  class="challenge-manage-filter-input"
+                  placeholder="搜索题目标题"
+                />
+              </label>
+
+              <label class="challenge-manage-filter-field">
+                <span class="challenge-manage-filter-label">分类</span>
+                <select v-model="categoryFilter" class="challenge-manage-filter-select">
+                  <option value="">全部分类</option>
+                  <option value="web">Web</option>
+                  <option value="pwn">Pwn</option>
+                  <option value="reverse">逆向</option>
+                  <option value="crypto">密码</option>
+                  <option value="misc">杂项</option>
+                  <option value="forensics">取证</option>
+                </select>
+              </label>
+
+              <label class="challenge-manage-filter-field">
+                <span class="challenge-manage-filter-label">难度</span>
+                <select v-model="difficultyFilter" class="challenge-manage-filter-select">
+                  <option value="">全部难度</option>
+                  <option value="beginner">入门</option>
+                  <option value="easy">简单</option>
+                  <option value="medium">中等</option>
+                  <option value="hard">困难</option>
+                  <option value="insane">地狱</option>
+                </select>
+              </label>
+
+              <label class="challenge-manage-filter-field">
+                <span class="challenge-manage-filter-label">发布状态</span>
+                <select v-model="statusFilter" class="challenge-manage-filter-select">
+                  <option value="">全部状态</option>
+                  <option value="draft">草稿</option>
+                  <option value="published">已发布</option>
+                  <option value="archived">已归档</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
           <div
             v-if="loading"
             class="workspace-directory-loading flex items-center justify-center py-12"
@@ -219,7 +325,7 @@ onMounted(() => {
 
           <template v-else>
             <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
-              当前还没有题目，请先导入题目包。
+              {{ manageEmptyMessage }}
             </div>
 
             <div v-else class="challenge-list workspace-directory-list">
@@ -603,6 +709,116 @@ onMounted(() => {
   font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
+}
+
+.challenge-manage-filters {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+}
+
+.challenge-manage-filters__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.challenge-manage-filters__heading {
+  display: grid;
+  gap: var(--space-1-5);
+  margin-right: auto;
+}
+
+.challenge-manage-filters__title {
+  margin: 0;
+  font-size: var(--font-size-1-00);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.challenge-manage-filters__copy {
+  margin: 0;
+  color: var(--journal-muted);
+  line-height: 1.6;
+}
+
+.challenge-manage-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.35rem;
+  padding: 0 var(--space-3-5);
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 20%, var(--journal-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  color: var(--journal-ink);
+  font-size: var(--font-size-0-80);
+  font-weight: 700;
+}
+
+.challenge-manage-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(16rem, 1.5fr) repeat(3, minmax(10rem, 0.75fr));
+}
+
+.challenge-manage-filter-search,
+.challenge-manage-filter-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.challenge-manage-filter-search {
+  position: relative;
+}
+
+.challenge-manage-filter-search__icon {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  transform: translateY(-50%);
+  color: var(--journal-muted);
+  pointer-events: none;
+}
+
+.challenge-manage-filter-label {
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+  color: var(--journal-muted);
+}
+
+.challenge-manage-filter-input,
+.challenge-manage-filter-select {
+  min-height: 2.8rem;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--journal-border) 90%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
+  color: var(--journal-ink);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+.challenge-manage-filter-input {
+  padding: 0 var(--space-3) 0 calc(var(--space-6) + var(--space-1));
+}
+
+.challenge-manage-filter-select {
+  padding: 0 var(--space-3);
+}
+
+.challenge-manage-filter-input::placeholder {
+  color: var(--journal-muted);
+}
+
+.challenge-manage-filter-input:focus,
+.challenge-manage-filter-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
 }
 
 .challenge-list {
@@ -1052,6 +1268,10 @@ onMounted(() => {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .challenge-manage-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .challenge-list {
     --challenge-list-columns: minmax(13rem, 1.45fr) minmax(5.4rem, 0.6fr) minmax(5.4rem, 0.6fr)
       minmax(5rem, 0.54fr) minmax(6.2rem, 0.66fr) minmax(6.2rem, 0.7fr) minmax(8.6rem, 8.6rem);
@@ -1069,6 +1289,10 @@ onMounted(() => {
 @media (max-width: 960px) {
   .manage-directory-head {
     display: none;
+  }
+
+  .challenge-manage-filter-grid {
+    grid-template-columns: 1fr;
   }
 
   .challenge-row {
