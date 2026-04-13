@@ -123,6 +123,10 @@ describe('ChallengeManage', () => {
     expect(wrapper.find('#challenge-panel-import').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('#challenge-panel-queue').attributes('aria-hidden')).toBe('true')
     expect(wrapper.text()).toContain('Test Challenge')
+    expect(wrapper.text()).toContain('已导入题目')
+    expect(wrapper.text()).toContain('Imported Challenges')
+    expect(wrapper.text()).not.toContain('Challenge Filters')
+    expect(wrapper.text()).not.toContain('支持按关键词、分类、难度和发布状态快速收束题库范围。')
     expect(wrapper.text()).not.toContain('CH-')
     expect(wrapper.text()).not.toContain('Publish Check')
 
@@ -161,8 +165,14 @@ describe('ChallengeManage', () => {
 
     expect(adminApiMocks.getChallenges).toHaveBeenCalledWith({ page: 1, page_size: 20 })
 
+    const filterSection = wrapper.get('.challenge-manage-filters')
     const keywordInput = wrapper.get('input[placeholder="搜索题目标题"]')
-    const selects = wrapper.findAll('.challenge-manage-filter-select')
+    let selects = wrapper.findAll('.challenge-manage-filter-select')
+
+    expect(filterSection.text()).not.toContain('难度')
+    expect(wrapper.get('#challenge-manage-filter-toggle').attributes('aria-expanded')).toBe('false')
+    expect(wrapper.get('#challenge-manage-filter-toggle').text()).toContain('更多筛选')
+    expect(selects).toHaveLength(2)
 
     await keywordInput.setValue('Test')
     expect(adminApiMocks.getChallenges).toHaveBeenCalledTimes(1)
@@ -186,7 +196,7 @@ describe('ChallengeManage', () => {
       category: 'web',
     })
 
-    await selects[1].setValue('easy')
+    await selects[1].setValue('draft')
     await flushPromises()
 
     expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
@@ -194,10 +204,20 @@ describe('ChallengeManage', () => {
       page_size: 20,
       keyword: 'Test',
       category: 'web',
-      difficulty: 'easy',
+      status: 'draft',
     })
 
-    await selects[2].setValue('draft')
+    await wrapper.get('#challenge-manage-filter-toggle').trigger('click')
+    await flushPromises()
+
+    expect(filterSection.text()).toContain('难度')
+    expect(wrapper.get('#challenge-manage-filter-toggle').attributes('aria-expanded')).toBe('true')
+    expect(wrapper.get('#challenge-manage-filter-toggle').text()).toContain('收起筛选')
+
+    selects = wrapper.findAll('.challenge-manage-filter-select')
+    expect(selects).toHaveLength(3)
+
+    await selects[2].setValue('easy')
     await flushPromises()
 
     expect(adminApiMocks.getChallenges).toHaveBeenLastCalledWith({
@@ -208,8 +228,17 @@ describe('ChallengeManage', () => {
       difficulty: 'easy',
       status: 'draft',
     })
-    expect(wrapper.text()).toContain('题目筛选')
-    expect(wrapper.text()).toContain('激活筛选 4 项')
+    expect(wrapper.find('.challenge-manage-filters').attributes('aria-label')).toBe('题目筛选')
+    expect(wrapper.find('.challenge-manage-filters__bar').exists()).toBe(false)
+    expect(wrapper.find('#challenge-manage-keyword').exists()).toBe(true)
+    expect(wrapper.find('.challenge-manage-filter-actions').exists()).toBe(true)
+    expect(wrapper.find('.challenge-manage-filter-actions').text()).toContain('清空筛选')
+    expect(
+      wrapper.find('.challenge-manage-filter-actions .challenge-manage-filter-clear').attributes(
+        'disabled'
+      )
+    ).toBeUndefined()
+    expect(wrapper.text()).not.toContain('激活筛选')
     expect(wrapper.text()).not.toContain('应用筛选')
   })
 
@@ -251,10 +280,37 @@ describe('ChallengeManage', () => {
   })
 
   it('题目管理源码应包含平铺筛选区，并避免显式应用按钮', () => {
-    expect(challengeManageSource).toContain('题目筛选')
+    expect(challengeManageSource).toContain('Imported Challenges')
+    expect(challengeManageSource).toContain('已导入题目')
+    expect(challengeManageSource).toContain('class="list-heading"')
+    expect(challengeManageSource).not.toContain('Challenge Filters')
+    expect(challengeManageSource).not.toContain('challenge-manage-filters__heading')
+    expect(challengeManageSource).not.toContain('支持按关键词、分类、难度和发布状态快速收束题库范围。')
+    expect(challengeManageSource).not.toMatch(
+      /\.manage-header\s*\{[^}]*border-bottom:\s*1px solid/s
+    )
+    expect(challengeManageSource).toContain('id="challenge-manage-filter-toggle"')
+    expect(challengeManageSource).toContain('class="challenge-manage-filter-advanced"')
+    expect(challengeManageSource).toContain('更多筛选')
+    expect(challengeManageSource).toContain('收起筛选')
+    expect(challengeManageSource).not.toContain('challenge-manage-filters__bar')
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-filter-advanced\s*\{[^}]*display:\s*inline-grid;[^}]*justify-self:\s*start;[^}]*grid-template-columns:\s*minmax\(16rem,\s*18rem\);/s
+    )
     expect(challengeManageSource).toContain('placeholder="搜索题目标题"')
     expect(challengeManageSource).toContain('class="challenge-manage-filter-grid"')
     expect(challengeManageSource).toContain('class="challenge-manage-filter-select"')
+    expect(challengeManageSource).toContain('class="challenge-manage-filter-search__control"')
+    expect(challengeManageSource).toContain('class="challenge-manage-filter-actions"')
+    expect(challengeManageSource).toContain('class="admin-btn admin-btn-ghost admin-btn-compact challenge-manage-filter-clear"')
+    expect(challengeManageSource).toContain(':disabled="!hasActiveFilters"')
+    expect(challengeManageSource).toMatch(
+      /\.challenge-manage-filter-grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(16rem,\s*18rem\)\) minmax\(15rem,\s*1\.35fr\) auto;/s
+    )
+    const keywordIndex = challengeManageSource.indexOf('id="challenge-manage-keyword"')
+    const statusIndex = challengeManageSource.indexOf('发布状态')
+    expect(keywordIndex).toBeGreaterThan(statusIndex)
+    expect(challengeManageSource).not.toContain('激活筛选')
     expect(challengeManageSource).not.toContain('应用筛选')
   })
 
