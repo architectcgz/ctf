@@ -236,37 +236,8 @@ function contestStatusLabel(status: string): string {
   --awd-review-directory-columns: minmax(0, 7rem) minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1fr) auto;
 }
 
-.teacher-controls {
-  margin-top: var(--space-6);
-  padding: var(--space-5);
-  border: 1px solid var(--teacher-card-border);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--journal-surface-subtle) 84%, transparent);
-  box-shadow: 0 10px 24px var(--color-shadow-soft);
-}
-
-.teacher-controls-bar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 .teacher-controls-heading {
   max-width: 40rem;
-}
-
-.teacher-controls-title {
-  margin: var(--space-3) 0 var(--space-2);
-  font-size: var(--font-size-1-08);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.teacher-controls-copy {
-  margin: 0;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .awd-review-filter-grid {
