@@ -1517,6 +1517,7 @@ watch(
 
 :global([data-theme='dark']) .journal-shell {
   color-scheme: dark;
+  --bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));
   --bg-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --bg-panel: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
   --bg-muted: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));

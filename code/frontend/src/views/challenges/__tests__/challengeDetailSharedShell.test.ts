@@ -93,4 +93,10 @@ describe('challenge detail shared shell alignment', () => {
     )
     expect(challengeInstanceCardSource).not.toContain("var(--color-primary) 88%, white")
   })
+
+  it('题目详情夜间模式应覆盖 workspace page 底色，避免外层主内容区继续发亮', () => {
+    expect(challengeDetailSource).toMatch(
+      /:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{[\s\S]*--bg-page:\s*color-mix\(in srgb,\s*var\(--color-bg-base\)\s*94%,\s*var\(--color-bg-surface\)\);/s
+    )
+  })
 })
