@@ -325,7 +325,7 @@
               <div class="section-head workspace-tab-heading">
                 <div class="workspace-tab-heading__main">
                   <div class="overline">My Writeup</div>
-                  <h2 class="section-title workspace-tab-heading__title">我的复盘</h2>
+                  <h2 class="section-title workspace-tab-heading__title">编写题解</h2>
                 </div>
                 <div class="section-hint">
                   解题过程复盘 · {{ challenge?.is_solved ? '可发布到社区' : '仅可保存草稿' }}
@@ -558,7 +558,7 @@ const workspaceTabs: Array<{ id: WorkspaceTab; label: string }> = [
   { id: 'question', label: '题目' },
   { id: 'solution', label: '题解' },
   { id: 'records', label: '提交记录' },
-  { id: 'writeup', label: '我的复盘' },
+  { id: 'writeup', label: '编写题解' },
 ]
 const workspaceTabOrder = workspaceTabs.map((tab) => tab.id) as WorkspaceTab[]
 const {

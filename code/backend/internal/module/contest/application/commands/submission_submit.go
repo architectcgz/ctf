@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 
-	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 )
 
@@ -25,7 +24,6 @@ func (s *SubmissionService) SubmitFlagInContest(ctx context.Context, userID, con
 
 	return &dto.SubmissionResp{
 		IsCorrect:   true,
-		Message:     constants.MsgFlagCorrect,
 		Points:      finalScore,
 		SubmittedAt: submission.SubmittedAt,
 	}, nil

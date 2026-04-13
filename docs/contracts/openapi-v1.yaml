@@ -398,13 +398,12 @@ components:
 
     SubmitFlagData:
       type: object
-      required: [is_correct, status, message, submitted_at]
+      required: [is_correct, status, submitted_at]
       properties:
         is_correct: { type: boolean }
         status:
           type: string
           enum: [correct, incorrect, pending_review]
-        message: { type: string }
         points: { type: integer, nullable: true, minimum: 0 }
         submitted_at: { $ref: "#/components/schemas/ISODateTime" }
         instance_shutdown_at: { $ref: "#/components/schemas/ISODateTime", nullable: true }

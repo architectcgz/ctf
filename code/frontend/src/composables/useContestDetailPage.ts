@@ -214,6 +214,13 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
     submitResult.value = null
   }
 
+  function buildContestSubmitMessage(result: SubmitFlagData): string {
+    if (result.is_correct) {
+      return `正确！+${result.points ?? 0} 分`
+    }
+    return 'Flag 错误，请重试'
+  }
+
   async function submitFlagAction() {
     const flag = flagInput.value.trim()
     if (!flag) {
@@ -233,7 +240,10 @@ export function useContestDetailPage(options: UseContestDetailPageOptions) {
 
     try {
       const result = await submitContestFlag(contest.value.id, selectedChallenge.value.id, flag)
-      submitResult.value = result
+      submitResult.value = {
+        ...result,
+        message: buildContestSubmitMessage(result),
+      }
 
       if (result.is_correct) {
         const solvedChallengeId = selectedChallenge.value.id
