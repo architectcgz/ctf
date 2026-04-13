@@ -191,6 +191,20 @@ func (r *Repository) FindCorrectSubmission(userID, challengeID int64) (*model.Su
 	return &submission, err
 }
 
+func (r *Repository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+
+	var submissions []model.Submission
+	err := r.db.
+		Where("user_id = ? AND challenge_id = ? AND contest_id IS NULL", userID, challengeID).
+		Order("submitted_at DESC, id DESC").
+		Limit(limit).
+		Find(&submissions).Error
+	return submissions, err
+}
+
 func (r *Repository) UpdateSubmission(submission *model.Submission) error {
 	return r.db.Save(submission).Error
 }

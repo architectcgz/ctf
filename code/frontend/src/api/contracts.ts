@@ -203,10 +203,17 @@ export interface InstanceListItem extends InstanceData {
 export interface SubmitFlagData {
   is_correct: boolean
   status: 'correct' | 'incorrect' | 'pending_review'
-  message: string
+  message?: string
   points?: number
   submitted_at: ISODateTime
   instance_shutdown_at?: ISODateTime
+}
+
+export interface ChallengeSubmissionRecordData {
+  id: ID
+  status: 'correct' | 'incorrect' | 'pending_review'
+  answer?: string
+  submitted_at: ISODateTime
 }
 
 export type TeacherManualReviewStatus = 'pending' | 'approved' | 'rejected'

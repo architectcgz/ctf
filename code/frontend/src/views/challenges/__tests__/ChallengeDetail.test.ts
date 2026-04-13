@@ -11,6 +11,7 @@ const challengeApiMocks = vi.hoisted(() => ({
   getRecommendedChallengeSolutions: vi.fn(),
   getCommunityChallengeSolutions: vi.fn(),
   getMyChallengeWriteupSubmission: vi.fn(),
+  getMyChallengeSubmissionRecords: vi.fn(),
   upsertChallengeWriteupSubmission: vi.fn(),
   submitFlag: vi.fn(),
   unlockHint: vi.fn(),
@@ -103,6 +104,7 @@ describe('ChallengeDetail', () => {
       page_size: 20,
     })
     challengeApiMocks.getMyChallengeWriteupSubmission.mockResolvedValue(null)
+    challengeApiMocks.getMyChallengeSubmissionRecords.mockResolvedValue([])
     challengeApiMocks.upsertChallengeWriteupSubmission.mockResolvedValue({
       id: 'submission-1',
       user_id: 'stu-1',
@@ -565,7 +567,6 @@ describe('ChallengeDetail', () => {
     challengeApiMocks.submitFlag.mockResolvedValue({
       is_correct: false,
       status: 'pending_review',
-      message: '答案已提交，等待教师审核',
       submitted_at: '2026-03-12T01:00:00.000Z',
     })
 
@@ -598,7 +599,6 @@ describe('ChallengeDetail', () => {
     challengeApiMocks.submitFlag.mockResolvedValue({
       is_correct: true,
       status: 'correct',
-      message: '恭喜你，Flag 正确！当前实例将在 10 分钟后自动关闭',
       points: 100,
       submitted_at: '2026-03-12T01:00:00.000Z',
       instance_shutdown_at: '2026-03-12T01:10:00.000Z',
@@ -625,6 +625,43 @@ describe('ChallengeDetail', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(wrapper.text()).toContain('当前实例将在 10 分钟后自动关闭')
+  })
+
+  it('进入题目页后应加载并展示历史提交记录', async () => {
+    challengeApiMocks.getMyChallengeSubmissionRecords.mockResolvedValue([
+      {
+        id: 'record-1',
+        status: 'correct',
+        submitted_at: '2026-03-12T01:10:00.000Z',
+      },
+      {
+        id: 'record-2',
+        status: 'incorrect',
+        submitted_at: '2026-03-12T01:00:00.000Z',
+      },
+    ])
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
+    expect(recordsTab).toBeTruthy()
+
+    await recordsTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(challengeApiMocks.getMyChallengeSubmissionRecords).toHaveBeenCalledWith('1')
+    expect(wrapper.text()).toContain('恭喜你，Flag 正确！')
+    expect(wrapper.text()).toContain('Flag 错误，请重试')
   })
 
   it('Flag 输入应提供可访问标签', async () => {

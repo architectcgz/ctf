@@ -132,6 +132,14 @@ type flowSubmissionResponse struct {
 	Points    int    `json:"points"`
 }
 
+type flowSubmissionRecord struct {
+	ID          int64  `json:"id"`
+	Status      string `json:"status"`
+	Message     string `json:"message"`
+	Answer      string `json:"answer"`
+	SubmittedAt string `json:"submitted_at"`
+}
+
 type flowInstanceResponse struct {
 	ID        int64  `json:"id"`
 	AccessURL string `json:"access_url"`
@@ -416,6 +424,9 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	if wrongSubmission.IsCorrect {
 		t.Fatalf("expected wrong flag submission to be incorrect")
 	}
+	if wrongSubmission.Message != "" {
+		t.Fatalf("expected wrong submission message to be omitted, got %+v", wrongSubmission)
+	}
 
 	correctSubmitResp := performFlowJSONRequest(
 		t,
@@ -436,6 +447,39 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	}
 	if correctSubmission.Points != 100 {
 		t.Fatalf("expected 100 points, got %d", correctSubmission.Points)
+	}
+	if correctSubmission.Message != "" {
+		t.Fatalf("expected correct submission message to be omitted, got %+v", correctSubmission)
+	}
+
+	submissionHistoryResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/challenges/"+strconv.FormatInt(challenge.ID, 10)+"/submissions/mine",
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if submissionHistoryResp.Code != http.StatusOK {
+		t.Fatalf("unexpected submission history status: %d body=%s", submissionHistoryResp.Code, submissionHistoryResp.Body.String())
+	}
+	submissionHistoryBody := decodeFlowEnvelope(t, submissionHistoryResp)
+	submissionHistory := decodeFlowJSON[[]flowSubmissionRecord](t, submissionHistoryBody.Data)
+	if len(submissionHistory) != 2 {
+		t.Fatalf("expected 2 submission history records, got %d", len(submissionHistory))
+	}
+	if submissionHistory[0].Status != dto.SubmissionStatusCorrect {
+		t.Fatalf("unexpected latest submission record: %+v", submissionHistory[0])
+	}
+	if submissionHistory[0].Message != "" {
+		t.Fatalf("expected latest submission record message to be omitted, got %+v", submissionHistory[0])
+	}
+	if submissionHistory[1].Status != dto.SubmissionStatusIncorrect {
+		t.Fatalf("unexpected previous submission record: %+v", submissionHistory[1])
+	}
+	if submissionHistory[1].Message != "" {
+		t.Fatalf("expected previous submission record message to be omitted, got %+v", submissionHistory[1])
 	}
 
 	repeatSubmitResp := performFlowJSONRequest(
@@ -861,6 +905,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		}, logger),
 		practiceHandler.SubmitFlag,
 	)
+	protected.GET("/challenges/:id/submissions/mine", practiceHandler.ListMyChallengeSubmissions)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.POST("/instances/:id/access", runtimeHandler.AccessInstance)
 	apiV1.GET("/instances/:id/proxy", runtimeHandler.ProxyInstance)

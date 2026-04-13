@@ -25,6 +25,7 @@ type stubPracticeRepository struct {
 	bindReservedPortFn                     func(port int, instanceID int64) error
 	createSubmissionFn                     func(submission *model.Submission) error
 	findCorrectSubmissionFn                func(userID, challengeID int64) (*model.Submission, error)
+	listChallengeSubmissionsFn             func(userID, challengeID int64, limit int) ([]model.Submission, error)
 	updateSubmissionFn                     func(submission *model.Submission) error
 	findUserByIDFn                         func(userID int64) (*model.User, error)
 	listTeacherManualReviewSubmissionsFn   func(query *dto.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
@@ -121,6 +122,13 @@ func (s *stubPracticeRepository) FindCorrectSubmission(userID, challengeID int64
 		return s.findCorrectSubmissionFn(userID, challengeID)
 	}
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (s *stubPracticeRepository) ListChallengeSubmissions(userID, challengeID int64, limit int) ([]model.Submission, error) {
+	if s.listChallengeSubmissionsFn != nil {
+		return s.listChallengeSubmissionsFn(userID, challengeID, limit)
+	}
+	return nil, nil
 }
 
 func (s *stubPracticeRepository) UpdateSubmission(submission *model.Submission) error {
