@@ -1,11 +1,14 @@
 package commands
 
 import (
+	"context"
+
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
 	contestports "ctf-platform/internal/module/contest/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type AWDService struct {
@@ -16,6 +19,7 @@ type AWDService struct {
 	flagSecret   string
 	awdConfig    config.ContestAWDConfig
 	log          *zap.Logger
+	eventBus     platformevents.Bus
 }
 
 func NewAWDService(
@@ -38,5 +42,25 @@ func NewAWDService(
 		flagSecret:   flagSecret,
 		awdConfig:    awdConfig,
 		log:          log,
+	}
+}
+
+func (s *AWDService) SetEventBus(bus platformevents.Bus) *AWDService {
+	if s == nil {
+		return nil
+	}
+	s.eventBus = bus
+	return s
+}
+
+func (s *AWDService) publishWeakEvent(ctx context.Context, evt platformevents.Event) {
+	if s == nil || s.eventBus == nil {
+		return
+	}
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if err := s.eventBus.Publish(ctx, evt); err != nil {
+		s.log.Warn("publish_contest_event_failed", zap.String("event", evt.Name), zap.Error(err))
 	}
 }

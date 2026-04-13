@@ -21,11 +21,13 @@ import (
 	contestcmd "ctf-platform/internal/module/contest/application/commands"
 	contestjobs "ctf-platform/internal/module/contest/application/jobs"
 	contestqry "ctf-platform/internal/module/contest/application/queries"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
 	"ctf-platform/internal/module/contest/testsupport"
 	rediskeys "ctf-platform/internal/pkg/redis"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
 
@@ -1062,6 +1064,113 @@ func TestAWDServiceSubmitAttackUsesCurrentRoundFlagAndDeduplicatesByTeam(t *test
 	}
 	if !second.IsSuccess || second.ScoreGained != 0 {
 		t.Fatalf("unexpected second attack resp: %+v", second)
+	}
+
+	var logs []model.AWDAttackLog
+	if err := db.Order("id ASC").Find(&logs).Error; err != nil {
+		t.Fatalf("query attack logs: %v", err)
+	}
+	if len(logs) != 2 {
+		t.Fatalf("expected 2 attack logs, got %+v", logs)
+	}
+	if logs[0].SubmittedByUserID == nil || *logs[0].SubmittedByUserID != 4001 {
+		t.Fatalf("expected first log submitted_by_user_id=4001, got %+v", logs[0])
+	}
+	if logs[1].SubmittedByUserID == nil || *logs[1].SubmittedByUserID != 4002 {
+		t.Fatalf("expected second log submitted_by_user_id=4002, got %+v", logs[1])
+	}
+}
+
+func TestAWDServiceSubmitAttackPublishesAttackAcceptedEvent(t *testing.T) {
+	db := newAWDTestDB(t)
+
+	mini, err := miniredis.Run()
+	if err != nil {
+		t.Fatalf("start miniredis: %v", err)
+	}
+	t.Cleanup(mini.Close)
+
+	redisClient := redis.NewClient(&redis.Options{Addr: mini.Addr()})
+	t.Cleanup(func() {
+		_ = redisClient.Close()
+	})
+
+	service := newAWDServiceForTest(db, redisClient, "awd-secret", config.ContestAWDConfig{})
+	bus := platformevents.NewBus()
+	service.commands.SetEventBus(bus)
+
+	now := time.Now()
+	createAWDContestFixture(t, db, 14, now)
+	createAWDRoundFixture(t, db, 141, 14, 1, 80, 20, now)
+	createAWDChallengeFixture(t, db, 1401, now)
+	createAWDContestChallengeFixture(t, db, 14, 1401, now)
+	createAWDTeamFixture(t, db, 1411, 14, "Red", now)
+	createAWDTeamFixture(t, db, 1412, 14, "Blue", now)
+	createContestRegistrationForExistingTeam(t, db, 14, 1411, 14001, now)
+	createContestRegistrationForExistingTeam(t, db, 14, 1411, 14002, now)
+
+	if err := db.Model(&model.Challenge{}).Where("id = ?", 1401).Updates(map[string]any{
+		"flag_prefix": "awd",
+		"category":    model.DimensionWeb,
+	}).Error; err != nil {
+		t.Fatalf("update challenge fields: %v", err)
+	}
+	if err := redisClient.Set(context.Background(), rediskeys.AWDCurrentRoundKey(14), "1", 0).Err(); err != nil {
+		t.Fatalf("set current round: %v", err)
+	}
+
+	flag := contestdomain.BuildAWDRoundFlag(14, 1, 1412, 1401, "awd-secret", "awd")
+	if err := redisClient.HSet(context.Background(), rediskeys.AWDRoundFlagsKey(14, 141), map[string]any{
+		rediskeys.AWDRoundFlagField(1412, 1401): flag,
+	}).Err(); err != nil {
+		t.Fatalf("set round flag: %v", err)
+	}
+
+	received := make(chan contestcontracts.AWDAttackAcceptedEvent, 2)
+	bus.Subscribe(contestcontracts.EventAWDAttackAccepted, func(_ context.Context, evt platformevents.Event) error {
+		payload, ok := evt.Payload.(contestcontracts.AWDAttackAcceptedEvent)
+		if !ok {
+			t.Fatalf("unexpected payload type: %T", evt.Payload)
+		}
+		received <- payload
+		return nil
+	})
+
+	first, err := service.SubmitAttack(context.Background(), 14001, 14, 1401, &dto.SubmitAWDAttackReq{
+		VictimTeamID: 1412,
+		Flag:         flag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() first error = %v", err)
+	}
+	if !first.IsSuccess || first.ScoreGained != 80 {
+		t.Fatalf("unexpected first attack resp: %+v", first)
+	}
+
+	second, err := service.SubmitAttack(context.Background(), 14002, 14, 1401, &dto.SubmitAWDAttackReq{
+		VictimTeamID: 1412,
+		Flag:         flag,
+	})
+	if err != nil {
+		t.Fatalf("SubmitAttack() second error = %v", err)
+	}
+	if !second.IsSuccess || second.ScoreGained != 0 {
+		t.Fatalf("unexpected second attack resp: %+v", second)
+	}
+
+	select {
+	case evt := <-received:
+		if evt.UserID != 14001 || evt.ChallengeID != 1401 || evt.Dimension != model.DimensionWeb {
+			t.Fatalf("unexpected event payload: %+v", evt)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected contest.awd.attack_accepted event to be published")
+	}
+
+	select {
+	case evt := <-received:
+		t.Fatalf("expected only one accepted event, got %+v", evt)
+	case <-time.After(100 * time.Millisecond):
 	}
 }
 

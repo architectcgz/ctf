@@ -3,18 +3,21 @@ package model
 import "time"
 
 const (
-	ReportTypePersonal      = "personal"
-	ReportTypeClass         = "class"
-	ReportTypeContest       = "contest_export"
-	ReportTypeReview        = "review_archive"
-	ReportTypeContestExport = ReportTypeContest
-	ReportTypeReviewArchive = ReportTypeReview
+	ReportTypePersonal         = "personal"
+	ReportTypeClass            = "class"
+	ReportTypeContest          = "contest_export"
+	ReportTypeReview           = "review_archive"
+	ReportTypeAWDReviewArchive = "awd_review_archive"
+	ReportTypeAWDReviewReport  = "awd_review_report"
+	ReportTypeContestExport    = ReportTypeContest
+	ReportTypeReviewArchive    = ReportTypeReview
 )
 
 const (
 	ReportFormatPDF   = "pdf"
 	ReportFormatExcel = "excel"
 	ReportFormatJSON  = "json"
+	ReportFormatZIP   = "zip"
 )
 
 const (

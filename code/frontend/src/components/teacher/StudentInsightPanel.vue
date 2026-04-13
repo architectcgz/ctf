@@ -316,6 +316,7 @@ function isManualReviewVisible(): boolean {
                 </div>
 
                 <div class="writeup-directory-cell">
+                  <div class="writeup-directory-status-label">社区题解状态</div>
                   <div class="writeup-directory-status">
                     <span class="writeup-chip writeup-chip--muted">已发布</span>
                     <span :class="visibilityStatusClass(item.visibility_status)">
@@ -833,6 +834,15 @@ function isManualReviewVisible(): boolean {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.writeup-directory-status-label {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
 }
 
 .writeup-directory-time {

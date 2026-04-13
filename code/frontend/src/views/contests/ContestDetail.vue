@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } from 'lucide-vue-next'
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
@@ -13,18 +14,11 @@ import { formatTime } from '@/utils/format'
 
 type ContestWorkspaceTab = 'overview' | 'announcements' | 'challenges' | 'team'
 
-const workspaceTabs: Array<{ id: ContestWorkspaceTab; label: string }> = [
-  { id: 'overview', label: '概览' },
-  { id: 'announcements', label: '公告' },
-  { id: 'challenges', label: '题目' },
-  { id: 'team', label: '队伍' },
-]
-
 const route = useRoute()
 const authStore = useAuthStore()
 const contestId = computed(() => String(route.params.id ?? ''))
 const currentUserId = computed(() => authStore.user?.id)
-const workspaceTabOrder = workspaceTabs.map((tab) => tab.id) as ContestWorkspaceTab[]
+const workspaceTabOrder: ContestWorkspaceTab[] = ['overview', 'announcements', 'challenges', 'team']
 const {
   activeTab: activeWorkspaceTab,
   setTabButtonRef,
@@ -68,6 +62,23 @@ const {
   contestId,
   currentUserId,
 })
+
+const isAWDContest = computed(() => contest.value?.mode === 'awd')
+const workspaceTabs = computed<Array<{ id: ContestWorkspaceTab; label: string }>>(() => [
+  { id: 'overview', label: '概览' },
+  { id: 'announcements', label: '公告' },
+  { id: 'challenges', label: isAWDContest.value ? '战场' : '题目' },
+  { id: 'team', label: '队伍' },
+])
+
+watch(
+  () => contest.value?.mode,
+  (mode) => {
+    if (mode === 'awd' && !route.query.panel) {
+      selectWorkspaceTab('challenges')
+    }
+  }
+)
 
 const solvedCount = computed(() => challenges.value.filter((item) => item.is_solved).length)
 const totalPoints = computed(() =>
@@ -330,13 +341,23 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">Challenges</div>
-                <h2 class="contest-section__title workspace-tab-heading__title">题目</h2>
+                <div class="contest-overline">{{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}</div>
+                <h2 class="contest-section__title workspace-tab-heading__title">
+                  {{ contest.mode === 'awd' ? '战场' : '题目' }}
+                </h2>
               </div>
-              <div class="contest-section__hint">{{ solvedCount }} / {{ challenges.length }} 已解</div>
+              <div class="contest-section__hint">
+                {{ contest.mode === 'awd' ? `${challenges.length} 题` : `${solvedCount} / ${challenges.length} 已解` }}
+              </div>
             </div>
 
-            <div v-if="challenges.length === 0" class="contest-empty-state">
+            <ContestAWDWorkspacePanel
+              v-if="contest.mode === 'awd'"
+              :contest="contest"
+              :challenges="challenges"
+            />
+
+            <div v-else-if="challenges.length === 0" class="contest-empty-state">
               <AppEmpty icon="Flag" title="暂无题目" description="当前竞赛尚未发布题目。" />
             </div>
 

@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
@@ -18,13 +20,17 @@ import (
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/dto"
 	assessmenthttp "ctf-platform/internal/module/assessment/api/http"
+	assessmentqry "ctf-platform/internal/module/assessment/application/queries"
 	assessmentcontracts "ctf-platform/internal/module/assessment/contracts"
+	assessmentinfra "ctf-platform/internal/module/assessment/infrastructure"
 	challengehttp "ctf-platform/internal/module/challenge/api/http"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
 	contestports "ctf-platform/internal/module/contest/ports"
+	contesttestsupport "ctf-platform/internal/module/contest/testsupport"
 	identityhttp "ctf-platform/internal/module/identity/api/http"
 	identitycmd "ctf-platform/internal/module/identity/application/commands"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
@@ -36,6 +42,7 @@ import (
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
 	runtimehttp "ctf-platform/internal/module/runtime/api/http"
 	teachingreadmodelqueries "ctf-platform/internal/module/teaching_readmodel/application/queries"
+	"ctf-platform/pkg/errcode"
 )
 
 func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
@@ -66,6 +73,10 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/reports/class", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/skill-profile", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/reports/class", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/awd/reviews", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/awd/reviews/:id", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/archive", "internal/module/assessment/api/http")
+	assertRouteHandlerContains(t, router, "POST", "/api/v1/teacher/awd/reviews/:id/export/report", "internal/module/assessment/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/students/:id/evidence", "internal/module/teaching_readmodel/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/writeup-submissions", "internal/module/challenge/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/challenges/:id/writeup-submissions/me", "internal/module/challenge/api/http")
@@ -95,6 +106,7 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/summary", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/admin/contests/:id/awd/rounds/:rid/traffic/events", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/scoreboard", "internal/module/contest/api/http")
+	assertRouteHandlerContains(t, router, "GET", "/api/v1/contests/:id/awd/workspace", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/submissions", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/contests/:id/teams", "internal/module/contest/api/http")
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/challenges/:id/instances", "internal/module/practice/api/http")
@@ -124,6 +136,54 @@ func TestNewRouterUsesRuntimeHandlersForInstanceRoutes(t *testing.T) {
 	assertRouteHandlerContains(t, router, "POST", "/api/v1/instances/:id/proxy/*proxyPath", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "GET", "/api/v1/teacher/instances", "internal/module/runtime")
 	assertRouteHandlerContains(t, router, "DELETE", "/api/v1/teacher/instances/:id", "internal/module/runtime")
+}
+
+func TestTeacherAWDReviewArchiveReqUsesPlannedQueryParams(t *testing.T) {
+	t.Parallel()
+
+	reqType := reflect.TypeOf(dto.GetTeacherAWDReviewArchiveReq{})
+
+	roundField, ok := reqType.FieldByName("RoundNumber")
+	if !ok {
+		t.Fatalf("RoundNumber field missing")
+	}
+	if tag := roundField.Tag.Get("form"); tag != "round" {
+		t.Fatalf("RoundNumber form tag = %q, want %q", tag, "round")
+	}
+
+	teamField, ok := reqType.FieldByName("TeamID")
+	if !ok {
+		t.Fatalf("TeamID field missing")
+	}
+	if tag := teamField.Tag.Get("form"); tag != "team_id" {
+		t.Fatalf("TeamID form tag = %q, want %q", tag, "team_id")
+	}
+}
+
+func TestTeacherAWDReviewServiceInvalidRoundUsesRoundMessage(t *testing.T) {
+	t.Parallel()
+
+	db := contesttestsupport.SetupAWDTestDB(t)
+	now := time.Date(2026, 4, 12, 10, 0, 0, 0, time.UTC)
+	service := assessmentqry.NewTeacherAWDReviewService(assessmentinfra.NewTeacherAWDReviewRepository(db))
+
+	contesttestsupport.CreateAWDContestFixture(t, db, 901, now)
+	contesttestsupport.CreateAWDRoundFixtureWithWindow(t, db, 90101, 901, 1, 60, 40, now.Add(-40*time.Minute), now.Add(-20*time.Minute))
+
+	_, err := service.GetContestArchive(context.Background(), 1, 901, &dto.GetTeacherAWDReviewArchiveReq{
+		RoundNumber: func(v int) *int { return &v }(2),
+	})
+	if err == nil {
+		t.Fatalf("expected invalid round error")
+	}
+
+	var appErr *errcode.AppError
+	if !errors.As(err, &appErr) {
+		t.Fatalf("expected app error, got %T", err)
+	}
+	if appErr.Message != "round 无效" {
+		t.Fatalf("app error message = %q, want %q", appErr.Message, "round 无效")
+	}
 }
 
 func TestBuildRoot(t *testing.T) {
@@ -194,6 +254,7 @@ func TestCompositionModulesExposeContracts(t *testing.T) {
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ProfileService", reflect.TypeOf((*assessmentcontracts.ProfileService)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "Recommendations", reflect.TypeOf((*assessmentcontracts.RecommendationProvider)(nil)).Elem())
 	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "ReportHandler", reflect.TypeOf(&assessmenthttp.ReportHandler{}))
+	assertFieldType(t, reflect.TypeOf(composition.AssessmentModule{}), "TeacherAWDReviewHandler", reflect.TypeOf(&assessmenthttp.TeacherAWDReviewHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "AWDHandler", reflect.TypeOf(&contesthttp.AWDHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "ChallengeHandler", reflect.TypeOf(&contesthttp.ChallengeHandler{}))
 	assertFieldType(t, reflect.TypeOf(composition.ContestModule{}), "Handler", reflect.TypeOf(&contesthttp.Handler{}))
@@ -798,6 +859,7 @@ func TestBuildAssessmentModuleDelegatesToSubBuilders(t *testing.T) {
 		"buildAssessmentProfileHandler(",
 		"buildAssessmentRecommendationHandler(",
 		"buildAssessmentReportHandler(",
+		"buildAssessmentTeacherAWDReviewHandler(",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

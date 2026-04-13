@@ -22,7 +22,9 @@ describe('Sidebar desktop layout', () => {
   })
 
   it('uses a flatter console navigation system instead of stacked card buttons', () => {
-    expect(sidebarSource).toContain('class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"')
+    expect(sidebarSource).toContain(
+      'class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"'
+    )
     expect(sidebarSource).toContain('sidebar-nav-scroll')
     expect(sidebarSource).toContain('sidebar-group-title--collapsed')
     expect(sidebarSource).toContain('.sidebar-item-active::before,')
@@ -62,7 +64,9 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const profileButton = wrapper.findAll('.sidebar-shell-desktop button').find((node) => node.text().includes('个人资料'))
+    const profileButton = wrapper
+      .findAll('.sidebar-shell-desktop button')
+      .find((node) => node.text().includes('个人资料'))
 
     expect(profileButton).toBeTruthy()
 
@@ -108,7 +112,9 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const classButton = wrapper.findAll('.sidebar-shell-desktop button').find((node) => node.text().includes('班级管理'))
+    const classButton = wrapper
+      .findAll('.sidebar-shell-desktop button')
+      .find((node) => node.text().includes('班级管理'))
 
     expect(classButton).toBeTruthy()
 
@@ -116,6 +122,45 @@ describe('Sidebar desktop layout', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.fullPath).toBe('/academy/classes')
+
+    wrapper.unmount()
+  })
+
+  it('shows AWD复盘 and removes 报告导出 from teaching navigation', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/academy/overview', component: { template: '<div>overview</div>' } },
+        { path: '/academy/awd-reviews', component: { template: '<div>awd reviews</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        name: 'Teacher',
+      },
+      'token'
+    )
+
+    await router.push('/academy/overview')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    expect(wrapper.text()).toContain('AWD复盘')
+    expect(wrapper.text()).not.toContain('报告导出')
 
     wrapper.unmount()
   })

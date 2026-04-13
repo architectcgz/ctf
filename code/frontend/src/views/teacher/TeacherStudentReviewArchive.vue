@@ -196,6 +196,8 @@ async function handleExportArchive(): Promise<void> {
       <ReviewArchiveEvidencePanel
         :timeline="archive.timeline"
         :evidence="archive.evidence"
+        :writeups="archive.writeups"
+        :manual-reviews="archive.manual_reviews"
       />
 
       <ReviewArchiveReflectionPanel

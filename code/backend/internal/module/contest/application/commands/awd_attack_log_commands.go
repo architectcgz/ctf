@@ -5,12 +5,14 @@ import (
 
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
+	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	contestdomain "ctf-platform/internal/module/contest/domain"
+	"ctf-platform/internal/platform/events"
 	"ctf-platform/pkg/errcode"
 )
 
 func (s *AWDService) CreateAttackLog(ctx context.Context, contestID, roundID int64, req *dto.CreateAWDAttackLogReq) (*dto.AWDAttackLogResp, error) {
-	return s.createAttackLog(ctx, contestID, roundID, req, model.AWDAttackSourceManual)
+	return s.createAttackLog(ctx, contestID, roundID, req, model.AWDAttackSourceManual, nil)
 }
 
 func (s *AWDService) createAttackLog(
@@ -18,6 +20,7 @@ func (s *AWDService) createAttackLog(
 	contestID, roundID int64,
 	req *dto.CreateAWDAttackLogReq,
 	source string,
+	submittedByUserID *int64,
 ) (*dto.AWDAttackLogResp, error) {
 	round, err := s.ensureAWDRound(ctx, contestID, roundID)
 	if err != nil {
@@ -49,18 +52,39 @@ func (s *AWDService) createAttackLog(
 	}
 
 	logRecord := &model.AWDAttackLog{
-		RoundID:        roundID,
-		AttackerTeamID: req.AttackerTeamID,
-		VictimTeamID:   req.VictimTeamID,
-		ChallengeID:    req.ChallengeID,
-		AttackType:     req.AttackType,
-		Source:         contestdomain.NormalizeAWDAttackSource(source),
-		SubmittedFlag:  req.SubmittedFlag,
-		IsSuccess:      req.IsSuccess,
-		ScoreGained:    scoreGained,
+		RoundID:           roundID,
+		AttackerTeamID:    req.AttackerTeamID,
+		VictimTeamID:      req.VictimTeamID,
+		ChallengeID:       req.ChallengeID,
+		AttackType:        req.AttackType,
+		Source:            contestdomain.NormalizeAWDAttackSource(source),
+		SubmittedFlag:     req.SubmittedFlag,
+		SubmittedByUserID: submittedByUserID,
+		IsSuccess:         req.IsSuccess,
+		ScoreGained:       scoreGained,
 	}
 	if err := s.persistAttackLogAndScores(ctx, contestID, round.ID, req, logRecord); err != nil {
 		return nil, err
 	}
-	return s.buildAttackLogResponse(ctx, contestID, roundID, req, logRecord, teams)
+	resp, err := s.buildAttackLogResponse(ctx, contestID, roundID, req, logRecord, teams)
+	if err != nil {
+		return nil, err
+	}
+	if submittedByUserID != nil && logRecord.IsSuccess && logRecord.ScoreGained > 0 {
+		challengeItem, err := s.loadChallenge(ctx, req.ChallengeID)
+		if err != nil {
+			return nil, err
+		}
+		s.publishWeakEvent(ctx, events.Event{
+			Name: contestcontracts.EventAWDAttackAccepted,
+			Payload: contestcontracts.AWDAttackAcceptedEvent{
+				UserID:      *submittedByUserID,
+				ContestID:   contestID,
+				ChallengeID: req.ChallengeID,
+				Dimension:   challengeItem.Category,
+				OccurredAt:  logRecord.CreatedAt,
+			},
+		})
+	}
+	return resp, nil
 }

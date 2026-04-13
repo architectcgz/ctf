@@ -544,6 +544,10 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 	)
 	protected.GET("/contests/:id/challenges", deps.contest.ChallengeHandler.ListChallenges)
 	protected.GET("/contests/:id/my-progress", deps.contest.ParticipationHandler.GetMyProgress)
+	protected.GET("/contests/:id/awd/workspace",
+		middleware.ParseInt64Param("id"),
+		deps.contest.AWDHandler.GetUserWorkspace,
+	)
 	protected.POST("/contests/:id/challenges/:cid/submissions",
 		audit(middleware.AuditOptions{
 			Action:          model.AuditActionSubmit,
@@ -716,6 +720,19 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 			DetailBuilder:   middleware.DetailFromParams("id"),
 		}),
 		deps.assessment.ReportHandler.CreateStudentReviewArchive,
+	)
+	teacherOrAbove.GET("/awd/reviews", deps.assessment.TeacherAWDReviewHandler.ListReviews)
+	teacherOrAbove.GET("/awd/reviews/:id",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.GetReview,
+	)
+	teacherOrAbove.POST("/awd/reviews/:id/export/archive",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.ExportArchive,
+	)
+	teacherOrAbove.POST("/awd/reviews/:id/export/report",
+		middleware.ParseInt64Param("id"),
+		deps.assessment.TeacherAWDReviewHandler.ExportReport,
 	)
 	teacherOrAbove.GET("/manual-review-submissions", deps.practice.Handler.ListTeacherManualReviewSubmissions)
 	teacherOrAbove.GET("/manual-review-submissions/:id", deps.practice.Handler.GetTeacherManualReviewSubmission)

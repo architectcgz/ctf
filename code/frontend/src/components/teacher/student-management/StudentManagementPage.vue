@@ -58,7 +58,7 @@ const emit = defineEmits<{
               class="teacher-btn teacher-btn--ghost"
               @click="emit('openReportExport')"
             >
-              导出报告
+              导出班级报告
             </button>
           </div>
         </header>

@@ -408,6 +408,56 @@ export interface AWDAttackLogData {
   created_at: ISODateTime
 }
 
+export type ContestAWDWorkspaceEventDirection = 'attack_in' | 'attack_out'
+
+export interface ContestAWDWorkspaceTeamData {
+  team_id: ID
+  team_name: string
+}
+
+export interface ContestAWDWorkspaceServiceData {
+  challenge_id: ID
+  access_url?: string
+  service_status?: AWDServiceStatus
+  checker_type?: AWDCheckerType
+  attack_received: number
+  sla_score: number
+  defense_score: number
+  attack_score: number
+  updated_at?: ISODateTime
+}
+
+export interface ContestAWDWorkspaceTargetServiceData {
+  challenge_id: ID
+  access_url?: string
+}
+
+export interface ContestAWDWorkspaceTargetTeamData {
+  team_id: ID
+  team_name: string
+  services: ContestAWDWorkspaceTargetServiceData[]
+}
+
+export interface ContestAWDWorkspaceRecentEventData {
+  id: ID
+  direction: ContestAWDWorkspaceEventDirection
+  challenge_id: ID
+  peer_team_id: ID
+  peer_team_name: string
+  is_success: boolean
+  score_gained: number
+  created_at: ISODateTime
+}
+
+export interface ContestAWDWorkspaceData {
+  contest_id: ID
+  current_round?: AWDRoundData
+  my_team?: ContestAWDWorkspaceTeamData | null
+  services: ContestAWDWorkspaceServiceData[]
+  targets: ContestAWDWorkspaceTargetTeamData[]
+  recent_events: ContestAWDWorkspaceRecentEventData[]
+}
+
 export interface AWDRoundSummaryItemData {
   team_id: ID
   team_name: string
@@ -757,6 +807,123 @@ export interface ReportExportData {
   download_url?: string
   expires_at?: ISODateTime
   error_message?: string
+}
+
+export interface TeacherAWDReviewContestItemData {
+  id: ID
+  title: string
+  mode: ContestMode
+  status: ContestStatus
+  current_round?: number
+  round_count: number
+  team_count: number
+  latest_evidence_at?: ISODateTime
+  export_ready: boolean
+}
+
+export interface TeacherAWDReviewScopeData {
+  snapshot_type: 'live' | 'final' | string
+  requested_by: number
+  requested_id: ID
+  requested_role?: string
+}
+
+export interface TeacherAWDReviewOverviewData {
+  round_count: number
+  team_count: number
+  service_count: number
+  attack_count: number
+  traffic_count: number
+  latest_evidence_at?: ISODateTime
+}
+
+export interface TeacherAWDReviewRoundItemData {
+  id: ID
+  contest_id: ID
+  round_number: number
+  status: string
+  started_at?: ISODateTime
+  ended_at?: ISODateTime
+  attack_score: number
+  defense_score: number
+  service_count: number
+  attack_count: number
+  traffic_count: number
+}
+
+export interface TeacherAWDReviewTeamItemData {
+  team_id: ID
+  team_name: string
+  captain_id: ID
+  total_score: number
+  member_count: number
+  last_solve_at?: ISODateTime
+}
+
+export interface TeacherAWDReviewServiceItemData {
+  id: ID
+  round_id: ID
+  team_id: ID
+  team_name: string
+  challenge_id: ID
+  challenge_title: string
+  service_status: string
+  attack_received: number
+  sla_score: number
+  defense_score: number
+  attack_score: number
+  updated_at: ISODateTime
+}
+
+export interface TeacherAWDReviewAttackItemData {
+  id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team_name: string
+  victim_team_id: ID
+  victim_team_name: string
+  challenge_id: ID
+  challenge_title: string
+  attack_type: string
+  source: string
+  submitted_flag?: string
+  is_success: boolean
+  score_gained: number
+  created_at: ISODateTime
+}
+
+export interface TeacherAWDReviewTrafficItemData {
+  id: ID
+  contest_id: ID
+  round_id: ID
+  attacker_team_id: ID
+  attacker_team_name: string
+  victim_team_id: ID
+  victim_team_name: string
+  challenge_id: ID
+  challenge_title: string
+  method: string
+  path: string
+  status_code: number
+  source: string
+  created_at: ISODateTime
+}
+
+export interface TeacherAWDReviewSelectedRoundData {
+  round: TeacherAWDReviewRoundItemData
+  teams: TeacherAWDReviewTeamItemData[]
+  services: TeacherAWDReviewServiceItemData[]
+  attacks: TeacherAWDReviewAttackItemData[]
+  traffic: TeacherAWDReviewTrafficItemData[]
+}
+
+export interface TeacherAWDReviewArchiveData {
+  generated_at: ISODateTime
+  scope: TeacherAWDReviewScopeData
+  contest: TeacherAWDReviewContestItemData
+  overview?: TeacherAWDReviewOverviewData
+  rounds: TeacherAWDReviewRoundItemData[]
+  selected_round?: TeacherAWDReviewSelectedRoundData
 }
 
 export interface ReviewArchiveStudentData {

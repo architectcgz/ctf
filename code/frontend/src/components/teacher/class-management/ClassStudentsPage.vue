@@ -217,7 +217,7 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 class="teacher-btn teacher-btn--primary"
                 @click="emit('openReportExport')"
               >
-                导出报告
+                导出班级报告
               </button>
             </div>
           </header>
