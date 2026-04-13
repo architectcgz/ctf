@@ -922,8 +922,8 @@ watch(
   border-left: 1px solid var(--line-soft);
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--bg-panel) 95%, white),
-    color-mix(in srgb, var(--bg-shell) 92%, white)
+    color-mix(in srgb, var(--bg-panel) 92%, var(--color-bg-base)),
+    color-mix(in srgb, var(--bg-shell) 88%, var(--color-bg-base))
   );
 }
 
@@ -1079,7 +1079,7 @@ watch(
   padding: var(--space-4-5) var(--space-5);
   border: 1px solid var(--line-soft);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--bg-panel) 72%, white);
+  background: color-mix(in srgb, var(--bg-panel) 72%, var(--color-bg-base));
   color: var(--text-main);
   font: 13px/1.7 var(--font-mono);
 }
@@ -1272,7 +1272,7 @@ watch(
   width: 100%;
   border: 1px solid var(--line-strong);
   border-radius: 14px;
-  background: white;
+  background: var(--bg-panel);
   color: var(--text-main);
 }
 
@@ -1420,7 +1420,7 @@ watch(
 
 .solution-list-item:focus-visible,
 .challenge-input:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--brand) 44%, white);
+  outline: 2px solid color-mix(in srgb, var(--brand) 44%, var(--color-bg-base));
   outline-offset: 3px;
 }
 
@@ -1516,6 +1516,7 @@ watch(
 }
 
 :global([data-theme='dark']) .journal-shell {
+  color-scheme: dark;
   --bg-shell: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
   --bg-panel: color-mix(in srgb, var(--color-bg-surface) 96%, var(--color-bg-base));
   --bg-muted: color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base));
@@ -1524,7 +1525,7 @@ watch(
   --text-main: var(--color-text-primary);
   --text-subtle: var(--color-text-secondary);
   --text-faint: color-mix(in srgb, var(--color-text-secondary) 82%, var(--color-bg-base));
-  --brand: color-mix(in srgb, var(--color-primary) 88%, white);
+  --brand: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
   --brand-soft: color-mix(in srgb, var(--brand) 12%, transparent);
   --brand-ink: color-mix(in srgb, var(--brand) 84%, var(--text-main));
 }

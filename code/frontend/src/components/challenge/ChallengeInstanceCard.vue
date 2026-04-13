@@ -438,7 +438,7 @@ const canExtend = computed(
   --text-main: var(--color-text-primary);
   --text-subtle: var(--color-text-secondary);
   --text-faint: color-mix(in srgb, var(--color-text-secondary) 82%, var(--color-bg-base));
-  --brand: color-mix(in srgb, var(--color-primary) 88%, white);
+  --brand: color-mix(in srgb, var(--color-primary) 88%, var(--color-text-primary));
 }
 
 @media (prefers-reduced-motion: reduce) {
