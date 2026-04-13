@@ -163,7 +163,15 @@ const {
             >
               {{ formatRemainingTime(instance.remaining) }}
             </span>
-            <span v-else class="instance-row-note">等待创建</span>
+            <span v-else class="instance-row-note">
+              {{
+                instance.status === 'failed'
+                  ? '启动失败'
+                  : instance.status === 'crashed'
+                    ? '运行异常'
+                    : '等待创建'
+              }}
+            </span>
           </div>
 
           <div class="instance-row-actions">

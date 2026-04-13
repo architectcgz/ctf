@@ -41,8 +41,8 @@ export function getInstanceStatusLabel(status: InstanceStatus): string {
     expired: '已过期',
     destroying: '销毁中',
     destroyed: '已销毁',
-    failed: '失败',
-    crashed: '崩溃',
+    failed: '启动失败',
+    crashed: '运行异常',
   }
 
   return labels[status] || status
@@ -82,6 +82,12 @@ function formatEtaSeconds(seconds?: number): string {
 export function getInstanceWaitingHint(
   instance: Pick<InstanceListItem, 'status' | 'queue_position' | 'eta_seconds' | 'progress'>
 ): string {
+  if (instance.status === 'failed') {
+    return '启动失败，当前目标不可访问'
+  }
+  if (instance.status === 'crashed') {
+    return '实例运行异常，当前目标不可访问'
+  }
   if (instance.status !== 'pending' && instance.status !== 'creating') {
     return ''
   }

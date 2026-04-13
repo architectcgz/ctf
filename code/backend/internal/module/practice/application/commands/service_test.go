@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -91,6 +96,35 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("migrate practice command tables: %v", err)
 	}
 	return db
+}
+
+func reserveClosedLoopbackPort(t *testing.T) int {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen loopback port: %v", err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	if err := listener.Close(); err != nil {
+		t.Fatalf("close loopback listener: %v", err)
+	}
+	return port
+}
+
+func parseHTTPServerEndpoint(t *testing.T, rawURL string) (string, int) {
+	t.Helper()
+
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatalf("parse server url: %v", err)
+	}
+
+	port, err := strconv.Atoi(parsed.Port())
+	if err != nil {
+		t.Fatalf("parse server port: %v", err)
+	}
+	return parsed.Hostname(), port
 }
 
 type stubAssessmentService struct {
@@ -853,6 +887,12 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 
 	db := newPracticeCommandTestDB(t)
 	now := time.Now()
+	healthyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	}))
+	t.Cleanup(healthyServer.Close)
+	publicHost, hostPort := parseHTTPServerEndpoint(t, healthyServer.URL)
 	if err := db.Create(&model.Image{
 		ID:        102,
 		Name:      "ctf/web",
@@ -889,7 +929,7 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		runtimeinfrarepo.NewRepository(db),
 		&stubPracticeRuntimeService{
 			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
-				return "container-queued", "network-queued", reservedHostPort, 8080, nil
+				return "container-queued", "network-queued", hostPort, 8080, nil
 			},
 		},
 		nil,
@@ -897,10 +937,10 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		nil,
 		&config.Config{
 			Container: config.ContainerConfig{
-				PortRangeStart:       30000,
-				PortRangeEnd:         30010,
+				PortRangeStart:       hostPort,
+				PortRangeEnd:         hostPort + 1,
 				DefaultExposedPort:   8080,
-				PublicHost:           "127.0.0.1",
+				PublicHost:           publicHost,
 				DefaultTTL:           time.Hour,
 				MaxConcurrentPerUser: 3,
 				CreateTimeout:        time.Second,
@@ -935,6 +975,103 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		}
 		return instance.Status == model.InstanceStatusRunning && instance.ContainerID == "container-queued"
 	})
+}
+
+func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        104,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	challenge := &model.Challenge{
+		ID:         205,
+		Title:      "Readiness Failure",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    104,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	hostPort := reserveClosedLoopbackPort(t)
+	instance := &model.Instance{
+		UserID:      44,
+		ChallengeID: challenge.ID,
+		HostPort:    hostPort,
+		Status:      model.InstanceStatusCreating,
+		ExpiresAt:   now.Add(time.Hour),
+		MaxExtends:  2,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	var cleanupCalls atomic.Int32
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(instance *model.Instance) error {
+				cleanupCalls.Add(1)
+				return nil
+			},
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int) (string, string, int, int, error) {
+				return "container-readiness", "network-readiness", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PublicHost:         "127.0.0.1",
+				CreateTimeout:      time.Second,
+				StartProbeTimeout:  50 * time.Millisecond,
+				StartProbeInterval: 10 * time.Millisecond,
+				StartProbeAttempts: 2,
+			},
+		},
+		nil,
+	)
+
+	err := service.provisionInstance(context.Background(), instance, challenge, "flag{static}")
+	if err == nil || err.Error() != errcode.ErrContainerStartFailed.Error() {
+		t.Fatalf("expected container start failed error, got %v", err)
+	}
+
+	var stored model.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("load failed instance: %v", err)
+	}
+	if stored.Status != model.InstanceStatusFailed {
+		t.Fatalf("expected failed instance status, got %+v", stored)
+	}
+	if stored.AccessURL != "" {
+		t.Fatalf("expected access url to stay empty after failed readiness, got %q", stored.AccessURL)
+	}
+	if cleanupCalls.Load() != 1 {
+		t.Fatalf("expected cleanup to be called once, got %d", cleanupCalls.Load())
+	}
 }
 
 func TestRunProvisioningLoopLeavesOverflowPendingWhenGlobalCapacityReached(t *testing.T) {

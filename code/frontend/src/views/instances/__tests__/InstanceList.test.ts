@@ -46,6 +46,20 @@ describe('InstanceList', () => {
         eta_seconds: 90,
         progress: 35,
       },
+      {
+        id: 'inst-3',
+        challenge_id: 'chal-3',
+        challenge_title: '文件下载审计',
+        category: 'web',
+        difficulty: 'hard',
+        status: 'failed',
+        access_url: 'http://127.0.0.1:39999',
+        flag_type: 'dynamic',
+        share_scope: 'per_user',
+        expires_at: '2099-01-01T00:00:00Z',
+        remaining_extends: 0,
+        created_at: '2026-03-05T00:00:00Z',
+      },
     ])
   })
 
@@ -71,11 +85,14 @@ describe('InstanceList', () => {
     expect(wrapper.text()).toContain('我的实例')
     expect(wrapper.text()).toContain('SQL 注入基础')
     expect(wrapper.text()).toContain('反序列化迷宫')
+    expect(wrapper.text()).toContain('文件下载审计')
     expect(wrapper.text()).toContain('等待创建')
     expect(wrapper.text()).toContain('实例正在排队创建')
+    expect(wrapper.text()).toContain('启动失败，当前目标不可访问')
     expect(wrapper.text()).toContain('系统托管')
     expect(wrapper.find('.instance-row-title').attributes('title')).toBe('SQL 注入基础')
     expect(wrapper.find('.instance-row-access-value').attributes('title')).toBe('http://example.test')
+    expect(wrapper.text()).not.toContain('http://127.0.0.1:39999')
   })
 
   it('应该为实例列表长标题和访问地址保留省略样式与完整提示', () => {
