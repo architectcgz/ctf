@@ -86,6 +86,19 @@ describe('TeacherStudentReviewArchive', () => {
           challenge_id: '11',
           points: 100,
         },
+        {
+          id: 'awd-hit-1',
+          type: 'awd_attack_submit',
+          title: 'awd-web',
+          detail: 'AWD 攻击命中 Blue Team，得分 120',
+          created_at: '2026-04-01T09:24:00Z',
+          challenge_id: '21',
+          is_correct: true,
+          points: 120,
+          meta: {
+            raw_type: 'awd_attack_submit',
+          },
+        },
       ],
       evidence: [
         {
@@ -103,6 +116,19 @@ describe('TeacherStudentReviewArchive', () => {
           detail: '经平台代理发起 POST /login',
           timestamp: '2026-04-01T09:03:00Z',
           meta: { event_stage: 'exploit', method: 'POST' },
+        },
+        {
+          type: 'awd_attack_submission',
+          challenge_id: '21',
+          title: 'awd-web',
+          detail: 'AWD 攻击命中 Blue Team，得分 120',
+          timestamp: '2026-04-01T09:24:00Z',
+          meta: {
+            event_stage: 'exploit',
+            is_success: true,
+            score_gained: 120,
+            victim_team_name: 'Blue Team',
+          },
         },
       ],
       writeups: [
@@ -162,7 +188,9 @@ describe('TeacherStudentReviewArchive', () => {
     expect(wrapper.text()).toContain('教学复盘归档')
     expect(wrapper.text()).toContain('训练闭环')
     expect(wrapper.text()).toContain('提示依赖')
-    expect(wrapper.text()).toContain('攻防证据链')
+    expect(wrapper.text()).toContain('练习复盘')
+    expect(wrapper.text()).toContain('AWD 复盘')
+    expect(wrapper.text()).toContain('Blue Team')
     expect(wrapper.text()).toContain('从回显到 flag')
     expect(wrapper.text()).toContain('misc-essay')
   })
