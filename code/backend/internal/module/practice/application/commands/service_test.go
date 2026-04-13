@@ -750,6 +750,75 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	}
 }
 
+func TestSubmitFlagWithContextRejectsRepeatCorrectSubmission(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	flagSalt := "repeat-submit-salt"
+
+	if err := db.Create(&model.User{
+		ID:        71,
+		Username:  "student-repeat",
+		Role:      model.RoleStudent,
+		Status:    model.UserStatusActive,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+
+	redisServer := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: redisServer.Addr()})
+	defer redisClient.Close()
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		&stubPracticeChallengeContract{
+			findByIDFn: func(id int64) (*model.Challenge, error) {
+				return &model.Challenge{
+					ID:       id,
+					Category: model.DimensionWeb,
+					Points:   100,
+					Status:   model.ChallengeStatusPublished,
+					FlagType: model.FlagTypeStatic,
+					FlagSalt: flagSalt,
+					FlagHash: flagcrypto.HashStaticFlag("flag{repeatable}", flagSalt),
+				}, nil
+			},
+		},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		redisClient,
+		&config.Config{
+			RateLimit: config.RateLimitConfig{
+				RedisKeyPrefix: "practice:test",
+				FlagSubmit: config.RateLimitPolicyConfig{
+					Limit:  5,
+					Window: time.Minute,
+				},
+			},
+		},
+		nil,
+	)
+
+	first, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() first error = %v", err)
+	}
+	if !first.IsCorrect || first.Points != 100 {
+		t.Fatalf("expected first correct submission to score once, got %+v", first)
+	}
+
+	_, err = service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	if err == nil || err.Error() != errcode.ErrAlreadySolved.Error() {
+		t.Fatalf("expected already solved error on repeated correct submission, got %v", err)
+	}
+}
+
 func TestSubmitFlagWithContextShrinksOwnedInstanceExpiryAfterSolve(t *testing.T) {
 	t.Parallel()
 
@@ -1167,6 +1236,105 @@ func TestRunProvisioningLoopPromotesPendingInstanceToRunning(t *testing.T) {
 		}
 		return instance.Status == model.InstanceStatusRunning && instance.ContainerID == "container-queued"
 	})
+}
+
+func TestStartChallengeWithContextIgnoresExpiredRunningInstance(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&model.Image{
+		ID:        106,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    model.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&model.Challenge{
+		ID:         206,
+		Title:      "Expired Runtime",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    106,
+		Status:     model.ChallengeStatusPublished,
+		FlagType:   model.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&model.User{ID: 46, Username: "student-46", Role: model.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := db.Create(&model.Instance{
+		ID:          9006,
+		UserID:      46,
+		ChallengeID: 206,
+		HostPort:    30000,
+		ContainerID: "expired-runtime",
+		Status:      model.InstanceStatusRunning,
+		AccessURL:   "http://127.0.0.1:30000",
+		ExpiresAt:   now.Add(-2 * time.Minute),
+		MaxExtends:  2,
+		CreatedAt:   now.Add(-time.Hour),
+		UpdatedAt:   now.Add(-time.Hour),
+	}).Error; err != nil {
+		t.Fatalf("create expired instance: %v", err)
+	}
+
+	service := NewService(
+		practiceinfra.NewRepository(db),
+		challengeinfra.NewRepository(db),
+		challengeinfra.NewImageRepository(db),
+		runtimeinfrarepo.NewRepository(db),
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30010,
+				DefaultExposedPort:   8080,
+				PublicHost:           "127.0.0.1",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 1,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil,
+	)
+
+	resp, err := service.StartChallengeWithContext(context.Background(), 46, 206)
+	if err != nil {
+		t.Fatalf("StartChallengeWithContext() error = %v", err)
+	}
+	if resp.ID == 9006 {
+		t.Fatalf("expected expired instance to be replaced, got reused instance %+v", resp)
+	}
+	if resp.Status != model.InstanceStatusPending {
+		t.Fatalf("expected pending status for restarted instance, got %+v", resp)
+	}
+
+	var instances []model.Instance
+	if err := db.Order("id asc").Find(&instances).Error; err != nil {
+		t.Fatalf("list instances: %v", err)
+	}
+	if len(instances) != 2 {
+		t.Fatalf("expected expired instance and restarted instance, got %+v", instances)
+	}
 }
 
 func TestProvisionInstanceMarksInstanceFailedWhenAccessURLIsNotReady(t *testing.T) {

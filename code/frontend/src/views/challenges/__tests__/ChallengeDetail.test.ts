@@ -707,6 +707,46 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('靶机实例')
   })
 
+  it('题目已解出时仍应允许重启实例', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('重启实例')
+    expect(wrapper.text()).not.toContain('当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。')
+
+    const restartButton = wrapper.findAll('button').find((node) => node.text().includes('重启实例'))
+    expect(restartButton).toBeTruthy()
+
+    await restartButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(challengeApiMocks.createInstance).toHaveBeenCalledWith('1')
+  })
+
   it('createInstance 返回 pending 时应显示等待文案并触发轮询', async () => {
     vi.useFakeTimers()
     challengeApiMocks.createInstance.mockResolvedValueOnce({
@@ -826,6 +866,51 @@ describe('ChallengeDetail', () => {
     expect(instanceApiMocks.getMyInstances).toHaveBeenCalledTimes(2)
     expect(wrapper.text()).toContain('实例启动失败，当前目标不可访问')
     expect(wrapper.text()).not.toContain('打开目标')
+    expect(wrapper.text()).toContain('重启实例')
+  })
+
+  it('实例过期后应显示已自动回收并允许重启', async () => {
+    instanceApiMocks.getMyInstances.mockResolvedValueOnce([
+      {
+        id: 'inst-expired',
+        challenge_id: 1,
+        status: 'expired',
+        access_url: '',
+        flag_type: 'static',
+        expires_at: '2026-03-11T00:00:00.000Z',
+        remaining_extends: 0,
+        created_at: '2026-03-12T00:00:00.000Z',
+        challenge_title: 'Test Challenge',
+        category: 'web',
+        difficulty: 'easy',
+      },
+    ])
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(wrapper.text()).toContain('已自动回收')
+    expect(wrapper.text()).toContain('重启实例')
+    expect(wrapper.text()).not.toContain('销毁')
+    expect(wrapper.text()).not.toContain('打开目标')
+
+    const restartButton = wrapper.findAll('button').find((node) => node.text().includes('重启实例'))
+    expect(restartButton).toBeTruthy()
+
+    await restartButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(challengeApiMocks.createInstance).toHaveBeenCalledWith('1')
   })
 
   it('已存在实例时应直接显示实例信息', async () => {
