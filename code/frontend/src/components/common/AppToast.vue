@@ -73,17 +73,17 @@ interface ToastToneMeta {
 const toneMap: Record<ToastType, ToastToneMeta> = {
   success: {
     icon: CheckCircle2,
-    accentColor: 'var(--color-success)',
+    accentColor: 'var(--color-primary)',
     containerStyle: {
-      borderColor: 'color-mix(in srgb, var(--color-success) 24%, var(--color-border-default))',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default))',
     },
     iconWrapStyle: {
-      backgroundColor: 'color-mix(in srgb, var(--color-success) 12%, var(--color-bg-surface))',
-      borderColor: 'color-mix(in srgb, var(--color-success) 30%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 30%, var(--color-border-default))',
     },
     closeStyle: {
-      borderColor: 'color-mix(in srgb, var(--color-success) 22%, var(--color-border-default))',
-      backgroundColor: 'color-mix(in srgb, var(--color-success) 8%, var(--color-bg-surface))',
+      borderColor: 'color-mix(in srgb, var(--color-primary) 22%, var(--color-border-default))',
+      backgroundColor: 'color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface))',
     },
   },
   warning: {

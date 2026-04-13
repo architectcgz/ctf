@@ -45,6 +45,17 @@ describe('AppToast', () => {
     expect(toastItem.classes()).not.toContain('bg-surface')
   })
 
+  it('uses primary token instead of success green for success toast accents', async () => {
+    const wrapper = await mountToast()
+    useToast().success('登录成功')
+    await nextTick()
+
+    const html = wrapper.html()
+
+    expect(html).toContain('var(--color-primary)')
+    expect(html).not.toContain('var(--color-success)')
+  })
+
   it('uses primary token in info toast close button style', async () => {
     const wrapper = await mountToast()
     useToast().info('主题适配检查')
