@@ -16,16 +16,22 @@ interface Props {
   accent?: 'warning' | 'danger' | 'primary'
   primaryTo?: string
   primaryLabel?: string
+  primaryAction?: 'back' | 'reload'
   secondaryTo?: string
   secondaryLabel?: string
+  secondaryAction?: 'back' | 'reload'
+  secondaryToHome?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   accent: 'primary',
   primaryTo: '',
   primaryLabel: '',
-  secondaryTo: '/notifications',
-  secondaryLabel: '打开通知中心',
+  primaryAction: undefined,
+  secondaryTo: '',
+  secondaryLabel: '',
+  secondaryAction: undefined,
+  secondaryToHome: false,
 })
 
 const authStore = useAuthStore()
@@ -49,10 +55,48 @@ const dynamicHomeLabel = computed(() => {
 })
 
 const resolvedPrimaryTo = computed(() => props.primaryTo || dynamicHomePath.value)
-const resolvedPrimaryLabel = computed(() => props.primaryLabel || dynamicHomeLabel.value)
+const resolvedPrimaryLabel = computed(() => {
+  if (props.primaryLabel) return props.primaryLabel
+  if (props.primaryAction === 'reload') return '刷新页面'
+  if (props.primaryAction === 'back') return '返回上一页'
+  return dynamicHomeLabel.value
+})
+const resolvedSecondaryTo = computed(() => {
+  if (props.secondaryToHome) return dynamicHomePath.value
+  return props.secondaryTo
+})
+const resolvedSecondaryLabel = computed(() => {
+  if (props.secondaryLabel) return props.secondaryLabel
+  if (props.secondaryAction === 'reload') return '刷新页面'
+  if (props.secondaryAction === 'back') return '返回上一页'
+  if (props.secondaryToHome) return dynamicHomeLabel.value
+  return ''
+})
+const showSecondaryAction = computed(
+  () =>
+    Boolean(props.secondaryAction) ||
+    Boolean(resolvedSecondaryTo.value && resolvedSecondaryLabel.value)
+)
 const accentVars = computed(() => ({
   '--error-accent': accentValueMap[props.accent],
 }))
+
+function navigateBack() {
+  if (window.history.length > 1) {
+    window.history.back()
+    return
+  }
+  window.location.assign(resolvedPrimaryTo.value)
+}
+
+function executeAction(action: NonNullable<Props['primaryAction'] | Props['secondaryAction']>) {
+  if (action === 'reload') {
+    window.location.reload()
+    return
+  }
+
+  navigateBack()
+}
 </script>
 
 <template>
@@ -72,19 +116,39 @@ const accentVars = computed(() => ({
         </p>
 
         <div class="error-status-actions">
+          <button
+            v-if="primaryAction"
+            type="button"
+            class="error-status-action error-status-action-primary"
+            @click="executeAction(primaryAction)"
+          >
+            <component :is="primaryIcon" class="h-4 w-4" />
+            {{ resolvedPrimaryLabel }}
+          </button>
           <RouterLink
+            v-else
             :to="resolvedPrimaryTo"
             class="error-status-action error-status-action-primary"
           >
             <component :is="primaryIcon" class="h-4 w-4" />
             {{ resolvedPrimaryLabel }}
           </RouterLink>
+          <button
+            v-if="secondaryAction"
+            type="button"
+            class="error-status-action error-status-action-secondary"
+            @click="executeAction(secondaryAction)"
+          >
+            <component :is="secondaryIcon" class="h-4 w-4" />
+            {{ resolvedSecondaryLabel }}
+          </button>
           <RouterLink
-            :to="secondaryTo"
+            v-else-if="showSecondaryAction"
+            :to="resolvedSecondaryTo"
             class="error-status-action error-status-action-secondary"
           >
             <component :is="secondaryIcon" class="h-4 w-4" />
-            {{ secondaryLabel }}
+            {{ resolvedSecondaryLabel }}
           </RouterLink>
         </div>
       </div>
