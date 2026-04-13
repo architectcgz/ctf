@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getAuditLogs } from '@/api/admin'
@@ -22,10 +22,13 @@ const page = ref(1)
 const pageSize = ref(20)
 const loading = ref(false)
 const error = ref<string | null>(null)
+let textFilterTimer: ReturnType<typeof setTimeout> | null = null
+let suppressAutoApply = false
+const autoApplyReady = ref(false)
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
-const activeFilterCount = computed(
-  () => [filters.action, filters.resource_type, filters.actor_user_id].filter(Boolean).length
+const hasActiveFilters = computed(() =>
+  Boolean(filters.action || filters.resource_type || filters.actor_user_id)
 )
 
 function formatDate(value: string): string {
@@ -94,6 +97,23 @@ async function applyFilters(): Promise<void> {
   await loadLogs()
 }
 
+function clearTextFilterTimer(): void {
+  if (textFilterTimer !== null) {
+    clearTimeout(textFilterTimer)
+    textFilterTimer = null
+  }
+}
+
+function scheduleTextFilterApply(): void {
+  if (!autoApplyReady.value || suppressAutoApply) {
+    return
+  }
+  clearTextFilterTimer()
+  textFilterTimer = setTimeout(() => {
+    void applyFilters()
+  }, 250)
+}
+
 async function changePage(next: number): Promise<void> {
   page.value = Math.max(1, Math.floor(next))
   await syncRouteQuery()
@@ -101,9 +121,12 @@ async function changePage(next: number): Promise<void> {
 }
 
 async function resetFilters(): Promise<void> {
+  clearTextFilterTimer()
+  suppressAutoApply = true
   filters.action = ''
   filters.resource_type = ''
   filters.actor_user_id = ''
+  suppressAutoApply = false
   page.value = 1
   await syncRouteQuery()
   await loadLogs()
@@ -111,8 +134,31 @@ async function resetFilters(): Promise<void> {
 
 onMounted(() => {
   hydrateFromRoute()
+  autoApplyReady.value = true
   void loadLogs()
 })
+
+onBeforeUnmount(() => {
+  clearTextFilterTimer()
+})
+
+watch(
+  () => filters.action,
+  () => {
+    if (!autoApplyReady.value || suppressAutoApply) {
+      return
+    }
+    clearTextFilterTimer()
+    void applyFilters()
+  }
+)
+
+watch(
+  () => [filters.resource_type, filters.actor_user_id] as const,
+  () => {
+    scheduleTextFilterApply()
+  }
+)
 </script>
 
 <template>
@@ -123,19 +169,9 @@ onMounted(() => {
       <div class="admin-overview__intro">
         <div class="journal-eyebrow">Audit Log</div>
         <h1 class="admin-page-title">审计日志</h1>
-        <p class="admin-page-copy">按动作、资源类型和执行人快速检索关键操作记录。</p>
       </div>
 
       <div class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
-        <article class="journal-note progress-card metric-panel-card">
-          <div class="journal-note-label progress-card-label metric-panel-label">激活筛选</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">
-            {{ activeFilterCount }}
-          </div>
-          <div class="journal-note-helper progress-card-hint metric-panel-helper">
-            当前生效的筛选项数量
-          </div>
-        </article>
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
           <div class="journal-note-value progress-card-value metric-panel-value">
@@ -152,63 +188,77 @@ onMounted(() => {
             符合条件的审计记录总量
           </div>
         </article>
+        <article class="journal-note progress-card metric-panel-card">
+          <div class="journal-note-label progress-card-label metric-panel-label">总页数</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">{{ totalPages }}</div>
+          <div class="journal-note-helper progress-card-hint metric-panel-helper">
+            当前筛选结果的分页范围
+          </div>
+        </article>
       </div>
     </header>
 
-    <section class="admin-toolbar">
-      <div class="admin-section-head">
-        <div>
-          <div class="journal-note-label">Filters</div>
-          <h2 class="admin-section-title">筛选条件</h2>
-        </div>
-        <p class="admin-section-copy">支持按动作、资源类型与执行人组合筛选。</p>
-      </div>
-
-      <div class="admin-filter-grid">
-        <select v-model="filters.action" class="admin-input">
-          <option value="">全部动作</option>
-          <option value="login">登录</option>
-          <option value="logout">登出</option>
-          <option value="create">创建</option>
-          <option value="update">更新</option>
-          <option value="delete">删除</option>
-          <option value="submit">提交</option>
-          <option value="admin_op">管理员操作</option>
-        </select>
-
-        <input
-          v-model="filters.resource_type"
-          type="text"
-          placeholder="资源类型，如 challenge"
-          class="admin-input"
-        />
-
-        <input
-          v-model="filters.actor_user_id"
-          type="number"
-          min="1"
-          placeholder="执行人 ID"
-          class="admin-input"
-        />
-
-        <button type="button" class="admin-btn admin-btn-primary" @click="applyFilters">
-          应用筛选
-        </button>
-
-        <button type="button" class="admin-btn admin-btn-ghost" @click="resetFilters">重置</button>
-      </div>
-    </section>
-
-    <div class="journal-divider admin-divider" />
-
     <section class="admin-board workspace-directory-section">
-      <div class="admin-section-head">
+      <header class="list-heading">
         <div>
-          <div class="journal-note-label">Results</div>
-          <h2 class="admin-section-title">操作流水</h2>
+          <div class="journal-note-label">Audit Trail</div>
+          <h2 class="list-heading__title">操作流水</h2>
         </div>
         <div class="admin-caption">第 {{ page }} / {{ totalPages }} 页</div>
-      </div>
+      </header>
+
+      <section class="audit-filter-strip" aria-label="日志筛选">
+        <div class="audit-filter-grid">
+          <label class="audit-filter-field">
+            <span class="audit-filter-label">动作</span>
+            <select v-model="filters.action" class="admin-input">
+              <option value="">全部动作</option>
+              <option value="login">登录</option>
+              <option value="logout">登出</option>
+              <option value="create">创建</option>
+              <option value="update">更新</option>
+              <option value="delete">删除</option>
+              <option value="submit">提交</option>
+              <option value="admin_op">管理员操作</option>
+            </select>
+          </label>
+
+          <label class="audit-filter-field">
+            <span class="audit-filter-label">资源类型</span>
+            <input
+              v-model="filters.resource_type"
+              type="text"
+              placeholder="资源类型，如 challenge"
+              class="admin-input"
+            />
+          </label>
+
+          <label class="audit-filter-field">
+            <span class="audit-filter-label">执行人</span>
+            <input
+              v-model="filters.actor_user_id"
+              type="number"
+              min="1"
+              placeholder="执行人 ID"
+              class="admin-input"
+            />
+          </label>
+
+          <div class="audit-filter-actions">
+            <span class="audit-filter-label audit-filter-label--ghost" aria-hidden="true">操作</span>
+            <div class="audit-filter-action-row">
+              <button
+                type="button"
+                class="admin-btn admin-btn-ghost audit-filter-reset"
+                :disabled="!hasActiveFilters"
+                @click="resetFilters"
+              >
+                重置筛选
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div v-if="error" class="admin-error">
         {{ error }}
@@ -316,16 +366,11 @@ onMounted(() => {
   max-width: 48rem;
 }
 
-.admin-toolbar,
 .admin-board {
   padding: 0;
 }
 
-.admin-divider {
-  margin: var(--space-5) 0;
-}
-
-.admin-section-head {
+.list-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -333,25 +378,56 @@ onMounted(() => {
   gap: var(--space-3);
 }
 
-.admin-section-title {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-1-15);
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
 }
 
-.admin-section-copy,
 .admin-caption {
   font-size: var(--font-size-0-82);
   line-height: 1.6;
   color: var(--journal-muted);
 }
 
-.admin-filter-grid {
-  margin-top: var(--space-4);
+.audit-filter-strip {
   display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+}
+
+.audit-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(3, minmax(14rem, 16rem)) auto;
+}
+
+.audit-filter-field,
+.audit-filter-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.audit-filter-label {
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+  color: var(--journal-muted);
+}
+
+.audit-filter-label--ghost {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.audit-filter-actions {
+  justify-items: end;
+}
+
+.audit-filter-action-row {
+  display: flex;
+  gap: var(--space-2-5);
+  justify-content: flex-end;
 }
 
 .admin-input {
@@ -396,16 +472,15 @@ onMounted(() => {
   padding: var(--space-2) var(--space-3);
 }
 
-.admin-btn-primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-}
-
 .admin-btn-ghost {
   border: 1px solid var(--admin-control-border);
   background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
   color: var(--journal-ink);
+}
+
+.audit-filter-reset:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .admin-error {
@@ -444,15 +519,35 @@ onMounted(() => {
 
 @media (max-width: 1080px) {
   .admin-summary-grid,
-  .admin-filter-grid {
+  .audit-filter-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
-  .admin-summary-grid,
-  .admin-filter-grid {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-summary-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .audit-filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .audit-filter-actions {
+    justify-items: stretch;
+  }
+
+  .audit-filter-action-row {
+    width: 100%;
+  }
+
+  .audit-filter-action-row > * {
+    flex: 1 1 0;
   }
 
   .journal-shell {
