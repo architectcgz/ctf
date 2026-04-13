@@ -127,6 +127,9 @@ container:
   cleanup_lock_ttl: 2m
   orphan_grace_period: 5m
   create_timeout: 30s
+  start_probe_timeout: 800ms
+  start_probe_interval: 300ms
+  start_probe_attempts: 5
   flag_global_secret: "" # 建议通过 CTF_CONTAINER_FLAG_GLOBAL_SECRET 注入
   public_host: localhost
   proxy_ticket_ttl: 15m

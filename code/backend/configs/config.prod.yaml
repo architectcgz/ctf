@@ -27,6 +27,12 @@ auth:
   public_key_path: /etc/ctf/keys/public.pem
 
 container:
+  # 生产部署时应显式配置可从浏览器访问的主机名或域名，不要依赖默认 localhost
+  public_host: ctf.example.com
+  # 启动判定会在容器创建后探测访问地址，只有探测通过才进入 running
+  start_probe_timeout: 800ms
+  start_probe_interval: 300ms
+  start_probe_attempts: 5
   scheduler:
     enabled: true
     poll_interval: 1s
