@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherAWDReviewIndex from '../TeacherAWDReviewIndex.vue'
@@ -22,6 +22,7 @@ vi.mock('@/api/teacher', () => teacherApiMocks)
 
 describe('TeacherAWDReviewIndex', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     pushMock.mockReset()
     Object.values(teacherApiMocks).forEach((mock) => mock.mockReset())
 
@@ -49,6 +50,10 @@ describe('TeacherAWDReviewIndex', () => {
     ])
   })
 
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('应加载 AWD 赛事目录并渲染进入复盘入口', async () => {
     const wrapper = mount(TeacherAWDReviewIndex)
 
@@ -60,7 +65,39 @@ describe('TeacherAWDReviewIndex', () => {
     expect(wrapper.text()).toContain('进入复盘')
   })
 
+  it('应在停止输入后自动筛选，不再依赖显式筛选按钮', async () => {
+    const wrapper = mount(TeacherAWDReviewIndex)
+
+    await flushPromises()
+
+    const statusSelect = wrapper.find('select')
+    const keywordInput = wrapper.find('input[placeholder="搜索赛事标题"]')
+
+    expect(statusSelect.exists()).toBe(true)
+    expect(keywordInput.exists()).toBe(true)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+
+    await statusSelect.setValue('ended')
+    await keywordInput.setValue('期末')
+
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(250)
+    await flushPromises()
+
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenCalledTimes(2)
+    expect(teacherApiMocks.listTeacherAWDReviews).toHaveBeenLastCalledWith({
+      status: 'ended',
+      keyword: '期末',
+    })
+    expect(wrapper.text()).not.toContain('应用筛选')
+  })
+
   it('筛选区应保持平铺，不应继续在页面局部做成独立卡片壳', () => {
+    expect(teacherAwdReviewIndexSource).toContain('class="workspace-directory-section teacher-directory-section"')
+    expect(teacherAwdReviewIndexSource).toContain('class="list-heading"')
+    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-title')
+    expect(teacherAwdReviewIndexSource).not.toContain('teacher-controls-copy')
     expect(teacherAwdReviewIndexSource).not.toMatch(
       /\.teacher-controls\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
@@ -79,5 +116,12 @@ describe('TeacherAWDReviewIndex', () => {
     expect(teacherAwdReviewIndexSource).toMatch(
       /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
     )
+  })
+
+  it('筛选区源码不应继续保留表单提交和应用筛选按钮', () => {
+    expect(teacherAwdReviewIndexSource).not.toContain('@submit.prevent="loadContests"')
+    expect(teacherAwdReviewIndexSource).not.toContain('应用筛选')
+    expect(teacherAwdReviewIndexSource).not.toContain('赛事筛选')
+    expect(teacherAwdReviewIndexSource).not.toContain('支持按状态或关键字快速定位要进入的 AWD 赛事。')
   })
 })
