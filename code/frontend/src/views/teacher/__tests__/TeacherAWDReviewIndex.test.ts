@@ -71,4 +71,13 @@ describe('TeacherAWDReviewIndex', () => {
       /\.teacher-controls\s*\{[\s\S]*box-shadow:\s*0 10px 24px var\(--color-shadow-soft\);/s
     )
   })
+
+  it('赛事概览条不应继续保留多余的底部分隔线', () => {
+    expect(teacherAwdReviewIndexSource).toContain(
+      'class="teacher-summary teacher-summary--flat metric-panel-default-surface"'
+    )
+    expect(teacherAwdReviewIndexSource).toMatch(
+      /\.teacher-summary--flat\s*\{[\s\S]*border-bottom:\s*0;/s
+    )
+  })
 })

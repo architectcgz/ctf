@@ -61,7 +61,7 @@ function contestStatusLabel(status: string): string {
           </div>
         </header>
 
-        <section class="teacher-summary metric-panel-default-surface">
+        <section class="teacher-summary teacher-summary--flat metric-panel-default-surface">
           <div class="teacher-summary-title">
             <FolderKanban class="h-4 w-4" />
             <span>Review Snapshot</span>
@@ -238,6 +238,10 @@ function contestStatusLabel(status: string): string {
 
 .teacher-controls-heading {
   max-width: 40rem;
+}
+
+.teacher-summary--flat {
+  border-bottom: 0;
 }
 
 .awd-review-filter-grid {
