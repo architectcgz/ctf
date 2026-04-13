@@ -184,6 +184,62 @@ select {
 
 .app-destructive-confirm-box.el-message-box {
   --el-message-close-size: 16px;
+  --destructive-confirm-accent: var(--color-danger);
+  --destructive-confirm-border: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 24%,
+    var(--journal-border, var(--color-border-default))
+  );
+  --destructive-confirm-border-strong: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 32%,
+    var(--journal-border, var(--color-border-default))
+  );
+  --destructive-confirm-soft-bg: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 10%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
+  --destructive-confirm-soft-bg-hover: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 14%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
+  --destructive-confirm-soft-text: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 88%,
+    var(--journal-ink, var(--color-text-primary))
+  );
+  --destructive-confirm-neutral-border: color-mix(
+    in srgb,
+    var(--journal-border, var(--color-border-default)) 78%,
+    transparent
+  );
+  --destructive-confirm-neutral-border-hover: color-mix(
+    in srgb,
+    var(--journal-accent, var(--color-primary)) 26%,
+    var(--journal-border, var(--color-border-default))
+  );
+  --destructive-confirm-neutral-bg: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 94%,
+    var(--journal-surface-subtle, var(--color-bg-elevated))
+  );
+  --destructive-confirm-neutral-bg-hover: color-mix(
+    in srgb,
+    var(--journal-surface-subtle, var(--color-bg-elevated)) 92%,
+    var(--journal-surface, var(--color-bg-surface))
+  );
+  --destructive-confirm-neutral-text: color-mix(
+    in srgb,
+    var(--journal-muted, var(--color-text-secondary)) 90%,
+    var(--journal-ink, var(--color-text-primary))
+  );
+  --destructive-confirm-neutral-text-hover: color-mix(
+    in srgb,
+    var(--journal-ink, var(--color-text-primary)) 88%,
+    var(--journal-muted, var(--color-text-secondary))
+  );
   position: fixed;
   top: 50%;
   left: 50%;
@@ -282,6 +338,10 @@ select {
   height: 2.35rem;
   font-size: 1.45rem;
   line-height: 1;
+  border: 1px solid var(--destructive-confirm-border);
+  border-radius: 0.8rem;
+  color: var(--destructive-confirm-soft-text);
+  background: var(--destructive-confirm-soft-bg);
 }
 
 .app-destructive-confirm-box .el-message-box__message {
@@ -310,46 +370,45 @@ select {
 }
 
 .app-destructive-confirm-box .el-message-box__btns .app-destructive-confirm-cancel.el-button {
-  border: 1px solid #5f6f83 !important;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 90%, transparent) !important;
-  color: color-mix(in srgb, var(--journal-muted, var(--color-text-secondary)) 94%, #a8b8cb) !important;
+  border: 1px solid var(--destructive-confirm-neutral-border) !important;
+  background: var(--destructive-confirm-neutral-bg) !important;
+  color: var(--destructive-confirm-neutral-text) !important;
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary) {
-  border: 1px solid #5f6f83 !important;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 90%, transparent) !important;
-  color: color-mix(in srgb, var(--journal-muted, var(--color-text-secondary)) 94%, #a8b8cb) !important;
+  border: 1px solid var(--destructive-confirm-neutral-border) !important;
+  background: var(--destructive-confirm-neutral-bg) !important;
+  color: var(--destructive-confirm-neutral-text) !important;
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):hover,
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):focus-visible {
-  border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 32%, #5f6f83) !important;
-  color: color-mix(in srgb, var(--journal-ink, var(--color-text-primary)) 82%, var(--journal-muted, var(--color-text-secondary))) !important;
-}
-
-[data-theme="light"] .app-destructive-confirm-box .el-message-box__btns .app-destructive-confirm-cancel.el-button,
-[data-theme="light"] .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary) {
-  border-color: #a4b2c2 !important;
-  background: color-mix(in srgb, #ffffff 92%, var(--color-bg-surface)) !important;
-  color: #334155 !important;
-}
-
-[data-theme="light"] .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):hover,
-[data-theme="light"] .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):focus-visible {
-  border-color: color-mix(in srgb, var(--color-primary) 36%, #a4b2c2) !important;
-  color: #1f2937 !important;
+  border-color: var(--destructive-confirm-neutral-border-hover) !important;
+  background: var(--destructive-confirm-neutral-bg-hover) !important;
+  color: var(--destructive-confirm-neutral-text-hover) !important;
 }
 
 .app-destructive-confirm-box .el-message-box__btns .app-destructive-confirm-primary.el-button {
-  border: 1px solid color-mix(in srgb, #dc2626 32%, transparent) !important;
-  background: color-mix(in srgb, #dc2626 12%, var(--journal-surface, var(--color-bg-surface))) !important;
-  color: #b91c1c !important;
+  border: 1px solid var(--destructive-confirm-border-strong) !important;
+  background: var(--destructive-confirm-soft-bg) !important;
+  color: var(--destructive-confirm-soft-text) !important;
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button--primary {
-  border: 1px solid color-mix(in srgb, #dc2626 32%, transparent);
-  background: color-mix(in srgb, #dc2626 12%, var(--journal-surface, var(--color-bg-surface)));
-  color: #b91c1c;
+  border: 1px solid var(--destructive-confirm-border-strong);
+  background: var(--destructive-confirm-soft-bg);
+  color: var(--destructive-confirm-soft-text);
+}
+
+.app-destructive-confirm-box .el-message-box__btns .el-button--primary:hover,
+.app-destructive-confirm-box .el-message-box__btns .el-button--primary:focus-visible {
+  border-color: color-mix(in srgb, var(--destructive-confirm-accent) 44%, transparent);
+  background: var(--destructive-confirm-soft-bg-hover);
+  color: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent) 92%,
+    var(--journal-ink, var(--color-text-primary))
+  );
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:focus-visible {
