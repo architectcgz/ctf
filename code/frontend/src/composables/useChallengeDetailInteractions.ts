@@ -118,7 +118,7 @@ export function useChallengeDetailInteractions({
             className: 'text-[var(--color-success)]',
             message: result.message,
           }
-          toast.success('Flag 正确！')
+          toast.success(result.message)
           currentChallenge.is_solved = true
           await loadSolutions(currentChallenge.id)
           break

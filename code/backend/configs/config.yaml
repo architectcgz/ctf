@@ -121,6 +121,7 @@ container:
   default_exposed_port: 8080
   max_concurrent_per_user: 3
   default_ttl: 2h
+  solve_grace_period: 10m
   max_extends: 2
   extend_duration: 1h
   cleanup_interval: "*/5 * * * *"

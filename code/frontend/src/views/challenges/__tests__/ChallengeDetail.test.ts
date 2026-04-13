@@ -594,6 +594,39 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('已完成 ✓')
   })
 
+  it('正确提交后应提示实例将在 10 分钟后自动关闭', async () => {
+    challengeApiMocks.submitFlag.mockResolvedValue({
+      is_correct: true,
+      status: 'correct',
+      message: '恭喜你，Flag 正确！当前实例将在 10 分钟后自动关闭',
+      points: 100,
+      submitted_at: '2026-03-12T01:00:00.000Z',
+      instance_shutdown_at: '2026-03-12T01:10:00.000Z',
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.find('input[placeholder="flag{...}"]')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+
+    await flagInput.setValue('flag{correct}')
+    await submitButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(wrapper.text()).toContain('当前实例将在 10 分钟后自动关闭')
+  })
+
   it('Flag 输入应提供可访问标签', async () => {
     await router.push('/challenges/1')
     await router.isReady()

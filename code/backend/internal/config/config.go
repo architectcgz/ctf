@@ -135,6 +135,7 @@ type ContainerConfig struct {
 	DefaultExposedPort   int                      `mapstructure:"default_exposed_port"`
 	MaxConcurrentPerUser int                      `mapstructure:"max_concurrent_per_user"`
 	DefaultTTL           time.Duration            `mapstructure:"default_ttl"`
+	SolveGracePeriod     time.Duration            `mapstructure:"solve_grace_period"`
 	MaxExtends           int                      `mapstructure:"max_extends"`
 	ExtendDuration       time.Duration            `mapstructure:"extend_duration"`
 	CleanupInterval      string                   `mapstructure:"cleanup_interval"`
