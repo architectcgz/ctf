@@ -11,7 +11,30 @@
 后端：
 
 ```bash
-cd code/backend && make run
+cd code/backend && APP_ENV=dev go run ./cmd/api
+```
+
+后端热重载开发（推荐）：
+
+```bash
+go install github.com/air-verse/air@latest
+cd code/backend && ./scripts/dev-run.sh --infra-shared --hot
+```
+
+脚本会在以下场景自动补齐本地开发环境变量：
+
+- 复用 Docker 中的 PostgreSQL / Redis 时，默认切到 `127.0.0.1:15432` 与 `127.0.0.1:16379`
+- 如果 `8080` 已被 `ctf-api` 容器占用，默认把本地 API 端口切到 `18080`
+
+如果共享依赖已经在跑，也可以直接：
+
+```bash
+cd code/backend && \
+  APP_ENV=dev \
+  CTF_POSTGRES_PORT=15432 \
+  CTF_REDIS_ADDR=127.0.0.1:16379 \
+  CTF_HTTP_PORT=18080 \
+  air -c .air.toml
 ```
 
 前端：
@@ -28,18 +51,23 @@ cd code/frontend && npm run dev
 
 脚本会优先复用 `package-lock.json` 一致的 `code/frontend/node_modules`，找不到可复用依赖时再回退到 `npm ci --prefer-offline`。
 
-开发容器栈（推荐，后端与依赖在同一个 Compose 项目中）：
+开发容器栈（仅在需要整套容器联调时使用）：
 
 ```bash
-cd code/backend && make docker-build
-cd code/backend && make infra-up
+docker compose -f docker/ctf/docker-compose.dev.yml up -d --build
 ```
 
 复用共享基础设施（推荐，避免重复占用资源）：
 
 ```bash
-cd code/backend && make infra-up-shared
+docker compose -f docker/ctf/docker-compose.dev.yml up -d ctf-postgres ctf-redis
 ```
+
+建议日常 Go 开发使用“依赖容器 + 本地热重载”：
+
+- PostgreSQL / Redis 继续跑在 Docker 中
+- Go 后端直接在宿主机执行 `air -c .air.toml`
+- 只有需要验证镜像、容器网络或完整编排时再启动 `ctf-api` 容器
 
 `docker/ctf/docker-compose.dev.yml` 默认端口如下，并且仅绑定到 `127.0.0.1`，避免开发态暴露到局域网：
 
