@@ -87,13 +87,13 @@ describe('ChallengeList', () => {
     expect(wrapper.text()).toContain('题目总数')
     expect(wrapper.text()).toContain('开始做题')
     expect(wrapper.find('.challenge-row-title').attributes('title')).toBe('Test Challenge')
+    expect(wrapper.find('.challenge-row-solved').text()).toContain('10 人解出')
+    expect(wrapper.find('.challenge-row-attempts').text()).toContain('尝试 20 次')
   })
 
   it('页头标题与说明应接入共享工作区排版类', () => {
     expect(challengeListSource).toContain('<h1 class="workspace-page-title challenge-title">靶场训练</h1>')
-    expect(challengeListSource).toContain(
-      '<p class="workspace-page-copy challenge-subtitle">按关键词、分类与难度筛选题目，直接进入训练。</p>'
-    )
+    expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')
   })
 
   it('题目列表不应显示编号前缀', async () => {
@@ -380,6 +380,12 @@ describe('ChallengeList', () => {
   })
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
+    expect(challengeListSource).toContain('class="workspace-directory-section challenge-directory-section"')
+    expect(challengeListSource).toContain('class="list-heading"')
+    expect(challengeListSource).not.toContain('challenge-controls-title')
+    expect(challengeListSource).not.toContain('challenge-controls-copy')
+    expect(challengeListSource).not.toContain('challenge-filter-pill')
+    expect(challengeListSource).not.toContain('激活筛选')
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
     expect(challengeListSource).not.toContain('</section>\n\n        <div v-if="total > 0" class="challenge-pagination">')
@@ -390,8 +396,12 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('CH-{{ challengeIndex(index) }}')
     expect(challengeListSource).toContain('<span>分类</span>')
     expect(challengeListSource).toContain('<span>难度</span>')
+    expect(challengeListSource).toContain('<span>解出</span>')
+    expect(challengeListSource).toContain('<span>尝试</span>')
     expect(challengeListSource).toContain('class="challenge-row-category"')
     expect(challengeListSource).toContain('class="challenge-row-difficulty"')
+    expect(challengeListSource).toContain('class="challenge-row-solved"')
+    expect(challengeListSource).toContain('class="challenge-row-attempts"')
     expect(challengeListSource).toMatch(/class="challenge-row-title"[\s\S]*:title="challenge\.title"/s)
     expect(challengeListSource).toMatch(/\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
     expect(challengeListSource).not.toContain('class="challenge-card')

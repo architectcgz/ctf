@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import AuditLog from '../AuditLog.vue'
@@ -32,6 +32,7 @@ vi.mock('@/api/admin', () => adminApiMocks)
 
 describe('AuditLog', () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     replaceMock.mockReset()
     routeState.query = {
       action: 'submit',
@@ -60,6 +61,11 @@ describe('AuditLog', () => {
     })
   })
 
+  afterEach(() => {
+    vi.runOnlyPendingTimers()
+    vi.useRealTimers()
+  })
+
   it('应该根据路由 query 加载预置筛选结果', async () => {
     const wrapper = mount(AuditLog)
 
@@ -83,7 +89,7 @@ describe('AuditLog', () => {
 
     const resourceInput = wrapper.find('input[placeholder="资源类型，如 challenge"]')
     await resourceInput.setValue('instance')
-    await wrapper.get('button').trigger('click')
+    vi.advanceTimersByTime(250)
     await flushPromises()
 
     expect(replaceMock).toHaveBeenLastCalledWith({
@@ -96,21 +102,30 @@ describe('AuditLog', () => {
     })
   })
 
+  it('筛选区应改成平铺目录筛选，不应继续保留显式应用按钮和说明壳', () => {
+    expect(auditLogSource).toContain('class="admin-board workspace-directory-section"')
+    expect(auditLogSource).not.toContain('class="admin-section-title">筛选条件</h2>')
+    expect(auditLogSource).not.toContain('支持按动作、资源类型与执行人组合筛选。')
+    expect(auditLogSource).not.toContain('应用筛选')
+    expect(auditLogSource).not.toContain('激活筛选')
+    expect(auditLogSource).not.toContain('当前生效的筛选项数量')
+    expect(auditLogSource).toContain('placeholder="资源类型，如 challenge"')
+    expect(auditLogSource).toContain('placeholder="执行人 ID"')
+    expect(auditLogSource).toContain('重置筛选')
+    expect(auditLogSource).toContain(':disabled="!hasActiveFilters"')
+  })
+
   it('应使用统一进度卡片样式展示审计摘要', () => {
     expect(auditLogSource).toContain(
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(auditLogSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(auditLogSource).toContain(
-      'class="journal-note-label progress-card-label metric-panel-label">激活筛选</div>'
-    )
-    expect(auditLogSource).toContain(
       'class="journal-note-value progress-card-value metric-panel-value"'
     )
-    expect(auditLogSource).toContain('{{ activeFilterCount }}')
     expect(auditLogSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(auditLogSource).toContain('当前生效的筛选项数量')
+    expect(auditLogSource).toContain('本页已加载的日志条数')
   })
 })

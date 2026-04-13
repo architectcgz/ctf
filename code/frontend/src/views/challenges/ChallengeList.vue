@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ArrowRight, Filter, LayoutDashboard, Search, Target } from 'lucide-vue-next'
+import { ArrowRight, LayoutDashboard, Search, Target } from 'lucide-vue-next'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getChallenges } from '@/api/challenge'
@@ -85,9 +85,6 @@ const emptyDescription = computed(() =>
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / Math.max(pageSize.value, 1))))
 const solvedCount = computed(() => list.value.filter((challenge) => challenge.is_solved).length)
 const unsolvedCount = computed(() => list.value.filter((challenge) => !challenge.is_solved).length)
-const activeFilterCount = computed(
-  () => [searchQuery.value, categoryFilter.value, difficultyFilter.value].filter(Boolean).length
-)
 const summaryStats = computed(() => [
   { key: 'total', label: '题目总数', value: total.value, helper: '当前可训练题库规模' },
   {
@@ -217,7 +214,6 @@ watch(
         <div class="challenge-heading">
           <div class="journal-eyebrow">Challenges</div>
           <h1 class="workspace-page-title challenge-title">靶场训练</h1>
-          <p class="workspace-page-copy challenge-subtitle">按关键词、分类与难度筛选题目，直接进入训练。</p>
         </div>
 
         <div class="challenge-actions">
@@ -245,128 +241,143 @@ watch(
         </div>
       </section>
 
-      <section class="challenge-controls">
-        <div class="challenge-controls-bar">
-          <div class="challenge-controls-heading">
-            <h2 class="challenge-controls-title">筛选条件</h2>
-            <p class="challenge-controls-copy">快速收束训练范围，定位当前要攻克的题目。</p>
+      <section class="workspace-directory-section challenge-directory-section" aria-label="题目目录">
+        <header class="list-heading">
+          <div>
+            <div class="journal-note-label">Challenge Directory</div>
+            <h2 class="list-heading__title">题目列表</h2>
           </div>
-          <div class="challenge-filter-pill">
-            <Filter class="h-4 w-4" />
-            激活筛选 {{ activeFilterCount }} 项
+          <div id="challenge-directory-meta" class="challenge-directory-meta">
+            共 {{ total }} 题
+            <span v-if="hasActiveFilters">· 已按当前筛选收束结果</span>
           </div>
-          <button
-            v-if="hasActiveFilters"
-            type="button"
-            class="challenge-btn challenge-btn-ghost"
-            @click="resetFilters"
-          >
-            清空筛选
-          </button>
-        </div>
+        </header>
 
-        <div class="challenge-filter-grid">
-          <label class="challenge-input-wrap" for="challenge-search-input">
-            <span class="sr-only">搜索题目</span>
-            <Search class="challenge-search-icon h-4 w-4" />
-            <input
-              id="challenge-search-input"
-              v-model="searchQuery"
-              type="text"
-              placeholder="搜索题目标题或描述..."
-              class="challenge-input"
-              aria-describedby="challenge-directory-meta"
-              @input="onSearch"
-            />
-          </label>
+        <section class="challenge-directory-filters" aria-label="题目筛选">
+          <div class="challenge-directory-filter-grid">
+            <label class="challenge-directory-filter-field" for="challenge-category-filter">
+              <span class="challenge-directory-filter-label">分类</span>
+              <select
+                id="challenge-category-filter"
+                v-model="categoryFilter"
+                class="challenge-select"
+                @change="onFilterChange"
+              >
+                <option value="">全部分类</option>
+                <option value="web">Web</option>
+                <option value="pwn">Pwn</option>
+                <option value="reverse">逆向</option>
+                <option value="crypto">密码</option>
+                <option value="misc">杂项</option>
+                <option value="forensics">取证</option>
+              </select>
+            </label>
 
-          <label class="challenge-select-wrap" for="challenge-category-filter">
-            <span class="sr-only">按分类筛选</span>
-            <select
-              id="challenge-category-filter"
-              v-model="categoryFilter"
-              class="challenge-select"
-              @change="onFilterChange"
-            >
-              <option value="">全部分类</option>
-              <option value="web">Web</option>
-              <option value="pwn">Pwn</option>
-              <option value="reverse">逆向</option>
-              <option value="crypto">密码</option>
-              <option value="misc">杂项</option>
-              <option value="forensics">取证</option>
-            </select>
-          </label>
+            <label class="challenge-directory-filter-field" for="challenge-difficulty-filter">
+              <span class="challenge-directory-filter-label">难度</span>
+              <select
+                id="challenge-difficulty-filter"
+                v-model="difficultyFilter"
+                class="challenge-select"
+                @change="onFilterChange"
+              >
+                <option value="">全部难度</option>
+                <option value="beginner">入门</option>
+                <option value="easy">简单</option>
+                <option value="medium">中等</option>
+                <option value="hard">困难</option>
+                <option value="insane">地狱</option>
+              </select>
+            </label>
 
-          <label class="challenge-select-wrap" for="challenge-difficulty-filter">
-            <span class="sr-only">按难度筛选</span>
-            <select
-              id="challenge-difficulty-filter"
-              v-model="difficultyFilter"
-              class="challenge-select"
-              @change="onFilterChange"
-            >
-              <option value="">全部难度</option>
-              <option value="beginner">入门</option>
-              <option value="easy">简单</option>
-              <option value="medium">中等</option>
-              <option value="hard">困难</option>
-              <option value="insane">地狱</option>
-            </select>
-          </label>
-        </div>
-      </section>
+            <div class="challenge-directory-filter-search">
+              <label class="challenge-directory-filter-search__label" for="challenge-search-input">
+                <span
+                  class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
+                  aria-hidden="true"
+                >
+                  搜索
+                </span>
+                <span class="challenge-directory-filter-search__control">
+                  <Search class="challenge-search-icon h-4 w-4" />
+                  <input
+                    id="challenge-search-input"
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="搜索题目标题或描述..."
+                    class="challenge-input"
+                    aria-describedby="challenge-directory-meta"
+                    @input="onSearch"
+                  />
+                </span>
+              </label>
+            </div>
 
-      <div v-if="loading" class="challenge-loading">
-        <div class="challenge-loading-spinner" />
-      </div>
-
-      <AppEmpty
-        v-else-if="hasLoadError"
-        class="challenge-empty-state"
-        icon="AlertTriangle"
-        title="题目列表加载失败"
-        :description="errorMessage"
-      >
-        <template #action>
-          <button type="button" class="challenge-btn" @click="refresh">重新加载</button>
-        </template>
-      </AppEmpty>
-
-      <AppEmpty
-        v-else-if="list.length === 0"
-        class="challenge-empty-state"
-        icon="Flag"
-        :title="emptyTitle"
-        :description="emptyDescription"
-      >
-        <template #action>
-          <button v-if="hasActiveFilters" type="button" class="challenge-btn" @click="resetFilters">
-            清空筛选
-          </button>
-        </template>
-      </AppEmpty>
-
-      <template v-else>
-        <section class="challenge-directory" aria-label="题目目录">
-          <div class="challenge-directory-top">
-            <h2 class="challenge-directory-title">题目列表</h2>
-            <div id="challenge-directory-meta" class="challenge-directory-meta">
-              共 {{ total }} 题
-              <span v-if="hasActiveFilters">· 已按当前筛选收束结果</span>
+            <div class="challenge-directory-filter-actions">
+              <span
+                class="challenge-directory-filter-label challenge-directory-filter-label--ghost"
+                aria-hidden="true"
+              >
+                操作
+              </span>
+              <div class="challenge-directory-filter-action-row">
+                <button
+                  type="button"
+                  class="challenge-btn challenge-btn-ghost challenge-filter-clear"
+                  :disabled="!hasActiveFilters"
+                  @click="resetFilters"
+                >
+                  清空筛选
+                </button>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div class="challenge-directory-head">
-            <span>题目</span>
-            <span>积分</span>
-            <span>分类</span>
-            <span>难度</span>
-            <span>标签</span>
-            <span>状态</span>
-            <span>数据</span>
-            <span>操作</span>
-          </div>
+        <div v-if="loading" class="challenge-loading workspace-directory-loading">
+          <div class="challenge-loading-spinner" />
+        </div>
+
+        <AppEmpty
+          v-else-if="hasLoadError"
+          class="challenge-empty-state workspace-directory-empty"
+          icon="AlertTriangle"
+          title="题目列表加载失败"
+          :description="errorMessage"
+        >
+          <template #action>
+            <button type="button" class="challenge-btn" @click="refresh">重新加载</button>
+          </template>
+        </AppEmpty>
+
+        <AppEmpty
+          v-else-if="list.length === 0"
+          class="challenge-empty-state workspace-directory-empty"
+          icon="Flag"
+          :title="emptyTitle"
+          :description="emptyDescription"
+        >
+          <template #action>
+            <button v-if="hasActiveFilters" type="button" class="challenge-btn" @click="resetFilters">
+              清空筛选
+            </button>
+          </template>
+        </AppEmpty>
+
+        <template v-else>
+          <section class="challenge-directory">
+
+            <div class="challenge-directory-head">
+              <span>题目</span>
+              <span>积分</span>
+              <span>分类</span>
+              <span>难度</span>
+              <span>标签</span>
+              <span>状态</span>
+              <span>解出</span>
+              <span>尝试</span>
+              <span>操作</span>
+            </div>
 
           <button
             v-for="challenge in list"
@@ -430,10 +441,9 @@ watch(
               </span>
             </div>
 
-            <div class="challenge-row-metrics">
-              <span>{{ challenge.solved_count }} 人解出</span>
-              <span>尝试 {{ challenge.total_attempts }} 次</span>
-            </div>
+            <div class="challenge-row-solved">{{ challenge.solved_count }} 人解出</div>
+
+            <div class="challenge-row-attempts">尝试 {{ challenge.total_attempts }} 次</div>
 
             <div class="challenge-row-cta">
               <span>{{ challenge.is_solved ? '继续查看' : '开始做题' }}</span>
@@ -441,17 +451,18 @@ watch(
             </div>
           </button>
 
-          <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">
-            <PagePaginationControls
-              :page="page"
-              :total-pages="totalPages"
-              :total="total"
-              :total-label="`共 ${total} 题`"
-              @change-page="changePage"
-            />
-          </div>
-        </section>
-      </template>
+            <div v-if="total > 0" class="challenge-pagination workspace-directory-pagination">
+              <PagePaginationControls
+                :page="page"
+                :total-pages="totalPages"
+                :total="total"
+                :total-label="`共 ${total} 题`"
+                @change-page="changePage"
+              />
+            </div>
+          </section>
+        </template>
+      </section>
     </div>
   </section>
 </template>
@@ -489,11 +500,6 @@ watch(
   color: var(--journal-ink);
 }
 
-.challenge-subtitle {
-  max-width: 680px;
-  color: var(--journal-muted);
-}
-
 .challenge-actions {
   display: flex;
   flex-wrap: wrap;
@@ -501,64 +507,77 @@ watch(
   gap: var(--space-3);
 }
 
-.challenge-controls {
-  padding: var(--space-6) 0 0;
+.challenge-directory-section {
+  margin-top: var(--space-6);
 }
 
-.challenge-controls-bar {
+.list-heading {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  gap: var(--space-3);
+  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-3) var(--space-4);
 }
 
-.challenge-controls-heading {
-  min-width: 0;
-}
-
-.challenge-controls-title {
-  font-size: var(--font-size-17);
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
-  letter-spacing: -0.02em;
   color: var(--journal-ink);
 }
 
-.challenge-controls-copy {
-  margin-top: var(--space-1-5);
-  font-size: var(--font-size-13);
-  line-height: 1.6;
+.challenge-directory-meta {
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
-.challenge-filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 32px;
-  padding: 0 var(--space-2-5);
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 22%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
-  font-size: var(--font-size-12);
-  font-weight: 600;
-  color: var(--journal-accent-strong);
-}
-
-.challenge-filter-grid {
+.challenge-directory-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 220px));
-  gap: var(--space-3);
-  margin-top: var(--space-4-5);
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
 }
 
-.challenge-input-wrap {
+.challenge-directory-filter-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(2, minmax(14rem, 16rem)) minmax(16rem, 1.2fr) auto;
+}
+
+.challenge-directory-filter-field,
+.challenge-directory-filter-search,
+.challenge-directory-filter-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.challenge-directory-filter-search__label {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.challenge-directory-filter-label {
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+  color: var(--journal-muted);
+}
+
+.challenge-directory-filter-label--ghost {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.challenge-directory-filter-search__control {
   position: relative;
-  display: block;
 }
 
-.challenge-select-wrap {
-  display: block;
+.challenge-directory-filter-actions {
+  justify-items: end;
+}
+
+.challenge-directory-filter-action-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2-5);
 }
 
 .challenge-search-icon {
@@ -605,6 +624,11 @@ watch(
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 12%, transparent);
 }
 
+.challenge-filter-clear:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
 .challenge-loading {
   display: flex;
   align-items: center;
@@ -631,11 +655,11 @@ watch(
 
 .challenge-directory {
   --challenge-directory-columns: minmax(0, 1.25fr) minmax(88px, 0.32fr) minmax(96px, 0.38fr)
-    minmax(96px, 0.38fr) minmax(160px, 0.82fr) 120px 180px 120px;
+    minmax(96px, 0.38fr) minmax(160px, 0.82fr) 120px minmax(104px, 0.42fr)
+    minmax(116px, 0.48fr) 120px;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  margin-top: var(--space-6);
 }
 
 .challenge-directory-head {
@@ -773,9 +797,10 @@ watch(
   color: var(--journal-accent-strong);
 }
 
-.challenge-row-metrics {
-  display: grid;
-  gap: var(--space-1);
+.challenge-row-solved,
+.challenge-row-attempts {
+  display: flex;
+  align-items: center;
   font-size: var(--font-size-13);
   line-height: 1.5;
   color: var(--journal-muted);
@@ -830,19 +855,45 @@ watch(
 
 @media (max-width: 960px) {
   .challenge-topbar,
-  .challenge-controls-bar {
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .challenge-filter-grid {
+  .challenge-directory-filter-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 640px) {
-  .challenge-directory-top {
-    align-items: flex-start;
+  .challenge-directory-filter-action-row {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .challenge-directory-filter-action-row > * {
+    flex: 1 1 0;
+  }
+
+  .challenge-directory-meta {
+    width: 100%;
+  }
+
+  .challenge-directory-filter-actions {
+    justify-items: stretch;
+  }
+
+  .challenge-directory-filter-search__control,
+  .challenge-directory-filter-field {
+    min-width: 0;
+  }
+
+  .challenge-directory-filter-actions,
+  .challenge-directory-filter-search,
+  .challenge-directory-filter-field {
+    width: 100%;
+  }
+
+  .challenge-directory-filter-label--ghost {
+    display: none;
   }
 }
 </style>
