@@ -93,8 +93,15 @@ func (r *Repository) LockInstanceScope(userID, challengeID int64, scope practice
 }
 
 func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope practiceports.InstanceScope) (*model.Instance, error) {
+	now := time.Now()
 	query := r.db.Model(&model.Instance{}).
-		Where("challenge_id = ? AND share_scope = ? AND status IN ?", challengeID, scope.ShareScope, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("challenge_id = ? AND share_scope = ?", challengeID, scope.ShareScope).
+		Where(
+			"(status IN ? OR (status = ? AND expires_at > ?))",
+			[]string{model.InstanceStatusPending, model.InstanceStatusCreating},
+			model.InstanceStatusRunning,
+			now,
+		)
 
 	switch {
 	case scope.ShareScope == model.InstanceSharingShared && scope.ContestID != nil:
@@ -120,8 +127,15 @@ func (r *Repository) FindScopedExistingInstance(userID, challengeID int64, scope
 }
 
 func (r *Repository) CountScopedRunningInstances(userID int64, scope practiceports.InstanceScope) (int, error) {
+	now := time.Now()
 	query := r.db.Model(&model.Instance{}).
-		Where("share_scope = ? AND status IN ?", scope.ShareScope, []string{model.InstanceStatusPending, model.InstanceStatusCreating, model.InstanceStatusRunning})
+		Where("share_scope = ?", scope.ShareScope).
+		Where(
+			"(status IN ? OR (status = ? AND expires_at > ?))",
+			[]string{model.InstanceStatusPending, model.InstanceStatusCreating},
+			model.InstanceStatusRunning,
+			now,
+		)
 
 	switch {
 	case scope.ShareScope == model.InstanceSharingShared && scope.ContestID != nil:
