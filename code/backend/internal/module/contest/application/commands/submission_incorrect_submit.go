@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"ctf-platform/internal/constants"
 	"ctf-platform/internal/dto"
 	"ctf-platform/internal/model"
 	"ctf-platform/pkg/errcode"
@@ -17,7 +16,6 @@ func (s *SubmissionService) handleIncorrectSubmission(ctx context.Context, submi
 	}
 	return &dto.SubmissionResp{
 		IsCorrect:   false,
-		Message:     constants.MsgFlagIncorrect,
 		SubmittedAt: submission.SubmittedAt,
 	}, nil
 }

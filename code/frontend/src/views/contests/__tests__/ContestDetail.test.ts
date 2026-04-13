@@ -363,6 +363,64 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('战场')
   })
 
+  it('普通竞赛提交反馈应由前端根据结果生成', async () => {
+    contestApiMocks.getContestChallenges.mockResolvedValueOnce([
+      {
+        id: '101',
+        challenge_id: '101',
+        title: 'Web 101',
+        category: 'web',
+        difficulty: 'easy',
+        points: 100,
+        solved_count: 0,
+        is_solved: false,
+      },
+    ])
+    contestApiMocks.submitContestFlag
+      .mockResolvedValueOnce({
+        is_correct: false,
+        points: 0,
+        submitted_at: '2024-03-15T09:05:00Z',
+      })
+      .mockResolvedValueOnce({
+        is_correct: true,
+        points: 100,
+        submitted_at: '2024-03-15T09:06:00Z',
+      })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    const challengesTab = wrapper.findAll('button').find((node) => node.text().trim() === '题目')
+    expect(challengesTab).toBeTruthy()
+    await challengesTab!.trigger('click')
+    await flushPromises()
+
+    const challengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    expect(challengeButton).toBeTruthy()
+    await challengeButton!.trigger('click')
+    await flushPromises()
+
+    const flagInput = wrapper.get('#contest-flag-input')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+    expect(submitButton).toBeTruthy()
+
+    await flagInput.setValue('flag{wrong}')
+    await submitButton!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Flag 错误，请重试')
+
+    await flagInput.setValue('flag{correct}')
+    await submitButton!.trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('正确！+100 分')
+  })
+
   it('运行中的 AWD 战场应显示防守告警、自动刷新提示，并支持筛选目标', async () => {
     vi.useFakeTimers()
 

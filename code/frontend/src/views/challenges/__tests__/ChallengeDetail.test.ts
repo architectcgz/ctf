@@ -109,7 +109,7 @@ describe('ChallengeDetail', () => {
       id: 'submission-1',
       user_id: 'stu-1',
       challenge_id: '1',
-      title: '我的复盘',
+      title: '我的题解',
       content: '先找回显，再定位注入。',
       submission_status: 'draft',
       visibility_status: 'visible',
@@ -162,7 +162,7 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('题目')
     expect(wrapper.text()).toContain('题解')
     expect(wrapper.text()).toContain('提交记录')
-    expect(wrapper.text()).toContain('我的复盘')
+    expect(wrapper.text()).toContain('编写题解')
     expect(wrapper.text()).toContain('Test Challenge')
     expect(wrapper.text()).toContain('题目描述')
   })
@@ -214,7 +214,7 @@ describe('ChallengeDetail', () => {
     expect(challengeApiMocks.getCommunityChallengeSolutions).not.toHaveBeenCalled()
   })
 
-  it('已解题时应通过顶部标签切换到推荐题解、社区题解和我的复盘', async () => {
+  it('已解题时应通过顶部标签切换到推荐题解、社区题解和编写题解', async () => {
     challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
       id: '1',
       title: 'Solved Challenge',
@@ -261,7 +261,7 @@ describe('ChallengeDetail', () => {
 
     expect(wrapper.text()).toContain('我的 SQLi 复盘')
 
-    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
     expect(writeupTab).toBeTruthy()
 
     await writeupTab!.trigger('click')
@@ -404,7 +404,7 @@ describe('ChallengeDetail', () => {
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
     expect(writeupTab).toBeTruthy()
     await writeupTab!.trigger('click')
     await wrapper.vm.$nextTick()
@@ -413,21 +413,21 @@ describe('ChallengeDetail', () => {
     const contentInput = wrapper.find('textarea')
     const draftButton = wrapper.findAll('button').find((node) => node.text().trim() === '保存草稿')
 
-    await titleInput.setValue('我的复盘')
+    await titleInput.setValue('我的题解')
     await contentInput.setValue('先找回显，再定位注入。')
     await draftButton!.trigger('click')
     await wrapper.vm.$nextTick()
     await new Promise((resolve) => setTimeout(resolve, 0))
 
     expect(challengeApiMocks.upsertChallengeWriteupSubmission).toHaveBeenCalledWith('1', {
-      title: '我的复盘',
+      title: '我的题解',
       content: '先找回显，再定位注入。',
       submission_status: 'draft',
     })
     expect(wrapper.text()).toContain('草稿')
   })
 
-  it('我的复盘应通过顶部标签切换进入，默认不显示编辑区', async () => {
+  it('编写题解应通过顶部标签切换进入，默认不显示编辑区', async () => {
     await router.push('/challenges/1')
     await router.isReady()
 
@@ -443,7 +443,7 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).not.toContain('解题过程复盘')
     expect(wrapper.find('input[placeholder*="完整链路"]').exists()).toBe(false)
 
-    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
     expect(writeupTab).toBeTruthy()
 
     await writeupTab!.trigger('click')
@@ -470,7 +470,7 @@ describe('ChallengeDetail', () => {
 
     const solutionTab = wrapper.findAll('button').find((node) => node.text().trim() === '题解')
     const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
-    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '我的复盘')
+    const writeupTab = wrapper.findAll('button').find((node) => node.text().trim() === '编写题解')
 
     expect(solutionTab).toBeTruthy()
     expect(recordsTab).toBeTruthy()

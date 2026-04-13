@@ -56,6 +56,9 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 	if !firstResp.IsCorrect || firstResp.Points != 495 {
 		t.Fatalf("unexpected first response: %+v", firstResp)
 	}
+	if firstResp.Message != "" {
+		t.Fatalf("expected contest correct response message to be omitted, got %+v", firstResp)
+	}
 
 	secondResp, err := service.SubmitFlagInContest(context.Background(), 1002, contestID, challengeID, "flag{contest-dynamic}")
 	if err != nil {
@@ -63,6 +66,9 @@ func TestSubmissionServiceSubmitFlagInContestAppliesDynamicScoreAndFirstBlood(t 
 	}
 	if !secondResp.IsCorrect || secondResp.Points != 405 {
 		t.Fatalf("unexpected second response: %+v", secondResp)
+	}
+	if secondResp.Message != "" {
+		t.Fatalf("expected contest correct response message to be omitted, got %+v", secondResp)
 	}
 
 	var submissions []model.Submission
@@ -132,6 +138,30 @@ func TestSubmissionServiceSubmitFlagInContestUsesContestScoreAsDynamicBase(t *te
 	}
 	if submission.Score != 297 {
 		t.Fatalf("unexpected submission score: %+v", submission)
+	}
+}
+
+func TestSubmissionServiceSubmitFlagInContestOmitsIncorrectMessage(t *testing.T) {
+	service, _, db := newContestSubmissionTestService(t)
+
+	now := time.Now()
+	contestID := int64(6)
+	challengeID := int64(106)
+	teamID := int64(61)
+	userID := int64(6001)
+
+	createContestSubmissionFixture(t, db, contestID, challengeID, now)
+	testsupport.CreateContestTeamRegistration(t, db, contestID, teamID, userID, "Wrong", now)
+
+	resp, err := service.SubmitFlagInContest(context.Background(), userID, contestID, challengeID, "flag{wrong}")
+	if err != nil {
+		t.Fatalf("SubmitFlagInContest() error = %v", err)
+	}
+	if resp.IsCorrect {
+		t.Fatalf("expected incorrect response, got %+v", resp)
+	}
+	if resp.Message != "" {
+		t.Fatalf("expected contest incorrect response message to be omitted, got %+v", resp)
 	}
 }
 
