@@ -79,4 +79,10 @@ describe('shared route canonical paths', () => {
     expect(findChild('admin/environment-templates')?.redirect).toBeTruthy()
     expect(findChild('admin/images')?.redirect).toBeTruthy()
   })
+
+  it('keeps contest management on admin paths and exposes a dedicated contest edit route', () => {
+    expect(findChild('admin/contests')?.name).toBe('ContestManage')
+    expect(findChild('admin/contests/:id/edit')?.name).toBe('ContestEdit')
+    expect(findChild('platform/contests')?.redirect).toBeTruthy()
+  })
 })
