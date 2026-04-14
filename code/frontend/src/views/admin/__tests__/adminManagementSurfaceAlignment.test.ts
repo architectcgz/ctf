@@ -14,6 +14,7 @@ import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSu
 import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/admin/contest/AWDChallengeConfigDialog.vue?raw'
 import adminContestFormDialogSource from '@/components/admin/contest/AdminContestFormDialog.vue?raw'
+import adminContestFormPanelSource from '@/components/admin/contest/AdminContestFormPanel.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
@@ -108,15 +109,13 @@ describe('admin management surface alignment', () => {
 
   it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
     expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
-    expect(adminContestFormDialogSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
-    expect(adminContestFormDialogSource).toContain(
-      '<h3 class="list-heading__title">赛制与时间</h3>'
-    )
-    expect(adminContestFormDialogSource).toContain(
-      'class="contest-form-button contest-form-button--primary"'
-    )
     expect(adminContestFormDialogSource).toContain(':deep(.contest-form-dialog .el-dialog)')
     expect(adminContestFormDialogSource).toContain('Contest Workspace')
+    expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
+    expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">赛制与时间</h3>')
+    expect(adminContestFormPanelSource).toContain(
+      'class="contest-form-button contest-form-button--primary"'
+    )
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {

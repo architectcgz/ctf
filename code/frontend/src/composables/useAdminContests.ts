@@ -26,7 +26,7 @@ export interface ContestFormDraft {
   status: AdminContestStatus
 }
 
-interface ContestFieldLocks {
+export interface ContestFieldLocks {
   mode: boolean
   starts_at: boolean
   ends_at: boolean
@@ -175,11 +175,16 @@ export function useAdminContests() {
     await pagination.changePage(1)
   })
 
-  function openCreateDialog() {
+  function prepareCreateContest() {
     editingContestId.value = null
     editingBaseStatus.value = null
     formDraft.value = createEmptyDraft()
     awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
+    dialogOpen.value = false
+  }
+
+  function openCreateDialog() {
+    prepareCreateContest()
     dialogOpen.value = true
   }
 
@@ -261,13 +266,13 @@ export function useAdminContests() {
     }
   }
 
-  async function saveContest(draft: ContestFormDraft) {
+  async function saveContest(draft: ContestFormDraft): Promise<'create' | 'edit' | null> {
     const title = draft.title.trim()
     const description = draft.description.trim()
 
     if (!title) {
       toast.error('请填写竞赛标题')
-      return
+      return null
     }
 
     saving.value = true
@@ -285,18 +290,20 @@ export function useAdminContests() {
           try {
             await updateContest(editingContestId.value, payload, { suppressErrorToast: true })
             await finalizeContestUpdateSuccess()
+            return 'edit'
           } catch (error) {
             if (isAWDReadinessBlockedError(error)) {
               await openAWDStartOverrideDialog(payload)
-              return
+              return null
             }
             toast.error(humanizeRequestError(error, '竞赛更新失败'))
           }
-          return
+          return null
         }
 
         await updateContest(editingContestId.value, payload)
         await finalizeContestUpdateSuccess()
+        return 'edit'
       } else {
         const payload: AdminContestCreatePayload = {
           title,
@@ -307,10 +314,10 @@ export function useAdminContests() {
         }
         await createContest(payload)
         toast.success('竞赛已创建')
+        dialogOpen.value = false
+        await pagination.refresh()
+        return 'create'
       }
-
-      dialogOpen.value = false
-      await pagination.refresh()
     } finally {
       saving.value = false
     }
@@ -326,6 +333,7 @@ export function useAdminContests() {
     fieldLocks,
     statusOptions,
     awdStartOverrideDialogState,
+    prepareCreateContest,
     openCreateDialog,
     openEditDialog,
     closeDialog,
