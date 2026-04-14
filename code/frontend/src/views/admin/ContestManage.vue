@@ -50,7 +50,7 @@ const {
   fieldLocks,
   statusOptions,
   awdStartOverrideDialogState,
-  openCreateDialog,
+  prepareCreateContest,
   openEditDialog,
   closeDialog,
   closeAWDStartOverrideDialog,
@@ -63,6 +63,8 @@ const awdContests = computed(() => list.value.filter((item) => item.mode === 'aw
 const exportingContestId = ref<string | null>(null)
 const downloadingContestReport = ref(false)
 const pendingContestReportId = ref<string | null>(null)
+const requestedPanel = ref<'overview' | 'list' | 'create' | 'operations' | null>(null)
+const requestedPanelVersion = ref(0)
 
 onMounted(() => {
   void refresh()
@@ -97,6 +99,11 @@ function updateStatusFilter(value: typeof statusFilter.value) {
 
 function updateSelectedAwdContestId(value: string) {
   selectedAwdContestId.value = value
+}
+
+function requestContestPanel(panel: 'overview' | 'list' | 'create' | 'operations') {
+  requestedPanel.value = panel
+  requestedPanelVersion.value += 1
 }
 
 function handleDialogOpenChange(value: boolean) {
@@ -165,6 +172,13 @@ async function handleExportContest(contest: ContestDetailData): Promise<void> {
     exportingContestId.value = null
   }
 }
+
+async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0]): Promise<void> {
+  const result = await saveContest(draft)
+  if (result === 'create') {
+    requestContestPanel('list')
+  }
+}
 </script>
 
 <template>
@@ -178,8 +192,14 @@ async function handleExportContest(contest: ContestDetailData): Promise<void> {
       :status-filter="statusFilter"
       :awd-contests="awdContests"
       :selected-awd-contest-id="selectedAwdContestId"
+      :create-draft="formDraft"
+      :create-saving="saving"
+      :create-field-locks="fieldLocks"
+      :requested-panel="requestedPanel"
+      :requested-panel-version="requestedPanelVersion"
       @refresh="refresh"
-      @open-create-dialog="openCreateDialog"
+      @prepare-create-contest="prepareCreateContest"
+      @save-create-contest="handleCreateContestSave"
       @update-status-filter="updateStatusFilter"
       @open-edit-dialog="openEditDialog"
       @export-contest="handleExportContest"

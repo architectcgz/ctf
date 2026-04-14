@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
 
+import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
 import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
+import type { ContestFieldLocks, ContestFormDraft } from '@/composables/useAdminContests'
 
 type StatusFilter =
   | 'all'
@@ -22,11 +24,17 @@ const props = defineProps<{
   statusFilter: StatusFilter
   awdContests: ContestDetailData[]
   selectedAwdContestId: string | null
+  createDraft: ContestFormDraft
+  createSaving: boolean
+  createFieldLocks: ContestFieldLocks
+  requestedPanel: ContestPanelKey | null
+  requestedPanelVersion: number
 }>()
 
 const emit = defineEmits<{
   refresh: []
-  openCreateDialog: []
+  prepareCreateContest: []
+  saveCreateContest: [value: ContestFormDraft]
   updateStatusFilter: [value: StatusFilter]
   openEditDialog: [contest: ContestDetailData]
   exportContest: [contest: ContestDetailData]
@@ -46,6 +54,12 @@ const panelTabs = [
     label: '赛事目录',
     tabId: 'contest-tab-list',
     panelId: 'contest-panel-list',
+  },
+  {
+    key: 'create',
+    label: '创建竞赛',
+    tabId: 'contest-tab-create',
+    panelId: 'contest-panel-create',
   },
   {
     key: 'operations',
@@ -74,6 +88,20 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
 const awdCount = computed(() => props.awdContests.length)
 const listCount = computed(() => props.list.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
+
+watch(
+  () => props.requestedPanelVersion,
+  () => {
+    if (props.requestedPanel) {
+      selectPanel(props.requestedPanel)
+    }
+  }
+)
+
+function openCreatePanel() {
+  emit('prepareCreateContest')
+  selectPanel('create')
+}
 </script>
 
 <template>
@@ -105,7 +133,7 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
         :aria-selected="activePanel === tab.key ? 'true' : 'false'"
         :aria-controls="tab.panelId"
         :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="selectPanel(tab.key)"
+        @click="tab.key === 'create' ? openCreatePanel() : selectPanel(tab.key)"
         @keydown="handleTabKeydown($event, index)"
       >
         {{ tab.label }}
@@ -138,7 +166,7 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
             <button
               type="button"
               class="admin-btn admin-btn-primary"
-              @click="emit('openCreateDialog')"
+              @click="openCreatePanel"
             >
               <Plus class="h-4 w-4" />
               创建竞赛
@@ -248,7 +276,7 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
             <button
               type="button"
               class="admin-btn admin-btn-primary"
-              @click="emit('openCreateDialog')"
+              @click="openCreatePanel"
             >
               <Plus class="h-4 w-4" />
               创建竞赛
@@ -314,7 +342,7 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
               <button
                 type="button"
                 class="admin-btn admin-btn-primary"
-                @click="emit('openCreateDialog')"
+                @click="openCreatePanel"
               >
                 创建第一场竞赛
               </button>
@@ -330,6 +358,37 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
             @edit="emit('openEditDialog', $event)"
             @export="emit('exportContest', $event)"
             @change-page="emit('changePage', $event)"
+          />
+        </section>
+      </section>
+
+      <section
+        id="contest-panel-create"
+        class="tab-panel contest-panel"
+        :class="{ active: activePanel === 'create' }"
+        role="tabpanel"
+        aria-labelledby="contest-tab-create"
+        :aria-hidden="activePanel === 'create' ? 'false' : 'true'"
+      >
+        <section class="workspace-directory-section contest-create-panel">
+          <header class="contest-overview-head">
+            <div class="workspace-tab-heading__main">
+              <div class="workspace-overline">Contest Setup</div>
+              <h2 class="workspace-page-title">创建竞赛</h2>
+              <p class="workspace-page-copy">
+                在当前工作区里补齐竞赛基础信息和时间窗口，保存后直接回到赛事目录继续编排。
+              </p>
+            </div>
+          </header>
+
+          <AdminContestFormPanel
+            :mode="'create'"
+            :draft="createDraft"
+            :saving="createSaving"
+            :field-locks="createFieldLocks"
+            :show-cancel="false"
+            :note="'创建后可继续在赛事目录中编辑详情、挂载题目或进入 AWD 运维面板。'"
+            @save="emit('saveCreateContest', $event)"
           />
         </section>
       </section>
@@ -436,7 +495,8 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 }
 
 .contest-overview-section,
-.contest-list-panel {
+.contest-list-panel,
+.contest-create-panel {
   display: grid;
   gap: var(--space-5);
   padding: var(--space-5) var(--space-5-5);
@@ -613,7 +673,8 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
   }
 
   .contest-overview-section,
-  .contest-list-panel {
+  .contest-list-panel,
+  .contest-create-panel {
     padding: var(--space-4-5) var(--space-4);
   }
 
