@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -101,6 +102,10 @@ func (s *RuntimeCleanupService) removeContainerWithContext(ctx context.Context, 
 	defer cancel()
 	_ = s.engine.StopContainer(timeoutCtx, containerID, 5*time.Second)
 	if err := s.engine.RemoveContainer(timeoutCtx, containerID, true); err != nil {
+		if isMissingContainerError(err) {
+			s.logger.Info("删除容器跳过，容器不存在", zap.String("container_id", containerID))
+			return nil
+		}
 		return err
 	}
 	s.logger.Info("删除容器", zap.String("container_id", containerID))
@@ -125,4 +130,11 @@ func (s *RuntimeCleanupService) removeNetworkWithContext(ctx context.Context, ne
 	}
 	s.logger.Info("删除网络", zap.String("network_id", networkID))
 	return nil
+}
+
+func isMissingContainerError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "no such container")
 }
