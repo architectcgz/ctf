@@ -93,7 +93,7 @@ describe('InstanceManagement', () => {
       keyword: undefined,
       student_no: undefined,
     })
-    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(3)
+    expect(wrapper.findAll('.progress-card.metric-panel-card')).toHaveLength(3)
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.text()).toContain('Web SQLi 101')
     expect(wrapper.text()).toContain('@alice')
@@ -216,6 +216,24 @@ describe('InstanceManagement', () => {
   it('应该为教师实例列表长文本保留省略样式与完整提示', () => {
     expect(instanceManagementSource).toContain('class="workspace-directory-section teacher-directory-section"')
     expect(instanceManagementSource).toContain('class="list-heading"')
+    expect(instanceManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(instanceManagementSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+    )
+    expect(instanceManagementSource).toContain('class="progress-card metric-panel-card"')
+    expect(instanceManagementSource).not.toContain('class="teacher-summary-item progress-card metric-panel-card"')
+    expect(instanceManagementSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(instanceManagementSource).not.toContain(
+      'class="teacher-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(instanceManagementSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(instanceManagementSource).not.toContain(
+      'class="teacher-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(instanceManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(instanceManagementSource).not.toContain(
+      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
     expect(instanceManagementSource).not.toContain('teacher-controls-title')
     expect(instanceManagementSource).not.toContain('teacher-controls-copy')
     expect(instanceManagementSource).toContain('用户关键字')
