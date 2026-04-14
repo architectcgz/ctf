@@ -47,6 +47,8 @@ declare module 'vue' {
     ClassStudentsPage: typeof import('./components/teacher/class-management/ClassStudentsPage.vue')['default']
     ContestAnnouncementRealtimeBridge: typeof import('./components/contests/ContestAnnouncementRealtimeBridge.vue')['default']
     ContestAWDWorkspacePanel: typeof import('./components/contests/ContestAWDWorkspacePanel.vue')['default']
+    ContestChallengeEditorDialog: typeof import('./components/admin/contest/ContestChallengeEditorDialog.vue')['default']
+    ContestChallengeOrchestrationPanel: typeof import('./components/admin/contest/ContestChallengeOrchestrationPanel.vue')['default']
     ContestOrchestrationPage: typeof import('./components/admin/contest/ContestOrchestrationPage.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElDialog: typeof import('element-plus/es')['ElDialog']

@@ -1920,6 +1920,16 @@ export async function updateAdminContestChallenge(
   })
 }
 
+export async function deleteAdminContestChallenge(
+  contestId: string,
+  challengeId: string
+): Promise<void> {
+  await request<void>({
+    method: 'DELETE',
+    url: `/admin/contests/${encodeURIComponent(contestId)}/challenges/${encodeURIComponent(challengeId)}`,
+  })
+}
+
 export async function listContestAWDRoundServices(
   contestId: string,
   roundId: string
