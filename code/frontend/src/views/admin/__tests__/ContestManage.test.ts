@@ -283,9 +283,7 @@ describe('ContestManage', () => {
       page_size: 20,
     })
     contestMocks.updateContest
-      .mockRejectedValueOnce(
-        new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 })
-      )
+      .mockRejectedValueOnce(new ApiError('AWD 开赛就绪检查未通过', { status: 409, code: 14025 }))
       .mockResolvedValueOnce({
         contest: {
           id: 'awd-start',
@@ -437,7 +435,7 @@ describe('ContestManage', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('赛事编排台')
+    expect(wrapper.text()).toContain('赛事管理台')
     expect(wrapper.text()).toContain('2026 春季校园 CTF')
     expect(wrapper.text()).toContain('报名中')
     expect(wrapper.text()).toContain('当前页没有 AWD 赛事')
@@ -448,7 +446,7 @@ describe('ContestManage', () => {
     })
   })
 
-  it('应该将主窗口、赛事列表与 AWD 运维视图拆分为顶部标签页', async () => {
+  it('应该将总览、赛事目录与 AWD 运维拆分为顶部标签页', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -493,7 +491,7 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
     expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('true')
     expect(wrapper.get('#contest-panel-operations').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.get('#contest-panel-overview').text()).toContain('赛事编排台')
+    expect(wrapper.get('#contest-panel-overview').text()).toContain('赛事管理台')
     expect(wrapper.get('#contest-panel-overview').find('select').exists()).toBe(false)
     expect(wrapper.get('#contest-panel-overview').text()).not.toContain('选择 AWD 赛事')
 
@@ -502,7 +500,7 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('true')
     expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('false')
     expect(wrapper.get('#contest-panel-list').text()).toContain('状态筛选')
-    expect(wrapper.get('#contest-panel-list').text()).toContain('竞赛目录')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('赛事目录')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('当前筛选结果')
     expect(wrapper.get('#contest-panel-list').text()).toContain('2026 AWD 联赛')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('选择 AWD 赛事')
@@ -513,7 +511,7 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-panel-operations').attributes('aria-hidden')).toBe('false')
     expect(wrapper.get('#contest-panel-operations').text()).toContain('选择 AWD 赛事')
     expect(wrapper.get('#contest-panel-operations').text()).not.toContain('状态筛选')
-    expect(wrapper.get('#contest-panel-operations').text()).not.toContain('赛事编排台')
+    expect(wrapper.get('#contest-panel-operations').text()).not.toContain('赛事管理台')
   })
 
   it('应该在空列表时展示显式空态', async () => {
@@ -827,39 +825,67 @@ describe('ContestManage', () => {
         },
       ],
     })
-    contestMocks.listContestAWDRoundTrafficEvents.mockImplementation(async (_contestId, _roundId, params) => {
-      const page = params?.page ?? 1
-      const pageSize = params?.page_size ?? 20
-      const statusGroup = params?.status_group
-      if (page === 2) {
-        return {
-          list: [
-            {
-              id: 'traffic-3',
-              contest_id: 'awd-1',
-              round_id: 'round-1',
-              occurred_at: '2026-03-15T09:05:30.000Z',
-              attacker_team_id: 'team-2',
-              attacker_team_name: '红队一',
-              victim_team_id: 'team-1',
-              victim_team_name: '蓝队一',
-              challenge_id: 'challenge-2',
-              challenge_title: 'Traffic Gamma',
-              method: 'GET',
-              path: '/api/gamma',
-              status_code: 302,
-              status_group: 'redirect',
-              is_error: false,
-              source: 'proxy_audit',
-              request_id: 'req-traffic-3',
-            },
-          ],
-          total: 21,
-          page,
-          page_size: pageSize,
+    contestMocks.listContestAWDRoundTrafficEvents.mockImplementation(
+      async (_contestId, _roundId, params) => {
+        const page = params?.page ?? 1
+        const pageSize = params?.page_size ?? 20
+        const statusGroup = params?.status_group
+        if (page === 2) {
+          return {
+            list: [
+              {
+                id: 'traffic-3',
+                contest_id: 'awd-1',
+                round_id: 'round-1',
+                occurred_at: '2026-03-15T09:05:30.000Z',
+                attacker_team_id: 'team-2',
+                attacker_team_name: '红队一',
+                victim_team_id: 'team-1',
+                victim_team_name: '蓝队一',
+                challenge_id: 'challenge-2',
+                challenge_title: 'Traffic Gamma',
+                method: 'GET',
+                path: '/api/gamma',
+                status_code: 302,
+                status_group: 'redirect',
+                is_error: false,
+                source: 'proxy_audit',
+                request_id: 'req-traffic-3',
+              },
+            ],
+            total: 21,
+            page,
+            page_size: pageSize,
+          }
         }
-      }
-      if (statusGroup === 'server_error') {
+        if (statusGroup === 'server_error') {
+          return {
+            list: [
+              {
+                id: 'traffic-1',
+                contest_id: 'awd-1',
+                round_id: 'round-1',
+                occurred_at: '2026-03-15T09:04:10.000Z',
+                attacker_team_id: 'team-2',
+                attacker_team_name: '红队一',
+                victim_team_id: 'team-1',
+                victim_team_name: '蓝队一',
+                challenge_id: 'challenge-1',
+                challenge_title: 'Traffic Alpha',
+                method: 'POST',
+                path: '/api/alpha',
+                status_code: 500,
+                status_group: 'server_error',
+                is_error: true,
+                source: 'proxy_audit',
+                request_id: 'req-traffic-1',
+              },
+            ],
+            total: 1,
+            page,
+            page_size: pageSize,
+          }
+        }
         return {
           list: [
             {
@@ -881,58 +907,32 @@ describe('ContestManage', () => {
               source: 'proxy_audit',
               request_id: 'req-traffic-1',
             },
+            {
+              id: 'traffic-2',
+              contest_id: 'awd-1',
+              round_id: 'round-1',
+              occurred_at: '2026-03-15T09:04:40.000Z',
+              attacker_team_id: 'team-1',
+              attacker_team_name: '蓝队一',
+              victim_team_id: 'team-2',
+              victim_team_name: '红队一',
+              challenge_id: 'challenge-2',
+              challenge_title: 'Traffic Beta',
+              method: 'GET',
+              path: '/api/beta',
+              status_code: 200,
+              status_group: 'success',
+              is_error: false,
+              source: 'proxy_audit',
+              request_id: 'req-traffic-2',
+            },
           ],
-          total: 1,
+          total: 21,
           page,
           page_size: pageSize,
         }
       }
-      return {
-        list: [
-          {
-            id: 'traffic-1',
-            contest_id: 'awd-1',
-            round_id: 'round-1',
-            occurred_at: '2026-03-15T09:04:10.000Z',
-            attacker_team_id: 'team-2',
-            attacker_team_name: '红队一',
-            victim_team_id: 'team-1',
-            victim_team_name: '蓝队一',
-            challenge_id: 'challenge-1',
-            challenge_title: 'Traffic Alpha',
-            method: 'POST',
-            path: '/api/alpha',
-            status_code: 500,
-            status_group: 'server_error',
-            is_error: true,
-            source: 'proxy_audit',
-            request_id: 'req-traffic-1',
-          },
-          {
-            id: 'traffic-2',
-            contest_id: 'awd-1',
-            round_id: 'round-1',
-            occurred_at: '2026-03-15T09:04:40.000Z',
-            attacker_team_id: 'team-1',
-            attacker_team_name: '蓝队一',
-            victim_team_id: 'team-2',
-            victim_team_name: '红队一',
-            challenge_id: 'challenge-2',
-            challenge_title: 'Traffic Beta',
-            method: 'GET',
-            path: '/api/beta',
-            status_code: 200,
-            status_group: 'success',
-            is_error: false,
-            source: 'proxy_audit',
-            request_id: 'req-traffic-2',
-          },
-        ],
-        total: 21,
-        page,
-        page_size: pageSize,
-      }
-    })
+    )
     contestMocks.getAdminContestLiveScoreboard.mockResolvedValue({
       contest: {
         id: 'awd-1',
@@ -994,7 +994,7 @@ describe('ContestManage', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(wrapper.text()).toContain('AWD 运维视图')
+    expect(wrapper.text()).toContain('AWD 运维')
     expect(wrapper.text()).toContain('2026 校赛 AWD')
     expect(wrapper.text()).toContain('蓝队一')
     expect(wrapper.text()).toContain('红队一')
@@ -1034,7 +1034,10 @@ describe('ContestManage', () => {
         page_size: 20,
       })
     )
-    expect(contestMocks.getAdminContestLiveScoreboard).toHaveBeenCalledWith('awd-1', { page: 1, page_size: 10 })
+    expect(contestMocks.getAdminContestLiveScoreboard).toHaveBeenCalledWith('awd-1', {
+      page: 1,
+      page_size: 10,
+    })
 
     await wrapper.find('#awd-service-filter-source').setValue('manual_selected_round')
     await flushPromises()
@@ -1097,53 +1100,47 @@ describe('ContestManage', () => {
     )
 
     await wrapper.find('#awd-export-services').trigger('click')
-    expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith(
-      '2026-AWD-round-1-services.csv',
-      [
-        {
-          赛事: '2026 校赛 AWD',
-          轮次: '第 1 轮',
-          筛选队伍: '全部队伍',
-          筛选状态: '全部状态',
-          筛选来源: '指定轮次重跑',
-          筛选告警: 'HTTP 状态异常',
-          队伍: '蓝队一',
-          靶题: 'Challenge #challenge-1',
-          服务状态: '已失陷',
-          巡检来源: '指定轮次重跑',
-          Checker类型: '',
-          检查摘要: '来源: 指定轮次重跑 | 状态: HTTP 状态异常 | 时间: 2026/03/15 17:05:00',
-          SLA得分: 0,
-          防守得分: 0,
-          攻击得分: 100,
-          受攻击次数: 2,
-          更新时间: '2026/03/15 17:05:00',
-        },
-      ]
-    )
+    expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith('2026-AWD-round-1-services.csv', [
+      {
+        赛事: '2026 校赛 AWD',
+        轮次: '第 1 轮',
+        筛选队伍: '全部队伍',
+        筛选状态: '全部状态',
+        筛选来源: '指定轮次重跑',
+        筛选告警: 'HTTP 状态异常',
+        队伍: '蓝队一',
+        靶题: 'Challenge #challenge-1',
+        服务状态: '已失陷',
+        巡检来源: '指定轮次重跑',
+        Checker类型: '',
+        检查摘要: '来源: 指定轮次重跑 | 状态: HTTP 状态异常 | 时间: 2026/03/15 17:05:00',
+        SLA得分: 0,
+        防守得分: 0,
+        攻击得分: 100,
+        受攻击次数: 2,
+        更新时间: '2026/03/15 17:05:00',
+      },
+    ])
 
     await wrapper.find('#awd-export-attacks').trigger('click')
-    expect(exportMocks.downloadCSVFile).toHaveBeenLastCalledWith(
-      '2026-AWD-round-1-attacks.csv',
-      [
-        {
-          赛事: '2026 校赛 AWD',
-          轮次: '第 1 轮',
-          筛选队伍: '全部队伍',
-          筛选结果: '全部结果',
-          筛选来源: '人工补录',
-          时间: '2026/03/15 17:04:30',
-          攻击方: '蓝队一',
-          受害方: '红队一',
-          靶题: 'Challenge #challenge-1',
-          攻击类型: '服务利用',
-          记录来源: '人工补录',
-          攻击结果: '失败',
-          得分: 0,
-          提交Flag: '',
-        },
-      ]
-    )
+    expect(exportMocks.downloadCSVFile).toHaveBeenLastCalledWith('2026-AWD-round-1-attacks.csv', [
+      {
+        赛事: '2026 校赛 AWD',
+        轮次: '第 1 轮',
+        筛选队伍: '全部队伍',
+        筛选结果: '全部结果',
+        筛选来源: '人工补录',
+        时间: '2026/03/15 17:04:30',
+        攻击方: '蓝队一',
+        受害方: '红队一',
+        靶题: 'Challenge #challenge-1',
+        攻击类型: '服务利用',
+        记录来源: '人工补录',
+        攻击结果: '失败',
+        得分: 0,
+        提交Flag: '',
+      },
+    ])
 
     await wrapper.find('#awd-export-review-package').trigger('click')
     expect(exportMocks.downloadJSONFile).toHaveBeenCalledWith(
@@ -1562,7 +1559,9 @@ describe('ContestManage', () => {
     await wrapper.find('#awd-service-team').setValue('11')
     await wrapper.find('#awd-service-challenge').setValue('501')
     await wrapper.find('#awd-service-status').setValue('down')
-    await wrapper.find('#awd-service-check-result').setValue('{"http_status":503,"reason":"timeout"}')
+    await wrapper
+      .find('#awd-service-check-result')
+      .setValue('{"http_status":503,"reason":"timeout"}')
     contestMocks.listContestAWDRoundServices.mockResolvedValue([
       {
         id: 'service-manual-1',
@@ -1849,24 +1848,26 @@ describe('ContestManage', () => {
       challengeLinksState.push(created)
       return created
     })
-    contestMocks.updateAdminContestChallenge.mockImplementation(async (_contestId, challengeId, payload) => {
-      const target = challengeLinksState.find((item) => item.challenge_id === challengeId)
-      if (!target) {
-        throw new Error('missing challenge link')
+    contestMocks.updateAdminContestChallenge.mockImplementation(
+      async (_contestId, challengeId, payload) => {
+        const target = challengeLinksState.find((item) => item.challenge_id === challengeId)
+        if (!target) {
+          throw new Error('missing challenge link')
+        }
+        if (typeof payload.points === 'number') target.points = payload.points
+        if (typeof payload.order === 'number') target.order = payload.order
+        if (typeof payload.is_visible === 'boolean') target.is_visible = payload.is_visible
+        if (payload.awd_checker_type) target.awd_checker_type = payload.awd_checker_type
+        if (payload.awd_checker_config) {
+          target.awd_checker_config = payload.awd_checker_config
+          target.awd_checker_validation_state = 'stale'
+        }
+        if (typeof payload.awd_sla_score === 'number') target.awd_sla_score = payload.awd_sla_score
+        if (typeof payload.awd_defense_score === 'number') {
+          target.awd_defense_score = payload.awd_defense_score
+        }
       }
-      if (typeof payload.points === 'number') target.points = payload.points
-      if (typeof payload.order === 'number') target.order = payload.order
-      if (typeof payload.is_visible === 'boolean') target.is_visible = payload.is_visible
-      if (payload.awd_checker_type) target.awd_checker_type = payload.awd_checker_type
-      if (payload.awd_checker_config) {
-        target.awd_checker_config = payload.awd_checker_config
-        target.awd_checker_validation_state = 'stale'
-      }
-      if (typeof payload.awd_sla_score === 'number') target.awd_sla_score = payload.awd_sla_score
-      if (typeof payload.awd_defense_score === 'number') {
-        target.awd_defense_score = payload.awd_defense_score
-      }
-    })
+    )
 
     const wrapper = mount(ContestManage, {
       global: {
@@ -1903,21 +1904,17 @@ describe('ContestManage', () => {
     await flushPromises()
     await flushPromises()
 
-    expect(contestMocks.updateAdminContestChallenge).toHaveBeenCalledWith(
-      'awd-config',
-      '101',
-      {
-        points: 120,
-        order: 1,
-        is_visible: true,
-        awd_checker_type: 'legacy_probe',
-        awd_checker_config: {
-          health_path: '/healthz',
-        },
-        awd_sla_score: 20,
-        awd_defense_score: 30,
-      }
-    )
+    expect(contestMocks.updateAdminContestChallenge).toHaveBeenCalledWith('awd-config', '101', {
+      points: 120,
+      order: 1,
+      is_visible: true,
+      awd_checker_type: 'legacy_probe',
+      awd_checker_config: {
+        health_path: '/healthz',
+      },
+      awd_sla_score: 20,
+      awd_defense_score: 30,
+    })
 
     expect(wrapper.text()).toContain('基础探活')
     expect(wrapper.text()).toContain('SLA 20 / 防守 30')
@@ -2083,92 +2080,94 @@ describe('ContestManage', () => {
           ]
         : []
     )
-    contestMocks.listContestAWDRoundServices.mockImplementation(async (contestId: string, roundId: string) =>
-      contestId === 'awd-restore-2' && roundId === 'round-restore-2'
-        ? [
-            {
-              id: 'restore-service-a',
-              round_id: 'round-restore-2',
-              team_id: 'team-a',
-              team_name: '红队甲',
-              challenge_id: 'restore-challenge-1',
-              service_status: 'up',
-              checker_type: 'http_standard',
-              check_result: {
-                check_source: 'scheduler',
+    contestMocks.listContestAWDRoundServices.mockImplementation(
+      async (contestId: string, roundId: string) =>
+        contestId === 'awd-restore-2' && roundId === 'round-restore-2'
+          ? [
+              {
+                id: 'restore-service-a',
+                round_id: 'round-restore-2',
+                team_id: 'team-a',
+                team_name: '红队甲',
+                challenge_id: 'restore-challenge-1',
+                service_status: 'up',
                 checker_type: 'http_standard',
-                status_reason: 'healthy',
-                put_flag: { healthy: true, method: 'PUT', path: '/api/flag' },
-                get_flag: { healthy: true, method: 'GET', path: '/api/flag' },
-                checked_at: '2026-03-26T09:15:00.000Z',
-              },
-              attack_received: 0,
-              sla_score: 18,
-              defense_score: 40,
-              attack_score: 0,
-              updated_at: '2026-03-26T09:15:00.000Z',
-            },
-            {
-              id: 'restore-service-b',
-              round_id: 'round-restore-2',
-              team_id: 'team-b',
-              team_name: '蓝队乙',
-              challenge_id: 'restore-challenge-1',
-              service_status: 'down',
-              checker_type: 'http_standard',
-              check_result: {
-                check_source: 'manual_service_check',
-                checker_type: 'http_standard',
-                checked_at: '2026-03-26T09:16:00.000Z',
-                status_reason: 'flag_mismatch',
-                get_flag: {
-                  healthy: false,
-                  error_code: 'flag_mismatch',
-                  error: 'flag_mismatch',
+                check_result: {
+                  check_source: 'scheduler',
+                  checker_type: 'http_standard',
+                  status_reason: 'healthy',
+                  put_flag: { healthy: true, method: 'PUT', path: '/api/flag' },
+                  get_flag: { healthy: true, method: 'GET', path: '/api/flag' },
+                  checked_at: '2026-03-26T09:15:00.000Z',
                 },
+                attack_received: 0,
+                sla_score: 18,
+                defense_score: 40,
+                attack_score: 0,
+                updated_at: '2026-03-26T09:15:00.000Z',
               },
-              attack_received: 1,
-              sla_score: 0,
-              defense_score: 0,
-              attack_score: 0,
-              updated_at: '2026-03-26T09:16:00.000Z',
-            },
-          ]
-        : []
+              {
+                id: 'restore-service-b',
+                round_id: 'round-restore-2',
+                team_id: 'team-b',
+                team_name: '蓝队乙',
+                challenge_id: 'restore-challenge-1',
+                service_status: 'down',
+                checker_type: 'http_standard',
+                check_result: {
+                  check_source: 'manual_service_check',
+                  checker_type: 'http_standard',
+                  checked_at: '2026-03-26T09:16:00.000Z',
+                  status_reason: 'flag_mismatch',
+                  get_flag: {
+                    healthy: false,
+                    error_code: 'flag_mismatch',
+                    error: 'flag_mismatch',
+                  },
+                },
+                attack_received: 1,
+                sla_score: 0,
+                defense_score: 0,
+                attack_score: 0,
+                updated_at: '2026-03-26T09:16:00.000Z',
+              },
+            ]
+          : []
     )
-    contestMocks.listContestAWDRoundAttacks.mockImplementation(async (contestId: string, roundId: string) =>
-      contestId === 'awd-restore-2' && roundId === 'round-restore-2'
-        ? [
-            {
-              id: 'restore-attack-a',
-              round_id: 'round-restore-2',
-              attacker_team_id: 'team-a',
-              attacker_team: '红队甲',
-              victim_team_id: 'team-b',
-              victim_team: '蓝队乙',
-              challenge_id: 'restore-challenge-1',
-              attack_type: 'flag_capture',
-              source: 'submission',
-              is_success: true,
-              score_gained: 80,
-              created_at: '2026-03-26T09:12:00.000Z',
-            },
-            {
-              id: 'restore-attack-b',
-              round_id: 'round-restore-2',
-              attacker_team_id: 'team-b',
-              attacker_team: '蓝队乙',
-              victim_team_id: 'team-a',
-              victim_team: '红队甲',
-              challenge_id: 'restore-challenge-1',
-              attack_type: 'service_exploit',
-              source: 'manual_attack_log',
-              is_success: false,
-              score_gained: 0,
-              created_at: '2026-03-26T09:13:00.000Z',
-            },
-          ]
-        : []
+    contestMocks.listContestAWDRoundAttacks.mockImplementation(
+      async (contestId: string, roundId: string) =>
+        contestId === 'awd-restore-2' && roundId === 'round-restore-2'
+          ? [
+              {
+                id: 'restore-attack-a',
+                round_id: 'round-restore-2',
+                attacker_team_id: 'team-a',
+                attacker_team: '红队甲',
+                victim_team_id: 'team-b',
+                victim_team: '蓝队乙',
+                challenge_id: 'restore-challenge-1',
+                attack_type: 'flag_capture',
+                source: 'submission',
+                is_success: true,
+                score_gained: 80,
+                created_at: '2026-03-26T09:12:00.000Z',
+              },
+              {
+                id: 'restore-attack-b',
+                round_id: 'round-restore-2',
+                attacker_team_id: 'team-b',
+                attacker_team: '蓝队乙',
+                victim_team_id: 'team-a',
+                victim_team: '红队甲',
+                challenge_id: 'restore-challenge-1',
+                attack_type: 'service_exploit',
+                source: 'manual_attack_log',
+                is_success: false,
+                score_gained: 0,
+                created_at: '2026-03-26T09:13:00.000Z',
+              },
+            ]
+          : []
     )
     contestMocks.getContestAWDRoundSummary.mockResolvedValue({
       round: {
@@ -2254,31 +2253,28 @@ describe('ContestManage', () => {
     expect(wrapper.text()).toContain('GET Flag')
 
     await wrapper.find('#awd-export-services').trigger('click')
-    expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith(
-      'AWD-Restore-2-round-2-services.csv',
-      [
-        {
-          赛事: 'AWD Restore 2',
-          轮次: '第 2 轮',
-          筛选队伍: '蓝队乙',
-          筛选状态: '下线',
-          筛选来源: '人工补录',
-          筛选告警: '全部告警',
-          队伍: '蓝队乙',
-          靶题: 'Restore Challenge',
-          服务状态: '下线',
-          巡检来源: '人工补录',
-          Checker类型: 'HTTP 标准 Checker',
-          检查摘要:
-            'Checker: HTTP 标准 Checker | 来源: 人工补录 | 状态: Flag 校验失败 | 时间: 2026/03/26 17:16:00',
-          SLA得分: 0,
-          防守得分: 0,
-          攻击得分: 0,
-          受攻击次数: 1,
-          更新时间: '2026/03/26 17:16:00',
-        },
-      ]
-    )
+    expect(exportMocks.downloadCSVFile).toHaveBeenCalledWith('AWD-Restore-2-round-2-services.csv', [
+      {
+        赛事: 'AWD Restore 2',
+        轮次: '第 2 轮',
+        筛选队伍: '蓝队乙',
+        筛选状态: '下线',
+        筛选来源: '人工补录',
+        筛选告警: '全部告警',
+        队伍: '蓝队乙',
+        靶题: 'Restore Challenge',
+        服务状态: '下线',
+        巡检来源: '人工补录',
+        Checker类型: 'HTTP 标准 Checker',
+        检查摘要:
+          'Checker: HTTP 标准 Checker | 来源: 人工补录 | 状态: Flag 校验失败 | 时间: 2026/03/26 17:16:00',
+        SLA得分: 0,
+        防守得分: 0,
+        攻击得分: 0,
+        受攻击次数: 1,
+        更新时间: '2026/03/26 17:16:00',
+      },
+    ])
 
     await wrapper.find('#awd-export-attacks').trigger('click')
     expect(exportMocks.downloadCSVFile).toHaveBeenLastCalledWith(
