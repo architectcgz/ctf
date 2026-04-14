@@ -68,30 +68,30 @@ const emit = defineEmits<{
             <span>Directory Snapshot</span>
           </div>
           <div class="teacher-summary-grid progress-strip metric-panel-grid">
-            <article class="teacher-summary-item progress-card metric-panel-card">
-              <div class="teacher-summary-label progress-card-label metric-panel-label">可访问班级</div>
-              <div class="teacher-summary-value progress-card-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">可访问班级</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ classes.length }}
               </div>
-              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+              <div class="progress-card-hint metric-panel-helper">
                 当前教师可切换的班级数量
               </div>
             </article>
-            <article class="teacher-summary-item progress-card metric-panel-card">
-              <div class="teacher-summary-label progress-card-label metric-panel-label">当前班级学生</div>
-              <div class="teacher-summary-value progress-card-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">当前班级学生</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ totalStudents }}
               </div>
-              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+              <div class="progress-card-hint metric-panel-helper">
                 当前选中班级的学生总数
               </div>
             </article>
-            <article class="teacher-summary-item progress-card metric-panel-card">
-              <div class="teacher-summary-label progress-card-label metric-panel-label">搜索结果</div>
-              <div class="teacher-summary-value progress-card-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">搜索结果</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ filteredStudents.length }}
               </div>
-              <div class="teacher-summary-helper progress-card-hint metric-panel-helper">
+              <div class="progress-card-hint metric-panel-helper">
                 当前搜索条件下匹配的学生数量
               </div>
             </article>
