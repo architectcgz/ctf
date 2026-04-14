@@ -657,7 +657,7 @@ function handleSubmit() {
         <header class="checker-config-block__head">
           <div>
             <div class="journal-note-label">Checker Config</div>
-            <h3 class="workspace-tab-heading__title checker-config-block__title">
+            <h3 class="checker-config-block__title">
               {{ form.awd_checker_type === 'http_standard' ? 'HTTP Standard 配置' : 'Legacy Probe 配置' }}
             </h3>
           </div>
@@ -939,7 +939,7 @@ function handleSubmit() {
         <header class="checker-config-block__head">
           <div>
             <div class="journal-note-label">Payload Preview</div>
-            <h3 class="workspace-tab-heading__title checker-config-block__title">最终 JSON 预览</h3>
+            <h3 class="checker-config-block__title">最终 JSON 预览</h3>
           </div>
           <p class="checker-config-block__hint">保存时会按下面的结构写入 `awd_checker_config`。</p>
         </header>
@@ -954,7 +954,7 @@ function handleSubmit() {
         <header class="checker-config-block__head">
           <div>
             <div class="journal-note-label">Saved Validation</div>
-            <h3 class="workspace-tab-heading__title checker-config-block__title">最近一次已保存校验</h3>
+            <h3 class="checker-config-block__title">最近一次已保存校验</h3>
           </div>
           <p class="checker-config-block__hint">
             这里显示已经写入赛事题目配置的校验状态；如果后续改了 Checker 草稿，需要重新试跑。
@@ -989,7 +989,7 @@ function handleSubmit() {
         <header class="checker-config-block__head">
           <div>
             <div class="journal-note-label">Checker Preview</div>
-            <h3 class="workspace-tab-heading__title checker-config-block__title">试跑 Checker</h3>
+            <h3 class="checker-config-block__title">试跑 Checker</h3>
           </div>
           <p class="checker-config-block__hint">
             会按当前配置真实请求目标地址，但不会写入轮次、服务状态和排行榜数据。
