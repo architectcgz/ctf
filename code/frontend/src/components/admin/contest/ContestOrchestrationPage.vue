@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Trophy } from 'lucide-vue-next'
+import { Plus, RefreshCw } from 'lucide-vue-next'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
-import AppEmpty from '@/components/common/AppEmpty.vue'
-import AppLoading from '@/components/common/AppLoading.vue'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
 import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
+import AppEmpty from '@/components/common/AppEmpty.vue'
+import AppLoading from '@/components/common/AppLoading.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 type StatusFilter =
@@ -37,19 +37,19 @@ const emit = defineEmits<{
 const panelTabs = [
   {
     key: 'overview',
-    label: '主窗口',
+    label: '总览',
     tabId: 'contest-tab-overview',
     panelId: 'contest-panel-overview',
   },
   {
     key: 'list',
-    label: '赛事列表',
+    label: '赛事目录',
     tabId: 'contest-tab-list',
     panelId: 'contest-panel-list',
   },
   {
     key: 'operations',
-    label: 'AWD 运维视图',
+    label: 'AWD 运维',
     tabId: 'contest-tab-operations',
     panelId: 'contest-panel-operations',
   },
@@ -57,11 +57,15 @@ const panelTabs = [
 
 type ContestPanelKey = (typeof panelTabs)[number]['key']
 const contestPanelOrder = panelTabs.map((tab) => tab.key) as ContestPanelKey[]
-const { activeTab: activePanel, setTabButtonRef, selectTab: selectPanel, handleTabKeydown } =
-  useUrlSyncedTabs<ContestPanelKey>({
-    orderedTabs: contestPanelOrder,
-    defaultTab: 'overview',
-  })
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab: selectPanel,
+  handleTabKeydown,
+} = useUrlSyncedTabs<ContestPanelKey>({
+  orderedTabs: contestPanelOrder,
+  defaultTab: 'overview',
+})
 
 const registeringCount = computed(
   () => props.list.filter((item) => item.status === 'registering').length
@@ -69,6 +73,7 @@ const registeringCount = computed(
 const runningCount = computed(() => props.list.filter((item) => item.status === 'running').length)
 const awdCount = computed(() => props.awdContests.length)
 const listCount = computed(() => props.list.length)
+const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 </script>
 
 <template>
@@ -116,55 +121,108 @@ const listCount = computed(() => props.list.length)
         aria-labelledby="contest-tab-overview"
         :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
       >
-        <header class="panel-head panel-head--overview">
-          <div class="panel-copy workspace-tab-heading__main">
-            <div class="journal-eyebrow">Contest Orchestration</div>
-            <h1 class="hero-title">赛事编排台</h1>
-            <p class="admin-page-copy">在这里查看赛事窗口、状态筛选和 AWD 运维入口。</p>
+        <header class="contest-overview-head">
+          <div class="workspace-tab-heading__main">
+            <div class="journal-note-label">Contest Workspace</div>
+            <h1 class="workspace-page-title">赛事管理台</h1>
+            <p class="workspace-page-copy">
+              在同一套工作区里查看赛事窗口、切换目录筛选，并按需进入 AWD 运维视图。
+            </p>
           </div>
 
-          <article class="journal-brief panel-brief rounded-[24px] border px-5 py-5">
-            <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
-              <Trophy class="h-5 w-5 text-[var(--journal-accent)]" />
-              当前赛事概况
-            </div>
-            <div class="admin-summary-grid contest-overview-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
-              <div class="journal-note progress-card metric-panel-card">
-                <div class="journal-note-label progress-card-label metric-panel-label">赛事总量</div>
-                <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  当前筛选条件下的赛事总数
-                </div>
-              </div>
-              <div class="journal-note progress-card metric-panel-card">
-                <div class="journal-note-label progress-card-label metric-panel-label">报名中</div>
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ registeringCount }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  当前页开放报名的赛事
-                </div>
-              </div>
-              <div class="journal-note progress-card metric-panel-card">
-                <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
-                <div class="journal-note-value progress-card-value metric-panel-value">
-                  {{ runningCount }}
-                </div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  当前页正在进行的赛事
-                </div>
-              </div>
-              <div class="journal-note progress-card metric-panel-card">
-                <div class="journal-note-label progress-card-label metric-panel-label">AWD</div>
-                <div class="journal-note-value progress-card-value metric-panel-value">{{ awdCount }}</div>
-                <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                  当前页可直接切换到攻防运维视图
-                </div>
-              </div>
-            </div>
-          </article>
+          <div class="contest-panel-actions">
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+              <RefreshCw class="h-4 w-4" />
+              刷新列表
+            </button>
+            <button
+              type="button"
+              class="admin-btn admin-btn-primary"
+              @click="emit('openCreateDialog')"
+            >
+              <Plus class="h-4 w-4" />
+              创建竞赛
+            </button>
+          </div>
         </header>
 
+        <div
+          class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+        >
+          <div class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">赛事总量</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前筛选条件下的赛事总数
+            </div>
+          </div>
+          <div class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">报名中</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ registeringCount }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前页开放报名的赛事
+            </div>
+          </div>
+          <div class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">进行中</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ runningCount }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前页正在进行的赛事
+            </div>
+          </div>
+          <div class="journal-note progress-card metric-panel-card">
+            <div class="journal-note-label progress-card-label metric-panel-label">AWD</div>
+            <div class="journal-note-value progress-card-value metric-panel-value">
+              {{ awdCount }}
+            </div>
+            <div class="journal-note-helper progress-card-hint metric-panel-helper">
+              当前页可直接切换到攻防运维视图
+            </div>
+          </div>
+        </div>
+
+        <section class="workspace-directory-section contest-overview-section">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Contest Status</div>
+              <h2 class="list-heading__title">当前赛事窗口</h2>
+            </div>
+            <div class="contest-section-meta">当前页 {{ listCount }} 场赛事</div>
+          </header>
+
+          <div class="contest-overview-rows">
+            <article class="contest-overview-row">
+              <div class="contest-overview-row__body">
+                <h3 class="contest-overview-row__title">报名与开赛窗口</h3>
+                <p class="contest-overview-row__copy">
+                  当前页有 {{ registeringCount }} 场赛事开放报名，{{
+                    runningCount
+                  }}
+                  场赛事正在进行。
+                </p>
+              </div>
+              <button type="button" class="contest-inline-link" @click="selectPanel('list')">
+                查看赛事目录
+              </button>
+            </article>
+
+            <article class="contest-overview-row">
+              <div class="contest-overview-row__body">
+                <h3 class="contest-overview-row__title">AWD 运维入口</h3>
+                <p class="contest-overview-row__copy">
+                  AWD 赛事会在这里汇总，便于直接进入攻防轮次、服务巡检和流量排查流程。
+                </p>
+              </div>
+              <button type="button" class="contest-inline-link" @click="selectPanel('operations')">
+                进入 AWD 运维
+              </button>
+            </article>
+          </div>
+        </section>
       </section>
 
       <section
@@ -175,45 +233,74 @@ const listCount = computed(() => props.list.length)
         aria-labelledby="contest-tab-list"
         :aria-hidden="activePanel === 'list' ? 'false' : 'true'"
       >
-        <section class="contest-list-filters">
-          <label class="space-y-2">
-            <span class="text-sm text-[var(--journal-muted)]">状态筛选</span>
-            <select
-              :value="statusFilter"
-              class="admin-input"
-              @change="
-                emit(
-                  'updateStatusFilter',
-                  ($event.target as HTMLSelectElement).value as StatusFilter
-                )
-              "
+        <header class="list-heading contest-list-head">
+          <div>
+            <div class="journal-note-label">Contest Directory</div>
+            <h2 class="list-heading__title">赛事目录</h2>
+          </div>
+
+          <div class="contest-list-actions">
+            <div class="contest-section-meta">共 {{ total }} 场赛事</div>
+            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+              <RefreshCw class="h-4 w-4" />
+              刷新列表
+            </button>
+            <button
+              type="button"
+              class="admin-btn admin-btn-primary"
+              @click="emit('openCreateDialog')"
             >
-              <option value="all">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="registering">报名中</option>
-              <option value="running">进行中</option>
-              <option value="frozen">已冻结</option>
-              <option value="ended">已结束</option>
-            </select>
-          </label>
-        </section>
+              <Plus class="h-4 w-4" />
+              创建竞赛
+            </button>
+          </div>
+        </header>
 
         <section class="workspace-directory-section contest-list-panel">
-          <header class="list-heading">
-            <div>
-              <div class="journal-note-label">Contests</div>
-              <h3 class="list-heading__title">竞赛目录</h3>
-            </div>
-            <div class="contest-list-meta">共 {{ total }} 场赛事</div>
-          </header>
+          <section class="contest-list-filters" aria-label="赛事筛选">
+            <label class="contest-filter-field">
+              <span class="contest-filter-label">状态筛选</span>
+              <select
+                :value="statusFilter"
+                class="admin-input"
+                @change="
+                  emit(
+                    'updateStatusFilter',
+                    ($event.target as HTMLSelectElement).value as StatusFilter
+                  )
+                "
+              >
+                <option value="all">全部状态</option>
+                <option value="draft">草稿</option>
+                <option value="registering">报名中</option>
+                <option value="running">进行中</option>
+                <option value="frozen">已冻结</option>
+                <option value="ended">已结束</option>
+              </select>
+            </label>
 
-          <div v-if="loading && list.length === 0" class="flex justify-center py-10">
+            <div class="contest-filter-actions">
+              <button
+                v-if="hasStatusFilter"
+                type="button"
+                class="admin-btn admin-btn-ghost"
+                @click="emit('updateStatusFilter', 'all')"
+              >
+                清空筛选
+              </button>
+            </div>
+          </section>
+
+          <div
+            v-if="loading && list.length === 0"
+            class="workspace-directory-loading flex justify-center py-10"
+          >
             <AppLoading>正在同步竞赛列表...</AppLoading>
           </div>
 
           <AppEmpty
             v-else-if="list.length === 0"
-            class="contest-empty-state"
+            class="workspace-directory-empty contest-empty-state"
             title="暂无竞赛"
             description="当前筛选条件下没有竞赛数据。"
             icon="Trophy"
@@ -284,7 +371,7 @@ const listCount = computed(() => props.list.length)
 }
 
 .contest-panel {
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .workspace-shell .tab-panel.contest-panel {
@@ -293,107 +380,27 @@ const listCount = computed(() => props.list.length)
 
 .workspace-shell .tab-panel.contest-panel.active {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
-.contest-list-panel {
+.contest-overview-head {
   display: grid;
   gap: var(--space-4);
 }
 
-.panel-head {
-  display: grid;
-  gap: var(--space-6);
-}
-
-.panel-head--overview {
-  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
-  align-items: start;
-}
-
-.panel-copy {
-  max-width: 42rem;
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-.panel-title {
-  margin: var(--space-1-5) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.panel-copy > p {
-  max-width: 48rem;
-}
-
-.panel-copy > p {
-  margin-top: var(--space-3);
-  line-height: 1.7;
-  color: var(--journal-muted);
-}
-
-.contest-list-filters {
-  display: grid;
-  max-width: 20rem;
-  gap: var(--space-3);
-}
-
-.contest-overview-summary {
-  --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
-}
-
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-shadow-soft) 26%, transparent);
-}
-
-.admin-section-head {
+.contest-panel-actions,
+.contest-list-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-}
-
-.admin-section-head-intro {
-  position: relative;
-  padding: var(--space-4) var(--space-4-5) var(--space-4) var(--space-5-5);
-  border: 1px dashed color-mix(in srgb, var(--journal-border) 82%, transparent);
-  border-radius: 18px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 10%, transparent),
-    transparent 72%
-  );
-}
-
-.admin-section-head-intro::before {
-  content: '';
-  position: absolute;
-  left: 0.82rem;
-  top: 0.95rem;
-  bottom: 0.95rem;
-  width: 3px;
-  border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink)),
-    color-mix(in srgb, var(--journal-accent) 20%, transparent)
-  );
-}
-
-.admin-section-head-intro .journal-note-label {
-  color: var(--journal-accent);
 }
 
 .list-heading {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: space-between;
   gap: var(--space-3);
 }
 
@@ -404,9 +411,86 @@ const listCount = computed(() => props.list.length)
   color: var(--journal-ink);
 }
 
-.contest-list-meta {
+.contest-section-meta {
   font-size: var(--font-size-0-82);
   color: var(--journal-muted);
+}
+
+.contest-overview-summary {
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
+}
+
+.contest-overview-section,
+.contest-list-panel {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-5-5);
+}
+
+.contest-overview-rows {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.contest-overview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-top: 1px solid color-mix(in srgb, var(--journal-border) 68%, transparent);
+  padding-top: var(--space-4);
+}
+
+.contest-overview-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.contest-overview-row__body {
+  display: grid;
+  gap: var(--space-1-5);
+  max-width: 42rem;
+}
+
+.contest-overview-row__title {
+  margin: 0;
+  font-size: var(--font-size-0-98);
+  font-weight: 600;
+  color: var(--journal-ink);
+}
+
+.contest-overview-row__copy {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--journal-muted);
+}
+
+.contest-inline-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
+  padding: var(--space-1-5) var(--space-3);
+  font-size: var(--font-size-0-84);
+  font-weight: 600;
+  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.contest-inline-link:hover {
+  border-color: color-mix(in srgb, var(--journal-accent) 36%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 14%, var(--journal-surface));
+}
+
+.contest-list-head {
+  align-items: flex-end;
 }
 
 .admin-btn {
@@ -459,6 +543,32 @@ const listCount = computed(() => props.list.length)
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
 
+.contest-list-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.contest-filter-field {
+  display: grid;
+  max-width: 18rem;
+  gap: var(--space-2);
+}
+
+.contest-filter-label {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
+}
+
+.contest-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
 .contest-empty-state {
   border-top-style: solid;
   border-bottom-style: solid;
@@ -466,13 +576,10 @@ const listCount = computed(() => props.list.length)
   border-bottom-color: color-mix(in srgb, var(--journal-border) 68%, transparent);
 }
 
-:global([data-theme='dark']) .admin-section-head-intro {
-  border-color: color-mix(in srgb, var(--journal-accent) 22%, var(--journal-border));
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--journal-accent) 14%, transparent),
-    transparent 72%
-  );
+@media (max-width: 1023px) {
+  .contest-overview-summary {
+    --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 767px) {
@@ -481,8 +588,22 @@ const listCount = computed(() => props.list.length)
     padding: var(--space-5) var(--space-4) var(--space-6);
   }
 
-  .panel-head--overview {
-    grid-template-columns: 1fr;
+  .contest-overview-section,
+  .contest-list-panel {
+    padding: var(--space-4-5) var(--space-4);
+  }
+
+  .contest-overview-row,
+  .contest-panel-actions,
+  .contest-list-actions,
+  .contest-list-filters {
+    align-items: stretch;
+  }
+
+  .contest-filter-field,
+  .contest-inline-link {
+    width: 100%;
+    max-width: none;
   }
 }
 
