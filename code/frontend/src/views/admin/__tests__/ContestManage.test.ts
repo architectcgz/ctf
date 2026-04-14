@@ -487,9 +487,11 @@ describe('ContestManage', () => {
 
     expect(wrapper.get('#contest-tab-overview').attributes('aria-selected')).toBe('true')
     expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('false')
+    expect(wrapper.get('#contest-tab-create').attributes('aria-selected')).toBe('false')
     expect(wrapper.get('#contest-tab-operations').attributes('aria-selected')).toBe('false')
     expect(wrapper.get('#contest-panel-overview').attributes('aria-hidden')).toBe('false')
     expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('#contest-panel-create').attributes('aria-hidden')).toBe('true')
     expect(wrapper.get('#contest-panel-operations').attributes('aria-hidden')).toBe('true')
     expect(wrapper.get('#contest-panel-overview').text()).toContain('赛事管理台')
     expect(wrapper.get('#contest-panel-overview').find('select').exists()).toBe(false)
@@ -510,6 +512,13 @@ describe('ContestManage', () => {
     )
     expect(wrapper.get('#contest-panel-list').find('.contest-filter-actions').exists()).toBe(false)
 
+    await wrapper.get('#contest-tab-create').trigger('click')
+
+    expect(wrapper.get('#contest-tab-create').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-panel-create').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.get('#contest-panel-create').text()).toContain('创建竞赛')
+    expect(wrapper.get('#contest-panel-create').text()).not.toContain('选择 AWD 赛事')
+
     await wrapper.get('#contest-tab-operations').trigger('click')
 
     expect(wrapper.get('#contest-tab-operations').attributes('aria-selected')).toBe('true')
@@ -517,6 +526,63 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-panel-operations').text()).toContain('选择 AWD 赛事')
     expect(wrapper.get('#contest-panel-operations').text()).not.toContain('状态筛选')
     expect(wrapper.get('#contest-panel-operations').text()).not.toContain('赛事管理台')
+  })
+
+  it('应该在创建竞赛成功后切回赛事目录', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: '1',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'registering',
+          starts_at: '2026-03-15T09:00:00.000Z',
+          ends_at: '2026-03-15T13:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    contestMocks.createContest.mockResolvedValue({
+      id: '2',
+      title: '2026 新生赛',
+      description: '迎新赛',
+      mode: 'jeopardy',
+      status: 'draft',
+      starts_at: '2026-03-20T09:00:00.000Z',
+      ends_at: '2026-03-20T12:00:00.000Z',
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-tab-create').trigger('click')
+    await wrapper.get('#contest-title').setValue('2026 新生赛')
+    await wrapper.get('#contest-description').setValue('迎新赛')
+    await wrapper.get('#contest-starts-at').setValue('2026-03-20T09:00')
+    await wrapper.get('#contest-ends-at').setValue('2026-03-20T12:00')
+    await wrapper.get('#contest-panel-create .contest-form-button--primary').trigger('click')
+    await flushPromises()
+
+    expect(contestMocks.createContest).toHaveBeenCalledWith({
+      title: '2026 新生赛',
+      description: '迎新赛',
+      mode: 'jeopardy',
+      starts_at: new Date('2026-03-20T09:00').toISOString(),
+      ends_at: new Date('2026-03-20T12:00').toISOString(),
+    })
+    expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('true')
+    expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('false')
   })
 
   it('应该在空列表时展示显式空态', async () => {
