@@ -315,6 +315,20 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
     expect(journalNotesSource).toContain('--metric-panel-value-size: var(--font-size-26);')
     expect(journalNotesSource).toContain('--metric-panel-helper-line-height: 1.7;')
+    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
+    expect(journalNotesSource).toContain(
+      'var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 18%'
+    )
+    expect(journalNotesSource).toContain('--workspace-panel-soft,')
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-label\s*\{[\s\S]*color:\s*var\(--metric-panel-label-color,\s*var\(--journal-muted\)\);/s
+    )
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-value\s*\{[\s\S]*color:\s*var\(--metric-panel-value-color,\s*var\(--journal-ink\)\);/s
+    )
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-helper\s*\{[\s\S]*color:\s*var\(--metric-panel-helper-color,\s*var\(--journal-muted\)\);/s
+    )
     expect(journalNotesSource).toContain(
       '.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {'
     )
