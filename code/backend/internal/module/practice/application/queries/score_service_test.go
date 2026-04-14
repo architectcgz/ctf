@@ -17,8 +17,7 @@ import (
 )
 
 func newTestScoreQueryService(db *gorm.DB, redisClient *redis.Client) *practiceqry.ScoreService {
-	_ = redisClient
-	return practiceqry.NewScoreService(practiceinfra.NewRepository(db), zap.NewNop(), &config.ScoreConfig{
+	return practiceqry.NewScoreService(practiceinfra.NewRepository(db), redisClient, zap.NewNop(), &config.ScoreConfig{
 		CacheTTL:        time.Minute,
 		LockTimeout:     5 * time.Second,
 		MaxRankingLimit: 100,

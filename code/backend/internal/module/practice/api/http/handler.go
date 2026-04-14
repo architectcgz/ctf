@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -14,8 +13,7 @@ import (
 )
 
 type Handler struct {
-	service        practiceService
-	rankingService practiceRankingService
+	service practiceService
 }
 
 type practiceService interface {
@@ -28,12 +26,8 @@ type practiceService interface {
 	ReviewManualReviewSubmissionWithContext(ctx context.Context, submissionID, reviewerID int64, reviewerRole string, req *dto.ReviewManualReviewSubmissionReq) (*dto.TeacherManualReviewSubmissionDetailResp, error)
 }
 
-type practiceRankingService interface {
-	GetRankingWithContext(ctx context.Context, limit int) ([]*dto.RankingItem, error)
-}
-
-func NewHandler(service practiceService, rankingService practiceRankingService) *Handler {
-	return &Handler{service: service, rankingService: rankingService}
+func NewHandler(service practiceService) *Handler {
+	return &Handler{service: service}
 }
 
 // StartChallenge 启动靶机实例
@@ -113,26 +107,6 @@ func (h *Handler) ListMyChallengeSubmissions(c *gin.Context) {
 	}
 
 	resp, err := h.service.ListMyChallengeSubmissions(userID, challengeID)
-	if err != nil {
-		response.FromError(c, err)
-		return
-	}
-
-	response.Success(c, resp)
-}
-
-func (h *Handler) GetRanking(c *gin.Context) {
-	limit := 100
-	if rawLimit := strings.TrimSpace(c.Query("limit")); rawLimit != "" {
-		parsed, err := strconv.Atoi(rawLimit)
-		if err != nil {
-			response.Error(c, errcode.ErrInvalidParams)
-			return
-		}
-		limit = parsed
-	}
-
-	resp, err := h.rankingService.GetRankingWithContext(c.Request.Context(), limit)
 	if err != nil {
 		response.FromError(c, err)
 		return

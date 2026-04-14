@@ -75,7 +75,7 @@ func (r *Repository) FindUsersByIDsWithContext(ctx context.Context, userIDs []in
 
 	var users []model.User
 	err := r.dbWithContext(ctx).
-		Select("id, username, class_name").
+		Select("id, username").
 		Where("id IN ?", userIDs).
 		Find(&users).Error
 	return users, err
