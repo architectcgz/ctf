@@ -16,10 +16,10 @@ describe('cheat detection surface alignment', () => {
       /--cheat-card-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 74%, transparent\);/
     )
     expect(cheatDetectionSource).toMatch(
-      /\.risk-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--cheat-card-border\);/s
+      /\.cheat-directory-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--cheat-card-border\);/s
     )
     expect(cheatDetectionSource).not.toMatch(
-      /\.risk-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--journal-border\);/s
+      /\.cheat-directory-row,\s*\.quick-action-row\s*\{[\s\S]*border:\s*1px solid var\(--journal-border\);/s
     )
   })
 
@@ -81,12 +81,11 @@ describe('cheat detection surface alignment', () => {
     expect(journalNotesSource).toContain(
       '.journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid)'
     )
+    expect(cheatDetectionSource).toContain('class="workspace-shell')
     expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-risk-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(cheatDetectionSource).toContain(
-      'class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
+    expect(cheatDetectionSource).not.toContain('class="admin-summary-grid cheat-risk-summary')
     expect(cheatDetectionSource).toContain('class="journal-note progress-card metric-panel-card"')
     expect(cheatDetectionSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
@@ -99,5 +98,24 @@ describe('cheat detection surface alignment', () => {
     )
     expect(cheatDetectionSource).not.toContain('class="mt-5 grid gap-3 sm:grid-cols-2"')
     expect(cheatDetectionSource).not.toContain('class="grid gap-3 md:grid-cols-3"')
+  })
+
+  it('uses workspace directory sections and flat rows instead of stacked cards for integrity review flows', () => {
+    expect(cheatDetectionSource).toContain(
+      '<h2 class="list-heading__title">风险焦点</h2>'
+    )
+    expect(cheatDetectionSource).toContain(
+      '<h2 class="list-heading__title">复核动作</h2>'
+    )
+    expect(cheatDetectionSource).toContain(
+      'class="workspace-directory-section cheat-directory-section"'
+    )
+    expect(cheatDetectionSource).toContain('class="cheat-directory-list"')
+    expect(cheatDetectionSource).toContain('class="cheat-directory-row"')
+    expect(cheatDetectionSource).toContain('class="cheat-directory-row-meta"')
+    expect(cheatDetectionSource).toContain('class="quick-action-directory"')
+    expect(cheatDetectionSource).toContain('class="quick-action-row"')
+    expect(cheatDetectionSource).not.toContain('class="tab-panel space-y-3"')
+    expect(cheatDetectionSource).not.toContain('class="grid gap-3 lg:grid-cols-2"')
   })
 })

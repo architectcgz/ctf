@@ -86,6 +86,10 @@ function openAudit(query: Record<string, string>) {
   return router.push({ name: 'AuditLog', query })
 }
 
+function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString('zh-CN')
+}
+
 onMounted(() => {
   void loadRiskData()
 })
@@ -93,7 +97,7 @@ onMounted(() => {
 
 <template>
   <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
+    class="workspace-shell journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <header class="workspace-topbar">
       <div class="topbar-leading">
@@ -130,50 +134,33 @@ onMounted(() => {
       <template v-else-if="riskData">
         <section
           id="cheat-panel-overview"
-          class="workspace-hero tab-panel"
+          class="tab-panel"
           role="tabpanel"
           aria-labelledby="cheat-tab-overview"
           :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
           v-show="activePanel === 'overview'"
         >
-          <div class="overview-grid">
-            <div>
+          <header class="cheat-overview-head">
+            <div class="workspace-tab-heading__main">
               <div class="workspace-overline">Risk Triage</div>
-              <h1 class="hero-title">作弊检测</h1>
-              <p class="hero-summary">
-                查看高频提交账号、共享 IP 线索和快速排查入口，并继续下钻到审计日志。
+              <h1 class="workspace-page-title">作弊检测</h1>
+              <p class="workspace-page-copy">
+                先看高频提交和共享 IP 的风险焦点，再切到账号、线索和审计入口继续复核。
               </p>
             </div>
 
-            <article class="journal-brief rounded-[24px] border px-5 py-5">
-              <div class="journal-note-label">风险概况</div>
-              <div class="admin-summary-grid cheat-risk-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
-                <div class="journal-note progress-card metric-panel-card">
-                  <div class="journal-note-label progress-card-label metric-panel-label">提交突增</div>
-                  <div class="journal-note-value progress-card-value metric-panel-value">
-                    {{ riskData.summary.submit_burst_users }}
-                  </div>
-                  <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                    最近窗口内提交次数异常的账号
-                  </div>
-                </div>
-                <div class="journal-note progress-card metric-panel-card">
-                  <div class="journal-note-label progress-card-label metric-panel-label">共享 IP</div>
-                  <div class="journal-note-value progress-card-value metric-panel-value">
-                    {{ riskData.summary.shared_ip_groups }}
-                  </div>
-                  <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                    最近 24 小时出现多账号复用的 IP 组
-                  </div>
-                </div>
-              </div>
-            </article>
-          </div>
+            <div class="cheat-overview-meta">
+              <span class="cheat-overview-meta__label">最近生成</span>
+              <span class="cheat-overview-meta__value">
+                {{ formatDateTime(riskData.generated_at) }}
+              </span>
+            </div>
+          </header>
 
-          <div class="journal-divider" />
-
-          <div class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface">
-            <div class="journal-note progress-card metric-panel-card">
+          <div
+            class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+          >
+            <article class="journal-note progress-card metric-panel-card">
               <div class="journal-note-label progress-card-label metric-panel-label">Submit Burst</div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.submit_burst_users }}
@@ -181,8 +168,8 @@ onMounted(() => {
               <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 高频提交账号
               </div>
-            </div>
-            <div class="journal-note progress-card metric-panel-card">
+            </article>
+            <article class="journal-note progress-card metric-panel-card">
               <div class="journal-note-label progress-card-label metric-panel-label">Shared IP</div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.shared_ip_groups }}
@@ -190,8 +177,8 @@ onMounted(() => {
               <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 共享 IP 组数
               </div>
-            </div>
-            <div class="journal-note progress-card metric-panel-card">
+            </article>
+            <article class="journal-note progress-card metric-panel-card">
               <div class="journal-note-label progress-card-label metric-panel-label">
                 Affected Users
               </div>
@@ -201,129 +188,254 @@ onMounted(() => {
               <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 受影响账号数
               </div>
-            </div>
+            </article>
           </div>
+
+          <div class="journal-divider" />
+
+          <section class="workspace-directory-section cheat-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Risk Focus</div>
+                <h2 class="list-heading__title">风险焦点</h2>
+              </div>
+              <div class="cheat-directory-caption">按优先级切换到对应排查面板</div>
+            </header>
+
+            <div class="cheat-directory-list">
+              <button
+                type="button"
+                class="cheat-directory-row"
+                @click="switchPanel('suspects')"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">高频提交账号</h3>
+                  <p class="cheat-directory-row-copy">
+                    先复核短时间内提交异常偏高的账号，再决定是否继续追踪其登录和操作轨迹。
+                  </p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip cheat-directory-row-chip-warning">
+                    {{ riskData.summary.submit_burst_users }} 个账号
+                  </span>
+                  <span class="cheat-directory-row-cta">查看账号</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="cheat-directory-row"
+                @click="switchPanel('shared-ip')"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">共享 IP 线索</h3>
+                  <p class="cheat-directory-row-copy">
+                    汇总最近 24 小时内多账号复用的 IP 组，适合先做登录轨迹和时间段交叉复核。
+                  </p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip">{{ riskData.summary.shared_ip_groups }} 组</span>
+                  <span class="cheat-directory-row-cta">查看线索</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="cheat-directory-row"
+                @click="openAudit({ action: 'submit' })"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">提交审计流水</h3>
+                  <p class="cheat-directory-row-copy">
+                    直接跳到 submit 日志，结合账号和时间窗口继续核对风险样本是否真实异常。
+                  </p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip cheat-directory-row-chip-muted">
+                    审计联动
+                  </span>
+                  <span class="cheat-directory-row-cta">打开日志</span>
+                </div>
+              </button>
+            </div>
+          </section>
+
+          <section class="workspace-directory-section cheat-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Review Actions</div>
+                <h2 class="list-heading__title">复核动作</h2>
+              </div>
+              <div class="cheat-directory-caption">常用排查入口按动作整理</div>
+            </header>
+
+            <div class="quick-action-directory">
+              <button
+                v-for="action in quickActions"
+                :key="action.title"
+                type="button"
+                class="quick-action-row"
+                @click="openAudit(action.query)"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">{{ action.title }}</h3>
+                  <p class="cheat-directory-row-copy">
+                    {{ action.description }}
+                  </p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip cheat-directory-row-chip-muted">
+                    Audit
+                  </span>
+                  <span class="cheat-directory-row-cta">立即排查</span>
+                </div>
+              </button>
+            </div>
+          </section>
         </section>
 
         <section
           id="cheat-panel-suspects"
-          class="tab-panel space-y-3"
+          class="tab-panel"
           role="tabpanel"
           aria-labelledby="cheat-tab-suspects"
           :aria-hidden="activePanel === 'suspects' ? 'false' : 'true'"
           v-show="activePanel === 'suspects'"
         >
-          <div class="list-heading">
-            <div>
-              <div class="journal-note-label">Burst Accounts</div>
-              <h2 class="list-heading__title">高频提交账号</h2>
-            </div>
-          </div>
-
-          <AppEmpty
-            v-if="!riskData?.suspects.length"
-            class="cheat-empty-state"
-            icon="UsersRound"
-            title="当前没有超过阈值的高频提交账号"
-            description="说明最近窗口内还没有明显的提交爆发样本。"
-          />
-
-          <div v-else class="space-y-3">
-            <article v-for="suspect in riskData.suspects" :key="suspect.user_id" class="risk-row">
-              <div class="flex items-start justify-between gap-4">
-                <div>
-                  <p class="font-medium text-[var(--color-text-primary)]">{{ suspect.username }}</p>
-                  <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    {{ suspect.reason }}
-                  </p>
-                </div>
-                <span
-                  class="rounded-full bg-[var(--color-warning)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-warning)]"
-                >
-                  {{ suspect.submit_count }} 次
-                </span>
+          <section class="workspace-directory-section cheat-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Burst Accounts</div>
+                <h2 class="list-heading__title">高频提交账号</h2>
               </div>
-              <p class="mt-3 text-xs text-[var(--color-text-secondary)]">
-                最近出现时间：{{ new Date(suspect.last_seen_at).toLocaleString('zh-CN') }}
-              </p>
-            </article>
-          </div>
+              <div class="cheat-directory-caption">按账号排序查看提交频次和最近出现时间</div>
+            </header>
+
+            <AppEmpty
+              v-if="!riskData?.suspects.length"
+              class="cheat-empty-state"
+              icon="UsersRound"
+              title="当前没有超过阈值的高频提交账号"
+              description="说明最近窗口内还没有明显的提交爆发样本。"
+            />
+
+            <div v-else class="cheat-directory-list">
+              <button
+                v-for="suspect in riskData.suspects"
+                :key="suspect.user_id"
+                type="button"
+                class="cheat-directory-row"
+                @click="openAudit({ action: 'submit', actor_user_id: suspect.user_id })"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">{{ suspect.username }}</h3>
+                  <p class="cheat-directory-row-copy">{{ suspect.reason }}</p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip cheat-directory-row-chip-warning">
+                    {{ suspect.submit_count }} 次
+                  </span>
+                  <span class="cheat-directory-row-subtle">
+                    最近出现 {{ formatDateTime(suspect.last_seen_at) }}
+                  </span>
+                  <span class="cheat-directory-row-cta">查看提交日志</span>
+                </div>
+              </button>
+            </div>
+          </section>
         </section>
 
         <section
           id="cheat-panel-shared-ip"
-          class="tab-panel space-y-3"
+          class="tab-panel"
           role="tabpanel"
           aria-labelledby="cheat-tab-shared-ip"
           :aria-hidden="activePanel === 'shared-ip' ? 'false' : 'true'"
           v-show="activePanel === 'shared-ip'"
         >
-          <div class="list-heading">
-            <div>
-              <div class="journal-note-label">Shared IP</div>
-              <h2 class="list-heading__title">共享 IP 线索</h2>
-            </div>
-          </div>
+          <section class="workspace-directory-section cheat-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Shared IP</div>
+                <h2 class="list-heading__title">共享 IP 线索</h2>
+              </div>
+              <div class="cheat-directory-caption">按 IP 聚合查看复用账号范围</div>
+            </header>
 
-          <AppEmpty
-            v-if="!riskData?.shared_ips.length"
-            class="cheat-empty-state"
-            icon="UsersRound"
-            title="当前没有共享 IP 线索"
-            description="最近 24 小时内还没有发现明显的多账号复用 IP。"
-          />
+            <AppEmpty
+              v-if="!riskData?.shared_ips.length"
+              class="cheat-empty-state"
+              icon="UsersRound"
+              title="当前没有共享 IP 线索"
+              description="最近 24 小时内还没有发现明显的多账号复用 IP。"
+            />
 
-          <div v-else class="space-y-3">
-            <article v-for="group in riskData.shared_ips" :key="group.ip" class="risk-row">
-              <div class="flex items-start justify-between gap-4">
-                <div>
-                  <p class="font-mono text-sm text-[var(--color-text-primary)]">{{ group.ip }}</p>
-                  <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
+            <div v-else class="cheat-directory-list">
+              <button
+                v-for="group in riskData.shared_ips"
+                :key="group.ip"
+                type="button"
+                class="cheat-directory-row"
+                @click="openAudit({ action: 'login' })"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title cheat-directory-row-title-mono">
+                    {{ group.ip }}
+                  </h3>
+                  <p class="cheat-directory-row-copy">
                     {{ group.usernames.join('、') || '匿名记录' }}
                   </p>
                 </div>
-                <span
-                  class="rounded-full bg-[var(--color-primary)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-primary)]"
-                >
-                  {{ group.user_count }} 账号
-                </span>
-              </div>
-            </article>
-          </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip">{{ group.user_count }} 账号</span>
+                  <span class="cheat-directory-row-subtle">建议先复核登录时间段</span>
+                  <span class="cheat-directory-row-cta">查看登录日志</span>
+                </div>
+              </button>
+            </div>
+          </section>
         </section>
 
         <section
           id="cheat-panel-actions"
-          class="tab-panel space-y-3"
+          class="tab-panel"
           role="tabpanel"
           aria-labelledby="cheat-tab-actions"
           :aria-hidden="activePanel === 'actions' ? 'false' : 'true'"
           v-show="activePanel === 'actions'"
         >
-          <div class="list-heading">
-            <div>
-              <div class="journal-note-label">Quick Actions</div>
-              <h2 class="list-heading__title">快速排查入口</h2>
-            </div>
-          </div>
-
-          <div class="grid gap-3 lg:grid-cols-2">
-            <button
-              v-for="action in quickActions"
-              :key="action.title"
-              type="button"
-              class="quick-action-row"
-              @click="openAudit(action.query)"
-            >
+          <section class="workspace-directory-section cheat-directory-section">
+            <header class="list-heading">
               <div>
-                <p class="font-medium text-[var(--color-text-primary)]">{{ action.title }}</p>
-                <p class="mt-1 text-sm leading-6 text-[var(--color-text-secondary)]">
-                  {{ action.description }}
-                </p>
+                <div class="journal-note-label">Quick Actions</div>
+                <h2 class="list-heading__title">快速排查入口</h2>
               </div>
-              <span class="mt-0.5 text-sm font-medium text-[var(--color-primary)]">打开</span>
-            </button>
-          </div>
+              <div class="cheat-directory-caption">直接跳转到审计日志的高频动作视图</div>
+            </header>
+
+            <div class="quick-action-directory">
+              <button
+                v-for="action in quickActions"
+                :key="action.title"
+                type="button"
+                class="quick-action-row"
+                @click="openAudit(action.query)"
+              >
+                <div class="cheat-directory-row-main">
+                  <h3 class="cheat-directory-row-title">{{ action.title }}</h3>
+                  <p class="cheat-directory-row-copy">
+                    {{ action.description }}
+                  </p>
+                </div>
+                <div class="cheat-directory-row-meta">
+                  <span class="cheat-directory-row-chip cheat-directory-row-chip-muted">
+                    审计联动
+                  </span>
+                  <span class="cheat-directory-row-cta">打开日志</span>
+                </div>
+              </button>
+            </div>
+          </section>
         </section>
       </template>
 
@@ -359,12 +471,6 @@ onMounted(() => {
   --journal-shell-dark-accent: var(--color-primary-hover);
 }
 
-.journal-brief {
-  background: var(--journal-surface-subtle);
-  border-color: var(--journal-border);
-  border-radius: 16px !important;
-}
-
 .content-pane {
   display: flex;
   flex: 1 1 auto;
@@ -372,10 +478,33 @@ onMounted(() => {
   gap: var(--space-4);
 }
 
-.workspace-hero {
+.cheat-overview-head {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-bottom: var(--space-4);
+}
+
+.cheat-overview-meta {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: end;
+  min-width: 12rem;
+}
+
+.cheat-overview-meta__label {
+  font-size: var(--font-size-0-72);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--journal-muted);
+}
+
+.cheat-overview-meta__value {
+  font-size: var(--font-size-0-88);
+  color: var(--journal-ink);
 }
 
 .list-heading {
@@ -401,25 +530,116 @@ onMounted(() => {
   --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
 }
 
-.overview-grid {
-  display: grid;
-  gap: var(--space-6);
+.cheat-directory-section + .cheat-directory-section {
+  margin-top: var(--space-5);
 }
 
-.hero-summary {
-  margin-top: var(--space-3);
-  max-width: 48rem;
-  font-size: var(--font-size-0-92);
-  line-height: 1.7;
+.cheat-directory-caption {
+  font-size: var(--font-size-0-82);
   color: var(--journal-muted);
 }
 
-.risk-row,
+.cheat-directory-list,
+.quick-action-directory {
+  display: flex;
+  flex-direction: column;
+}
+
+.cheat-directory-row,
 .quick-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  width: 100%;
   border: 1px solid var(--cheat-card-border);
   border-radius: 18px;
   background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
   padding: var(--space-4);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.cheat-directory-row + .cheat-directory-row,
+.quick-action-row + .quick-action-row {
+  margin-top: var(--space-3);
+}
+
+.cheat-directory-row:hover,
+.cheat-directory-row:focus-visible,
+.quick-action-row:hover,
+.quick-action-row:focus-visible {
+  border-color: color-mix(in srgb, var(--journal-accent) 24%, var(--cheat-card-border));
+  background: color-mix(in srgb, var(--journal-accent) 4%, var(--journal-surface));
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.cheat-directory-row-main {
+  display: grid;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.cheat-directory-row-title {
+  margin: 0;
+  font-size: var(--font-size-0-98);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.cheat-directory-row-title-mono {
+  font-family: var(--font-family-mono);
+}
+
+.cheat-directory-row-copy {
+  margin: 0;
+  font-size: var(--font-size-0-84);
+  line-height: 1.65;
+  color: var(--journal-muted);
+}
+
+.cheat-directory-row-meta {
+  display: grid;
+  gap: var(--space-1-5);
+  justify-items: end;
+  flex-shrink: 0;
+}
+
+.cheat-directory-row-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0 var(--space-2-5);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  font-size: var(--font-size-0-74);
+  font-weight: 700;
+  color: var(--journal-accent-strong);
+}
+
+.cheat-directory-row-chip-warning {
+  background: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  color: var(--color-warning);
+}
+
+.cheat-directory-row-chip-muted {
+  background: color-mix(in srgb, var(--journal-muted) 10%, transparent);
+  color: var(--journal-muted);
+}
+
+.cheat-directory-row-subtle {
+  font-size: var(--font-size-0-78);
+  color: var(--journal-muted);
+}
+
+.cheat-directory-row-cta {
+  font-size: var(--font-size-0-80);
+  font-weight: 700;
+  color: var(--journal-accent-strong);
 }
 
 .cheat-empty-state {
@@ -435,40 +655,30 @@ onMounted(() => {
   color: var(--journal-muted);
 }
 
-.quick-action-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  text-align: left;
-}
-
-@media (min-width: 1280px) {
-  .overview-grid {
-    grid-template-columns: 1.06fr 0.94fr;
-    align-items: start;
-  }
-}
-
 @media (max-width: 720px) {
+  .cheat-overview-head,
   .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .cheat-risk-summary,
   .cheat-kpi-summary {
     --admin-summary-grid-columns: 1fr;
   }
 
-  .top-tabs {
-    gap: var(--space-5-5);
+  .cheat-overview-meta,
+  .cheat-directory-row-meta {
+    justify-items: start;
   }
 
-  .top-note {
-    width: 100%;
+  .cheat-directory-row,
+  .quick-action-row {
+    align-items: flex-start;
     flex-direction: column;
-    gap: var(--space-1-5);
+  }
+
+  .top-tabs {
+    gap: var(--space-5-5);
   }
 }
 
