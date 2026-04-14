@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
@@ -103,19 +104,19 @@ async function submitPasswordChange(): Promise<void> {
     class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="security-page flex flex-1 flex-col">
-      <header class="security-topbar">
-        <div class="security-heading">
-          <div class="journal-eyebrow">Security</div>
-          <h1 class="workspace-page-title">安全设置</h1>
-          <p class="workspace-page-copy">更新账号密码并检查当前安全策略。</p>
-        </div>
+      <PageHeader
+        class="security-topbar"
+        title="安全设置"
+        description="更新账号密码并检查当前安全策略。"
+        eyebrow="Security"
+      >
         <div class="security-topbar-actions">
           <div class="security-pill">
             <span class="status-dot status-dot-active" />
             密码策略已启用
           </div>
         </div>
-      </header>
+      </PageHeader>
 
       <section class="security-summary" aria-label="安全概况">
         <div class="security-summary-title">

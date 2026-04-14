@@ -214,8 +214,8 @@ describe('workspace page header styles', () => {
       },
       {
         source: contestOrchestrationSource,
-        include: '<h1 class="hero-title">赛事编排台</h1>',
-        exclude: '<h1 class="hero-title workspace-tab-heading__title">赛事编排台</h1>',
+        include: '<h1 class="workspace-page-title">赛事管理台</h1>',
+        exclude: '<h1 class="workspace-page-title workspace-tab-heading__title">赛事管理台</h1>',
       },
       {
         source: challengeManageSource,
