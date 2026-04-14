@@ -24,6 +24,7 @@ const props = defineProps<{
 }>()
 
 const toast = useToast()
+const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
@@ -101,8 +102,22 @@ async function ensureChallengeCatalogLoaded() {
 
   loadingChallengeCatalog.value = true
   try {
-    const result = await getChallenges({ page: 1, page_size: 200, status: 'published' })
-    challengeCatalog.value = result.list
+    const list: AdminChallengeListItem[] = []
+    let page = 1
+    let total = 0
+
+    do {
+      const result = await getChallenges({
+        page,
+        page_size: CHALLENGE_CATALOG_PAGE_SIZE,
+        status: 'published',
+      })
+      list.push(...result.list)
+      total = result.total
+      page += 1
+    } while (list.length < total)
+
+    challengeCatalog.value = list
   } catch (error) {
     toast.error(humanizeRequestError(error, '题目目录加载失败'))
   } finally {

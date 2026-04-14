@@ -308,6 +308,12 @@ describe('ContestEdit', () => {
     await wrapper.get('#contest-challenge-add').trigger('click')
     await flushPromises()
 
+    expect(contestApiMocks.getChallenges).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 100,
+      status: 'published',
+    })
+
     await wrapper.get('#contest-challenge-select').setValue('102')
     await wrapper.get('#contest-challenge-points').setValue('160')
     await wrapper.get('#contest-challenge-order').setValue('3')
