@@ -509,8 +509,8 @@ onMounted(() => {
         :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
         v-show="activePanel === 'import'"
       >
-        <div class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <div class="list-heading challenge-import-heading">
+          <div>
             <div class="journal-note-label">Challenge Package</div>
             <h1 class="workspace-page-title">导入题目包</h1>
           </div>
@@ -608,8 +608,8 @@ onMounted(() => {
         :aria-hidden="activePanel === 'queue' ? 'false' : 'true'"
         v-show="activePanel === 'queue'"
       >
-        <div class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <div class="list-heading challenge-queue-heading">
+          <div>
             <div class="journal-note-label">Import Review</div>
             <h1 class="workspace-page-title">待确认导入</h1>
           </div>
@@ -1325,6 +1325,11 @@ onMounted(() => {
 }
 
 @media (max-width: 960px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .manage-directory-head {
     display: none;
   }
