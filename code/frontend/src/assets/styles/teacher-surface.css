@@ -258,26 +258,6 @@
   color: var(--journal-accent-strong);
 }
 
-.teacher-summary-item,
-.teacher-management-shell .report-summary-item {
-  min-width: 0;
-}
-
-.teacher-summary-label,
-.teacher-management-shell .report-summary-label {
-  text-transform: uppercase;
-}
-
-.teacher-summary-value,
-.teacher-management-shell .report-summary-value {
-  color: var(--journal-ink);
-}
-
-.teacher-summary-helper,
-.teacher-management-shell .report-summary-helper {
-  color: var(--journal-muted);
-}
-
 .teacher-management-shell .teacher-summary-grid,
 .teacher-management-shell .report-summary-grid {
   --metric-panel-columns: var(--teacher-summary-columns, repeat(3, minmax(0, 1fr)));

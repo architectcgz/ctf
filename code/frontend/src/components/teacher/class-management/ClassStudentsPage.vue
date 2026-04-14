@@ -175,23 +175,23 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <div class="teacher-summary-title">
                   <span>Class Snapshot</span>
                 </div>
-                <div class="teacher-summary-grid metric-panel-grid">
-                  <div class="teacher-summary-item metric-panel-card">
-                    <div class="teacher-summary-label metric-panel-label">班级人数</div>
-                    <div class="teacher-summary-value metric-panel-value">
+                <div class="teacher-summary-grid progress-strip metric-panel-grid">
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">班级人数</div>
+                    <div class="progress-card-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
                     </div>
-                    <div class="teacher-summary-helper metric-panel-helper">当前班级纳入统计的学生数量</div>
+                    <div class="progress-card-hint metric-panel-helper">当前班级纳入统计的学生数量</div>
                   </div>
-                  <div class="teacher-summary-item metric-panel-card">
-                    <div class="teacher-summary-label metric-panel-label">平均解题</div>
-                    <div class="teacher-summary-value metric-panel-value">{{ averageSolvedText }}</div>
-                    <div class="teacher-summary-helper metric-panel-helper">班级当前平均完成情况</div>
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">平均解题</div>
+                    <div class="progress-card-value metric-panel-value">{{ averageSolvedText }}</div>
+                    <div class="progress-card-hint metric-panel-helper">班级当前平均完成情况</div>
                   </div>
-                  <div class="teacher-summary-item metric-panel-card">
-                    <div class="teacher-summary-label metric-panel-label">近 7 天活跃率</div>
-                    <div class="teacher-summary-value metric-panel-value">{{ activeRateText }}</div>
-                    <div class="teacher-summary-helper metric-panel-helper">当前班级近 7 天训练参与情况</div>
+                  <div class="progress-card metric-panel-card">
+                    <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
+                    <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
+                    <div class="progress-card-hint metric-panel-helper">当前班级近 7 天训练参与情况</div>
                   </div>
                 </div>
               </section>

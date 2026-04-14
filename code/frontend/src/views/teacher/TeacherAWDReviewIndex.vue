@@ -66,25 +66,25 @@ function contestStatusLabel(status: string): string {
             <FolderKanban class="h-4 w-4" />
             <span>Review Snapshot</span>
           </div>
-          <div class="teacher-summary-grid metric-panel-grid">
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">赛事数量</div>
-              <div class="teacher-summary-value metric-panel-value">{{ contests.length }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前可进入 AWD 复盘的赛事总数</div>
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">赛事数量</div>
+              <div class="progress-card-value metric-panel-value">{{ contests.length }}</div>
+              <div class="progress-card-hint metric-panel-helper">当前可进入 AWD 复盘的赛事总数</div>
             </article>
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">进行中</div>
-              <div class="teacher-summary-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">进行中</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.status === 'running').length }}
               </div>
-              <div class="teacher-summary-helper metric-panel-helper">仍在持续产出实时攻防信号的赛事</div>
+              <div class="progress-card-hint metric-panel-helper">仍在持续产出实时攻防信号的赛事</div>
             </article>
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">可导出教师报告</div>
-              <div class="teacher-summary-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">可导出教师报告</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.export_ready).length }}
               </div>
-              <div class="teacher-summary-helper metric-panel-helper">已结束并允许生成教师复盘报告的赛事</div>
+              <div class="progress-card-hint metric-panel-helper">已结束并允许生成教师复盘报告的赛事</div>
             </article>
           </div>
         </section>

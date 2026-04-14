@@ -13,11 +13,13 @@ type TeacherInstanceFilters = {
 }
 
 export function useTeacherInstances() {
+  const pageSize = 20
   const authStore = useAuthStore()
   const toast = useToast()
 
   const classes = ref<TeacherClassItem[]>([])
   const instances = ref<TeacherInstanceItem[]>([])
+  const page = ref(1)
   const filters = reactive<TeacherInstanceFilters>({
     className: '',
     keyword: '',
@@ -33,6 +35,11 @@ export function useTeacherInstances() {
 
   const isAdmin = computed(() => authStore.user?.role === 'admin')
   const totalCount = computed(() => instances.value.length)
+  const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / pageSize)))
+  const pagedInstances = computed(() => {
+    const start = (page.value - 1) * pageSize
+    return instances.value.slice(start, start + pageSize)
+  })
   const runningCount = computed(
     () => instances.value.filter((item) => item.status === 'running').length
   )
@@ -46,6 +53,7 @@ export function useTeacherInstances() {
     loadingClasses.value = true
     error.value = null
     autoSearchReady.value = false
+    page.value = 1
 
     try {
       classes.value = await getClasses()
@@ -77,6 +85,7 @@ export function useTeacherInstances() {
       })
       if (requestID !== latestInstanceRequestID) return
       instances.value = nextInstances
+      page.value = Math.min(page.value, Math.max(1, Math.ceil(nextInstances.length / pageSize)))
     } catch (err) {
       if (requestID !== latestInstanceRequestID) return
       console.error('加载教师实例列表失败:', err)
@@ -97,12 +106,14 @@ export function useTeacherInstances() {
 
   async function submitFilters(): Promise<void> {
     scheduleInstanceSearch.cancel?.()
+    page.value = 1
     await loadInstances()
   }
 
   async function resetFilters(): Promise<void> {
     autoSearchReady.value = false
     scheduleInstanceSearch.cancel?.()
+    page.value = 1
     filters.keyword = ''
     filters.studentNo = ''
     filters.className = isAdmin.value
@@ -119,11 +130,16 @@ export function useTeacherInstances() {
     filters[key] = value
   }
 
+  function changePage(nextPage: number): void {
+    page.value = Math.min(Math.max(1, nextPage), totalPages.value)
+  }
+
   async function removeInstance(id: string): Promise<void> {
     destroyingId.value = id
     try {
       await destroyTeacherInstance(id)
       instances.value = instances.value.filter((item) => item.id !== id)
+      page.value = Math.min(page.value, totalPages.value)
       toast.success('实例已销毁')
     } catch (err) {
       console.error('教师销毁实例失败:', err)
@@ -138,6 +154,7 @@ export function useTeacherInstances() {
     () => [filters.className, filters.keyword, filters.studentNo],
     () => {
       if (!autoSearchReady.value) return
+      page.value = 1
       scheduleInstanceSearch()
     }
   )
@@ -145,6 +162,10 @@ export function useTeacherInstances() {
   return {
     classes,
     instances,
+    pagedInstances,
+    page,
+    pageSize,
+    totalPages,
     filters,
     loadingClasses,
     loadingInstances,
@@ -159,6 +180,7 @@ export function useTeacherInstances() {
     submitFilters,
     resetFilters,
     updateFilter,
+    changePage,
     removeInstance,
   }
 }

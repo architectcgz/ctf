@@ -79,16 +79,16 @@ const currentPageStudentCount = computed(() =>
             <FolderKanban class="h-4 w-4" />
             <span>Directory Snapshot</span>
           </div>
-          <div class="teacher-summary-grid metric-panel-grid">
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">班级数量</div>
-              <div class="teacher-summary-value metric-panel-value">{{ total }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前可管理班级总数</div>
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <div class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">班级数量</div>
+              <div class="progress-card-value metric-panel-value">{{ total }}</div>
+              <div class="progress-card-hint metric-panel-helper">当前可管理班级总数</div>
             </div>
-            <div class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">当前页学生数</div>
-              <div class="teacher-summary-value metric-panel-value">{{ currentPageStudentCount }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前分页已加载班级的学生数汇总</div>
+            <div class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">当前页学生数</div>
+              <div class="progress-card-value metric-panel-value">{{ currentPageStudentCount }}</div>
+              <div class="progress-card-hint metric-panel-helper">当前分页已加载班级的学生数汇总</div>
             </div>
           </div>
         </section>

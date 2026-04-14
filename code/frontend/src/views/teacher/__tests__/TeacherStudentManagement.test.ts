@@ -190,16 +190,20 @@ describe('TeacherStudentManagement', () => {
     expect(studentManagementSource).toContain(
       'class="teacher-summary-grid progress-strip metric-panel-grid"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card metric-panel-card"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-item progress-card metric-panel-card"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-label progress-card-label metric-panel-label"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-value progress-card-value metric-panel-value"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
   })

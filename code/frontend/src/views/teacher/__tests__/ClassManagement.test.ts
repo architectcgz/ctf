@@ -79,7 +79,7 @@ describe('ClassManagement', () => {
     expect(wrapper.find('.top-tabs').exists()).toBe(false)
     expect(wrapper.find('#class-manage-tab-overview').exists()).toBe(false)
     expect(wrapper.find('#class-manage-tab-directory').exists()).toBe(false)
-    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(2)
+    expect(wrapper.findAll('.metric-panel-card')).toHaveLength(2)
     expect(wrapper.text()).not.toContain('已就绪')
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)

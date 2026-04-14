@@ -10,7 +10,9 @@ const router = useRouter()
 
 const {
   classes,
-  instances,
+  pagedInstances,
+  page,
+  totalPages,
   filters,
   loadingClasses,
   loadingInstances,
@@ -24,6 +26,7 @@ const {
   submitFilters,
   resetFilters,
   updateFilter,
+  changePage,
   removeInstance,
 } = useTeacherInstances()
 
@@ -48,7 +51,7 @@ onMounted(() => {
 <template>
   <TeacherInstanceManagementPage
     :classes="classes"
-    :instances="instances"
+    :instances="pagedInstances"
     :class-name="filters.className"
     :keyword="filters.keyword"
     :student-no="filters.studentNo"
@@ -60,12 +63,15 @@ onMounted(() => {
     :total-count="totalCount"
     :running-count="runningCount"
     :expiring-soon-count="expiringSoonCount"
+    :page="page"
+    :total-pages="totalPages"
     @retry="initialize"
     @submit="submitFilters"
     @reset="resetFilters"
     @update-class-name="updateFilter('className', $event)"
     @update-keyword="updateFilter('keyword', $event)"
     @update-student-no="updateFilter('studentNo', $event)"
+    @change-page="changePage"
     @destroy="handleDestroy"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
   />
