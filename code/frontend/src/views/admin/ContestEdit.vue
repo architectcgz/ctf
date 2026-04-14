@@ -7,6 +7,7 @@ import { getContest, getContestAWDReadiness, updateContest } from '@/api/admin'
 import type { AWDReadinessData, ContestDetailData } from '@/api/contracts'
 import type { AdminContestUpdatePayload } from '@/api/admin'
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
+import ContestChallengeOrchestrationPanel from '@/components/admin/contest/ContestChallengeOrchestrationPanel.vue'
 import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -19,6 +20,7 @@ import {
   type ContestFormDraft,
 } from '@/composables/useAdminContests'
 import { ApiError } from '@/api/request'
+import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'
 
 interface AWDStartOverrideDialogState {
@@ -47,6 +49,31 @@ const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefau
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
+const editPanels = [
+  {
+    key: 'basics',
+    label: '基础设置',
+    tabId: 'contest-edit-tab-basics',
+    panelId: 'contest-edit-panel-basics',
+  },
+  {
+    key: 'challenges',
+    label: '题目编排',
+    tabId: 'contest-edit-tab-challenges',
+    panelId: 'contest-edit-panel-challenges',
+  },
+] as const
+type ContestEditPanelKey = (typeof editPanels)[number]['key']
+const contestEditPanelOrder = editPanels.map((panel) => panel.key) as ContestEditPanelKey[]
+const {
+  activeTab: activePanel,
+  setTabButtonRef,
+  selectTab,
+  handleTabKeydown,
+} = useUrlSyncedTabs<ContestEditPanelKey>({
+  orderedTabs: contestEditPanelOrder,
+  defaultTab: 'basics',
+})
 
 function createDefaultAWDStartOverrideDialogState(): AWDStartOverrideDialogState {
   return {
@@ -226,6 +253,26 @@ onMounted(() => {
       </div>
     </header>
 
+    <nav class="top-tabs contest-edit-tabs" role="tablist" aria-label="竞赛编辑视图切换">
+      <button
+        v-for="(panel, index) in editPanels"
+        :id="panel.tabId"
+        :key="panel.key"
+        :ref="(element) => setTabButtonRef(panel.key, element as HTMLButtonElement | null)"
+        type="button"
+        role="tab"
+        class="top-tab"
+        :class="{ active: activePanel === panel.key }"
+        :aria-selected="activePanel === panel.key ? 'true' : 'false'"
+        :aria-controls="panel.panelId"
+        :tabindex="activePanel === panel.key ? 0 : -1"
+        @click="selectTab(panel.key)"
+        @keydown="handleTabKeydown($event, index)"
+      >
+        {{ panel.label }}
+      </button>
+    </nav>
+
     <main class="content-pane">
       <div v-if="loading" class="flex justify-center py-12">
         <AppLoading>正在同步竞赛详情...</AppLoading>
@@ -244,28 +291,53 @@ onMounted(() => {
         </template>
       </AppEmpty>
 
-      <template v-else-if="formDraft">
-        <section class="workspace-directory-section contest-edit-section">
-          <header class="contest-edit-header">
-            <div class="workspace-tab-heading__main">
-              <div class="workspace-overline">Contest Editor</div>
-              <h1 class="workspace-page-title">编辑竞赛</h1>
-              <p class="workspace-page-copy">
-                {{ pageTitle }}。保存成功后会回到赛事目录，便于继续查看列表或进入后续编排。
-              </p>
-            </div>
-          </header>
+      <template v-else-if="formDraft && contest">
+        <section
+          id="contest-edit-panel-basics"
+          class="tab-panel contest-edit-panel"
+          :class="{ active: activePanel === 'basics' }"
+          role="tabpanel"
+          aria-labelledby="contest-edit-tab-basics"
+          :aria-hidden="activePanel === 'basics' ? 'false' : 'true'"
+        >
+          <section class="workspace-directory-section contest-edit-section">
+            <header class="contest-edit-header">
+              <div class="workspace-tab-heading__main">
+                <div class="workspace-overline">Contest Editor</div>
+                <h1 class="workspace-page-title">编辑竞赛</h1>
+                <p class="workspace-page-copy">
+                  {{ pageTitle }}。保存成功后会回到赛事目录，便于继续查看列表或进入后续编排。
+                </p>
+              </div>
+            </header>
 
-          <AdminContestFormPanel
-            :mode="'edit'"
-            :draft="formDraft"
-            :saving="saving"
-            :status-options="statusOptions"
-            :field-locks="fieldLocks"
-            :show-cancel="false"
-            :note="'保存后将返回赛事目录列表；AWD 赛事切换到进行中时仍会执行就绪检查。'"
-            @save="handleSave"
-          />
+            <AdminContestFormPanel
+              :mode="'edit'"
+              :draft="formDraft"
+              :saving="saving"
+              :status-options="statusOptions"
+              :field-locks="fieldLocks"
+              :show-cancel="false"
+              :note="'保存后将返回赛事目录列表；AWD 赛事切换到进行中时仍会执行就绪检查。'"
+              @save="handleSave"
+            />
+          </section>
+        </section>
+
+        <section
+          id="contest-edit-panel-challenges"
+          class="tab-panel contest-edit-panel"
+          :class="{ active: activePanel === 'challenges' }"
+          role="tabpanel"
+          aria-labelledby="contest-edit-tab-challenges"
+          :aria-hidden="activePanel === 'challenges' ? 'false' : 'true'"
+        >
+          <section class="contest-edit-section contest-edit-section--flat">
+            <ContestChallengeOrchestrationPanel
+              :contest-id="contest.id"
+              :contest-mode="contest.mode"
+            />
+          </section>
         </section>
       </template>
     </main>
@@ -289,10 +361,27 @@ onMounted(() => {
   gap: var(--space-6);
 }
 
+.contest-edit-tabs {
+  margin-top: var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
+}
+
+.contest-edit-panel {
+  display: none;
+}
+
+.contest-edit-panel.active {
+  display: grid;
+}
+
 .contest-edit-section {
   display: grid;
   gap: var(--space-5);
   padding: var(--space-5) var(--space-5-5);
+}
+
+.contest-edit-section--flat {
+  padding: 0;
 }
 
 .contest-edit-header {

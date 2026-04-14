@@ -23,6 +23,7 @@ import {
   createContest,
   createContestAWDRound,
   configureChallengeFlag,
+  deleteAdminContestChallenge,
   deleteChallengeTopology,
   deleteEnvironmentTemplate,
   deleteImage,
@@ -366,6 +367,17 @@ describe('admin contest api contract', () => {
         awd_defense_score: 20,
         awd_checker_preview_token: 'preview-token-2',
       },
+    })
+  })
+
+  it('应该按后端契约移除竞赛题目', async () => {
+    requestMock.mockResolvedValue(null)
+
+    await deleteAdminContestChallenge('7', '11')
+
+    expect(requestMock).toHaveBeenCalledWith({
+      method: 'DELETE',
+      url: '/admin/contests/7/challenges/11',
     })
   })
 
