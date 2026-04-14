@@ -5,10 +5,12 @@ import { describe, expect, it } from 'vitest'
 
 import auditLogSource from '../AuditLog.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
+import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
+import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
@@ -93,6 +95,23 @@ describe('admin management surface alignment', () => {
     expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">阻塞短名单</h3>')
     expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
     expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">阻塞短名单</h3>')
+  })
+
+  it('awd readiness override dialog should use list-heading for override sections', () => {
+    expect(awdReadinessOverrideDialogSource).toContain('class="workspace-directory-section readiness-override-section"')
+    expect(awdReadinessOverrideDialogSource).toMatch(/class="[^"]*list-heading[^"]*"/)
+    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">系统级阻塞</h3>')
+    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">阻塞题目</h3>')
+    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">填写本次放行原因</h3>')
+    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
+    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">阻塞题目</h3>')
+    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">填写本次放行原因</h3>')
+  })
+
+  it('challenge detail hint section should use list-heading for the hint directory header', () => {
+    expect(challengeDetailSource).toContain('<div class="journal-note-label">Hints</div>')
+    expect(challengeDetailSource).toContain('<h2 class="list-heading__title">提示管理</h2>')
+    expect(challengeDetailSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
   })
 
   it('contest orchestration should place the tab rail under the workspace topbar before the page title', () => {

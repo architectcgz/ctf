@@ -123,10 +123,10 @@
           />
 
           <section v-if="challenge.hints?.length" class="challenge-section">
-            <div class="workspace-tab-heading">
-              <div class="workspace-tab-heading__main">
+            <div class="list-heading">
+              <div>
                 <div class="journal-note-label">Hints</div>
-                <h2 class="workspace-tab-heading__title">提示管理</h2>
+                <h2 class="list-heading__title">提示管理</h2>
               </div>
             </div>
 
@@ -299,6 +299,8 @@ const {
   router,
   orderedTabs: panelTabOrder,
   defaultTab: 'detail',
+  routeName: 'AdminChallengeDetail',
+  routeParams: route.params,
 })
 const workspaceLabel = computed(() => challenge.value?.title || '题目管理')
 const flagConfigSummary = computed(() => summarizeFlagConfig(challenge.value?.flag_config))
@@ -555,6 +557,21 @@ watch(
   gap: var(--space-4);
 }
 
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
 .hint-list {
   display: grid;
   gap: var(--space-3);
@@ -692,6 +709,11 @@ watch(
 }
 
 @media (max-width: 900px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .challenge-meta-grid {
     grid-template-columns: minmax(0, 1fr);
   }

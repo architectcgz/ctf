@@ -133,10 +133,10 @@ function handleSubmit() {
         v-if="readiness?.global_blocking_reasons?.length"
         class="workspace-directory-section readiness-override-section"
       >
-        <header class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <header class="list-heading">
+          <div>
             <div class="journal-note-label">Global Blocking</div>
-            <h3 class="workspace-tab-heading__title">系统级阻塞</h3>
+            <h3 class="list-heading__title">系统级阻塞</h3>
           </div>
         </header>
         <ul class="readiness-override-list">
@@ -147,10 +147,10 @@ function handleSubmit() {
       </section>
 
       <section class="workspace-directory-section readiness-override-section">
-        <header class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <header class="list-heading">
+          <div>
             <div class="journal-note-label">Blocking Items</div>
-            <h3 class="workspace-tab-heading__title">阻塞题目</h3>
+            <h3 class="list-heading__title">阻塞题目</h3>
           </div>
         </header>
 
@@ -172,10 +172,10 @@ function handleSubmit() {
       </section>
 
       <section class="workspace-directory-section readiness-override-section">
-        <header class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <header class="list-heading">
+          <div>
             <div class="journal-note-label">Override Reason</div>
-            <h3 class="workspace-tab-heading__title">填写本次放行原因</h3>
+            <h3 class="list-heading__title">填写本次放行原因</h3>
           </div>
         </header>
 
@@ -235,6 +235,21 @@ function handleSubmit() {
 
 .readiness-override-section {
   padding: 1.25rem 1.35rem;
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .readiness-override-list {
@@ -318,6 +333,11 @@ function handleSubmit() {
 }
 
 @media (max-width: 900px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .readiness-override-summary {
     --metric-panel-columns: repeat(2, minmax(0, 1fr));
   }

@@ -8,6 +8,7 @@ interface UseRouteQueryTabsOptions<T extends string> {
   orderedTabs: readonly T[]
   defaultTab: T
   routeName?: string
+  routeParams?: RouteLocationNormalizedLoaded['params']
   queryKey?: string
 }
 
@@ -24,6 +25,7 @@ export function useRouteQueryTabs<T extends string>({
   orderedTabs,
   defaultTab,
   routeName,
+  routeParams,
   queryKey = 'panel',
 }: UseRouteQueryTabsOptions<T>): UseRouteQueryTabsResult<T> {
   const tabSet = new Set<T>(orderedTabs)
@@ -48,6 +50,11 @@ export function useRouteQueryTabs<T extends string>({
     }
 
     if (routeName) {
+      if (routeParams) {
+        await router.replace({ name: routeName, params: routeParams, query: nextQuery })
+        return
+      }
+
       await router.replace({ name: routeName, query: nextQuery })
       return
     }
