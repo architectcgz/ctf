@@ -71,6 +71,12 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /--admin-control-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 76%, transparent\);/
     )
+    expect(contestOrchestrationSource).toMatch(
+      /--workspace-panel:\s*color-mix\(in srgb,\s*var\(--color-bg-surface\) 90%, var\(--color-bg-base\)\);/
+    )
+    expect(contestOrchestrationSource).toMatch(
+      /--workspace-line-soft:\s*color-mix\(in srgb,\s*var\(--color-text-primary\) 10%, transparent\);/
+    )
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).toMatch(
       /\.admin-btn-ghost\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
@@ -90,6 +96,13 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
     expect(contestOrchestrationSource).not.toContain(
       'workspace-tab-heading__title">当前筛选结果</h3>'
+    )
+    expect(contestOrchestrationSource).not.toContain('class="contest-list-filters"')
+    expect(contestOrchestrationSource).toContain('class="contest-filter-grid"')
+    expect(contestOrchestrationSource).toContain('class="contest-filter-field contest-filter-field--action"')
+    expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
+    expect(contestOrchestrationSource).toMatch(
+      /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*var\(--workspace-line-soft\);[\s\S]*--metric-panel-background:\s*color-mix\(/s
     )
   })
 

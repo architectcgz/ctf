@@ -257,37 +257,42 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
         </header>
 
         <section class="workspace-directory-section contest-list-panel">
-          <section class="contest-list-filters" aria-label="赛事筛选">
-            <label class="contest-filter-field">
-              <span class="contest-filter-label">状态筛选</span>
-              <select
-                :value="statusFilter"
-                class="admin-input"
-                @change="
-                  emit(
-                    'updateStatusFilter',
-                    ($event.target as HTMLSelectElement).value as StatusFilter
-                  )
-                "
-              >
-                <option value="all">全部状态</option>
-                <option value="draft">草稿</option>
-                <option value="registering">报名中</option>
-                <option value="running">进行中</option>
-                <option value="frozen">已冻结</option>
-                <option value="ended">已结束</option>
-              </select>
-            </label>
+          <section class="contest-filter-strip" aria-label="赛事筛选">
+            <div class="contest-filter-grid">
+              <label class="contest-filter-field">
+                <span class="contest-filter-label">状态筛选</span>
+                <select
+                  :value="statusFilter"
+                  class="admin-input"
+                  @change="
+                    emit(
+                      'updateStatusFilter',
+                      ($event.target as HTMLSelectElement).value as StatusFilter
+                    )
+                  "
+                >
+                  <option value="all">全部状态</option>
+                  <option value="draft">草稿</option>
+                  <option value="registering">报名中</option>
+                  <option value="running">进行中</option>
+                  <option value="frozen">已冻结</option>
+                  <option value="ended">已结束</option>
+                </select>
+              </label>
 
-            <div class="contest-filter-actions">
-              <button
-                v-if="hasStatusFilter"
-                type="button"
-                class="admin-btn admin-btn-ghost"
-                @click="emit('updateStatusFilter', 'all')"
-              >
-                清空筛选
-              </button>
+              <div class="contest-filter-field contest-filter-field--action">
+                <span class="contest-filter-label contest-filter-label--ghost" aria-hidden="true">
+                  操作
+                </span>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn-ghost contest-filter-clear"
+                  :disabled="!hasStatusFilter"
+                  @click="emit('updateStatusFilter', 'all')"
+                >
+                  清空筛选
+                </button>
+              </div>
             </div>
           </section>
 
@@ -354,6 +359,10 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
   --workspace-shell-shadow: 0 22px 50px var(--color-shadow-soft);
   --workspace-brand: var(--journal-accent);
   --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-faint: var(--journal-muted);
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --journal-note-label-weight: 600;
@@ -418,6 +427,12 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
 
 .contest-overview-summary {
   --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
+}
+
+.contest-overview-summary.metric-panel-default-surface.metric-panel-workspace-surface {
+  --metric-panel-border: var(--workspace-line-soft);
+  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
 .contest-overview-section,
@@ -543,18 +558,26 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
   border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
 
-.contest-list-filters {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
+.contest-filter-strip {
+  display: grid;
   gap: var(--space-3);
+}
+
+.contest-filter-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
 }
 
 .contest-filter-field {
   display: grid;
-  max-width: 18rem;
   gap: var(--space-2);
+}
+
+.contest-filter-field--action {
+  justify-self: end;
+  min-width: 0;
 }
 
 .contest-filter-label {
@@ -562,11 +585,12 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
   color: var(--journal-muted);
 }
 
-.contest-filter-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-3);
+.contest-filter-label--ghost {
+  opacity: 0;
+}
+
+.contest-filter-clear {
+  min-width: 7rem;
 }
 
 .contest-empty-state {
@@ -596,14 +620,23 @@ const hasStatusFilter = computed(() => props.statusFilter !== 'all')
   .contest-overview-row,
   .contest-panel-actions,
   .contest-list-actions,
-  .contest-list-filters {
+  .contest-filter-grid {
     align-items: stretch;
   }
 
   .contest-filter-field,
+  .contest-filter-field--action,
   .contest-inline-link {
     width: 100%;
     max-width: none;
+  }
+
+  .contest-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contest-filter-field--action {
+    justify-self: stretch;
   }
 }
 
