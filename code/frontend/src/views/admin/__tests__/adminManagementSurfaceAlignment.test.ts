@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 import auditLogSource from '../AuditLog.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
+import contestEditSource from '../ContestEdit.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
@@ -127,6 +128,14 @@ describe('admin management surface alignment', () => {
     expect(adminContestFormPanelSource).toContain(
       'class="contest-form-button contest-form-button--primary"'
     )
+  })
+
+  it('contest edit page should use the admin workspace shell and a dedicated back action', () => {
+    expect(contestEditSource).toContain('class="workspace-topbar"')
+    expect(contestEditSource).toContain('<h1 class="workspace-page-title">编辑竞赛</h1>')
+    expect(contestEditSource).toContain('返回竞赛目录')
+    expect(contestEditSource).toContain('Contest Editor')
+    expect(contestEditSource).toContain('class="workspace-directory-section contest-edit-section"')
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {

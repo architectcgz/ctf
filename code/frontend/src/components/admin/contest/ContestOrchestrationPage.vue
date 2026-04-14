@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { Plus, RefreshCw } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
@@ -69,6 +70,8 @@ const panelTabs = [
   },
 ] as const
 
+const router = useRouter()
+
 type ContestPanelKey = (typeof panelTabs)[number]['key']
 const contestPanelOrder = panelTabs.map((tab) => tab.key) as ContestPanelKey[]
 const {
@@ -101,6 +104,10 @@ watch(
 function openCreatePanel() {
   emit('prepareCreateContest')
   selectPanel('create')
+}
+
+function openEditContest(contest: ContestDetailData) {
+  void router.push({ name: 'ContestEdit', params: { id: contest.id } })
 }
 </script>
 
@@ -355,7 +362,7 @@ function openCreatePanel() {
             :page="page"
             :page-size="pageSize"
             :total="total"
-            @edit="emit('openEditDialog', $event)"
+            @edit="openEditContest"
             @export="emit('exportContest', $event)"
             @change-page="emit('changePage', $event)"
           />

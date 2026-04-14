@@ -480,8 +480,27 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'admin/contests/:id/edit',
+        name: 'ContestEdit',
+        component: () => import('@/views/admin/ContestEdit.vue'),
+        meta: {
+          requiresAuth: true,
+          roles: ['admin'],
+          title: '编辑竞赛',
+          contentLayout: 'bleed',
+        },
+      },
+      {
         path: 'platform/contests',
         redirect: redirectWithQuery('/admin/contests'),
+      },
+      {
+        path: 'platform/contests/:id/edit',
+        redirect: (to) => ({
+          path: `/admin/contests/${encodeURIComponent(String(to.params.id || ''))}/edit`,
+          query: to.query,
+          hash: to.hash,
+        }),
       },
       {
         path: 'admin/users',
