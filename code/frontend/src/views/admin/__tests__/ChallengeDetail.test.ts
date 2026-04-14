@@ -15,6 +15,10 @@ const adminApiMocks = vi.hoisted(() => ({
   configureChallengeFlag: vi.fn(),
 }))
 
+const challengeApiMocks = vi.hoisted(() => ({
+  downloadAttachment: vi.fn(),
+}))
+
 const toastMocks = vi.hoisted(() => ({
   success: vi.fn(),
   error: vi.fn(),
@@ -30,6 +34,7 @@ vi.mock('vue-router', async () => {
 })
 
 vi.mock('@/api/admin', () => adminApiMocks)
+vi.mock('@/api/challenge', () => challengeApiMocks)
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastMocks,
 }))
@@ -40,6 +45,7 @@ describe('Admin ChallengeDetail', () => {
     replaceMock.mockReset()
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
+    challengeApiMocks.downloadAttachment.mockReset()
     routeState.params = { id: '11' }
     routeState.query = {}
     adminApiMocks.getChallengeDetail.mockReset()
@@ -61,6 +67,10 @@ describe('Admin ChallengeDetail', () => {
       },
       created_at: '2026-03-10T00:00:00.000Z',
       updated_at: '2026-03-10T00:00:00.000Z',
+    })
+    challengeApiMocks.downloadAttachment.mockResolvedValue({
+      blob: new Blob(['demo']),
+      filename: 'demo.zip',
     })
   })
 
@@ -206,5 +216,70 @@ describe('Admin ChallengeDetail', () => {
     expect(toastMocks.error).toHaveBeenCalledWith(
       '共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team'
     )
+  })
+
+  it('管理员下载内部附件时应走带鉴权的下载接口', async () => {
+    adminApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '11',
+      title: '双节点演练',
+      category: 'web',
+      difficulty: 'easy',
+      status: 'draft',
+      points: 100,
+      image_id: 'img-1',
+      attachment_url: '/api/v1/challenges/attachments/imports/demo.zip',
+      description: 'desc',
+      hints: [],
+      flag_config: {
+        configured: true,
+        flag_type: 'static',
+      },
+      created_at: '2026-03-10T00:00:00.000Z',
+      updated_at: '2026-03-10T00:00:00.000Z',
+    })
+
+    const originalCreateElement = document.createElement.bind(document)
+    const clickMock = vi.fn()
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string) => {
+        if (tagName === 'a') {
+          const anchor = originalCreateElement(tagName)
+          anchor.click = clickMock
+          return anchor
+        }
+        return originalCreateElement(tagName)
+      })
+
+    vi.stubGlobal('URL', {
+      createObjectURL: vi.fn(() => 'blob:demo'),
+      revokeObjectURL: vi.fn(),
+    })
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        stubs: {
+          ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
+          ChallengeWriteupManagePanel: { template: '<div>题解目录</div>' },
+        },
+      },
+    })
+
+    await flushPromises()
+
+    const downloadButton = wrapper.findAll('button').find((button) => button.text().includes('下载附件'))
+    expect(downloadButton).toBeTruthy()
+    expect(wrapper.text()).not.toContain('/api/v1/challenges/attachments/imports/demo.zip')
+
+    await downloadButton!.trigger('click')
+    await flushPromises()
+
+    expect(challengeApiMocks.downloadAttachment).toHaveBeenCalledWith(
+      '/api/v1/challenges/attachments/imports/demo.zip'
+    )
+    expect(clickMock).toHaveBeenCalled()
+
+    createElementSpy.mockRestore()
+    vi.unstubAllGlobals()
   })
 })
