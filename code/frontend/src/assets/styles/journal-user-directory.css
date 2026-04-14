@@ -1,6 +1,8 @@
 :is(
   .challenge-topbar,
   .contest-topbar,
+  .profile-topbar,
+  .security-topbar,
   .notification-topbar,
   .scoreboard-topbar,
   .instance-topbar
@@ -17,6 +19,8 @@
 :is(
   .challenge-heading,
   .contest-heading,
+  .profile-heading,
+  .security-heading,
   .notification-heading,
   .scoreboard-heading,
   .instance-heading
@@ -27,6 +31,8 @@
 :is(
   .challenge-summary,
   .contest-summary,
+  .profile-summary,
+  .security-summary,
   .notification-summary,
   .scoreboard-summary,
   .instance-summary
@@ -39,6 +45,8 @@
 :is(
   .challenge-summary-title,
   .contest-summary-title,
+  .profile-summary-title,
+  .security-summary-title,
   .notification-summary-title,
   .scoreboard-summary-title,
   .instance-summary-title
@@ -56,6 +64,8 @@
 :is(
   .challenge-summary-grid,
   .contest-summary-grid,
+  .profile-summary-grid,
+  .security-summary-grid,
   .notification-summary-grid,
   .scoreboard-summary-grid,
   .instance-summary-grid
@@ -77,6 +87,8 @@
 :is(
   .challenge-summary-item,
   .contest-summary-item,
+  .profile-summary-item,
+  .security-summary-item,
   .notification-summary-item,
   .scoreboard-summary-item,
   .instance-summary-item
