@@ -5,6 +5,7 @@ import ContestManage from '../ContestManage.vue'
 import { ApiError } from '@/api/request'
 import type { AdminContestChallengeData } from '@/api/contracts'
 
+const pushMock = vi.fn()
 const exportMocks = vi.hoisted(() => ({
   downloadCSVFile: vi.fn(),
   downloadJSONFile: vi.fn(),
@@ -67,9 +68,18 @@ vi.mock('@/utils/csv', () => ({
   downloadJSONFile: exportMocks.downloadJSONFile,
 }))
 
+vi.mock('vue-router', async () => {
+  const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
+  return {
+    ...actual,
+    useRouter: () => ({ push: pushMock, replace: vi.fn(), back: vi.fn() }),
+  }
+})
+
 describe('ContestManage', () => {
   beforeEach(() => {
     vi.useRealTimers()
+    pushMock.mockReset()
     window.sessionStorage.clear()
     exportMocks.downloadCSVFile.mockReset()
     exportMocks.downloadJSONFile.mockReset()
@@ -444,6 +454,41 @@ describe('ContestManage', () => {
       page_size: 20,
       status: undefined,
     })
+  })
+
+  it('应该在赛事目录点击编辑后跳转到独立编辑页', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-1',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'registering',
+          starts_at: '2026-03-15T09:00:00.000Z',
+          ends_at: '2026-03-15T13:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#contest-tab-list').trigger('click')
+    await wrapper.find('.contest-action--primary').trigger('click')
+
+    expect(pushMock).toHaveBeenCalledWith({ name: 'ContestEdit', params: { id: 'contest-1' } })
   })
 
   it('应该将总览、赛事目录与 AWD 运维拆分为顶部标签页', async () => {

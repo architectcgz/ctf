@@ -13,7 +13,10 @@ import type { AWDReadinessData, ContestDetailData, ContestStatus } from '@/api/c
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 
-type AdminContestStatus = Extract<ContestStatus, 'draft' | 'registering' | 'running' | 'frozen' | 'ended'>
+export type AdminContestStatus = Extract<
+  ContestStatus,
+  'draft' | 'registering' | 'running' | 'frozen' | 'ended'
+>
 type StatusFilter = 'all' | AdminContestStatus
 const ERR_AWD_READINESS_BLOCKED = 14025
 
@@ -90,7 +93,7 @@ function createDefaultAWDStartOverrideDialogState(): AWDStartOverrideDialogState
   }
 }
 
-function createDraftFromContest(contest: ContestDetailData): ContestFormDraft {
+export function createDraftFromContest(contest: ContestDetailData): ContestFormDraft {
   return {
     title: contest.title,
     description: contest.description || '',
@@ -101,14 +104,14 @@ function createDraftFromContest(contest: ContestDetailData): ContestFormDraft {
   }
 }
 
-function normalizeEditableStatus(status: ContestStatus): AdminContestStatus {
+export function normalizeEditableStatus(status: ContestStatus): AdminContestStatus {
   if (status === 'draft' || status === 'registering' || status === 'running' || status === 'frozen' || status === 'ended') {
     return status
   }
   return 'draft'
 }
 
-function createFieldLocks(status: AdminContestStatus | null): ContestFieldLocks {
+export function createFieldLocks(status: AdminContestStatus | null): ContestFieldLocks {
   if (!status) {
     return {
       mode: false,
@@ -122,6 +125,13 @@ function createFieldLocks(status: AdminContestStatus | null): ContestFieldLocks 
     starts_at: status === 'registering' || status === 'running' || status === 'ended',
     ends_at: status === 'running' || status === 'ended',
   }
+}
+
+export function createContestStatusOptions(status: AdminContestStatus | null) {
+  if (!status) {
+    return []
+  }
+  return STATUS_TRANSITIONS[status].map((nextStatus) => ({ label: nextStatus, value: nextStatus }))
 }
 
 function shouldGateAWDContestStart(mode: ContestDetailData['mode'] | null, targetStatus: AdminContestStatus): boolean {
@@ -164,12 +174,7 @@ export function useAdminContests() {
 
   const mode = computed<'create' | 'edit'>(() => (editingContestId.value ? 'edit' : 'create'))
   const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
-  const statusOptions = computed(() => {
-    if (!editingBaseStatus.value) {
-      return []
-    }
-    return STATUS_TRANSITIONS[editingBaseStatus.value].map((status) => ({ label: status, value: status }))
-  })
+  const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 
   watch(statusFilter, async () => {
     await pagination.changePage(1)
