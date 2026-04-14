@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import TeacherAWDReviewDetail from '../TeacherAWDReviewDetail.vue'
+import awdReviewDetailSource from '../TeacherAWDReviewDetail.vue?raw'
 
 const routeMock = {
   params: {
@@ -186,5 +187,17 @@ describe('TeacherAWDReviewDetail', () => {
     expect(
       wrapper.find('[data-testid="awd-review-export-report"]').attributes('disabled')
     ).toBeUndefined()
+  })
+
+  it('轮次切换区应并入目录段结构，不再保留独立筛选卡片壳', () => {
+    expect(awdReviewDetailSource).toContain(
+      'class="workspace-directory-section teacher-directory-section awd-review-round-section"'
+    )
+    expect(awdReviewDetailSource).toContain('class="list-heading"')
+    expect(awdReviewDetailSource).not.toContain('teacher-controls-title')
+    expect(awdReviewDetailSource).not.toContain('teacher-controls-copy')
+    expect(awdReviewDetailSource).not.toContain(
+      '默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。'
+    )
   })
 })

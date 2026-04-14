@@ -5,7 +5,6 @@ import { ArrowRight, FolderKanban, Search } from 'lucide-vue-next'
 import type { TeacherClassItem } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 
 const props = defineProps<{
   classes: TeacherClassItem[]
@@ -25,38 +24,6 @@ const emit = defineEmits<{
 }>()
 
 const filterQuery = ref('')
-
-type WorkspaceTab = 'overview' | 'directory'
-
-interface WorkspaceTabItem {
-  key: WorkspaceTab
-  label: string
-  buttonId: string
-  panelId: string
-}
-
-const workspaceTabs: WorkspaceTabItem[] = [
-  {
-    key: 'overview',
-    label: '总览',
-    buttonId: 'class-manage-tab-overview',
-    panelId: 'class-manage-overview',
-  },
-  {
-    key: 'directory',
-    label: '班级列表',
-    buttonId: 'class-manage-tab-directory',
-    panelId: 'class-manage-directory',
-  },
-]
-
-const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
-  {
-    orderedTabs: workspaceTabOrder,
-    defaultTab: 'overview',
-  }
-)
 
 const classEntries = computed(() =>
   props.classes.map((item, index) => ({
@@ -86,103 +53,59 @@ const currentPageStudentCount = computed(() =>
       class="teacher-hero teacher-surface-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
     >
       <div class="teacher-page">
-        <nav class="top-tabs" role="tablist" aria-label="班级管理标签页">
-          <button
-            v-for="(tab, index) in workspaceTabs"
-            :id="tab.buttonId"
-            :key="tab.key"
-            :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-            class="top-tab"
-            :class="{ active: activeTab === tab.key }"
-            type="button"
-            role="tab"
-            :tabindex="activeTab === tab.key ? 0 : -1"
-            :aria-selected="activeTab === tab.key ? 'true' : 'false'"
-            :aria-controls="tab.panelId"
-            @click="selectTab(tab.key)"
-            @keydown="handleTabKeydown($event, index)"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
+        <header class="teacher-topbar">
+          <div class="teacher-heading">
+            <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
+            <h1 class="teacher-title">班级管理</h1>
+            <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
+          </div>
 
-        <section
-          id="class-manage-overview"
-          class="tab-panel"
-          role="tabpanel"
-          aria-labelledby="class-manage-tab-overview"
-          :aria-hidden="activeTab === 'overview' ? 'false' : 'true'"
-          v-show="activeTab === 'overview'"
-        >
-          <header class="teacher-topbar">
-            <div class="teacher-heading">
-              <div class="teacher-surface-eyebrow journal-eyebrow">Class Directory</div>
-              <h1 class="teacher-title">班级管理</h1>
-              <p class="teacher-copy">查看当前可管理班级，并进入对应班级继续查看学生和训练表现。</p>
+          <div class="teacher-actions">
+            <button type="button" class="teacher-btn teacher-btn--primary" @click="emit('openDashboard')">
+              教学概览
+            </button>
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost"
+              @click="emit('openReportExport')"
+            >
+              导出班级报告
+            </button>
+          </div>
+        </header>
+
+        <section class="teacher-summary metric-panel-default-surface">
+          <div class="teacher-summary-title">
+            <FolderKanban class="h-4 w-4" />
+            <span>Directory Snapshot</span>
+          </div>
+          <div class="teacher-summary-grid metric-panel-grid">
+            <div class="teacher-summary-item metric-panel-card">
+              <div class="teacher-summary-label metric-panel-label">班级数量</div>
+              <div class="teacher-summary-value metric-panel-value">{{ total }}</div>
+              <div class="teacher-summary-helper metric-panel-helper">当前可管理班级总数</div>
             </div>
+            <div class="teacher-summary-item metric-panel-card">
+              <div class="teacher-summary-label metric-panel-label">当前页学生数</div>
+              <div class="teacher-summary-value metric-panel-value">{{ currentPageStudentCount }}</div>
+              <div class="teacher-summary-helper metric-panel-helper">当前分页已加载班级的学生数汇总</div>
+            </div>
+          </div>
+        </section>
 
-            <div class="teacher-actions">
-              <button
-                type="button"
-                class="teacher-btn teacher-btn--primary"
-                @click="emit('openDashboard')"
-              >
-                教学概览
-              </button>
-              <button
-                type="button"
-                class="teacher-btn teacher-btn--ghost"
-                @click="emit('openReportExport')"
-              >
-                导出班级报告
-              </button>
+        <section class="workspace-directory-section teacher-directory-section" aria-label="班级目录">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Class Directory</div>
+              <h3 class="list-heading__title">班级目录</h3>
+            </div>
+            <div class="teacher-directory-meta">
+              本页 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级，共
+              {{ total }} 个班级
             </div>
           </header>
 
-          <section class="teacher-summary metric-panel-default-surface">
-            <div class="teacher-summary-title">
-              <FolderKanban class="h-4 w-4" />
-              <span>Directory Snapshot</span>
-            </div>
-            <div class="teacher-summary-grid metric-panel-grid">
-              <div class="teacher-summary-item metric-panel-card">
-                <div class="teacher-summary-label metric-panel-label">班级数量</div>
-                <div class="teacher-summary-value metric-panel-value">{{ total }}</div>
-                <div class="teacher-summary-helper metric-panel-helper">当前可管理班级总数</div>
-              </div>
-              <div class="teacher-summary-item metric-panel-card">
-                <div class="teacher-summary-label metric-panel-label">当前页学生数</div>
-                <div class="teacher-summary-value metric-panel-value">{{ currentPageStudentCount }}</div>
-                <div class="teacher-summary-helper metric-panel-helper">当前分页已加载班级的学生数汇总</div>
-              </div>
-              <div class="teacher-summary-item metric-panel-card">
-                <div class="teacher-summary-label metric-panel-label">当前状态</div>
-                <div class="teacher-summary-value metric-panel-value">
-                  {{ loading ? '同步中' : '已就绪' }}
-                </div>
-                <div class="teacher-summary-helper metric-panel-helper">班级目录与入口操作已同步</div>
-              </div>
-            </div>
-          </section>
-        </section>
-
-        <section
-          id="class-manage-directory"
-          class="tab-panel"
-          role="tabpanel"
-          aria-labelledby="class-manage-tab-directory"
-          :aria-hidden="activeTab === 'directory' ? 'false' : 'true'"
-          v-show="activeTab === 'directory'"
-        >
-          <section class="teacher-controls">
-            <div class="teacher-controls-bar">
-              <div class="teacher-controls-heading workspace-tab-heading__main">
-                <div class="teacher-surface-eyebrow journal-eyebrow">Class Filters</div>
-                <h3 class="teacher-controls-title workspace-tab-heading__title">班级筛选</h3>
-                <p class="teacher-controls-copy">支持按班级编号或班级名称快速定位班级入口。</p>
-              </div>
-            </div>
-
+          <section class="teacher-directory-filters" aria-label="班级过滤">
             <div class="teacher-filter-grid teacher-filter-grid--single">
               <label class="teacher-field">
                 <span class="teacher-field-label">搜索班级</span>
@@ -198,8 +121,6 @@ const currentPageStudentCount = computed(() =>
               </label>
             </div>
           </section>
-
-          <div class="teacher-hero-divider" />
 
           <div v-if="loading" class="teacher-skeleton-list workspace-directory-loading">
             <div
@@ -217,31 +138,19 @@ const currentPageStudentCount = computed(() =>
             description="当前教师账号下还没有可访问的班级。"
           />
 
-          <section
-            v-else
-            class="teacher-directory workspace-directory-section"
-            aria-label="班级目录"
-          >
-            <div class="teacher-directory-top">
-              <div>
-                <h3 class="teacher-directory-title">班级目录</h3>
-                <div class="teacher-directory-meta">
-                  本页 {{ filteredClassEntries.length }} / {{ classes.length }} 个班级，共
-                  {{ total }} 个班级
-                </div>
-              </div>
-            </div>
-
+          <section v-else class="teacher-directory">
             <div v-if="filteredClassEntries.length > 0" class="teacher-directory-head">
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code"
-                >班级编号</span
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-code">
+                班级编号
+              </span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name">
+                班级名称
+              </span>
+              <span
+                class="teacher-directory-head-cell teacher-directory-head-cell-student-count"
               >
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-class-name"
-                >班级名称</span
-              >
-              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-count"
-                >学生数</span
-              >
+                学生数
+              </span>
               <span>状态</span>
               <span>操作</span>
             </div>
@@ -296,7 +205,7 @@ const currentPageStudentCount = computed(() =>
             </div>
 
             <div
-              v-if="total > 0"
+              v-if="total > 0 && filteredClassEntries.length > 0"
               class="teacher-directory-pagination workspace-directory-pagination"
             >
               <PagePaginationControls
@@ -326,15 +235,6 @@ const currentPageStudentCount = computed(() =>
   --teacher-directory-columns: var(--teacher-class-directory-columns);
   --teacher-class-directory-columns: minmax(7rem, 0.7fr) minmax(11rem, 1.15fr) minmax(7rem, 0.7fr)
     minmax(7rem, 0.7fr) minmax(7rem, 0.75fr);
-  --page-top-tabs-gap: var(--space-5);
-  --page-top-tabs-margin: 0 calc(var(--space-6) * -1) var(--space-5);
-  --page-top-tabs-padding: 0 var(--space-6);
-  --page-top-tabs-border: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  --page-top-tab-min-height: 3rem;
-  --page-top-tab-padding: var(--space-1-5) 0 var(--space-3);
-  --page-top-tab-font-size: var(--font-size-0-92);
-  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 78%, var(--journal-ink));
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 84%, var(--journal-ink));
   font-family: var(--font-family-sans);
 }
 
@@ -345,16 +245,6 @@ const currentPageStudentCount = computed(() =>
   flex-direction: column;
 }
 
-.teacher-skeleton-list {
-  margin-top: var(--space-6);
-  display: grid;
-  gap: var(--space-3);
-}
-
-.teacher-empty-state {
-  margin-top: var(--space-6);
-}
-
 .teacher-badge-card {
   border: 1px solid var(--teacher-card-border);
 }
@@ -363,9 +253,29 @@ const currentPageStudentCount = computed(() =>
   border-top: 1px dashed var(--teacher-divider);
 }
 
-.teacher-hero-divider {
+.teacher-directory-section {
   margin-top: var(--space-6);
-  border-top: 1px dashed var(--teacher-divider);
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-filters {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
 }
 
 .teacher-filter-grid {
@@ -376,6 +286,16 @@ const currentPageStudentCount = computed(() =>
 
 .teacher-filter-grid--single {
   justify-content: start;
+}
+
+.teacher-skeleton-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.teacher-directory {
+  display: flex;
+  flex-direction: column;
 }
 
 .teacher-directory-row {
@@ -524,13 +444,8 @@ const currentPageStudentCount = computed(() =>
 }
 
 @media (max-width: 960px) {
-  .top-tabs {
-    margin-left: calc(var(--space-4) * -1);
-    margin-right: calc(var(--space-4) * -1);
-    padding: 0 var(--space-4);
-  }
-
-  .teacher-topbar {
+  .teacher-topbar,
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }

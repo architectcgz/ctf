@@ -155,16 +155,12 @@ function roundStatusLabel(status: string): string {
           </div>
         </section>
 
-        <section class="teacher-controls">
-          <div class="teacher-controls-bar">
-            <div class="teacher-controls-heading">
-              <div class="teacher-surface-eyebrow journal-eyebrow">Review Controls</div>
-              <h3 class="teacher-controls-title">轮次切换</h3>
-              <p class="teacher-controls-copy">
-                默认展示整场总览；切换到单轮后，可继续按队伍查看该轮服务、攻击和流量证据。
-              </p>
+        <section class="workspace-directory-section teacher-directory-section awd-review-round-section" aria-label="复盘轮次目录">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Review Rounds</div>
+              <h3 class="list-heading__title">轮次目录</h3>
             </div>
-
             <div class="awd-review-meta">
               <span class="teacher-directory-chip">
                 {{ contestStatusLabel(review?.contest.status || '') }}
@@ -176,9 +172,9 @@ function roundStatusLabel(status: string): string {
                 {{ polling ? '导出轮询中' : '下载链路就绪' }}
               </span>
             </div>
-          </div>
+          </header>
 
-          <div class="awd-review-round-rail" role="tablist" aria-label="AWD 轮次切换">
+          <div class="awd-review-round-rail" role="tablist" aria-label="AWD 复盘视图">
             <button
               type="button"
               class="awd-review-round-pill"
@@ -455,8 +451,11 @@ function roundStatusLabel(status: string): string {
   --awd-review-team-columns: minmax(0, 7rem) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.1fr) auto;
 }
 
-.teacher-controls {
+.teacher-directory-section {
   margin-top: var(--space-6);
+}
+
+.awd-review-round-section {
   padding: var(--space-5);
   border: 1px solid var(--teacher-card-border);
   border-radius: 22px;
@@ -464,35 +463,25 @@ function roundStatusLabel(status: string): string {
   box-shadow: 0 10px 24px var(--color-shadow-soft);
 }
 
-.teacher-controls-bar {
+.list-heading {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
-.teacher-controls-heading {
-  max-width: 42rem;
-}
-
-.teacher-controls-title {
-  margin: var(--space-3) 0 var(--space-2);
-  font-size: var(--font-size-1-08);
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
-}
-
-.teacher-controls-copy {
-  margin: 0;
-  line-height: 1.7;
-  color: var(--journal-muted);
 }
 
 .awd-review-meta {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  justify-content: flex-end;
 }
 
 .awd-review-round-rail {
@@ -826,7 +815,7 @@ function roundStatusLabel(status: string): string {
 
 @media (max-width: 1080px) {
   .teacher-topbar,
-  .teacher-controls-bar {
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }

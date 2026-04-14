@@ -98,150 +98,148 @@ const emit = defineEmits<{
           </div>
         </section>
 
-        <section class="teacher-controls">
-          <div class="teacher-controls-bar">
-            <div class="teacher-controls-heading">
-              <div class="teacher-surface-eyebrow journal-eyebrow">Student Filters</div>
-              <h3 class="teacher-controls-title">学生筛选</h3>
+        <section class="workspace-directory-section teacher-directory-section" aria-label="学生目录">
+          <header class="list-heading">
+            <div>
+              <div class="journal-note-label">Student Directory</div>
+              <h3 class="list-heading__title">学生目录</h3>
             </div>
-          </div>
-
-          <div class="teacher-filter-grid">
-            <label class="teacher-field">
-              <span class="teacher-field-label">班级</span>
-              <select
-                :value="selectedClassName"
-                class="teacher-field-control"
-                :disabled="loadingClasses"
-                @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
-              >
-                <option value="">全部班级</option>
-                <option v-for="item in classes" :key="item.name" :value="item.name">
-                  {{ item.name }} · {{ item.student_count || 0 }}
-                </option>
-              </select>
-            </label>
-
-            <label class="teacher-field">
-              <span class="teacher-field-label">搜索姓名或用户名</span>
-              <div class="teacher-field-control teacher-filter-control">
-                <Search class="h-4 w-4 text-text-muted" />
-                <input
-                  :value="searchQuery"
-                  type="text"
-                  placeholder="搜索姓名或用户名"
-                  class="teacher-input"
-                  @input="emit('updateSearchQuery', ($event.target as HTMLInputElement).value)"
-                />
-              </div>
-            </label>
-
-            <label class="teacher-field">
-              <span class="teacher-field-label">按学号查询</span>
-              <div class="teacher-field-control teacher-filter-control">
-                <Search class="h-4 w-4 text-text-muted" />
-                <input
-                  :value="studentNoQuery"
-                  type="text"
-                  placeholder="输入学号精确查询"
-                  class="teacher-input"
-                  @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
-                />
-              </div>
-            </label>
-          </div>
-        </section>
-
-        <div class="teacher-hero-divider" />
-
-        <div v-if="loadingStudents" class="teacher-skeleton-list">
-          <div
-            v-for="index in 6"
-            :key="index"
-            class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
-          />
-        </div>
-
-        <AppEmpty
-          v-else-if="filteredStudents.length === 0"
-          class="teacher-empty-state"
-          icon="Users"
-          title="没有匹配学生"
-          description="调整搜索词或切换班级后再试。"
-        />
-
-        <section v-else class="teacher-directory" aria-label="学生目录">
-          <div class="teacher-directory-top">
-            <h3 class="teacher-directory-title">学生目录</h3>
             <div class="teacher-directory-meta">共 {{ filteredTotal }} 名学生</div>
-          </div>
+          </header>
 
-          <div class="teacher-directory-head">
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no"
-              >学号</span
-            >
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
-              >学生名称</span
-            >
-            <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">昵称</span>
-            <span>薄弱项</span>
-            <span>做题数</span>
-            <span>得分数</span>
-            <span>操作</span>
-          </div>
+          <section class="teacher-directory-filters" aria-label="学生过滤">
+            <div class="teacher-filter-grid">
+              <label class="teacher-field">
+                <span class="teacher-field-label">班级</span>
+                <select
+                  :value="selectedClassName"
+                  class="teacher-field-control"
+                  :disabled="loadingClasses"
+                  @change="emit('selectClass', ($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="">全部班级</option>
+                  <option v-for="item in classes" :key="item.name" :value="item.name">
+                    {{ item.name }} · {{ item.student_count || 0 }}
+                  </option>
+                </select>
+              </label>
 
-          <button
-            v-for="student in filteredStudents"
-            :key="student.id"
-            type="button"
-            class="teacher-directory-row"
-            :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
-            @click="emit('openStudent', student.id)"
-          >
-            <div class="teacher-directory-cell teacher-directory-cell-student-no">
-              {{ student.student_no || '未设置学号' }}
+              <label class="teacher-field">
+                <span class="teacher-field-label">搜索姓名或用户名</span>
+                <div class="teacher-field-control teacher-filter-control">
+                  <Search class="h-4 w-4 text-text-muted" />
+                  <input
+                    :value="searchQuery"
+                    type="text"
+                    placeholder="搜索姓名或用户名"
+                    class="teacher-input"
+                    @input="emit('updateSearchQuery', ($event.target as HTMLInputElement).value)"
+                  />
+                </div>
+              </label>
+
+              <label class="teacher-field">
+                <span class="teacher-field-label">按学号查询</span>
+                <div class="teacher-field-control teacher-filter-control">
+                  <Search class="h-4 w-4 text-text-muted" />
+                  <input
+                    :value="studentNoQuery"
+                    type="text"
+                    placeholder="输入学号精确查询"
+                    class="teacher-input"
+                    @input="emit('updateStudentNoQuery', ($event.target as HTMLInputElement).value)"
+                  />
+                </div>
+              </label>
             </div>
+          </section>
 
-            <div class="teacher-directory-cell teacher-directory-cell-name">
-              <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
-                {{ student.name || '未设置姓名' }}
-              </h4>
-            </div>
-
-            <div class="teacher-directory-cell teacher-directory-cell-alias">
-              <div class="teacher-directory-row-points" :title="student.username">
-                {{ student.username }}
-              </div>
-            </div>
-
-            <div class="teacher-directory-row-tags">
-              <span class="teacher-directory-chip teacher-directory-chip-muted">
-                {{ student.weak_dimension || '暂无薄弱项' }}
-              </span>
-            </div>
-
-            <div class="teacher-directory-row-solved">{{ student.solved_count ?? 0 }}</div>
-
-            <div class="teacher-directory-row-score">{{ student.total_score ?? 0 }}</div>
-
-            <div class="teacher-directory-row-cta">
-              <span>查看学员分析</span>
-              <ArrowRight class="h-4 w-4" />
-            </div>
-          </button>
-
-          <div
-            v-if="filteredTotal > 0"
-            class="teacher-directory-pagination workspace-directory-pagination"
-          >
-            <PagePaginationControls
-              :page="page"
-              :total-pages="totalPages"
-              :total="filteredTotal"
-              :total-label="`共 ${filteredTotal} 名学生`"
-              @change-page="emit('changePage', $event)"
+          <div v-if="loadingStudents" class="teacher-skeleton-list workspace-directory-loading">
+            <div
+              v-for="index in 6"
+              :key="index"
+              class="h-14 animate-pulse rounded-2xl bg-[var(--journal-surface-subtle)]"
             />
           </div>
+
+          <AppEmpty
+            v-else-if="filteredStudents.length === 0"
+            class="teacher-empty-state workspace-directory-empty"
+            icon="Users"
+            title="没有匹配学生"
+            description="调整搜索词或切换班级后再试。"
+          />
+
+          <section v-else class="teacher-directory">
+            <div class="teacher-directory-head">
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-student-no">
+                学号
+              </span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-name">
+                学生名称
+              </span>
+              <span class="teacher-directory-head-cell teacher-directory-head-cell-alias">
+                昵称
+              </span>
+              <span>薄弱项</span>
+              <span>做题数</span>
+              <span>得分数</span>
+              <span>操作</span>
+            </div>
+
+            <button
+              v-for="student in filteredStudents"
+              :key="student.id"
+              type="button"
+              class="teacher-directory-row"
+              :aria-label="`${student.name || student.username}，${student.solved_count ?? 0} 题，${student.total_score ?? 0} 分，查看学员分析`"
+              @click="emit('openStudent', student.id)"
+            >
+              <div class="teacher-directory-cell teacher-directory-cell-student-no">
+                {{ student.student_no || '未设置学号' }}
+              </div>
+
+              <div class="teacher-directory-cell teacher-directory-cell-name">
+                <h4 class="teacher-directory-row-title" :title="student.name || '未设置姓名'">
+                  {{ student.name || '未设置姓名' }}
+                </h4>
+              </div>
+
+              <div class="teacher-directory-cell teacher-directory-cell-alias">
+                <div class="teacher-directory-row-points" :title="student.username">
+                  {{ student.username }}
+                </div>
+              </div>
+
+              <div class="teacher-directory-row-tags">
+                <span class="teacher-directory-chip teacher-directory-chip-muted">
+                  {{ student.weak_dimension || '暂无薄弱项' }}
+                </span>
+              </div>
+
+              <div class="teacher-directory-row-solved">{{ student.solved_count ?? 0 }}</div>
+
+              <div class="teacher-directory-row-score">{{ student.total_score ?? 0 }}</div>
+
+              <div class="teacher-directory-row-cta">
+                <span>查看学员分析</span>
+                <ArrowRight class="h-4 w-4" />
+              </div>
+            </button>
+
+            <div
+              v-if="filteredTotal > 0"
+              class="teacher-directory-pagination workspace-directory-pagination"
+            >
+              <PagePaginationControls
+                :page="page"
+                :total-pages="totalPages"
+                :total="filteredTotal"
+                :total-label="`共 ${filteredTotal} 名学生`"
+                @change-page="emit('changePage', $event)"
+              />
+            </div>
+          </section>
         </section>
       </div>
     </section>
@@ -278,9 +276,29 @@ const emit = defineEmits<{
   border: 1px solid var(--teacher-card-border);
 }
 
-.teacher-hero-divider {
+.teacher-directory-section {
   margin-top: var(--space-6);
-  border-top: 1px dashed var(--teacher-divider);
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.teacher-directory-filters {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
 }
 
 .teacher-filter-grid {
@@ -294,19 +312,13 @@ const emit = defineEmits<{
 }
 
 .teacher-skeleton-list {
-  margin-top: var(--space-6);
   display: grid;
   gap: var(--space-3);
-}
-
-.teacher-empty-state {
-  margin-top: var(--space-6);
 }
 
 .teacher-directory {
   display: flex;
   flex-direction: column;
-  margin-top: var(--space-6);
 }
 
 .teacher-directory-row {
@@ -433,7 +445,8 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 1080px) {
-  .teacher-topbar {
+  .teacher-topbar,
+  .list-heading {
     align-items: flex-start;
     flex-direction: column;
   }
