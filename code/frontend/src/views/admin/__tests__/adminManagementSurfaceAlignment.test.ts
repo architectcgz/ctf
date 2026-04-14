@@ -13,12 +13,16 @@ import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallen
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
 import awdChallengeConfigDialogSource from '@/components/admin/contest/AWDChallengeConfigDialog.vue?raw'
+import adminContestFormDialogSource from '@/components/admin/contest/AdminContestFormDialog.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
 const styleSource = readFileSync(resolve(process.cwd(), 'src/style.css'), 'utf8')
-const journalNotesSource = readFileSync(resolve(process.cwd(), 'src/assets/styles/journal-notes.css'), 'utf8')
+const journalNotesSource = readFileSync(
+  resolve(process.cwd(), 'src/assets/styles/journal-notes.css'),
+  'utf8'
+)
 
 describe('admin management surface alignment', () => {
   it('audit log should soften table and empty-state borders on dark surfaces', () => {
@@ -67,7 +71,7 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /--admin-control-border:\s*color-mix\(in srgb,\s*var\(--journal-border\) 76%, transparent\);/
     )
-    expect(contestOrchestrationSource).toContain('class="contest-empty-state"')
+    expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).toMatch(
       /\.admin-btn-ghost\s*\{[\s\S]*border:\s*1px solid var\(--admin-control-border\);/s
     )
@@ -77,14 +81,36 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
-    expect(contestOrchestrationSource).toContain('<h3 class="list-heading__title">竞赛目录</h3>')
+    expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
+    expect(contestOrchestrationSource).toContain(
+      '<h2 class="list-heading__title">当前赛事窗口</h2>'
+    )
+    expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">赛事目录</h2>')
+    expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
-    expect(contestOrchestrationSource).not.toContain('workspace-tab-heading__title">当前筛选结果</h3>')
+    expect(contestOrchestrationSource).not.toContain(
+      'workspace-tab-heading__title">当前筛选结果</h3>'
+    )
+  })
+
+  it('contest form dialog should adopt the admin workspace dialog shell and section headings', () => {
+    expect(adminContestFormDialogSource).toContain('class="contest-form-dialog"')
+    expect(adminContestFormDialogSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
+    expect(adminContestFormDialogSource).toContain(
+      '<h3 class="list-heading__title">赛制与时间</h3>'
+    )
+    expect(adminContestFormDialogSource).toContain(
+      'class="contest-form-button contest-form-button--primary"'
+    )
+    expect(adminContestFormDialogSource).toContain(':deep(.contest-form-dialog .el-dialog)')
+    expect(adminContestFormDialogSource).toContain('Contest Workspace')
   })
 
   it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
     expect(awdRoundInspectorSource).toContain('id="awd-traffic-reset-filters"')
-    expect(awdRoundInspectorSource).not.toContain('按攻击方、受害方、题目、状态分桶和路径关键字筛选。')
+    expect(awdRoundInspectorSource).not.toContain(
+      '按攻击方、受害方、题目、状态分桶和路径关键字筛选。'
+    )
     expect(awdRoundInspectorSource).not.toContain(
       'class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"'
     )
@@ -94,7 +120,9 @@ describe('admin management surface alignment', () => {
     expect(awdChallengeConfigPanelSource).toContain('class="workspace-directory-section"')
     expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*list-heading[^"]*"/)
     expect(awdChallengeConfigPanelSource).toContain('<h3 class="list-heading__title">题目目录</h3>')
-    expect(awdChallengeConfigPanelSource).not.toContain('workspace-tab-heading__title">已关联题目</h3>')
+    expect(awdChallengeConfigPanelSource).not.toContain(
+      'workspace-tab-heading__title">已关联题目</h3>'
+    )
 
     expect(awdReadinessSummarySource).toMatch(/class="[^"]*list-heading[^"]*"/)
     expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">系统级阻塞</h3>')
@@ -104,19 +132,35 @@ describe('admin management surface alignment', () => {
   })
 
   it('awd readiness override dialog should use list-heading for override sections', () => {
-    expect(awdReadinessOverrideDialogSource).toContain('class="workspace-directory-section readiness-override-section"')
+    expect(awdReadinessOverrideDialogSource).toContain(
+      'class="workspace-directory-section readiness-override-section"'
+    )
     expect(awdReadinessOverrideDialogSource).toMatch(/class="[^"]*list-heading[^"]*"/)
-    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">系统级阻塞</h3>')
-    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">阻塞题目</h3>')
-    expect(awdReadinessOverrideDialogSource).toContain('<h3 class="list-heading__title">填写本次放行原因</h3>')
-    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
-    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">阻塞题目</h3>')
-    expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">填写本次放行原因</h3>')
+    expect(awdReadinessOverrideDialogSource).toContain(
+      '<h3 class="list-heading__title">系统级阻塞</h3>'
+    )
+    expect(awdReadinessOverrideDialogSource).toContain(
+      '<h3 class="list-heading__title">阻塞题目</h3>'
+    )
+    expect(awdReadinessOverrideDialogSource).toContain(
+      '<h3 class="list-heading__title">填写本次放行原因</h3>'
+    )
+    expect(awdReadinessOverrideDialogSource).not.toContain(
+      'workspace-tab-heading__title">系统级阻塞</h3>'
+    )
+    expect(awdReadinessOverrideDialogSource).not.toContain(
+      'workspace-tab-heading__title">阻塞题目</h3>'
+    )
+    expect(awdReadinessOverrideDialogSource).not.toContain(
+      'workspace-tab-heading__title">填写本次放行原因</h3>'
+    )
   })
 
   it('awd challenge config dialog should use plain block titles instead of workspace-tab-heading titles', () => {
     expect(awdChallengeConfigDialogSource).toContain('checker-config-block__title')
-    expect(awdChallengeConfigDialogSource).not.toContain('workspace-tab-heading__title checker-config-block__title')
+    expect(awdChallengeConfigDialogSource).not.toContain(
+      'workspace-tab-heading__title checker-config-block__title'
+    )
     expect(awdChallengeConfigDialogSource).toContain('>最终 JSON 预览</h3>')
     expect(awdChallengeConfigDialogSource).toContain('>最近一次已保存校验</h3>')
     expect(awdChallengeConfigDialogSource).toContain('>试跑 Checker</h3>')
@@ -142,7 +186,7 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toContain('class="top-tabs"')
     expect(contestOrchestrationSource).toContain('class="content-pane"')
     expect(contestOrchestrationSource.indexOf('class="top-tabs"')).toBeLessThan(
-      contestOrchestrationSource.indexOf('赛事编排台')
+      contestOrchestrationSource.indexOf('赛事管理台')
     )
   })
 
@@ -204,7 +248,9 @@ describe('admin management surface alignment', () => {
       /^\.image-summary-grid\s*\{[\s\S]*display:\s*grid;[\s\S]*grid-template-columns:/m
     )
     expect(userGovernanceSource).toContain('class="admin-summary-grid user-overview-grid')
-    expect(contestOrchestrationSource).toContain('class="admin-summary-grid contest-overview-summary')
+    expect(contestOrchestrationSource).toContain(
+      'class="admin-summary-grid contest-overview-summary'
+    )
   })
 
   it('admin summary cards should explicitly adopt metric-panel utility classes', () => {
@@ -212,9 +258,15 @@ describe('admin management surface alignment', () => {
       'class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
     expect(auditLogSource).toContain('class="journal-note progress-card metric-panel-card"')
-    expect(auditLogSource).toContain('class="journal-note-label progress-card-label metric-panel-label"')
-    expect(auditLogSource).toContain('class="journal-note-value progress-card-value metric-panel-value"')
-    expect(auditLogSource).toContain('class="journal-note-helper progress-card-hint metric-panel-helper"')
+    expect(auditLogSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(auditLogSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(auditLogSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
 
     expect(journalNotesSource).toContain('.metric-panel-default-surface {')
     expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
@@ -231,15 +283,25 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).not.toContain(
       '.journal-shell-admin.journal-notes-card .journal-note {'
     )
-    expect(challengeManageSource).toContain('class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"')
+    expect(challengeManageSource).toContain(
+      'class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
     expect(challengeManageSource).toContain('class="journal-note progress-card metric-panel-card"')
-    expect(challengeManageSource).toContain('class="journal-note-label progress-card-label metric-panel-label"')
-    expect(challengeManageSource).toContain('class="journal-note-value progress-card-value metric-panel-value"')
-    expect(challengeManageSource).toContain('class="journal-note-helper progress-card-hint metric-panel-helper"')
+    expect(challengeManageSource).toContain(
+      'class="journal-note-label progress-card-label metric-panel-label"'
+    )
+    expect(challengeManageSource).toContain(
+      'class="journal-note-value progress-card-value metric-panel-value"'
+    )
+    expect(challengeManageSource).toContain(
+      'class="journal-note-helper progress-card-hint metric-panel-helper"'
+    )
     expect(imageManageSource).toContain(
       'class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(imageManageSource).toContain('class="image-summary-card progress-card metric-panel-card"')
+    expect(imageManageSource).toContain(
+      'class="image-summary-card progress-card metric-panel-card"'
+    )
     expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper"')
 
     expect(userGovernanceSource).toContain(
@@ -262,9 +324,11 @@ describe('admin management surface alignment', () => {
     )
 
     expect(contestOrchestrationSource).toContain(
-      'class="admin-summary-grid contest-overview-summary mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
+      'class="admin-summary-grid contest-overview-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"'
     )
-    expect(contestOrchestrationSource).toContain('class="journal-note progress-card metric-panel-card"')
+    expect(contestOrchestrationSource).toContain(
+      'class="journal-note progress-card metric-panel-card"'
+    )
     expect(contestOrchestrationSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
