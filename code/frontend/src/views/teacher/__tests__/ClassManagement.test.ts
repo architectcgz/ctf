@@ -76,16 +76,11 @@ describe('ClassManagement', () => {
 
     expect(teacherApiMocks.getClasses).toHaveBeenCalledWith({ page: 1, page_size: 20 })
     expect(wrapper.text()).toContain('班级管理')
-    expect(wrapper.find('#class-manage-tab-overview').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#class-manage-overview').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#class-manage-directory').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(3)
-
-    await wrapper.get('#class-manage-tab-directory').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.find('#class-manage-tab-directory').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#class-manage-directory').attributes('aria-hidden')).toBe('false')
+    expect(wrapper.find('.top-tabs').exists()).toBe(false)
+    expect(wrapper.find('#class-manage-tab-overview').exists()).toBe(false)
+    expect(wrapper.find('#class-manage-tab-directory').exists()).toBe(false)
+    expect(wrapper.findAll('.teacher-summary-item')).toHaveLength(2)
+    expect(wrapper.text()).not.toContain('已就绪')
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
     expect(wrapper.find('.teacher-directory-pagination').exists()).toBe(true)
@@ -148,14 +143,15 @@ describe('ClassManagement', () => {
 
     await flushPromises()
 
-    await wrapper.get('#class-manage-tab-directory').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.find('.teacher-controls').exists()).toBe(true)
-    expect(wrapper.find('.teacher-controls-title').text()).toContain('班级筛选')
+    expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
+      true
+    )
+    expect(wrapper.find('.list-heading').exists()).toBe(true)
     expect(wrapper.find('.teacher-filter-control').exists()).toBe(true)
     const searchInput = wrapper.find('input[placeholder="搜索班级编号或名称"]')
     expect(searchInput.exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('班级筛选')
+    expect(wrapper.text()).not.toContain('支持按班级编号或班级名称快速定位班级入口。')
 
     await searchInput.setValue('CL-02')
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(1)
@@ -204,8 +200,6 @@ describe('ClassManagement', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#class-manage-tab-directory').trigger('click')
-    await flushPromises()
 
     expect(wrapper.text()).toContain('共 21 个班级')
     expect(wrapper.find('.teacher-directory-pagination').text()).toContain('1 / 2')
@@ -222,11 +216,19 @@ describe('ClassManagement', () => {
   })
 
   it('应该为班级名称保留单行省略和完整悬浮提示', () => {
-    expect(classManagementSource).toContain('role="tablist"')
-    expect(classManagementSource).toContain('class-manage-tab-overview')
-    expect(classManagementSource).toContain('class-manage-tab-directory')
-    expect(classManagementSource).toContain('class-manage-overview')
-    expect(classManagementSource).toContain('class-manage-directory')
+    expect(classManagementSource).not.toContain('role="tablist"')
+    expect(classManagementSource).not.toContain('class-manage-tab-overview')
+    expect(classManagementSource).not.toContain('class-manage-tab-directory')
+    expect(classManagementSource).not.toContain('class-manage-overview')
+    expect(classManagementSource).not.toContain('class-manage-directory')
+    expect(classManagementSource).toContain(
+      'class="workspace-directory-section teacher-directory-section"'
+    )
+    expect(classManagementSource).toContain('class="list-heading"')
+    expect(classManagementSource).not.toContain('teacher-controls-title')
+    expect(classManagementSource).not.toContain('teacher-controls-copy')
+    expect(classManagementSource).not.toContain('班级筛选')
+    expect(classManagementSource).not.toContain('支持按班级编号或班级名称快速定位班级入口。')
     expect(classManagementSource).toMatch(
       /class="teacher-directory-row-title"[\s\S]*:title="item\.name"/s
     )
@@ -238,6 +240,8 @@ describe('ClassManagement', () => {
   it('班级管理概况卡片应复用教学概览的默认 metric-panel 外观', () => {
     expect(classManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
     expect(classManagementSource).not.toContain('teacher-summary--overview-metrics')
+    expect(classManagementSource).not.toContain('当前状态')
+    expect(classManagementSource).not.toContain('已就绪')
   })
 
   it('班级管理概览头部应与学生管理页使用同一套 teacher header 结构', () => {

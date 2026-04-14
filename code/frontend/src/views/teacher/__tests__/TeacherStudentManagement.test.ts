@@ -117,6 +117,10 @@ describe('TeacherStudentManagement', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('学生管理')
+    expect(wrapper.find('.workspace-directory-section.teacher-directory-section').exists()).toBe(
+      true
+    )
+    expect(wrapper.find('.list-heading').exists()).toBe(true)
     expect(wrapper.find('.teacher-directory-head').exists()).toBe(true)
     expect(wrapper.findAll('.teacher-directory-row')).toHaveLength(2)
     expect(wrapper.find('.teacher-directory-head').text()).toContain('学号')
@@ -158,6 +162,7 @@ describe('TeacherStudentManagement', () => {
     expect(rows[1].find('.teacher-directory-row-status').exists()).toBe(false)
     expect(wrapper.text()).toContain('alice')
     expect(wrapper.text()).toContain('bob')
+    expect(wrapper.text()).not.toContain('学生筛选')
 
     const searchInput = wrapper.find('input[placeholder="搜索姓名或用户名"]')
     await searchInput.setValue('Alice')
@@ -508,6 +513,12 @@ describe('TeacherStudentManagement', () => {
   })
 
   it('应该为学生列表姓名和昵称保留单行省略与完整提示', () => {
+    expect(studentManagementSource).toContain(
+      'class="workspace-directory-section teacher-directory-section"'
+    )
+    expect(studentManagementSource).toContain('class="list-heading"')
+    expect(studentManagementSource).not.toContain('teacher-controls-title')
+    expect(studentManagementSource).not.toContain('学生筛选')
     expect(studentManagementSource).toContain('<span>做题数</span>')
     expect(studentManagementSource).toContain('<span>得分数</span>')
     expect(studentManagementSource).toContain('class="teacher-directory-row-solved"')
