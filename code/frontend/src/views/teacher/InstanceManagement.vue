@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import TeacherInstanceManagementPage from '@/components/teacher/instance-management/TeacherInstanceManagementPage.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { useTeacherInstances } from '@/composables/useTeacherInstances'
+import { DEFAULT_PAGE_SIZE } from '@/utils/constants'
 
 const router = useRouter()
+const page = ref(1)
+const pageSize = ref(DEFAULT_PAGE_SIZE)
 
 const {
   classes,
@@ -21,11 +24,25 @@ const {
   runningCount,
   expiringSoonCount,
   initialize,
-  submitFilters,
-  resetFilters,
   updateFilter,
   removeInstance,
 } = useTeacherInstances()
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(totalCount.value / Math.max(pageSize.value, 1)))
+)
+const paginatedInstances = computed(() => {
+  const start = (page.value - 1) * pageSize.value
+  return instances.value.slice(start, start + pageSize.value)
+})
+
+function handlePageChange(nextPage: number): void {
+  const normalizedPage = Math.max(1, Math.floor(nextPage))
+  if (normalizedPage === page.value || normalizedPage > totalPages.value) {
+    return
+  }
+  page.value = normalizedPage
+}
 
 async function handleDestroy(id: string): Promise<void> {
   const confirmed = await confirmDestructiveAction({
@@ -43,15 +60,29 @@ async function handleDestroy(id: string): Promise<void> {
 onMounted(() => {
   initialize()
 })
+
+watch(
+  () => [filters.className, filters.keyword, filters.studentNo],
+  () => {
+    page.value = 1
+  }
+)
+
+watch(totalCount, () => {
+  if (page.value > totalPages.value) {
+    page.value = totalPages.value
+  }
+})
 </script>
 
 <template>
   <TeacherInstanceManagementPage
     :classes="classes"
-    :instances="instances"
     :class-name="filters.className"
     :keyword="filters.keyword"
     :student-no="filters.studentNo"
+    :page="page"
+    :total-pages="totalPages"
     :loading-classes="loadingClasses"
     :loading-instances="loadingInstances"
     :destroying-id="destroyingId"
@@ -60,12 +91,12 @@ onMounted(() => {
     :total-count="totalCount"
     :running-count="runningCount"
     :expiring-soon-count="expiringSoonCount"
+    :instances="paginatedInstances"
     @retry="initialize"
-    @submit="submitFilters"
-    @reset="resetFilters"
     @update-class-name="updateFilter('className', $event)"
     @update-keyword="updateFilter('keyword', $event)"
     @update-student-no="updateFilter('studentNo', $event)"
+    @change-page="handlePageChange"
     @destroy="handleDestroy"
     @open-dashboard="router.push({ name: 'TeacherDashboard' })"
   />

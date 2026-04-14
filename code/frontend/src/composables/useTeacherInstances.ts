@@ -95,23 +95,6 @@ export function useTeacherInstances() {
     void loadInstances()
   }, 250) as DebouncedInstanceSearch
 
-  async function submitFilters(): Promise<void> {
-    scheduleInstanceSearch.cancel?.()
-    await loadInstances()
-  }
-
-  async function resetFilters(): Promise<void> {
-    autoSearchReady.value = false
-    scheduleInstanceSearch.cancel?.()
-    filters.keyword = ''
-    filters.studentNo = ''
-    filters.className = isAdmin.value
-      ? ''
-      : authStore.user?.class_name || classes.value[0]?.name || ''
-    await loadInstances()
-    autoSearchReady.value = true
-  }
-
   function updateFilter<K extends keyof TeacherInstanceFilters>(
     key: K,
     value: TeacherInstanceFilters[K]
@@ -156,8 +139,6 @@ export function useTeacherInstances() {
     expiringSoonCount,
     initialize,
     loadInstances,
-    submitFilters,
-    resetFilters,
     updateFilter,
     removeInstance,
   }
