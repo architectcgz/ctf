@@ -102,16 +102,20 @@ describe('teacher base surface alignment', () => {
     expect(instanceManagementSource).toContain(
       'class="teacher-summary-grid progress-strip metric-panel-grid"'
     )
-    expect(instanceManagementSource).toContain(
+    expect(instanceManagementSource).toContain('class="progress-card metric-panel-card"')
+    expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-item progress-card metric-panel-card"'
     )
-    expect(instanceManagementSource).toContain(
+    expect(instanceManagementSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-label progress-card-label metric-panel-label"'
     )
-    expect(instanceManagementSource).toContain(
+    expect(instanceManagementSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-value progress-card-value metric-panel-value"'
     )
-    expect(instanceManagementSource).toContain(
+    expect(instanceManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(instanceManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
