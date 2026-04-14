@@ -1812,6 +1812,15 @@ export async function getContests(
   }
 }
 
+export async function getContest(id: string): Promise<ContestDetailData> {
+  const contest = await request<RawContestItem>({
+    method: 'GET',
+    url: `/admin/contests/${encodeURIComponent(id)}`,
+  })
+
+  return normalizeContest(contest)
+}
+
 export async function createContest(
   data: AdminContestCreatePayload
 ): Promise<{ contest: ContestDetailData }> {
