@@ -505,12 +505,16 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-panel-list').text()).toContain('赛事目录')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('当前筛选结果')
     expect(wrapper.get('#contest-panel-list').text()).toContain('2026 AWD 联赛')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('开始时间')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('结束时间')
+    expect(wrapper.get('#contest-panel-list').text()).not.toContain('时间窗口')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('选择 AWD 赛事')
     expect(wrapper.get('#contest-panel-list').find('.contest-filter-grid').exists()).toBe(true)
     expect(wrapper.get('#contest-panel-list').find('.contest-filter-field--action').exists()).toBe(
       true
     )
     expect(wrapper.get('#contest-panel-list').find('.contest-filter-actions').exists()).toBe(false)
+    expect(wrapper.get('#contest-panel-list').find('.contest-status-pill').exists()).toBe(true)
 
     await wrapper.get('#contest-tab-create').trigger('click')
 
