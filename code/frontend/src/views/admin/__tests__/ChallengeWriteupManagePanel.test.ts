@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/request'
 
 import ChallengeWriteupManagePanel from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue'
+import challengeWriteupManagePanelSource from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue?raw'
 
 const pushMock = vi.fn()
 
@@ -48,6 +49,15 @@ describe('ChallengeWriteupManagePanel', () => {
     toastMocks.success.mockReset()
     toastMocks.error.mockReset()
     confirmMock.mockReset()
+  })
+
+  it('应使用统一目录头样式展示题解页头与题解目录', () => {
+    expect(challengeWriteupManagePanelSource).toContain('class="list-heading writeup-manage-heading"')
+    expect(challengeWriteupManagePanelSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
+    expect(challengeWriteupManagePanelSource).toContain('class="list-heading writeup-manage-section__head"')
+    expect(challengeWriteupManagePanelSource).toContain('<h2 class="list-heading__title">题解目录</h2>')
+    expect(challengeWriteupManagePanelSource).not.toContain('workspace-tab-heading')
+    expect(challengeWriteupManagePanelSource).not.toContain('writeup-manage-section__title">题解列表</h2>')
   })
 
   it('存在题解时应显示带边框的查看入口，并通过更多菜单进入编辑', async () => {
@@ -103,7 +113,7 @@ describe('ChallengeWriteupManagePanel', () => {
     await flushPromises()
 
     expect(wrapper.find('.writeup-manage-header').exists()).toBe(true)
-    expect(wrapper.find('.writeup-manage-header .workspace-tab-heading').exists()).toBe(true)
+    expect(wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header .writeup-manage-actions').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
@@ -123,7 +133,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(
       wrapper.findAll('.writeup-summary-grid .progress-card-hint').map((node) => node.text())
     ).toEqual(['当前题目已创建的官方题解数量', '当前题目收到的学员题解投稿数量'])
-    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).toContain('题解目录')
     expect(wrapper.text()).toContain('来源')
     expect(wrapper.find('.writeup-manage-section__copy').exists()).toBe(false)
     expect(wrapper.text()).toContain('官方题解1')
@@ -384,7 +394,7 @@ describe('ChallengeWriteupManagePanel', () => {
     await flushPromises()
 
     expect(wrapper.find('.writeup-manage-header').exists()).toBe(true)
-    expect(wrapper.find('.writeup-manage-header .workspace-tab-heading').exists()).toBe(true)
+    expect(wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header .writeup-manage-actions').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
@@ -397,7 +407,7 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(
       wrapper.findAll('.writeup-summary-grid .progress-card-hint').map((node) => node.text())
     ).toEqual(['当前题目已创建的官方题解数量', '当前题目收到的学员题解投稿数量'])
-    expect(wrapper.text()).toContain('题解列表')
+    expect(wrapper.text()).toContain('题解目录')
     expect(wrapper.text()).toContain('来源')
     expect(wrapper.find('.writeup-manage-section__copy').exists()).toBe(false)
     expect(wrapper.text()).toContain('官方题解0')
