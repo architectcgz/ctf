@@ -102,14 +102,14 @@
               <div v-if="challenge.attachment_url" class="challenge-meta-item challenge-meta-item--full">
                 <dt>附件</dt>
                 <dd>
-                  <a
-                    :href="challenge.attachment_url"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="challenge-link"
+                  <button
+                    type="button"
+                    class="challenge-link challenge-link-button"
+                    :disabled="downloadingAttachment"
+                    @click="downloadAttachment"
                   >
-                    {{ challenge.attachment_url }}
-                  </a>
+                    {{ downloadingAttachment ? '下载中...' : '下载附件' }}
+                  </button>
                 </dd>
               </div>
             </dl>
@@ -252,6 +252,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { AdminChallengeFlagPayload } from '@/api/admin'
 import { configureChallengeFlag, getChallengeDetail } from '@/api/admin'
+import { downloadAttachment as downloadChallengeAttachment } from '@/api/challenge'
 import type { AdminChallengeListItem, FlagType } from '@/api/contracts'
 import ChallengeDescriptionPanel from '@/components/admin/challenge/ChallengeDescriptionPanel.vue'
 import ChallengeWriteupManagePanel from '@/components/admin/writeup/ChallengeWriteupManagePanel.vue'
@@ -281,6 +282,7 @@ const toast = useToast()
 
 const loading = ref(true)
 const saving = ref(false)
+const downloadingAttachment = ref(false)
 const challenge = ref<AdminChallengeListItem | null>(null)
 const flagType = ref<FlagType>('static')
 const flagValue = ref('')
@@ -321,6 +323,38 @@ function openTopology(): void {
 
 function openChallengeList(): void {
   void router.push('/platform/challenges')
+}
+
+async function downloadAttachment(): Promise<void> {
+  const attachmentURL = challenge.value?.attachment_url?.trim()
+  if (!attachmentURL) return
+
+  try {
+    const parsed = new URL(attachmentURL, window.location.origin)
+    if (parsed.origin !== window.location.origin) {
+      window.open(attachmentURL, '_blank', 'noopener')
+      return
+    }
+  } catch {
+    // fallback to axios download for relative urls
+  }
+
+  downloadingAttachment.value = true
+  try {
+    const { blob, filename } = await downloadChallengeAttachment(attachmentURL)
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  } catch {
+    toast.error('下载附件失败')
+  } finally {
+    downloadingAttachment.value = false
+  }
 }
 
 function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): string {
@@ -550,6 +584,13 @@ watch(
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.15em;
+}
+
+.challenge-link-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
 }
 
 .challenge-section {
