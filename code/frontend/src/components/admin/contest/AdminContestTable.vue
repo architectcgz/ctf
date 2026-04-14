@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { ContestDetailData } from '@/api/contracts'
+import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
-import { getModeLabel, getStatusBadgeClass, getStatusLabel } from '@/utils/contest'
+import { getModeLabel, getStatusLabel } from '@/utils/contest'
 
 const props = defineProps<{
   contests: ContestDetailData[]
@@ -29,6 +29,16 @@ function formatTime(value: string): string {
     minute: '2-digit',
   })
 }
+
+function getStatusPillClass(status: ContestStatus): string {
+  if (status === 'running') return 'contest-status-pill--running'
+  if (status === 'registering') return 'contest-status-pill--registering'
+  if (status === 'draft' || status === 'published') return 'contest-status-pill--draft'
+  if (status === 'frozen') return 'contest-status-pill--frozen'
+  if (status === 'ended' || status === 'archived') return 'contest-status-pill--ended'
+  if (status === 'cancelled') return 'contest-status-pill--cancelled'
+  return 'contest-status-pill--neutral'
+}
 </script>
 
 <template>
@@ -38,7 +48,8 @@ function formatTime(value: string): string {
         <span>竞赛</span>
         <span>模式</span>
         <span>状态</span>
-        <span>时间窗口</span>
+        <span>开始时间</span>
+        <span>结束时间</span>
         <span class="contest-directory-head__actions">操作</span>
       </div>
 
@@ -54,16 +65,19 @@ function formatTime(value: string): string {
 
         <div class="contest-row__status">
           <span
-            class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-            :class="getStatusBadgeClass(contest.status)"
+            class="contest-status-pill"
+            :class="getStatusPillClass(contest.status)"
           >
             {{ getStatusLabel(contest.status) }}
           </span>
         </div>
 
-        <div class="contest-row__window">
+        <div class="contest-row__starts-at">
           <p>{{ formatTime(contest.starts_at) }}</p>
-          <p class="contest-row__window-end">至 {{ formatTime(contest.ends_at) }}</p>
+        </div>
+
+        <div class="contest-row__ends-at">
+          <p>{{ formatTime(contest.ends_at) }}</p>
         </div>
 
         <div class="contest-row__actions" role="group" aria-label="竞赛操作">
@@ -101,8 +115,13 @@ function formatTime(value: string): string {
 
 <style scoped>
 .contest-directory {
-  --contest-directory-columns: minmax(18rem, 1.58fr) minmax(6rem, 0.56fr) minmax(6.5rem, 0.62fr)
-    minmax(14rem, 1fr) minmax(11rem, 11rem);
+  --contest-directory-columns:
+    minmax(17rem, 1.46fr)
+    minmax(6rem, 0.54fr)
+    minmax(7rem, 0.68fr)
+    minmax(9.5rem, 0.78fr)
+    minmax(9.5rem, 0.78fr)
+    minmax(11rem, 11rem);
   display: grid;
   gap: 0;
 }
@@ -169,22 +188,74 @@ function formatTime(value: string): string {
 }
 
 .contest-row__mode,
-.contest-row__window {
+.contest-row__starts-at,
+.contest-row__ends-at {
   font-size: var(--font-size-0-90);
   color: var(--journal-muted);
 }
 
-.contest-row__window {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.contest-row__window p {
+.contest-row__starts-at p,
+.contest-row__ends-at p {
   margin: 0;
+  line-height: 1.45;
 }
 
-.contest-row__window-end {
+.contest-row__starts-at p {
+  color: color-mix(in srgb, var(--journal-ink) 84%, var(--journal-muted));
+}
+
+.contest-row__ends-at p {
   color: color-mix(in srgb, var(--journal-muted) 88%, var(--journal-ink));
+}
+
+.contest-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.75rem;
+  font-size: var(--font-size-0-78);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.contest-status-pill--running {
+  border-color: color-mix(in srgb, #22d3ee 38%, transparent);
+  background: color-mix(in srgb, #22d3ee 16%, var(--journal-surface));
+  color: #67e8f9;
+}
+
+.contest-status-pill--registering {
+  border-color: color-mix(in srgb, #f59e0b 34%, transparent);
+  background: color-mix(in srgb, #f59e0b 15%, var(--journal-surface));
+  color: #fbbf24;
+}
+
+.contest-status-pill--draft {
+  border-color: color-mix(in srgb, #a78bfa 28%, transparent);
+  background: color-mix(in srgb, #a78bfa 12%, var(--journal-surface));
+  color: #c4b5fd;
+}
+
+.contest-status-pill--frozen {
+  border-color: color-mix(in srgb, #60a5fa 30%, transparent);
+  background: color-mix(in srgb, #60a5fa 13%, var(--journal-surface));
+  color: #93c5fd;
+}
+
+.contest-status-pill--ended {
+  border-color: color-mix(in srgb, #34d399 28%, transparent);
+  background: color-mix(in srgb, #34d399 12%, var(--journal-surface));
+  color: #6ee7b7;
+}
+
+.contest-status-pill--cancelled,
+.contest-status-pill--neutral {
+  border-color: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
 
 .contest-row__actions {
