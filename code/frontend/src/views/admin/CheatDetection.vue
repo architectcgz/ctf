@@ -135,6 +135,7 @@ onMounted(() => {
         <section
           id="cheat-panel-overview"
           class="tab-panel"
+          :class="{ active: activePanel === 'overview' }"
           role="tabpanel"
           aria-labelledby="cheat-tab-overview"
           :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
@@ -297,6 +298,7 @@ onMounted(() => {
         <section
           id="cheat-panel-suspects"
           class="tab-panel"
+          :class="{ active: activePanel === 'suspects' }"
           role="tabpanel"
           aria-labelledby="cheat-tab-suspects"
           :aria-hidden="activePanel === 'suspects' ? 'false' : 'true'"
@@ -348,6 +350,7 @@ onMounted(() => {
         <section
           id="cheat-panel-shared-ip"
           class="tab-panel"
+          :class="{ active: activePanel === 'shared-ip' }"
           role="tabpanel"
           aria-labelledby="cheat-tab-shared-ip"
           :aria-hidden="activePanel === 'shared-ip' ? 'false' : 'true'"
@@ -399,6 +402,7 @@ onMounted(() => {
         <section
           id="cheat-panel-actions"
           class="tab-panel"
+          :class="{ active: activePanel === 'actions' }"
           role="tabpanel"
           aria-labelledby="cheat-tab-actions"
           :aria-hidden="activePanel === 'actions' ? 'false' : 'true'"
