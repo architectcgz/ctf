@@ -16,4 +16,5 @@ type RankingItem struct {
 	Username    string `json:"username"`
 	TotalScore  int    `json:"total_score"`
 	SolvedCount int    `json:"solved_count"`
+	ClassName   string `json:"class_name"`
 }
