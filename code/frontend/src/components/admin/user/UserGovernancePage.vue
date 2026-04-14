@@ -72,6 +72,7 @@ const {
   router,
   orderedTabs: panelTabOrder,
   defaultTab: 'overview',
+  routeName: 'UserManage',
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(props.total / props.pageSize)))
@@ -222,13 +223,14 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'directory' ? 'false' : 'true'"
       v-show="activePanel === 'directory'"
     >
-      <div class="workspace-tab-heading">
-        <div class="workspace-tab-heading__main">
-          <div class="journal-note-label">Filters</div>
-          <h2 class="workspace-tab-heading__title">用户列表</h2>
+      <div class="list-heading user-directory-head">
+        <div>
+          <div class="journal-note-label">User Directory</div>
+          <h2 class="list-heading__title">用户目录</h2>
         </div>
 
-        <div class="flex flex-wrap gap-3">
+        <div class="user-directory-actions">
+          <div class="user-directory-meta">共 {{ total }} 个用户</div>
           <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
             <RefreshCw class="h-4 w-4" />
             刷新列表
@@ -538,6 +540,38 @@ function handleImportChange(event: Event): void {
   justify-content: space-between;
 }
 
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.user-directory-head {
+  gap: var(--space-4);
+}
+
+.user-directory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.user-directory-meta {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
+}
+
 .admin-section-head-intro {
   position: relative;
   padding: var(--space-4) var(--space-4-5) var(--space-4) var(--space-5-5);
@@ -741,6 +775,15 @@ function handleImportChange(event: Event): void {
 
   .user-overview-grid {
     --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .user-directory-actions {
+    justify-content: flex-start;
   }
 }
 

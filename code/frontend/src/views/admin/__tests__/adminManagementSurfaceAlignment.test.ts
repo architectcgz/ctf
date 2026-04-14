@@ -51,6 +51,8 @@ describe('admin management surface alignment', () => {
     expect(userGovernanceSource).toMatch(
       /\.user-table-row\s*\{[\s\S]*border-top:\s*1px solid var\(--user-row-divider\);/s
     )
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">用户目录</h2>')
+    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">用户列表</h2>')
   })
 
   it('contest orchestration should soften control and empty-state borders', () => {
