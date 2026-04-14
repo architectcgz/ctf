@@ -58,71 +58,125 @@
           :aria-hidden="activePanel === 'detail' ? 'false' : 'true'"
           v-show="activePanel === 'detail'"
         >
-          <div class="workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
-              <div class="journal-note-label">Question Ops</div>
+          <header class="challenge-detail-header">
+            <div class="challenge-detail-header__intro workspace-tab-heading__main">
+              <div class="workspace-overline">Challenge Profile</div>
               <h1 class="workspace-page-title">题目管理</h1>
             </div>
             <p class="workspace-page-copy">
-              查看题目基础信息、提示与附件，并维护当前判题模式配置。
+              聚合《{{ challenge.title }}》的基础信息、附件与判题模式配置，便于和拓扑、题解工作区来回切换。
             </p>
+          </header>
+
+          <div class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface">
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">分类</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ getCategoryLabel(challenge.category) }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前题目的所属方向
+              </div>
+            </article>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">难度</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ getDifficultyLabel(challenge.difficulty) }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                学员侧展示的题目难度
+              </div>
+            </article>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">分值</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ challenge.points }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前题目的基础得分
+              </div>
+            </article>
+            <article class="journal-note progress-card metric-panel-card">
+              <div class="journal-note-label progress-card-label metric-panel-label">状态</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ getStatusLabel(challenge.status) }}
+              </div>
+              <div class="journal-note-helper progress-card-hint metric-panel-helper">
+                当前发布与维护状态
+              </div>
+            </article>
           </div>
 
-          <section class="challenge-summary">
-            <div class="challenge-summary__head">
-              <div class="journal-note-label">Challenge Profile</div>
-              <h2 class="challenge-summary__title">{{ challenge.title }}</h2>
-            </div>
+          <section class="workspace-directory-section challenge-section challenge-profile-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Challenge Directory</div>
+                <h2 class="list-heading__title">基础信息</h2>
+              </div>
+            </header>
 
-            <dl class="challenge-meta-grid">
-              <div class="challenge-meta-item">
-                <dt>分类</dt>
-                <dd>{{ challenge.category }}</dd>
-              </div>
-              <div class="challenge-meta-item">
-                <dt>难度</dt>
-                <dd>{{ challenge.difficulty }}</dd>
-              </div>
-              <div class="challenge-meta-item">
-                <dt>分值</dt>
-                <dd>{{ challenge.points }}</dd>
-              </div>
-              <div class="challenge-meta-item">
-                <dt>状态</dt>
-                <dd>{{ challenge.status }}</dd>
-              </div>
-              <div v-if="challenge.image_id" class="challenge-meta-item">
-                <dt>镜像</dt>
-                <dd class="challenge-meta-item__mono">ID #{{ challenge.image_id }}</dd>
-              </div>
-              <div class="challenge-meta-item">
-                <dt>Flag 配置</dt>
-                <dd class="challenge-meta-item__mono">{{ flagConfigSummary }}</dd>
-              </div>
-              <div v-if="challenge.attachment_url" class="challenge-meta-item challenge-meta-item--full">
-                <dt>附件</dt>
-                <dd>
-                  <button
-                    type="button"
-                    class="challenge-link challenge-link-button"
-                    :disabled="downloadingAttachment"
-                    @click="downloadAttachment"
-                  >
-                    {{ downloadingAttachment ? '下载中...' : '下载附件' }}
-                  </button>
-                </dd>
-              </div>
-            </dl>
+            <div class="journal-panel challenge-profile-card">
+              <dl class="challenge-meta-grid">
+                <div class="challenge-meta-item">
+                  <dt>题目名称</dt>
+                  <dd>{{ challenge.title }}</dd>
+                </div>
+                <div class="challenge-meta-item">
+                  <dt>Flag 配置</dt>
+                  <dd class="challenge-meta-item__mono">{{ flagConfigSummary }}</dd>
+                </div>
+                <div v-if="challenge.image_id" class="challenge-meta-item">
+                  <dt>镜像</dt>
+                  <dd class="challenge-meta-item__mono">ID #{{ challenge.image_id }}</dd>
+                </div>
+                <div class="challenge-meta-item">
+                  <dt>实例模式</dt>
+                  <dd>{{ getInstanceSharingLabel(challenge.instance_sharing) }}</dd>
+                </div>
+                <div class="challenge-meta-item">
+                  <dt>创建时间</dt>
+                  <dd>{{ formatDateTime(challenge.created_at) }}</dd>
+                </div>
+                <div class="challenge-meta-item">
+                  <dt>最近更新</dt>
+                  <dd>{{ formatDateTime(challenge.updated_at) }}</dd>
+                </div>
+                <div
+                  v-if="challenge.attachment_url"
+                  class="challenge-meta-item challenge-meta-item--full challenge-meta-item--action"
+                >
+                  <dt>附件</dt>
+                  <dd>
+                    <button
+                      type="button"
+                      class="challenge-link challenge-link-button"
+                      :disabled="downloadingAttachment"
+                      @click="downloadAttachment"
+                    >
+                      {{ downloadingAttachment ? '下载中...' : '下载附件' }}
+                    </button>
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </section>
 
-          <ChallengeDescriptionPanel
-            v-if="challenge.description"
-            :content="challenge.description"
-            label="描述"
-            test-id="challenge-detail-description"
-          />
+          <section v-if="challenge.description" class="workspace-directory-section challenge-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Challenge Description</div>
+                <h2 class="list-heading__title">题目描述</h2>
+              </div>
+            </header>
 
-          <section v-if="challenge.hints?.length" class="challenge-section">
+            <ChallengeDescriptionPanel
+              :content="challenge.description"
+              label="描述"
+              test-id="challenge-detail-description"
+            />
+          </section>
+
+          <section v-if="challenge.hints?.length" class="workspace-directory-section challenge-section">
             <div class="list-heading">
               <div>
                 <div class="journal-note-label">Hints</div>
@@ -144,87 +198,92 @@
             </div>
           </section>
 
-          <section class="journal-panel challenge-section challenge-flag-panel p-5 md:p-6">
-            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <section class="workspace-directory-section challenge-section">
+            <header class="list-heading">
               <div>
                 <div class="journal-note-label">Judge Mode</div>
-                <h2 class="challenge-flag-panel__title">判题模式配置</h2>
+                <h2 class="list-heading__title">判题模式配置</h2>
+              </div>
+            </header>
+
+            <section class="journal-panel challenge-flag-panel p-5 md:p-6">
+              <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                 <p class="challenge-flag-panel__copy">
                   支持静态 Flag、动态前缀、正则判题和人工审核四种模式。保存后即时刷新当前题目配置。
                 </p>
+                <div class="flag-summary-chip">
+                  {{ flagDraftSummary }}
+                </div>
               </div>
-              <div class="flag-summary-chip">
-                {{ flagDraftSummary }}
+
+              <div class="grid gap-4 md:grid-cols-2">
+                <label class="flag-field">
+                  <span class="flag-field-label">判题模式</span>
+                  <select v-model="flagType" class="flag-field-input">
+                    <option value="static">静态 Flag</option>
+                    <option value="dynamic">动态前缀</option>
+                    <option value="regex">正则匹配</option>
+                    <option value="manual_review">人工审核</option>
+                  </select>
+                </label>
+
+                <label v-if="flagType === 'dynamic' || flagType === 'regex'" class="flag-field">
+                  <span class="flag-field-label">Flag 前缀</span>
+                  <input
+                    v-model="flagPrefix"
+                    type="text"
+                    placeholder="例如：flag"
+                    class="flag-field-input"
+                  />
+                </label>
+
+                <label v-if="flagType === 'static'" class="flag-field md:col-span-2">
+                  <span class="flag-field-label">静态 Flag</span>
+                  <input
+                    v-model="flagValue"
+                    type="text"
+                    placeholder="例如：flag{demo}"
+                    class="flag-field-input font-mono"
+                  />
+                </label>
+
+                <label v-if="flagType === 'regex'" class="flag-field md:col-span-2">
+                  <span class="flag-field-label">正则表达式</span>
+                  <input
+                    v-model="flagRegex"
+                    type="text"
+                    placeholder="例如：^flag\\{demo-[0-9]+\\}$"
+                    class="flag-field-input font-mono"
+                  />
+                </label>
               </div>
-            </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="flag-field">
-                <span class="flag-field-label">判题模式</span>
-                <select v-model="flagType" class="flag-field-input">
-                  <option value="static">静态 Flag</option>
-                  <option value="dynamic">动态前缀</option>
-                  <option value="regex">正则匹配</option>
-                  <option value="manual_review">人工审核</option>
-                </select>
-              </label>
-
-              <label v-if="flagType === 'dynamic' || flagType === 'regex'" class="flag-field">
-                <span class="flag-field-label">Flag 前缀</span>
-                <input
-                  v-model="flagPrefix"
-                  type="text"
-                  placeholder="例如：flag"
-                  class="flag-field-input"
-                />
-              </label>
-
-              <label v-if="flagType === 'static'" class="flag-field md:col-span-2">
-                <span class="flag-field-label">静态 Flag</span>
-                <input
-                  v-model="flagValue"
-                  type="text"
-                  placeholder="例如：flag{demo}"
-                  class="flag-field-input font-mono"
-                />
-              </label>
-
-              <label v-if="flagType === 'regex'" class="flag-field md:col-span-2">
-                <span class="flag-field-label">正则表达式</span>
-                <input
-                  v-model="flagRegex"
-                  type="text"
-                  placeholder="例如：^flag\\{demo-[0-9]+\\}$"
-                  class="flag-field-input font-mono"
-                />
-              </label>
-            </div>
-
-            <div
-              v-if="isSharedInstanceChallenge"
-              class="challenge-flag-panel__warning"
-            >
-              共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用 per_user 或 per_team。
-            </div>
-
-            <div
-              v-if="flagType === 'manual_review'"
-              class="challenge-flag-panel__warning"
-            >
-              学生提交的答案将进入教师审核队列。审核通过后才会计分并更新通过状态。
-            </div>
-
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div class="text-sm text-[var(--journal-muted)]">当前配置：{{ flagConfigSummary }}</div>
-              <button
-                :disabled="saving"
-                class="admin-btn admin-btn-primary"
-                type="button"
-                @click="saveFlagConfig"
+              <div
+                v-if="isSharedInstanceChallenge"
+                class="challenge-flag-panel__warning"
               >
-                {{ saving ? '保存中...' : '保存配置' }}
-              </button>
-            </div>
+                共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用 per_user 或 per_team。
+              </div>
+
+              <div
+                v-if="flagType === 'manual_review'"
+                class="challenge-flag-panel__warning"
+              >
+                学生提交的答案将进入教师审核队列。审核通过后才会计分并更新通过状态。
+              </div>
+
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="text-sm text-[var(--journal-muted)]">当前配置：{{ flagConfigSummary }}</div>
+                <button
+                  :disabled="saving"
+                  class="admin-btn admin-btn-primary"
+                  type="button"
+                  @click="saveFlagConfig"
+                >
+                  {{ saving ? '保存中...' : '保存配置' }}
+                </button>
+              </div>
+            </section>
           </section>
         </section>
 
@@ -374,6 +433,78 @@ function summarizeFlagConfig(config?: AdminChallengeListItem['flag_config']): st
   }
 }
 
+function getCategoryLabel(category?: AdminChallengeListItem['category']): string {
+  switch (category) {
+    case 'web':
+      return 'Web'
+    case 'pwn':
+      return 'Pwn'
+    case 'reverse':
+      return '逆向'
+    case 'crypto':
+      return '密码'
+    case 'misc':
+      return '杂项'
+    case 'forensics':
+      return '取证'
+    default:
+      return '未分类'
+  }
+}
+
+function getDifficultyLabel(difficulty?: AdminChallengeListItem['difficulty']): string {
+  switch (difficulty) {
+    case 'beginner':
+      return '入门'
+    case 'easy':
+      return '简单'
+    case 'medium':
+      return '中等'
+    case 'hard':
+      return '困难'
+    case 'insane':
+      return '地狱'
+    default:
+      return '未设置'
+  }
+}
+
+function getStatusLabel(status?: AdminChallengeListItem['status']): string {
+  switch (status) {
+    case 'published':
+      return '已发布'
+    case 'draft':
+      return '草稿'
+    case 'archived':
+      return '已归档'
+    default:
+      return status || '未设置'
+  }
+}
+
+function getInstanceSharingLabel(mode?: AdminChallengeListItem['instance_sharing']): string {
+  switch (mode) {
+    case 'shared':
+      return '共享实例'
+    case 'per_team':
+      return '队伍隔离'
+    case 'per_user':
+      return '用户隔离'
+    default:
+      return '未设置'
+  }
+}
+
+function formatDateTime(value?: string): string {
+  if (!value) return '未记录'
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+  return date.toLocaleString('zh-CN')
+}
+
 function hydrateFlagForm(item: AdminChallengeListItem | null): void {
   const config = item?.flag_config
   flagType.value = config?.flag_type ?? 'static'
@@ -510,21 +641,23 @@ watch(
   padding-top: var(--space-6);
 }
 
-.challenge-summary {
+.challenge-detail-header,
+.challenge-profile-section {
   display: grid;
   gap: var(--space-4);
 }
 
-.challenge-summary__head {
-  display: grid;
-  gap: var(--space-1);
+.challenge-overview-summary {
+  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
+  --admin-summary-grid-gap: var(--space-3);
 }
 
-.challenge-summary__title {
-  margin: 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
+.challenge-profile-card {
+  padding: var(--space-5);
+}
+
+.challenge-profile-card .challenge-meta-grid {
+  border-top: 0;
 }
 
 .challenge-meta-grid {
@@ -579,6 +712,11 @@ watch(
   padding-inline: 0;
 }
 
+.challenge-meta-item--action dd {
+  display: flex;
+  align-items: center;
+}
+
 .challenge-link {
   color: var(--journal-accent);
   text-decoration: underline;
@@ -591,6 +729,7 @@ watch(
   border: 0;
   background: transparent;
   font: inherit;
+  cursor: pointer;
 }
 
 .challenge-section {

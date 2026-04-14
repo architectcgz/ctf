@@ -180,6 +180,12 @@ describe('admin management surface alignment', () => {
   })
 
   it('challenge detail hint section should use list-heading for the hint directory header', () => {
+    expect(challengeDetailSource).toContain('<div class="workspace-overline">Challenge Profile</div>')
+    expect(challengeDetailSource).toContain(
+      'class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"'
+    )
+    expect(challengeDetailSource).toContain('<h2 class="list-heading__title">基础信息</h2>')
+    expect(challengeDetailSource).not.toContain('<div class="journal-note-label">Question Ops</div>')
     expect(challengeDetailSource).toContain('<div class="journal-note-label">Hints</div>')
     expect(challengeDetailSource).toContain('<h2 class="list-heading__title">提示管理</h2>')
     expect(challengeDetailSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
