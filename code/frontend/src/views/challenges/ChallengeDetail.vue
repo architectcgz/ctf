@@ -293,7 +293,7 @@
 
               <div v-else class="submission-records record-list">
                 <div
-                  v-for="item in submissionRecords"
+                  v-for="item in paginatedSubmissionRecords"
                   :key="item.id"
                   class="submission-record-item record-item"
                 >
@@ -310,6 +310,16 @@
                     {{ submissionStatusText(item.status) }}
                   </div>
                 </div>
+              </div>
+
+              <div v-if="submissionRecordTotal > 0" class="submission-pagination workspace-directory-pagination">
+                <PagePaginationControls
+                  :page="submissionRecordPage"
+                  :total-pages="submissionRecordTotalPages"
+                  :total="submissionRecordTotal"
+                  :total-label="`共 ${submissionRecordTotal} 条提交`"
+                  @change-page="changeSubmissionRecordPage"
+                />
               </div>
             </section>
           </section>
@@ -449,14 +459,13 @@
                     type="text"
                     aria-label="Flag"
                     :placeholder="submitPlaceholder"
-                    :disabled="challenge?.is_solved"
                     class="challenge-input flag-input disabled:cursor-not-allowed disabled:opacity-50"
                     :class="submitInputClass"
                     @keyup.enter="submitFlagHandler"
                   />
                   <button
                     type="button"
-                    :disabled="challenge?.is_solved || submitting"
+                    :disabled="submitting"
                     class="challenge-btn challenge-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
                     @click="submitFlagHandler"
                   >
@@ -516,6 +525,7 @@ import type {
   CommunityChallengeSolutionData,
   RecommendedChallengeSolutionData,
 } from '@/api/contracts'
+import PagePaginationControls from '@/components/common/PagePaginationControls.vue'
 import ChallengeInstanceCard from '@/components/challenge/ChallengeInstanceCard.vue'
 import { useChallengeDetailInteractions } from '@/composables/useChallengeDetailInteractions'
 import {
@@ -571,6 +581,8 @@ const {
   defaultTab: 'question',
 })
 const solutionTabOrder: ChallengeSolutionTab[] = ['recommended', 'community']
+const submissionRecordPageSize = 10
+const submissionRecordPage = ref(1)
 
 const {
   myWriteup,
@@ -594,6 +606,14 @@ const {
   challengeId,
   challenge,
   loadSolutions,
+})
+const submissionRecordTotal = computed(() => submissionRecords.value.length)
+const submissionRecordTotalPages = computed(() =>
+  Math.max(1, Math.ceil(submissionRecordTotal.value / submissionRecordPageSize))
+)
+const paginatedSubmissionRecords = computed(() => {
+  const start = (submissionRecordPage.value - 1) * submissionRecordPageSize
+  return submissionRecords.value.slice(start, start + submissionRecordPageSize)
 })
 
 const needTarget = computed(() => challenge.value?.need_target ?? true)
@@ -632,6 +652,10 @@ const {
 
 function selectSolutionTab(tab: ChallengeSolutionTab): void {
   activeSolutionTab.value = tab
+}
+
+function changeSubmissionRecordPage(page: number): void {
+  submissionRecordPage.value = page
 }
 
 const {
@@ -681,12 +705,21 @@ watch(
   challengeId,
   () => {
     challenge.value = null
+    submissionRecordPage.value = 1
     resetChallengeInteractions()
     clearSolutions()
     selectWorkspaceTab('question')
     void Promise.all([loadChallenge(), loadMyWriteupSubmission(), loadSubmissionRecords()])
   },
   { immediate: true }
+)
+
+watch(
+  submissionRecords,
+  () => {
+    submissionRecordPage.value = 1
+  },
+  { deep: true }
 )
 </script>
 

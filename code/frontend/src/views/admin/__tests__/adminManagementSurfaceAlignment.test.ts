@@ -89,10 +89,12 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
+    expect(contestOrchestrationSource).toContain('<div class="workspace-overline">Contest Workspace</div>')
     expect(contestOrchestrationSource).toContain('<h1 class="workspace-page-title">赛事管理台</h1>')
     expect(contestOrchestrationSource).toContain(
       '<h2 class="list-heading__title">当前赛事窗口</h2>'
     )
+    expect(contestOrchestrationSource).toContain('<div class="workspace-overline">Contest Directory</div>')
     expect(contestOrchestrationSource).toContain('<h2 class="list-heading__title">赛事目录</h2>')
     expect(contestOrchestrationSource).toContain('workspace-directory-empty contest-empty-state')
     expect(contestOrchestrationSource).not.toContain('当前筛选结果')
@@ -104,7 +106,7 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toContain('class="contest-filter-field contest-filter-field--action"')
     expect(contestOrchestrationSource).not.toContain('class="contest-filter-actions"')
     expect(contestOrchestrationSource).toMatch(
-      /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*var\(--workspace-line-soft\);[\s\S]*--metric-panel-background:\s*color-mix\(/s
+      /\.contest-overview-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*color-mix\(in srgb,\s*var\(--workspace-brand\)\s*16%,\s*var\(--workspace-line-soft\)\);[\s\S]*--metric-panel-background:\s*radial-gradient\([\s\S]*linear-gradient\(/s
     )
   })
 
@@ -219,8 +221,7 @@ describe('admin management surface alignment', () => {
     expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">快速排查入口</h2>')
   })
 
-  it('contest orchestration should place the tab rail under the workspace topbar before the page title', () => {
-    expect(contestOrchestrationSource).toContain('class="workspace-topbar"')
+  it('contest orchestration should place the tab rail at the top of the workspace before the page title', () => {
     expect(contestOrchestrationSource).toContain('class="top-tabs"')
     expect(contestOrchestrationSource).toContain('class="content-pane"')
     expect(contestOrchestrationSource.indexOf('class="top-tabs"')).toBeLessThan(
@@ -312,9 +313,34 @@ describe('admin management surface alignment', () => {
     expect(journalNotesSource).toContain('.progress-card-label {')
     expect(journalNotesSource).toContain('.progress-card-value {')
     expect(journalNotesSource).toContain('.progress-card-hint {')
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-label-size, var(--font-size-11));'
+    )
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-value-size, var(--font-size-26));'
+    )
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-helper-size, var(--font-size-13));'
+    )
+    expect(journalNotesSource).toContain('--metric-panel-label-size: var(--font-size-11);')
     expect(journalNotesSource).toContain('--metric-panel-radius: var(--workspace-radius-lg, 18px);')
     expect(journalNotesSource).toContain('--metric-panel-value-size: var(--font-size-26);')
+    expect(journalNotesSource).toContain('--metric-panel-helper-size: var(--font-size-13);')
     expect(journalNotesSource).toContain('--metric-panel-helper-line-height: 1.7;')
+    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
+    expect(journalNotesSource).toContain(
+      'var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 18%'
+    )
+    expect(journalNotesSource).toContain('--workspace-panel-soft,')
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-label\s*\{[\s\S]*color:\s*var\(--metric-panel-label-color,\s*var\(--journal-muted\)\);/s
+    )
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-value\s*\{[\s\S]*color:\s*var\(--metric-panel-value-color,\s*var\(--journal-ink\)\);/s
+    )
+    expect(journalNotesSource).toMatch(
+      /\.journal-shell-admin :is\(\.admin-summary-grid, \.manage-summary-grid, \.image-summary-grid\) > \.journal-note \.journal-note-helper\s*\{[\s\S]*color:\s*var\(--metric-panel-helper-color,\s*var\(--journal-muted\)\);/s
+    )
     expect(journalNotesSource).toContain(
       '.journal-shell-admin.journal-notes-card .journal-note:not(.metric-panel-card) {'
     )
@@ -334,13 +360,9 @@ describe('admin management surface alignment', () => {
     expect(challengeManageSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(imageManageSource).toContain(
-      'class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(imageManageSource).toContain(
-      'class="image-summary-card progress-card metric-panel-card"'
-    )
-    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(imageManageSource).toContain('class="image-status-strip"')
+    expect(imageManageSource).toContain('class="image-status-strip__note">{{ refreshHint }}</div>')
+    expect(imageManageSource).not.toContain('class="image-summary-card progress-card metric-panel-card"')
 
     expect(userGovernanceSource).toContain(
       'class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface'

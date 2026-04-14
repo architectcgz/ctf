@@ -664,6 +664,49 @@ describe('ChallengeDetail', () => {
     expect(wrapper.text()).toContain('Flag 错误，请重试')
   })
 
+  it('提交记录过多时应支持分页切换', async () => {
+    challengeApiMocks.getMyChallengeSubmissionRecords.mockResolvedValue(
+      Array.from({ length: 11 }, (_, index) => ({
+        id: `record-${index + 1}`,
+        answer: `flag{${index + 1}}`,
+        status: index % 2 === 0 ? 'incorrect' : 'correct',
+        submitted_at: `2026-03-${String(20 - index).padStart(2, '0')}T01:00:00.000Z`,
+      }))
+    )
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const recordsTab = wrapper.findAll('button').find((node) => node.text().trim() === '提交记录')
+    expect(recordsTab).toBeTruthy()
+
+    await recordsTab!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.submission-pagination').exists()).toBe(true)
+    expect(wrapper.find('.submission-pagination').text()).toContain('1 / 2')
+    expect(wrapper.text()).toContain('flag{1}')
+    expect(wrapper.text()).toContain('flag{10}')
+    expect(wrapper.text()).not.toContain('flag{11}')
+
+    const paginationButtons = wrapper.findAll('.page-pagination-controls__button')
+    await paginationButtons[1].trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.submission-pagination').text()).toContain('2 / 2')
+    expect(wrapper.text()).toContain('flag{11}')
+    expect(wrapper.text()).not.toContain('flag{1}')
+  })
+
   it('Flag 输入应提供可访问标签', async () => {
     await router.push('/challenges/1')
     await router.isReady()
@@ -679,6 +722,54 @@ describe('ChallengeDetail', () => {
 
     const flagInput = wrapper.find('input[aria-label="Flag"]')
     expect(flagInput.exists()).toBe(true)
+  })
+
+  it('题目已解出后仍应允许再次提交 Flag 做校验', async () => {
+    challengeApiMocks.getChallengeDetail.mockResolvedValueOnce({
+      id: '1',
+      title: 'Solved Challenge',
+      description: '<p>Test description</p>',
+      category: 'web',
+      difficulty: 'easy',
+      tags: ['test'],
+      points: 100,
+      need_target: true,
+      is_solved: true,
+      attachment_url: 'https://example.com/file.zip',
+      hints: [],
+    })
+    challengeApiMocks.submitFlag.mockResolvedValueOnce({
+      is_correct: true,
+      status: 'correct',
+      points: 0,
+      submitted_at: '2026-03-12T01:15:00.000Z',
+    })
+
+    await router.push('/challenges/1')
+    await router.isReady()
+
+    const wrapper = mount(ChallengeDetail, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const flagInput = wrapper.get('input[aria-label="Flag"]')
+    const submitButton = wrapper.findAll('button').find((node) => node.text().trim() === '提交')
+
+    expect(flagInput.attributes('disabled')).toBeUndefined()
+    expect(submitButton?.attributes('disabled')).toBeUndefined()
+
+    await flagInput.setValue('flag{still-correct}')
+    await submitButton!.trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(challengeApiMocks.submitFlag).toHaveBeenCalledWith('1', 'flag{still-correct}')
+    expect(wrapper.text()).toContain('Flag 校验通过，本题已解出，不重复计分')
   })
 
   it('启动靶机后应停留在题目页并显示实例卡片', async () => {

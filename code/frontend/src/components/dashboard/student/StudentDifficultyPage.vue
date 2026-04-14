@@ -48,7 +48,9 @@ const primaryDifficulty = computed<RankedDifficultyStat | null>(() =>
   selectDifficultyPriority(props.difficultyStats)
 )
 const hasDifficultyStats = computed(() => orderedStats.value.length > 0)
-const solvedDifficultyCount = computed(() => orderedStats.value.filter((item) => item.solved > 0).length)
+const solvedDifficultyCount = computed(
+  () => orderedStats.value.filter((item) => item.solved > 0).length
+)
 const headlineTitle = computed(() =>
   primaryDifficulty.value
     ? `先推这一档强度：${difficultyLabel(primaryDifficulty.value.difficulty)}`
@@ -66,7 +68,9 @@ const summaryCards = computed(() => [
   {
     key: 'coverage',
     label: '当前覆盖层级',
-    value: hasDifficultyStats.value ? `${solvedDifficultyCount.value} / ${orderedStats.value.length} 档` : '待建立',
+    value: hasDifficultyStats.value
+      ? `${solvedDifficultyCount.value} / ${orderedStats.value.length} 档`
+      : '待建立',
     helper: hasDifficultyStats.value
       ? '看已经摸到的难度层级有多少，判断训练是不是还停在熟悉区间。'
       : '还没有难度数据时，先从题库里做几道题把强度分布跑出来。',
@@ -74,7 +78,9 @@ const summaryCards = computed(() => [
   {
     key: 'pace',
     label: '推进节奏',
-    value: primaryDifficulty.value ? `先补 ${difficultyLabel(primaryDifficulty.value.difficulty)}` : '先形成样本',
+    value: primaryDifficulty.value
+      ? `先补 ${difficultyLabel(primaryDifficulty.value.difficulty)}`
+      : '先形成样本',
     helper: primaryDifficulty.value
       ? '先补完成率更低的一档，再继续往上提强度，训练节奏会更稳。'
       : '先把训练样本积累起来，再决定应该从哪一档开始往上推。',
@@ -116,7 +122,7 @@ function openPrimaryDifficulty(): void {
     "
   >
     <div class="difficulty-header">
-      <div class="journal-eyebrow">Intensity Workspace</div>
+      <div class="workspace-overline">Intensity Workspace</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
       </h1>
@@ -130,12 +136,16 @@ function openPrimaryDifficulty(): void {
 
       <div class="mt-5 flex flex-wrap gap-3" role="group" aria-label="难度进度快捷操作">
         <button class="journal-btn-primary" @click="openPrimaryDifficulty">
-          {{ primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练' }}
+          {{
+            primaryDifficulty ? `先做${difficultyLabel(primaryDifficulty.difficulty)}` : '去训练'
+          }}
         </button>
         <button class="journal-btn-outline" @click="emit('openChallenges')">浏览全部题目</button>
       </div>
 
-      <div class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+      <div
+        class="difficulty-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+      >
         <article
           v-for="card in summaryCards"
           :key="card.key"
@@ -189,9 +199,13 @@ function openPrimaryDifficulty(): void {
               </div>
               <div class="difficulty-action-item__content">
                 <div class="difficulty-action-item__meta">
-                  <span class="difficulty-action-item__name">{{ difficultyLabel(item.difficulty) }}</span>
+                  <span class="difficulty-action-item__name">{{
+                    difficultyLabel(item.difficulty)
+                  }}</span>
                   <span class="difficulty-action-item__rate">{{ item.rate }}%</span>
-                  <span class="difficulty-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                  <span class="difficulty-action-item__count"
+                    >{{ item.solved }}/{{ item.total }}</span
+                  >
                 </div>
                 <p class="difficulty-action-item__copy">
                   {{ difficultyActionCopy(item) }}

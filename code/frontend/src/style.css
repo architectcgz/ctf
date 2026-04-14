@@ -179,7 +179,11 @@ select {
 ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
 
 .app-destructive-confirm-modal {
-  background: color-mix(in srgb, var(--color-bg-base) 52%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--destructive-confirm-accent, var(--color-danger)) 8%,
+    color-mix(in srgb, var(--color-bg-base) 56%, transparent)
+  ) !important;
 }
 
 .app-destructive-confirm-box.el-message-box {
@@ -246,19 +250,29 @@ select {
   margin: 0 !important;
   transform: translate(-50%, -50%);
   width: min(26rem, calc(100vw - 2rem));
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 92%, transparent);
+  border: 1px solid var(--destructive-confirm-border);
   border-radius: 1rem;
   padding: 0.25rem;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)),
     color-mix(
       in srgb,
-      var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
-      var(--color-bg-base)
+      var(--destructive-confirm-soft-bg) 62%,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, var(--color-bg-base))
+    ),
+    color-mix(
+      in srgb,
+      var(--destructive-confirm-soft-bg) 42%,
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 94%,
+        var(--color-bg-base)
+      )
     )
   );
-  box-shadow: 0 24px 56px var(--color-shadow-soft);
+  box-shadow:
+    0 24px 56px var(--color-shadow-soft),
+    0 0 0 1px color-mix(in srgb, var(--destructive-confirm-accent) 10%, transparent);
 }
 
 .app-destructive-confirm-box .el-message-box__header {

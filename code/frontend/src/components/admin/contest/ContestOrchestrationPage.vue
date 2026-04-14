@@ -115,18 +115,6 @@ function openEditContest(contest: ContestDetailData) {
   <section
     class="journal-shell journal-shell-admin journal-notes-card journal-hero journal-eyebrow-text workspace-shell flex min-h-full flex-1 flex-col"
   >
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Contest Workspace</span>
-        <span class="class-chip">赛事管理</span>
-      </div>
-      <div class="top-note">
-        <span>当前页 {{ listCount }} 场</span>
-        <span>进行中 {{ runningCount }} 场</span>
-        <span>AWD {{ awdCount }} 场</span>
-      </div>
-    </header>
-
     <nav class="top-tabs" role="tablist" aria-label="赛事管理视图切换">
       <button
         v-for="(tab, index) in panelTabs"
@@ -158,7 +146,7 @@ function openEditContest(contest: ContestDetailData) {
       >
         <header class="contest-overview-head">
           <div class="workspace-tab-heading__main">
-            <div class="journal-note-label">Contest Workspace</div>
+            <div class="workspace-overline">Contest Workspace</div>
             <h1 class="workspace-page-title">赛事管理台</h1>
             <p class="workspace-page-copy">
               在同一套工作区里查看赛事窗口、切换目录筛选，并按需进入 AWD 运维视图。
@@ -234,9 +222,7 @@ function openEditContest(contest: ContestDetailData) {
               <div class="contest-overview-row__body">
                 <h3 class="contest-overview-row__title">报名与开赛窗口</h3>
                 <p class="contest-overview-row__copy">
-                  当前页有 {{ registeringCount }} 场赛事开放报名，{{
-                    runningCount
-                  }}
+                  当前页有 {{ registeringCount }} 场赛事开放报名，{{ runningCount }}
                   场赛事正在进行。
                 </p>
               </div>
@@ -270,7 +256,7 @@ function openEditContest(contest: ContestDetailData) {
       >
         <header class="list-heading contest-list-head">
           <div>
-            <div class="journal-note-label">Contest Directory</div>
+            <div class="workspace-overline">Contest Directory</div>
             <h2 class="list-heading__title">赛事目录</h2>
           </div>
 
@@ -496,8 +482,18 @@ function openEditContest(contest: ContestDetailData) {
 }
 
 .contest-overview-summary.metric-panel-default-surface.metric-panel-workspace-surface {
-  --metric-panel-border: var(--workspace-line-soft);
-  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-border: color-mix(in srgb, var(--workspace-brand) 16%, var(--workspace-line-soft));
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--workspace-brand) 16%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--workspace-panel) 94%, var(--color-bg-base)),
+      color-mix(in srgb, var(--workspace-panel-soft) 82%, transparent)
+    );
   --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 

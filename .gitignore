@@ -18,6 +18,7 @@ docs/*
 frontend/dist/
 frontend/node_modules/
 code/backend/bin/
+code/backend/tmp/
 code/frontend/dist/
 code/frontend/node_modules/
 code/frontend/docs/

@@ -105,7 +105,7 @@
 }
 
 .metric-panel-label {
-  font-size: var(--metric-panel-label-size, var(--font-size-0-74));
+  font-size: var(--metric-panel-label-size, var(--font-size-11));
   font-weight: var(--metric-panel-label-weight, 700);
   letter-spacing: var(--metric-panel-label-spacing, 0.12em);
   text-transform: uppercase;
@@ -114,7 +114,7 @@
 
 .metric-panel-value {
   margin-top: var(--metric-panel-value-margin-top, var(--space-2));
-  font-size: var(--metric-panel-value-size, clamp(1.5rem, 2vw, 2rem));
+  font-size: var(--metric-panel-value-size, var(--font-size-26));
   font-weight: var(--metric-panel-value-weight, 700);
   line-height: var(--metric-panel-value-line-height, 1);
   letter-spacing: var(--metric-panel-value-spacing, -0.03em);
@@ -123,8 +123,8 @@
 
 .metric-panel-helper {
   margin-top: var(--metric-panel-helper-margin-top, var(--space-1));
-  font-size: var(--metric-panel-helper-size, var(--font-size-0-8));
-  line-height: var(--metric-panel-helper-line-height, 1.55);
+  font-size: var(--metric-panel-helper-size, var(--font-size-13));
+  line-height: var(--metric-panel-helper-line-height, 1.7);
   color: var(--metric-panel-helper-color, var(--journal-muted, var(--color-text-secondary)));
 }
 
@@ -178,32 +178,59 @@
     );
   --metric-panel-shadow: 0 14px 28px color-mix(in srgb, var(--color-shadow-soft) 55%, transparent);
   --metric-panel-padding: var(--space-4);
-  --metric-panel-label-size: var(--font-size-0-74);
+  --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-spacing: 0.12em;
-  --metric-panel-value-margin-top: var(--space-2);
-  --metric-panel-value-size: clamp(1.5rem, 2vw, 2rem);
-  --metric-panel-helper-margin-top: var(--space-1);
-  --metric-panel-helper-size: var(--font-size-0-8);
-  --metric-panel-helper-line-height: 1.55;
+  --metric-panel-value-margin-top: var(--space-2-5);
+  --metric-panel-value-size: var(--font-size-26);
+  --metric-panel-helper-margin-top: var(--space-2);
+  --metric-panel-helper-size: var(--font-size-13);
+  --metric-panel-helper-line-height: 1.7;
 }
 
 .metric-panel-workspace-surface {
-  --metric-panel-border: color-mix(
-    in srgb,
-    var(--journal-border, var(--color-border-default)) 76%,
-    transparent
+  --metric-panel-border: var(
+    --workspace-line-soft,
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 76%, transparent)
   );
   --metric-panel-radius: var(--workspace-radius-lg, 18px);
-  --metric-panel-background: color-mix(
-    in srgb,
-    var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 88%,
-    transparent
+  --metric-panel-background:
+    radial-gradient(
+      circle at top right,
+      color-mix(
+        in srgb,
+        var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 18%,
+        transparent
+      ),
+      transparent 46%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--workspace-panel, var(--journal-surface, var(--color-bg-surface))) 96%,
+        var(--color-bg-base)
+      ),
+      color-mix(
+        in srgb,
+        var(
+          --workspace-panel-soft,
+          var(--workspace-panel, var(--journal-surface, var(--color-bg-surface)))
+        ) 90%,
+        var(--color-bg-base)
+      )
+    );
+  --metric-panel-shadow: var(
+    --workspace-shadow-panel,
+    0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent)
   );
-  --metric-panel-shadow: var(--workspace-shadow-panel, 0 14px 34px var(--color-shadow-soft));
   --metric-panel-padding: var(--space-3-5, 0.875rem) var(--space-4, 1rem) var(--space-4, 1rem);
   --metric-panel-label-size: var(--font-size-11);
   --metric-panel-label-spacing: 0.18em;
-  --metric-panel-label-color: var(--journal-muted, var(--color-text-secondary));
+  --metric-panel-label-color: color-mix(
+    in srgb,
+    var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 58%,
+    var(--journal-muted, var(--color-text-secondary))
+  );
   --metric-panel-value-margin-top: var(--space-2-5, 0.625rem);
   --metric-panel-value-size: var(--font-size-26);
   --metric-panel-value-color: var(--journal-ink, var(--color-text-primary));
@@ -346,27 +373,27 @@
 }
 
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-label {
-  font-size: var(--metric-panel-label-size, var(--font-size-0-74));
+  font-size: var(--metric-panel-label-size, var(--font-size-11));
   font-weight: 700;
   letter-spacing: var(--metric-panel-label-spacing, 0.12em);
   text-transform: uppercase;
-  color: var(--journal-muted);
+  color: var(--metric-panel-label-color, var(--journal-muted));
 }
 
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-value {
   margin-top: var(--metric-panel-value-margin-top, var(--space-2));
-  font-size: var(--metric-panel-value-size, clamp(1.5rem, 2vw, 2rem));
+  font-size: var(--metric-panel-value-size, var(--font-size-26));
   font-weight: var(--metric-panel-value-weight, 700);
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--journal-ink);
+  color: var(--metric-panel-value-color, var(--journal-ink));
 }
 
 .journal-shell-admin :is(.admin-summary-grid, .manage-summary-grid, .image-summary-grid) > .journal-note .journal-note-helper {
   margin-top: var(--metric-panel-helper-margin-top, var(--space-1));
-  font-size: var(--metric-panel-helper-size, var(--font-size-0-8));
-  line-height: var(--metric-panel-helper-line-height, 1.55);
-  color: var(--journal-muted);
+  font-size: var(--metric-panel-helper-size, var(--font-size-13));
+  line-height: var(--metric-panel-helper-line-height, 1.7);
+  color: var(--metric-panel-helper-color, var(--journal-muted));
 }
 
 .journal-shell-admin .journal-divider {

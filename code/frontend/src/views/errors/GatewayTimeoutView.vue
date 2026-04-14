@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, RotateCcw, TimerOff } from 'lucide-vue-next'
+import { ArrowLeft, LayoutDashboard, TimerOff } from 'lucide-vue-next'
 
 import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
 </script>
@@ -9,12 +9,12 @@ import ErrorStatusShell from '@/components/errors/ErrorStatusShell.vue'
     status-code="504"
     kicker="504 · Gateway Timeout"
     title="服务响应超时"
-    description="请求已经发出，但依赖服务在限定时间内没有返回结果。你可以先刷新当前页面重试；若仍然超时，先返回上一页，必要时再回工作台。"
+    description="请求已经发出，但依赖服务在限定时间内没有返回结果。建议先返回上一页稍后重试；若仍然超时，再回工作台。"
     accent="warning"
     :icon="TimerOff"
-    :primary-icon="RotateCcw"
-    :secondary-icon="ArrowLeft"
-    primary-action="reload"
-    secondary-action="back"
+    :primary-icon="ArrowLeft"
+    :secondary-icon="LayoutDashboard"
+    primary-action="back"
+    secondary-to-home
   />
 </template>

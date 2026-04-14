@@ -14,6 +14,7 @@ import InternalServerErrorView from '../InternalServerErrorView.vue'
 import BadGatewayView from '../BadGatewayView.vue'
 import ServiceUnavailableView from '../ServiceUnavailableView.vue'
 import GatewayTimeoutView from '../GatewayTimeoutView.vue'
+import { useAuthStore } from '@/stores/auth'
 import { getNavigationType, redirectTo, reloadPage } from '@/utils/browser'
 
 describe('additional error views', () => {
@@ -64,7 +65,10 @@ describe('additional error views', () => {
     expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
   })
 
-  it('renders server-side failure pages with retry-first and back recovery actions', () => {
+  it('renders server-side failure pages with back-first and workspace recovery actions', () => {
+    const authStore = useAuthStore()
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
+
     const pages = [
       { component: InternalServerErrorView, code: '500', text: '系统内部错误' },
       { component: BadGatewayView, code: '502', text: '上游服务响应异常' },
@@ -85,17 +89,22 @@ describe('additional error views', () => {
 
       expect(wrapper.text()).toContain(page.code)
       expect(wrapper.text()).toContain(page.text)
-      expect(wrapper.text()).toContain('刷新页面')
       expect(wrapper.text()).toContain('返回上一页')
+      expect(wrapper.text()).toContain('返回学习工作台')
       expect(wrapper.text()).not.toContain('通知中心')
-      expect(links).toHaveLength(0)
-      expect(wrapper.get('button.error-status-action-primary').text()).toContain('刷新页面')
-      expect(wrapper.get('button.error-status-action-secondary').text()).toContain('返回上一页')
+      expect(links).toHaveLength(1)
+      expect(links[0]?.props('to')).toBe('/student/dashboard')
+      expect(wrapper.get('button.error-status-action-primary').text()).toContain('返回上一页')
+      expect(wrapper.get('a.error-status-action-secondary').text()).toContain('返回学习工作台')
     }
   })
 
-  it('prefers navigating back to the recorded source route when retrying from /500', async () => {
-    window.history.replaceState({}, '', '/500?from=%2Fchallenges%2F5')
+  it('clicking the primary action on /500 should navigate back instead of retrying the same page', async () => {
+    window.history.pushState({}, '', '/challenges/5')
+    window.history.pushState({}, '', '/500?from=%2Fchallenges%2F5')
+    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(() => undefined)
+    const authStore = useAuthStore()
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
 
     const wrapper = mount(InternalServerErrorView, {
       global: {
@@ -107,13 +116,17 @@ describe('additional error views', () => {
 
     await wrapper.get('button.error-status-action-primary').trigger('click')
 
-    expect(redirectTo).toHaveBeenCalledWith('/challenges/5')
+    expect(backSpy).toHaveBeenCalled()
+    expect(redirectTo).not.toHaveBeenCalled()
     expect(reloadPage).not.toHaveBeenCalled()
+    backSpy.mockRestore()
   })
 
-  it('automatically retries the recorded source route when the browser reloads /500', () => {
+  it('reloading /500 should stay on the status page until the user chooses where to go', () => {
     vi.mocked(getNavigationType).mockReturnValue('reload')
     window.history.replaceState({}, '', '/500?from=%2Fchallenges%2F5')
+    const authStore = useAuthStore()
+    authStore.setAuth({ id: 'stu-1', username: 'alice', role: 'student' }, 'token')
 
     mount(InternalServerErrorView, {
       global: {
@@ -123,7 +136,7 @@ describe('additional error views', () => {
       },
     })
 
-    expect(redirectTo).toHaveBeenCalledWith('/challenges/5')
+    expect(redirectTo).not.toHaveBeenCalled()
     expect(reloadPage).not.toHaveBeenCalled()
   })
 })

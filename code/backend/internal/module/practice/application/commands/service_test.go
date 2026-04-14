@@ -750,7 +750,7 @@ func TestSubmitFlagWithSharedStaticChallengeUsesRegularFlagValidation(t *testing
 	}
 }
 
-func TestSubmitFlagWithContextRejectsRepeatCorrectSubmission(t *testing.T) {
+func TestSubmitFlagWithContextAllowsRepeatCorrectSubmissionWithoutExtraPoints(t *testing.T) {
 	t.Parallel()
 
 	db := newPracticeCommandTestDB(t)
@@ -813,9 +813,15 @@ func TestSubmitFlagWithContextRejectsRepeatCorrectSubmission(t *testing.T) {
 		t.Fatalf("expected first correct submission to score once, got %+v", first)
 	}
 
-	_, err = service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
-	if err == nil || err.Error() != errcode.ErrAlreadySolved.Error() {
-		t.Fatalf("expected already solved error on repeated correct submission, got %v", err)
+	repeat, err := service.SubmitFlagWithContext(context.Background(), 71, 11, "flag{repeatable}")
+	if err != nil {
+		t.Fatalf("SubmitFlagWithContext() repeat error = %v", err)
+	}
+	if !repeat.IsCorrect || repeat.Status != dto.SubmissionStatusCorrect {
+		t.Fatalf("expected repeated correct submission to stay correct, got %+v", repeat)
+	}
+	if repeat.Points != 0 {
+		t.Fatalf("expected repeated correct submission not to award points, got %+v", repeat)
 	}
 }
 
