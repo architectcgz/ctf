@@ -462,6 +462,12 @@ onMounted(() => {
   --journal-topbar-padding-bottom: var(--space-3-5);
   --journal-overline-font-size: var(--font-size-0-72);
   --journal-overline-letter-spacing: 0.18em;
+  --workspace-brand: var(--journal-accent);
+  --workspace-brand-ink: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  --workspace-brand-soft: color-mix(in srgb, var(--journal-accent) 10%, transparent);
+  --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
+  --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
+  --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
   --page-top-tabs-gap: 28px;
   --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
   --page-top-tabs-padding: 0 var(--space-6);
@@ -532,6 +538,12 @@ onMounted(() => {
 
 .cheat-kpi-summary {
   --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cheat-kpi-summary.metric-panel-default-surface.metric-panel-workspace-surface {
+  --metric-panel-border: var(--workspace-line-soft);
+  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
+  --metric-panel-shadow: var(--workspace-shadow-panel);
 }
 
 .cheat-directory-section + .cheat-directory-section {
