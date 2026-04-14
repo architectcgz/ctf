@@ -7,6 +7,7 @@ import auditLogSource from '../AuditLog.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import challengeDetailSource from '../ChallengeDetail.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
+import cheatDetectionSource from '../CheatDetection.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
@@ -112,6 +113,15 @@ describe('admin management surface alignment', () => {
     expect(challengeDetailSource).toContain('<div class="journal-note-label">Hints</div>')
     expect(challengeDetailSource).toContain('<h2 class="list-heading__title">提示管理</h2>')
     expect(challengeDetailSource).not.toContain('workspace-tab-heading__title">提示管理</h2>')
+  })
+
+  it('cheat detection sections should use list-heading for directory headers', () => {
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">高频提交账号</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">共享 IP 线索</h2>')
+    expect(cheatDetectionSource).toContain('<h2 class="list-heading__title">快速排查入口</h2>')
+    expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">高频提交账号</h2>')
+    expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">共享 IP 线索</h2>')
+    expect(cheatDetectionSource).not.toContain('workspace-tab-heading__title">快速排查入口</h2>')
   })
 
   it('contest orchestration should place the tab rail under the workspace topbar before the page title', () => {
