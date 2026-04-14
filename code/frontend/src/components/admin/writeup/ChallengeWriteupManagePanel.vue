@@ -254,17 +254,17 @@ onMounted(() => {
 <template>
   <section class="writeup-manage-panel">
     <div class="writeup-manage-header">
-      <div class="workspace-tab-heading">
-        <div class="workspace-tab-heading__main">
+      <div class="list-heading writeup-manage-heading">
+        <div>
           <div class="journal-note-label">Writeup Directory</div>
           <h1 class="workspace-page-title">题解管理</h1>
         </div>
-      </div>
 
-      <div class="writeup-manage-actions">
-        <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
-          编写题解
-        </button>
+        <div class="writeup-manage-actions">
+          <button class="admin-btn admin-btn-primary" type="button" @click="openWriteup('edit')">
+            编写题解
+          </button>
+        </div>
       </div>
     </div>
 
@@ -297,11 +297,12 @@ onMounted(() => {
 
     <template v-else>
       <section class="writeup-manage-section">
-        <header class="writeup-manage-section__head">
+        <header class="list-heading writeup-manage-section__head">
           <div class="writeup-manage-section__intro">
             <div class="journal-note-label">Writeup Directory</div>
-            <h2 class="writeup-manage-section__title">题解列表</h2>
+            <h2 class="list-heading__title">题解目录</h2>
           </div>
+          <div class="writeup-manage-section__meta">共 {{ officialWriteupCount + submissionTotal }} 篇题解</div>
         </header>
 
         <AppLoading v-if="submissionLoading" class="writeup-manage-loading">正在加载题解投稿...</AppLoading>
@@ -442,6 +443,25 @@ onMounted(() => {
   gap: var(--space-4);
 }
 
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.writeup-manage-heading {
+  width: 100%;
+}
+
 .writeup-manage-section {
   display: grid;
   gap: var(--space-4);
@@ -453,9 +473,7 @@ onMounted(() => {
 }
 
 .writeup-manage-section__head {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
+  margin: 0;
 }
 
 .writeup-manage-section__intro {
@@ -464,11 +482,9 @@ onMounted(() => {
   min-width: 0;
 }
 
-.writeup-manage-section__title {
-  margin: 0;
-  font-size: var(--font-size-1-08);
-  font-weight: 700;
-  color: var(--journal-ink);
+.writeup-manage-section__meta {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
 }
 
 .writeup-summary-grid {
@@ -704,8 +720,13 @@ onMounted(() => {
     flex-direction: column;
   }
 
-  .writeup-manage-section__head {
+  .list-heading {
+    align-items: flex-start;
     flex-direction: column;
+  }
+
+  .writeup-manage-section__head {
+    width: 100%;
   }
 
   .writeup-summary-grid {

@@ -27,6 +27,9 @@ describe('SecuritySettings', () => {
     expect(wrapper.text()).toContain('更新账号密码并检查当前安全策略。')
     expect(wrapper.get('h1').classes()).toContain('workspace-page-title')
     expect(wrapper.find('.workspace-page-copy').exists()).toBe(true)
+    expect(wrapper.find('.security-topbar').exists()).toBe(true)
+    expect(wrapper.find('.security-summary').exists()).toBe(true)
+    expect(wrapper.find('.security-summary-title').text()).toContain('安全概况')
     expect(wrapper.text()).toContain('密码修改')
 
     const passwordInputs = wrapper.findAll('input[type="password"]')

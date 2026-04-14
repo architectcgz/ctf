@@ -6,7 +6,6 @@ import { downloadReport, exportPersonalReport } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -25,14 +24,22 @@ const latestReportCreatedAt = ref<string | null>(null)
 const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
 const currentRole = computed(() => profile.value?.role ?? authStore.user?.role)
 const canManagePersonalReport = computed(() => currentRole.value !== 'admin')
+const currentProfile = computed(() => profile.value ?? authStore.user ?? null)
 const pageCopy = computed(() =>
   canManagePersonalReport.value
     ? '查看账号信息、个人报告与最近导出状态。'
     : '查看账号信息与当前账号状态。'
 )
 
+function getRoleLabel(role: AuthUser['role'] | undefined): string {
+  if (role === 'admin') return '管理员'
+  if (role === 'teacher') return '教师'
+  if (role === 'student') return '学生'
+  return '未知'
+}
+
 const profileFields = computed(() => {
-  const current = profile.value
+  const current = currentProfile.value
   if (!current) return []
   return [
     { label: 'Username', value: current.username },
@@ -53,6 +60,53 @@ const reportTaskMeta = computed(() => {
     return { label: '生成中', status: 'processing', chipClass: 'chip--warning' }
   }
   return { label: '待创建', status: 'idle', chipClass: 'chip--primary' }
+})
+
+const profileSummaryItems = computed(() => {
+  const current = currentProfile.value
+  const className = current?.class_name || '未分配'
+  const displayName = current?.name || '未填写'
+
+  return [
+    {
+      key: 'status',
+      label: '账号状态',
+      value: '正常',
+      helper: '当前账号可正常访问个人工作区',
+      icon: ShieldCheck,
+      techFont: false,
+    },
+    {
+      key: 'role',
+      label: '当前角色',
+      value: getRoleLabel(current?.role),
+      helper: '决定当前账号可访问的功能范围',
+      icon: UserCircle2,
+      techFont: false,
+    },
+    {
+      key: canManagePersonalReport.value ? 'report' : 'name',
+      label: canManagePersonalReport.value ? '报告状态' : '实名信息',
+      value: canManagePersonalReport.value ? reportTaskMeta.value.label : displayName,
+      helper: canManagePersonalReport.value
+        ? latestReportCreatedAt.value
+          ? `最近生成于 ${formatDate(latestReportCreatedAt.value)}`
+          : '当前还没有生成过个人报告'
+        : current?.name
+          ? '用于账号展示与身份识别'
+          : '当前未填写姓名信息',
+      icon: canManagePersonalReport.value ? Activity : UserCircle2,
+      techFont: false,
+    },
+    {
+      key: 'class',
+      label: '所属班级',
+      value: className,
+      helper: current?.class_name ? '当前归属的班级信息' : '当前账号还未绑定班级',
+      icon: UserCircle2,
+      techFont: false,
+    },
+  ]
 })
 
 async function loadProfile(): Promise<void> {
@@ -134,44 +188,45 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div v-else class="flex flex-1 flex-col">
-      <div class="profile-header">
-        <PageHeader class="profile-page-header" eyebrow="Profile" title="个人资料" :description="pageCopy">
-          <div class="profile-header__actions">
-            <div class="profile-pill">
-              <span class="status-dot status-dot-ready" />
-              账号状态正常
-            </div>
-            <button type="button" class="journal-btn" @click="loadProfile">
-              <RefreshCw class="h-4 w-4" />
-              刷新
-            </button>
+    <div v-else class="profile-page flex flex-1 flex-col">
+      <header class="profile-topbar">
+        <div class="profile-heading">
+          <div class="journal-eyebrow">Profile</div>
+          <h1 class="workspace-page-title">个人资料</h1>
+          <p class="workspace-page-copy">{{ pageCopy }}</p>
+        </div>
+        <div class="profile-topbar-actions">
+          <div class="profile-pill">
+            <span class="status-dot status-dot-ready" />
+            账号状态正常
           </div>
-        </PageHeader>
+          <button type="button" class="journal-btn" @click="loadProfile">
+            <RefreshCw class="h-4 w-4" />
+            刷新
+          </button>
+        </div>
+      </header>
 
-        <div v-if="canManagePersonalReport" class="profile-summary-grid metric-panel-grid">
-          <article class="profile-summary-item metric-panel-card">
+      <section class="profile-summary" aria-label="账号概况">
+        <div class="profile-summary-title">
+          <ShieldCheck class="h-4 w-4" />
+          <span>账号概况</span>
+        </div>
+        <div class="profile-summary-grid metric-panel-grid">
+          <article v-for="item in profileSummaryItems" :key="item.key" class="profile-summary-item metric-panel-card">
             <div class="profile-summary-icon">
-              <ShieldCheck class="h-4 w-4" />
+              <component :is="item.icon" class="h-4 w-4" />
             </div>
             <div>
-              <div class="journal-note-label metric-panel-label">报告状态</div>
-              <div class="profile-summary-value metric-panel-value">{{ reportTaskMeta.label }}</div>
-            </div>
-          </article>
-          <article class="profile-summary-item metric-panel-card">
-            <div class="profile-summary-icon">
-              <Activity class="h-4 w-4" />
-            </div>
-            <div>
-              <div class="journal-note-label metric-panel-label">最近生成</div>
-              <div class="profile-summary-value metric-panel-value">
-                {{ latestReportCreatedAt ? formatDate(latestReportCreatedAt) : '尚未生成' }}
+              <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
+              <div class="profile-summary-value metric-panel-value" :class="{ 'tech-font': item.techFont }">
+                {{ item.value }}
               </div>
+              <div class="journal-note-helper metric-panel-helper">{{ item.helper }}</div>
             </div>
           </article>
         </div>
-      </div>
+      </section>
 
       <div class="journal-divider profile-divider" />
 
@@ -349,14 +404,15 @@ onUnmounted(() => {
   gap: 1rem;
 }
 
-.profile-header {
-  display: grid;
-  gap: 1rem;
+.profile-page {
+  min-height: 100%;
 }
 
-.profile-header__actions {
+.profile-topbar-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
 }
 
@@ -371,10 +427,6 @@ onUnmounted(() => {
   font-size: var(--font-size-0-875);
   font-weight: 500;
   color: var(--journal-ink);
-}
-
-.profile-divider {
-  margin: 1.2rem 0 0;
 }
 
 .profile-layout {
@@ -562,6 +614,10 @@ onUnmounted(() => {
   color: color-mix(in srgb, var(--color-warning) 88%, var(--journal-ink));
 }
 
+.profile-divider {
+  margin: 0;
+}
+
 .status-dot {
   display: inline-block;
   width: 7px;
@@ -606,6 +662,10 @@ onUnmounted(() => {
 @media (max-width: 720px) {
   .journal-shell {
     padding-inline: 1rem;
+  }
+
+  .profile-topbar-actions {
+    justify-content: flex-start;
   }
 
   .profile-field-list,
