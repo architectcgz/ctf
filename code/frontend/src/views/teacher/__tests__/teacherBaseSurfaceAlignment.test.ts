@@ -39,7 +39,7 @@ describe('teacher base surface alignment', () => {
     expect(studentManagementSource).not.toMatch(/^\.teacher-hero\s*\{/m)
     expect(studentManagementSource).not.toMatch(/^\.teacher-summary\s*\{/m)
     expect(studentManagementSource).toMatch(
-      /\.teacher-hero-divider\s*\{[\s\S]*border-top:\s*1px dashed var\(--teacher-divider\);/s
+      /\.teacher-badge-card\s*\{[\s\S]*border:\s*1px solid var\(--teacher-card-border\);/s
     )
 
     expect(dashboardSource).toContain('--teacher-card-border:')
@@ -71,11 +71,26 @@ describe('teacher base surface alignment', () => {
   })
 
   it('teacher summary cards should explicitly adopt metric-panel classes and rely on shared variables', () => {
-    expect(classManagementSource).toContain('class="teacher-summary-grid metric-panel-grid"')
-    expect(classManagementSource).toContain('class="teacher-summary-item metric-panel-card"')
-    expect(classManagementSource).toContain('class="teacher-summary-label metric-panel-label"')
-    expect(classManagementSource).toContain('class="teacher-summary-value metric-panel-value"')
-    expect(classManagementSource).toContain('class="teacher-summary-helper metric-panel-helper"')
+    expect(classManagementSource).toContain('class="teacher-summary metric-panel-default-surface"')
+    expect(classManagementSource).toContain(
+      'class="teacher-summary-grid progress-strip metric-panel-grid"'
+    )
+    expect(classManagementSource).toContain('class="progress-card metric-panel-card"')
+    expect(classManagementSource).not.toContain(
+      'class="teacher-summary-item progress-card metric-panel-card"'
+    )
+    expect(classManagementSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(classManagementSource).not.toContain(
+      'class="teacher-summary-label progress-card-label metric-panel-label"'
+    )
+    expect(classManagementSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(classManagementSource).not.toContain(
+      'class="teacher-summary-value progress-card-value metric-panel-value"'
+    )
+    expect(classManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(classManagementSource).not.toContain(
+      'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
+    )
 
     expect(studentManagementSource).toContain(
       'class="teacher-summary metric-panel-default-surface"'
@@ -83,16 +98,20 @@ describe('teacher base surface alignment', () => {
     expect(studentManagementSource).toContain(
       'class="teacher-summary-grid progress-strip metric-panel-grid"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card metric-panel-card"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-item progress-card metric-panel-card"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-label metric-panel-label"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-label progress-card-label metric-panel-label"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-value metric-panel-value"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-value progress-card-value metric-panel-value"'
     )
-    expect(studentManagementSource).toContain(
+    expect(studentManagementSource).toContain('class="progress-card-hint metric-panel-helper"')
+    expect(studentManagementSource).not.toContain(
       'class="teacher-summary-helper progress-card-hint metric-panel-helper"'
     )
 
@@ -122,9 +141,11 @@ describe('teacher base surface alignment', () => {
     expect(awdReviewIndexSource).toContain('metric-panel-default-surface')
     expect(awdReviewIndexSource).toContain('metric-panel-grid')
     expect(awdReviewIndexSource).toContain('metric-panel-card')
+    expect(awdReviewIndexSource).not.toContain('teacher-summary-item')
     expect(awdReviewDetailSource).toContain('metric-panel-default-surface')
     expect(awdReviewDetailSource).toContain('metric-panel-grid')
     expect(awdReviewDetailSource).toContain('metric-panel-card')
+    expect(awdReviewDetailSource).not.toContain('teacher-summary-item')
 
     expect(teacherSurfaceSource).not.toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(teacherSurfaceSource).not.toContain(

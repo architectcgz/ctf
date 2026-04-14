@@ -132,25 +132,25 @@ function roundStatusLabel(status: string): string {
             <Shield class="h-4 w-4" />
             <span>Review Snapshot</span>
           </div>
-          <div class="teacher-summary-grid metric-panel-grid">
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">视图焦点</div>
-              <div class="teacher-summary-value metric-panel-value">{{ activeSummaryTitle }}</div>
-              <div class="teacher-summary-helper metric-panel-helper">当前查看整场总览或指定轮次摘要</div>
+          <div class="teacher-summary-grid progress-strip metric-panel-grid">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">视图焦点</div>
+              <div class="progress-card-value metric-panel-value">{{ activeSummaryTitle }}</div>
+              <div class="progress-card-hint metric-panel-helper">当前查看整场总览或指定轮次摘要</div>
             </article>
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">服务 / 攻击 / 流量</div>
-              <div class="teacher-summary-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">服务 / 攻击 / 流量</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
               </div>
-              <div class="teacher-summary-helper metric-panel-helper">当前视图下的关键证据量级</div>
+              <div class="progress-card-hint metric-panel-helper">当前视图下的关键证据量级</div>
             </article>
-            <article class="teacher-summary-item metric-panel-card">
-              <div class="teacher-summary-label metric-panel-label">轮次 / 队伍</div>
-              <div class="teacher-summary-value metric-panel-value">
+            <article class="progress-card metric-panel-card">
+              <div class="progress-card-label metric-panel-label">轮次 / 队伍</div>
+              <div class="progress-card-value metric-panel-value">
                 {{ summaryStats.roundCount }} / {{ summaryStats.teamCount }}
               </div>
-              <div class="teacher-summary-helper metric-panel-helper">轮次切换不会丢失目录上下文</div>
+              <div class="progress-card-hint metric-panel-helper">轮次切换不会丢失目录上下文</div>
             </article>
           </div>
         </section>
