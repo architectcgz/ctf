@@ -12,6 +12,7 @@ import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspecto
 import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
 import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
 import awdReadinessOverrideDialogSource from '@/components/admin/contest/AWDReadinessOverrideDialog.vue?raw'
+import awdChallengeConfigDialogSource from '@/components/admin/contest/AWDChallengeConfigDialog.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
@@ -56,6 +57,10 @@ describe('admin management surface alignment', () => {
     )
     expect(userGovernanceSource).toContain('<h2 class="list-heading__title">用户目录</h2>')
     expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">用户列表</h2>')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入用户</h2>')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入用户</h2>')
+    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入回执</h2>')
   })
 
   it('contest orchestration should soften control and empty-state borders', () => {
@@ -107,6 +112,14 @@ describe('admin management surface alignment', () => {
     expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
     expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">阻塞题目</h3>')
     expect(awdReadinessOverrideDialogSource).not.toContain('workspace-tab-heading__title">填写本次放行原因</h3>')
+  })
+
+  it('awd challenge config dialog should use plain block titles instead of workspace-tab-heading titles', () => {
+    expect(awdChallengeConfigDialogSource).toContain('checker-config-block__title')
+    expect(awdChallengeConfigDialogSource).not.toContain('workspace-tab-heading__title checker-config-block__title')
+    expect(awdChallengeConfigDialogSource).toContain('>最终 JSON 预览</h3>')
+    expect(awdChallengeConfigDialogSource).toContain('>最近一次已保存校验</h3>')
+    expect(awdChallengeConfigDialogSource).toContain('>试跑 Checker</h3>')
   })
 
   it('challenge detail hint section should use list-heading for the hint directory header', () => {

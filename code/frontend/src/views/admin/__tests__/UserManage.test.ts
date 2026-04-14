@@ -341,6 +341,15 @@ describe('UserManage', () => {
     expect(userGovernanceSource).not.toMatch(/筛选与导入[\s\S]*用户列表[\s\S]*导入回执/s)
   })
 
+  it('用户导入流分段页应使用统一目录头样式', () => {
+    expect(userGovernanceSource).toContain('class="list-heading admin-section-head-intro"')
+    expect(userGovernanceSource).toContain('class="list-heading user-import-receipt-head"')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入用户</h2>')
+    expect(userGovernanceSource).toContain('<h2 class="list-heading__title">导入回执</h2>')
+    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入用户</h2>')
+    expect(userGovernanceSource).not.toContain('workspace-tab-heading__title">导入回执</h2>')
+  })
+
   it('用户总览头部不应再渲染快捷操作按钮组', () => {
     expect(userGovernanceSource).not.toContain('class="mt-6 flex flex-wrap gap-3"')
     expect(userGovernanceSource).not.toMatch(

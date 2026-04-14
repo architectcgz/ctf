@@ -447,10 +447,10 @@ function handleImportChange(event: Event): void {
       :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
       v-show="activePanel === 'import'"
     >
-      <div class="workspace-tab-heading admin-section-head-intro">
-        <div class="workspace-tab-heading__main">
+      <div class="list-heading admin-section-head-intro">
+        <div>
           <div class="journal-note-label">User Import</div>
-          <h2 class="workspace-tab-heading__title">导入用户</h2>
+          <h2 class="list-heading__title">导入用户</h2>
         </div>
 
         <button type="button" class="admin-btn admin-btn-primary" @click="triggerImport">
@@ -470,10 +470,10 @@ function handleImportChange(event: Event): void {
     <div v-show="activePanel === 'import'" class="journal-divider mt-6" aria-hidden="true" />
 
     <section v-show="activePanel === 'import'" class="space-y-4">
-      <div class="workspace-tab-heading">
-        <div class="workspace-tab-heading__main">
+      <div class="list-heading user-import-receipt-head">
+        <div>
           <div class="journal-note-label">Import Receipt</div>
-          <h2 class="workspace-tab-heading__title">导入回执</h2>
+          <h2 class="list-heading__title">导入回执</h2>
         </div>
       </div>
 
