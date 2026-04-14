@@ -6,6 +6,7 @@ import (
 	"ctf-platform/internal/model"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
+	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 )
@@ -47,11 +48,12 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, runtime *Runtim
 	externalDeps := buildPracticeModuleExternalDeps(challenge, runtime, assessment)
 	service := buildPracticeHandler(root, deps, externalDeps)
 	service.SetEventBus(root.Events)
+	scoreQueryService := practiceqry.NewScoreService(deps.rankingRepo, root.Logger().Named("practice_score_query_service"), &root.Config().Score)
 	root.RegisterBackgroundJob(NewLoopBackgroundJob("practice_instance_scheduler", service.RunProvisioningLoop))
 
 	return &PracticeModule{
 		BackgroundCloser: service,
-		Handler:          practicehttp.NewHandler(service),
+		Handler:          practicehttp.NewHandler(service, scoreQueryService),
 	}
 }
 
