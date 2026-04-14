@@ -199,11 +199,12 @@ const listCount = computed(() => props.list.length)
         </section>
 
         <section class="workspace-directory-section contest-list-panel">
-          <header class="list-heading workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <header class="list-heading">
+            <div>
               <div class="journal-note-label">Contests</div>
-              <h3 class="list-heading__title workspace-tab-heading__title">当前筛选结果</h3>
+              <h3 class="list-heading__title">竞赛目录</h3>
             </div>
+            <div class="contest-list-meta">共 {{ total }} 场赛事</div>
           </header>
 
           <div v-if="loading && list.length === 0" class="flex justify-center py-10">
@@ -396,11 +397,16 @@ const listCount = computed(() => props.list.length)
   gap: var(--space-3);
 }
 
-.list-heading__title:not(.workspace-tab-heading__title) {
+.list-heading__title {
   margin: var(--space-1) 0 0;
   font-size: var(--font-size-1-20);
   font-weight: 700;
   color: var(--journal-ink);
+}
+
+.contest-list-meta {
+  font-size: var(--font-size-0-82);
+  color: var(--journal-muted);
 }
 
 .admin-btn {

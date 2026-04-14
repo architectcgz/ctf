@@ -113,6 +113,9 @@ describe('AuditLog', () => {
     expect(auditLogSource).toContain('placeholder="执行人 ID"')
     expect(auditLogSource).toContain('重置筛选')
     expect(auditLogSource).toContain(':disabled="!hasActiveFilters"')
+    expect(auditLogSource).not.toContain('audit-filter-label--ghost')
+    expect(auditLogSource).not.toContain('audit-filter-actions')
+    expect(auditLogSource).not.toContain('audit-filter-action-row')
   })
 
   it('应使用统一进度卡片样式展示审计摘要', () => {

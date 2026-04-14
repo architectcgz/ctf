@@ -7,6 +7,8 @@ import auditLogSource from '../AuditLog.vue?raw'
 import challengeManageSource from '../ChallengeManage.vue?raw'
 import imageManageSource from '../ImageManage.vue?raw'
 import awdRoundInspectorSource from '@/components/admin/contest/AWDRoundInspector.vue?raw'
+import awdChallengeConfigPanelSource from '@/components/admin/contest/AWDChallengeConfigPanel.vue?raw'
+import awdReadinessSummarySource from '@/components/admin/contest/AWDReadinessSummary.vue?raw'
 import contestOrchestrationSource from '@/components/admin/contest/ContestOrchestrationPage.vue?raw'
 import adminContestTableSource from '@/components/admin/contest/AdminContestTable.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
@@ -65,6 +67,30 @@ describe('admin management surface alignment', () => {
     expect(contestOrchestrationSource).toMatch(
       /\.contest-empty-state\s*\{[\s\S]*border-top-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);[\s\S]*border-bottom-color:\s*color-mix\(in srgb,\s*var\(--journal-border\) 68%, transparent\);/s
     )
+    expect(contestOrchestrationSource).toContain('<h3 class="list-heading__title">竞赛目录</h3>')
+    expect(contestOrchestrationSource).not.toContain('当前筛选结果')
+    expect(contestOrchestrationSource).not.toContain('workspace-tab-heading__title">当前筛选结果</h3>')
+  })
+
+  it('awd round inspector traffic filters should stay flattened into the table section instead of using a split intro bar', () => {
+    expect(awdRoundInspectorSource).toContain('id="awd-traffic-reset-filters"')
+    expect(awdRoundInspectorSource).not.toContain('按攻击方、受害方、题目、状态分桶和路径关键字筛选。')
+    expect(awdRoundInspectorSource).not.toContain(
+      'class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"'
+    )
+  })
+
+  it('awd challenge config and readiness sections should use list-heading for directory blocks', () => {
+    expect(awdChallengeConfigPanelSource).toContain('class="workspace-directory-section"')
+    expect(awdChallengeConfigPanelSource).toMatch(/class="[^"]*list-heading[^"]*"/)
+    expect(awdChallengeConfigPanelSource).toContain('<h3 class="list-heading__title">题目目录</h3>')
+    expect(awdChallengeConfigPanelSource).not.toContain('workspace-tab-heading__title">已关联题目</h3>')
+
+    expect(awdReadinessSummarySource).toMatch(/class="[^"]*list-heading[^"]*"/)
+    expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">系统级阻塞</h3>')
+    expect(awdReadinessSummarySource).toContain('<h3 class="list-heading__title">阻塞短名单</h3>')
+    expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">系统级阻塞</h3>')
+    expect(awdReadinessSummarySource).not.toContain('workspace-tab-heading__title">阻塞短名单</h3>')
   })
 
   it('contest orchestration should place the tab rail under the workspace topbar before the page title', () => {

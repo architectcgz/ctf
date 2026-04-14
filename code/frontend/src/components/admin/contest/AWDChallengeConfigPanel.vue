@@ -178,19 +178,22 @@ function getValidationHint(item: AdminContestChallengeData): string {
     </header>
 
     <section class="workspace-directory-section">
-      <header class="config-list-head">
-        <div class="workspace-tab-heading__main">
+      <header class="list-heading config-list-head">
+        <div>
           <div class="journal-note-label">Contest Challenges</div>
-          <h3 class="workspace-tab-heading__title">已关联题目</h3>
+          <h3 class="list-heading__title">题目目录</h3>
         </div>
-        <button
-          id="awd-challenge-config-create"
-          type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-          @click="emit('create')"
-        >
-          新增题目
-        </button>
+        <div class="config-list-actions">
+          <div class="config-list-meta">共 {{ sortedChallengeLinks.length }} 道题目</div>
+          <button
+            id="awd-challenge-config-create"
+            type="button"
+            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+            @click="emit('create')"
+          >
+            新增题目
+          </button>
+        </div>
       </header>
 
       <AppEmpty
@@ -261,12 +264,36 @@ function getValidationHint(item: AdminContestChallengeData): string {
   gap: 1.5rem;
 }
 
-.config-list-head {
+.list-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.config-list-head {
   margin-bottom: 1.25rem;
+}
+
+.config-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+}
+
+.config-list-meta {
+  color: var(--journal-muted);
+  font-size: 0.82rem;
 }
 
 .config-directory-head,
@@ -393,6 +420,11 @@ function getValidationHint(item: AdminContestChallengeData): string {
 }
 
 @media (max-width: 1100px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .config-directory-head {
     display: none;
   }

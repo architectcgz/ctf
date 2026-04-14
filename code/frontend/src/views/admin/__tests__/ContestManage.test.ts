@@ -502,7 +502,8 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-tab-list').attributes('aria-selected')).toBe('true')
     expect(wrapper.get('#contest-panel-list').attributes('aria-hidden')).toBe('false')
     expect(wrapper.get('#contest-panel-list').text()).toContain('状态筛选')
-    expect(wrapper.get('#contest-panel-list').text()).toContain('当前筛选结果')
+    expect(wrapper.get('#contest-panel-list').text()).toContain('竞赛目录')
+    expect(wrapper.get('#contest-panel-list').text()).not.toContain('当前筛选结果')
     expect(wrapper.get('#contest-panel-list').text()).toContain('2026 AWD 联赛')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('选择 AWD 赛事')
 
