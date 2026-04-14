@@ -46,6 +46,7 @@ import (
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
+	practiceqry "ctf-platform/internal/module/practice/application/queries"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practicereadmodelhttp "ctf-platform/internal/module/practice_readmodel/api/http"
 	practicereadmodelqueries "ctf-platform/internal/module/practice_readmodel/application/queries"
@@ -157,6 +158,15 @@ type flowProgressResponse struct {
 	TotalScore  int `json:"total_score"`
 	TotalSolved int `json:"total_solved"`
 	Rank        int `json:"rank"`
+}
+
+type flowRankingItem struct {
+	Rank        int    `json:"rank"`
+	UserID      int64  `json:"user_id"`
+	Username    string `json:"username"`
+	TotalScore  int    `json:"total_score"`
+	SolvedCount int    `json:"solved_count"`
+	ClassName   string `json:"class_name"`
 }
 
 type flowTimelineResponse struct {
@@ -634,6 +644,60 @@ func TestPracticeFlow_AdminPublishesChallengeStudentSolvesChallenge(t *testing.T
 	}
 }
 
+func TestPracticeFlow_GetGlobalRanking(t *testing.T) {
+	env := newPracticeFlowTestEnv(t)
+
+	studentToken := loginForToken(t, env.router, "student_user", "Password123")
+	secondStudent := createFlowUser(t, env.db, "student_user_b", "Password123", model.RoleStudent)
+	secondStudent.ClassName = "Class B"
+	if err := env.db.Model(&model.User{}).
+		Where("id = ?", secondStudent.ID).
+		Update("class_name", secondStudent.ClassName).Error; err != nil {
+		t.Fatalf("update second student class: %v", err)
+	}
+	if err := env.db.Model(&model.User{}).
+		Where("id = ?", env.student.ID).
+		Update("class_name", "Class A").Error; err != nil {
+		t.Fatalf("update primary student class: %v", err)
+	}
+
+	now := time.Now()
+	if err := env.db.Create([]model.UserScore{
+		{UserID: env.student.ID, TotalScore: 320, SolvedCount: 4, Rank: 1, UpdatedAt: now},
+		{UserID: secondStudent.ID, TotalScore: 180, SolvedCount: 2, Rank: 2, UpdatedAt: now},
+	}).Error; err != nil {
+		t.Fatalf("seed user scores: %v", err)
+	}
+
+	rankingResp := performFlowJSONRequest(
+		t,
+		env.router,
+		http.MethodGet,
+		"/api/v1/scoreboard/ranking?limit=10",
+		nil,
+		bearerHeaders(studentToken),
+		nil,
+	)
+	if rankingResp.Code != http.StatusOK {
+		t.Fatalf("unexpected ranking status: %d body=%s", rankingResp.Code, rankingResp.Body.String())
+	}
+
+	rankingBody := decodeFlowEnvelope(t, rankingResp)
+	items := decodeFlowJSON[[]flowRankingItem](t, rankingBody.Data)
+	if len(items) != 2 {
+		t.Fatalf("expected 2 ranking items, got %+v", items)
+	}
+	if items[0].Username != env.student.Username || items[0].ClassName != "Class A" {
+		t.Fatalf("unexpected first ranking item: %+v", items[0])
+	}
+	if items[0].TotalScore != 320 || items[0].SolvedCount != 4 || items[0].Rank != 1 {
+		t.Fatalf("unexpected first ranking score fields: %+v", items[0])
+	}
+	if items[1].Username != secondStudent.Username || items[1].ClassName != "Class B" {
+		t.Fatalf("unexpected second ranking item: %+v", items[1])
+	}
+}
+
 func TestPracticeFlow_UnpublishedChallengeCannotBeSolved(t *testing.T) {
 	env := newPracticeFlowTestEnv(t)
 
@@ -856,7 +920,8 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		cfg,
 		logger,
 	)
-	practiceHandler := practicehttp.NewHandler(practiceService)
+	practiceQueryService := practiceqry.NewScoreService(practiceRepo, cache, logger, &cfg.Score)
+	practiceHandler := practicehttp.NewHandler(practiceService, practiceQueryService)
 	practiceReadmodelRepo := practicereadmodelinfra.NewRepository(db)
 	practiceReadmodelService := practicereadmodelqueries.NewQueryService(practiceReadmodelRepo, cache, cfg.Cache.ProgressTTL, logger)
 	practiceReadmodelHandler := practicereadmodelhttp.NewHandler(practiceReadmodelService)
@@ -906,6 +971,7 @@ func newPracticeFlowTestEnv(t *testing.T) *flowTestEnv {
 		practiceHandler.SubmitFlag,
 	)
 	protected.GET("/challenges/:id/submissions/mine", practiceHandler.ListMyChallengeSubmissions)
+	protected.GET("/scoreboard/ranking", practiceHandler.GetRanking)
 	protected.POST("/challenges/:id/instances", practiceHandler.StartChallenge)
 	protected.POST("/instances/:id/access", runtimeHandler.AccessInstance)
 	apiV1.GET("/instances/:id/proxy", runtimeHandler.ProxyInstance)
