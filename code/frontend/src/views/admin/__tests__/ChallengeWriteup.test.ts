@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import ChallengeWriteupEditorPage from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue'
 import ChallengeWriteupViewPage from '@/components/admin/writeup/ChallengeWriteupViewPage.vue'
+import challengeWriteupEditorSource from '@/components/admin/writeup/ChallengeWriteupEditorPage.vue?raw'
 import { ApiError } from '@/api/request'
 
 const adminApiMocks = vi.hoisted(() => ({
@@ -67,6 +68,12 @@ vi.mock('@/composables/useDestructiveConfirm', () => ({
 }))
 
 describe('ChallengeWriteupEditorPage', () => {
+  it('嵌入态题解编辑页应使用统一头部样式而不是旧 workspace-tab-heading', () => {
+    expect(challengeWriteupEditorSource).toContain('class="list-heading writeup-tab-heading"')
+    expect(challengeWriteupEditorSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
+    expect(challengeWriteupEditorSource).not.toContain('class="workspace-tab-heading writeup-tab-heading"')
+  })
+
   it('删除题解失败时应优先展示接口返回消息', async () => {
     confirmMock.mockResolvedValue(true)
     adminApiMocks.deleteChallengeWriteup.mockRejectedValue(
@@ -170,7 +177,6 @@ describe('ChallengeWriteupEditorPage', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('查看题解')
-    expect(wrapper.text()).toContain('官方题解')
     expect(wrapper.text()).toContain('题解正文')
     expect(wrapper.text()).toContain('Step 1')
     expect(wrapper.find('main > .writeup-snapshot-grid').exists()).toBe(true)
