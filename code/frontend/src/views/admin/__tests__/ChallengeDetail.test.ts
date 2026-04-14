@@ -92,6 +92,12 @@ describe('Admin ChallengeDetail', () => {
     expect(wrapper.find('#admin-challenge-panel-detail').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#admin-challenge-panel-writeup').attributes('aria-hidden')).toBe('true')
     expect(wrapper.text()).toContain('双节点演练')
+    expect(
+      wrapper
+        .find('.challenge-overview-summary.progress-strip.metric-panel-grid.metric-panel-default-surface')
+        .exists()
+    ).toBe(true)
+    expect(wrapper.text()).toContain('基础信息')
 
     const topologyButton = wrapper.findAll('button').find((button) => button.text().includes('拓扑编排'))
     expect(topologyButton).toBeTruthy()
