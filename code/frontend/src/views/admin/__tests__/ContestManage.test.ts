@@ -504,6 +504,11 @@ describe('ContestManage', () => {
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('当前筛选结果')
     expect(wrapper.get('#contest-panel-list').text()).toContain('2026 AWD 联赛')
     expect(wrapper.get('#contest-panel-list').text()).not.toContain('选择 AWD 赛事')
+    expect(wrapper.get('#contest-panel-list').find('.contest-filter-grid').exists()).toBe(true)
+    expect(wrapper.get('#contest-panel-list').find('.contest-filter-field--action').exists()).toBe(
+      true
+    )
+    expect(wrapper.get('#contest-panel-list').find('.contest-filter-actions').exists()).toBe(false)
 
     await wrapper.get('#contest-tab-operations').trigger('click')
 
