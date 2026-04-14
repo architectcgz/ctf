@@ -157,10 +157,10 @@ function formatDateTime(value?: string): string {
         v-if="hasGlobalBlockingReasons"
         class="workspace-directory-section readiness-alert"
       >
-        <header class="workspace-tab-heading">
-          <div class="workspace-tab-heading__main">
+        <header class="list-heading">
+          <div>
             <div class="journal-note-label">Global Blocking</div>
-            <h3 class="workspace-tab-heading__title">系统级阻塞</h3>
+            <h3 class="list-heading__title">系统级阻塞</h3>
           </div>
         </header>
         <ul class="readiness-alert-list">
@@ -175,10 +175,10 @@ function formatDateTime(value?: string): string {
       </section>
 
       <section class="workspace-directory-section readiness-section">
-        <header class="readiness-list-head">
-          <div class="workspace-tab-heading__main">
+        <header class="list-heading readiness-list-head">
+          <div>
             <div class="journal-note-label">Blocking Items</div>
-            <h3 class="workspace-tab-heading__title">阻塞短名单</h3>
+            <h3 class="list-heading__title">阻塞短名单</h3>
           </div>
           <div class="readiness-list-head__meta">
             <span class="readiness-count">阻塞 {{ readiness?.blocking_count ?? 0 }} 项</span>
@@ -243,6 +243,21 @@ function formatDateTime(value?: string): string {
 .panel-head--readiness {
   display: grid;
   gap: 1.5rem;
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
 }
 
 .readiness-summary-grid {
@@ -386,6 +401,11 @@ function formatDateTime(value?: string): string {
 }
 
 @media (max-width: 1100px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .readiness-summary-grid {
     --metric-panel-columns: repeat(2, minmax(0, 1fr));
   }

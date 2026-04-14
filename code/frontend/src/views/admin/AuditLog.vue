@@ -244,18 +244,15 @@ watch(
             />
           </label>
 
-          <div class="audit-filter-actions">
-            <span class="audit-filter-label audit-filter-label--ghost" aria-hidden="true">操作</span>
-            <div class="audit-filter-action-row">
-              <button
-                type="button"
-                class="admin-btn admin-btn-ghost audit-filter-reset"
-                :disabled="!hasActiveFilters"
-                @click="resetFilters"
-              >
-                重置筛选
-              </button>
-            </div>
+          <div class="audit-filter-field audit-filter-field--action">
+            <button
+              type="button"
+              class="admin-btn admin-btn-ghost audit-filter-reset"
+              :disabled="!hasActiveFilters"
+              @click="resetFilters"
+            >
+              重置筛选
+            </button>
           </div>
         </div>
       </section>
@@ -403,31 +400,20 @@ watch(
   grid-template-columns: repeat(3, minmax(14rem, 16rem)) auto;
 }
 
-.audit-filter-field,
-.audit-filter-actions {
+.audit-filter-field {
   display: grid;
   gap: var(--space-2);
+}
+
+.audit-filter-field--action {
+  align-content: end;
+  justify-items: end;
 }
 
 .audit-filter-label {
   font-size: var(--font-size-0-78);
   font-weight: 700;
   color: var(--journal-muted);
-}
-
-.audit-filter-label--ghost {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.audit-filter-actions {
-  justify-items: end;
-}
-
-.audit-filter-action-row {
-  display: flex;
-  gap: var(--space-2-5);
-  justify-content: flex-end;
 }
 
 .admin-input {
@@ -538,16 +524,8 @@ watch(
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .audit-filter-actions {
+  .audit-filter-field--action {
     justify-items: stretch;
-  }
-
-  .audit-filter-action-row {
-    width: 100%;
-  }
-
-  .audit-filter-action-row > * {
-    flex: 1 1 0;
   }
 
   .journal-shell {

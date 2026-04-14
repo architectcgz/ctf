@@ -674,26 +674,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
 
             <div class="overflow-hidden rounded-xl border border-border">
               <div
-                class="flex items-center justify-between gap-3 border-b border-border bg-surface-alt/60 px-4 py-3"
-              >
-                <div>
-                  <p class="text-sm font-semibold text-[var(--color-text-primary)]">流量明细表</p>
-                  <p class="mt-1 text-xs text-[var(--color-text-muted)]">
-                    按攻击方、受害方、题目、状态分桶和路径关键字筛选。
-                  </p>
-                </div>
-                <button
-                  id="awd-traffic-reset-filters"
-                  type="button"
-                  class="rounded-xl border border-border px-3 py-2 text-xs font-medium text-[var(--color-text-primary)] transition hover:border-primary"
-                  @click="emit('resetTrafficFilters')"
-                >
-                  重置筛选
-                </button>
-              </div>
-
-              <div
-                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-5"
+                class="grid gap-3 border-b border-border bg-surface-alt/30 px-4 py-3 md:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.35fr)_auto]"
               >
                 <label class="space-y-1">
                   <span
@@ -822,6 +803,16 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                     清除路径关键字
                   </button>
                 </label>
+                <div class="flex items-end md:justify-end">
+                  <button
+                    id="awd-traffic-reset-filters"
+                    type="button"
+                    class="inline-flex min-h-10 items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-medium text-[var(--color-text-primary)] transition hover:border-primary"
+                    @click="emit('resetTrafficFilters')"
+                  >
+                    重置筛选
+                  </button>
+                </div>
               </div>
 
               <table class="min-w-full divide-y divide-border">
