@@ -540,12 +540,6 @@ onMounted(() => {
   --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
 }
 
-.cheat-kpi-summary.metric-panel-default-surface.metric-panel-workspace-surface {
-  --metric-panel-border: var(--workspace-line-soft);
-  --metric-panel-background: color-mix(in srgb, var(--workspace-panel) 88%, transparent);
-  --metric-panel-shadow: var(--workspace-shadow-panel);
-}
-
 .cheat-directory-section + .cheat-directory-section {
   margin-top: var(--space-5);
 }
