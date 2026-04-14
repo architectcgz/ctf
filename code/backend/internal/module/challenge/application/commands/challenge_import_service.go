@@ -199,9 +199,13 @@ func (s *ChallengeService) CommitChallengeImport(
 				"deleted_at":     nil,
 				"updated_at":     now,
 			}
-			if err := tx.Model(&current).Updates(updates).Error; err != nil {
+			if err := tx.Unscoped().Model(&current).Updates(updates).Error; err != nil {
 				return fmt.Errorf("update imported challenge %s: %w", parsed.Slug, err)
 			}
+		}
+
+		if err := tx.Where("challenge_id = ?", current.ID).Delete(&model.ChallengePublishCheckJob{}).Error; err != nil {
+			return fmt.Errorf("clear imported challenge publish check jobs %s: %w", parsed.Slug, err)
 		}
 
 		if err := syncImportedChallengeHints(tx, current.ID, parsed.Hints); err != nil {

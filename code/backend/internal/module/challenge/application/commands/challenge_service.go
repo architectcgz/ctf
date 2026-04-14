@@ -290,12 +290,22 @@ func (s *ChallengeService) GetLatestPublishCheck(ctx context.Context, id int64) 
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	challenge, err := s.repo.FindByID(id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errcode.ErrChallengeNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
 	job, err := s.repo.FindLatestPublishCheckJobByChallengeID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errcode.ErrNotFound
 	}
 	if err != nil {
 		return nil, err
+	}
+	if challenge.UpdatedAt.After(job.UpdatedAt) {
+		return nil, errcode.ErrNotFound
 	}
 	return s.buildPublishCheckJobResp(job), nil
 }
@@ -488,6 +498,7 @@ type challengeSelfCheckRuntimeInput struct {
 	entryNodeKey    string
 	topologySpec    model.TopologySpec
 	useTopology     bool
+	skipRuntime     bool
 }
 
 func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*dto.ChallengeSelfCheckResp, error) {
@@ -519,6 +530,16 @@ func (s *ChallengeService) SelfCheckChallenge(ctx context.Context, id int64) (*d
 			Message: "预检未通过，已跳过真实拉起",
 		})
 		resp.Runtime.EndedAt = time.Now()
+		return resp, nil
+	}
+	if input.skipRuntime {
+		resp.Runtime.Steps = append(resp.Runtime.Steps, dto.ChallengeSelfCheckStepResp{
+			Name:    "runtime_startup",
+			Passed:  true,
+			Message: "当前题目无需运行时，已跳过真实拉起",
+		})
+		resp.Runtime.EndedAt = time.Now()
+		resp.Runtime.Passed = true
 		return resp, nil
 	}
 	if s.runtimeProbe == nil {
@@ -685,12 +706,21 @@ func (s *ChallengeService) runPrecheck(challenge *model.Challenge, steps *[]dto.
 			return input, false, err
 		}
 		if challenge.ImageID <= 0 {
-			passed = false
-			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
-				Name:    "topology_or_single_container",
-				Passed:  false,
-				Message: "未配置拓扑且题目默认镜像为空，无法执行真实拉起",
-			})
+			if strings.TrimSpace(challenge.AttachmentURL) != "" {
+				input.skipRuntime = true
+				*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+					Name:    "topology_or_single_container",
+					Passed:  true,
+					Message: "题目仅提供附件内容，无需执行真实拉起",
+				})
+			} else {
+				passed = false
+				*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
+					Name:    "topology_or_single_container",
+					Passed:  false,
+					Message: "未配置拓扑且题目默认镜像为空，无法执行真实拉起",
+				})
+			}
 		} else {
 			*steps = append(*steps, dto.ChallengeSelfCheckStepResp{
 				Name:    "topology_or_single_container",

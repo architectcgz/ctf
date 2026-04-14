@@ -90,6 +90,50 @@ func TestChallengeSelfCheckSkipsRuntimeWhenPrecheckFails(t *testing.T) {
 	}
 }
 
+func TestChallengeSelfCheckAttachmentOnlyChallengeSkipsRuntimeStartup(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	salt, err := flagcrypto.GenerateSalt()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &model.Challenge{
+		Title:         "attachment-only",
+		Category:      model.DimensionWeb,
+		Difficulty:    model.ChallengeDifficultyEasy,
+		Points:        100,
+		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
+		FlagType:      model.FlagTypeStatic,
+		FlagSalt:      salt,
+		FlagHash:      flagcrypto.HashStaticFlag("flag{test}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{}
+	service := NewChallengeService(nil, repo, imageRepo, repo, probe, SelfCheckConfig{}, zap.NewNop())
+
+	resp, err := service.SelfCheckChallenge(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("SelfCheckChallenge() error = %v", err)
+	}
+	if !resp.Precheck.Passed {
+		t.Fatalf("expected attachment-only challenge precheck passed, got %+v", resp.Precheck)
+	}
+	if !resp.Runtime.Passed {
+		t.Fatalf("expected attachment-only challenge runtime passed, got %+v", resp.Runtime)
+	}
+	if probe.createContainerCalled || probe.createTopologyCalled {
+		t.Fatalf("attachment-only challenge should skip runtime startup")
+	}
+	if len(resp.Runtime.Steps) == 0 || resp.Runtime.Steps[0].Message == "" {
+		t.Fatalf("expected runtime skip message, got %+v", resp.Runtime.Steps)
+	}
+}
+
 func TestChallengeSelfCheckSingleContainerSuccess(t *testing.T) {
 	db := testsupport.SetupTestDB(t)
 

@@ -12,6 +12,7 @@ import (
 	"ctf-platform/pkg/errcode"
 	"errors"
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -394,5 +395,119 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 	}
 	if notifier.calls[0].failureSummary == "" {
 		t.Fatalf("expected failure summary in notification, got %+v", notifier.calls[0])
+	}
+}
+
+func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+	salt, err := flagcrypto.GenerateSalt()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &model.Challenge{
+		Title:         "attachment-only",
+		Category:      model.DimensionWeb,
+		Difficulty:    model.ChallengeDifficultyEasy,
+		Points:        100,
+		Status:        model.ChallengeStatusDraft,
+		CreatedBy:     &teacher.ID,
+		AttachmentURL: "/api/v1/challenges/attachments/imports/web-source-audit-double-wrap-01/source.html",
+		FlagType:      model.FlagTypeStatic,
+		FlagSalt:      salt,
+		FlagHash:      flagcrypto.HashStaticFlag("flag{ok}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{}
+	notifier := &stubChallengeNotificationSender{}
+	service := NewChallengeService(db, repo, imageRepo, repo, probe, SelfCheckConfig{
+		PublishCheckBatchSize: 1,
+	}, zap.NewNop(), notifier)
+
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+
+	service.dispatchPublishCheckJobs(context.Background())
+
+	published, err := repo.FindByID(challenge.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if published.Status != model.ChallengeStatusPublished {
+		t.Fatalf("expected attachment-only challenge to publish, got %s", published.Status)
+	}
+	if probe.createContainerCalled || probe.createTopologyCalled {
+		t.Fatalf("attachment-only challenge publish check should skip runtime startup")
+	}
+
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("GetLatestPublishCheck() error = %v", err)
+	}
+	if latest.Status != "succeeded" || latest.Active {
+		t.Fatalf("expected passed publish check job, got %+v", latest)
+	}
+	if latest.Result == nil || !latest.Result.Precheck.Passed || !latest.Result.Runtime.Passed {
+		t.Fatalf("expected successful self-check result, got %+v", latest.Result)
+	}
+}
+
+func TestGetLatestPublishCheckIgnoresStaleJobsAfterChallengeUpdate(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &model.User{Username: "teacher", PasswordHash: "x", Role: model.RoleTeacher, Status: model.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+
+	createdAt := time.Date(2026, 4, 9, 10, 55, 5, 0, time.UTC)
+	updatedAt := createdAt.Add(2 * time.Hour)
+	challenge := &model.Challenge{
+		Title:      "Web-01 源码审计：双层伪装",
+		Category:   model.DimensionWeb,
+		Difficulty: model.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    0,
+		Status:     model.ChallengeStatusDraft,
+		CreatedBy:  &teacher.ID,
+		UpdatedAt:  updatedAt,
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Model(challenge).Update("updated_at", updatedAt).Error; err != nil {
+		t.Fatalf("update challenge updated_at: %v", err)
+	}
+
+	job := &model.ChallengePublishCheckJob{
+		ChallengeID:    challenge.ID,
+		RequestedBy:    teacher.ID,
+		Status:         model.ChallengePublishCheckStatusFailed,
+		RequestSource:  "admin_publish",
+		FailureSummary: "单容器拉起失败: Error response from daemon: No such image: registry.example.edu/ctf/web-source-audit-double-wrap-01:20260404",
+		CreatedAt:      createdAt,
+		UpdatedAt:      createdAt,
+	}
+	if err := db.Create(job).Error; err != nil {
+		t.Fatalf("create publish check job: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	service := NewChallengeService(db, repo, imageRepo, repo, nil, SelfCheckConfig{}, zap.NewNop())
+
+	latest, err := service.GetLatestPublishCheck(context.Background(), challenge.ID)
+	if err == nil || err.Error() != errcode.ErrNotFound.Error() {
+		t.Fatalf("expected not found for stale publish check job, got latest=%+v err=%v", latest, err)
 	}
 }
