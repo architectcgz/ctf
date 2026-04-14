@@ -324,15 +324,6 @@ export interface ScoreboardRow {
   last_submission_at?: ISODateTime
 }
 
-export interface PracticeRankingItemData {
-  rank: number
-  user_id: ID
-  username: string
-  total_score: number
-  solved_count: number
-  class_name?: string
-}
-
 export interface ContestScoreboardData {
   contest: {
     id: ID

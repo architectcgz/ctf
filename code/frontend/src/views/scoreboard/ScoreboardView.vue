@@ -1,59 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { BarChart2, Shield, Users } from 'lucide-vue-next'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import ScoreboardRealtimeBridge from '@/components/scoreboard/ScoreboardRealtimeBridge.vue'
 import type { ContestStatus } from '@/api/contracts'
-import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
 import { useScoreboardView } from '@/composables/useScoreboardView'
 import { getContestAccentColor, getModeLabel, getStatusLabel } from '@/utils/contest'
 
-type ScoreboardPanelKey = 'contest' | 'points'
-
-const route = useRoute()
-const router = useRouter()
-const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> = [
-  {
-    key: 'contest',
-    label: '竞赛排行榜',
-    panelId: 'scoreboard-panel-contest',
-    tabId: 'scoreboard-tab-contest',
-  },
-  {
-    key: 'points',
-    label: '积分排行榜',
-    panelId: 'scoreboard-panel-points',
-    tabId: 'scoreboard-tab-points',
-  },
-]
-const {
-  activeTab,
-  setTabButtonRef,
-  selectTab,
-  handleTabKeydown,
-} = useRouteQueryTabs<ScoreboardPanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabs.map((tab) => tab.key) as ScoreboardPanelKey[],
-  defaultTab: 'contest',
-})
-
-const {
-  hasSections,
-  hasRankingRows,
-  loading,
-  rankingError,
-  rankingHint,
-  rankingLoading,
-  rankingRows,
-  refresh,
-  refreshContestScoreboard,
-  refreshPracticeRanking,
-  sections,
-  selectionHint,
-} = useScoreboardView()
+const { hasSections, loading, refresh, refreshContestScoreboard, sections, selectionHint } =
+  useScoreboardView()
 const contestCount = computed(() => sections.value.length)
 const teamCount = computed(() =>
   sections.value.reduce((sum, section) => sum + section.rows.length, 0)
@@ -63,10 +19,6 @@ const failureCount = computed(() => sections.value.filter((section) => section.e
 const hasPartialFailure = computed(() => sections.value.some((section) => section.error))
 const emptyTitle = computed(() =>
   selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
-)
-const pageSubtitle = '可在竞赛排行榜与积分排行榜之间切换查看当前榜单。'
-const pointsEmptyTitle = computed(() =>
-  rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
 )
 
 function formatDateTime(value?: string): string {
@@ -144,244 +96,149 @@ function getCardDescription(
         <div class="scoreboard-heading">
           <div class="journal-eyebrow">Scoreboard</div>
           <h1 class="scoreboard-title">排行榜</h1>
-          <p class="scoreboard-subtitle">{{ pageSubtitle }}</p>
+          <p class="scoreboard-subtitle">{{ selectionHint }}</p>
         </div>
       </header>
 
-      <nav class="top-tabs" role="tablist" aria-label="排行榜视图切换">
-        <button
-          v-for="(tab, index) in panelTabs"
-          :id="tab.tabId"
-          :key="tab.tabId"
-          :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-          type="button"
-          role="tab"
-          class="top-tab"
-          :class="{ active: activeTab === tab.key }"
-          :aria-selected="activeTab === tab.key ? 'true' : 'false'"
-          :aria-controls="tab.panelId"
-          :tabindex="activeTab === tab.key ? 0 : -1"
-          @click="selectTab(tab.key)"
-          @keydown="handleTabKeydown($event, index)"
-        >
-          {{ tab.label }}
-        </button>
-      </nav>
-
-      <main class="content-pane">
-        <section
-          id="scoreboard-panel-contest"
-          class="tab-panel"
-          role="tabpanel"
-          aria-labelledby="scoreboard-tab-contest"
-          :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
-          v-show="activeTab === 'contest'"
-        >
-          <section class="scoreboard-summary">
-            <div class="scoreboard-summary-title">
-              <BarChart2 class="h-4 w-4" />
-              <span>当前排行概况</span>
-            </div>
-            <div class="scoreboard-summary-grid metric-panel-grid">
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">展示竞赛</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ contestCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">当前可查看排行的竞赛总数</div>
-              </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">参赛队伍</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ teamCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">已进入榜单统计的队伍规模</div>
-              </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">冻结竞赛</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ frozenCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">当前处于封榜阶段的竞赛数量</div>
-              </div>
-              <div class="scoreboard-summary-item metric-panel-card">
-                <div class="scoreboard-summary-label metric-panel-label">异常分区</div>
-                <div class="scoreboard-summary-value metric-panel-value">{{ failureCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">排行榜加载异常的竞赛分区</div>
-              </div>
-            </div>
-            <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
-          </section>
-
-          <div v-if="loading && !hasSections" class="scoreboard-loading">
-            <div class="scoreboard-loading-spinner" />
+      <section class="scoreboard-summary">
+        <div class="scoreboard-summary-title">
+          <BarChart2 class="h-4 w-4" />
+          <span>当前排行概况</span>
+        </div>
+        <div class="scoreboard-summary-grid metric-panel-grid">
+          <div class="scoreboard-summary-item metric-panel-card">
+            <div class="scoreboard-summary-label metric-panel-label">展示竞赛</div>
+            <div class="scoreboard-summary-value metric-panel-value">{{ contestCount }}</div>
+            <div class="scoreboard-summary-helper metric-panel-helper">当前可查看排行的竞赛总数</div>
           </div>
+          <div class="scoreboard-summary-item metric-panel-card">
+            <div class="scoreboard-summary-label metric-panel-label">参赛队伍</div>
+            <div class="scoreboard-summary-value metric-panel-value">{{ teamCount }}</div>
+            <div class="scoreboard-summary-helper metric-panel-helper">已进入榜单统计的队伍规模</div>
+          </div>
+          <div class="scoreboard-summary-item metric-panel-card">
+            <div class="scoreboard-summary-label metric-panel-label">冻结竞赛</div>
+            <div class="scoreboard-summary-value metric-panel-value">{{ frozenCount }}</div>
+            <div class="scoreboard-summary-helper metric-panel-helper">当前处于封榜阶段的竞赛数量</div>
+          </div>
+          <div class="scoreboard-summary-item metric-panel-card">
+            <div class="scoreboard-summary-label metric-panel-label">异常分区</div>
+            <div class="scoreboard-summary-value metric-panel-value">{{ failureCount }}</div>
+            <div class="scoreboard-summary-helper metric-panel-helper">排行榜加载异常的竞赛分区</div>
+          </div>
+        </div>
+        <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
+      </section>
 
-          <AppEmpty
-            v-else-if="!hasSections"
-            class="scoreboard-empty-state"
-            icon="Trophy"
-            :title="emptyTitle"
-            :description="selectionHint"
+      <div v-if="loading && !hasSections" class="scoreboard-loading">
+        <div class="scoreboard-loading-spinner" />
+      </div>
+
+      <AppEmpty
+        v-else-if="!hasSections"
+        class="scoreboard-empty-state"
+        icon="Trophy"
+        :title="emptyTitle"
+        :description="selectionHint"
+      >
+        <template #action>
+          <button type="button" class="scoreboard-btn" @click="refresh">重新加载</button>
+        </template>
+      </AppEmpty>
+
+      <section v-else class="scoreboard-directory" aria-label="排行榜列表">
+        <div class="scoreboard-directory-top">
+          <h2 class="scoreboard-directory-title">竞赛排行列表</h2>
+          <div class="scoreboard-directory-meta">按竞赛开始时间倒序展示排行榜</div>
+        </div>
+
+        <div class="scoreboard-sections">
+          <article
+            v-for="(section, index) in sections"
+            :key="section.contest.id"
+            data-testid="scoreboard-card"
+            class="scoreboard-card"
+            :style="sectionAccentStyle(section.contest.status)"
           >
-            <template #action>
-              <button type="button" class="scoreboard-btn" @click="refresh">重新加载</button>
-            </template>
-          </AppEmpty>
-
-          <section v-else class="scoreboard-directory" aria-label="排行榜列表">
-            <div class="scoreboard-directory-top">
-              <h2 class="scoreboard-directory-title">竞赛排行列表</h2>
-              <div class="scoreboard-directory-meta">按竞赛开始时间倒序展示排行榜</div>
+            <ScoreboardRealtimeBridge
+              v-if="supportsRealtime(section.contest.status)"
+              :contest-id="section.contest.id"
+              @updated="refreshContestScoreboard(section.contest.id)"
+            />
+            <div class="scoreboard-card-header">
+              <div class="scoreboard-card-main">
+                <div class="scoreboard-card-chips">
+                  <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
+                  <span class="sb-status-chip">{{ getStatusLabel(section.contest.status) }}</span>
+                  <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
+                  <span v-if="section.frozen" class="sb-frozen-chip">
+                    <Shield class="h-3 w-3" /> 已冻结
+                  </span>
+                </div>
+                <h3 class="scoreboard-card-title">{{ section.contest.title }}</h3>
+                <p class="scoreboard-card-time">
+                  {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
+                </p>
+                <p class="scoreboard-card-description">
+                  {{
+                    getCardDescription(
+                      section.contest.status,
+                      section.frozen,
+                      section.error,
+                      section.rows.length
+                    )
+                  }}
+                </p>
+              </div>
+              <div class="scoreboard-card-meta">
+                <Users class="h-3.5 w-3.5" />
+                {{
+                  section.rows.length > 0 ? `展示前 ${section.rows.length} 支队伍` : '暂无排行队伍'
+                }}
+              </div>
             </div>
 
-            <div class="scoreboard-sections">
-              <article
-                v-for="(section, index) in sections"
-                :key="section.contest.id"
-                data-testid="scoreboard-card"
-                class="scoreboard-card"
-                :style="sectionAccentStyle(section.contest.status)"
-              >
-                <ScoreboardRealtimeBridge
-                  v-if="supportsRealtime(section.contest.status)"
-                  :contest-id="section.contest.id"
-                  @updated="refreshContestScoreboard(section.contest.id)"
-                />
-                <div class="scoreboard-card-header">
-                  <div class="scoreboard-card-main">
-                    <div class="scoreboard-card-chips">
-                      <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <span class="sb-status-chip">{{ getStatusLabel(section.contest.status) }}</span>
-                      <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
-                      <span v-if="section.frozen" class="sb-frozen-chip">
-                        <Shield class="h-3 w-3" /> 已冻结
-                      </span>
-                    </div>
-                    <h3 class="scoreboard-card-title">{{ section.contest.title }}</h3>
-                    <p class="scoreboard-card-time">
-                      {{ formatContestWindow(section.contest.starts_at, section.contest.ends_at) }}
-                    </p>
-                    <p class="scoreboard-card-description">
-                      {{
-                        getCardDescription(
-                          section.contest.status,
-                          section.frozen,
-                          section.error,
-                          section.rows.length
-                        )
-                      }}
-                    </p>
-                  </div>
-                  <div class="scoreboard-card-meta">
-                    <Users class="h-3.5 w-3.5" />
-                    {{
-                      section.rows.length > 0 ? `展示前 ${section.rows.length} 支队伍` : '暂无排行队伍'
-                    }}
-                  </div>
-                </div>
+            <div class="scoreboard-card-divider" />
 
-                <div class="scoreboard-card-divider" />
-
-                <div
-                  v-if="section.error"
-                  class="scoreboard-inline-note scoreboard-inline-note-danger"
-                >
-                  该竞赛排行榜加载失败，请稍后重试
-                </div>
-
-                <div v-else-if="section.rows.length === 0" class="scoreboard-inline-note">
-                  暂无排行榜数据
-                </div>
-
-                <div v-else class="scoreboard-table-shell overflow-x-auto">
-                  <table class="sb-table">
-                    <thead>
-                      <tr>
-                        <th>排名</th>
-                        <th>队伍</th>
-                        <th>得分</th>
-                        <th>解题数</th>
-                        <th>最近得分</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="item in section.rows"
-                        :key="`${section.contest.id}-${item.team_id}`"
-                        :class="getRowClass(item.rank)"
-                      >
-                        <td class="sb-cell--rank">
-                          <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
-                        </td>
-                        <td>{{ item.team_name }}</td>
-                        <td class="sb-cell--mono">{{ item.score }}</td>
-                        <td>{{ item.solved_count }}</td>
-                        <td class="sb-cell--muted">{{ formatDateTime(item.last_submission_at) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </article>
+            <div v-if="section.error" class="scoreboard-inline-note scoreboard-inline-note-danger">
+              该竞赛排行榜加载失败，请稍后重试
             </div>
-          </section>
-        </section>
 
-        <section
-          id="scoreboard-panel-points"
-          class="tab-panel"
-          role="tabpanel"
-          aria-labelledby="scoreboard-tab-points"
-          :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
-          v-show="activeTab === 'points'"
-        >
-          <div class="scoreboard-directory-top">
-            <h2 class="scoreboard-directory-title">积分排行榜</h2>
-            <div class="scoreboard-directory-meta">{{ rankingHint }}</div>
-          </div>
+            <div v-else-if="section.rows.length === 0" class="scoreboard-inline-note">
+              暂无排行榜数据
+            </div>
 
-          <div v-if="rankingLoading" class="scoreboard-loading">
-            <div class="scoreboard-loading-spinner" />
-          </div>
-
-          <AppEmpty
-            v-else-if="!hasRankingRows"
-            class="scoreboard-empty-state"
-            icon="Trophy"
-            :title="pointsEmptyTitle"
-            :description="rankingHint"
-          >
-            <template #action>
-              <button type="button" class="scoreboard-btn" @click="refreshPracticeRanking">
-                重新加载
-              </button>
-            </template>
-          </AppEmpty>
-
-          <div v-else class="scoreboard-table-shell overflow-x-auto">
-            <table class="sb-table">
-              <thead>
-                <tr>
-                  <th>排名</th>
-                  <th>用户名</th>
-                  <th>积分</th>
-                  <th>解题数</th>
-                  <th>班级</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="item in rankingRows"
-                  :key="item.user_id"
-                  :class="getRowClass(item.rank)"
-                >
-                  <td class="sb-cell--rank">
-                    <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
-                  </td>
-                  <td>{{ item.username }}</td>
-                  <td class="sb-cell--mono">{{ item.total_score }}</td>
-                  <td>{{ item.solved_count }}</td>
-                  <td class="sb-cell--muted">{{ item.class_name || '未分配班级' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </main>
+            <div v-else class="scoreboard-table-shell overflow-x-auto">
+              <table class="sb-table">
+                <thead>
+                  <tr>
+                    <th>排名</th>
+                    <th>队伍</th>
+                    <th>得分</th>
+                    <th>解题数</th>
+                    <th>最近得分</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="item in section.rows"
+                    :key="`${section.contest.id}-${item.team_id}`"
+                    :class="getRowClass(item.rank)"
+                  >
+                    <td class="sb-cell--rank">
+                      <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
+                    </td>
+                    <td>{{ item.team_name }}</td>
+                    <td class="sb-cell--mono">{{ item.score }}</td>
+                    <td>{{ item.solved_count }}</td>
+                    <td class="sb-cell--muted">{{ formatDateTime(item.last_submission_at) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
     </div>
   </section>
 </template>

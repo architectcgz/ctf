@@ -665,7 +665,6 @@ func registerUserRoutes(apiV1, protected, teacherOrAbove *gin.RouterGroup, deps 
 		deps.practice.Handler.SubmitFlag,
 	)
 	protected.GET("/challenges/:id/submissions/mine", deps.practice.Handler.ListMyChallengeSubmissions)
-	protected.GET("/scoreboard/ranking", deps.practice.Handler.GetRanking)
 	protected.GET("/instances", deps.runtime.Handler.ListInstances)
 	protected.DELETE("/instances/:id",
 		audit(middleware.AuditOptions{
