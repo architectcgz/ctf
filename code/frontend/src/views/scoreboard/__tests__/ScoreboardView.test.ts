@@ -5,9 +5,10 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import ScoreboardView from '../ScoreboardView.vue'
 import scoreboardSource from '../ScoreboardView.vue?raw'
 
-const { getContestsMock, getScoreboardMock } = vi.hoisted(() => ({
+const { getContestsMock, getScoreboardMock, getPracticeRankingMock } = vi.hoisted(() => ({
   getContestsMock: vi.fn(),
   getScoreboardMock: vi.fn(),
+  getPracticeRankingMock: vi.fn(),
 }))
 
 const webSocketMocks = vi.hoisted(() => {
@@ -41,6 +42,10 @@ vi.mock('@/api/contest', () => ({
   getScoreboard: getScoreboardMock,
 }))
 
+vi.mock('@/api/scoreboard', () => ({
+  getPracticeRanking: getPracticeRankingMock,
+}))
+
 vi.mock('@/composables/useWebSocket', () => ({
   useWebSocket: webSocketMocks.useWebSocket,
 }))
@@ -49,6 +54,7 @@ describe('ScoreboardView', () => {
   beforeEach(() => {
     getContestsMock.mockReset()
     getScoreboardMock.mockReset()
+    getPracticeRankingMock.mockReset()
     webSocketMocks.connect.mockClear()
     webSocketMocks.disconnect.mockClear()
     webSocketMocks.send.mockClear()
@@ -161,6 +167,7 @@ describe('ScoreboardView', () => {
   })
 
   it('同时展示当前排行和历史排行内容', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue({
       list: [
         {
@@ -263,6 +270,7 @@ describe('ScoreboardView', () => {
   })
 
   it('收到进行中竞赛的 scoreboard.updated 后只刷新对应竞赛', async () => {
+    getPracticeRankingMock.mockResolvedValue([])
     getContestsMock.mockResolvedValue({
       list: [
         {
@@ -383,5 +391,82 @@ describe('ScoreboardView', () => {
     expect(scoreboardSource).toContain('class="scoreboard-summary-label metric-panel-label"')
     expect(scoreboardSource).toContain('class="scoreboard-summary-value metric-panel-value"')
     expect(scoreboardSource).toContain('class="scoreboard-summary-helper metric-panel-helper"')
+  })
+
+  it('提供竞赛排行榜与积分排行榜两个页签，并展示积分榜字段', async () => {
+    getPracticeRankingMock.mockResolvedValue([
+      {
+        rank: 1,
+        user_id: 'student-1',
+        username: 'student_user',
+        total_score: 320,
+        solved_count: 4,
+        class_name: 'Class A',
+      },
+    ])
+    getContestsMock.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-running',
+          title: '当前竞赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-03-12T00:00:00Z',
+          ends_at: '2026-03-12T12:00:00Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 100,
+    })
+    getScoreboardMock.mockResolvedValue({
+      contest: {
+        id: 'contest-running',
+        title: '当前竞赛',
+        status: 'running',
+        started_at: '2026-03-12T00:00:00Z',
+        ends_at: '2026-03-12T12:00:00Z',
+      },
+      scoreboard: {
+        list: [
+          {
+            rank: 1,
+            team_id: 'team-running',
+            team_name: 'Current Champions',
+            score: 2450,
+            solved_count: 8,
+            last_submission_at: '2026-03-12T10:15:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      },
+      frozen: false,
+    })
+
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/scoreboard', name: 'Scoreboard', component: ScoreboardView }],
+    })
+    await router.push('/scoreboard?tab=points')
+    await router.isReady()
+
+    const wrapper = mount(ScoreboardView, {
+      global: {
+        plugins: [router],
+      },
+    })
+
+    await flushPromises()
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('竞赛排行榜')
+    expect(wrapper.text()).toContain('积分排行榜')
+    expect(wrapper.text()).toContain('student_user')
+    expect(wrapper.text()).toContain('320')
+    expect(wrapper.text()).toContain('4')
+    expect(wrapper.text()).toContain('Class A')
+    expect(scoreboardSource).toContain('scoreboard-tab-points')
   })
 })
