@@ -64,7 +64,6 @@ const hasPartialFailure = computed(() => sections.value.some((section) => sectio
 const emptyTitle = computed(() =>
   selectionHint.value.includes('失败') ? '排行榜加载失败' : '暂无可查看的竞赛排行榜'
 )
-const pageSubtitle = '可在竞赛排行榜与积分排行榜之间切换查看当前榜单。'
 const pointsEmptyTitle = computed(() =>
   rankingError.value ? '积分排行榜加载失败' : '暂无可查看的积分排行榜'
 )
@@ -140,14 +139,6 @@ function getCardDescription(
     class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
     <div class="scoreboard-page">
-      <header class="scoreboard-topbar">
-        <div class="scoreboard-heading">
-          <div class="journal-eyebrow">Scoreboard</div>
-          <h1 class="scoreboard-title">排行榜</h1>
-          <p class="scoreboard-subtitle">{{ pageSubtitle }}</p>
-        </div>
-      </header>
-
       <nav class="top-tabs" role="tablist" aria-label="排行榜视图切换">
         <button
           v-for="(tab, index) in panelTabs"
@@ -329,11 +320,6 @@ function getCardDescription(
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
           v-show="activeTab === 'points'"
         >
-          <div class="scoreboard-directory-top">
-            <h2 class="scoreboard-directory-title">积分排行榜</h2>
-            <div class="scoreboard-directory-meta">{{ rankingHint }}</div>
-          </div>
-
           <div v-if="rankingLoading" class="scoreboard-loading">
             <div class="scoreboard-loading-spinner" />
           </div>
@@ -396,10 +382,6 @@ function getCardDescription(
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-}
-
-.scoreboard-subtitle {
-  max-width: 760px;
 }
 
 .scoreboard-inline-note {
