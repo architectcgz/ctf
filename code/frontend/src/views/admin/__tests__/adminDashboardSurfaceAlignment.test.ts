@@ -29,4 +29,11 @@ describe('admin dashboard surface alignment', () => {
       /\.admin-action-row:focus-visible\s*\{[\s\S]*outline:\s*none;[\s\S]*0 0 0 3px color-mix\(in srgb,\s*var\(--journal-accent\) 12%, transparent\)/s,
     )
   })
+
+  it('uses list-heading for alerts and hotspot section headers instead of workspace-tab-heading', () => {
+    expect(adminDashboardSource).toContain('<h2 class="section-title list-heading__title">当前告警</h2>')
+    expect(adminDashboardSource).toContain('<h2 class="section-title list-heading__title">资源热点</h2>')
+    expect(adminDashboardSource).not.toContain('workspace-tab-heading__title">当前告警</h2>')
+    expect(adminDashboardSource).not.toContain('workspace-tab-heading__title">资源热点</h2>')
+  })
 })

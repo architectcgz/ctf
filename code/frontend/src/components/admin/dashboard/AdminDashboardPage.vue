@@ -191,10 +191,10 @@ const {
           aria-labelledby="admin-dashboard-tab-alerts"
           :aria-hidden="activePanel === 'alerts' ? 'false' : 'true'"
         >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <div class="section-head list-heading">
+            <div>
               <div class="section-kicker">Alert Stack</div>
-              <h2 class="section-title workspace-tab-heading__title">当前告警</h2>
+              <h2 class="section-title list-heading__title">当前告警</h2>
             </div>
             <div class="status-pill" :class="alertCount > 0 ? 'danger' : 'ready'">
               {{ alertCount }} 条
@@ -236,10 +236,10 @@ const {
           aria-labelledby="admin-dashboard-tab-hotspots"
           :aria-hidden="activePanel === 'hotspots' ? 'false' : 'true'"
         >
-          <div class="section-head workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <div class="section-head list-heading">
+            <div>
               <div class="section-kicker">Resource Hotspots</div>
-              <h2 class="section-title workspace-tab-heading__title">资源热点</h2>
+              <h2 class="section-title list-heading__title">资源热点</h2>
             </div>
           </div>
 
@@ -543,7 +543,16 @@ const {
   margin-bottom: var(--space-4);
 }
 
-.section-title:not(.workspace-tab-heading__title) {
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.list-heading__title,
+.section-title {
   margin: var(--space-2-5) 0 0;
   font-size: var(--font-size-22);
   line-height: 1.12;
@@ -818,8 +827,10 @@ const {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .list-heading,
   .section-head {
-    display: block;
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
