@@ -397,6 +397,12 @@ describe('ScoreboardView', () => {
   it('tabs 应直接位于页面顶部，points 页签不应重复渲染局部页头', () => {
     expect(scoreboardSource).not.toContain('<header class="scoreboard-topbar">')
     expect(scoreboardSource).not.toContain('<h2 class="scoreboard-directory-title">积分排行榜</h2>')
+    expect(scoreboardSource).toContain(
+      '<div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>'
+    )
+    expect(scoreboardSource).toContain(
+      '<div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>'
+    )
   })
 
   it('提供竞赛排行榜与积分排行榜两个页签，并展示积分榜字段', async () => {

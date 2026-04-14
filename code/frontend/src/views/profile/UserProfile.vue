@@ -6,6 +6,7 @@ import { downloadReport, exportPersonalReport } from '@/api/assessment'
 import { getProfile } from '@/api/auth'
 import type { AuthUser, ReportExportData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useAuthStore } from '@/stores/auth'
 import { formatDate } from '@/utils/format'
@@ -189,12 +190,12 @@ onUnmounted(() => {
     </div>
 
     <div v-else class="profile-page flex flex-1 flex-col">
-      <header class="profile-topbar">
-        <div class="profile-heading">
-          <div class="journal-eyebrow">Profile</div>
-          <h1 class="workspace-page-title">个人资料</h1>
-          <p class="workspace-page-copy">{{ pageCopy }}</p>
-        </div>
+      <PageHeader
+        class="profile-topbar"
+        title="个人资料"
+        :description="pageCopy"
+        eyebrow="Profile"
+      >
         <div class="profile-topbar-actions">
           <div class="profile-pill">
             <span class="status-dot status-dot-ready" />
@@ -205,7 +206,7 @@ onUnmounted(() => {
             刷新
           </button>
         </div>
-      </header>
+      </PageHeader>
 
       <section class="profile-summary" aria-label="账号概况">
         <div class="profile-summary-title">

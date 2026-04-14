@@ -168,6 +168,8 @@ function getCardDescription(
           :aria-hidden="activeTab === 'contest' ? 'false' : 'true'"
           v-show="activeTab === 'contest'"
         >
+          <div class="workspace-overline scoreboard-panel-overline">Contest Scoreboard</div>
+
           <section class="scoreboard-summary">
             <div class="scoreboard-summary-title">
               <BarChart2 class="h-4 w-4" />
@@ -320,6 +322,8 @@ function getCardDescription(
           :aria-hidden="activeTab === 'points' ? 'false' : 'true'"
           v-show="activeTab === 'points'"
         >
+          <div class="workspace-overline scoreboard-panel-overline">Points Scoreboard</div>
+
           <div v-if="rankingLoading" class="scoreboard-loading">
             <div class="scoreboard-loading-spinner" />
           </div>
@@ -382,6 +386,10 @@ function getCardDescription(
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
+}
+
+.scoreboard-panel-overline {
+  margin-bottom: 18px;
 }
 
 .scoreboard-inline-note {
