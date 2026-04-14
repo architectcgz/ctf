@@ -66,6 +66,7 @@ const {
   router,
   orderedTabs: panelTabOrder,
   defaultTab: 'overview',
+  routeName: 'CheatDetection',
 })
 
 async function loadRiskData() {
@@ -212,10 +213,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'suspects' ? 'false' : 'true'"
           v-show="activePanel === 'suspects'"
         >
-          <div class="workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <div class="list-heading">
+            <div>
               <div class="journal-note-label">Burst Accounts</div>
-              <h2 class="workspace-tab-heading__title">高频提交账号</h2>
+              <h2 class="list-heading__title">高频提交账号</h2>
             </div>
           </div>
 
@@ -257,10 +258,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'shared-ip' ? 'false' : 'true'"
           v-show="activePanel === 'shared-ip'"
         >
-          <div class="workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <div class="list-heading">
+            <div>
               <div class="journal-note-label">Shared IP</div>
-              <h2 class="workspace-tab-heading__title">共享 IP 线索</h2>
+              <h2 class="list-heading__title">共享 IP 线索</h2>
             </div>
           </div>
 
@@ -299,10 +300,10 @@ onMounted(() => {
           :aria-hidden="activePanel === 'actions' ? 'false' : 'true'"
           v-show="activePanel === 'actions'"
         >
-          <div class="workspace-tab-heading">
-            <div class="workspace-tab-heading__main">
+          <div class="list-heading">
+            <div>
               <div class="journal-note-label">Quick Actions</div>
-              <h2 class="workspace-tab-heading__title">快速排查入口</h2>
+              <h2 class="list-heading__title">快速排查入口</h2>
             </div>
           </div>
 
@@ -377,6 +378,21 @@ onMounted(() => {
   gap: var(--space-4);
 }
 
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
 .cheat-risk-summary {
   --admin-summary-grid-columns: repeat(2, minmax(0, 1fr));
 }
@@ -435,6 +451,11 @@ onMounted(() => {
 }
 
 @media (max-width: 720px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .cheat-risk-summary,
   .cheat-kpi-summary {
     --admin-summary-grid-columns: 1fr;
