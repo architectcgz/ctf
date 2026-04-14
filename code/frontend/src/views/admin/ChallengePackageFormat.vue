@@ -8,7 +8,10 @@ const packageTree = `challenge-package.zip    # 上传的题目包压缩文件
   statement.md           # 题面 Markdown 文件（必填）
   attachments/           # 题目附件目录（可选）
     web-demo.zip         # 题目附件示例
-  docker/                # 运行扩展目录（可选）
+  docker/                # 教师源码与运行扩展目录（可选）
+    Dockerfile           # 容器构建文件示例
+    app.py               # 教师编写的 Web 服务器入口示例
+    requirements.txt     # 运行依赖示例
     topology.yml         # 拓扑扩展配置（extensions.topology.source）`
 
 const challengeManifest = `api_version: v1 # 固定为 v1
@@ -85,7 +88,8 @@ const statementGuide = `statement.md 写法建议
       <h1 class="hero-title">题目包示例</h1>
       <p class="hero-summary">
         上传 zip 之前，先核对目录结构、`challenge.yml`
-        字段和题面文件路径。这里的示例与当前导入解析规则保持一致。
+        字段和题面文件路径。教师自己写的 Web 服务代码通常也放在 `docker/`
+        目录里，这里的示例与当前导入解析规则保持一致。
       </p>
     </div>
 
