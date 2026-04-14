@@ -730,6 +730,64 @@ func TestServiceCleanExpiredInstancesKeepsRunningStateWhenRuntimeCleanupFails(t 
 	}
 }
 
+func TestServiceCleanExpiredInstancesMarksExpiredWhenContainerAlreadyRemoved(t *testing.T) {
+	t.Parallel()
+
+	repo := newTestRepository(t)
+	now := time.Now()
+	instance := &model.Instance{
+		ID:          2102,
+		UserID:      1,
+		ChallengeID: 1,
+		HostPort:    30003,
+		ContainerID: "missing-ctr",
+		NetworkID:   "net-3",
+		Status:      model.InstanceStatusRunning,
+		ExpiresAt:   now.Add(-time.Minute),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	seedInstance(t, repo.db, instance)
+	if err := repo.db.Create(&model.PortAllocation{
+		Port:       30003,
+		InstanceID: &instance.ID,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create port allocation: %v", err)
+	}
+
+	engine := &fakeRuntimeEngine{
+		removeContainerErr: errors.New("Error response from daemon: No such container: missing-ctr"),
+	}
+	cleanupService := runtimecmd.NewRuntimeCleanupService(engine, nil)
+	service := runtimecmd.NewRuntimeMaintenanceService(repo, nil, cleanupService, &config.ContainerConfig{
+		MaxExtends:        2,
+		ExtendDuration:    30 * time.Minute,
+		OrphanGracePeriod: 5 * time.Minute,
+	}, nil)
+
+	if err := service.CleanExpiredInstances(context.Background()); err != nil {
+		t.Fatalf("CleanExpiredInstances() error = %v", err)
+	}
+
+	updated, err := repo.FindByID(instance.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if updated.Status != model.InstanceStatusExpired {
+		t.Fatalf("expected instance to be marked expired, got %+v", updated)
+	}
+
+	var count int64
+	if err := repo.db.Model(&model.PortAllocation{}).Where("port = ?", 30003).Count(&count).Error; err != nil {
+		t.Fatalf("count port allocations: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("expected port allocation to be removed, count=%d", count)
+	}
+}
+
 func TestServiceCreateTopologyCreatesAndConnectsMultipleNetworks(t *testing.T) {
 	t.Parallel()
 
