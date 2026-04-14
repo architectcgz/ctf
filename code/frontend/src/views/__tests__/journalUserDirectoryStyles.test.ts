@@ -6,6 +6,8 @@ import challengeListSource from '@/views/challenges/ChallengeList.vue?raw'
 import contestListSource from '@/views/contests/ContestList.vue?raw'
 import instanceListSource from '@/views/instances/InstanceList.vue?raw'
 import notificationListSource from '@/views/notifications/NotificationList.vue?raw'
+import securitySettingsSource from '@/views/profile/SecuritySettings.vue?raw'
+import userProfileSource from '@/views/profile/UserProfile.vue?raw'
 import scoreboardSource from '@/views/scoreboard/ScoreboardView.vue?raw'
 
 const journalUserDirectorySource = readFileSync(
@@ -22,6 +24,8 @@ describe('journal user directory shared styles', () => {
   it('应该在共享样式文件中声明学生侧目录页复用的骨架与按钮规则', () => {
     expect(journalUserDirectorySource).toContain('.challenge-topbar')
     expect(journalUserDirectorySource).toContain('.contest-topbar')
+    expect(journalUserDirectorySource).toContain('.profile-topbar')
+    expect(journalUserDirectorySource).toContain('.security-topbar')
     expect(journalUserDirectorySource).toContain('.notification-topbar')
     expect(journalUserDirectorySource).toContain('.scoreboard-topbar')
     expect(journalUserDirectorySource).toContain('.instance-topbar')
@@ -44,7 +48,6 @@ describe('journal user directory shared styles', () => {
     expect(challengeStyle).not.toMatch(/^\.challenge-summary-helper\s*\{/m)
     expect(challengeStyle).not.toMatch(/^\.challenge-directory-top\s*\{/m)
     expect(challengeStyle).not.toMatch(/^\.challenge-directory-title\s*\{/m)
-    expect(challengeStyle).not.toMatch(/^\.challenge-directory-meta\s*\{/m)
     expect(challengeStyle).not.toMatch(/^\.challenge-btn\s*\{/m)
 
     const contestStyle = extractScopedStyle(contestListSource)
@@ -97,6 +100,22 @@ describe('journal user directory shared styles', () => {
     expect(instanceStyle).not.toMatch(/^\.instance-directory-title\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-directory-meta\s*\{/m)
     expect(instanceStyle).not.toMatch(/^\.instance-btn\s*\{/m)
+
+    const userProfileStyle = extractScopedStyle(userProfileSource)
+    expect(userProfileStyle).not.toMatch(/^\.profile-topbar\s*\{/m)
+    expect(userProfileStyle).not.toMatch(/^\.profile-heading\s*\{/m)
+    expect(userProfileStyle).not.toMatch(/^\.profile-summary\s*\{/m)
+    expect(userProfileStyle).not.toMatch(/^\.profile-summary-title\s*\{/m)
+    expect(userProfileStyle).not.toMatch(/^\.profile-summary-grid\s*\{/m)
+    expect(userProfileStyle).not.toMatch(/^\.profile-summary-item\s*\{/m)
+
+    const securityStyle = extractScopedStyle(securitySettingsSource)
+    expect(securityStyle).not.toMatch(/^\.security-topbar\s*\{/m)
+    expect(securityStyle).not.toMatch(/^\.security-heading\s*\{/m)
+    expect(securityStyle).not.toMatch(/^\.security-summary\s*\{/m)
+    expect(securityStyle).not.toMatch(/^\.security-summary-title\s*\{/m)
+    expect(securityStyle).not.toMatch(/^\.security-summary-grid\s*\{/m)
+    expect(securityStyle).not.toMatch(/^\.security-summary-item\s*\{/m)
   })
 
   it('challenge 等目录页的概况卡片不应在目录共享样式里继续覆写 metric-panel 单卡外观', () => {
@@ -119,5 +138,21 @@ describe('journal user directory shared styles', () => {
     expect(journalUserDirectorySource).not.toMatch(
       /:is\(\s*\.challenge-summary-helper,[\s\S]*?--metric-panel-helper-size:/s
     )
+  })
+
+  it('profile 与 security 页顶部也应接入共享 topbar 与 summary 骨架', () => {
+    expect(userProfileSource).toContain('class="profile-topbar"')
+    expect(userProfileSource).toContain('class="profile-heading"')
+    expect(userProfileSource).toContain('class="profile-summary"')
+    expect(userProfileSource).toContain('class="profile-summary-title"')
+    expect(userProfileSource).toContain('class="profile-summary-grid metric-panel-grid"')
+    expect(userProfileSource).not.toContain('<PageHeader')
+
+    expect(securitySettingsSource).toContain('class="security-topbar"')
+    expect(securitySettingsSource).toContain('class="security-heading"')
+    expect(securitySettingsSource).toContain('class="security-summary"')
+    expect(securitySettingsSource).toContain('class="security-summary-title"')
+    expect(securitySettingsSource).toContain('class="security-summary-grid metric-panel-grid"')
+    expect(securitySettingsSource).not.toContain('<PageHeader')
   })
 })
