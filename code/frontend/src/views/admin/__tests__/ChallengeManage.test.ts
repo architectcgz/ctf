@@ -362,6 +362,15 @@ describe('ChallengeManage', () => {
     expect(pushMock).toHaveBeenLastCalledWith({ name: 'AdminChallengePackageFormat' })
   })
 
+  it('导入流分段页应使用统一目录头样式', () => {
+    expect(challengeManageSource).toContain('class="list-heading challenge-import-heading"')
+    expect(challengeManageSource).toContain('class="list-heading challenge-queue-heading"')
+    expect(challengeManageSource).toContain('<h1 class="workspace-page-title">导入题目包</h1>')
+    expect(challengeManageSource).toContain('<h1 class="workspace-page-title">待确认导入</h1>')
+    expect(challengeManageSource).not.toContain('workspace-tab-heading__title">导入题目包</h1>')
+    expect(challengeManageSource).not.toContain('workspace-tab-heading__title">待确认导入</h1>')
+  })
+
   it('支持多选上传，并在上传区域下方显示每个文件的结果', async () => {
     adminApiMocks.previewChallengeImport
       .mockResolvedValueOnce({

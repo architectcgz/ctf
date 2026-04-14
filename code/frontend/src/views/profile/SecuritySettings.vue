@@ -3,7 +3,6 @@ import { reactive, ref } from 'vue'
 import { KeyRound, Loader2 } from 'lucide-vue-next'
 
 import { changePassword } from '@/api/auth'
-import PageHeader from '@/components/common/PageHeader.vue'
 import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
@@ -103,142 +102,148 @@ async function submitPasswordChange(): Promise<void> {
   <section
     class="journal-shell journal-shell-user journal-eyebrow-text journal-hero flex min-h-full flex-1 flex-col rounded-[30px] border px-6 py-6 md:px-8"
   >
-    <div class="security-header">
-      <PageHeader
-        class="security-page-header"
-        eyebrow="Security"
-        title="安全设置"
-        description="更新账号密码并检查当前安全策略。"
-      >
-        <div class="security-header__actions">
+    <div class="security-page flex flex-1 flex-col">
+      <header class="security-topbar">
+        <div class="security-heading">
+          <div class="journal-eyebrow">Security</div>
+          <h1 class="workspace-page-title">安全设置</h1>
+          <p class="workspace-page-copy">更新账号密码并检查当前安全策略。</p>
+        </div>
+        <div class="security-topbar-actions">
           <div class="security-pill">
             <span class="status-dot status-dot-active" />
             密码策略已启用
           </div>
         </div>
-      </PageHeader>
+      </header>
 
-      <div class="security-summary-grid metric-panel-grid">
-        <article
-          v-for="stat in securityStats"
-          :key="stat.key"
-          class="security-summary-item metric-panel-card"
-        >
-          <div class="security-summary-icon">
-            <KeyRound class="h-4 w-4" />
-          </div>
-          <div>
-            <div class="journal-note-label metric-panel-label">{{ stat.label }}</div>
-            <div
-              class="security-summary-value metric-panel-value"
-              :class="{ 'tech-font': stat.key === 'rotation' }"
-            >
-              {{ stat.value }}
-            </div>
-            <div class="journal-note-helper metric-panel-helper">{{ stat.helper }}</div>
-          </div>
-        </article>
-      </div>
-    </div>
-
-    <div class="journal-divider security-divider" />
-
-    <div class="security-layout">
-      <form class="security-section" @submit.prevent="submitPasswordChange">
-        <div class="security-section-head">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Password</div>
-            <h2 class="security-section-title">密码修改</h2>
-          </div>
+      <section class="security-summary" aria-label="安全概况">
+        <div class="security-summary-title">
+          <KeyRound class="h-4 w-4" />
+          <span>安全概况</span>
         </div>
-
-        <div class="space-y-1.5">
-          <label class="journal-label">当前密码</label>
-          <input
-            v-model="passwordForm.oldPassword"
-            type="password"
-            autocomplete="current-password"
-            class="journal-input"
-            :class="{ 'journal-input--error': passwordFieldErrors.oldPassword }"
-            placeholder="输入当前密码"
-          />
-          <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">
-            {{ passwordFieldErrors.oldPassword }}
-          </p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="journal-label">新密码</label>
-          <input
-            v-model="passwordForm.newPassword"
-            type="password"
-            autocomplete="new-password"
-            class="journal-input"
-            :class="{ 'journal-input--error': passwordFieldErrors.newPassword }"
-            placeholder="至少 8 位"
-          />
-          <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">
-            {{ passwordFieldErrors.newPassword }}
-          </p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="journal-label">确认新密码</label>
-          <input
-            v-model="passwordForm.confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            class="journal-input"
-            :class="{ 'journal-input--error': passwordFieldErrors.confirmPassword }"
-            placeholder="再次输入新密码"
-          />
-          <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">
-            {{ passwordFieldErrors.confirmPassword }}
-          </p>
-        </div>
-
-        <div v-if="passwordError" class="security-error">
-          {{ passwordError }}
-        </div>
-
-        <div class="security-actions">
-          <button
-            type="button"
-            class="journal-btn journal-btn--primary"
-            :disabled="passwordSaving"
-            @click="submitPasswordChange"
+        <div class="security-summary-grid metric-panel-grid">
+          <article
+            v-for="stat in securityStats"
+            :key="stat.key"
+            class="security-summary-item metric-panel-card"
           >
-            <Loader2 v-if="passwordSaving" class="h-4 w-4 animate-spin" />
-            {{ passwordSaving ? '提交中…' : '更新密码' }}
-          </button>
+            <div class="security-summary-icon">
+              <KeyRound class="h-4 w-4" />
+            </div>
+            <div>
+              <div class="journal-note-label metric-panel-label">{{ stat.label }}</div>
+              <div
+                class="security-summary-value metric-panel-value"
+                :class="{ 'tech-font': stat.key === 'rotation' }"
+              >
+                {{ stat.value }}
+              </div>
+              <div class="journal-note-helper metric-panel-helper">{{ stat.helper }}</div>
+            </div>
+          </article>
         </div>
-      </form>
+      </section>
 
-      <aside class="security-section security-section--aside">
-        <div class="security-section-head">
-          <div>
-            <div class="journal-eyebrow journal-eyebrow-soft">Tips</div>
-            <h2 class="security-section-title">安全提示</h2>
-          </div>
-        </div>
+      <div class="journal-divider security-divider" />
 
-        <div class="security-side-lead">
-          <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
-            <span class="status-dot status-dot-active" />
-            修改后会同步退出其他设备
+      <div class="security-layout">
+        <form class="security-section" @submit.prevent="submitPasswordChange">
+          <div class="security-section-head">
+            <div>
+              <div class="journal-eyebrow journal-eyebrow-soft">Password</div>
+              <h2 class="security-section-title">密码修改</h2>
+            </div>
           </div>
-          <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
-            提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
-          </p>
-        </div>
 
-        <div class="security-tip-list">
-          <div v-for="tip in passwordTips" :key="tip" class="security-tip-item">
-            <div class="journal-note-label">安全提示</div>
-            <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
+          <div class="space-y-1.5">
+            <label class="journal-label">当前密码</label>
+            <input
+              v-model="passwordForm.oldPassword"
+              type="password"
+              autocomplete="current-password"
+              class="journal-input"
+              :class="{ 'journal-input--error': passwordFieldErrors.oldPassword }"
+              placeholder="输入当前密码"
+            />
+            <p v-if="passwordFieldErrors.oldPassword" class="journal-field-error">
+              {{ passwordFieldErrors.oldPassword }}
+            </p>
           </div>
-        </div>
-      </aside>
+
+          <div class="space-y-1.5">
+            <label class="journal-label">新密码</label>
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              autocomplete="new-password"
+              class="journal-input"
+              :class="{ 'journal-input--error': passwordFieldErrors.newPassword }"
+              placeholder="至少 8 位"
+            />
+            <p v-if="passwordFieldErrors.newPassword" class="journal-field-error">
+              {{ passwordFieldErrors.newPassword }}
+            </p>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="journal-label">确认新密码</label>
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              class="journal-input"
+              :class="{ 'journal-input--error': passwordFieldErrors.confirmPassword }"
+              placeholder="再次输入新密码"
+            />
+            <p v-if="passwordFieldErrors.confirmPassword" class="journal-field-error">
+              {{ passwordFieldErrors.confirmPassword }}
+            </p>
+          </div>
+
+          <div v-if="passwordError" class="security-error">
+            {{ passwordError }}
+          </div>
+
+          <div class="security-actions">
+            <button
+              type="button"
+              class="journal-btn journal-btn--primary"
+              :disabled="passwordSaving"
+              @click="submitPasswordChange"
+            >
+              <Loader2 v-if="passwordSaving" class="h-4 w-4 animate-spin" />
+              {{ passwordSaving ? '提交中…' : '更新密码' }}
+            </button>
+          </div>
+        </form>
+
+        <aside class="security-section security-section--aside">
+          <div class="security-section-head">
+            <div>
+              <div class="journal-eyebrow journal-eyebrow-soft">Tips</div>
+              <h2 class="security-section-title">安全提示</h2>
+            </div>
+          </div>
+
+          <div class="security-side-lead">
+            <div class="flex items-center gap-2 text-sm font-medium text-[var(--journal-ink)]">
+              <span class="status-dot status-dot-active" />
+              修改后会同步退出其他设备
+            </div>
+            <p class="mt-3 text-sm leading-6 text-[var(--journal-muted)]">
+              提交后会立即更新当前账号密码，并提示其他设备重新完成认证。
+            </p>
+          </div>
+
+          <div class="security-tip-list">
+            <div v-for="tip in passwordTips" :key="tip" class="security-tip-item">
+              <div class="journal-note-label">安全提示</div>
+              <div class="mt-2 text-sm leading-6 text-[var(--journal-ink)]">{{ tip }}</div>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   </section>
 </template>
@@ -286,19 +291,20 @@ async function submitPasswordChange(): Promise<void> {
   --journal-user-tech-font: var(--font-family-mono);
 }
 
-.security-header {
-  display: grid;
-  gap: 1rem;
+.security-page {
+  min-height: 100%;
 }
 
-.security-header__actions {
+.security-topbar-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.75rem;
 }
 
 .security-divider {
-  margin: 1.2rem 0 0;
+  margin: 0;
 }
 
 .security-layout {
@@ -446,6 +452,10 @@ async function submitPasswordChange(): Promise<void> {
 @media (max-width: 720px) {
   .journal-shell {
     padding-inline: 1rem;
+  }
+
+  .security-topbar-actions {
+    justify-content: flex-start;
   }
 }
 </style>

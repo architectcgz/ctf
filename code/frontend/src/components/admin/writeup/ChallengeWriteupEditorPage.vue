@@ -71,8 +71,8 @@ const {
           : '为题目维护管理员题解，控制公开范围。'
       "
     />
-    <div v-else class="workspace-tab-heading writeup-tab-heading">
-      <div class="workspace-tab-heading__main">
+    <div v-else class="list-heading writeup-tab-heading">
+      <div>
         <div class="journal-note-label">Admin Writeup</div>
         <h1 class="workspace-page-title">题解管理</h1>
       </div>
@@ -270,6 +270,14 @@ const {
 
 .writeup-tab-heading {
   margin-bottom: var(--space-1);
+}
+
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .workspace-overline {
@@ -577,6 +585,11 @@ const {
 }
 
 @media (max-width: 760px) {
+  .list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .writeup-form-grid {
     grid-template-columns: 1fr;
   }
