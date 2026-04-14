@@ -114,13 +114,11 @@ const operationsSummary = computed(() => [
     "
   >
     <div>
-      <div class="journal-eyebrow">Training Journal</div>
+      <div class="workspace-overline">Training Journal</div>
       <h1 class="journal-page-title workspace-page-title max-w-3xl text-[var(--journal-ink)]">
         {{ displayName }} 的训练总览
       </h1>
-      <p class="workspace-page-copy max-w-2xl">
-        先看进度、短板和最近状态，再决定下一步训练。
-      </p>
+      <p class="workspace-page-copy max-w-2xl">先看进度、短板和最近状态，再决定下一步训练。</p>
 
       <div class="journal-actions mt-6">
         <button type="button" class="journal-btn-primary" @click="emit('openChallenges')">
@@ -136,8 +134,7 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-radar-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <div class="journal-eyebrow">Skill Matrix</div>
-              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
+              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">能力雷达</h3>
             </div>
             <MapPinned class="h-5 w-5 text-[var(--journal-accent-strong)]" />
           </div>
@@ -180,8 +177,7 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-rank-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <div class="journal-eyebrow">Leaderboard</div>
-              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
+              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">竞技表现</h3>
             </div>
             <Trophy class="h-5 w-5 text-[var(--journal-accent-strong)]" />
           </div>
@@ -207,7 +203,9 @@ const operationsSummary = computed(() => [
               <span class="status-dot status-dot-solved" />
               当前排名
             </div>
-            <div class="journal-rank-summary__value progress-card-value metric-panel-value tech-font">
+            <div
+              class="journal-rank-summary__value progress-card-value metric-panel-value tech-font"
+            >
               #{{ rankSummary }}
             </div>
             <div class="journal-rank-summary__helper progress-card-hint metric-panel-helper">
@@ -219,8 +217,7 @@ const operationsSummary = computed(() => [
         <article class="journal-panel journal-ops-card px-6 py-6">
           <div class="journal-panel-head">
             <div>
-              <div class="journal-eyebrow">Operations</div>
-              <h3 class="mt-2 text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
+              <h3 class="text-xl font-semibold text-[var(--journal-ink)]">公告与状态</h3>
             </div>
             <BellRing class="h-5 w-5 text-[var(--journal-accent-strong)]" />
           </div>

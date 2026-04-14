@@ -548,7 +548,13 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		return nil, errcode.ErrChallengeNotPublish
 	}
 
+	alreadySolved := false
 	if _, err := s.repo.FindCorrectSubmission(userID, challengeID); err == nil {
+		alreadySolved = true
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errcode.ErrInternal.WithCause(err)
+	}
+	if alreadySolved && challengeItem.FlagType == model.FlagTypeManualReview {
 		return nil, errcode.ErrAlreadySolved
 	}
 
@@ -601,7 +607,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		}
 	}
 
-	if submission.IsCorrect {
+	if submission.IsCorrect && !alreadySolved {
 		cacheKey := constants.UserProgressKey(userID)
 		if err := s.redis.Del(ctx, cacheKey).Err(); err != nil {
 			s.logger.Warn("删除进度缓存失败", zap.Int64("user_id", userID), zap.Error(err))
@@ -619,7 +625,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 	}
 
 	var instanceShutdownAt *time.Time
-	if submission.IsCorrect {
+	if submission.IsCorrect && !alreadySolved {
 		instanceShutdownAt = s.applySolveGracePeriod(ctx, userID, challengeItem, submission.SubmittedAt)
 	}
 
@@ -629,7 +635,7 @@ func (s *Service) SubmitFlagWithContext(ctx context.Context, userID, challengeID
 		SubmittedAt:        submission.SubmittedAt,
 		InstanceShutdownAt: instanceShutdownAt,
 	}
-	if submission.IsCorrect {
+	if submission.IsCorrect && !alreadySolved {
 		resp.Points = challengeItem.Points
 		if s.scoreService != nil {
 			s.triggerScoreUpdate(userID)

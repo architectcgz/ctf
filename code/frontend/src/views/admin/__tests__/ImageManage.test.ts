@@ -98,19 +98,13 @@ describe('ImageManage', () => {
     expect(wrapper.text()).toContain('镜像管理')
   })
 
-  it('应使用通用数值卡片样式展示镜像统计', () => {
-    expect(imageManageSource).toContain(
-      'class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface"'
-    )
-    expect(imageManageSource).toContain('class="image-summary-card progress-card metric-panel-card"')
-    expect(imageManageSource).toContain('class="progress-card-label metric-panel-label">镜像总量</div>')
-    expect(imageManageSource).toContain('class="progress-card-label metric-panel-label">当前页</div>')
-    expect(imageManageSource).toContain('class="progress-card-value metric-panel-value">{{ total }}</div>')
-    expect(imageManageSource).toContain(
-      'class="progress-card-value metric-panel-value">{{ list.length }}</div>'
-    )
-    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper">当前查询结果的镜像总数</div>')
-    expect(imageManageSource).toContain('class="progress-card-hint metric-panel-helper">这一页已加载的镜像数量</div>')
+  it('应在头部展示轻量状态条而不是总量卡片', () => {
+    expect(imageManageSource).toContain('class="image-status-strip"')
+    expect(imageManageSource).toContain('data-testid="image-status-pill"')
+    expect(imageManageSource).toContain('<div class="image-status-strip__note">{{ refreshHint }}</div>')
+    expect(imageManageSource).not.toContain('镜像总量')
+    expect(imageManageSource).not.toContain('当前查询结果的镜像总数')
+    expect(imageManageSource).not.toContain('这一页已加载的镜像数量')
   })
 
   it('不应在头部摘要和镜像列表之间重复渲染分割线', () => {
@@ -158,6 +152,35 @@ describe('ImageManage', () => {
     await flushPromises()
 
     expect(getImagesMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('当前页无进行中镜像时应展示可用状态条', async () => {
+    const wrapper = mountPage()
+
+    await flushPromises()
+
+    const pills = wrapper.findAll('[data-testid="image-status-pill"]')
+
+    expect(pills).toHaveLength(1)
+    expect(pills[0].text()).toContain('可用')
+    expect(pills[0].text()).toContain('1')
+    expect(wrapper.find('.image-status-strip__note').text()).toContain('当前无进行中镜像，可手动刷新')
+  })
+
+  it('当前页存在构建中镜像时应展示状态摘要并自动刷新提示', async () => {
+    getImagesMock.mockReset()
+    getImagesMock.mockResolvedValue(createImagePage('building'))
+
+    const wrapper = mountPage()
+
+    await flushPromises()
+
+    const pills = wrapper.findAll('[data-testid="image-status-pill"]')
+
+    expect(pills).toHaveLength(1)
+    expect(pills[0].text()).toContain('构建中')
+    expect(pills[0].text()).toContain('1')
+    expect(wrapper.find('.image-status-strip__note').text()).toContain('构建中镜像会每 10 秒自动刷新')
   })
 
   it('当没有进行中镜像时不应该继续自动轮询', async () => {

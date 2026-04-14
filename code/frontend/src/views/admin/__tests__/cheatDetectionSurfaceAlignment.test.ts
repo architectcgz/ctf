@@ -109,8 +109,14 @@ describe('cheat detection surface alignment', () => {
     expect(cheatDetectionSource).toContain(
       '--workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);'
     )
-    expect(cheatDetectionSource).toMatch(
-      /\.cheat-kpi-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{[\s\S]*--metric-panel-border:\s*var\(--workspace-line-soft\);[\s\S]*--metric-panel-background:\s*color-mix\(in srgb,\s*var\(--workspace-panel\) 88%, transparent\);[\s\S]*--metric-panel-shadow:\s*var\(--workspace-shadow-panel\);/s
+    expect(journalNotesSource).toContain('.metric-panel-workspace-surface {')
+    expect(journalNotesSource).toContain(
+      'var(--workspace-brand, var(--journal-accent, var(--color-primary-default))) 18%'
+    )
+    expect(journalNotesSource).toContain('--workspace-panel-soft,')
+    expect(journalNotesSource).toContain('--metric-panel-label-color: color-mix(')
+    expect(cheatDetectionSource).not.toMatch(
+      /\.cheat-kpi-summary\.metric-panel-default-surface\.metric-panel-workspace-surface\s*\{/s
     )
     expect(cheatDetectionSource).not.toContain('class="mt-5 grid gap-3 sm:grid-cols-2"')
     expect(cheatDetectionSource).not.toContain('class="grid gap-3 md:grid-cols-3"')

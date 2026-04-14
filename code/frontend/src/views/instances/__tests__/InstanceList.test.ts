@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { readFileSync } from 'node:fs'
 import InstanceList from '../InstanceList.vue'
 import instanceListSource from '../InstanceList.vue?raw'
+
+const journalNotesSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/journal-notes.css`,
+  'utf-8'
+)
 
 const instanceApiMocks = vi.hoisted(() => ({
   getMyInstances: vi.fn(),
@@ -108,6 +114,15 @@ describe('InstanceList', () => {
     expect(instanceListSource).toContain('class="instance-summary-label metric-panel-label"')
     expect(instanceListSource).toContain('class="instance-summary-value metric-panel-value"')
     expect(instanceListSource).toContain('class="instance-summary-helper metric-panel-helper"')
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-label-size, var(--font-size-11));'
+    )
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-value-size, var(--font-size-26));'
+    )
+    expect(journalNotesSource).toContain(
+      'font-size: var(--metric-panel-helper-size, var(--font-size-13));'
+    )
     expect(instanceListSource).toContain('当前仍在运行、可直接访问的实例数量')
     expect(instanceListSource).toContain('已经提交创建请求、正在排队或启动中的实例数量')
     expect(instanceListSource).toContain('当前账号最多可同时保留的实例数量')

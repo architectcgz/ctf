@@ -335,6 +335,10 @@ func registerAdminRoutes(adminOnly *gin.RouterGroup, deps adminRouteDeps) {
 		}),
 		deps.contest.Handler.CreateContest,
 	)
+	adminOnly.GET("/contests/:id",
+		middleware.ParseInt64Param("id"),
+		deps.contest.Handler.GetContest,
+	)
 	adminOnly.PUT("/contests/:id",
 		middleware.ParseInt64Param("id"),
 		audit(middleware.AuditOptions{

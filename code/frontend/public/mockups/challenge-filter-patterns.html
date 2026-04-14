@@ -1,0 +1,979 @@
+<!doctype html>
+<!-- mockups/challenge-filter-patterns.html -->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>筛选方案预览</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f7fb;
+        --surface: #ffffff;
+        --surface-subtle: #f8fafc;
+        --surface-soft: #eef3f8;
+        --border: #d7dee8;
+        --border-strong: #c3cedb;
+        --text: #172033;
+        --muted: #61708a;
+        --accent: #295dff;
+        --accent-soft: rgba(41, 93, 255, 0.12);
+        --success-soft: rgba(15, 118, 110, 0.1);
+        --success-text: #0f766e;
+        --shadow: 0 18px 40px rgba(17, 24, 39, 0.08);
+        --radius-lg: 24px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(41, 93, 255, 0.08), transparent 22rem),
+          linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .journal-shell {
+        width: min(1360px, calc(100vw - 48px));
+        margin: 24px auto;
+        padding: 28px;
+        border: 1px solid rgba(199, 209, 224, 0.7);
+        border-radius: var(--radius-lg);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96));
+        box-shadow: var(--shadow);
+      }
+
+      .workspace-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 14px;
+      }
+
+      .topbar-leading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .workspace-overline,
+      .journal-note-label,
+      .pattern-chip,
+      .directory-head,
+      .preview-note__label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .workspace-overline,
+      .journal-note-label,
+      .preview-note__label {
+        color: var(--accent);
+      }
+
+      .class-chip,
+      .pattern-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(41, 93, 255, 0.18);
+        background: rgba(41, 93, 255, 0.08);
+        color: var(--text);
+      }
+
+      .top-note {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .top-note span {
+        padding: 8px 12px;
+        border: 1px solid rgba(199, 209, 224, 0.7);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .top-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 0 0;
+        border-top: 1px solid rgba(215, 222, 232, 0.9);
+      }
+
+      .top-tab {
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          border-color 0.18s ease,
+          background 0.18s ease,
+          color 0.18s ease;
+      }
+
+      .top-tab.active {
+        border-color: rgba(41, 93, 255, 0.2);
+        background: var(--accent-soft);
+        color: var(--text);
+      }
+
+      .content-pane {
+        display: grid;
+        gap: 20px;
+        padding-top: 20px;
+      }
+
+      .pattern-header {
+        display: grid;
+        gap: 10px;
+      }
+
+      .workspace-page-title {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+
+      .workspace-page-copy {
+        margin: 0;
+        max-width: 66rem;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .pattern-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .workspace-directory-section {
+        display: grid;
+        gap: 18px;
+        padding: 22px;
+        border: 1px solid rgba(199, 209, 224, 0.82);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.98));
+      }
+
+      .list-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .list-heading__title {
+        margin: 6px 0 0;
+        font-size: 24px;
+      }
+
+      .preview-note {
+        display: grid;
+        gap: 8px;
+        max-width: 32rem;
+        padding: 14px 16px;
+        border: 1px solid rgba(199, 209, 224, 0.76);
+        border-radius: 16px;
+        background: var(--surface-subtle);
+      }
+
+      .preview-note p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 14px;
+      }
+
+      .filter-grid,
+      .filter-grid--inline,
+      .filter-grid--expanded {
+        display: grid;
+        gap: 14px;
+      }
+
+      .filter-grid--inline {
+        grid-template-columns:
+          minmax(9rem, 0.8fr)
+          minmax(9rem, 0.8fr)
+          minmax(9rem, 0.8fr)
+          minmax(10rem, 0.9fr)
+          minmax(12rem, 1.2fr)
+          auto;
+      }
+
+      .filter-grid {
+        grid-template-columns:
+          minmax(9rem, 0.8fr)
+          minmax(9rem, 0.8fr)
+          minmax(9rem, 0.8fr)
+          minmax(14rem, 1.3fr)
+          auto;
+      }
+
+      .filter-grid--expanded {
+        grid-template-columns: repeat(3, minmax(11rem, 1fr));
+      }
+
+      .filter-field,
+      .filter-search,
+      .filter-actions {
+        display: grid;
+        gap: 8px;
+      }
+
+      .filter-actions {
+        justify-items: end;
+      }
+
+      .filter-actions__row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .filter-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .filter-label--ghost {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .filter-control,
+      .filter-search__input {
+        min-height: 44px;
+        width: 100%;
+        border: 1px solid rgba(199, 209, 224, 0.9);
+        border-radius: 14px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+      }
+
+      .filter-control {
+        padding: 0 12px;
+      }
+
+      .filter-search__control {
+        position: relative;
+      }
+
+      .filter-search__icon {
+        position: absolute;
+        top: 50%;
+        left: 14px;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #8aa0c8;
+        border-radius: 999px;
+        transform: translateY(-58%);
+      }
+
+      .filter-search__icon::after {
+        content: "";
+        position: absolute;
+        right: -5px;
+        bottom: -5px;
+        width: 7px;
+        height: 2px;
+        border-radius: 999px;
+        background: #8aa0c8;
+        transform: rotate(45deg);
+      }
+
+      .filter-search__input {
+        padding: 0 14px 0 40px;
+      }
+
+      .admin-btn {
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid rgba(199, 209, 224, 0.9);
+        border-radius: 14px;
+        background: #fff;
+        color: var(--text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          border-color 0.18s ease,
+          background 0.18s ease,
+          color 0.18s ease;
+      }
+
+      .admin-btn:hover {
+        border-color: rgba(41, 93, 255, 0.36);
+      }
+
+      .admin-btn[disabled] {
+        cursor: not-allowed;
+        color: #98a5ba;
+        background: var(--surface-soft);
+      }
+
+      .admin-btn-primary {
+        border-color: rgba(41, 93, 255, 0.24);
+        background: var(--accent-soft);
+      }
+
+      .progressive-rail,
+      .summary-rail {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px 16px;
+        border: 1px solid rgba(199, 209, 224, 0.82);
+        border-radius: 16px;
+        background: var(--surface-subtle);
+      }
+
+      .summary-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .summary-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(199, 209, 224, 0.86);
+        background: #fff;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .summary-pill strong {
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .expandable {
+        display: grid;
+        gap: 14px;
+      }
+
+      .expandable[hidden] {
+        display: none;
+      }
+
+      .directory-head,
+      .directory-row {
+        display: grid;
+        align-items: center;
+        gap: 14px;
+        grid-template-columns:
+          minmax(16rem, 1.7fr)
+          minmax(6rem, 0.7fr)
+          minmax(6rem, 0.7fr)
+          minmax(6rem, 0.7fr)
+          minmax(7rem, 0.8fr)
+          minmax(9rem, 9rem);
+      }
+
+      .directory-head {
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(215, 222, 232, 0.92);
+        color: var(--muted);
+      }
+
+      .directory-row {
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(232, 237, 244, 0.96);
+      }
+
+      .challenge-title {
+        display: grid;
+        gap: 6px;
+      }
+
+      .challenge-title strong {
+        font-size: 15px;
+      }
+
+      .challenge-title span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(41, 93, 255, 0.08);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .chip--status {
+        background: var(--success-soft);
+        color: var(--success-text);
+      }
+
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .row-actions .admin-btn {
+        min-height: 36px;
+        padding: 0 14px;
+      }
+
+      .panel {
+        display: none;
+      }
+
+      .panel.active {
+        display: grid;
+        gap: 18px;
+      }
+
+      @media (max-width: 1200px) {
+        .filter-grid--inline,
+        .filter-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .filter-actions {
+          justify-items: stretch;
+        }
+
+        .filter-actions__row {
+          justify-content: stretch;
+        }
+
+        .filter-actions__row > * {
+          flex: 1 1 auto;
+        }
+
+        .directory-head,
+        .directory-row {
+          grid-template-columns: minmax(14rem, 1.5fr) repeat(3, minmax(5rem, 0.7fr)) minmax(6rem, 0.75fr) auto;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .journal-shell {
+          width: calc(100vw - 24px);
+          padding: 18px;
+          margin: 12px auto;
+        }
+
+        .workspace-topbar,
+        .progressive-rail,
+        .summary-rail,
+        .list-heading {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .directory-head {
+          display: none;
+        }
+
+        .directory-row {
+          grid-template-columns: 1fr;
+          padding: 16px;
+          border: 1px solid rgba(215, 222, 232, 0.92);
+          border-radius: 16px;
+          background: #fff;
+        }
+
+        .row-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="journal-shell">
+      <header class="workspace-topbar">
+        <div class="topbar-leading">
+          <span class="workspace-overline">Platform Challenges</span>
+          <span class="class-chip">筛选方案预览</span>
+        </div>
+        <div class="top-note">
+          <span>方案数: 3</span>
+          <span>默认策略: 先看主筛选</span>
+        </div>
+      </header>
+
+      <nav class="top-tabs" role="tablist" aria-label="筛选方案切换">
+        <button
+          id="challenge-filter-pattern-tab-inline"
+          class="top-tab active"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="challenge-filter-pattern-panel-inline"
+          data-panel="inline"
+        >
+          全量展示
+        </button>
+        <button
+          id="challenge-filter-pattern-tab-progressive"
+          class="top-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="challenge-filter-pattern-panel-progressive"
+          data-panel="progressive"
+        >
+          主筛选折叠
+        </button>
+        <button
+          id="challenge-filter-pattern-tab-summary"
+          class="top-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="challenge-filter-pattern-panel-summary"
+          data-panel="summary"
+        >
+          摘要折叠
+        </button>
+      </nav>
+
+      <section class="content-pane">
+        <header class="pattern-header">
+          <div class="pattern-strip">
+            <span class="pattern-chip">平台管理页</span>
+            <span class="pattern-chip">筛选条件较少时可直接展示</span>
+            <span class="pattern-chip">条件变多时默认收起次级层</span>
+          </div>
+          <h1 class="workspace-page-title">题目管理筛选区方案预览</h1>
+          <p class="workspace-page-copy">
+            这三版都沿用当前 `platform/challenges`
+            的工作台骨架，只调整筛选区的显隐策略。你可以直接比较单屏密度、展开成本和信息干扰。
+          </p>
+        </header>
+
+        <section
+          id="challenge-filter-pattern-panel-inline"
+          class="panel active"
+          role="tabpanel"
+          aria-labelledby="challenge-filter-pattern-tab-inline"
+        >
+          <section class="workspace-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Imported Challenges</div>
+                <h2 class="list-heading__title">已导入题目</h2>
+              </div>
+              <aside class="preview-note">
+                <div class="preview-note__label">Always Visible</div>
+                <p>适合筛选项不多的目录页，所有条件默认全部展开，切换路径最短。</p>
+              </aside>
+            </header>
+
+            <section class="filter-grid--inline" aria-label="题目筛选">
+              <label class="filter-field">
+                <span class="filter-label">分类</span>
+                <select class="filter-control">
+                  <option>全部分类</option>
+                  <option selected>Web</option>
+                  <option>Pwn</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">难度</span>
+                <select class="filter-control">
+                  <option>全部难度</option>
+                  <option selected>简单</option>
+                  <option>中等</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">发布状态</span>
+                <select class="filter-control">
+                  <option>全部状态</option>
+                  <option selected>已发布</option>
+                  <option>草稿</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">创建者</span>
+                <select class="filter-control">
+                  <option>全部创建者</option>
+                  <option selected>课程组</option>
+                  <option>平台管理员</option>
+                </select>
+              </label>
+              <label class="filter-search">
+                <span class="filter-label">搜索</span>
+                <span class="filter-search__control">
+                  <span class="filter-search__icon" aria-hidden="true"></span>
+                  <input class="filter-search__input" value="搜索题目标题" />
+                </span>
+              </label>
+              <div class="filter-actions">
+                <span class="filter-label filter-label--ghost" aria-hidden="true">操作</span>
+                <button class="admin-btn">清空筛选</button>
+              </div>
+              <label class="filter-field">
+                <span class="filter-label">题目来源</span>
+                <select class="filter-control">
+                  <option>全部来源</option>
+                  <option selected>导入包</option>
+                  <option>平台创建</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">最近导入时间</span>
+                <select class="filter-control">
+                  <option>全部时间</option>
+                  <option selected>近 7 天</option>
+                  <option>近 30 天</option>
+                </select>
+              </label>
+            </section>
+
+            <div class="directory-head" aria-hidden="true">
+              <span>题目</span>
+              <span>分类</span>
+              <span>难度</span>
+              <span>分值</span>
+              <span>发布状态</span>
+              <span>操作</span>
+            </div>
+            <article class="directory-row">
+              <div class="challenge-title">
+                <strong>Web Login Intro</strong>
+                <span>Flag 已配置，导入包来源</span>
+              </div>
+              <span class="chip">Web</span>
+              <span class="chip">简单</span>
+              <span class="chip">100 pts</span>
+              <span class="chip chip--status">已发布</span>
+              <div class="row-actions">
+                <button class="admin-btn admin-btn-primary">查看</button>
+                <button class="admin-btn">更多</button>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section
+          id="challenge-filter-pattern-panel-progressive"
+          class="panel"
+          role="tabpanel"
+          aria-labelledby="challenge-filter-pattern-tab-progressive"
+          hidden
+        >
+          <section class="workspace-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Imported Challenges</div>
+                <h2 class="list-heading__title">已导入题目</h2>
+              </div>
+            </header>
+
+            <section class="filter-grid" aria-label="题目筛选">
+              <label class="filter-field">
+                <span class="filter-label">分类</span>
+                <select class="filter-control">
+                  <option>全部分类</option>
+                  <option selected>Web</option>
+                  <option>Pwn</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">难度</span>
+                <select class="filter-control">
+                  <option>全部难度</option>
+                  <option selected>简单</option>
+                  <option>中等</option>
+                </select>
+              </label>
+              <label class="filter-field">
+                <span class="filter-label">发布状态</span>
+                <select class="filter-control">
+                  <option>全部状态</option>
+                  <option selected>已发布</option>
+                  <option>草稿</option>
+                </select>
+              </label>
+              <label class="filter-search">
+                <span class="filter-label">搜索</span>
+                <span class="filter-search__control">
+                  <span class="filter-search__icon" aria-hidden="true"></span>
+                  <input class="filter-search__input" value="搜索题目标题" />
+                </span>
+              </label>
+              <div class="filter-actions">
+                <span class="filter-label filter-label--ghost" aria-hidden="true">操作</span>
+                <div class="filter-actions__row">
+                  <button id="progressive-toggle" class="admin-btn" type="button" aria-expanded="false">
+                    展开更多筛选
+                  </button>
+                  <button class="admin-btn" type="button">清空筛选</button>
+                </div>
+              </div>
+            </section>
+
+            <section id="progressive-extra" class="expandable" hidden>
+              <div class="filter-grid--expanded">
+                <label class="filter-field">
+                  <span class="filter-label">题目来源</span>
+                  <select class="filter-control">
+                    <option>全部来源</option>
+                    <option selected>导入包</option>
+                    <option>平台创建</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">创建者</span>
+                  <select class="filter-control">
+                    <option>全部创建者</option>
+                    <option selected>课程组</option>
+                    <option>平台管理员</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">最近导入时间</span>
+                  <select class="filter-control">
+                    <option>全部时间</option>
+                    <option selected>近 7 天</option>
+                    <option>近 30 天</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <div class="directory-head" aria-hidden="true">
+              <span>题目</span>
+              <span>分类</span>
+              <span>难度</span>
+              <span>分值</span>
+              <span>发布状态</span>
+              <span>操作</span>
+            </div>
+            <article class="directory-row">
+              <div class="challenge-title">
+                <strong>Web Login Intro</strong>
+                <span>主筛选固定，低频条件按需展开</span>
+              </div>
+              <span class="chip">Web</span>
+              <span class="chip">简单</span>
+              <span class="chip">100 pts</span>
+              <span class="chip chip--status">已发布</span>
+              <div class="row-actions">
+                <button class="admin-btn admin-btn-primary">查看</button>
+                <button class="admin-btn">更多</button>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section
+          id="challenge-filter-pattern-panel-summary"
+          class="panel"
+          role="tabpanel"
+          aria-labelledby="challenge-filter-pattern-tab-summary"
+          hidden
+        >
+          <section class="workspace-directory-section">
+            <header class="list-heading">
+              <div>
+                <div class="journal-note-label">Imported Challenges</div>
+                <h2 class="list-heading__title">已导入题目</h2>
+              </div>
+              <aside class="preview-note">
+                <div class="preview-note__label">Summary First</div>
+                <p>默认只留下筛选摘要和入口，适合经常需要回看当前筛选条件、但不想让控件常驻占屏的页面。</p>
+              </aside>
+            </header>
+
+            <div class="summary-rail">
+              <div class="summary-pills">
+                <span class="summary-pill"><strong>当前筛选</strong> Web</span>
+                <span class="summary-pill"><strong>状态</strong> 已发布</span>
+                <span class="summary-pill"><strong>来源</strong> 导入包</span>
+              </div>
+              <div class="row-actions">
+                <button id="summary-toggle" class="admin-btn" type="button" aria-expanded="false">
+                  展开筛选
+                </button>
+                <button class="admin-btn">清空筛选</button>
+              </div>
+            </div>
+
+            <section id="summary-extra" class="expandable" hidden aria-label="题目筛选">
+              <div class="filter-grid--inline">
+                <label class="filter-field">
+                  <span class="filter-label">分类</span>
+                  <select class="filter-control">
+                    <option>全部分类</option>
+                    <option selected>Web</option>
+                    <option>Pwn</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">难度</span>
+                  <select class="filter-control">
+                    <option>全部难度</option>
+                    <option selected>简单</option>
+                    <option>中等</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">发布状态</span>
+                  <select class="filter-control">
+                    <option>全部状态</option>
+                    <option selected>已发布</option>
+                    <option>草稿</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">创建者</span>
+                  <select class="filter-control">
+                    <option>全部创建者</option>
+                    <option selected>课程组</option>
+                    <option>平台管理员</option>
+                  </select>
+                </label>
+                <label class="filter-search">
+                  <span class="filter-label">搜索</span>
+                  <span class="filter-search__control">
+                    <span class="filter-search__icon" aria-hidden="true"></span>
+                    <input class="filter-search__input" value="搜索题目标题" />
+                  </span>
+                </label>
+                <div class="filter-actions">
+                  <span class="filter-label filter-label--ghost" aria-hidden="true">操作</span>
+                  <span class="summary-pill"><strong>更新</strong> 自动应用</span>
+                </div>
+                <label class="filter-field">
+                  <span class="filter-label">题目来源</span>
+                  <select class="filter-control">
+                    <option>全部来源</option>
+                    <option selected>导入包</option>
+                    <option>平台创建</option>
+                  </select>
+                </label>
+                <label class="filter-field">
+                  <span class="filter-label">最近导入时间</span>
+                  <select class="filter-control">
+                    <option>全部时间</option>
+                    <option selected>近 7 天</option>
+                    <option>近 30 天</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+
+            <div class="directory-head" aria-hidden="true">
+              <span>题目</span>
+              <span>分类</span>
+              <span>难度</span>
+              <span>分值</span>
+              <span>发布状态</span>
+              <span>操作</span>
+            </div>
+            <article class="directory-row">
+              <div class="challenge-title">
+                <strong>Web Login Intro</strong>
+                <span>先看摘要，再决定是否展开完整条件。</span>
+              </div>
+              <span class="chip">Web</span>
+              <span class="chip">简单</span>
+              <span class="chip">100 pts</span>
+              <span class="chip chip--status">已发布</span>
+              <div class="row-actions">
+                <button class="admin-btn admin-btn-primary">查看</button>
+                <button class="admin-btn">更多</button>
+              </div>
+            </article>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const tabs = Array.from(document.querySelectorAll('[data-panel]'))
+      const panels = {
+        inline: document.getElementById('challenge-filter-pattern-panel-inline'),
+        progressive: document.getElementById('challenge-filter-pattern-panel-progressive'),
+        summary: document.getElementById('challenge-filter-pattern-panel-summary'),
+      }
+
+      function activatePanel(key) {
+        tabs.forEach((tab) => {
+          const active = tab.dataset.panel === key
+          tab.classList.toggle('active', active)
+          tab.setAttribute('aria-selected', active ? 'true' : 'false')
+        })
+
+        Object.entries(panels).forEach(([panelKey, panel]) => {
+          if (!panel) return
+          const active = panelKey === key
+          panel.classList.toggle('active', active)
+          panel.hidden = !active
+        })
+      }
+
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => activatePanel(tab.dataset.panel))
+      })
+
+      const progressiveToggle = document.getElementById('progressive-toggle')
+      const progressiveExtra = document.getElementById('progressive-extra')
+      progressiveToggle?.addEventListener('click', () => {
+        const expanded = progressiveToggle.getAttribute('aria-expanded') === 'true'
+        progressiveToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true')
+        progressiveToggle.textContent = expanded ? '展开更多筛选' : '收起更多筛选'
+        if (progressiveExtra) progressiveExtra.hidden = expanded
+      })
+
+      const summaryToggle = document.getElementById('summary-toggle')
+      const summaryExtra = document.getElementById('summary-extra')
+      summaryToggle?.addEventListener('click', () => {
+        const expanded = summaryToggle.getAttribute('aria-expanded') === 'true'
+        summaryToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true')
+        summaryToggle.textContent = expanded ? '展开筛选' : '收起筛选'
+        if (summaryExtra) summaryExtra.hidden = expanded
+      })
+    </script>
+  </body>
+</html>

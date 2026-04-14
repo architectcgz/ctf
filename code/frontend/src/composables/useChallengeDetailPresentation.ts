@@ -123,7 +123,7 @@ export function useChallengeDetailPresentation({
   )
 
   const submitPlaceholder = computed(() => {
-    if (challenge.value?.is_solved) return '该题已通过'
+    if (challenge.value?.is_solved) return '本题已通过，可继续输入 Flag 做校验'
 
     switch (submitResult.value?.variant) {
       case 'success':
@@ -139,7 +139,11 @@ export function useChallengeDetailPresentation({
 
   const submitPanelTitle = computed(() => 'Flag 提交')
 
-  const submitPanelCopy = computed(() => '输入当前题目的 Flag 并提交验证。')
+  const submitPanelCopy = computed(() =>
+    challenge.value?.is_solved
+      ? '本题已解出，仍可继续提交 Flag 做校验；系统不会重复计分。'
+      : '输入当前题目的 Flag 并提交验证。'
+  )
 
   const submitFieldLabel = computed(() => 'Flag')
 

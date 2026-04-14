@@ -114,10 +114,10 @@ function changeTimelinePage(page: number): void {
         <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
           训练记录总览
         </h1>
-        <p class="workspace-page-copy max-w-2xl">
-          按时间回看最近训练动作，看看节奏有没有断。
-        </p>
-        <div class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+        <p class="workspace-page-copy max-w-2xl">按时间回看最近训练动作，看看节奏有没有断。</p>
+        <div
+          class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+        >
           <article
             v-for="metric in timelineMetrics"
             :key="metric.key"
@@ -143,8 +143,8 @@ function changeTimelinePage(page: number): void {
     >
       <div class="journal-divider timeline-board-divider" aria-hidden="true" />
       <section class="timeline-section">
-        <div class="journal-eyebrow journal-eyebrow-soft">Timeline Log</div>
-        <h3 class="mt-3 text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
+        <div class="workspace-overline">Timeline Log</div>
+        <h3 class="text-xl font-semibold text-[var(--journal-ink)]">训练记录</h3>
         <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
           按日期回看最近的提交、解题和实例操作。
         </p>

@@ -68,7 +68,7 @@ const summaryCards = computed(() => [
     "
   >
     <div class="recommendation-header">
-      <div class="journal-eyebrow">Action Queue</div>
+      <div class="workspace-overline">Action Queue</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         现在先练这几道
       </h1>
@@ -90,7 +90,9 @@ const summaryCards = computed(() => [
         <span v-else class="journal-weak-tag journal-weak-tag--stable"> 暂无明显短板 </span>
       </div>
 
-      <div class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+      <div
+        class="recommendation-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+      >
         <article
           v-for="card in summaryCards"
           :key="card.key"
@@ -115,9 +117,7 @@ const summaryCards = computed(() => [
     >
       <section class="recommend-section">
         <div v-if="recommendations.length > 0" class="recommend-toolbar">
-          <p class="recommend-toolbar__copy">
-            按当前顺序直接推进，做完这组再回来刷新下一批建议。
-          </p>
+          <p class="recommend-toolbar__copy">按当前顺序直接推进，做完这组再回来刷新下一批建议。</p>
           <div class="recommend-toolbar__actions">
             <button type="button" class="journal-btn-outline" @click="emit('openSkillProfile')">
               能力画像
@@ -178,7 +178,6 @@ const summaryCards = computed(() => [
           </button>
         </div>
       </section>
-
     </div>
   </section>
 </template>

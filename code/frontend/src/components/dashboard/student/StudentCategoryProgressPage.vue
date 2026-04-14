@@ -37,7 +37,9 @@ const rankedCategories = computed<RankedCategoryStat[]>(() =>
 const primaryCategory = computed(() => rankedCategories.value[0] || null)
 const hasCategoryStats = computed(() => rankedCategories.value.length > 0)
 const headlineTitle = computed(() =>
-  primaryCategory.value ? `优先补这个分类：${primaryCategory.value.category}` : '先开始积累分类覆盖面'
+  primaryCategory.value
+    ? `优先补这个分类：${primaryCategory.value.category}`
+    : '先开始积累分类覆盖面'
 )
 const summaryCards = computed(() => [
   {
@@ -99,7 +101,7 @@ function openPrimaryCategory(): void {
     "
   >
     <div class="category-header">
-      <div class="journal-eyebrow">Action Ranking</div>
+      <div class="workspace-overline">Action Ranking</div>
       <h1 class="journal-page-title workspace-page-title text-[var(--journal-ink)]">
         {{ headlineTitle }}
       </h1>
@@ -119,7 +121,9 @@ function openPrimaryCategory(): void {
         <button class="journal-btn-outline" @click="emit('openSkillProfile')">能力画像</button>
       </div>
 
-      <div class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface">
+      <div
+        class="category-summary-strip mt-5 progress-strip metric-panel-grid metric-panel-default-surface"
+      >
         <article
           v-for="card in summaryCards"
           :key="card.key"
@@ -144,9 +148,7 @@ function openPrimaryCategory(): void {
     >
       <section class="category-section">
         <div v-if="rankedCategories.length > 0" class="category-toolbar">
-          <p class="category-toolbar__copy">
-            从排序最前的分类开始，完成一类再继续往后推。
-          </p>
+          <p class="category-toolbar__copy">从排序最前的分类开始，完成一类再继续往后推。</p>
         </div>
 
         <div
@@ -171,7 +173,9 @@ function openPrimaryCategory(): void {
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="category-action-item__name">{{ item.category }}</span>
                   <span class="category-action-item__rate">{{ item.rate }}%</span>
-                  <span class="category-action-item__count">{{ item.solved }}/{{ item.total }}</span>
+                  <span class="category-action-item__count"
+                    >{{ item.solved }}/{{ item.total }}</span
+                  >
                 </div>
                 <p class="mt-2 text-sm leading-6 text-[var(--journal-muted)]">
                   {{ categoryActionCopy(item, index) }}
@@ -187,7 +191,10 @@ function openPrimaryCategory(): void {
             </div>
 
             <div class="category-track mt-4 h-2 rounded-full">
-              <div class="category-track-fill h-2 rounded-full" :style="{ width: `${item.rate}%` }" />
+              <div
+                class="category-track-fill h-2 rounded-full"
+                :style="{ width: `${item.rate}%` }"
+              />
             </div>
           </article>
         </div>
@@ -201,7 +208,11 @@ function openPrimaryCategory(): void {
   --journal-soft-button-height: 34px;
   --journal-soft-button-padding: var(--space-2) var(--space-4);
   --journal-soft-button-size: 0.82rem;
-  --journal-soft-button-primary-background: color-mix(in srgb, var(--journal-accent) 8%, transparent);
+  --journal-soft-button-primary-background: color-mix(
+    in srgb,
+    var(--journal-accent) 8%,
+    transparent
+  );
   --journal-soft-button-primary-hover-background: color-mix(
     in srgb,
     var(--journal-accent) 14%,

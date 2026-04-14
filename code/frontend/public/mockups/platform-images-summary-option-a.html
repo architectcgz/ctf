@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>镜像管理 Mock A</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #111a2b;
+        --panel-soft: #162135;
+        --line: rgba(148, 163, 184, 0.18);
+        --line-strong: rgba(148, 163, 184, 0.28);
+        --text: #e8eefc;
+        --text-soft: #95a4bf;
+        --text-faint: #72819d;
+        --brand: #6aa7ff;
+        --brand-soft: rgba(106, 167, 255, 0.12);
+        --success: #4dd0a8;
+        --success-soft: rgba(77, 208, 168, 0.14);
+        --warning: #f5b860;
+        --warning-soft: rgba(245, 184, 96, 0.14);
+        --danger: #ff7a90;
+        --danger-soft: rgba(255, 122, 144, 0.14);
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+        --radius-xl: 28px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(87, 124, 255, 0.14), transparent 34%),
+          linear-gradient(180deg, #09101c 0%, #0b1220 100%);
+        color: var(--text);
+      }
+
+      .page {
+        width: min(1240px, calc(100vw - 48px));
+        margin: 28px auto;
+        padding: 28px 30px 32px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 18%),
+          linear-gradient(180deg, rgba(17, 26, 43, 0.98), rgba(11, 18, 32, 0.98));
+        box-shadow: var(--shadow);
+      }
+
+      .topbar,
+      .section-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px 20px;
+      }
+
+      .topbar {
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow,
+      .section-label,
+      .directory-head {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow {
+        color: var(--brand);
+      }
+
+      .title {
+        margin: 10px 0 0;
+        font-size: 34px;
+        line-height: 1.06;
+        letter-spacing: -0.03em;
+      }
+
+      .copy {
+        margin: 12px 0 0;
+        max-width: 620px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--text-soft);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .btn,
+      .pager button,
+      .danger-btn {
+        height: 38px;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid var(--line-strong);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .btn.primary {
+        border-color: rgba(106, 167, 255, 0.34);
+        background: linear-gradient(180deg, rgba(106, 167, 255, 0.2), rgba(106, 167, 255, 0.12));
+      }
+
+      .status-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 18px;
+        padding: 18px 0 6px;
+      }
+
+      .status-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 34px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text-soft);
+        font-size: 13px;
+      }
+
+      .pill strong {
+        color: var(--text);
+      }
+
+      .pill.brand {
+        border-color: rgba(106, 167, 255, 0.22);
+        background: var(--brand-soft);
+        color: #bdd6ff;
+      }
+
+      .pill.warning {
+        border-color: rgba(245, 184, 96, 0.24);
+        background: var(--warning-soft);
+        color: #ffd99b;
+      }
+
+      .note {
+        font-size: 13px;
+        color: var(--text-faint);
+      }
+
+      .section {
+        margin-top: 18px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+      }
+
+      .section-label {
+        color: var(--text-faint);
+      }
+
+      .section-title {
+        margin: 8px 0 0;
+        font-size: 22px;
+      }
+
+      .section-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      .directory {
+        margin-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      .directory-head,
+      .row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) 160px minmax(0, 1.2fr) 120px 180px 110px;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .directory-head {
+        padding: 14px 0 12px;
+        color: var(--text-faint);
+      }
+
+      .row {
+        padding: 18px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      .name strong,
+      .tag,
+      .time {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .name strong {
+        font-size: 16px;
+      }
+
+      .name span,
+      .tag,
+      .time,
+      .desc {
+        font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      .name span {
+        margin-top: 6px;
+      }
+
+      .tag,
+      .time {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .desc {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        line-height: 1.65;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .status.ready {
+        background: var(--success-soft);
+        color: var(--success);
+      }
+
+      .status.building {
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+
+      .status.failed {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .danger-btn {
+        height: 34px;
+        padding: 0 12px;
+        border-color: rgba(255, 122, 144, 0.22);
+        background: rgba(255, 122, 144, 0.08);
+        color: #ff9eb0;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 18px;
+        margin-top: 8px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        color: var(--text-soft);
+      }
+
+      .pager {
+        display: flex;
+        gap: 8px;
+      }
+
+      .pager button {
+        width: 34px;
+        padding: 0;
+      }
+
+      .pager .active {
+        border-color: rgba(106, 167, 255, 0.3);
+        background: var(--brand-soft);
+        color: #dbe8ff;
+      }
+
+      @media (max-width: 960px) {
+        .page {
+          width: min(100vw - 24px, 1240px);
+          padding: 22px 18px 24px;
+        }
+
+        .topbar,
+        .section-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .directory-head {
+          display: none;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+
+        .row-actions {
+          justify-content: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Image Registry</div>
+          <h1 class="title">镜像管理</h1>
+          <p class="copy">方向 A 把“总量 / 当前页”从卡片退成更轻的状态条，头部只保留操作和当前状态。</p>
+        </div>
+        <div class="actions">
+          <button class="btn">立即刷新</button>
+          <button class="btn primary">创建镜像</button>
+        </div>
+      </header>
+
+      <section class="status-strip">
+        <div class="status-row">
+          <div class="pill brand">当前可见 <strong>48</strong></div>
+          <div class="pill warning">构建中 <strong>3</strong></div>
+          <div class="pill">失败 <strong>2</strong></div>
+        </div>
+        <div class="note">构建中镜像会每 10 秒自动刷新，其他情况只在操作后更新。</div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-label">Images</div>
+            <h2 class="section-title">镜像列表</h2>
+          </div>
+          <div class="section-meta">
+            <span>共 48 条</span>
+            <span>当前页 12 条</span>
+            <span>按创建时间倒序</span>
+          </div>
+        </div>
+
+        <div class="directory">
+          <div class="directory-head">
+            <span>镜像名称</span>
+            <span>标签</span>
+            <span>描述</span>
+            <span>状态</span>
+            <span>创建时间</span>
+            <span style="text-align: right">操作</span>
+          </div>
+
+          <article class="row">
+            <div class="name"><strong>ubuntu-builder</strong><span>基础运行环境 / amd64</span></div>
+            <div class="tag">24.04</div>
+            <div class="desc">用于 Web 与 Pwn 题目的统一基础镜像，包含常用调试工具与最小运行依赖。</div>
+            <div><span class="status ready">可用</span></div>
+            <div class="time">2026-04-14 18:32</div>
+            <div class="row-actions"><button class="danger-btn">删除</button></div>
+          </article>
+
+          <article class="row">
+            <div class="name"><strong>node-sandbox</strong><span>前端题目构建链路</span></div>
+            <div class="tag">18-alpine</div>
+            <div class="desc">面向前端靶机的轻量 Node 环境，当前仍在构建，刷新后可查看产物状态。</div>
+            <div><span class="status building">构建中</span></div>
+            <div class="time">2026-04-14 18:20</div>
+            <div class="row-actions"><button class="danger-btn">删除</button></div>
+          </article>
+
+          <article class="row">
+            <div class="name"><strong>legacy-mysql-lab</strong><span>兼容旧赛题运行环境</span></div>
+            <div class="tag">5.7-debug</div>
+            <div class="desc">保留旧版 MySQL 调试能力的实验镜像，上一次构建失败，需要检查 Dockerfile 和网络拉取日志。</div>
+            <div><span class="status failed">失败</span></div>
+            <div class="time">2026-04-14 17:48</div>
+            <div class="row-actions"><button class="danger-btn">删除</button></div>
+          </article>
+        </div>
+
+        <div class="pagination">
+          <div>第 1 页，共 4 页</div>
+          <div class="pager">
+            <button>‹</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>›</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

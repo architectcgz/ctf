@@ -19,6 +19,13 @@ describe('destructive confirm theme alignment', () => {
     expect(sharedStylesSource).toMatch(
       /--destructive-confirm-soft-text:\s*color-mix\([\s\S]*var\(--destructive-confirm-accent\) 88%,[\s\S]*var\(--journal-ink,\s*var\(--color-text-primary\)\)[\s\S]*\);/
     )
+    expect(sharedStylesSource).toContain('border: 1px solid var(--destructive-confirm-border);')
+    expect(sharedStylesSource).toMatch(
+      /\.app-destructive-confirm-box\.el-message-box\s*\{[\s\S]*var\(--destructive-confirm-soft-bg\) 62%/s
+    )
+    expect(sharedStylesSource).toMatch(
+      /\.app-destructive-confirm-modal\s*\{[\s\S]*var\(--destructive-confirm-accent,\s*var\(--color-danger\)\) 8%/s
+    )
     expect(sharedStylesSource).not.toContain('#5f6f83')
     expect(sharedStylesSource).not.toContain('#a4b2c2')
     expect(sharedStylesSource).not.toContain('#b91c1c')

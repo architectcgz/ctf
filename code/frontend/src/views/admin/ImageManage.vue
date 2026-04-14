@@ -23,17 +23,19 @@
             创建镜像
           </button>
         </div>
-        <div class="image-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
-          <article class="image-summary-card progress-card metric-panel-card">
-            <div class="progress-card-label metric-panel-label">镜像总量</div>
-            <div class="progress-card-value metric-panel-value">{{ total }}</div>
-            <div class="progress-card-hint metric-panel-helper">当前查询结果的镜像总数</div>
-          </article>
-          <article class="image-summary-card progress-card metric-panel-card">
-            <div class="progress-card-label metric-panel-label">当前页</div>
-            <div class="progress-card-value metric-panel-value">{{ list.length }}</div>
-            <div class="progress-card-hint metric-panel-helper">这一页已加载的镜像数量</div>
-          </article>
+        <div class="image-status-strip" aria-label="镜像状态摘要">
+          <div class="image-status-strip__row">
+            <div
+              v-for="item in statusSummary"
+              :key="item.key"
+              :class="['image-status-pill', `image-status-pill--${item.tone}`]"
+              data-testid="image-status-pill"
+            >
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+          <div class="image-status-strip__note">{{ refreshHint }}</div>
         </div>
       </div>
     </header>
@@ -44,7 +46,7 @@
           <div class="journal-note-label">Images</div>
           <h2 class="image-section-title">镜像列表</h2>
         </div>
-        <div class="image-board__hint">{{ refreshHint }}</div>
+        <div class="image-board__hint">按创建时间倒序</div>
       </div>
 
       <div
@@ -176,6 +178,41 @@ const hasActiveImages = computed(() =>
 const refreshHint = computed(() =>
   hasActiveImages.value ? '构建中镜像会每 10 秒自动刷新' : '当前无进行中镜像，可手动刷新'
 )
+
+const statusSummary = computed(() => {
+  const counts = {
+    available: 0,
+    pending: 0,
+    building: 0,
+    failed: 0,
+  }
+
+  for (const row of list.value) {
+    counts[row.status] += 1
+  }
+
+  const summary = []
+
+  if (counts.available > 0) {
+    summary.push({ key: 'available', label: '可用', value: counts.available, tone: 'success' })
+  }
+  if (counts.building > 0) {
+    summary.push({ key: 'building', label: '构建中', value: counts.building, tone: 'warning' })
+  }
+  if (counts.pending > 0) {
+    summary.push({ key: 'pending', label: '等待中', value: counts.pending, tone: 'muted' })
+  }
+  if (counts.failed > 0) {
+    summary.push({ key: 'failed', label: '失败', value: counts.failed, tone: 'danger' })
+  }
+
+  if (summary.length > 0) {
+    return summary
+  }
+
+  return [{ key: 'empty', label: '当前页', value: 0, tone: 'muted' as const }]
+})
+
 const imageStatusMeta: Record<ImageStatus, { label: string; color: string; backgroundColor: string }> = {
   pending: {
     label: '等待中',
@@ -431,13 +468,76 @@ onUnmounted(() => {
   display: grid;
   gap: var(--space-3);
   justify-items: start;
-  --metric-panel-columns: repeat(2, minmax(0, 1fr));
 }
 
 .image-header__actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+.image-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+}
+
+.image-status-strip__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2-5);
+}
+
+.image-status-strip__note {
+  font-size: var(--font-size-0-82);
+  line-height: 1.6;
+  color: var(--journal-muted);
+}
+
+.image-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-base));
+  color: var(--journal-muted);
+  font-size: var(--font-size-0-82);
+  line-height: 1;
+}
+
+.image-status-pill strong {
+  font-size: var(--font-size-0-9);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
+.image-status-pill--success {
+  border-color: color-mix(in srgb, var(--color-success) 22%, transparent);
+  background: color-mix(in srgb, var(--color-success) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-success) 82%, var(--journal-ink));
+}
+
+.image-status-pill--warning {
+  border-color: color-mix(in srgb, var(--color-warning) 24%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 12%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-warning) 84%, var(--journal-ink));
+}
+
+.image-status-pill--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
+  color: color-mix(in srgb, var(--color-danger) 84%, var(--journal-ink));
+}
+
+.image-status-pill--muted {
+  border-color: color-mix(in srgb, var(--journal-muted) 18%, transparent);
+  background: color-mix(in srgb, var(--journal-muted) 10%, var(--journal-surface));
+  color: var(--journal-muted);
 }
 
 .image-board {
@@ -582,8 +682,12 @@ onUnmounted(() => {
 }
 
 @media (max-width: 720px) {
-  .image-header__side {
-    --metric-panel-columns: minmax(0, 1fr);
+  .image-status-strip {
+    align-items: flex-start;
+  }
+
+  .image-status-strip__note {
+    width: 100%;
   }
 }
 </style>

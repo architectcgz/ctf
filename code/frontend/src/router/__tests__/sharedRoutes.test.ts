@@ -50,6 +50,7 @@ describe('shared route canonical paths', () => {
 
   it('uses platform paths as the canonical location for shared governance pages', () => {
     expect(findChild('platform/challenges')?.name).toBe('ChallengeManage')
+    expect(findChild('platform/challenges/filter-patterns/mock')).toBeUndefined()
     expect(findChild('platform/challenges/package-format')?.name).toBe(
       'AdminChallengePackageFormat'
     )

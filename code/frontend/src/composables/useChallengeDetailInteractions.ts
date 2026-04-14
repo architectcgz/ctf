@@ -116,6 +116,11 @@ export function useChallengeDetailInteractions({
   }
 
   function buildSubmitResultMessage(result: SubmitFlagData): string {
+    const repeatedCorrect = result.status === 'correct' && (result.points ?? 0) <= 0 && challenge.value?.is_solved
+
+    if (repeatedCorrect) {
+      return 'Flag 校验通过，本题已解出，不重复计分'
+    }
     if (result.status === 'correct') {
       const countdown = formatShutdownCountdown(result)
       if (countdown) {
@@ -146,6 +151,7 @@ export function useChallengeDetailInteractions({
     if (!currentChallenge || !flagInput.value.trim()) return
 
     const answer = flagInput.value.trim()
+    const alreadySolved = currentChallenge.is_solved
     submitting.value = true
     submitResult.value = null
     try {
@@ -169,7 +175,9 @@ export function useChallengeDetailInteractions({
           }
           toast.success(submitMessage)
           currentChallenge.is_solved = true
-          await loadSolutions(currentChallenge.id)
+          if (!alreadySolved) {
+            await loadSolutions(currentChallenge.id)
+          }
           break
         case 'pending_review':
           submitResult.value = {

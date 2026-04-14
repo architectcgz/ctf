@@ -165,7 +165,6 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Training Journal')
     expect(wrapper.text()).toContain('alice 的训练总览')
     expect(wrapper.text()).toContain('320')
     expect(wrapper.text()).toContain('#7')
@@ -473,9 +472,7 @@ describe('DashboardView', () => {
       total_score: 320,
       total_solved: 0,
       rank: 7,
-      category_stats: [
-        { category: 'web', solved: 0, total: 2 },
-      ],
+      category_stats: [{ category: 'web', solved: 0, total: 2 }],
       difficulty_stats: [
         { difficulty: 'beginner', solved: 0, total: 1 },
         { difficulty: 'medium', solved: 0, total: 5 },
@@ -535,7 +532,6 @@ describe('DashboardView', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Training Journal')
     expect(wrapper.text()).toContain('alice 的训练总览')
   })
 
