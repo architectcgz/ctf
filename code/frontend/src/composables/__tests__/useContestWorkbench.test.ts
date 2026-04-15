@@ -1,6 +1,5 @@
 import { ref } from 'vue'
 import { describe, expect, it } from 'vitest'
-
 import { useContestWorkbench } from '../useContestWorkbench'
 import type { ContestDetailData } from '@/api/contracts'
 
@@ -18,14 +17,14 @@ function buildContestDetail(overrides: Partial<ContestDetailData> = {}): Contest
 }
 
 describe('useContestWorkbench', () => {
-  it('jeopardy 模式仅返回基础阶段', () => {
+  it('jeopardy 模式仅返回基础编排阶段', async () => {
     const result = useContestWorkbench(ref(buildContestDetail()))
 
     expect(result.visibleStages.map((item) => item.key)).toEqual(['basics', 'pool'])
     expect(result.defaultStage).toBe('basics')
   })
 
-  it('awd + running 状态默认阶段为 operations', () => {
+  it('awd + running 状态默认阶段为 operations', async () => {
     const result = useContestWorkbench(
       ref(
         buildContestDetail({
@@ -47,7 +46,7 @@ describe('useContestWorkbench', () => {
     expect(result.defaultStage).toBe('operations')
   })
 
-  it('awd + registering 状态默认阶段为 basics 或 pool', () => {
+  it('awd + registering 状态默认阶段为 pool', async () => {
     const result = useContestWorkbench(
       ref(
         buildContestDetail({
@@ -66,6 +65,6 @@ describe('useContestWorkbench', () => {
       'preflight',
       'operations',
     ])
-    expect(['basics', 'pool']).toContain(result.defaultStage)
+    expect(result.defaultStage).toBe('pool')
   })
 })
