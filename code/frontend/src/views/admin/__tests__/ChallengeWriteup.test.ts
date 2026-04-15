@@ -71,7 +71,9 @@ describe('ChallengeWriteupEditorPage', () => {
   it('嵌入态题解编辑页应使用统一头部样式而不是旧 workspace-tab-heading', () => {
     expect(challengeWriteupEditorSource).toContain('class="list-heading writeup-tab-heading"')
     expect(challengeWriteupEditorSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
-    expect(challengeWriteupEditorSource).not.toContain('class="workspace-tab-heading writeup-tab-heading"')
+    expect(challengeWriteupEditorSource).not.toContain(
+      'class="workspace-tab-heading writeup-tab-heading"'
+    )
   })
 
   it('删除题解失败时应优先展示接口返回消息', async () => {
@@ -96,7 +98,9 @@ describe('ChallengeWriteupEditorPage', () => {
 
     await flushPromises()
 
-    const deleteButton = wrapper.findAll('button').find((button) => button.text().includes('删除题解'))
+    const deleteButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('删除题解'))
     expect(deleteButton).toBeTruthy()
 
     await deleteButton!.trigger('click')
@@ -150,7 +154,9 @@ describe('ChallengeWriteupEditorPage', () => {
 
     await flushPromises()
 
-    const actionButton = wrapper.findAll('button').find((button) => button.text().includes('取消推荐'))
+    const actionButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('取消推荐'))
     expect(actionButton).toBeTruthy()
 
     await actionButton!.trigger('click')

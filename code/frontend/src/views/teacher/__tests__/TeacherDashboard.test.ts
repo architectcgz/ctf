@@ -192,15 +192,19 @@ describe('TeacherDashboard', () => {
     expect(teacherDashboardPageSource).toMatch(teacherSurfacePattern)
     for (const [sourceName, source] of teacherSurfaceSources) {
       for (const forbiddenTeacherSurfaceLiteral of forbiddenTeacherSurfaceLiterals) {
-        expect(source, `${sourceName} contains forbidden literal: ${forbiddenTeacherSurfaceLiteral}`).not.toContain(
-          forbiddenTeacherSurfaceLiteral
-        )
+        expect(
+          source,
+          `${sourceName} contains forbidden literal: ${forbiddenTeacherSurfaceLiteral}`
+        ).not.toContain(forbiddenTeacherSurfaceLiteral)
       }
     }
   })
 
   it('教师概览应采用 workspace tabs 结构而不是单一仪表盘堆叠', () => {
-    expect(teacherDashboardPageSource).toContain('class="workspace-shell teacher-management-shell teacher-surface"')
+    expect(teacherDashboardPageSource).toContain(
+      'class="workspace-shell teacher-management-shell teacher-surface"'
+    )
+    expect(teacherDashboardPageSource).not.toContain('class="workspace-topbar"')
     expect(teacherDashboardPageSource).toContain('role="tablist"')
     expect(teacherDashboardPageSource).toContain('top-tab-overview')
     expect(teacherDashboardPageSource).toContain('top-tab-portrait')

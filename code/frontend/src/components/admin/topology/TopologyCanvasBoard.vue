@@ -172,9 +172,7 @@ onBeforeUnmount(() => {
         <div class="topology-canvas-board__title">拖拽节点调整拓扑视图</div>
       </div>
       <div class="topology-canvas-board__legend">
-        <span class="topology-canvas-board__legend-pill">
-          灰线：逻辑连线
-        </span>
+        <span class="topology-canvas-board__legend-pill"> 灰线：逻辑连线 </span>
         <span class="topology-canvas-board__legend-pill topology-canvas-board__legend-pill--allow">
           绿线：allow
         </span>
@@ -262,12 +260,7 @@ onBeforeUnmount(() => {
         <text x="0" y="-8" text-anchor="middle" class="topology-canvas-board__node-label">
           {{ node.label.slice(0, 14) }}
         </text>
-        <text
-          x="0"
-          y="12"
-          text-anchor="middle"
-          class="topology-canvas-board__node-key"
-        >
+        <text x="0" y="12" text-anchor="middle" class="topology-canvas-board__node-key">
           {{ node.key }}
         </text>
         <text x="0" y="30" text-anchor="middle" class="topology-canvas-board__node-meta">
@@ -354,7 +347,11 @@ onBeforeUnmount(() => {
   border: 1px solid var(--topology-canvas-border);
   border-radius: 28px;
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 20rem),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 20rem
+    ),
     var(--topology-canvas-shell);
   padding: 1rem;
   box-shadow: 0 20px 44px var(--color-shadow-soft);

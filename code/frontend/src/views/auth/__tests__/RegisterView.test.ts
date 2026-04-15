@@ -34,7 +34,8 @@ describe('RegisterView', () => {
           },
           ElButton: {
             props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
-            template: '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
+            template:
+              '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
           },
         },
       },

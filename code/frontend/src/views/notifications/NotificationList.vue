@@ -137,7 +137,11 @@ async function handlePublishSuccess(): Promise<void> {
           <span>当前消息概况</span>
         </div>
         <div class="notification-summary-grid metric-panel-grid">
-          <div v-for="stat in summaryStats" :key="stat.key" class="notification-summary-item metric-panel-card">
+          <div
+            v-for="stat in summaryStats"
+            :key="stat.key"
+            class="notification-summary-item metric-panel-card"
+          >
             <div class="notification-summary-label metric-panel-label">{{ stat.label }}</div>
             <div class="notification-summary-value metric-panel-value">{{ stat.value }}</div>
             <div class="notification-summary-helper metric-panel-helper">{{ stat.helper }}</div>
@@ -232,9 +236,17 @@ async function handlePublishSuccess(): Promise<void> {
 
 <style scoped>
 .journal-shell {
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-elevated) 74%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-elevated) 74%,
+    var(--color-bg-base)
+  );
   --journal-shell-accent: color-mix(in srgb, var(--color-primary) 86%, var(--journal-ink));
-  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 94%,
+    var(--color-bg-base)
+  );
 }
 
 .notification-page {
@@ -400,5 +412,4 @@ async function handlePublishSuccess(): Promise<void> {
     grid-template-columns: 1fr;
   }
 }
-
 </style>

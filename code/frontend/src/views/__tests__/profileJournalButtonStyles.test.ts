@@ -19,9 +19,7 @@ function extractScopedStyle(source: string): string {
 describe('profile journal shared button styles', () => {
   it('应该在共享样式文件中声明 profile 页复用的 journal 按钮规则', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user .journal-btn')
-    expect(journalUserShellSource).toContain(
-      '.journal-shell.journal-shell-user .journal-btn:hover'
-    )
+    expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user .journal-btn:hover')
     expect(journalUserShellSource).toContain(
       '.journal-shell.journal-shell-user .journal-btn:focus-visible'
     )

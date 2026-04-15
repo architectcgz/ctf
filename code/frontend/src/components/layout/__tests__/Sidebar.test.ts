@@ -14,29 +14,54 @@ describe('Sidebar desktop layout', () => {
 
   it('stretches the desktop nav to align its bottom edge with the content area', () => {
     expect(sidebarSource).toMatch(
-      /<aside\s+class="[^"]*sidebar-shell-desktop[^"]*min-h-screen[^"]*self-stretch[^"]*"/s
+      /<aside[\s\S]*class="[^"]*relative[^"]*z-30[^"]*hidden[^"]*h-screen[^"]*shrink-0[^"]*flex-col[^"]*border-r[^"]*border-slate-200[^"]*bg-white[^"]*md:flex"/s
     )
     expect(sidebarSource).toMatch(
-      /<nav class="[^"]*flex[^"]*min-h-full[^"]*flex-col[^"]*space-y-7[^"]*">/s
+      /<nav[\s\S]*class="[^"]*flex-1[^"]*space-y-1\.5[^"]*overflow-x-hidden[^"]*"/s
     )
   })
 
-  it('uses a flatter console navigation system instead of stacked card buttons', () => {
+  it('matches the admin example sidebar shell structure instead of a custom console variant', () => {
     expect(sidebarSource).toContain(
-      'class="sidebar-brand-button flex min-w-0 items-center gap-3 px-2.5 py-2 text-left transition"'
+      "absolute -right-3.5 top-6 bg-white border border-slate-200 rounded-full p-1.5 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:shadow-md shadow-sm z-50 transition-all cursor-pointer"
     )
-    expect(sidebarSource).toContain('sidebar-nav-scroll')
-    expect(sidebarSource).toContain('sidebar-group-title--collapsed')
-    expect(sidebarSource).toContain('.sidebar-item-active::before,')
-    expect(sidebarSource).toContain('.sidebar-item-button--collapsed::before')
+    expect(sidebarSource).toContain(
+      'class="h-16 flex items-center px-5 border-b border-slate-100 overflow-hidden whitespace-nowrap"'
+    )
+    expect(sidebarSource).toContain('Main Navigation')
+    expect(sidebarSource).toContain(
+      "mt-1.5 flex flex-col gap-1 pl-11 pr-2 animate-in slide-in-from-top-2 duration-200"
+    )
   })
 
-  it('uses a role-neutral profile url when admin opens the profile page from sidebar', async () => {
+  it('uses the same ChallengeOps shell identity across academy and platform backoffice routes', () => {
+    expect(sidebarSource).toContain('const isBackofficeRoute = computed(')
+    expect(sidebarSource).toContain("route.path.startsWith('/academy/')")
+    expect(sidebarSource).toContain("route.path.startsWith('/platform/')")
+    expect(sidebarSource).toContain("route.path.startsWith('/admin/')")
+    expect(sidebarSource).toContain('sidebar-shell--admin')
+    expect(sidebarSource).toContain('ChallengeOps')
+    expect(sidebarSource).not.toContain('Academic Ops')
+  })
+
+  it('uses unified backoffice modules instead of raw main/teacher/admin route buckets', () => {
+    expect(sidebarSource).toContain('getVisibleBackofficeModules')
+    expect(sidebarSource).toContain('getVisibleBackofficeSecondaryItems')
+    expect(sidebarSource).toContain('backofficeModuleIconMap')
+    expect(sidebarSource).toContain('currentBackofficeModuleKey')
+    expect(sidebarSource).toContain('isBackofficeRoute')
+    expect(sidebarSource).toContain('backofficeNavGroups')
+    expect(sidebarSource).toContain('defaultNavGroups')
+  })
+
+  it('shows the four primary backoffice modules for admin users', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
         { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
-        { path: '/profile', component: { template: '<div>profile</div>' } },
+        { path: '/academy/classes', component: { template: '<div>classes</div>' } },
+        { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
+        { path: '/admin/contests', component: { template: '<div>contests</div>' } },
       ],
     })
 
@@ -64,27 +89,22 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const profileButton = wrapper
-      .findAll('.sidebar-shell-desktop button')
-      .find((node) => node.text().includes('个人资料'))
-
-    expect(profileButton).toBeTruthy()
-
-    await profileButton!.trigger('click')
-    await flushPromises()
-
-    expect(router.currentRoute.value.fullPath).toBe('/profile')
+    expect(wrapper.text()).toContain('总览')
+    expect(wrapper.text()).toContain('教学运营')
+    expect(wrapper.text()).toContain('题库与资源')
+    expect(wrapper.text()).toContain('系统治理')
 
     wrapper.unmount()
   })
 
-  it('uses academy paths for shared teaching entries when admin navigates from the sidebar', async () => {
+  it('navigates admin users to the canonical teaching module entry', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
         { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
         { path: '/academy/classes', component: { template: '<div>academy classes</div>' } },
-        { path: '/teacher/classes', component: { template: '<div>legacy teacher classes</div>' } },
+        { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
+        { path: '/admin/contests', component: { template: '<div>contests</div>' } },
       ],
     })
 
@@ -112,13 +132,11 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    const classButton = wrapper
-      .findAll('.sidebar-shell-desktop button')
-      .find((node) => node.text().includes('班级管理'))
+    const operationsButton = wrapper.findAll('button').find((node) => node.text().includes('教学运营'))
 
-    expect(classButton).toBeTruthy()
+    expect(operationsButton).toBeTruthy()
 
-    await classButton!.trigger('click')
+    await operationsButton!.trigger('click')
     await flushPromises()
 
     expect(router.currentRoute.value.fullPath).toBe('/academy/classes')
@@ -126,12 +144,110 @@ describe('Sidebar desktop layout', () => {
     wrapper.unmount()
   })
 
-  it('shows AWD复盘 and removes 报告导出 from teaching navigation', async () => {
+  it('expands the active backoffice module and renders its secondary entries inside the sidebar', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
         { path: '/academy/overview', component: { template: '<div>overview</div>' } },
+        { path: '/academy/classes', component: { template: '<div>classes</div>' } },
+        { path: '/academy/students', component: { template: '<div>students</div>' } },
         { path: '/academy/awd-reviews', component: { template: '<div>awd reviews</div>' } },
+        { path: '/academy/instances', component: { template: '<div>instances</div>' } },
+        { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        name: 'Teacher',
+      },
+      'token'
+    )
+
+    await router.push('/academy/classes')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    expect(wrapper.text()).toContain('总览')
+    expect(wrapper.text()).toContain('教学运营')
+    expect(wrapper.text()).toContain('题库与资源')
+    expect(wrapper.text()).toContain('班级管理')
+    expect(wrapper.text()).toContain('学生管理')
+    expect(wrapper.text()).toContain('AWD复盘')
+    expect(wrapper.text()).toContain('实例管理')
+
+    wrapper.unmount()
+  })
+
+  it('highlights only the matched secondary entry inside the expanded backoffice module', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/academy/overview', component: { template: '<div>overview</div>' } },
+        { path: '/academy/classes', component: { template: '<div>classes</div>' } },
+        { path: '/academy/students', component: { template: '<div>students</div>' } },
+        { path: '/academy/awd-reviews', component: { template: '<div>awd reviews</div>' } },
+        { path: '/academy/instances', component: { template: '<div>instances</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'teacher-1',
+        username: 'teacher',
+        role: 'teacher',
+        name: 'Teacher',
+      },
+      'token'
+    )
+
+    await router.push('/academy/classes')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    const classButtons = wrapper.findAll('button').filter((node) => node.text().includes('班级管理'))
+    const studentButtons = wrapper.findAll('button').filter((node) => node.text().includes('学生管理'))
+    const reviewButtons = wrapper.findAll('button').filter((node) => node.text().includes('AWD复盘'))
+
+    expect(classButtons.length).toBeGreaterThan(0)
+    expect(studentButtons.length).toBeGreaterThan(0)
+    expect(reviewButtons.length).toBeGreaterThan(0)
+    expect(classButtons.every((node) => node.classes().includes('text-blue-700'))).toBe(true)
+    expect(studentButtons.every((node) => !node.classes().includes('text-blue-700'))).toBe(true)
+    expect(reviewButtons.every((node) => !node.classes().includes('text-blue-700'))).toBe(true)
+
+    wrapper.unmount()
+  })
+
+  it('hides governance from teacher users while keeping overview, operations and resources', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/academy/overview', component: { template: '<div>overview</div>' } },
+        { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
       ],
     })
 
@@ -159,8 +275,10 @@ describe('Sidebar desktop layout', () => {
       },
     })
 
-    expect(wrapper.text()).toContain('AWD复盘')
-    expect(wrapper.text()).not.toContain('报告导出')
+    expect(wrapper.text()).toContain('总览')
+    expect(wrapper.text()).toContain('教学运营')
+    expect(wrapper.text()).toContain('题库与资源')
+    expect(wrapper.text()).not.toContain('系统治理')
 
     wrapper.unmount()
   })

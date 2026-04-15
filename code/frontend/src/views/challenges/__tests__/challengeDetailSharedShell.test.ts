@@ -5,7 +5,9 @@ import challengeInstanceCardSource from '@/components/challenge/ChallengeInstanc
 
 describe('challenge detail shared shell alignment', () => {
   it('题目详情页应通过 journal-shell-user 接入共享学生侧 shell', () => {
-    expect(challengeDetailSource).toContain('class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full"')
+    expect(challengeDetailSource).toContain(
+      'class="journal-shell journal-shell-user journal-hero workspace-shell min-h-full"'
+    )
   })
 
   it('通过变量接入共享 workspace shell，而不是继续本地重写整套壳层样式', () => {
@@ -36,7 +38,7 @@ describe('challenge detail shared shell alignment', () => {
 
   it('题目详情的 tab 与操作按钮应复用共享主题按钮和页签栈', () => {
     expect(challengeDetailSource).toContain('class="workspace-tab top-tab"')
-    expect(challengeDetailSource).toContain(":class=\"{ active: activeWorkspaceTab === tab.id }\"")
+    expect(challengeDetailSource).toContain(':class="{ active: activeWorkspaceTab === tab.id }"')
     expect(challengeDetailSource).toContain('class="solution-tabbar top-tabs challenge-subtabs"')
     expect(challengeDetailSource).toContain('class="solution-tab top-tab challenge-subtab"')
     expect(challengeDetailSource).toContain('class="challenge-btn"')
@@ -90,13 +92,15 @@ describe('challenge detail shared shell alignment', () => {
     expect(challengeInstanceCardSource).toMatch(
       /:global\(\[data-theme='dark'\]\) \.instance-shell\s*\{[\s\S]*--brand:\s*color-mix\(in srgb,\s*var\(--color-primary\)\s*88%,\s*var\(--color-text-primary\)\);/s
     )
-    expect(challengeInstanceCardSource).not.toContain("var(--color-primary) 88%, white")
+    expect(challengeInstanceCardSource).not.toContain('var(--color-primary) 88%, white')
   })
 
   it('题目详情夜间模式应覆盖 workspace page 底色，避免外层主内容区继续发亮', () => {
     expect(challengeDetailSource).toContain(
       '--bg-page: color-mix(in srgb, var(--color-bg-base) 94%, var(--color-bg-surface));'
     )
-    expect(challengeDetailSource).not.toMatch(/^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m)
+    expect(challengeDetailSource).not.toMatch(
+      /^:global\(\[data-theme='dark'\]\) \.journal-shell\s*\{/m
+    )
   })
 })

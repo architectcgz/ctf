@@ -1,7 +1,24 @@
 <script setup lang="ts">
-import { Search } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import {
+  Book,
+  CheckCircle,
+  Zap,
+  Edit3,
+  Search,
+  Filter,
+  ChevronDown,
+  Eye,
+  MoreHorizontal,
+  Trash2,
+  FileSearch,
+  Plus,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow,
+  SortAsc,
+  Calendar,
+} from 'lucide-vue-next'
 
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
@@ -72,17 +89,6 @@ const hasActiveFilters = computed(() =>
     keyword.value.trim() || categoryFilter.value || difficultyFilter.value || statusFilter.value
   )
 )
-const advancedFiltersExpanded = ref(false)
-const advancedFilterCount = computed(() => Number(Boolean(difficultyFilter.value)))
-const advancedFilterToggleLabel = computed(() => {
-  if (advancedFiltersExpanded.value) {
-    return '收起筛选'
-  }
-  if (advancedFilterCount.value > 0) {
-    return `更多筛选（${advancedFilterCount.value}）`
-  }
-  return '更多筛选'
-})
 const manageEmptyMessage = computed(() =>
   hasActiveFilters.value ? '当前筛选条件下没有匹配题目。' : '当前还没有题目，请先导入题目包。'
 )
@@ -105,13 +111,7 @@ const queueCount = computed(() => queue.value.length)
 const {
   openActionMenuId,
   getCategoryLabel,
-  getCategoryColor,
   getDifficultyLabel,
-  getDifficultyColor,
-  getStatusLabel,
-  getStatusColor,
-  getPublishRequestLabel,
-  getPublishRequestColor,
   formatDateTime,
   inspectImportTask,
   toggleActionMenu,
@@ -124,6 +124,61 @@ const {
   router,
   publish,
   remove,
+})
+
+const isFilterOpen = ref(false)
+const isSortOpen = ref(false)
+const filterToggleRef = ref<HTMLButtonElement | null>(null)
+const filterPanelRef = ref<HTMLDivElement | null>(null)
+const sortButtonRef = ref<HTMLButtonElement | null>(null)
+const sortMenuRef = ref<HTMLDivElement | null>(null)
+
+const sortConfig = ref({ key: 'updateTime', order: 'desc', label: '最近更新' })
+const sortOptions = [
+  { key: 'updateTime', order: 'desc', label: '最近更新', icon: Calendar },
+  { key: 'points', order: 'desc', label: '分值由高到低', icon: ArrowDownWideNarrow },
+  { key: 'points', order: 'asc', label: '分值由低到高', icon: ArrowUpNarrowWide },
+  { key: 'title', order: 'asc', label: '标题 A-Z', icon: SortAsc },
+]
+
+function setSort(opt: (typeof sortOptions)[number]) {
+  sortConfig.value = opt
+  isSortOpen.value = false
+}
+
+let removeWindowListeners: (() => void) | null = null
+
+onMounted(() => {
+  void refreshQueue()
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target
+    if (!(target instanceof Node)) {
+      isSortOpen.value = false
+      isFilterOpen.value = false
+      return
+    }
+
+    const clickedInsideFilter =
+      filterToggleRef.value?.contains(target) || filterPanelRef.value?.contains(target)
+    const clickedInsideSort =
+      sortButtonRef.value?.contains(target) || sortMenuRef.value?.contains(target)
+
+    if (!clickedInsideFilter) {
+      isFilterOpen.value = false
+    }
+
+    if (!clickedInsideSort) {
+      isSortOpen.value = false
+    }
+  }
+  window.addEventListener('click', handleClickOutside)
+  removeWindowListeners = () => {
+    window.removeEventListener('click', handleClickOutside)
+  }
+})
+
+onUnmounted(() => {
+  removeWindowListeners?.()
 })
 
 async function handleSelectPackage(files: File[]) {
@@ -141,27 +196,14 @@ async function openPackageFormatGuide(): Promise<void> {
   await router.push({ name: 'AdminChallengePackageFormat' })
 }
 
-onMounted(() => {
-  void refreshQueue()
-})
+function handleTabChange(key: ChallengePanelKey) {
+  switchPanel(key)
+}
 </script>
 
 <template>
-  <section
-    class="journal-shell journal-shell-admin journal-notes-card journal-hero flex min-h-full flex-1 flex-col rounded-[24px] border px-6 py-6 md:px-8"
-  >
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Challenge Workspace</span>
-        <span class="class-chip">题库管理</span>
-      </div>
-      <div class="top-note">
-        <span>当前题目: {{ total }}</span>
-        <span>待确认导入: {{ queueCount }}</span>
-      </div>
-    </header>
-
-    <nav class="top-tabs" role="tablist" aria-label="题目管理视图切换">
+  <div class="workspace-shell challenge-manage-shell">
+    <nav class="top-tabs" role="tablist" aria-label="题目管理工作区切换">
       <button
         v-for="(tab, index) in panelTabs"
         :id="tab.tabId"
@@ -174,371 +216,405 @@ onMounted(() => {
         :aria-selected="activePanel === tab.key ? 'true' : 'false'"
         :aria-controls="tab.panelId"
         :tabindex="activePanel === tab.key ? 0 : -1"
-        @click="switchPanel(tab.key)"
+        @click="handleTabChange(tab.key)"
         @keydown="handleTabKeydown($event, index)"
       >
         {{ tab.label }}
       </button>
     </nav>
 
-    <main class="content-pane">
-      <section
-        id="challenge-panel-manage"
-        class="tab-panel"
-        role="tabpanel"
-        aria-labelledby="challenge-tab-manage"
-        :aria-hidden="activePanel === 'manage' ? 'false' : 'true'"
-        v-show="activePanel === 'manage'"
-      >
-        <header class="manage-header">
-          <div class="manage-header__intro workspace-tab-heading__main">
-            <div class="journal-note-label">Challenge Library</div>
-            <h1 class="workspace-page-title">题目管理</h1>
+    <div class="workspace-grid">
+      <main class="content-pane challenge-manage-content">
+        <section
+          id="challenge-panel-manage"
+          v-show="activePanel === 'manage'"
+          class="tab-panel challenge-manage-panel"
+          :class="{ active: activePanel === 'manage' }"
+          role="tabpanel"
+          aria-labelledby="challenge-tab-manage"
+          :aria-hidden="activePanel === 'manage' ? 'false' : 'true'"
+        >
+          <div class="workspace-tab-heading challenge-manage-actions">
+          <div class="workspace-tab-heading__main">
+            <h1 class="workspace-page-title">题目资源管理中心</h1>
+            <p class="workspace-page-copy uppercase tracking-wider font-bold text-[10px] text-slate-400 mt-1">
+              Inventory / Challenge Management
+            </p>
           </div>
-
-          <div class="manage-summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">题目总量</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前题库中可管理的题目
-              </div>
-            </article>
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ list.length }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前分页中的题目数量
-              </div>
-            </article>
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">已发布</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ publishedCount }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                当前页已开放训练的题目
-              </div>
-            </article>
-            <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">草稿</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">
-                {{ draftCount }}
-              </div>
-              <div class="journal-note-helper progress-card-hint metric-panel-helper">
-                导入后仍待完善或发布的题目
-              </div>
-            </article>
-          </div>
-        </header>
-
-        <section class="workspace-directory-section">
-          <header class="list-heading">
-            <div>
-              <div class="journal-note-label">Imported Challenges</div>
-              <h2 class="list-heading__title">已导入题目</h2>
+            <div class="challenge-manage-hero-actions">
+              <button
+                type="button"
+                class="challenge-manage-action"
+                @click="openPackageFormatGuide"
+              >
+                <FileSearch class="h-3.5 w-3.5 mr-1.5" />
+                审计日志
+              </button>
+              <button
+                type="button"
+                class="challenge-manage-action challenge-manage-action--primary"
+                @click="handleTabChange('import')"
+              >
+                <Plus class="h-4 w-4 mr-1.5" />
+                导入资源包
+              </button>
             </div>
-          </header>
+          </div>
 
-          <section class="challenge-manage-filters" aria-label="题目筛选">
-            <div class="challenge-manage-filter-grid">
-              <label class="challenge-manage-filter-field">
-                <span class="challenge-manage-filter-label">分类</span>
-                <select v-model="categoryFilter" class="challenge-manage-filter-select">
-                  <option value="">全部分类</option>
-                  <option value="web">Web</option>
-                  <option value="pwn">Pwn</option>
-                  <option value="reverse">逆向</option>
-                  <option value="crypto">密码</option>
-                  <option value="misc">杂项</option>
-                  <option value="forensics">取证</option>
-                </select>
-              </label>
+          <div class="challenge-metric-grid">
+            <article class="challenge-metric-card">
+              <div class="challenge-metric-head">
+                <span class="challenge-metric-label">题目总量</span>
+                <Book class="h-4 w-4" />
+              </div>
+              <div class="challenge-metric-value-wrap">
+                <div class="challenge-metric-value">{{ total.toString().padStart(2, '0') }}</div>
+                <div class="challenge-metric-trend">题目资源总计</div>
+              </div>
+            </article>
 
-              <label class="challenge-manage-filter-field">
-                <span class="challenge-manage-filter-label">发布状态</span>
-                <select v-model="statusFilter" class="challenge-manage-filter-select">
-                  <option value="">全部状态</option>
-                  <option value="draft">草稿</option>
-                  <option value="published">已发布</option>
-                  <option value="archived">已归档</option>
-                </select>
-              </label>
+            <article class="challenge-metric-card">
+              <div class="challenge-metric-head">
+                <span class="challenge-metric-label">已发布</span>
+                <CheckCircle class="h-4 w-4" />
+              </div>
+              <div class="challenge-metric-value-wrap">
+                <div class="challenge-metric-value text-emerald-600">
+                  {{ publishedCount.toString().padStart(2, '0') }}
+                </div>
+                <div class="challenge-metric-trend">线上公开题目</div>
+              </div>
+            </article>
 
-              <div class="challenge-manage-filter-search">
-                <label class="challenge-manage-filter-search__label" for="challenge-manage-keyword">
-                  <span
-                    class="challenge-manage-filter-label challenge-manage-filter-label--ghost"
-                    aria-hidden="true"
-                  >
-                    搜索
-                  </span>
-                  <span class="challenge-manage-filter-search__control">
-                    <Search class="challenge-manage-filter-search__icon h-4 w-4" />
-                    <input
-                      id="challenge-manage-keyword"
-                      v-model="keyword"
-                      type="text"
-                      class="challenge-manage-filter-input"
-                      placeholder="搜索题目标题"
-                    />
-                  </span>
+            <article class="challenge-metric-card">
+              <div class="challenge-metric-head">
+                <span class="challenge-metric-label">待确认任务</span>
+                <Zap class="h-4 w-4" />
+              </div>
+              <div class="challenge-metric-value-wrap">
+                <div class="challenge-metric-value text-purple-600">{{ queueCount.toString().padStart(2, '0') }}</div>
+                <div class="challenge-metric-trend">待导入任务队列</div>
+              </div>
+            </article>
+
+            <article class="challenge-metric-card">
+              <div class="challenge-metric-head">
+                <span class="challenge-metric-label">草稿存量</span>
+                <Edit3 class="h-4 w-4" />
+              </div>
+              <div class="challenge-metric-value-wrap">
+                <div class="challenge-metric-value text-orange-500">{{ draftCount.toString().padStart(2, '0') }}</div>
+                <div class="challenge-metric-trend">导入后仍待发布</div>
+              </div>
+            </article>
+          </div>
+
+          <section class="workspace-directory-section challenge-manage-directory">
+            <div class="challenge-filter-bar">
+              <div class="challenge-filter-main">
+                <label class="challenge-search-wrap">
+                  <Search class="challenge-search-icon h-3.5 w-3.5" />
+                  <input
+                    v-model="keyword"
+                    type="text"
+                    class="challenge-search-input"
+                    placeholder="检索题目 ID 或名称..."
+                  />
                 </label>
+
+                <button
+                  ref="filterToggleRef"
+                  type="button"
+                  class="challenge-filter-toggle"
+                  :class="{ 'challenge-filter-toggle--active': isFilterOpen }"
+                  @click.stop="
+                    ;isFilterOpen = !isFilterOpen
+                    ;isSortOpen = false
+                  "
+                >
+                  <Filter class="h-3.5 w-3.5" />
+                  筛选
+                </button>
               </div>
 
-              <div class="challenge-manage-filter-actions">
-                <span
-                  class="challenge-manage-filter-label challenge-manage-filter-label--ghost"
-                  aria-hidden="true"
-                >
-                  操作
-                </span>
-                <div class="challenge-manage-filter-action-row">
+              <div class="challenge-filter-meta">
+                <div class="challenge-sort-wrap">
+                  <span class="mr-2 text-[10px] font-bold text-slate-400 uppercase tracking-tight">排序:</span>
                   <button
-                    id="challenge-manage-filter-toggle"
+                    ref="sortButtonRef"
                     type="button"
-                    class="admin-btn admin-btn-ghost admin-btn-compact challenge-manage-filter-toggle"
-                    :aria-expanded="advancedFiltersExpanded ? 'true' : 'false'"
-                    aria-controls="challenge-manage-filter-advanced"
-                    @click="advancedFiltersExpanded = !advancedFiltersExpanded"
+                    class="challenge-sort-button"
+                    @click.stop="
+                      ;isSortOpen = !isSortOpen
+                      ;isFilterOpen = false
+                    "
                   >
-                    {{ advancedFilterToggleLabel }}
+                    <span class="font-black tracking-wider">{{ sortConfig.label }}</span>
+                    <ChevronDown class="h-3.5 w-3.5 transition-transform" :class="{ 'rotate-180': isSortOpen }" />
                   </button>
+
+                  <div v-if="isSortOpen" ref="sortMenuRef" class="challenge-filter-menu">
+                    <div class="challenge-filter-menu__title">Sort Strategy</div>
+                    <div class="challenge-filter-menu__list">
+                      <button
+                        v-for="opt in sortOptions"
+                        :key="opt.label"
+                        type="button"
+                        class="challenge-filter-menu__item"
+                        :class="{ 'challenge-filter-menu__item--active': sortConfig.label === opt.label }"
+                        @click="setSort(opt)"
+                      >
+                        <div class="flex items-center gap-2">
+                          <component :is="opt.icon" class="h-3.5 w-3.5" />
+                          {{ opt.label }}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="challenge-count-pill">
+                  共 <span class="font-mono font-black text-slate-900">{{ total }}</span> 项
+                </div>
+              </div>
+
+              <div v-if="isFilterOpen" ref="filterPanelRef" class="challenge-filter-panel">
+                <div class="challenge-filter-panel__header">
+                  <div>
+                    <div class="workspace-overline">Filter Stack</div>
+                    <h3 class="challenge-filter-panel__title">高级筛选</h3>
+                  </div>
                   <button
                     type="button"
-                    class="admin-btn admin-btn-ghost admin-btn-compact challenge-manage-filter-clear"
+                    class="challenge-filter-reset"
                     :disabled="!hasActiveFilters"
-                    @click="void clearFilters()"
+                    @click="clearFilters"
                   >
                     清空筛选
                   </button>
                 </div>
+
+                <div class="challenge-filter-grid">
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">题目分类</span>
+                    <select v-model="categoryFilter" class="challenge-filter-select">
+                      <option value="">全部分类</option>
+                      <option value="web">Web</option>
+                      <option value="pwn">Pwn</option>
+                      <option value="reverse">逆向</option>
+                      <option value="crypto">密码</option>
+                      <option value="misc">杂项</option>
+                      <option value="forensics">取证</option>
+                    </select>
+                  </label>
+
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">难度等级</span>
+                    <select v-model="difficultyFilter" class="challenge-filter-select">
+                      <option value="">全部难度</option>
+                      <option value="beginner">入门</option>
+                      <option value="easy">简单</option>
+                      <option value="medium">中等</option>
+                      <option value="hard">困难</option>
+                      <option value="insane">地狱</option>
+                    </select>
+                  </label>
+
+                  <label class="challenge-filter-field">
+                    <span class="challenge-filter-label">发布状态</span>
+                    <select v-model="statusFilter" class="challenge-filter-select">
+                      <option value="">全部状态</option>
+                      <option value="draft">草稿</option>
+                      <option value="published">已发布</option>
+                      <option value="archived">已归档</option>
+                    </select>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <section
-              v-if="advancedFiltersExpanded"
-              id="challenge-manage-filter-advanced"
-              class="challenge-manage-filter-advanced"
-            >
-              <label class="challenge-manage-filter-field">
-                <span class="challenge-manage-filter-label">难度</span>
-                <select v-model="difficultyFilter" class="challenge-manage-filter-select">
-                  <option value="">全部难度</option>
-                  <option value="beginner">入门</option>
-                  <option value="easy">简单</option>
-                  <option value="medium">中等</option>
-                  <option value="hard">困难</option>
-                  <option value="insane">地狱</option>
-                </select>
-              </label>
-            </section>
-          </section>
-
-          <div
-            v-if="loading"
-            class="workspace-directory-loading flex items-center justify-center py-12"
-          >
-            <div
-              class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-            />
-          </div>
-
-          <template v-else>
-            <div v-if="list.length === 0" class="admin-empty workspace-directory-empty">
+            <div v-if="loading" class="challenge-directory-state">正在同步题目目录...</div>
+            <div v-else-if="list.length === 0" class="challenge-directory-state">
               {{ manageEmptyMessage }}
             </div>
-
-            <div v-else class="challenge-list workspace-directory-list">
-              <div class="manage-directory-head" aria-hidden="true">
-                <span>题目</span>
-                <span>分类</span>
-                <span>难度</span>
-                <span>分值</span>
-                <span>发布状态</span>
-                <span>发布检查</span>
-                <span class="manage-directory-head__actions">操作</span>
-              </div>
-
-              <article v-for="row in list" :key="row.id" class="challenge-row">
-                <div class="challenge-row__identity">
-                  <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <h2 class="challenge-row__title" :title="row.title">
-                        {{ row.title }}
-                      </h2>
-                    </div>
-
-                    <p
-                      v-if="row.latestPublishRequest?.failure_summary"
-                      class="challenge-row__failure"
-                      :title="row.latestPublishRequest.failure_summary"
+            <div v-else class="challenge-table-shell workspace-directory-list">
+              <table class="challenge-table">
+                <thead class="challenge-table-head">
+                  <tr>
+                    <th class="w-[30%] min-w-[180px] px-2">题目名称</th>
+                    <th class="w-[18%] px-2 text-center">题目 ID</th>
+                    <th class="w-24 px-2 text-center">分类</th>
+                    <th class="w-20 px-2 text-center">难度</th>
+                    <th class="w-20 px-2 text-center">分值</th>
+                    <th class="w-32 px-4">状态</th>
+                    <th class="w-40 px-2 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(row, index) in list"
+                    :key="row.id"
+                    class="challenge-table-row group"
+                  >
+                    <td class="truncate px-2 py-3.5 font-bold text-slate-900 group-hover:text-blue-600 transition-colors" :title="row.title">
+                      {{ row.title }}
+                    </td>
+                    <td
+                      class="truncate px-2 py-3.5 text-center font-mono text-[10px] font-bold uppercase tracking-tighter text-slate-400 group-hover:text-slate-600"
+                      :title="row.id"
                     >
-                      {{ row.latestPublishRequest.failure_summary }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="challenge-row__category">
-                  <span
-                    class="admin-inline-chip"
-                    :style="{
-                      backgroundColor: getCategoryColor(row.category) + '16',
-                      color: getCategoryColor(row.category),
-                    }"
-                  >
-                    {{ getCategoryLabel(row.category) }}
-                  </span>
-                </div>
-
-                <div class="challenge-row__difficulty">
-                  <span
-                    class="admin-inline-chip"
-                    :style="{
-                      backgroundColor: getDifficultyColor(row.difficulty) + '16',
-                      color: getDifficultyColor(row.difficulty),
-                    }"
-                  >
-                    {{ getDifficultyLabel(row.difficulty) }}
-                  </span>
-                </div>
-
-                <div class="challenge-row__points">
-                  <span class="admin-inline-chip admin-inline-chip-neutral"
-                    >{{ row.points }} pts</span
-                  >
-                </div>
-
-                <div class="challenge-row__status">
-                  <span
-                    class="admin-status-chip"
-                    :style="{
-                      backgroundColor: getStatusColor(row.status) + '18',
-                      color: getStatusColor(row.status),
-                    }"
-                  >
-                    {{ getStatusLabel(row.status) }}
-                  </span>
-                </div>
-
-                <div class="challenge-row__review">
-                  <div
-                    class="challenge-row__review-status"
-                    :style="{ color: getPublishRequestColor(row.latestPublishRequest) }"
-                  >
-                    {{ getPublishRequestLabel(row.latestPublishRequest) }}
-                  </div>
-                </div>
-
-                <div class="challenge-row__actions" role="group" aria-label="题目操作">
-                  <button
-                    class="admin-btn admin-btn-primary admin-btn-compact"
-                    @click="openChallengeDetail(row.id)"
-                  >
-                    查看
-                  </button>
-                  <button
-                    class="admin-btn admin-btn-ghost admin-btn-compact"
-                    data-testid="challenge-more-actions"
-                    :aria-expanded="openActionMenuId === row.id ? 'true' : 'false'"
-                    @click="toggleActionMenu(row.id)"
-                  >
-                    更多
-                  </button>
-
-                  <div
-                    v-if="openActionMenuId === row.id"
-                    class="challenge-row__actions-menu"
-                    role="menu"
-                    aria-label="更多题目操作"
-                  >
-                    <button
-                      class="admin-btn admin-btn-ghost admin-btn-compact challenge-row__menu-button"
-                      role="menuitem"
-                      @click="openChallengeTopology(row.id)"
+                      {{ row.id.split('-').pop()?.substring(0, 10) || row.id }}
+                    </td>
+                    <td class="px-2 py-3.5 text-center">
+                      <span class="challenge-table-pill challenge-table-pill--category">
+                        {{ getCategoryLabel(row.category) }}
+                      </span>
+                    </td>
+                    <td class="px-2 py-3.5 text-center">
+                      <span class="text-[10px] font-bold uppercase text-slate-500">
+                        {{ getDifficultyLabel(row.difficulty) }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-2 py-3.5 text-center font-mono text-sm font-black tracking-tighter text-slate-900"
                     >
-                      编排
-                    </button>
-                    <button
-                      class="admin-btn admin-btn-ghost admin-btn-compact challenge-row__menu-button"
-                      role="menuitem"
-                      @click="openChallengeWriteup(row.id)"
-                    >
-                      题解
-                    </button>
-                    <button
-                      v-if="row.status !== 'published'"
-                      class="admin-btn admin-btn-success admin-btn-compact challenge-row__menu-button"
-                      role="menuitem"
-                      @click="void submitPublishCheck(row)"
-                    >
-                      提交发布检查
-                    </button>
-                    <button
-                      class="admin-btn admin-btn-danger admin-btn-compact challenge-row__menu-button"
-                      role="menuitem"
-                      @click="void removeChallenge(row.id)"
-                    >
-                      删除
-                    </button>
-                  </div>
-                </div>
-              </article>
+                      {{ row.points }}
+                    </td>
+                    <td class="px-4 py-3.5">
+                      <div class="flex items-center gap-2">
+                        <div
+                          class="h-1.5 w-1.5 rounded-full"
+                          :class="row.status === 'published' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"
+                        />
+                        <span class="text-[11px] font-bold uppercase text-slate-700">
+                          {{
+                            row.status === 'published'
+                              ? '已发布'
+                              : row.status === 'archived'
+                                ? '已归档'
+                                : '草稿'
+                          }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="relative px-2 py-3.5 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          class="challenge-row-action"
+                          @click="openChallengeDetail(row.id)"
+                        >
+                          <Eye class="h-3 w-3" />
+                          查看
+                        </button>
+
+                        <div class="relative inline-block text-left">
+                          <button
+                            type="button"
+                            class="challenge-row-menu-button"
+                            :class="{ 'challenge-row-menu-button--active': openActionMenuId === row.id }"
+                            @click.stop="toggleActionMenu(row.id)"
+                          >
+                            <MoreHorizontal class="h-3.5 w-3.5" />
+                          </button>
+
+                          <div
+                            v-if="openActionMenuId === row.id"
+                            class="challenge-row-menu shadow-2xl"
+                            :class="
+                              index >= list.length - 2 && list.length > 2
+                                ? 'challenge-row-menu--up'
+                                : 'challenge-row-menu--down'
+                            "
+                          >
+                            <div class="challenge-row-menu__title">Management</div>
+                            <button
+                              type="button"
+                              class="challenge-row-menu__item"
+                              @click="openChallengeTopology(row.id)"
+                            >
+                              <FileSearch class="h-3 w-3" />
+                              编排拓扑
+                            </button>
+                            <button
+                              type="button"
+                              class="challenge-row-menu__item"
+                              @click="openChallengeWriteup(row.id)"
+                            >
+                              <Book class="h-3 w-3" />
+                              题解与提示
+                            </button>
+                            <button
+                              v-if="row.status !== 'published'"
+                              type="button"
+                              class="challenge-row-menu__item challenge-row-menu__item--success"
+                              @click="submitPublishCheck(row)"
+                            >
+                              <CheckCircle class="h-3 w-3" />
+                              提交发布检查
+                            </button>
+                            <button
+                              type="button"
+                              class="challenge-row-menu__item challenge-row-menu__item--danger"
+                              @click="removeChallenge(row.id)"
+                            >
+                              <Trash2 class="h-3 w-3" />
+                              永久删除
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div v-if="total > 0" class="admin-pagination workspace-directory-pagination">
+            <div v-if="total > 0" class="workspace-directory-pagination challenge-manage-pagination">
               <AdminPaginationControls
                 :page="page"
                 :total-pages="Math.max(1, Math.ceil(total / pageSize))"
                 :total="total"
                 :total-label="`共 ${total} 条`"
-                @change-page="void changePage($event)"
+                @change-page="changePage"
               />
             </div>
-          </template>
+          </section>
         </section>
-      </section>
 
-      <section
-        id="challenge-panel-import"
-        class="tab-panel space-y-4"
-        role="tabpanel"
-        aria-labelledby="challenge-tab-import"
-        :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
-        v-show="activePanel === 'import'"
-      >
-        <div class="list-heading challenge-import-heading">
-          <div>
-            <div class="journal-note-label">Challenge Package</div>
-            <h1 class="workspace-page-title">导入题目包</h1>
-          </div>
-        </div>
-
-        <ChallengePackageImportEntry
-          :hide-header="true"
-          :uploading="uploading"
-          :selected-file-name="selectedFileName"
-          @select="handleSelectPackage"
+        <section
+          id="challenge-panel-import"
+          v-show="activePanel === 'import'"
+          class="tab-panel challenge-manage-panel"
+          :class="{ active: activePanel === 'import' }"
+          role="tabpanel"
+          aria-labelledby="challenge-tab-import"
+          :aria-hidden="activePanel === 'import' ? 'false' : 'true'"
         >
-          <template #before-dropzone>
-            <section class="sample-guide">
-              <div class="sample-guide__header">
+          <div class="workspace-tab-heading__main">
+            <div class="workspace-overline">Challenge Package</div>
+            <h1 class="workspace-page-title">导入题目包</h1>
+            <p class="workspace-page-copy">
+              上传压缩包后先进入预览，再确认是否写入题库。页面内只保留导入主流程，格式规则单独维护。
+            </p>
+          </div>
+
+          <div class="challenge-panel-stack">
+            <section class="challenge-plain-section">
+              <div class="list-heading">
                 <div>
-                  <div class="sample-guide__eyebrow">Uploader Guide</div>
-                  <h2 class="sample-guide__title">题目包示例</h2>
+                  <div class="workspace-overline">Package Guide</div>
+                  <h2 class="list-heading__title">题目包示例</h2>
                 </div>
-                <p class="sample-guide__copy">
-                  导入页只保留上传和预览流程，目录结构与 `challenge.yml`
-                  示例统一放到独立说明页，避免同一份规则重复维护。
-                </p>
               </div>
 
-              <div class="sample-guide__actions">
+              <p class="workspace-page-copy">
+                导入页只保留上传和预览流程，目录结构与 `challenge.yml` 示例统一放到独立说明页，避免同一份规则重复维护。
+              </p>
+
+              <div class="challenge-manage-hero-actions mt-4">
                 <a
-                  class="sample-guide__link"
-                  data-testid="challenge-package-download-link"
+                  class="challenge-manage-action"
                   href="/downloads/challenge-package-sample-v1.zip"
                   download="challenge-package-sample-v1.zip"
                 >
@@ -546,837 +622,610 @@ onMounted(() => {
                 </a>
                 <button
                   type="button"
-                  class="sample-guide__link"
-                  data-testid="challenge-package-format-link"
-                  @click="void openPackageFormatGuide()"
+                  class="challenge-manage-action"
+                  @click="openPackageFormatGuide"
                 >
                   查看题目包示例
                 </button>
               </div>
             </section>
-          </template>
-        </ChallengePackageImportEntry>
 
-        <section v-if="uploadResults.length > 0" class="upload-result-panel" aria-live="polite">
-          <div class="upload-result-panel__header">
-            <div class="upload-result-panel__eyebrow">Upload Result</div>
-            <h2 class="upload-result-panel__title">最近上传结果</h2>
-          </div>
+            <ChallengePackageImportEntry
+              :hide-header="true"
+              :uploading="uploading"
+              :selected-file-name="selectedFileName"
+              @select="handleSelectPackage"
+            />
 
-          <div class="upload-result-list">
-            <article
-              v-for="result in uploadResults"
-              :key="result.id"
-              class="upload-result-item"
-              :class="{
-                'upload-result-item--success': result.status === 'success',
-                'upload-result-item--error': result.status === 'error',
-              }"
+            <section
+              v-if="uploadResults.length > 0"
+              class="workspace-directory-section challenge-plain-section"
             >
-              <header class="upload-result-item__head">
-                <span
-                  class="upload-result-item__status"
-                  :class="{
-                    'upload-result-item__status--success': result.status === 'success',
-                    'upload-result-item__status--error': result.status === 'error',
-                  }"
-                >
-                  {{ result.status === 'success' ? '成功' : '失败' }}
-                </span>
-                <strong class="upload-result-item__name" :title="result.fileName">{{
-                  result.fileName
-                }}</strong>
-              </header>
-
-              <p class="upload-result-item__message">{{ result.message }}</p>
-
-              <div class="upload-result-item__meta">
-                <span>{{ formatDateTime(result.createdAt) }}</span>
-                <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
-                <span v-if="result.requestId">请求ID {{ result.requestId }}</span>
+              <div class="list-heading">
+                <div>
+                  <div class="workspace-overline">Upload Receipt</div>
+                  <h2 class="list-heading__title">最近上传结果</h2>
+                </div>
               </div>
-            </article>
+
+              <div class="challenge-panel-stack">
+                <article
+                  v-for="result in uploadResults"
+                  :key="result.id"
+                  class="rounded-2xl border px-4 py-4"
+                  :class="
+                    result.status === 'success'
+                      ? 'border-emerald-200 bg-emerald-50/70'
+                      : 'border-red-200 bg-red-50/70'
+                  "
+                >
+                  <div class="mb-2 flex items-center gap-2">
+                    <span
+                      class="rounded-full px-2 py-0.5 text-xs font-bold"
+                      :class="
+                        result.status === 'success'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-700'
+                      "
+                    >
+                      {{ result.status === 'success' ? '成功' : '失败' }}
+                    </span>
+                    <strong class="truncate text-sm text-slate-900" :title="result.fileName">
+                      {{ result.fileName }}
+                    </strong>
+                  </div>
+                  <p class="mb-2 text-xs text-slate-600">{{ result.message }}</p>
+                  <div class="flex flex-wrap gap-4 text-[10px] font-medium text-slate-400">
+                    <span>{{ formatDateTime(result.createdAt) }}</span>
+                    <span v-if="result.code !== undefined">错误码 {{ result.code }}</span>
+                    <span v-if="result.requestId">请求ID {{ result.requestId }}</span>
+                  </div>
+                </article>
+              </div>
+            </section>
           </div>
         </section>
-      </section>
 
-      <section
-        id="challenge-panel-queue"
-        class="tab-panel space-y-3"
-        role="tabpanel"
-        aria-labelledby="challenge-tab-queue"
-        :aria-hidden="activePanel === 'queue' ? 'false' : 'true'"
-        v-show="activePanel === 'queue'"
-      >
-        <div class="list-heading challenge-queue-heading">
-          <div>
-            <div class="journal-note-label">Import Review</div>
+        <section
+          id="challenge-panel-queue"
+          v-show="activePanel === 'queue'"
+          class="tab-panel challenge-manage-panel"
+          :class="{ active: activePanel === 'queue' }"
+          role="tabpanel"
+          aria-labelledby="challenge-tab-queue"
+          :aria-hidden="activePanel === 'queue' ? 'false' : 'true'"
+        >
+          <div class="workspace-tab-heading__main">
+            <div class="workspace-overline">Import Review</div>
             <h1 class="workspace-page-title">待确认导入</h1>
+            <p class="workspace-page-copy">
+              这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
+            </p>
           </div>
-        </div>
 
-        <p class="workspace-page-copy">
-          这里列出已生成预览、但还没正式导入题库的题目包。确认无误后，可继续查看预览并完成导入。
-        </p>
-
-        <div v-if="queueLoading" class="flex items-center justify-center py-12">
-          <div
-            class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--journal-border)] border-t-[var(--journal-accent)]"
-          />
-        </div>
-
-        <div v-else-if="queue.length === 0" class="admin-empty">当前没有待确认的导入任务。</div>
-
-        <div v-else class="queue-list">
-          <article v-for="item in queue" :key="item.id" class="queue-row">
-            <div class="queue-row__identity">
-              <div class="challenge-row__index">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
-              <div class="min-w-0">
-                <h2 class="queue-row__title" :title="item.title">{{ item.title }}</h2>
-                <p class="queue-row__meta-text" :title="item.file_name">{{ item.file_name }}</p>
+          <section class="workspace-directory-section challenge-manage-directory">
+            <div class="list-heading challenge-directory-head">
+              <div>
+                <div class="workspace-overline">Import Queue</div>
+                <h2 class="list-heading__title">待确认目录</h2>
               </div>
+              <div class="challenge-directory-meta">共 {{ queueCount }} 个待处理任务</div>
             </div>
 
-            <div class="queue-row__summary">
-              <span
-                class="admin-inline-chip"
-                :style="{
-                  backgroundColor: getCategoryColor(item.category) + '16',
-                  color: getCategoryColor(item.category),
-                }"
-              >
-                {{ getCategoryLabel(item.category) }}
-              </span>
-              <span
-                class="admin-inline-chip"
-                :style="{
-                  backgroundColor: getDifficultyColor(item.difficulty) + '16',
-                  color: getDifficultyColor(item.difficulty),
-                }"
-              >
-                {{ getDifficultyLabel(item.difficulty) }}
-              </span>
-              <span class="admin-inline-chip admin-inline-chip-neutral">{{ item.points }} pts</span>
+            <div v-if="queueLoading" class="challenge-directory-state">正在同步导入队列...</div>
+            <div v-else-if="queue.length === 0" class="challenge-directory-state">
+              当前没有待确认的导入任务。
             </div>
 
-            <div class="queue-row__details">
-              <div class="queue-row__detail-label">创建时间</div>
-              <div class="queue-row__detail-value">{{ formatDateTime(item.created_at) }}</div>
-            </div>
-
-            <div class="queue-row__actions" role="group" aria-label="导入任务操作">
-              <button
-                class="admin-btn admin-btn-ghost admin-btn-compact"
-                @click="inspectImportTask(item)"
+            <div v-else class="challenge-panel-stack">
+              <article
+                v-for="item in queue"
+                :key="item.id"
+                class="challenge-plain-section challenge-queue-item"
               >
-                继续查看预览
-              </button>
+                <div class="flex min-w-0 items-start gap-4">
+                  <div class="challenge-queue-id">IMP-{{ item.id.slice(0, 6).toUpperCase() }}</div>
+                  <div class="min-w-0 flex-1">
+                    <h2 class="truncate text-base font-bold text-slate-900" :title="item.title">
+                      {{ item.title }}
+                    </h2>
+                    <p class="mt-1 truncate text-sm text-slate-500" :title="item.file_name">
+                      {{ item.file_name }}
+                    </p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <span class="challenge-table-pill challenge-table-pill--category">
+                        {{ getCategoryLabel(item.category) }}
+                      </span>
+                      <span class="challenge-table-pill challenge-table-pill--neutral">
+                        {{ getDifficultyLabel(item.difficulty) }}
+                      </span>
+                      <span class="text-[11px] font-mono text-slate-500">{{ item.points }} pts</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-col items-start gap-2 md:items-end">
+                  <div class="text-[10px] font-medium text-slate-400">
+                    {{ formatDateTime(item.created_at) }}
+                  </div>
+                  <button
+                    type="button"
+                    class="challenge-manage-action challenge-manage-action--primary"
+                    @click="inspectImportTask(item)"
+                  >
+                    继续查看预览
+                  </button>
+                </div>
+              </article>
             </div>
-          </article>
-        </div>
-      </section>
-    </main>
-  </section>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.journal-shell {
-  --admin-summary-grid-columns: repeat(4, minmax(0, 1fr));
-  --journal-topbar-padding-bottom: var(--space-3);
-  --page-top-tabs-gap: var(--space-7);
-  --page-top-tabs-margin: var(--space-2-5) calc(var(--space-6) * -1) 0;
-  --page-top-tabs-padding: 0 var(--space-6);
-  --page-top-tabs-border: color-mix(in srgb, var(--journal-ink) 10%, transparent);
-  --page-top-tab-min-height: 52px;
-  --page-top-tab-padding: var(--space-2-5) 0 var(--space-3-5);
-  --page-top-tab-font-size: var(--font-size-15);
-  --page-top-tab-active-color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  --page-top-tab-active-border: color-mix(in srgb, var(--journal-accent) 86%, var(--journal-ink));
-  --journal-note-value-weight: 700;
-  --journal-shell-hero-radial-strength: 7%;
-  --journal-shell-hero-radial-size: 22rem;
-  --journal-shell-hero-end: var(--journal-surface);
-  --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
+.challenge-manage-shell {
+  --workspace-brand: #2563eb;
+  --workspace-brand-ink: #1e40af;
+  --workspace-brand-soft: #eff6ff;
+  --workspace-faint: #f8fafc;
+  --workspace-shell-border: #e2e8f0;
+  --workspace-shadow-shell: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --workspace-side-padding: 2rem;
+  --workspace-content-padding: 2rem;
+  --workspace-tabs-offset-top: 1rem;
+  background: #f8fafc;
 }
 
-.workspace-overline {
-  font-size: var(--font-size-0-70);
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
+.challenge-manage-top-note {
+  font-size: 12px;
 }
 
-.content-pane {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-
-.manage-header {
+.challenge-manage-content {
   display: grid;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
+  gap: 1.5rem;
+  background: #f8fafc;
 }
 
-.list-heading {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+.challenge-manage-panel {
+  min-width: 0;
+}
+
+.challenge-manage-actions {
   align-items: flex-end;
+  margin-bottom: 1.5rem;
 }
 
-.list-heading__title {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-1-20);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.challenge-manage-filters {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5) 0;
-}
-
-.challenge-manage-filter-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.35rem;
-  padding: 0 var(--space-3-5);
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 20%, var(--journal-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--journal-accent) 10%, transparent);
-  color: var(--journal-ink);
-  font-size: var(--font-size-0-80);
-  font-weight: 700;
-}
-
-.challenge-manage-filter-grid {
-  display: grid;
-  gap: var(--space-4);
-  grid-template-columns: repeat(2, minmax(16rem, 18rem)) minmax(15rem, 1.35fr) auto;
-}
-
-.challenge-manage-filter-actions,
-.challenge-manage-filter-search,
-.challenge-manage-filter-field {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.challenge-manage-filter-search__label {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.challenge-manage-filter-label {
-  font-size: var(--font-size-0-78);
-  font-weight: 700;
-  color: var(--journal-muted);
-}
-
-.challenge-manage-filter-label--ghost {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.challenge-manage-filter-search__control {
-  position: relative;
-}
-
-.challenge-manage-filter-actions {
-  justify-items: end;
-}
-
-.challenge-manage-filter-action-row {
+.challenge-manage-hero-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--space-2-5);
+  gap: 0.5rem;
 }
 
-.challenge-manage-filter-advanced {
-  display: inline-grid;
-  gap: var(--space-4);
-  justify-self: start;
-  grid-template-columns: minmax(16rem, 18rem);
-}
-
-.challenge-manage-filter-toggle,
-.challenge-manage-filter-clear {
-  min-width: 7rem;
-}
-
-.challenge-manage-filter-clear:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-  border-color: color-mix(in srgb, var(--journal-border) 76%, transparent);
-  color: var(--journal-muted);
-  background: color-mix(in srgb, var(--journal-surface-subtle) 88%, var(--color-bg-base));
-}
-
-.challenge-manage-filter-search__icon {
-  position: absolute;
-  top: 50%;
-  left: var(--space-3);
-  transform: translateY(-50%);
-  color: var(--journal-muted);
-  pointer-events: none;
-}
-
-.challenge-manage-filter-input,
-.challenge-manage-filter-select {
-  min-height: 2.8rem;
-  width: 100%;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 90%, transparent);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background 150ms ease;
-}
-
-.challenge-manage-filter-input {
-  padding: 0 var(--space-3) 0 calc(var(--space-6) + var(--space-1));
-}
-
-.challenge-manage-filter-select {
-  padding: 0 var(--space-3);
-}
-
-.challenge-manage-filter-input::placeholder {
-  color: var(--journal-muted);
-}
-
-.challenge-manage-filter-input:focus,
-.challenge-manage-filter-select:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 40%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--journal-accent) 10%, transparent);
-}
-
-.challenge-list {
-  --challenge-list-columns: minmax(16rem, 1.7fr) minmax(6.5rem, 0.68fr) minmax(6.5rem, 0.68fr)
-    minmax(5.6rem, 0.58fr) minmax(7rem, 0.72fr) minmax(7rem, 0.76fr) minmax(9.5rem, 9.5rem);
-  display: grid;
-  gap: 0;
-}
-
-.manage-directory-head {
-  display: grid;
-  grid-template-columns: var(--challenge-list-columns);
-  gap: var(--space-4);
-  padding: 0 0 var(--space-3);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-muted);
-}
-
-.manage-directory-head > span {
-  min-width: 0;
-}
-
-.manage-directory-head__actions {
-  text-align: right;
-}
-
-.challenge-row {
-  display: grid;
-  grid-template-columns: var(--challenge-list-columns);
-  align-items: start;
-  gap: var(--space-4);
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-}
-
-.challenge-row > div {
-  min-width: 0;
-}
-
-.queue-row__identity {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.challenge-row__identity {
-  min-width: 0;
-}
-
-.challenge-row__title {
-  min-width: 0;
-  margin: 0;
-  font-size: var(--font-size-0-90);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--journal-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.challenge-row__category,
-.challenge-row__difficulty,
-.challenge-row__points,
-.challenge-row__status,
-.queue-row__summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-content: start;
-}
-
-.challenge-row__points,
-.challenge-row__status {
-  min-width: 0;
-}
-
-.challenge-row__category,
-.challenge-row__difficulty,
-.challenge-row__points,
-.challenge-row__status,
-.challenge-row__review {
-  justify-self: start;
-}
-
-.challenge-row__review {
-  display: grid;
-  gap: var(--space-1-5);
-  min-width: 0;
-}
-
-.challenge-row__review-status {
-  font-size: var(--font-size-0-92);
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.challenge-row__failure {
-  margin-top: var(--space-3);
-  display: -webkit-box;
-  font-size: var(--font-size-0-82);
-  line-height: 1.6;
-  color: var(--color-danger);
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.challenge-row__actions {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: var(--space-2);
-  position: relative;
-  justify-self: end;
-}
-
-.queue-row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: var(--space-2);
-  position: relative;
-}
-
-.challenge-row__actions-menu {
-  position: absolute;
-  top: calc(100% + var(--space-1-5));
-  right: 0;
-  z-index: 10;
-  display: grid;
-  gap: var(--space-2);
-  min-width: 10rem;
-  padding: var(--space-2-5);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 92%, transparent);
-  border-radius: 0.9rem;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
-  );
-  box-shadow: 0 16px 32px var(--color-shadow-soft);
-}
-
-.challenge-row__menu-button {
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.admin-btn {
+.challenge-manage-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.45rem;
-  border-radius: 0.75rem;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background 150ms ease,
-    color 150ms ease;
-}
-
-.admin-btn-compact {
-  min-height: 2.25rem;
-  padding: var(--space-2) var(--space-3);
-}
-
-.admin-btn-ghost {
-  border: 1px solid var(--journal-border);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  color: var(--journal-ink);
-}
-
-.admin-btn-success {
-  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
-  background: color-mix(in srgb, var(--color-success) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-success) 88%, var(--journal-ink));
-}
-
-.admin-btn-danger {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 20%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-}
-
-.admin-btn:hover,
-.admin-btn:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
-}
-
-.admin-inline-chip,
-.admin-status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  border-radius: 999px;
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--font-size-0-78);
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  font-size: 12px;
   font-weight: 700;
+  color: #475569;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.admin-inline-chip-neutral {
-  background: color-mix(in srgb, var(--journal-border) 34%, transparent);
-  color: var(--journal-muted);
-}
-
-.admin-empty {
-  padding: var(--space-4) 0;
-  color: var(--journal-muted);
-}
-
-.sample-guide {
-  display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-4-5) var(--space-4-5);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 1rem;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base)),
-    color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base))
-  );
-}
-
-.sample-guide__header {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.sample-guide__eyebrow,
-.sample-guide__link {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-}
-
-.sample-guide__eyebrow {
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--journal-accent);
-}
-
-.sample-guide__title {
-  margin: 0;
-  font-size: var(--font-size-1-05);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.sample-guide__copy {
-  margin: 0;
-  color: var(--journal-muted);
-  line-height: 1.65;
-}
-
-.sample-guide__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2-5);
-}
-
-.sample-guide__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 40%, var(--journal-border));
-  border-radius: 0.85rem;
-  background: color-mix(in srgb, var(--journal-accent) 12%, transparent);
-  color: var(--journal-ink);
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    transform 0.18s ease;
-}
-
-.sample-guide__link:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 64%, var(--journal-border));
-  background: color-mix(in srgb, var(--journal-accent) 18%, transparent);
+.challenge-manage-action:hover {
+  border-color: #cbd5e1;
+  color: #0f172a;
   transform: translateY(-1px);
 }
 
-.upload-result-panel {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-1-5) 0 var(--space-1);
+.challenge-manage-action--primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-.upload-result-panel__header {
-  display: grid;
-  gap: var(--space-2);
+.challenge-manage-action--primary:hover {
+  color: white;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
-.upload-result-panel__eyebrow {
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.16em;
+.challenge-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.challenge-metric-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.challenge-metric-card:hover {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.challenge-metric-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.challenge-metric-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--journal-accent);
 }
 
-.upload-result-panel__title {
-  margin: 0;
-  font-size: var(--font-size-1-00);
+.challenge-metric-value-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.challenge-metric-value {
+  font-family: inherit;
+  font-size: 1.85rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  color: #0f172a;
+}
+
+.challenge-metric-trend {
+  font-size: 10px;
   font-weight: 700;
-  color: var(--journal-ink);
+  color: #94a3b8;
 }
 
-.upload-result-list {
-  display: grid;
-  gap: var(--space-2-5);
-}
-
-.upload-result-item {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-3-5);
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  border-radius: 0.85rem;
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-}
-
-.upload-result-item--success {
-  border-color: color-mix(in srgb, var(--color-success) 30%, var(--journal-border));
-}
-
-.upload-result-item--error {
-  border-color: color-mix(in srgb, var(--color-danger) 34%, var(--journal-border));
-}
-
-.upload-result-item__head {
+.challenge-filter-bar {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
 }
 
-.upload-result-item__status {
+.challenge-filter-main,
+.challenge-filter-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.challenge-search-wrap {
+  position: relative;
+}
+
+.challenge-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+
+.challenge-search-input {
+  width: 20rem;
+  min-height: 2.5rem;
+  padding: 0 1rem 0 2.25rem;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.challenge-search-input:focus {
+  background: white;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.challenge-filter-toggle,
+.challenge-sort-button,
+.challenge-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.challenge-filter-toggle--active {
+  background: #0f172a;
+  color: white;
+}
+
+.challenge-sort-button:hover,
+.challenge-filter-toggle:hover {
+  color: #2563eb;
+}
+
+.challenge-filter-panel,
+.challenge-filter-menu,
+.challenge-row-menu {
+  border: 1px solid #e2e8f0;
+  background: white;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-filter-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 40;
+  width: 24rem;
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+.challenge-filter-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.challenge-filter-panel__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.challenge-filter-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.challenge-filter-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.challenge-filter-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.challenge-filter-select {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.challenge-filter-reset {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.challenge-filter-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 40;
+  width: 12rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.challenge-filter-menu__title,
+.challenge-row-menu__title {
+  padding: 0.75rem 1rem 0.5rem;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.challenge-filter-menu__item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  padding: 0.65rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.challenge-filter-menu__item:hover,
+.challenge-filter-menu__item--active {
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+.challenge-table-shell {
+  border: none;
+  background: transparent;
+}
+
+.challenge-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.challenge-table-head th {
+  padding: 0.75rem 0.5rem;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.challenge-table-row {
+  border-bottom: 1px solid #f1f5f9;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.challenge-table-row:hover {
+  background: rgba(226, 232, 240, 0.4);
+}
+
+.challenge-table-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.7rem;
-  min-height: 1.5rem;
-  padding: var(--space-0-5) var(--space-2);
-  border-radius: 999px;
-  font-size: var(--font-size-0-72);
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  height: 1.4rem;
+  padding: 0 0.5rem;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
-.upload-result-item__status--success {
-  color: color-mix(in srgb, var(--color-success) 88%, var(--journal-ink));
-  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+.challenge-table-pill--category {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.1);
 }
 
-.upload-result-item__status--error {
-  color: color-mix(in srgb, var(--color-danger) 88%, var(--journal-ink));
-  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+.challenge-row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 1.85rem;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #2563eb;
+  transition: all 0.2s ease;
 }
 
-.upload-result-item__name {
-  min-width: 0;
-  color: var(--journal-ink);
-  font-size: var(--font-size-0-92);
+.challenge-row-action:hover {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+}
+
+.challenge-row-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 8px;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+}
+
+.challenge-row-menu-button:hover,
+.challenge-row-menu-button--active {
+  background: #0f172a;
+  color: white;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+}
+
+.challenge-row-menu {
+  position: absolute;
+  right: 0;
+  z-index: 50;
+  width: 11rem;
+  border-radius: 12px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.upload-result-item__message {
-  margin: 0;
-  color: var(--journal-ink);
-  line-height: 1.55;
-  font-size: var(--font-size-0-86);
+.challenge-row-menu--down {
+  top: calc(100% + 0.4rem);
 }
 
-.upload-result-item__meta {
+.challenge-row-menu--up {
+  bottom: calc(100% + 0.4rem);
+}
+
+.challenge-row-menu__item {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  color: var(--journal-muted);
-  font-size: var(--font-size-0-78);
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  transition: all 0.2s ease;
 }
 
-.queue-list {
-  display: grid;
-  gap: var(--space-3);
+.challenge-row-menu__item:hover {
+  background: #f8fafc;
+  color: #2563eb;
 }
 
-.queue-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(8rem, 0.8fr) auto;
-  gap: var(--space-4);
-  align-items: start;
-  padding: var(--space-4) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
+.challenge-row-menu__item--danger {
+  color: #ef4444;
 }
 
-.queue-row__title {
-  margin: 0;
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.challenge-row-menu__item--danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
-.queue-row__meta-text,
-.queue-row__detail-label {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-0-82);
-  color: var(--journal-muted);
+.challenge-manage-pagination {
+  margin-top: 1.5rem;
 }
 
-.queue-row__meta-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.queue-row__details {
-  display: grid;
-  gap: var(--space-1-5);
-}
-
-.queue-row__detail-value {
-  color: var(--journal-ink);
-  line-height: 1.6;
-}
-
-@media (max-width: 1200px) {
-  .manage-summary-grid {
+@media (max-width: 1023px) {
+  .challenge-metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .challenge-manage-filter-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .challenge-list {
-    --challenge-list-columns: minmax(13rem, 1.45fr) minmax(5.4rem, 0.6fr) minmax(5.4rem, 0.6fr)
-      minmax(5rem, 0.54fr) minmax(6.2rem, 0.66fr) minmax(6.2rem, 0.7fr) minmax(8.6rem, 8.6rem);
-  }
-
-  .queue-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .queue-row__actions {
-    justify-content: flex-start;
-  }
 }
 
-@media (max-width: 960px) {
-  .list-heading {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .manage-directory-head {
-    display: none;
-  }
-
-  .challenge-manage-filter-grid {
+@media (max-width: 767px) {
+  .challenge-metric-grid {
     grid-template-columns: 1fr;
   }
-
-  .challenge-manage-filter-advanced {
-    display: grid;
-    grid-template-columns: 1fr;
+  .challenge-search-input {
     width: 100%;
-  }
-
-  .challenge-manage-filter-action-row {
-    width: 100%;
-    justify-content: stretch;
-  }
-
-  .challenge-manage-filter-action-row > * {
-    flex: 1 1 0;
-  }
-
-  .challenge-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .challenge-row__actions {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 720px) {
-  .top-tabs {
-    gap: var(--space-4-5);
-    margin-left: calc(var(--space-4) * -1);
-    margin-right: calc(var(--space-4) * -1);
-    padding: 0 var(--space-4);
-  }
-
-  .manage-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-pagination {
-    align-items: flex-start;
-    flex-direction: column;
   }
 }
 </style>

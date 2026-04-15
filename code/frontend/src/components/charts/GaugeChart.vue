@@ -8,16 +8,19 @@ import VChart from 'vue-echarts'
 
 use([EChartsGaugeChart, CanvasRenderer])
 
-const props = withDefaults(defineProps<{
-  value: number
-  min?: number
-  max?: number
-  name?: string
-}>(), {
-  min: 0,
-  max: 100,
-  name: '完成度',
-})
+const props = withDefaults(
+  defineProps<{
+    value: number
+    min?: number
+    max?: number
+    name?: string
+  }>(),
+  {
+    min: 0,
+    max: 100,
+    name: '完成度',
+  }
+)
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()

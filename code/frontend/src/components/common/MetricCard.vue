@@ -13,7 +13,7 @@ const props = withDefaults(
   {
     hint: '',
     accent: 'primary',
-  },
+  }
 )
 
 const displayValue = computed(() => String(props.value))

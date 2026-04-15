@@ -40,7 +40,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toContain('--teacher-card-border:')
     expect(studentAnalysisSource).toContain('--teacher-divider:')
     expect(studentAnalysisSource).toContain('class="workspace-shell journal-eyebrow-text"')
-    expect(studentAnalysisSource).toContain('class="workspace-topbar"')
+    expect(studentAnalysisSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisSource).toContain('class="top-tabs"')
     expect(studentAnalysisSource).toMatch(
       /:deep\(\.section-card\)\s*\{[\s\S]*border-top:\s*1px solid color-mix\(in srgb,\s*var\(--teacher-divider\)\s*90%,\s*transparent\);/s
@@ -48,9 +48,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentAnalysisSource).toMatch(
       /\.summary-strip\s*\{[\s\S]*?margin:\s*0 0 var\(--space-5\);[\s\S]*?padding:\s*var\(--space-1\) 0 0;/s
     )
-    expect(studentAnalysisSource).not.toMatch(
-      /\.summary-strip\s*\{[^}]*border-bottom:/s
-    )
+    expect(studentAnalysisSource).not.toMatch(/\.summary-strip\s*\{[^}]*border-bottom:/s)
     expect(studentAnalysisSource).toContain('class="summary-card metric-panel-card"')
     expect(studentAnalysisSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(studentAnalysisSource).toMatch(
@@ -72,13 +70,17 @@ describe('teacher detail surface alignment', () => {
     expect(reviewArchiveSource).toContain('metric-panel-card')
     expect(reviewArchiveSource).toContain('--metric-panel-border: var(--teacher-card-border);')
     expect(reviewArchiveSource).toContain('class="summary-grid metric-panel-grid"')
-    expect(reviewArchiveSource).toContain('class="summary-card summary-card--primary metric-panel-card"')
+    expect(reviewArchiveSource).toContain(
+      'class="summary-card summary-card--primary metric-panel-card"'
+    )
     expect(reviewArchiveSource).toContain('class="summary-card__label metric-panel-label"')
     expect(reviewArchiveSource).toContain('class="summary-card__value metric-panel-value"')
     expect(reviewArchiveSource).toContain('class="summary-card__hint metric-panel-helper"')
     expect(reviewArchiveSource).not.toContain('--journal-accent: #2563eb;')
     expect(reviewArchiveSource).not.toContain('--journal-accent-strong: #1d4ed8;')
-    expect(reviewArchiveSource).not.toContain('color-mix(in srgb, #f59e0b 14%, var(--journal-surface))')
+    expect(reviewArchiveSource).not.toContain(
+      'color-mix(in srgb, #f59e0b 14%, var(--journal-surface))'
+    )
   })
 
   it('teacher detail panels should use softened panel border fallbacks instead of bright rgba fallback lines', () => {
@@ -100,9 +102,7 @@ describe('teacher detail surface alignment', () => {
     expect(studentInsightPanelSource).toMatch(
       /\.insight-overview-layout\s*:deep\(\.section-card\)\s*\{[\s\S]*?border-top:\s*0;/s
     )
-    expect(studentInsightPanelSource).not.toMatch(
-      /\.insight-rate-panel\s*\{[^}]*border-top:/s
-    )
+    expect(studentInsightPanelSource).not.toMatch(/\.insight-rate-panel\s*\{[^}]*border-top:/s)
     expect(studentInsightPanelSource).toMatch(
       /\.insight-kpi-value\s*\{[\s\S]*--metric-panel-value-size:\s*var\(--font-size-1-00\);/s
     )
@@ -151,6 +151,8 @@ describe('teacher detail surface alignment', () => {
     expect(teacherPanelShellSource).toContain('--panel-ink: var(--journal-ink);')
     expect(teacherPanelShellSource).toContain('--panel-muted: var(--journal-muted);')
     expect(teacherPanelShellSource).toContain('--panel-accent: var(--journal-accent);')
-    expect(teacherPanelShellSource).toContain('--panel-accent-strong: var(--journal-accent-strong);')
+    expect(teacherPanelShellSource).toContain(
+      '--panel-accent-strong: var(--journal-accent-strong);'
+    )
   })
 })

@@ -12,7 +12,10 @@ const teacherSurfaceSource = readFileSync(
   `${process.cwd()}/src/assets/styles/teacher-surface.css`,
   'utf-8'
 )
-const journalNotesSource = readFileSync(`${process.cwd()}/src/assets/styles/journal-notes.css`, 'utf-8')
+const journalNotesSource = readFileSync(
+  `${process.cwd()}/src/assets/styles/journal-notes.css`,
+  'utf-8'
+)
 
 describe('spacing system tokens', () => {
   it('should define global spacing scale and semantic spacing tokens', () => {

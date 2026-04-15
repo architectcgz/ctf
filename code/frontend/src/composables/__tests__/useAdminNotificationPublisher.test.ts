@@ -100,7 +100,11 @@ describe('useAdminNotificationPublisher', () => {
     await publisher.searchUsers('alice')
     await publisher.loadClasses()
 
-    expect(adminApiMocks.getUsers).toHaveBeenCalledWith({ page: 1, page_size: 20, keyword: 'alice' })
+    expect(adminApiMocks.getUsers).toHaveBeenCalledWith({
+      page: 1,
+      page_size: 20,
+      keyword: 'alice',
+    })
     expect(teacherApiMocks.getClasses).toHaveBeenCalledTimes(1)
   })
 
@@ -167,9 +171,7 @@ describe('useAdminNotificationPublisher', () => {
     const slowSearch = publisher.searchUsers('bob')
     await publisher.searchUsers('alice')
 
-    expect(publisher.userOptions.value).toEqual([
-      expect.objectContaining({ username: 'alice' }),
-    ])
+    expect(publisher.userOptions.value).toEqual([expect.objectContaining({ username: 'alice' })])
 
     slowRequest.resolve({
       list: [
@@ -188,9 +190,7 @@ describe('useAdminNotificationPublisher', () => {
     })
     await slowSearch
 
-    expect(publisher.userOptions.value).toEqual([
-      expect.objectContaining({ username: 'alice' }),
-    ])
+    expect(publisher.userOptions.value).toEqual([expect.objectContaining({ username: 'alice' })])
 
     adminApiMocks.getUsers.mockClear()
     await publisher.searchUsers('   ')

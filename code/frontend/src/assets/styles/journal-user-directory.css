@@ -71,10 +71,7 @@
   .instance-summary-grid
 ) {
   display: grid;
-  grid-template-columns: var(
-    --journal-user-directory-summary-columns,
-    repeat(4, minmax(0, 1fr))
-  );
+  grid-template-columns: var(--journal-user-directory-summary-columns, repeat(4, minmax(0, 1fr)));
   gap: 12px;
   margin-top: var(--journal-user-directory-summary-grid-margin-top, 0);
 }

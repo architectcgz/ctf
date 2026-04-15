@@ -72,11 +72,11 @@ export async function getMyTimeline(): Promise<TimelineEvent[]> {
         ? 'instance'
         : item.type === 'hint_unlock'
           ? 'hint'
-        : item.type === 'flag_submit' && item.is_correct
-          ? 'solve'
-          : item.type === 'flag_submit'
-            ? 'submit'
-            : item.type,
+          : item.type === 'flag_submit' && item.is_correct
+            ? 'solve'
+            : item.type === 'flag_submit'
+              ? 'submit'
+              : item.type,
     title: item.title,
     detail: item.detail,
     created_at: item.timestamp,

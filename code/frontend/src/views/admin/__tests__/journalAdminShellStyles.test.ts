@@ -26,7 +26,9 @@ describe('admin journal shell shared styles', () => {
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin.journal-hero')
     expect(journalAdminShellSource).toContain('.journal-shell.journal-shell-admin .journal-panel')
-    expect(journalAdminShellSource).toContain("[data-theme='dark'] .journal-shell.journal-shell-admin")
+    expect(journalAdminShellSource).toContain(
+      "[data-theme='dark'] .journal-shell.journal-shell-admin"
+    )
   })
 
   it('admin 管理页应继续通过 journal-shell-admin 接入共享壳层', () => {

@@ -21,10 +21,30 @@ const fieldError = ref('')
 const summaryItems = computed(() => {
   const readiness = props.readiness
   return [
-    { key: 'blocking', label: '阻塞项', value: String(readiness?.blocking_count ?? 0), hint: '当前会拦截关键动作的风险数量' },
-    { key: 'failed', label: '最近失败', value: String(readiness?.failed_challenges ?? 0), hint: '最近一次试跑未通过的题目数' },
-    { key: 'pending', label: '未验证', value: String(readiness?.pending_challenges ?? 0), hint: '还没有可用试跑结果的题目数' },
-    { key: 'stale', label: '待重新验证', value: String(readiness?.stale_challenges ?? 0), hint: '配置变更后尚未重新试跑的题目数' },
+    {
+      key: 'blocking',
+      label: '阻塞项',
+      value: String(readiness?.blocking_count ?? 0),
+      hint: '当前会拦截关键动作的风险数量',
+    },
+    {
+      key: 'failed',
+      label: '最近失败',
+      value: String(readiness?.failed_challenges ?? 0),
+      hint: '最近一次试跑未通过的题目数',
+    },
+    {
+      key: 'pending',
+      label: '未验证',
+      value: String(readiness?.pending_challenges ?? 0),
+      hint: '还没有可用试跑结果的题目数',
+    },
+    {
+      key: 'stale',
+      label: '待重新验证',
+      value: String(readiness?.stale_challenges ?? 0),
+      hint: '配置变更后尚未重新试跑的题目数',
+    },
   ]
 })
 
@@ -122,7 +142,11 @@ function handleSubmit() {
       </p>
 
       <div class="metric-panel-grid metric-panel-default-surface readiness-override-summary">
-        <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
+        <article
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="journal-note metric-panel-card"
+        >
           <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
           <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
           <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
@@ -155,13 +179,18 @@ function handleSubmit() {
         </header>
 
         <div v-if="readiness?.items?.length" class="readiness-override-rows">
-          <article v-for="item in readiness.items" :key="item.challenge_id" class="readiness-override-row">
+          <article
+            v-for="item in readiness.items"
+            :key="item.challenge_id"
+            class="readiness-override-row"
+          >
             <div class="readiness-override-row__title">
               <strong>{{ item.title }}</strong>
               <span>{{ getValidationLabel(item) }}</span>
             </div>
             <p class="readiness-override-row__detail">
-              {{ getBlockingReasonLabel(item) }} · 最近校验 {{ formatDateTime(item.last_preview_at) }}
+              {{ getBlockingReasonLabel(item) }} · 最近校验
+              {{ formatDateTime(item.last_preview_at) }}
             </p>
             <p v-if="item.last_access_url" class="readiness-override-row__detail">
               目标地址 {{ item.last_access_url }}
@@ -180,7 +209,9 @@ function handleSubmit() {
         </header>
 
         <label class="readiness-override-form" for="awd-readiness-override-reason">
-          <span class="readiness-override-form__label">原因会附带到审计日志，用于说明本次为什么仍要继续。</span>
+          <span class="readiness-override-form__label"
+            >原因会附带到审计日志，用于说明本次为什么仍要继续。</span
+          >
           <textarea
             id="awd-readiness-override-reason"
             v-model="reason"

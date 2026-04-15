@@ -92,7 +92,9 @@ describe('ChallengeList', () => {
   })
 
   it('页头标题与说明应接入共享工作区排版类', () => {
-    expect(challengeListSource).toContain('<h1 class="workspace-page-title challenge-title">靶场训练</h1>')
+    expect(challengeListSource).toContain(
+      '<h1 class="workspace-page-title challenge-title">靶场训练</h1>'
+    )
     expect(challengeListSource).not.toContain('按关键词、分类与难度筛选题目，直接进入训练。')
   })
 
@@ -325,8 +327,12 @@ describe('ChallengeList', () => {
 
     const wrapper = await mountPage('/challenges?category=crypto&difficulty=medium')
 
-    expect((wrapper.get('#challenge-category-filter').element as HTMLSelectElement).value).toBe('crypto')
-    expect((wrapper.get('#challenge-difficulty-filter').element as HTMLSelectElement).value).toBe('medium')
+    expect((wrapper.get('#challenge-category-filter').element as HTMLSelectElement).value).toBe(
+      'crypto'
+    )
+    expect((wrapper.get('#challenge-difficulty-filter').element as HTMLSelectElement).value).toBe(
+      'medium'
+    )
     expect(mockedGetChallenges).toHaveBeenCalledTimes(1)
     expect(mockedGetChallenges).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -380,7 +386,9 @@ describe('ChallengeList', () => {
   })
 
   it('应采用平铺目录式题目列表而不是卡片网格', () => {
-    expect(challengeListSource).toContain('class="workspace-directory-section challenge-directory-section"')
+    expect(challengeListSource).toContain(
+      'class="workspace-directory-section challenge-directory-section"'
+    )
     expect(challengeListSource).toContain('class="list-heading"')
     expect(challengeListSource).not.toContain('challenge-controls-title')
     expect(challengeListSource).not.toContain('challenge-controls-copy')
@@ -388,7 +396,9 @@ describe('ChallengeList', () => {
     expect(challengeListSource).not.toContain('激活筛选')
     expect(challengeListSource).toContain('challenge-directory')
     expect(challengeListSource).toContain('challenge-row')
-    expect(challengeListSource).not.toContain('</section>\n\n        <div v-if="total > 0" class="challenge-pagination">')
+    expect(challengeListSource).not.toContain(
+      '</section>\n\n        <div v-if="total > 0" class="challenge-pagination">'
+    )
     expect(challengeListSource).toContain('题目列表')
     expect(challengeListSource).toContain('challenge-search-input')
     expect(challengeListSource).toContain('搜索题目标题或描述')
@@ -402,8 +412,12 @@ describe('ChallengeList', () => {
     expect(challengeListSource).toContain('class="challenge-row-difficulty"')
     expect(challengeListSource).toContain('class="challenge-row-solved"')
     expect(challengeListSource).toContain('class="challenge-row-attempts"')
-    expect(challengeListSource).toMatch(/class="challenge-row-title"[\s\S]*:title="challenge\.title"/s)
-    expect(challengeListSource).toMatch(/\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(challengeListSource).toMatch(
+      /class="challenge-row-title"[\s\S]*:title="challenge\.title"/s
+    )
+    expect(challengeListSource).toMatch(
+      /\.challenge-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
     expect(challengeListSource).not.toContain('class="challenge-card')
     expect(challengeListSource).not.toContain('Training Range')
     expect(challengeListSource).not.toContain('Challenge Filters')

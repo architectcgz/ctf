@@ -66,8 +66,7 @@ const summaryItems = computed(() => [
     value: String(
       sortedChallengeLinks.value.filter(
         (item) =>
-          Boolean(item.awd_checker_type) ||
-          Object.keys(item.awd_checker_config || {}).length > 0
+          Boolean(item.awd_checker_type) || Object.keys(item.awd_checker_config || {}).length > 0
       ).length
     ),
     hint: '已写入 checker 类型或 checker 配置的题目数',
@@ -168,7 +167,9 @@ function getValidationStateClass(item: AdminContestChallengeData): string {
 function getValidationHint(item: AdminContestChallengeData): string {
   const previewAccessURL = getPrimaryAccessURL(buildPresentationResult(item))
   const entries = [
-    item.awd_checker_last_preview_at ? `最近校验 ${formatValidationDateTime(item.awd_checker_last_preview_at)}` : '',
+    item.awd_checker_last_preview_at
+      ? `最近校验 ${formatValidationDateTime(item.awd_checker_last_preview_at)}`
+      : '',
     previewAccessURL ? `目标 ${previewAccessURL}` : '',
   ].filter(Boolean)
 
@@ -206,7 +207,11 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
       </div>
 
       <div class="metric-panel-grid metric-panel-default-surface">
-        <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
+        <article
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="journal-note metric-panel-card"
+        >
           <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
           <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
           <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
@@ -300,10 +305,14 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
           </div>
           <div class="config-row__scores">
             <p>{{ item.points }} 分</p>
-            <p class="config-row__scores-sub">SLA {{ item.awd_sla_score ?? 0 }} / 防守 {{ item.awd_defense_score ?? 0 }}</p>
+            <p class="config-row__scores-sub">
+              SLA {{ item.awd_sla_score ?? 0 }} / 防守 {{ item.awd_defense_score ?? 0 }}
+            </p>
           </div>
           <div class="config-row__checker">
-            <div class="config-row__checker-main">{{ getCheckerTypeLabel(item.awd_checker_type) }}</div>
+            <div class="config-row__checker-main">
+              {{ getCheckerTypeLabel(item.awd_checker_type) }}
+            </div>
             <span :class="getValidationStateClass(item)">
               {{ getValidationStateText(item) }}
             </span>
@@ -312,7 +321,11 @@ function isActiveChallenge(item: AdminContestChallengeData): boolean {
             <p class="config-row__summary-main">{{ getConfigSummary(item) }}</p>
             <p class="config-row__summary-sub">{{ getValidationHint(item) }}</p>
           </div>
-          <div class="config-row__actions" role="group" :aria-label="`题目 ${getChallengeTitle(item)} 操作`">
+          <div
+            class="config-row__actions"
+            role="group"
+            :aria-label="`题目 ${getChallengeTitle(item)} 操作`"
+          >
             <button
               :id="`awd-challenge-config-edit-${item.id}`"
               type="button"

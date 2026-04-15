@@ -4,7 +4,9 @@ import type { NotificationItem, PageResult } from './contracts'
 
 export type GetNotificationsData = PageResult<NotificationItem>
 
-export async function getNotifications(params?: Record<string, unknown>): Promise<GetNotificationsData> {
+export async function getNotifications(
+  params?: Record<string, unknown>
+): Promise<GetNotificationsData> {
   return request<GetNotificationsData>({ method: 'GET', url: '/notifications', params })
 }
 

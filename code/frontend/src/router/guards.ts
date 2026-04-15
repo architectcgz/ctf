@@ -14,7 +14,7 @@ import { getRoleDashboardPath } from '@/utils/roleRoutes'
 NProgress.configure({ showSpinner: false })
 
 function isPublicRoute(to: RouteLocationNormalized): boolean {
-  return to.path === '/login' || to.path === '/register'
+  return to.path === '/login' || to.path === '/register' || to.path === '/ui-lab'
 }
 
 function isAuthLandingRoute(to: RouteLocationNormalized): boolean {
@@ -30,7 +30,10 @@ export function sanitizeRedirectPath(input: unknown): string {
   return normalized
 }
 
-export function hasRequiredRole(requiredRoles: RouteLocationNormalized['meta']['roles'], currentRole: UserRole | undefined): boolean {
+export function hasRequiredRole(
+  requiredRoles: RouteLocationNormalized['meta']['roles'],
+  currentRole: UserRole | undefined
+): boolean {
   if (!requiredRoles || requiredRoles.length === 0) return true
   if (!currentRole) return false
   return requiredRoles.includes(currentRole)

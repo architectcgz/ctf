@@ -89,7 +89,10 @@ describe('ChallengeTopologyStudioPage', () => {
     adminApiMocks.updateEnvironmentTemplate.mockResolvedValue(undefined)
     adminApiMocks.deleteEnvironmentTemplate.mockResolvedValue(undefined)
 
-    vi.stubGlobal('confirm', vi.fn(() => true))
+    vi.stubGlobal(
+      'confirm',
+      vi.fn(() => true)
+    )
   })
 
   it('应该渲染当前挑战拓扑与模板区块', async () => {
@@ -163,7 +166,9 @@ describe('ChallengeTopologyStudioPage', () => {
 
     await flushPromises()
 
-    const deleteButton = wrapper.findAll('button').find((button) => button.text().includes('删除已保存拓扑'))
+    const deleteButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('删除已保存拓扑'))
     expect(deleteButton).toBeTruthy()
 
     await deleteButton!.trigger('click')
@@ -195,7 +200,9 @@ describe('ChallengeTopologyStudioPage', () => {
 
     await flushPromises()
 
-    const deleteButton = wrapper.findAll('button').find((button) => button.text().includes('删除模板'))
+    const deleteButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('删除模板'))
     expect(deleteButton).toBeTruthy()
 
     await deleteButton!.trigger('click')

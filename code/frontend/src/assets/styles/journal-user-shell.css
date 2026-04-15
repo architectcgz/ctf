@@ -31,10 +31,7 @@
   min-height: var(--journal-user-button-height, 2.7rem);
   border-radius: var(--journal-user-button-radius, 999px);
   border: 1px solid
-    var(
-      --journal-user-button-border,
-      color-mix(in srgb, var(--journal-border) 84%, transparent)
-    );
+    var(--journal-user-button-border, color-mix(in srgb, var(--journal-border) 84%, transparent));
   background: var(
     --journal-user-button-background,
     color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base))
@@ -43,12 +40,7 @@
   font-size: var(--journal-user-button-size, var(--font-size-0-875));
   font-weight: var(--journal-user-button-weight, 600);
   color: var(--journal-user-button-color, var(--journal-ink));
-  transition: var(
-    --journal-user-button-transition,
-    border-color 0.2s,
-    color 0.2s,
-    background 0.2s
-  );
+  transition: var(--journal-user-button-transition, border-color 0.2s, color 0.2s, background 0.2s);
   cursor: pointer;
 }
 
@@ -59,7 +51,10 @@
   );
   background: var(
     --journal-user-button-hover-background,
-    var(--journal-user-button-background, color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base)))
+    var(
+      --journal-user-button-background,
+      color-mix(in srgb, var(--journal-surface) 95%, var(--color-bg-base))
+    )
   );
   color: var(--journal-user-button-hover-color, var(--journal-accent));
 }

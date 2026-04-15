@@ -30,8 +30,7 @@ describe('admin full-bleed hero roots', () => {
         /<section[\s\S]*?class="[^"]*journal-shell[^"]*journal-hero[^"]*min-h-full[^"]*flex-1[^"]*"/s.test(
           source
         )
-      const hasWorkspaceShellRoot =
-        /<div[\s\S]*?class="[^"]*workspace-shell[^"]*"/s.test(source)
+      const hasWorkspaceShellRoot = /<div[\s\S]*?class="[^"]*workspace-shell[^"]*"/s.test(source)
 
       expect(hasSectionHeroRoot || hasWorkspaceShellRoot).toBe(true)
     }

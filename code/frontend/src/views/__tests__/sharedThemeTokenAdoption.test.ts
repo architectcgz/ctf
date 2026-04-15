@@ -34,7 +34,11 @@ import adminChallengeDetailSource from '@/views/admin/ChallengeDetail.vue?raw'
 import challengeDetailSource from '@/views/challenges/ChallengeDetail.vue?raw'
 import userGovernanceSource from '@/components/admin/user/UserGovernancePage.vue?raw'
 
-function expectNoHardcodedThemeTokens(source: string, label: string, forbiddenTokens: string[]): void {
+function expectNoHardcodedThemeTokens(
+  source: string,
+  label: string,
+  forbiddenTokens: string[]
+): void {
   forbiddenTokens.forEach((token) => {
     expect(source, `${label} 不应包含 ${token}`).not.toContain(token)
   })
@@ -48,7 +52,10 @@ describe('shared theme token adoption', () => {
       'rgba(255,255,255,0.08)',
       'rgba(0,0,0,0.16)',
     ])
-    expectNoHardcodedThemeTokens(pageHeaderSource, 'PageHeader', ['rgba(15, 23, 42, 0.05)', '#f8fafc'])
+    expectNoHardcodedThemeTokens(pageHeaderSource, 'PageHeader', [
+      'rgba(15, 23, 42, 0.05)',
+      '#f8fafc',
+    ])
     expectNoHardcodedThemeTokens(skillRadarSource, 'SkillRadar', [
       'rgba(148, 163, 184, 0.18)',
       'stroke="#0891b2"',
@@ -56,7 +63,11 @@ describe('shared theme token adoption', () => {
       'fill="#cbd5e1"',
     ])
     expectNoHardcodedThemeTokens(radarChartSource, 'RadarChart', ["|| '#475569'"])
-    expectNoHardcodedThemeTokens(errorStatusShellSource, 'ErrorStatusShell', ['#0b4f60', '#f8feff', '#f1f5f9'])
+    expectNoHardcodedThemeTokens(errorStatusShellSource, 'ErrorStatusShell', [
+      '#0b4f60',
+      '#f8feff',
+      '#f1f5f9',
+    ])
   })
 
   it('学生仪表盘与学习工作区不应继续写死状态色', () => {
@@ -88,13 +99,22 @@ describe('shared theme token adoption', () => {
       'rgba(8,47,73,0.35)',
       'rgba(15,23,42,0.55)',
     ])
-    expectNoHardcodedThemeTokens(studentRecommendationSource, 'StudentRecommendationPage', ['#16a34a', '#15803d'])
-    expectNoHardcodedThemeTokens(studentCategoryProgressSource, 'StudentCategoryProgressPage', ['#0ea5e9'])
+    expectNoHardcodedThemeTokens(studentRecommendationSource, 'StudentRecommendationPage', [
+      '#16a34a',
+      '#15803d',
+    ])
+    expectNoHardcodedThemeTokens(studentCategoryProgressSource, 'StudentCategoryProgressPage', [
+      '#0ea5e9',
+    ])
     expectNoHardcodedThemeTokens(skillProfileSource, 'SkillProfile', ['rgba(148, 163, 184, 0.2)'])
   })
 
   it('挑战与榜单页不应回退到旧色值', () => {
-    expectNoHardcodedThemeTokens(scoreboardSource, 'ScoreboardView', ['#b45309', '#475569', '#92400e'])
+    expectNoHardcodedThemeTokens(scoreboardSource, 'ScoreboardView', [
+      '#b45309',
+      '#475569',
+      '#92400e',
+    ])
     expectNoHardcodedThemeTokens(challengeListSource, 'ChallengeList', [
       '#0f766e',
       '#7c3aed',
@@ -103,18 +123,24 @@ describe('shared theme token adoption', () => {
       '#2563eb',
       '#d97706',
     ])
-    expectNoHardcodedThemeTokens(challengeDetailSource, 'ChallengeDetail', ['rgba(13, 23, 39, 0.06)'])
+    expectNoHardcodedThemeTokens(challengeDetailSource, 'ChallengeDetail', [
+      'rgba(13, 23, 39, 0.06)',
+    ])
   })
 
   it('通知与导航壳层不应带回旧的亮色回退值', () => {
-    expectNoHardcodedThemeTokens(adminNotificationPublishDrawerSource, 'AdminNotificationPublishDrawer', [
-      'var(--color-border, #d8e1ec)',
-      'var(--color-text-muted, #64748b)',
-      'var(--color-text, #0f172a)',
-      'var(--color-primary, #3b82f6)',
-      'var(--color-danger, #dc2626)',
-      'var(--color-bg-elevated, #fff)',
-    ])
+    expectNoHardcodedThemeTokens(
+      adminNotificationPublishDrawerSource,
+      'AdminNotificationPublishDrawer',
+      [
+        'var(--color-border, #d8e1ec)',
+        'var(--color-text-muted, #64748b)',
+        'var(--color-text, #0f172a)',
+        'var(--color-primary, #3b82f6)',
+        'var(--color-danger, #dc2626)',
+        'var(--color-bg-elevated, #fff)',
+      ]
+    )
     expectNoHardcodedThemeTokens(notificationDropdownSource, 'NotificationDropdown', [
       '0 8px 18px rgba(15, 23, 42, 0.04)',
       '0 18px 42px rgba(15, 23, 42, 0.14)',

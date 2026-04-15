@@ -17,17 +17,8 @@
     </button>
 
     <Teleport to="body">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-[120]"
-        @click="close"
-      >
-        <div
-          ref="panel"
-          class="fixed z-[130]"
-          :style="panelStyle"
-          @click.stop
-        >
+      <div v-if="open" class="fixed inset-0 z-[120]" @click="close">
+        <div ref="panel" class="fixed z-[130]" :style="panelStyle" @click.stop>
           <AppCard
             variant="panel"
             accent="primary"
@@ -36,12 +27,8 @@
           >
             <div class="flex items-start justify-between gap-4">
               <div class="min-w-0 flex-1">
-                <div class="notification-kicker text-text-muted">
-                  Notification Hub
-                </div>
-                <div class="mt-1 text-base font-semibold text-text-primary">
-                  通知中心
-                </div>
+                <div class="notification-kicker text-text-muted">Notification Hub</div>
+                <div class="mt-1 text-base font-semibold text-text-primary">通知中心</div>
                 <div class="mt-1 text-xs leading-5 text-text-secondary">
                   按时间流查看最近 {{ previewItems.length }} 条消息，{{ unreadCount }} 条未读
                 </div>
@@ -95,10 +82,7 @@
                 icon="Bell"
               />
 
-              <div
-                v-else
-                class="notification-timeline"
-              >
+              <div v-else class="notification-timeline">
                 <button
                   v-for="item in previewItems"
                   :key="item.id"
@@ -131,7 +115,10 @@
                         <span
                           v-if="item.unread"
                           class="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary"
-                          :style="{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }"
+                          :style="{
+                            backgroundColor:
+                              'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                          }"
                         >
                           未读
                         </span>
@@ -144,10 +131,7 @@
                     <div class="notification-timeline-title">
                       {{ item.title }}
                     </div>
-                    <div
-                      v-if="item.content"
-                      class="notification-timeline-content"
-                    >
+                    <div v-if="item.content" class="notification-timeline-content">
                       {{ item.content }}
                     </div>
 
@@ -259,12 +243,11 @@ const {
 
 .notification-timeline-item--unread {
   border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface)),
-      color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
-    );
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-bg-surface) 84%, var(--color-bg-base))
+  );
 }
 
 .notification-timeline-rail {

@@ -162,7 +162,9 @@ onMounted(() => {
             class="admin-summary-grid cheat-kpi-summary progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
           >
             <article class="journal-note progress-card metric-panel-card">
-              <div class="journal-note-label progress-card-label metric-panel-label">Submit Burst</div>
+              <div class="journal-note-label progress-card-label metric-panel-label">
+                Submit Burst
+              </div>
               <div class="journal-note-value progress-card-value metric-panel-value">
                 {{ riskData.summary.submit_burst_users }}
               </div>
@@ -204,11 +206,7 @@ onMounted(() => {
             </header>
 
             <div class="cheat-directory-list">
-              <button
-                type="button"
-                class="cheat-directory-row"
-                @click="switchPanel('suspects')"
-              >
+              <button type="button" class="cheat-directory-row" @click="switchPanel('suspects')">
                 <div class="cheat-directory-row-main">
                   <h3 class="cheat-directory-row-title">高频提交账号</h3>
                   <p class="cheat-directory-row-copy">
@@ -223,11 +221,7 @@ onMounted(() => {
                 </div>
               </button>
 
-              <button
-                type="button"
-                class="cheat-directory-row"
-                @click="switchPanel('shared-ip')"
-              >
+              <button type="button" class="cheat-directory-row" @click="switchPanel('shared-ip')">
                 <div class="cheat-directory-row-main">
                   <h3 class="cheat-directory-row-title">共享 IP 线索</h3>
                   <p class="cheat-directory-row-copy">
@@ -235,7 +229,9 @@ onMounted(() => {
                   </p>
                 </div>
                 <div class="cheat-directory-row-meta">
-                  <span class="cheat-directory-row-chip">{{ riskData.summary.shared_ip_groups }} 组</span>
+                  <span class="cheat-directory-row-chip"
+                    >{{ riskData.summary.shared_ip_groups }} 组</span
+                  >
                   <span class="cheat-directory-row-cta">查看线索</span>
                 </div>
               </button>

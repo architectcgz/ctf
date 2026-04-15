@@ -41,7 +41,10 @@
 .journal-shell .top-note {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--journal-top-note-gap, var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x));
+  gap: var(
+    --journal-top-note-gap,
+    var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x)
+  );
   font-size: var(--font-size-0-82);
   color: var(--journal-muted, var(--color-text-secondary));
 }
@@ -137,7 +140,11 @@
 }
 
 .workspace-tab-copy {
-  margin: var(--workspace-tab-copy-margin-top, var(--workspace-page-copy-margin-top, var(--space-2))) 0 0;
+  margin: var(
+      --workspace-tab-copy-margin-top,
+      var(--workspace-page-copy-margin-top, var(--space-2))
+    )
+    0 0;
   max-width: 54rem;
   font-size: var(--workspace-page-copy-font-size);
   line-height: var(--workspace-page-copy-line-height);

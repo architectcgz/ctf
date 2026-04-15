@@ -2,7 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { getClasses, getClassReview, getClassStudents, getClassSummary, getClassTrend } from '@/api/teacher'
+import {
+  getClasses,
+  getClassReview,
+  getClassStudents,
+  getClassSummary,
+  getClassTrend,
+} from '@/api/teacher'
 import type {
   TeacherClassItem,
   TeacherClassReviewData,

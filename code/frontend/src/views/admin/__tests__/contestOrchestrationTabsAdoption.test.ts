@@ -17,7 +17,9 @@ describe('contest orchestration tabs adoption', () => {
     expect(contestOrchestrationSource).not.toContain(
       'const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])'
     )
-    expect(contestOrchestrationSource).not.toContain('function focusTabByIndex(index: number): void {')
+    expect(contestOrchestrationSource).not.toContain(
+      'function focusTabByIndex(index: number): void {'
+    )
     expect(contestOrchestrationSource).not.toContain(
       'function handleTabKeydown(event: KeyboardEvent, index: number): void {'
     )

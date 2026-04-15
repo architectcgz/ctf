@@ -75,7 +75,13 @@ describe('TeacherStudentAnalysis', () => {
       dimensions: [{ key: 'crypto', name: '密码', value: 35 }],
     })
     teacherApiMocks.getStudentRecommendations.mockResolvedValue([
-      { challenge_id: '12', title: 'crypto-lab', category: 'crypto', difficulty: 'medium', reason: '针对薄弱维度：密码' },
+      {
+        challenge_id: '12',
+        title: 'crypto-lab',
+        category: 'crypto',
+        difficulty: 'medium',
+        reason: '针对薄弱维度：密码',
+      },
     ])
     teacherApiMocks.getStudentTimeline.mockResolvedValue([
       {
@@ -345,7 +351,9 @@ describe('TeacherStudentAnalysis', () => {
 
     await flushPromises()
 
-    const hideButton = wrapper.findAll('button').find((button) => button.text().includes('隐藏题解'))
+    const hideButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('隐藏题解'))
     expect(hideButton).toBeDefined()
 
     await hideButton?.trigger('click')
@@ -401,7 +409,7 @@ describe('TeacherStudentAnalysis', () => {
     })
   })
 
-  it('应采用顶部 tabs 工作区壳层而不是把所有内容堆叠在主页面', async () => {
+  it('应采用顶部 tabs 工作区壳层而不是把所有内容堆叠在主页面，并去掉页面内重复顶栏', async () => {
     const wrapper = mount(TeacherStudentAnalysis, {
       global: {
         stubs: {
@@ -420,11 +428,11 @@ describe('TeacherStudentAnalysis', () => {
     expect(wrapper.find('#student-tab-evidence').exists()).toBe(true)
     expect(wrapper.find('#student-tab-timeline').exists()).toBe(true)
     expect(studentAnalysisPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
-    expect(studentAnalysisPageSource).toContain('class="workspace-topbar"')
+    expect(studentAnalysisPageSource).not.toContain('class="workspace-topbar"')
     expect(studentAnalysisPageSource).toContain('class="top-tabs"')
     expect(studentAnalysisPageSource).toContain('class="content-pane"')
     expect(studentAnalysisPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
   })
 

@@ -136,12 +136,15 @@ function roundStatusLabel(status: string): string {
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">视图焦点</div>
               <div class="progress-card-value metric-panel-value">{{ activeSummaryTitle }}</div>
-              <div class="progress-card-hint metric-panel-helper">当前查看整场总览或指定轮次摘要</div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前查看整场总览或指定轮次摘要
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">服务 / 攻击 / 流量</div>
               <div class="progress-card-value metric-panel-value">
-                {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} / {{ summaryStats.trafficCount }}
+                {{ summaryStats.serviceCount }} / {{ summaryStats.attackCount }} /
+                {{ summaryStats.trafficCount }}
               </div>
               <div class="progress-card-hint metric-panel-helper">当前视图下的关键证据量级</div>
             </article>
@@ -155,7 +158,10 @@ function roundStatusLabel(status: string): string {
           </div>
         </section>
 
-        <section class="workspace-directory-section teacher-directory-section awd-review-round-section" aria-label="复盘轮次目录">
+        <section
+          class="workspace-directory-section teacher-directory-section awd-review-round-section"
+          aria-label="复盘轮次目录"
+        >
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Review Rounds</div>
@@ -188,7 +194,9 @@ function roundStatusLabel(status: string): string {
               :key="round.id"
               type="button"
               class="awd-review-round-pill"
-              :class="{ 'awd-review-round-pill--active': selectedRoundNumber === round.round_number }"
+              :class="{
+                'awd-review-round-pill--active': selectedRoundNumber === round.round_number,
+              }"
               @click="setRound(round.round_number)"
             >
               第 {{ round.round_number }} 轮
@@ -234,7 +242,11 @@ function roundStatusLabel(status: string): string {
                   <div class="teacher-surface-eyebrow journal-eyebrow">Round Summary</div>
                   <h3>{{ activeSummaryTitle }}</h3>
                   <p>
-                    {{ selectedRoundNumber ? '聚焦当前轮次的队伍与事件，便于快速下钻。' : '先看整场轮次变化，再决定进入哪一轮继续复盘。' }}
+                    {{
+                      selectedRoundNumber
+                        ? '聚焦当前轮次的队伍与事件，便于快速下钻。'
+                        : '先看整场轮次变化，再决定进入哪一轮继续复盘。'
+                    }}
                   </p>
                 </div>
                 <div class="awd-review-panel__meta">
@@ -244,7 +256,11 @@ function roundStatusLabel(status: string): string {
               </div>
 
               <div v-if="!selectedRound" class="awd-review-round-list">
-                <article v-for="round in review.rounds" :key="round.id" class="awd-review-round-card">
+                <article
+                  v-for="round in review.rounds"
+                  :key="round.id"
+                  class="awd-review-round-card"
+                >
                   <div class="awd-review-round-card__head">
                     <div>
                       <strong>第 {{ round.round_number }} 轮</strong>
@@ -272,13 +288,21 @@ function roundStatusLabel(status: string): string {
 
               <div v-else class="teacher-directory" aria-label="轮次队伍目录">
                 <div class="teacher-directory-top">
-                  <h4 class="teacher-directory-title">第 {{ selectedRound.round.round_number }} 轮队伍视图</h4>
-                  <div class="teacher-directory-meta">共 {{ selectedRound.teams.length }} 支队伍</div>
+                  <h4 class="teacher-directory-title">
+                    第 {{ selectedRound.round.round_number }} 轮队伍视图
+                  </h4>
+                  <div class="teacher-directory-meta">
+                    共 {{ selectedRound.teams.length }} 支队伍
+                  </div>
                 </div>
 
                 <div class="teacher-directory-head">
-                  <span class="teacher-directory-head-cell teacher-directory-head-cell-code">队伍</span>
-                  <span class="teacher-directory-head-cell teacher-directory-head-cell-name">队伍概览</span>
+                  <span class="teacher-directory-head-cell teacher-directory-head-cell-code"
+                    >队伍</span
+                  >
+                  <span class="teacher-directory-head-cell teacher-directory-head-cell-name"
+                    >队伍概览</span
+                  >
                   <span>成员</span>
                   <span>最近命中</span>
                   <span>操作</span>
@@ -303,7 +327,9 @@ function roundStatusLabel(status: string): string {
                     <span>队长 {{ team.captain_id }}</span>
                   </div>
                   <div class="teacher-directory-row-metrics">
-                    <span>{{ team.last_solve_at ? formatDate(team.last_solve_at) : '暂无命中' }}</span>
+                    <span>{{
+                      team.last_solve_at ? formatDate(team.last_solve_at) : '暂无命中'
+                    }}</span>
                   </div>
                   <div class="teacher-directory-row-cta">
                     <span>查看队伍</span>
@@ -336,7 +362,10 @@ function roundStatusLabel(status: string): string {
                     class="awd-review-event-item"
                   >
                     <strong>{{ service.team_name }} · {{ service.challenge_title }}</strong>
-                    <p>{{ service.service_status }} · SLA {{ service.sla_score }} · Def {{ service.defense_score }}</p>
+                    <p>
+                      {{ service.service_status }} · SLA {{ service.sla_score }} · Def
+                      {{ service.defense_score }}
+                    </p>
                   </article>
                 </div>
               </article>
@@ -364,7 +393,11 @@ function roundStatusLabel(status: string): string {
                     class="awd-review-event-item"
                   >
                     <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
-                    <p>{{ attack.challenge_title }} · {{ attack.attack_type }} · +{{ attack.score_gained }}</p>
+                    <p>
+                      {{ attack.challenge_title }} · {{ attack.attack_type }} · +{{
+                        attack.score_gained
+                      }}
+                    </p>
                   </article>
                 </div>
               </article>
@@ -392,7 +425,10 @@ function roundStatusLabel(status: string): string {
                     class="awd-review-event-item"
                   >
                     <strong>{{ event.method }} {{ event.path }}</strong>
-                    <p>{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.status_code }}</p>
+                    <p>
+                      {{ event.attacker_team_name }} → {{ event.victim_team_name }} ·
+                      {{ event.status_code }}
+                    </p>
                   </article>
                 </div>
               </article>
@@ -414,11 +450,17 @@ function roundStatusLabel(status: string): string {
                 </div>
                 <div class="awd-review-side__row">
                   <span>快照类型</span>
-                  <strong>{{ review.scope.snapshot_type === 'final' ? '赛后快照' : '实时快照' }}</strong>
+                  <strong>{{
+                    review.scope.snapshot_type === 'final' ? '赛后快照' : '实时快照'
+                  }}</strong>
                 </div>
                 <div class="awd-review-side__row">
                   <span>最新证据</span>
-                  <strong>{{ summaryStats.latestEvidenceAt ? formatDate(summaryStats.latestEvidenceAt) : '暂无' }}</strong>
+                  <strong>{{
+                    summaryStats.latestEvidenceAt
+                      ? formatDate(summaryStats.latestEvidenceAt)
+                      : '暂无'
+                  }}</strong>
                 </div>
                 <div class="awd-review-side__row">
                   <span>教师报告</span>

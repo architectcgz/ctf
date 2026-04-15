@@ -11,7 +11,7 @@ export function formatTime(time: string): string {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -30,4 +30,3 @@ export function formatDuration(ms: number): string {
 export function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleString('zh-CN')
 }
-

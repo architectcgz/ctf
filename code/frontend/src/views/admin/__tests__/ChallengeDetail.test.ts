@@ -79,7 +79,9 @@ describe('Admin ChallengeDetail', () => {
       global: {
         stubs: {
           ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
-          ChallengeWriteupManagePanel: { template: '<div data-testid="challenge-writeup-manage-panel">题解目录</div>' },
+          ChallengeWriteupManagePanel: {
+            template: '<div data-testid="challenge-writeup-manage-panel">题解目录</div>',
+          },
         },
       },
     })
@@ -94,12 +96,16 @@ describe('Admin ChallengeDetail', () => {
     expect(wrapper.text()).toContain('双节点演练')
     expect(
       wrapper
-        .find('.challenge-overview-summary.progress-strip.metric-panel-grid.metric-panel-default-surface')
+        .find(
+          '.challenge-overview-summary.progress-strip.metric-panel-grid.metric-panel-default-surface'
+        )
         .exists()
     ).toBe(true)
     expect(wrapper.text()).toContain('基础信息')
 
-    const topologyButton = wrapper.findAll('button').find((button) => button.text().includes('拓扑编排'))
+    const topologyButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('拓扑编排'))
     expect(topologyButton).toBeTruthy()
 
     await topologyButton!.trigger('click')
@@ -114,7 +120,9 @@ describe('Admin ChallengeDetail', () => {
       global: {
         stubs: {
           ChallengeDescriptionPanel: { template: '<div>描述面板</div>' },
-          ChallengeWriteupManagePanel: { template: '<div data-testid="challenge-writeup-tab">题解目录</div>' },
+          ChallengeWriteupManagePanel: {
+            template: '<div data-testid="challenge-writeup-tab">题解目录</div>',
+          },
         },
       },
     })
@@ -273,7 +281,9 @@ describe('Admin ChallengeDetail', () => {
 
     await flushPromises()
 
-    const downloadButton = wrapper.findAll('button').find((button) => button.text().includes('下载附件'))
+    const downloadButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('下载附件'))
     expect(downloadButton).toBeTruthy()
     expect(wrapper.text()).not.toContain('/api/v1/challenges/attachments/imports/demo.zip')
 

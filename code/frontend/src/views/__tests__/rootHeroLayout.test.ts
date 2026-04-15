@@ -39,7 +39,7 @@ describe('full-bleed hero roots', () => {
           source
         )
       const hasEmbeddableHeroRoot =
-        source.includes("embedded?: boolean") &&
+        source.includes('embedded?: boolean') &&
         source.includes("'journal-shell journal-hero") &&
         /<section[\s\S]*?class="[^"]*journal-soft-surface[^"]*flex[^"]*min-h-full[^"]*flex-1[^"]*flex-col[^"]*"/s.test(
           source

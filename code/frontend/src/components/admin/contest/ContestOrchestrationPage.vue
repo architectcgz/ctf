@@ -167,11 +167,7 @@ function openContestWorkbench() {
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
-            <button
-              type="button"
-              class="admin-btn admin-btn-primary"
-              @click="openCreatePanel"
-            >
+            <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
               <Plus class="h-4 w-4" />
               创建竞赛
             </button>
@@ -281,11 +277,7 @@ function openContestWorkbench() {
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
-            <button
-              type="button"
-              class="admin-btn admin-btn-primary"
-              @click="openCreatePanel"
-            >
+            <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
               <Plus class="h-4 w-4" />
               创建竞赛
             </button>
@@ -347,11 +339,7 @@ function openContestWorkbench() {
             icon="Trophy"
           >
             <template #action>
-              <button
-                type="button"
-                class="admin-btn admin-btn-primary"
-                @click="openCreatePanel"
-              >
+              <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
                 创建第一场竞赛
               </button>
             </template>
@@ -415,7 +403,8 @@ function openContestWorkbench() {
   --workspace-panel: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
   --workspace-panel-soft: color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base));
   --workspace-line-soft: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
-  --workspace-shadow-panel: 0 14px 34px color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
+  --workspace-shadow-panel: 0 14px 34px
+    color-mix(in srgb, var(--color-shadow-soft) 42%, transparent);
   --workspace-faint: var(--journal-muted);
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --journal-note-label-weight: 600;

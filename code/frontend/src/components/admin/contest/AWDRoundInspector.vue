@@ -190,7 +190,6 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
     ...service.check_result,
   }
 }
-
 </script>
 
 <template>
@@ -495,9 +494,7 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
               当前轮次暂未返回攻击流量摘要。
             </div>
             <template v-else>
-              <div
-                class="awd-traffic-summary-strip border-y border-border/80"
-              >
+              <div class="awd-traffic-summary-strip border-y border-border/80">
                 <div class="grid gap-0 md:grid-cols-2 xl:grid-cols-5">
                   <div
                     v-for="item in trafficSummaryStats"
@@ -1166,15 +1163,17 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                     </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-secondary)]">
                       <div>
-                        SLA {{ service.sla_score ?? 0 }} / 防守 {{ service.defense_score }} /
-                        攻击 {{ service.attack_score }}
+                        SLA {{ service.sla_score ?? 0 }} / 防守 {{ service.defense_score }} / 攻击
+                        {{ service.attack_score }}
                       </div>
                       <div class="mt-1 text-xs text-[var(--color-text-muted)]">
                         受攻击 {{ service.attack_received }}
                       </div>
                     </td>
                     <td class="px-4 py-4 text-sm text-[var(--color-text-muted)]">
-                      <div>{{ summarizeCheckResult(getServiceCheckPresentationResult(service)) }}</div>
+                      <div>
+                        {{ summarizeCheckResult(getServiceCheckPresentationResult(service)) }}
+                      </div>
                       <div
                         v-if="getCheckActions(service.check_result).length > 0"
                         class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
@@ -1187,7 +1186,10 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                           {{ action.label }} ·
                           {{ getProbeStatusText(action.healthy, action.error_code, action.error) }}
                           <span v-if="action.method || action.path">
-                            · {{ [action.method?.toUpperCase(), action.path].filter(Boolean).join(' ') }}
+                            ·
+                            {{
+                              [action.method?.toUpperCase(), action.path].filter(Boolean).join(' ')
+                            }}
                           </span>
                         </span>
                       </div>
@@ -1242,7 +1244,11 @@ function getServiceCheckPresentationResult(service: AWDTeamServiceData): Record<
                                 }}
                                 <span v-if="action.method || action.path">
                                   ·
-                                  {{ [action.method?.toUpperCase(), action.path].filter(Boolean).join(' ') }}
+                                  {{
+                                    [action.method?.toUpperCase(), action.path]
+                                      .filter(Boolean)
+                                      .join(' ')
+                                  }}
                                 </span>
                               </div>
                             </div>

@@ -110,7 +110,8 @@ export function useTeacherInstances() {
       toast.success('实例已销毁')
     } catch (err) {
       console.error('教师销毁实例失败:', err)
-      const message = err instanceof Error && err.message.trim() ? err.message : '销毁实例失败，请稍后重试'
+      const message =
+        err instanceof Error && err.message.trim() ? err.message : '销毁实例失败，请稍后重试'
       toast.error(message)
     } finally {
       destroyingId.value = ''

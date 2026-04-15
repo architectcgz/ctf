@@ -44,7 +44,9 @@ const statItems = [
       <div class="archive-hero__grid">
         <article class="archive-hero__profile">
           <div class="archive-hero__label">当前学员</div>
-          <div class="archive-hero__student">{{ archive?.student.name || archive?.student.username || '--' }}</div>
+          <div class="archive-hero__student">
+            {{ archive?.student.name || archive?.student.username || '--' }}
+          </div>
           <div class="archive-hero__student-subline">
             <span>@{{ archive?.student.username || '--' }}</span>
             <span>{{ archive?.student.class_name || '--' }}</span>
@@ -59,7 +61,7 @@ const statItems = [
           <article
             v-for="item in statItems"
             :key="item.key"
-          class="archive-hero__stat teacher-surface-metric"
+            class="archive-hero__stat teacher-surface-metric"
           >
             <div class="archive-hero__stat-label">{{ item.label }}</div>
             <div class="archive-hero__stat-value">{{ archive?.summary[item.field] ?? 0 }}</div>
@@ -77,7 +79,11 @@ const statItems = [
   border-radius: 28px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--journal-accent) 12%, transparent), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--journal-accent) 12%, transparent),
+      transparent 34%
+    ),
     linear-gradient(
       135deg,
       color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface)),
@@ -90,7 +96,11 @@ const statItems = [
   inset: 0;
   background-image:
     linear-gradient(color-mix(in srgb, var(--journal-accent) 8%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--journal-accent) 8%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--journal-accent) 8%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 28px 28px;
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent);
 }
@@ -147,7 +157,11 @@ const statItems = [
 .archive-hero__stat {
   border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
 }
 
 .archive-hero__profile {

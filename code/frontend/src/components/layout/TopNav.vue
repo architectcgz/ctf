@@ -1,6 +1,8 @@
 <template>
-  <header class="topnav-shell sticky top-0 z-50">
-    <div class="topnav-inner mx-auto flex min-h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-4 py-3 md:px-6 xl:px-8">
+  <header class="topnav-shell sticky top-0 z-50" :class="{ 'topnav-shell--admin': isBackofficeRoute }">
+    <div
+      class="topnav-inner mx-auto flex min-h-16 w-full max-w-[1600px] items-center justify-between gap-4 px-4 py-3 md:px-6 xl:px-8"
+    >
       <div class="topnav-main flex min-w-0 items-center gap-3 md:gap-4">
         <button
           type="button"
@@ -13,15 +15,33 @@
           <PanelLeftOpen v-else class="hidden h-4 w-4 md:block" />
         </button>
 
-        <div class="topnav-title-block min-w-0">
-          <div class="topnav-page-title truncate text-sm font-semibold text-text-primary md:text-[15px]">
+        <div
+          v-if="isBackofficeRoute"
+          class="flex min-w-0 items-center text-sm font-bold text-slate-500"
+        >
+          <span class="text-slate-400 whitespace-nowrap">Workspace</span>
+          <span class="mx-2 text-slate-300">/</span>
+          <span class="whitespace-nowrap">{{ backofficeBreadcrumb.moduleLabel }}</span>
+          <span class="mx-2 text-slate-300">/</span>
+          <span class="truncate text-slate-900 font-black">
+            {{ backofficeBreadcrumb.secondaryLabel }}
+          </span>
+        </div>
+
+        <div
+          v-else
+          class="topnav-title-block min-w-0"
+        >
+          <div
+            class="topnav-page-title truncate text-sm font-semibold text-text-primary md:text-[15px]"
+          >
             {{ pageTitle }}
           </div>
         </div>
       </div>
 
       <div class="topnav-actions flex shrink-0 items-center gap-3">
-        <div class="topnav-tool-cluster">
+        <div class="topnav-tool-cluster" :class="{ 'topnav-tool-cluster--admin': isBackofficeRoute }">
           <button
             type="button"
             class="topnav-icon-button"
@@ -73,7 +93,10 @@
           <NotificationDropdown :realtime-status="notificationStatus" />
         </div>
 
-        <div class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3">
+        <div
+          class="topnav-user-card flex items-center gap-3 px-2.5 py-1.5 sm:px-3"
+          :class="{ 'topnav-user-card--admin': isBackofficeRoute }"
+        >
           <div class="topnav-user-mark">
             {{ userInitial }}
           </div>
@@ -106,10 +129,15 @@ import { useRoute } from 'vue-router'
 import { LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Sun } from 'lucide-vue-next'
 
 import NotificationDropdown from '@/components/layout/NotificationDropdown.vue'
+import {
+  getBackofficeModuleByPath,
+  getVisibleBackofficeSecondaryItems,
+} from '@/config/backofficeNavigation'
 import { useAuth } from '@/composables/useAuth'
 import { useAuthStore } from '@/stores/auth'
 import { useTheme } from '@/composables/useTheme'
 import type { WebSocketStatus } from '@/composables/useWebSocket'
+import { isBackofficeRoute as checkBackofficeRoute } from '@/utils/backofficeRouteMeta'
 import { resolveRouteTitle } from '@/utils/routeTitle'
 
 defineProps<{
@@ -124,16 +152,29 @@ defineEmits<{
 
 const route = useRoute()
 const authStore = useAuthStore()
+const isBackofficeRoute = computed(() => checkBackofficeRoute(route.path))
 
 const isMobile = ref(window.innerWidth < 768)
 const brandPickerRef = ref<HTMLElement | null>(null)
 const brandPickerOpen = ref(false)
 
-function onResize() { isMobile.value = window.innerWidth < 768 }
+function onResize() {
+  isMobile.value = window.innerWidth < 768
+}
 const { logout } = useAuth()
 const { availableBrands, brand, setBrand, theme, toggleTheme } = useTheme()
 
 const pageTitle = computed(() => resolveRouteTitle(route))
+const backofficeBreadcrumb = computed(() => {
+  const module = getBackofficeModuleByPath(route.path)
+  const secondaryItems = getVisibleBackofficeSecondaryItems(route.path, authStore.user?.role ?? null)
+  const activeSecondaryItem = secondaryItems.find((item) => item.active) ?? null
+
+  return {
+    moduleLabel: module?.label ?? '后台',
+    secondaryLabel: activeSecondaryItem?.label ?? pageTitle.value ?? '工作区',
+  }
+})
 const roleCaption = computed(() => {
   const role = authStore.user?.role
   if (role === 'admin') return '系统管理'
@@ -191,9 +232,23 @@ onUnmounted(() => {
 .topnav-shell {
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 76%, transparent);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-base) 97%, var(--color-bg-surface)), color-mix(in srgb, var(--color-bg-base) 99%, var(--color-bg-surface))),
-    radial-gradient(circle at top left, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 18rem);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-base) 97%, var(--color-bg-surface)),
+      color-mix(in srgb, var(--color-bg-base) 99%, var(--color-bg-surface))
+    ),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--color-primary) 8%, transparent),
+      transparent 18rem
+    );
   backdrop-filter: blur(14px);
+}
+
+.topnav-shell--admin {
+  border-bottom-color: #e2e8f0;
+  background: white;
+  backdrop-filter: none;
 }
 
 .topnav-inner {
@@ -209,11 +264,17 @@ onUnmounted(() => {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--color-bg-surface) 54%, var(--color-bg-base));
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.topnav-tool-cluster--admin {
+  border-color: #f1f5f9;
+  border-radius: 999px;
+  background: white;
 }
 
 .topnav-brand-picker {
@@ -230,102 +291,114 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.45rem;
   padding: 0.55rem;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 82%, transparent);
+  border: 1px solid #e2e8f0;
   border-radius: 999px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 82%, var(--color-bg-base)));
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--color-shadow-soft) 90%, transparent);
+  background: white;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
 .topnav-brand-dot {
   --brand-dot-color: var(--color-primary);
   display: inline-flex;
-  height: 1.15rem;
-  width: 1.15rem;
+  height: 1rem;
+  width: 1rem;
   border-radius: 999px;
   border: none;
   padding: 0;
   background: var(--brand-dot-color);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 28%, transparent);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
 }
 
 .topnav-brand-dot:hover {
-  transform: translateY(-1px) scale(1.06);
+  transform: translateY(-1px) scale(1.1);
 }
 
-.topnav-brand-dot[data-brand="green"] {
+.topnav-brand-dot[data-brand='green'] {
   --brand-dot-color: var(--color-brand-swatch-green);
 }
 
-.topnav-brand-dot[data-brand="cyan"] {
+.topnav-brand-dot[data-brand='cyan'] {
   --brand-dot-color: var(--color-brand-swatch-cyan);
 }
 
-.topnav-brand-dot[data-brand="blue"] {
+.topnav-brand-dot[data-brand='blue'] {
   --brand-dot-color: var(--color-brand-swatch-blue);
 }
 
-.topnav-brand-dot[data-brand="orange"] {
+.topnav-brand-dot[data-brand='orange'] {
   --brand-dot-color: var(--color-brand-swatch-orange);
 }
 
 .topnav-brand-dot--active {
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--color-bg-base) 92%, transparent),
-    0 0 0 5px color-mix(in srgb, var(--color-primary) 26%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, white 34%, transparent);
+    0 0 0 2px white,
+    0 0 0 4px rgba(37, 99, 235, 0.2);
 }
 
 .topnav-actions :deep(.notification-trigger) {
-  height: 2.5rem;
-  width: 2.5rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 58%, var(--color-bg-base));
-  color: var(--color-text-secondary);
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  background: white;
+  color: #64748b;
   box-shadow: none;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .topnav-actions :deep(.notification-trigger:hover) {
-  border-color: color-mix(in srgb, var(--color-primary) 20%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-surface));
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
 }
 
 .topnav-icon-button {
   display: inline-flex;
-  height: 2.5rem;
-  width: 2.5rem;
+  height: 2.25rem;
+  width: 2.25rem;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 74%, transparent);
-  background: color-mix(in srgb, var(--color-bg-surface) 58%, var(--color-bg-base));
-  color: var(--color-text-secondary);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
+  background: white;
+  color: #64748b;
+  transition: all 0.2s ease;
 }
 
 .topnav-icon-button:hover {
-  color: var(--color-text-primary);
-  border-color: color-mix(in srgb, var(--color-primary) 24%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-surface));
-  transform: translateY(-1px);
+  color: #0f172a;
+  border-color: #e2e8f0;
+  background: #f8fafc;
 }
 
 .topnav-icon-button--quiet {
-  height: 2.25rem;
-  width: 2.25rem;
+  height: 2rem;
+  width: 2rem;
+}
+
+.text-slate-500 {
+  color: #64748b;
+}
+
+.text-slate-400 {
+  color: #94a3b8;
+}
+
+.text-slate-300 {
+  color: #cbd5e1;
+}
+
+.text-slate-900 {
+  color: #0f172a;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-black {
+  font-weight: 900;
 }
 
 .topnav-title-block {
@@ -337,25 +410,48 @@ onUnmounted(() => {
 }
 
 .topnav-user-card {
-  border: 1px solid color-mix(in srgb, var(--color-border-default) 72%, transparent);
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 58%, var(--color-bg-base)));
-  min-height: 2.75rem;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  background: white;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+}
+
+.topnav-user-card--admin {
+  border-radius: 999px;
+  background: white;
+  border-color: #f1f5f9;
 }
 
 .topnav-user-mark {
   display: inline-flex;
-  height: 2.25rem;
-  width: 2.25rem;
+  height: 1.75rem;
+  width: 1.75rem;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-bg-surface));
-  font-size: var(--font-size-0-75);
-  font-weight: 700;
-  color: var(--color-primary);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #475569;
+}
+
+.topnav-shell--admin .topnav-user-mark {
+  border-radius: 999px;
+}
+
+.topnav-shell--admin .topnav-icon-button,
+.topnav-shell--admin .topnav-actions :deep(.notification-trigger) {
+  border-radius: 999px;
+  border-color: #f1f5f9;
+  background: white;
+}
+
+.topnav-shell--admin .topnav-icon-button:hover,
+.topnav-shell--admin .topnav-actions :deep(.notification-trigger:hover) {
+  border-color: #e2e8f0;
+  background: #f8fafc;
 }
 
 .topnav-user-identity {
@@ -363,25 +459,35 @@ onUnmounted(() => {
 }
 
 .topnav-user-role {
-  font-size: var(--font-size-11);
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-text-muted);
+  color: #94a3b8;
 }
 
 .topnav-logout {
-  border-color: color-mix(in srgb, var(--color-danger) 16%, var(--color-border-default));
+  border-color: #fee2e2;
+  color: #ef4444;
 }
 
 .topnav-logout:hover {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, var(--color-border-default));
-  background: color-mix(in srgb, var(--color-danger) 6%, var(--color-bg-surface));
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
-:global([data-theme="light"]) .topnav-shell {
+:global([data-theme='light']) .topnav-shell {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle, var(--color-bg-elevated)) 95%, var(--color-bg-base))),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 97%, var(--color-bg-base)),
+      color-mix(
+        in srgb,
+        var(--journal-surface-subtle, var(--color-bg-elevated)) 95%,
+        var(--color-bg-base)
+      )
+    ),
     radial-gradient(
       circle at top left,
       color-mix(in srgb, var(--color-primary-hover) 6%, transparent),

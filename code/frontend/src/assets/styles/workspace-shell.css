@@ -86,7 +86,10 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--workspace-note-gap, var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x));
+  gap: var(
+    --workspace-note-gap,
+    var(--space-workspace-note-gap-y) var(--space-workspace-note-gap-x)
+  );
   font-size: var(--font-size-13);
   color: var(--workspace-faint, var(--color-text-secondary));
 }
