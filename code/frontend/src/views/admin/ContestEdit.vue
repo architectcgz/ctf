@@ -253,6 +253,9 @@ async function loadAwdChallengeCatalog(): Promise<void> {
     } while (catalog.length < total)
 
     awdChallengeCatalog.value = catalog
+  } catch (error) {
+    awdChallengeCatalog.value = []
+    toast.error(humanizeRequestError(error, 'AWD 题目目录加载失败'))
   } finally {
     loadingChallengeCatalog.value = false
   }
@@ -370,13 +373,18 @@ async function openPreflightOverrideDialog() {
     return
   }
 
-  const readiness = awdReadiness.value ?? (contestId.value ? await getContestAWDReadiness(contestId.value) : null)
-  awdStartOverrideDialogState.value = {
-    open: true,
-    title: '启动赛事',
-    readiness,
-    confirmLoading: false,
-    pendingPayload: payload,
+  try {
+    const readiness = awdReadiness.value ?? (contestId.value ? await getContestAWDReadiness(contestId.value) : null)
+    awdStartOverrideDialogState.value = {
+      open: true,
+      title: '启动赛事',
+      readiness,
+      confirmLoading: false,
+      pendingPayload: payload,
+    }
+  } catch (error) {
+    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
+    toast.error(humanizeRequestError(error, '赛前检查数据加载失败'))
   }
 }
 
@@ -420,13 +428,18 @@ async function finalizeContestUpdateSuccess() {
 }
 
 async function openAWDStartOverrideDialog(payload: AdminContestUpdatePayload) {
-  const readiness = await getContestAWDReadiness(contestId.value)
-  awdStartOverrideDialogState.value = {
-    open: true,
-    title: '启动赛事',
-    readiness,
-    confirmLoading: false,
-    pendingPayload: payload,
+  try {
+    const readiness = await getContestAWDReadiness(contestId.value)
+    awdStartOverrideDialogState.value = {
+      open: true,
+      title: '启动赛事',
+      readiness,
+      confirmLoading: false,
+      pendingPayload: payload,
+    }
+  } catch (error) {
+    awdStartOverrideDialogState.value = createDefaultAWDStartOverrideDialogState()
+    toast.error(humanizeRequestError(error, '赛前检查数据加载失败'))
   }
 }
 
@@ -621,8 +634,14 @@ onMounted(() => {
           :aria-hidden="activeStage === 'awd-config' ? 'false' : 'true'"
         >
           <section class="contest-edit-section contest-edit-section--flat">
+            <div
+              v-if="loadingAwdStageData && !awdConfigLoadError && awdChallengeLinks.length === 0"
+              class="workspace-directory-section contest-edit-section"
+            >
+              <AppLoading>正在同步 AWD 配置...</AppLoading>
+            </div>
             <AppEmpty
-              v-if="awdConfigLoadError"
+              v-else-if="awdConfigLoadError"
               title="AWD 配置数据暂时不可用"
               :description="awdConfigLoadError"
               icon="AlertTriangle"
