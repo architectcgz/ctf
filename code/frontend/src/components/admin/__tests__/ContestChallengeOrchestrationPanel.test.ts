@@ -196,4 +196,20 @@ describe('ContestChallengeOrchestrationPanel', () => {
     expect(wrapper.text()).toContain('最近失败题目')
     expect(wrapper.text()).not.toContain('最近通过题目')
   })
+
+  it('外部题目数据加载失败且尚无成功数据时应展示失败态而不是空态', async () => {
+    const wrapper = mountPanel({
+      contestMode: 'awd',
+      challengeLinks: [],
+      loadingExternal: false,
+      loadErrorExternal: '同步失败',
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('赛事题目暂时不可用')
+    expect(wrapper.text()).toContain('同步失败')
+    expect(wrapper.text()).not.toContain('当前竞赛还没有关联题目')
+    expect(wrapper.text()).not.toContain('共 0 道题目')
+  })
 })

@@ -652,6 +652,61 @@ describe('ContestEdit', () => {
     expect(wrapper.text()).not.toContain('尚未进入运行阶段')
   })
 
+  it('AWD 题目列表刷新失败时应保留上次成功数据并避免把摘要误报为 0', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.listAdminContestChallenges
+      .mockResolvedValueOnce([
+        {
+          id: 'link-1',
+          contest_id: 'contest-1',
+          challenge_id: '101',
+          title: 'Web 入门',
+          category: 'web',
+          difficulty: 'easy',
+          points: 120,
+          order: 1,
+          is_visible: true,
+          awd_checker_type: undefined,
+          awd_checker_config: {},
+          awd_sla_score: 0,
+          awd_defense_score: 0,
+          awd_checker_validation_state: 'pending',
+          awd_checker_last_preview_at: undefined,
+          awd_checker_last_preview_result: undefined,
+          created_at: '2026-03-10T00:00:00.000Z',
+        },
+      ])
+      .mockRejectedValueOnce(new Error('refresh failed'))
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('已关联题目数')
+    expect(wrapper.text()).toContain('Web 入门')
+
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('刷新列表'))
+      ?.trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('refresh failed')
+    expect(wrapper.text()).toContain('Web 入门')
+    expect(wrapper.text()).toContain('已关联题目数')
+    expect(wrapper.text()).not.toContain('当前竞赛还没有关联题目')
+    expect(wrapper.text()).not.toContain('共 0 道题目')
+  })
+
   it('应该在管理页工作台交接时强制落到轮次态势而不是恢复旧子页签', async () => {
     window.sessionStorage.setItem('ctf_admin_awd_ops_panel:contest-1', 'challenges')
     window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations&opsPanel=inspector')
