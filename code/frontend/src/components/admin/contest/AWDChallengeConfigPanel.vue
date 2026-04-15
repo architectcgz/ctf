@@ -5,13 +5,27 @@ import type { AdminContestChallengeData } from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 
-const props = defineProps<{
-  challengeLinks: AdminContestChallengeData[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    challengeLinks: AdminContestChallengeData[]
+    activeChallengeId?: string | null
+    focusSource?: 'pool' | 'preflight' | null
+    canNavigatePrevious?: boolean
+    canNavigateNext?: boolean
+  }>(),
+  {
+    activeChallengeId: null,
+    focusSource: null,
+    canNavigatePrevious: false,
+    canNavigateNext: false,
+  }
+)
 
 const emit = defineEmits<{
   create: []
   edit: [challenge: AdminContestChallengeData]
+  previous: []
+  next: []
 }>()
 
 const sortedChallengeLinks = computed(() =>
@@ -19,6 +33,25 @@ const sortedChallengeLinks = computed(() =>
     (left, right) => left.order - right.order || left.challenge_id.localeCompare(right.challenge_id)
   )
 )
+const activeChallenge = computed(
+  () =>
+    sortedChallengeLinks.value.find((item) => item.challenge_id === props.activeChallengeId) || null
+)
+const activeChallengeHeading = computed(() =>
+  activeChallenge.value ? getChallengeTitle(activeChallenge.value) : ''
+)
+const activeChallengeContext = computed(() => {
+  if (!activeChallenge.value) {
+    return ''
+  }
+  if (props.focusSource === 'preflight') {
+    return '这是赛前检查中仍需处理的题目，修正后可以回到赛前检查继续复核。'
+  }
+  if (props.focusSource === 'pool') {
+    return '这是你刚从题目池带回来的当前题，可以继续补齐 checker、分值和验证状态。'
+  }
+  return '当前题目会保持高亮，便于连续逐题整理配置。'
+})
 
 const summaryItems = computed(() => [
   {
@@ -155,6 +188,10 @@ function getValidationHint(item: AdminContestChallengeData): string {
       return '保存后可通过试跑绑定最近一次校验结果。'
   }
 }
+
+function isActiveChallenge(item: AdminContestChallengeData): boolean {
+  return item.challenge_id === props.activeChallengeId
+}
 </script>
 
 <template>
@@ -196,6 +233,38 @@ function getValidationHint(item: AdminContestChallengeData): string {
         </div>
       </header>
 
+      <section
+        v-if="activeChallenge"
+        class="workspace-directory-section config-focus-card"
+      >
+        <div>
+          <div class="journal-note-label">Current Focus</div>
+          <h3 class="list-heading__title">当前聚焦题目</h3>
+          <p class="config-focus-card__title">{{ activeChallengeHeading }}</p>
+          <p class="config-focus-card__copy">{{ activeChallengeContext }}</p>
+        </div>
+        <div class="config-focus-card__actions">
+          <button
+            id="awd-challenge-config-prev"
+            type="button"
+            class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!canNavigatePrevious"
+            @click="emit('previous')"
+          >
+            上一题
+          </button>
+          <button
+            id="awd-challenge-config-next"
+            type="button"
+            class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="!canNavigateNext"
+            @click="emit('next')"
+          >
+            下一题
+          </button>
+        </div>
+      </section>
+
       <AppEmpty
         v-if="sortedChallengeLinks.length === 0"
         title="当前赛事还没有关联题目"
@@ -217,6 +286,7 @@ function getValidationHint(item: AdminContestChallengeData): string {
           v-for="item in sortedChallengeLinks"
           :key="item.id"
           class="config-row"
+          :class="{ 'config-row--active': isActiveChallenge(item) }"
         >
           <div class="config-row__identity">
             <h4 class="config-row__title">{{ getChallengeTitle(item) }}</h4>
@@ -283,6 +353,41 @@ function getValidationHint(item: AdminContestChallengeData): string {
   margin-bottom: 1.25rem;
 }
 
+.config-focus-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
+}
+
+.config-focus-card__title,
+.config-focus-card__copy {
+  margin: 0.4rem 0 0;
+}
+
+.config-focus-card__title {
+  color: var(--journal-ink);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.config-focus-card__copy {
+  max-width: 44rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+}
+
+.config-focus-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .config-list-actions {
   display: flex;
   flex-wrap: wrap;
@@ -321,6 +426,13 @@ function getValidationHint(item: AdminContestChallengeData): string {
 .config-row {
   padding: 1rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 72%, transparent);
+}
+
+.config-row--active {
+  padding-inline: 0.85rem;
+  margin-inline: -0.85rem;
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--journal-accent) 8%, var(--journal-surface));
 }
 
 .config-row:last-child {
@@ -423,6 +535,10 @@ function getValidationHint(item: AdminContestChallengeData): string {
   .list-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .config-focus-card {
+    align-items: stretch;
   }
 
   .config-directory-head {

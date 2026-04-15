@@ -266,6 +266,58 @@ describe('ContestEdit', () => {
     expect(stageRail.text()).toContain('轮次运行')
   })
 
+  it('应该在赛前检查中列出阻塞项、保留强制开赛入口，并支持返回 AWD 配置后高亮当前题', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('可强制开赛')
+    expect(wrapper.text()).toContain('Challenge 101')
+    expect(wrapper.text()).toContain('返回 AWD 配置')
+    expect(wrapper.text()).toContain('强制开赛')
+
+    await wrapper.get('#awd-readiness-edit-101').trigger('click')
+    await flushPromises()
+
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 配置')
+    expect(wrapper.text()).toContain('当前聚焦题目')
+    expect(wrapper.text()).toContain('Challenge 101')
+  })
+
+  it('应该支持从题目池跳转到 AWD 配置并保留当前题高亮', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-challenge-open-awd-config-link-1').trigger('click')
+    await flushPromises()
+
+    expect(getWorkbenchStageRail(wrapper).get('[role="tab"][aria-selected="true"]').text()).toContain('AWD 配置')
+    expect(wrapper.text()).toContain('当前聚焦题目')
+    expect(wrapper.text()).toContain('Web 入门')
+  })
+
   it('应该在 AWD 赛事已开赛时默认聚焦轮次运行阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({
