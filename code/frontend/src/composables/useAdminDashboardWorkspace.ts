@@ -1,30 +1,6 @@
 import { computed, type Ref } from 'vue'
 
 import type { AdminDashboardData } from '@/api/contracts'
-import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
-
-const panelTabs = [
-  {
-    key: 'overview',
-    label: '总览',
-    tabId: 'admin-dashboard-tab-overview',
-    panelId: 'admin-dashboard-panel-overview',
-  },
-  {
-    key: 'alerts',
-    label: '当前告警',
-    tabId: 'admin-dashboard-tab-alerts',
-    panelId: 'admin-dashboard-panel-alerts',
-  },
-  {
-    key: 'hotspots',
-    label: '资源热点',
-    tabId: 'admin-dashboard-tab-hotspots',
-    panelId: 'admin-dashboard-panel-hotspots',
-  },
-] as const
-
-type DashboardPanelKey = (typeof panelTabs)[number]['key']
 
 function formatPercent(value: number | undefined): string {
   return `${Math.round(value ?? 0)}%`
@@ -50,17 +26,6 @@ function usageTone(value: number | undefined): string {
 }
 
 export function useAdminDashboardWorkspace(dashboard: Ref<AdminDashboardData | null>) {
-  const panelTabOrder = panelTabs.map((tab) => tab.key) as DashboardPanelKey[]
-  const {
-    activeTab: activePanel,
-    setTabButtonRef,
-    selectTab: selectPanel,
-    handleTabKeydown,
-  } = useUrlSyncedTabs<DashboardPanelKey>({
-    orderedTabs: panelTabOrder,
-    defaultTab: 'overview',
-  })
-
   const alertCount = computed(() => dashboard.value?.alerts.length ?? 0)
 
   const healthSummary = computed(() => {
@@ -129,7 +94,9 @@ export function useAdminDashboardWorkspace(dashboard: Ref<AdminDashboardData | n
   const peakContainer = computed(() => sortedContainers.value[0] ?? null)
 
   const railScore = computed(() =>
-    String(Math.round(Math.max(dashboard.value?.cpu_usage ?? 0, dashboard.value?.memory_usage ?? 0)))
+    String(
+      Math.round(Math.max(dashboard.value?.cpu_usage ?? 0, dashboard.value?.memory_usage ?? 0))
+    )
   )
 
   const railCopy = computed(() => {
@@ -145,11 +112,6 @@ export function useAdminDashboardWorkspace(dashboard: Ref<AdminDashboardData | n
   })
 
   return {
-    panelTabs,
-    activePanel,
-    setTabButtonRef,
-    selectPanel,
-    handleTabKeydown,
     alertCount,
     healthSummary,
     sortedContainers,

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
-import { AlertTriangle, ArrowRight, ShieldAlert, SquareStack } from 'lucide-vue-next'
+import { AlertTriangle } from 'lucide-vue-next'
 
 import type { AdminDashboardData } from '@/api/contracts'
 import { useAdminDashboardWorkspace } from '@/composables/useAdminDashboardWorkspace'
@@ -18,13 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const {
-  panelTabs,
-  activePanel,
-  setTabButtonRef,
-  selectPanel,
-  handleTabKeydown,
   alertCount,
-  healthSummary,
   sortedContainers,
   metaPills,
   overviewMetrics,
@@ -38,47 +32,11 @@ const {
 
 <template>
   <div class="workspace-shell">
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Operations Workspace</span>
-        <span class="class-chip">系统值守</span>
-      </div>
-      <div class="top-note">
-        <span>资源告警 {{ alertCount }} 条</span>
-        <span>热点容器 {{ sortedContainers.length }} 个</span>
-      </div>
-    </header>
-
-    <nav class="top-tabs" role="tablist" aria-label="系统值守视图切换">
-      <button
-        v-for="(tab, index) in panelTabs"
-        :id="tab.tabId"
-        :key="tab.key"
-        :ref="(element) => setTabButtonRef(tab.key, element as HTMLButtonElement | null)"
-        class="top-tab"
-        type="button"
-        role="tab"
-        :tabindex="activePanel === tab.key ? 0 : -1"
-        :aria-selected="activePanel === tab.key ? 'true' : 'false'"
-        :aria-controls="tab.panelId"
-        :class="{ active: activePanel === tab.key }"
-        @click="selectPanel(tab.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
-
     <div class="workspace-grid">
       <main class="content-pane">
         <section
-          v-show="activePanel === 'overview'"
-          id="admin-dashboard-panel-overview"
-          class="workspace-hero tab-panel"
-          :class="{ active: activePanel === 'overview' }"
-          role="tabpanel"
-          aria-labelledby="admin-dashboard-tab-overview"
-          :aria-hidden="activePanel === 'overview' ? 'false' : 'true'"
+          id="admin-dashboard-overview"
+          class="workspace-hero"
         >
           <div class="workspace-tab-heading__main">
             <div class="workspace-overline">Operations Workspace</div>
@@ -97,7 +55,11 @@ const {
             </div>
 
             <div class="progress-strip metric-panel-grid">
-              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card metric-panel-card">
+              <article
+                v-for="item in overviewMetrics"
+                :key="item.key"
+                class="progress-card metric-panel-card"
+              >
                 <div class="progress-card-label metric-panel-label">
                   {{ item.label }}
                 </div>
@@ -127,12 +89,12 @@ const {
                 >
                   <span>风险研判</span><span>→</span>
                 </button>
-                <button type="button" class="quick-action" @click="selectPanel('alerts')">
+                <a class="quick-action" href="#admin-dashboard-alerts">
                   <span>查看当前告警</span><span>→</span>
-                </button>
-                <button type="button" class="quick-action" @click="selectPanel('hotspots')">
+                </a>
+                <a class="quick-action" href="#admin-dashboard-hotspots">
                   <span>查看资源热点</span><span>→</span>
-                </button>
+                </a>
               </div>
             </div>
 
@@ -166,7 +128,11 @@ const {
             </div>
 
             <div v-else-if="loading" class="progress-strip metric-panel-grid">
-              <div v-for="index in 4" :key="index" class="progress-card progress-card--skeleton metric-panel-card" />
+              <div
+                v-for="index in 4"
+                :key="index"
+                class="progress-card progress-card--skeleton metric-panel-card"
+              />
             </div>
           </div>
 
@@ -183,13 +149,8 @@ const {
         </section>
 
         <section
-          v-show="activePanel === 'alerts'"
-          id="admin-dashboard-panel-alerts"
-          class="section tab-panel"
-          :class="{ active: activePanel === 'alerts' }"
-          role="tabpanel"
-          aria-labelledby="admin-dashboard-tab-alerts"
-          :aria-hidden="activePanel === 'alerts' ? 'false' : 'true'"
+          id="admin-dashboard-alerts"
+          class="section"
         >
           <div class="section-head list-heading">
             <div>
@@ -228,13 +189,8 @@ const {
         </section>
 
         <section
-          v-show="activePanel === 'hotspots'"
-          id="admin-dashboard-panel-hotspots"
-          class="section tab-panel"
-          :class="{ active: activePanel === 'hotspots' }"
-          role="tabpanel"
-          aria-labelledby="admin-dashboard-tab-hotspots"
-          :aria-hidden="activePanel === 'hotspots' ? 'false' : 'true'"
+          id="admin-dashboard-hotspots"
+          class="section"
         >
           <div class="section-head list-heading">
             <div>
@@ -352,10 +308,6 @@ const {
   gap: var(--space-7);
   padding-bottom: var(--space-6);
   border-bottom: 1px solid var(--workspace-line-soft);
-}
-
-.tab-panel.workspace-hero.active {
-  display: grid;
 }
 
 .hero-title {
@@ -835,20 +787,9 @@ const {
 }
 
 @media (max-width: 640px) {
-  .workspace-topbar,
-  .top-tabs,
   .content-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);
-  }
-
-  .workspace-topbar {
-    display: block;
-  }
-
-  .top-note {
-    justify-content: flex-start;
-    margin-top: var(--space-3);
   }
 
   .progress-strip {

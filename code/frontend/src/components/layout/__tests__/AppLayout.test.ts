@@ -4,6 +4,17 @@ import appLayoutSource from '../AppLayout.vue?raw'
 import routerSource from '../../../router/index.ts?raw'
 
 describe('AppLayout workspace shell', () => {
+  it('switches academy and platform routes into a shared backoffice shell while leaving student routes on the default layout', () => {
+    expect(appLayoutSource).toContain('isBackofficeRoute(route.path)')
+    expect(appLayoutSource).toContain('workspace-main--backoffice')
+    expect(appLayoutSource).not.toContain('BackofficeSubNav')
+  })
+
+  it('suppresses route-level workspace topbars in backoffice mode so pages do not duplicate the global topnav', () => {
+    expect(appLayoutSource).toContain('.workspace-main--backoffice :deep(.workspace-shell > .workspace-topbar)')
+    expect(appLayoutSource).toContain('display: none;')
+  })
+
   it('owns full-bleed page spacing and drives it from route meta', () => {
     expect(appLayoutSource).toContain('<RouterView v-slot="{ Component }">')
     expect(appLayoutSource).toContain('workspace-page')

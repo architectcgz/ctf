@@ -64,45 +64,38 @@ describe('AdminDashboard', () => {
     expect(wrapper.text()).toContain('web-01')
   })
 
-  it('应该将总览、当前告警与资源热点拆分为独立 tab', async () => {
+  it('应该移除页面内 tab，并直接展示总览、当前告警与资源热点三个区块', async () => {
     const wrapper = mount(AdminDashboard)
 
     await flushPromises()
 
-    expect(wrapper.find('#admin-dashboard-tab-overview').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#admin-dashboard-tab-alerts').attributes('aria-selected')).toBe('false')
-    expect(wrapper.find('#admin-dashboard-tab-hotspots').attributes('aria-selected')).toBe('false')
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false)
+    expect(wrapper.find('#admin-dashboard-tab-overview').exists()).toBe(false)
+    expect(wrapper.find('#admin-dashboard-tab-alerts').exists()).toBe(false)
+    expect(wrapper.find('#admin-dashboard-tab-hotspots').exists()).toBe(false)
 
-    expect(wrapper.find('#admin-dashboard-panel-overview').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#admin-dashboard-panel-alerts').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#admin-dashboard-panel-hotspots').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#admin-dashboard-panel-overview').text()).toContain('审计日志')
-
-    await wrapper.get('#admin-dashboard-tab-alerts').trigger('click')
-
-    expect(wrapper.find('#admin-dashboard-tab-alerts').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#admin-dashboard-panel-alerts').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#admin-dashboard-panel-alerts').text()).toContain('CPU 持续高于阈值')
-
-    await wrapper.get('#admin-dashboard-tab-hotspots').trigger('click')
-
-    expect(wrapper.find('#admin-dashboard-tab-hotspots').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#admin-dashboard-panel-hotspots').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#admin-dashboard-panel-hotspots').text()).toContain('web-01')
+    expect(wrapper.find('#admin-dashboard-overview').exists()).toBe(true)
+    expect(wrapper.find('#admin-dashboard-alerts').exists()).toBe(true)
+    expect(wrapper.find('#admin-dashboard-hotspots').exists()).toBe(true)
+    expect(wrapper.find('#admin-dashboard-overview').text()).toContain('审计日志')
+    expect(wrapper.find('#admin-dashboard-alerts').text()).toContain('CPU 持续高于阈值')
+    expect(wrapper.find('#admin-dashboard-hotspots').text()).toContain('web-01')
   })
 
-  it('应该将标签栏放在页面顶部标题之前，与其他工作台页面保持一致', () => {
-    expect(adminDashboardPageSource).toContain('role="tablist"')
-    expect(adminDashboardPageSource.indexOf('role="tablist"')).toBeLessThan(
-      adminDashboardPageSource.indexOf('系统值守台'),
-    )
+  it('应该去掉页面内顶部标签栏', () => {
+    expect(adminDashboardPageSource).not.toContain('role="tablist"')
+    expect(adminDashboardPageSource).not.toContain('class="top-tabs"')
+    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-overview')
+    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-alerts')
+    expect(adminDashboardPageSource).not.toContain('admin-dashboard-tab-hotspots')
   })
 
-  it('应该采用与 teacher dashboard 一致的 workspace 骨架，而不是独立的中后台容器风格', () => {
+  it('应该采用与 teacher dashboard 一致的 workspace 骨架，并去掉页面内重复顶栏', () => {
     expect(adminDashboardPageSource).toContain('class="workspace-shell"')
-    expect(adminDashboardPageSource).toContain('class="workspace-topbar"')
+    expect(adminDashboardPageSource).not.toContain('class="workspace-topbar"')
     expect(adminDashboardPageSource).toContain('class="content-pane"')
-    expect(adminDashboardPageSource).toContain('class="workspace-hero tab-panel"')
+    expect(adminDashboardPageSource).toContain('class="workspace-hero"')
+    expect(adminDashboardPageSource).not.toContain('tab-panel')
     expect(adminDashboardPageSource).toMatch(/class="[^"]*\bhero-title\b[^"]*"/)
     expect(adminDashboardPageSource).toContain('系统值守台')
     expect(adminDashboardPageSource).toContain('class="hero-summary"')

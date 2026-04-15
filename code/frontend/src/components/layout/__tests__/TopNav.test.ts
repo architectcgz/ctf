@@ -32,6 +32,16 @@ function createTestRouter() {
         component: { template: '<div>dashboard</div>' },
         meta: { title: '仪表盘' },
       },
+      {
+        path: '/academy/overview',
+        component: { template: '<div>academy</div>' },
+        meta: { title: '教学概览' },
+      },
+      {
+        path: '/admin/dashboard',
+        component: { template: '<div>admin</div>' },
+        meta: { title: '系统概览' },
+      },
     ],
   })
 }
@@ -141,7 +151,24 @@ describe('TopNav', () => {
 
   it('通知按钮应当显式保留和相邻工具按钮一致的外边框', () => {
     expect(topNavSource).toMatch(
-      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid color-mix\(in srgb,\s*var\(--color-border-default\)\s*74%,\s*transparent\);/s
+      /\.topnav-actions\s*:deep\(\.notification-trigger\)\s*\{[\s\S]*border:\s*1px solid #f1f5f9;/s
     )
+  })
+
+  it('supports a dedicated admin workspace treatment on platform routes', () => {
+    expect(topNavSource).toContain('const isBackofficeRoute = computed(() =>')
+    expect(topNavSource).toContain("import { isBackofficeRoute as checkBackofficeRoute }")
+    expect(topNavSource).toContain('checkBackofficeRoute(route.path)')
+    expect(topNavSource).toContain('topnav-shell--admin')
+    expect(topNavSource).toContain('Workspace')
+  })
+
+  it('renders backoffice breadcrumbs from sidebar module and submenu instead of the removed horizontal subnav', () => {
+    expect(topNavSource).toContain('getBackofficeModuleByPath')
+    expect(topNavSource).toContain('getVisibleBackofficeSecondaryItems')
+    expect(topNavSource).toContain('backofficeBreadcrumb')
+    expect(topNavSource).toContain('backofficeBreadcrumb.moduleLabel')
+    expect(topNavSource).toContain('backofficeBreadcrumb.secondaryLabel')
+    expect(topNavSource).not.toContain('Backoffice Workspace / {{ pageTitle }}')
   })
 })

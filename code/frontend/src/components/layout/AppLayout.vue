@@ -19,7 +19,7 @@
           @toggle-sidebar="sidebarOpen = true"
           @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
         />
-        <main class="workspace-main mx-auto w-full" :class="mainShellClass">
+        <main class="workspace-main mx-auto w-full" :class="[mainShellClass, backofficeMainClass]">
           <div class="workspace-page" :class="pageShellClass">
             <RouterView v-slot="{ Component }">
               <component :is="Component" class="workspace-route-root" :class="routeRootClass" />
@@ -39,13 +39,18 @@ import { RouterView } from 'vue-router'
 import Sidebar from '@/components/layout/Sidebar.vue'
 import TopNav from '@/components/layout/TopNav.vue'
 import { useNotificationRealtime } from '@/composables/useNotificationRealtime'
+import { isBackofficeRoute } from '@/utils/backofficeRouteMeta'
 
 const route = useRoute()
 const { start, status: notificationStatus } = useNotificationRealtime()
 const sidebarCollapsed = ref(false)
 const sidebarOpen = ref(false)
+const isBackofficeLayout = computed(() => isBackofficeRoute(route.path))
 const mainShellClass = computed(() =>
   route.meta.contentLayout === 'bleed' ? 'workspace-main--bleed' : 'workspace-main--default'
+)
+const backofficeMainClass = computed(() =>
+  isBackofficeLayout.value ? 'workspace-main--backoffice' : ''
 )
 const pageShellClass = computed(() =>
   route.meta.contentLayout === 'bleed' ? 'workspace-page--bleed' : ''
@@ -111,6 +116,14 @@ watch(
   max-width: none;
   padding-block: 0;
   padding-inline: 0;
+}
+
+.workspace-main--backoffice {
+  max-width: none;
+}
+
+.workspace-main--backoffice :deep(.workspace-shell > .workspace-topbar) {
+  display: none;
 }
 
 .workspace-page {
