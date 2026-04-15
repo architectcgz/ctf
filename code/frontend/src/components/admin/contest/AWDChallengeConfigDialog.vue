@@ -645,10 +645,10 @@ function handleSubmit() {
       </div>
 
       <section class="checker-config-block">
-        <header class="checker-config-block__head">
+        <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Checker Config</div>
-            <h3 class="checker-config-block__title">
+            <h3 class="list-heading__title checker-config-block__title">
               {{
                 form.awd_checker_type === 'http_standard'
                   ? 'HTTP Standard 配置'
@@ -992,10 +992,10 @@ function handleSubmit() {
       </section>
 
       <section class="checker-config-block">
-        <header class="checker-config-block__head">
+        <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Payload Preview</div>
-            <h3 class="checker-config-block__title">最终 JSON 预览</h3>
+            <h3 class="list-heading__title checker-config-block__title">最终 JSON 预览</h3>
           </div>
           <p class="checker-config-block__hint">保存时会按下面的结构写入 `awd_checker_config`。</p>
         </header>
@@ -1009,10 +1009,10 @@ function handleSubmit() {
         v-if="mode === 'edit' && (savedValidationStateLabel || savedPreviewResult)"
         class="checker-config-block"
       >
-        <header class="checker-config-block__head">
+        <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Saved Validation</div>
-            <h3 class="checker-config-block__title">最近一次已保存校验</h3>
+            <h3 class="list-heading__title checker-config-block__title">最近一次已保存校验</h3>
           </div>
           <p class="checker-config-block__hint">
             这里显示已经写入赛事题目配置的校验状态；如果后续改了 Checker 草稿，需要重新试跑。
@@ -1042,10 +1042,10 @@ function handleSubmit() {
       </section>
 
       <section class="checker-config-block">
-        <header class="checker-config-block__head">
+        <header class="list-heading checker-config-block__head">
           <div>
             <div class="journal-note-label">Checker Preview</div>
-            <h3 class="checker-config-block__title">试跑 Checker</h3>
+            <h3 class="list-heading__title checker-config-block__title">试跑 Checker</h3>
           </div>
           <p class="checker-config-block__hint">
             会按当前配置真实请求目标地址，但不会写入轮次、服务状态和排行榜数据。
@@ -1248,13 +1248,27 @@ function handleSubmit() {
   border-top: 1px solid color-mix(in srgb, var(--journal-border) 74%, transparent);
 }
 
+.list-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.list-heading__title {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-1-20);
+  font-weight: 700;
+  color: var(--journal-ink);
+}
+
 .checker-config-block__head {
-  display: grid;
-  gap: 0.45rem;
+  align-items: flex-start;
 }
 
 .checker-config-block__title {
-  margin: 0;
+  color: inherit;
 }
 
 .checker-config-block__hint {
