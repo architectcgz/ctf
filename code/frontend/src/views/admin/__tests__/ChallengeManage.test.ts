@@ -62,7 +62,7 @@ describe('ChallengeManage', () => {
     adminApiMocks.getChallenges.mockResolvedValue({
       list: [
         {
-          id: '1',
+          id: 'challenge-legacy-id-001',
           title: 'Test Challenge',
           category: 'web',
           difficulty: 'easy',
@@ -127,6 +127,20 @@ describe('ChallengeManage', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('题目管理')
     expect(wrapper.text()).toContain('Test Challenge')
+  })
+
+  it('题目管理列表应改用共享列表组件，并且不再显示题目 ID 列', async () => {
+    expect(challengeManageSource).toContain("from '@/components/common/WorkspaceDataTable.vue'")
+    expect(challengeManageSource).toContain('<WorkspaceDataTable')
+    expect(challengeManageSource).not.toContain('>题目 ID<')
+    expect(challengeManageSource).not.toContain('检索题目 ID 或名称...')
+
+    const wrapper = mount(ChallengeManage)
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('题目名称')
+    expect(wrapper.text()).not.toContain('题目 ID')
+    expect(wrapper.text()).not.toContain('challenge-legacy-id')
   })
 
   it('支持多选上传并在上传区域下方显示结果', async () => {

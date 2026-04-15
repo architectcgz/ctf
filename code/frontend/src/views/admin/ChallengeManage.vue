@@ -22,7 +22,8 @@ import {
 
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
 import ChallengePackageImportEntry from '@/components/admin/challenge/ChallengePackageImportEntry.vue'
-import { useAdminChallenges } from '@/composables/useAdminChallenges'
+import WorkspaceDataTable from '@/components/common/WorkspaceDataTable.vue'
+import { useAdminChallenges, type AdminChallengeListRow } from '@/composables/useAdminChallenges'
 import { useChallengeManagePresentation } from '@/composables/useChallengeManagePresentation'
 import { useChallengePackageImport } from '@/composables/useChallengePackageImport'
 import { useRouteQueryTabs } from '@/composables/useRouteQueryTabs'
@@ -140,6 +141,48 @@ const sortOptions = [
   { key: 'points', order: 'asc', label: '分值由低到高', icon: ArrowUpNarrowWide },
   { key: 'title', order: 'asc', label: '标题 A-Z', icon: SortAsc },
 ]
+const challengeTableColumns = [
+  {
+    key: 'title',
+    label: '题目名称',
+    widthClass: 'w-[42%] min-w-[18rem]',
+    cellClass: 'challenge-table__title-cell',
+  },
+  {
+    key: 'category',
+    label: '分类',
+    align: 'center' as const,
+    widthClass: 'w-[12%] min-w-[6rem]',
+    cellClass: 'challenge-table__compact-cell',
+  },
+  {
+    key: 'difficulty',
+    label: '难度',
+    align: 'center' as const,
+    widthClass: 'w-[11%] min-w-[5.5rem]',
+    cellClass: 'challenge-table__compact-cell',
+  },
+  {
+    key: 'points',
+    label: '分值',
+    align: 'center' as const,
+    widthClass: 'w-[10%] min-w-[5rem]',
+    cellClass: 'challenge-table__points-cell',
+  },
+  {
+    key: 'status',
+    label: '状态',
+    widthClass: 'w-[13%] min-w-[7rem]',
+    cellClass: 'challenge-table__compact-cell',
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    align: 'right' as const,
+    widthClass: 'w-[12rem]',
+    cellClass: 'challenge-table__actions-cell',
+  },
+]
 
 function setSort(opt: (typeof sortOptions)[number]) {
   sortConfig.value = opt
@@ -198,6 +241,18 @@ async function openPackageFormatGuide(): Promise<void> {
 
 function handleTabChange(key: ChallengePanelKey) {
   switchPanel(key)
+}
+
+function resolveChallengeCategoryLabel(value: unknown): string {
+  return getCategoryLabel(String(value) as never)
+}
+
+function resolveChallengeDifficultyLabel(value: unknown): string {
+  return getDifficultyLabel(String(value) as never)
+}
+
+function getChallengeRow(row: unknown): AdminChallengeListRow {
+  return row as AdminChallengeListRow
 }
 </script>
 
@@ -318,7 +373,7 @@ function handleTabChange(key: ChallengePanelKey) {
                     v-model="keyword"
                     type="text"
                     class="challenge-search-input"
-                    placeholder="检索题目 ID 或名称..."
+                    placeholder="检索题目名称..."
                   />
                 </label>
 
@@ -437,138 +492,133 @@ function handleTabChange(key: ChallengePanelKey) {
             <div v-else-if="list.length === 0" class="challenge-directory-state">
               {{ manageEmptyMessage }}
             </div>
-            <div v-else class="challenge-table-shell workspace-directory-list">
-              <table class="challenge-table">
-                <thead class="challenge-table-head">
-                  <tr>
-                    <th class="w-[30%] min-w-[180px] px-2">题目名称</th>
-                    <th class="w-[18%] px-2 text-center">题目 ID</th>
-                    <th class="w-24 px-2 text-center">分类</th>
-                    <th class="w-20 px-2 text-center">难度</th>
-                    <th class="w-20 px-2 text-center">分值</th>
-                    <th class="w-32 px-4">状态</th>
-                    <th class="w-40 px-2 text-right">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(row, index) in list"
-                    :key="row.id"
-                    class="challenge-table-row group"
+            <WorkspaceDataTable
+              v-else
+              class="challenge-table-shell workspace-directory-list"
+              :columns="challengeTableColumns"
+              :rows="list"
+              row-key="id"
+              row-class="challenge-table-row group"
+            >
+              <template #cell-title="{ row }">
+                <div
+                  class="challenge-table-title"
+                  :title="getChallengeRow(row).title"
+                >
+                  {{ getChallengeRow(row).title }}
+                </div>
+              </template>
+
+              <template #cell-category="{ row }">
+                <span class="challenge-table-pill challenge-table-pill--category">
+                  {{ resolveChallengeCategoryLabel(getChallengeRow(row).category) }}
+                </span>
+              </template>
+
+              <template #cell-difficulty="{ row }">
+                <span class="challenge-table-difficulty">
+                  {{ resolveChallengeDifficultyLabel(getChallengeRow(row).difficulty) }}
+                </span>
+              </template>
+
+              <template #cell-points="{ row }">
+                <span class="challenge-table-points">{{ getChallengeRow(row).points }}</span>
+              </template>
+
+              <template #cell-status="{ row }">
+                <div class="challenge-table-status">
+                  <div
+                    class="challenge-table-status__dot"
+                    :class="
+                      getChallengeRow(row).status === 'published'
+                        ? 'challenge-table-status__dot--published'
+                        : 'challenge-table-status__dot--idle'
+                    "
+                  />
+                  <span class="challenge-table-status__label">
+                    {{
+                      getChallengeRow(row).status === 'published'
+                        ? '已发布'
+                        : getChallengeRow(row).status === 'archived'
+                          ? '已归档'
+                          : '草稿'
+                    }}
+                  </span>
+                </div>
+              </template>
+
+              <template #cell-actions="{ row, index }">
+                <div class="challenge-table-actions">
+                  <button
+                    type="button"
+                    class="challenge-row-action"
+                    @click="openChallengeDetail(getChallengeRow(row).id)"
                   >
-                    <td class="truncate px-2 py-3.5 font-bold text-slate-900 group-hover:text-blue-600 transition-colors" :title="row.title">
-                      {{ row.title }}
-                    </td>
-                    <td
-                      class="truncate px-2 py-3.5 text-center font-mono text-[10px] font-bold uppercase tracking-tighter text-slate-400 group-hover:text-slate-600"
-                      :title="row.id"
-                    >
-                      {{ row.id.split('-').pop()?.substring(0, 10) || row.id }}
-                    </td>
-                    <td class="px-2 py-3.5 text-center">
-                      <span class="challenge-table-pill challenge-table-pill--category">
-                        {{ getCategoryLabel(row.category) }}
-                      </span>
-                    </td>
-                    <td class="px-2 py-3.5 text-center">
-                      <span class="text-[10px] font-bold uppercase text-slate-500">
-                        {{ getDifficultyLabel(row.difficulty) }}
-                      </span>
-                    </td>
-                    <td
-                      class="px-2 py-3.5 text-center font-mono text-sm font-black tracking-tighter text-slate-900"
-                    >
-                      {{ row.points }}
-                    </td>
-                    <td class="px-4 py-3.5">
-                      <div class="flex items-center gap-2">
-                        <div
-                          class="h-1.5 w-1.5 rounded-full"
-                          :class="row.status === 'published' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"
-                        />
-                        <span class="text-[11px] font-bold uppercase text-slate-700">
-                          {{
-                            row.status === 'published'
-                              ? '已发布'
-                              : row.status === 'archived'
-                                ? '已归档'
-                                : '草稿'
-                          }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="relative px-2 py-3.5 text-right">
-                      <div class="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          class="challenge-row-action"
-                          @click="openChallengeDetail(row.id)"
-                        >
-                          <Eye class="h-3 w-3" />
-                          查看
-                        </button>
+                    <Eye class="h-3 w-3" />
+                    查看
+                  </button>
 
-                        <div class="relative inline-block text-left">
-                          <button
-                            type="button"
-                            class="challenge-row-menu-button"
-                            :class="{ 'challenge-row-menu-button--active': openActionMenuId === row.id }"
-                            @click.stop="toggleActionMenu(row.id)"
-                          >
-                            <MoreHorizontal class="h-3.5 w-3.5" />
-                          </button>
+                  <div class="relative inline-block text-left">
+                    <button
+                      type="button"
+                      class="challenge-row-menu-button"
+                      :class="{
+                        'challenge-row-menu-button--active':
+                          openActionMenuId === getChallengeRow(row).id,
+                      }"
+                      @click.stop="toggleActionMenu(getChallengeRow(row).id)"
+                    >
+                      <MoreHorizontal class="h-3.5 w-3.5" />
+                    </button>
 
-                          <div
-                            v-if="openActionMenuId === row.id"
-                            class="challenge-row-menu shadow-2xl"
-                            :class="
-                              index >= list.length - 2 && list.length > 2
-                                ? 'challenge-row-menu--up'
-                                : 'challenge-row-menu--down'
-                            "
-                          >
-                            <div class="challenge-row-menu__title">Management</div>
-                            <button
-                              type="button"
-                              class="challenge-row-menu__item"
-                              @click="openChallengeTopology(row.id)"
-                            >
-                              <FileSearch class="h-3 w-3" />
-                              编排拓扑
-                            </button>
-                            <button
-                              type="button"
-                              class="challenge-row-menu__item"
-                              @click="openChallengeWriteup(row.id)"
-                            >
-                              <Book class="h-3 w-3" />
-                              题解与提示
-                            </button>
-                            <button
-                              v-if="row.status !== 'published'"
-                              type="button"
-                              class="challenge-row-menu__item challenge-row-menu__item--success"
-                              @click="submitPublishCheck(row)"
-                            >
-                              <CheckCircle class="h-3 w-3" />
-                              提交发布检查
-                            </button>
-                            <button
-                              type="button"
-                              class="challenge-row-menu__item challenge-row-menu__item--danger"
-                              @click="removeChallenge(row.id)"
-                            >
-                              <Trash2 class="h-3 w-3" />
-                              永久删除
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                    <div
+                      v-if="openActionMenuId === getChallengeRow(row).id"
+                      class="challenge-row-menu shadow-2xl"
+                      :class="
+                        index >= list.length - 2 && list.length > 2
+                          ? 'challenge-row-menu--up'
+                          : 'challenge-row-menu--down'
+                      "
+                    >
+                      <div class="challenge-row-menu__title">Management</div>
+                      <button
+                        type="button"
+                        class="challenge-row-menu__item"
+                        @click="openChallengeTopology(getChallengeRow(row).id)"
+                      >
+                        <FileSearch class="h-3 w-3" />
+                        编排拓扑
+                      </button>
+                      <button
+                        type="button"
+                        class="challenge-row-menu__item"
+                        @click="openChallengeWriteup(getChallengeRow(row).id)"
+                      >
+                        <Book class="h-3 w-3" />
+                        题解与提示
+                      </button>
+                      <button
+                        v-if="getChallengeRow(row).status !== 'published'"
+                        type="button"
+                        class="challenge-row-menu__item challenge-row-menu__item--success"
+                        @click="submitPublishCheck(getChallengeRow(row))"
+                      >
+                        <CheckCircle class="h-3 w-3" />
+                        提交发布检查
+                      </button>
+                      <button
+                        type="button"
+                        class="challenge-row-menu__item challenge-row-menu__item--danger"
+                        @click="removeChallenge(getChallengeRow(row).id)"
+                      >
+                        <Trash2 class="h-3 w-3" />
+                        永久删除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </WorkspaceDataTable>
 
             <div v-if="total > 0" class="workspace-directory-pagination challenge-manage-pagination">
               <AdminPaginationControls
@@ -1080,35 +1130,8 @@ function handleTabChange(key: ChallengePanelKey) {
   color: #2563eb;
 }
 
-.challenge-table-shell {
-  border: none;
-  background: transparent;
-}
-
-.challenge-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.challenge-table-head th {
-  padding: 0.75rem 0.5rem;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #94a3b8;
-  border-bottom: 1px solid #e2e8f0;
-  text-align: left;
-}
-
 .challenge-table-row {
-  border-bottom: 1px solid #f1f5f9;
-  background: transparent;
-  transition: all 0.2s ease;
-}
-
-.challenge-table-row:hover {
-  background: rgba(226, 232, 240, 0.4);
+  position: relative;
 }
 
 .challenge-table-pill {
@@ -1118,7 +1141,7 @@ function handleTabChange(key: ChallengePanelKey) {
   height: 1.4rem;
   padding: 0 0.5rem;
   border-radius: 4px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -1130,6 +1153,81 @@ function handleTabChange(key: ChallengePanelKey) {
   border: 1px solid rgba(37, 99, 235, 0.1);
 }
 
+.challenge-table__title-cell {
+  min-width: 0;
+}
+
+.challenge-table__compact-cell,
+.challenge-table__points-cell,
+.challenge-table__actions-cell {
+  font-size: 13px;
+}
+
+.challenge-table-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  transition: color 0.2s ease;
+}
+
+.group:hover .challenge-table-title {
+  color: #2563eb;
+}
+
+.challenge-table-difficulty {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.challenge-table-points {
+  font-family: var(--font-family-mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.challenge-table-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.challenge-table-status__dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+}
+
+.challenge-table-status__dot--published {
+  background: #10b981;
+  animation: challengeStatusPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.challenge-table-status__dot--idle {
+  background: #cbd5e1;
+}
+
+.challenge-table-status__label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #334155;
+}
+
+.challenge-table-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
 .challenge-row-action {
   display: inline-flex;
   align-items: center;
@@ -1137,7 +1235,7 @@ function handleTabChange(key: ChallengePanelKey) {
   height: 1.85rem;
   padding: 0 0.75rem;
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: #2563eb;
   transition: all 0.2s ease;
@@ -1212,6 +1310,17 @@ function handleTabChange(key: ChallengePanelKey) {
 
 .challenge-manage-pagination {
   margin-top: 1.5rem;
+}
+
+@keyframes challengeStatusPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
 }
 
 @media (max-width: 1023px) {
