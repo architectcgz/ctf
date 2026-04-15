@@ -4,6 +4,7 @@ import { BellRing, CalendarRange, Clock3, Flag, Swords, Trophy, UsersRound } fro
 import { RouterLink, useRoute } from 'vue-router'
 
 import AppEmpty from '@/components/common/AppEmpty.vue'
+import CFocusedInputDialog from '@/components/common/modal-templates/CFocusedInputDialog.vue'
 import ContestAWDWorkspacePanel from '@/components/contests/ContestAWDWorkspacePanel.vue'
 import ContestAnnouncementRealtimeBridge from '@/components/contests/ContestAnnouncementRealtimeBridge.vue'
 import { useContestDetailPage } from '@/composables/useContestDetailPage'
@@ -570,57 +571,81 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       </div>
     </section>
 
-    <div v-if="showCreateTeam" class="contest-modal-overlay" @click.self="closeCreateTeam">
-      <div class="contest-modal">
-        <h3 class="contest-modal__title">创建队伍</h3>
+    <CFocusedInputDialog
+      :open="showCreateTeam"
+      title="创建新队伍"
+      description="为你的战队起一个响亮的代号。创建完成后，你可以生成邀请链接让其他队友加入。"
+      aria-label="创建队伍"
+      @update:open="showCreateTeam = $event"
+      @close="closeCreateTeam"
+    >
+      <template #icon>
+        <UsersRound class="h-6 w-6" :stroke-width="2" />
+      </template>
+
+      <div class="contest-team-dialog-field">
+        <label for="contest-create-team-name">队伍名称</label>
         <input
+          id="contest-create-team-name"
           v-model="teamName"
           type="text"
-          placeholder="队伍名称"
-          class="contest-modal__input"
+          placeholder="例如：HackerG1"
           @keyup.enter="createTeamAction"
         />
-        <div class="contest-modal__actions">
-          <button type="button" class="contest-btn contest-btn--ghost" @click="closeCreateTeam">
-            取消
-          </button>
-          <button
-            type="button"
-            :disabled="creatingTeam"
-            class="contest-btn contest-btn--primary"
-            @click="createTeamAction"
-          >
-            {{ creatingTeam ? '创建中...' : '创建' }}
-          </button>
-        </div>
       </div>
-    </div>
 
-    <div v-if="showJoinTeam" class="contest-modal-overlay" @click.self="closeJoinTeam">
-      <div class="contest-modal">
-        <h3 class="contest-modal__title">加入队伍</h3>
+      <template #footer="{ close }">
+        <button type="button" data-c-modal-action="ghost" @click="close">
+          取消
+        </button>
+        <button
+          type="button"
+          data-c-modal-action="primary"
+          :disabled="creatingTeam"
+          @click="createTeamAction"
+        >
+          {{ creatingTeam ? '创建中...' : '确认创建' }}
+        </button>
+      </template>
+    </CFocusedInputDialog>
+
+    <CFocusedInputDialog
+      :open="showJoinTeam"
+      title="加入现有队伍"
+      description="输入队伍 ID 后立即加入当前战队。加入成功后，你会同步看到队伍成员与竞赛工作区。"
+      aria-label="加入队伍"
+      @update:open="showJoinTeam = $event"
+      @close="closeJoinTeam"
+    >
+      <template #icon>
+        <UsersRound class="h-6 w-6" :stroke-width="2" />
+      </template>
+
+      <div class="contest-team-dialog-field">
+        <label for="contest-join-team-id">队伍 ID</label>
         <input
+          id="contest-join-team-id"
           v-model="teamIdInput"
           type="text"
-          placeholder="队伍 ID"
-          class="contest-modal__input"
+          placeholder="输入队伍 ID"
           @keyup.enter="joinTeamAction"
         />
-        <div class="contest-modal__actions">
-          <button type="button" class="contest-btn contest-btn--ghost" @click="closeJoinTeam">
-            取消
-          </button>
-          <button
-            type="button"
-            :disabled="joiningTeam"
-            class="contest-btn contest-btn--primary"
-            @click="joinTeamAction"
-          >
-            {{ joiningTeam ? '加入中...' : '加入' }}
-          </button>
-        </div>
       </div>
-    </div>
+
+      <template #footer="{ close }">
+        <button type="button" data-c-modal-action="ghost" @click="close">
+          取消
+        </button>
+        <button
+          type="button"
+          data-c-modal-action="primary"
+          :disabled="joiningTeam"
+          @click="joinTeamAction"
+        >
+          {{ joiningTeam ? '加入中...' : '确认加入' }}
+        </button>
+      </template>
+    </CFocusedInputDialog>
   </div>
 </template>
 
@@ -1218,51 +1243,8 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   align-content: center;
 }
 
-.contest-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
+.contest-team-dialog-field {
   display: grid;
-  place-items: center;
-  background: color-mix(in srgb, black 45%, transparent);
-  padding: 1rem;
-}
-
-.contest-modal {
-  width: min(28rem, 100%);
-  border: 1px solid var(--journal-border);
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--journal-surface) 98%, var(--color-bg-base));
-  padding: 1rem;
-}
-
-.contest-modal__title {
-  font-size: var(--font-size-1-00);
-  font-weight: 700;
-  color: var(--journal-ink);
-}
-
-.contest-modal__input {
-  margin-top: 0.8rem;
-  width: 100%;
-  min-height: 2.8rem;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 96%, var(--color-bg-base));
-  padding: 0.65rem 0.9rem;
-  color: var(--journal-ink);
-  outline: none;
-}
-
-.contest-modal__input:focus {
-  border-color: color-mix(in srgb, var(--contest-accent) 44%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--contest-accent) 10%, transparent);
-}
-
-.contest-modal__actions {
-  margin-top: 0.8rem;
-  display: flex;
-  justify-content: flex-end;
   gap: 0.5rem;
 }
 
