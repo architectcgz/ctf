@@ -143,6 +143,24 @@ describe('ChallengeManage', () => {
     expect(wrapper.text()).not.toContain('challenge-legacy-id')
   })
 
+  it('更多操作菜单应浮到表格滚动层之上，而不是渲染在列表容器内部', async () => {
+    const wrapper = mount(ChallengeManage, {
+      attachTo: document.body,
+    })
+    await flushPromises()
+
+    await wrapper.get('.challenge-row-menu-button').trigger('click')
+    await flushPromises()
+
+    const teleportedMenu = document.body.querySelector('.challenge-row-menu')
+    expect(teleportedMenu).not.toBeNull()
+    expect(
+      wrapper.find('.workspace-directory-list .challenge-row-menu').exists()
+    ).toBe(false)
+
+    wrapper.unmount()
+  })
+
   it('支持多选上传并在上传区域下方显示结果', async () => {
     adminApiMocks.previewChallengeImport
       .mockResolvedValueOnce({
