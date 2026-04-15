@@ -116,7 +116,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	authGroup.GET("/cas/callback", authModule.Handler.CASCallback)
 
 	protected := apiV1.Group("")
-	protected.Use(middleware.Auth(identityModule.TokenService))
+	protected.Use(middleware.Auth(identityModule.TokenService, identityModule.Users))
 	if cfg.RateLimit.Global.Enabled {
 		protected.Use(middleware.RateLimitByUser(rateChecker, "global", cfg.RateLimit.Global.Limit, cfg.RateLimit.Global.Window))
 	}

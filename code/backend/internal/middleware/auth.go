@@ -8,12 +8,18 @@ import (
 
 	"ctf-platform/internal/authctx"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	"ctf-platform/pkg/errcode"
 	jwtpkg "ctf-platform/pkg/jwt"
 	"ctf-platform/pkg/response"
 )
 
-func Auth(tokenService authcontracts.TokenService) gin.HandlerFunc {
+func Auth(tokenService authcontracts.TokenService, users ...identitycontracts.UserRepository) gin.HandlerFunc {
+	var userRepo identitycontracts.UserRepository
+	if len(users) > 0 {
+		userRepo = users[0]
+	}
+
 	return func(c *gin.Context) {
 		tokenString := extractBearerToken(c.GetHeader("Authorization"))
 		if tokenString == "" {
@@ -46,10 +52,27 @@ func Auth(tokenService authcontracts.TokenService) gin.HandlerFunc {
 			return
 		}
 
+		username := claims.Username
+		role := claims.Role
+		if userRepo != nil {
+			user, err := userRepo.FindByID(c.Request.Context(), claims.UserID)
+			if err != nil {
+				if errors.Is(err, identitycontracts.ErrUserNotFound) {
+					response.Error(c, errcode.ErrUnauthorized)
+				} else {
+					response.FromError(c, errcode.ErrInternal.WithCause(err))
+				}
+				c.Abort()
+				return
+			}
+			username = user.Username
+			role = user.Role
+		}
+
 		authctx.SetCurrentUser(c, authctx.CurrentUser{
 			UserID:    claims.UserID,
-			Username:  claims.Username,
-			Role:      claims.Role,
+			Username:  username,
+			Role:      role,
 			JTI:       claims.ID,
 			ExpiresAt: claims.ExpiresAt.Time,
 		})
