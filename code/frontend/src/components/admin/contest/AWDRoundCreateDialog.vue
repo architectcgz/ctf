@@ -103,71 +103,65 @@ function handleSubmit() {
     @update:open="emit('update:open', $event)"
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-number"
-          >轮次编号</label
-        >
-        <input
-          id="awd-round-number"
-          v-model.number="form.round_number"
-          type="number"
-          min="1"
-          step="1"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-        />
-        <p v-if="fieldErrors.round_number" class="text-xs text-[var(--color-danger)]">
+      <div class="ui-field awd-round-field">
+        <label class="ui-field__label" for="awd-round-number">轮次编号</label>
+        <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.round_number }">
+          <input
+            id="awd-round-number"
+            v-model.number="form.round_number"
+            type="number"
+            min="1"
+            step="1"
+            class="ui-control"
+          />
+        </span>
+        <p v-if="fieldErrors.round_number" class="ui-field__error">
           {{ fieldErrors.round_number }}
         </p>
       </div>
 
-      <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-status"
-          >初始状态</label
-        >
-        <select
-          id="awd-round-status"
-          v-model="form.status"
-          class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-        >
-          <option value="pending">待开始</option>
-          <option value="running">进行中</option>
-          <option value="finished">已结束</option>
-        </select>
+      <div class="ui-field awd-round-field">
+        <label class="ui-field__label" for="awd-round-status">初始状态</label>
+        <span class="ui-control-wrap">
+          <select id="awd-round-status" v-model="form.status" class="ui-control">
+            <option value="pending">待开始</option>
+            <option value="running">进行中</option>
+            <option value="finished">已结束</option>
+          </select>
+        </span>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-2">
-        <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-score"
-            >攻击分</label
-          >
-          <input
-            id="awd-attack-score"
-            v-model.number="form.attack_score"
-            type="number"
-            min="0"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.attack_score" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-round-field">
+          <label class="ui-field__label" for="awd-attack-score">攻击分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.attack_score }">
+            <input
+              id="awd-attack-score"
+              v-model.number="form.attack_score"
+              type="number"
+              min="0"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.attack_score" class="ui-field__error">
             {{ fieldErrors.attack_score }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-defense-score"
-            >防守分</label
-          >
-          <input
-            id="awd-defense-score"
-            v-model.number="form.defense_score"
-            type="number"
-            min="0"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.defense_score" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-round-field">
+          <label class="ui-field__label" for="awd-defense-score">防守分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.defense_score }">
+            <input
+              id="awd-defense-score"
+              v-model.number="form.defense_score"
+              type="number"
+              min="0"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.defense_score" class="ui-field__error">
             {{ fieldErrors.defense_score }}
           </p>
         </div>
@@ -175,11 +169,11 @@ function handleSubmit() {
     </form>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-2">
+      <div class="awd-round-dialog__footer">
         <button
           id="awd-round-create-cancel"
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
+          class="ui-btn ui-btn--secondary"
           @click="closeDialog"
         >
           取消
@@ -187,7 +181,7 @@ function handleSubmit() {
         <button
           id="awd-round-create-submit"
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          class="ui-btn ui-btn--primary"
           :disabled="saving"
           @click="handleSubmit"
         >
@@ -197,3 +191,22 @@ function handleSubmit() {
     </template>
   </AdminSurfaceModal>
 </template>
+
+<style scoped>
+.awd-round-field {
+  --ui-field-gap: var(--space-2);
+}
+
+.awd-round-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+@media (max-width: 767px) {
+  .awd-round-dialog__footer {
+    flex-direction: column-reverse;
+  }
+}
+</style>
