@@ -700,8 +700,8 @@ function handleSubmit() {
           </div>
 
           <section class="checker-action-section">
-            <header class="checker-action-section__head">
-              <div class="journal-note-label">PUT Flag</div>
+            <header class="list-heading checker-action-section__head">
+              <h4 class="list-heading__title checker-action-section__title">PUT Flag</h4>
               <p class="checker-action-section__hint">写入当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
@@ -803,8 +803,8 @@ function handleSubmit() {
           </section>
 
           <section class="checker-action-section">
-            <header class="checker-action-section__head">
-              <div class="journal-note-label">GET Flag</div>
+            <header class="list-heading checker-action-section__head">
+              <h4 class="list-heading__title checker-action-section__title">GET Flag</h4>
               <p class="checker-action-section__hint">回读并校验当前轮 flag。</p>
             </header>
             <div class="checker-action-grid">
@@ -907,8 +907,8 @@ function handleSubmit() {
           </section>
 
           <section class="checker-action-section">
-            <header class="checker-action-section__head">
-              <div class="journal-note-label">Havoc</div>
+            <header class="list-heading checker-action-section__head">
+              <h4 class="list-heading__title checker-action-section__title">Havoc</h4>
               <p class="checker-action-section__hint">可选动作，路径留空时视为未启用。</p>
             </header>
             <div class="checker-action-grid">
@@ -1326,11 +1326,13 @@ function handleSubmit() {
 }
 
 .checker-action-section__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.checker-action-section__title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
 }
 
 .checker-action-section__hint {
