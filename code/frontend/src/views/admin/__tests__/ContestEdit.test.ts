@@ -84,6 +84,7 @@ function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
 
 describe('ContestEdit', () => {
   beforeEach(() => {
+    window.history.replaceState({}, '', '/admin/contests/contest-1/edit')
     pushMock.mockReset()
     contestApiMocks.getContest.mockReset()
     contestApiMocks.updateContest.mockReset()
@@ -282,6 +283,27 @@ describe('ContestEdit', () => {
     const stageRail = getWorkbenchStageRail(wrapper)
 
     expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
+  })
+
+  it('应该在 URL 已指定有效阶段时保留该阶段', async () => {
+    window.history.replaceState({}, '', '/admin/contests/contest-1/edit?panel=operations')
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
+    expect(window.location.search).toContain('panel=operations')
   })
 
   it('应该加载竞赛详情并在保存成功后返回赛事目录', async () => {

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { KeyboardEvent } from 'vue'
-
 import type { ContestWorkbenchStage, ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
 
 const props = defineProps<{
