@@ -55,8 +55,16 @@ const props = defineProps<{
 const emit = defineEmits<{
   openChallenge: [challengeId: string]
   openManualReview: [submissionId: string]
-  moderateWriteup: [payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' }]
-  reviewManualReview: [payload: { submissionId: string; reviewStatus: 'approved' | 'rejected'; reviewComment?: string }]
+  moderateWriteup: [
+    payload: { submissionId: string; action: 'recommend' | 'unrecommend' | 'hide' | 'restore' },
+  ]
+  reviewManualReview: [
+    payload: {
+      submissionId: string
+      reviewStatus: 'approved' | 'rejected'
+      reviewComment?: string
+    },
+  ]
   changeWriteupPage: [page: number]
 }>()
 
@@ -66,8 +74,8 @@ const publishedWriteupSubmissions = computed(() =>
     (item) => item.submission_status === 'published' || item.submission_status === 'submitted'
   )
 )
-const publishedRecommendedWriteupCount = computed(() =>
-  publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
+const publishedRecommendedWriteupCount = computed(
+  () => publishedWriteupSubmissions.value.filter((item) => item.is_recommended).length
 )
 const rankedProfileDimensions = computed(() =>
   [...(props.profile?.dimensions ?? [])].sort((left, right) => right.value - left.value)
@@ -75,8 +83,8 @@ const rankedProfileDimensions = computed(() =>
 const publishedChallengeCount = computed(
   () => new Set(publishedWriteupSubmissions.value.map((item) => String(item.challenge_id))).size
 )
-const approvedManualReviewCount = computed(() =>
-  props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
+const approvedManualReviewCount = computed(
+  () => props.manualReviewSubmissions.filter((item) => item.review_status === 'approved').length
 )
 const manualReviewComment = ref('')
 
@@ -85,7 +93,7 @@ watch(
   (value) => {
     manualReviewComment.value = value?.review_comment ?? ''
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 function openChallenge(challengeId: string): void {
@@ -107,15 +115,23 @@ function moderateWriteup(
   emit('moderateWriteup', { submissionId, action })
 }
 
-function visibilityStatusLabel(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
+function visibilityStatusLabel(
+  status: TeacherSubmissionWriteupItemData['visibility_status']
+): string {
   return status === 'hidden' ? '已隐藏' : '已公开'
 }
 
-function visibilityStatusClass(status: TeacherSubmissionWriteupItemData['visibility_status']): string {
-  return status === 'hidden' ? 'writeup-chip writeup-chip--warning' : 'writeup-chip writeup-chip--success'
+function visibilityStatusClass(
+  status: TeacherSubmissionWriteupItemData['visibility_status']
+): string {
+  return status === 'hidden'
+    ? 'writeup-chip writeup-chip--warning'
+    : 'writeup-chip writeup-chip--success'
 }
 
-function manualReviewStatusLabel(status: TeacherManualReviewSubmissionItemData['review_status']): string {
+function manualReviewStatusLabel(
+  status: TeacherManualReviewSubmissionItemData['review_status']
+): string {
   switch (status) {
     case 'approved':
       return '已通过'
@@ -126,7 +142,9 @@ function manualReviewStatusLabel(status: TeacherManualReviewSubmissionItemData['
   }
 }
 
-function manualReviewStatusClass(status: TeacherManualReviewSubmissionItemData['review_status']): string {
+function manualReviewStatusClass(
+  status: TeacherManualReviewSubmissionItemData['review_status']
+): string {
   switch (status) {
     case 'approved':
       return 'writeup-chip writeup-chip--success'
@@ -184,10 +202,7 @@ function isManualReviewVisible(): boolean {
       </div>
 
       <template v-else-if="student">
-        <div
-          v-if="isSectionVisible('overview')"
-          class="insight-overview-layout"
-        >
+        <div v-if="isSectionVisible('overview')" class="insight-overview-layout">
           <SectionCard title="能力雷达" subtitle="左侧雷达图展示当前能力维度分布。">
             <div class="mt-4">
               <SkillRadar :scores="radarScores" />
@@ -274,21 +289,37 @@ function isManualReviewVisible(): boolean {
           />
 
           <template v-else>
-            <div class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface">
+            <div
+              class="writeup-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface"
+            >
               <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
-                <div class="insight-kpi-label progress-card-label metric-panel-label">已发布题解</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedWriteupSubmissions.length }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前学员已发布的题解数量</div>
+                <div class="insight-kpi-label progress-card-label metric-panel-label">
+                  已发布题解
+                </div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ publishedWriteupSubmissions.length }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  当前学员已发布的题解数量
+                </div>
               </article>
               <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">对应题目</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedChallengeCount }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">覆盖到的题目总数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ publishedChallengeCount }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  覆盖到的题目总数
+                </div>
               </article>
               <article class="insight-kpi-card writeup-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">推荐中</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ publishedRecommendedWriteupCount }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">发布题解中被标记为推荐的数量</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ publishedRecommendedWriteupCount }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  发布题解中被标记为推荐的数量
+                </div>
               </article>
             </div>
 
@@ -312,7 +343,9 @@ function isManualReviewVisible(): boolean {
 
                 <div class="writeup-directory-cell">
                   <div class="writeup-directory-title">{{ item.title }}</div>
-                  <div class="writeup-directory-preview">{{ item.content_preview || '暂无摘要' }}</div>
+                  <div class="writeup-directory-preview">
+                    {{ item.content_preview || '暂无摘要' }}
+                  </div>
                 </div>
 
                 <div class="writeup-directory-cell">
@@ -322,10 +355,7 @@ function isManualReviewVisible(): boolean {
                     <span :class="visibilityStatusClass(item.visibility_status)">
                       {{ visibilityStatusLabel(item.visibility_status) }}
                     </span>
-                    <span
-                      v-if="item.is_recommended"
-                      class="writeup-chip writeup-chip--primary"
-                    >
+                    <span v-if="item.is_recommended" class="writeup-chip writeup-chip--primary">
                       推荐题解
                     </span>
                   </div>
@@ -348,14 +378,21 @@ function isManualReviewVisible(): boolean {
                     <button
                       type="button"
                       class="writeup-action-button"
-                      @click="moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')"
+                      @click="
+                        moderateWriteup(item.id, item.is_recommended ? 'unrecommend' : 'recommend')
+                      "
                     >
                       {{ item.is_recommended ? '取消推荐' : '推荐题解' }}
                     </button>
                     <button
                       type="button"
                       class="writeup-action-button writeup-action-button--warning"
-                      @click="moderateWriteup(item.id, item.visibility_status === 'hidden' ? 'restore' : 'hide')"
+                      @click="
+                        moderateWriteup(
+                          item.id,
+                          item.visibility_status === 'hidden' ? 'restore' : 'hide'
+                        )
+                      "
                     >
                       {{ item.visibility_status === 'hidden' ? '恢复公开' : '隐藏题解' }}
                     </button>
@@ -392,21 +429,38 @@ function isManualReviewVisible(): boolean {
           />
 
           <template v-else>
-            <div class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3">
+            <div
+              class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-3"
+            >
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">待处理</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ manualReviewSubmissions.length }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前分析页展示的题解审核提交数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ manualReviewSubmissions.length }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  当前分析页展示的题解审核提交数
+                </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">待审核</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ manualReviewSubmissions.filter((item) => item.review_status === 'pending').length }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">尚未给出审核结果的提交</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{
+                    manualReviewSubmissions.filter((item) => item.review_status === 'pending')
+                      .length
+                  }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  尚未给出审核结果的提交
+                </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">已通过</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ approvedManualReviewCount }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">已经通过审核的题解提交</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ approvedManualReviewCount }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  已经通过审核的题解提交
+                </div>
               </article>
             </div>
 
@@ -432,7 +486,9 @@ function isManualReviewVisible(): boolean {
                     </span>
                   </div>
 
-                  <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]">
+                  <div
+                    class="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-secondary)]"
+                  >
                     <span>提交于 {{ new Date(item.submitted_at).toLocaleString('zh-CN') }}</span>
                     <button
                       type="button"
@@ -477,16 +533,22 @@ function isManualReviewVisible(): boolean {
                   </div>
 
                   <div class="insight-answer-panel mt-5 rounded-2xl px-4 py-4">
-                    <div class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]">
+                    <div
+                      class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-text-secondary)]"
+                    >
                       题解内容
                     </div>
-                    <p class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]">
+                    <p
+                      class="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--color-text-primary)]"
+                    >
                       {{ activeManualReview.answer }}
                     </p>
                   </div>
 
                   <label class="mt-5 block">
-                    <span class="text-sm font-medium text-[var(--color-text-primary)]">审核意见</span>
+                    <span class="text-sm font-medium text-[var(--color-text-primary)]"
+                      >审核意见</span
+                    >
                     <textarea
                       v-model="manualReviewComment"
                       rows="5"
@@ -497,13 +559,17 @@ function isManualReviewVisible(): boolean {
 
                   <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
                     <div class="text-xs text-[var(--color-text-secondary)]">
-                      最近更新：{{ new Date(activeManualReview.updated_at).toLocaleString('zh-CN') }}
+                      最近更新：{{
+                        new Date(activeManualReview.updated_at).toLocaleString('zh-CN')
+                      }}
                     </div>
                     <div class="flex flex-wrap gap-3">
                       <button
                         type="button"
                         class="challenge-btn-outline insight-outline-action"
-                        :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                        :disabled="
+                          manualReviewSaving || activeManualReview.review_status !== 'pending'
+                        "
                         @click="submitManualReview('rejected')"
                       >
                         {{ manualReviewSaving ? '提交中...' : '驳回并说明' }}
@@ -511,7 +577,9 @@ function isManualReviewVisible(): boolean {
                       <button
                         type="button"
                         class="challenge-btn-primary rounded-xl px-5 py-3 text-sm font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-                        :disabled="manualReviewSaving || activeManualReview.review_status !== 'pending'"
+                        :disabled="
+                          manualReviewSaving || activeManualReview.review_status !== 'pending'
+                        "
                         @click="submitManualReview('approved')"
                       >
                         {{ manualReviewSaving ? '提交中...' : '审核通过' }}
@@ -538,26 +606,44 @@ function isManualReviewVisible(): boolean {
           />
 
           <template v-else>
-            <div class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4">
+            <div
+              class="insight-kpi-grid progress-strip metric-panel-grid metric-panel-default-surface md:grid-cols-4"
+            >
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">总事件数</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.total_events }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">纳入教师复盘的动作总数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ evidence.summary.total_events }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  纳入教师复盘的动作总数
+                </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">利用请求</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.proxy_request_count }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">经平台代理的利用请求次数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ evidence.summary.proxy_request_count }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  经平台代理的利用请求次数
+                </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">提交次数</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.submit_count }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">当前题目的提交动作统计</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ evidence.summary.submit_count }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  当前题目的提交动作统计
+                </div>
               </article>
               <article class="insight-kpi-card progress-card metric-panel-card">
                 <div class="insight-kpi-label progress-card-label metric-panel-label">成功次数</div>
-                <div class="insight-kpi-value progress-card-value metric-panel-value">{{ evidence.summary.success_count }}</div>
-                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">提交命中或利用成功的次数</div>
+                <div class="insight-kpi-value progress-card-value metric-panel-value">
+                  {{ evidence.summary.success_count }}
+                </div>
+                <div class="insight-kpi-hint progress-card-hint metric-panel-helper">
+                  提交命中或利用成功的次数
+                </div>
               </article>
             </div>
 
@@ -570,12 +656,16 @@ function isManualReviewVisible(): boolean {
               >
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">{{ event.title }}</div>
-                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">{{ event.detail }}</div>
-                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]">
-                      <span
-                        class="insight-meta-pill rounded-full border px-2.5 py-1"
-                      >
+                    <div class="text-sm font-semibold text-[var(--color-text-primary)]">
+                      {{ event.title }}
+                    </div>
+                    <div class="mt-1 text-sm text-[var(--color-text-secondary)]">
+                      {{ event.detail }}
+                    </div>
+                    <div
+                      class="mt-2 flex flex-wrap gap-2 text-xs text-[var(--color-text-secondary)]"
+                    >
+                      <span class="insight-meta-pill rounded-full border px-2.5 py-1">
                         {{ String(event.meta?.event_stage || 'trace') }}
                       </span>
                       <span
@@ -588,7 +678,14 @@ function isManualReviewVisible(): boolean {
                   </div>
                   <div class="text-right text-xs text-[var(--color-text-secondary)]">
                     <div>{{ new Date(event.timestamp).toLocaleDateString('zh-CN') }}</div>
-                    <div class="mt-1">{{ new Date(event.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) }}</div>
+                    <div class="mt-1">
+                      {{
+                        new Date(event.timestamp).toLocaleTimeString('zh-CN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      }}
+                    </div>
                   </div>
                 </div>
               </AppCard>

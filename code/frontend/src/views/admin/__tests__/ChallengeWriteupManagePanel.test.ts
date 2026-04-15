@@ -52,12 +52,22 @@ describe('ChallengeWriteupManagePanel', () => {
   })
 
   it('应使用统一目录头样式展示题解页头与题解目录', () => {
-    expect(challengeWriteupManagePanelSource).toContain('class="list-heading writeup-manage-heading"')
-    expect(challengeWriteupManagePanelSource).toContain('<h1 class="workspace-page-title">题解管理</h1>')
-    expect(challengeWriteupManagePanelSource).toContain('class="list-heading writeup-manage-section__head"')
-    expect(challengeWriteupManagePanelSource).toContain('<h2 class="list-heading__title">题解目录</h2>')
+    expect(challengeWriteupManagePanelSource).toContain(
+      'class="list-heading writeup-manage-heading"'
+    )
+    expect(challengeWriteupManagePanelSource).toContain(
+      '<h1 class="workspace-page-title">题解管理</h1>'
+    )
+    expect(challengeWriteupManagePanelSource).toContain(
+      'class="list-heading writeup-manage-section__head"'
+    )
+    expect(challengeWriteupManagePanelSource).toContain(
+      '<h2 class="list-heading__title">题解目录</h2>'
+    )
     expect(challengeWriteupManagePanelSource).not.toContain('workspace-tab-heading')
-    expect(challengeWriteupManagePanelSource).not.toContain('writeup-manage-section__title">题解列表</h2>')
+    expect(challengeWriteupManagePanelSource).not.toContain(
+      'writeup-manage-section__title">题解列表</h2>'
+    )
   })
 
   it('存在题解时应显示带边框的查看入口，并通过更多菜单进入编辑', async () => {
@@ -113,7 +123,9 @@ describe('ChallengeWriteupManagePanel', () => {
     await flushPromises()
 
     expect(wrapper.find('.writeup-manage-header').exists()).toBe(true)
-    expect(wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()).toBe(true)
+    expect(
+      wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()
+    ).toBe(true)
     expect(wrapper.find('.writeup-manage-header .writeup-manage-actions').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
@@ -164,7 +176,9 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await moreButton.trigger('mouseenter')
 
-    const editButton = wrapper.findAll('[role="menuitem"]').find((button) => button.text().trim() === '编辑')
+    const editButton = wrapper
+      .findAll('[role="menuitem"]')
+      .find((button) => button.text().trim() === '编辑')
     expect(moreButton.attributes('aria-expanded')).toBe('true')
     expect(editButton).toBeTruthy()
 
@@ -204,8 +218,7 @@ describe('ChallengeWriteupManagePanel', () => {
       global: {
         stubs: {
           AppEmpty: {
-            template:
-              '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
+            template: '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
             props: ['title', 'description'],
           },
           AppLoading: { template: '<div><slot /></div>' },
@@ -217,7 +230,9 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await wrapper.get('[data-testid="writeup-more-actions"]').trigger('mouseenter')
 
-    const deleteButton = wrapper.findAll('[role="menuitem"]').find((button) => button.text().trim() === '删除')
+    const deleteButton = wrapper
+      .findAll('[role="menuitem"]')
+      .find((button) => button.text().trim() === '删除')
     expect(deleteButton).toBeTruthy()
 
     await deleteButton!.trigger('click')
@@ -271,7 +286,9 @@ describe('ChallengeWriteupManagePanel', () => {
 
     await wrapper.get('[data-testid="writeup-more-actions"]').trigger('mouseenter')
 
-    const deleteButton = wrapper.findAll('[role="menuitem"]').find((button) => button.text().trim() === '删除')
+    const deleteButton = wrapper
+      .findAll('[role="menuitem"]')
+      .find((button) => button.text().trim() === '删除')
     expect(deleteButton).toBeTruthy()
 
     await deleteButton!.trigger('click')
@@ -298,8 +315,7 @@ describe('ChallengeWriteupManagePanel', () => {
       global: {
         stubs: {
           AppEmpty: {
-            template:
-              '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
+            template: '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
             props: ['title', 'description'],
           },
           AppLoading: { template: '<div><slot /></div>' },
@@ -312,7 +328,9 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.text()).toContain('当前还没有题解')
     expect(wrapper.text()).toContain('双节点演练')
 
-    const createButton = wrapper.findAll('button').find((button) => button.text().includes('编写题解'))
+    const createButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().includes('编写题解'))
     expect(createButton).toBeTruthy()
 
     await createButton!.trigger('click')
@@ -382,8 +400,7 @@ describe('ChallengeWriteupManagePanel', () => {
       global: {
         stubs: {
           AppEmpty: {
-            template:
-              '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
+            template: '<div><div>{{ title }}</div><div>{{ description }}</div><slot /></div>',
             props: ['title', 'description'],
           },
           AppLoading: { template: '<div><slot /></div>' },
@@ -394,7 +411,9 @@ describe('ChallengeWriteupManagePanel', () => {
     await flushPromises()
 
     expect(wrapper.find('.writeup-manage-header').exists()).toBe(true)
-    expect(wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()).toBe(true)
+    expect(
+      wrapper.find('.writeup-manage-header .list-heading.writeup-manage-heading').exists()
+    ).toBe(true)
     expect(wrapper.find('.writeup-manage-header .writeup-manage-actions').exists()).toBe(true)
     expect(wrapper.find('.writeup-manage-header + .writeup-manage-stats-shell').exists()).toBe(true)
     expect(
@@ -418,7 +437,9 @@ describe('ChallengeWriteupManagePanel', () => {
     expect(wrapper.text()).toContain('共 8 篇题解')
     expect(wrapper.text()).toContain('1 / 2')
 
-    const nextPageButton = wrapper.findAll('button').find((button) => button.text().trim() === '下一页')
+    const nextPageButton = wrapper
+      .findAll('button')
+      .find((button) => button.text().trim() === '下一页')
     expect(nextPageButton).toBeTruthy()
 
     await nextPageButton!.trigger('click')

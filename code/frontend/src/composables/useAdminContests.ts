@@ -105,7 +105,13 @@ export function createDraftFromContest(contest: ContestDetailData): ContestFormD
 }
 
 export function normalizeEditableStatus(status: ContestStatus): AdminContestStatus {
-  if (status === 'draft' || status === 'registering' || status === 'running' || status === 'frozen' || status === 'ended') {
+  if (
+    status === 'draft' ||
+    status === 'registering' ||
+    status === 'running' ||
+    status === 'frozen' ||
+    status === 'ended'
+  ) {
     return status
   }
   return 'draft'
@@ -134,7 +140,10 @@ export function createContestStatusOptions(status: AdminContestStatus | null) {
   return STATUS_TRANSITIONS[status].map((nextStatus) => ({ label: nextStatus, value: nextStatus }))
 }
 
-function shouldGateAWDContestStart(mode: ContestDetailData['mode'] | null, targetStatus: AdminContestStatus): boolean {
+function shouldGateAWDContestStart(
+  mode: ContestDetailData['mode'] | null,
+  targetStatus: AdminContestStatus
+): boolean {
   return mode === 'awd' && targetStatus === 'running'
 }
 

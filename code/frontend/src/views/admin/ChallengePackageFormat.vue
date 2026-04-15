@@ -87,9 +87,8 @@ const statementGuide = `statement.md 写法建议
       <div class="journal-eyebrow">Uploader Guide</div>
       <h1 class="hero-title">题目包示例</h1>
       <p class="hero-summary">
-        上传 zip 之前，先核对目录结构、`challenge.yml`
-        字段和题面文件路径。教师自己写的 Web 服务代码通常也放在 `docker/`
-        目录里，这里的示例与当前导入解析规则保持一致。
+        上传 zip 之前，先核对目录结构、`challenge.yml` 字段和题面文件路径。教师自己写的 Web
+        服务代码通常也放在 `docker/` 目录里，这里的示例与当前导入解析规则保持一致。
       </p>
     </div>
 

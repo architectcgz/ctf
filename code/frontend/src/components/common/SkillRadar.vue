@@ -21,7 +21,7 @@ const points = computed(() => {
   const total = props.scores.length
 
   return props.scores.map((item, index) => {
-    const angle = (-Math.PI / 2) + (Math.PI * 2 * index) / total
+    const angle = -Math.PI / 2 + (Math.PI * 2 * index) / total
     const x = center + Math.cos(angle) * radius * (item.value / 100)
     const y = center + Math.sin(angle) * radius * (item.value / 100)
     const labelX = center + Math.cos(angle) * (radius + 28)
@@ -42,7 +42,7 @@ const polygon = computed(() => points.value.map((point) => `${point.x},${point.y
 function ringPoints(scale) {
   return points.value
     .map((point, index) => {
-      const angle = (-Math.PI / 2) + (Math.PI * 2 * index) / points.value.length
+      const angle = -Math.PI / 2 + (Math.PI * 2 * index) / points.value.length
       return `${center + Math.cos(angle) * radius * scale},${center + Math.sin(angle) * radius * scale}`
     })
     .join(' ')
@@ -65,8 +65,8 @@ function ringPoints(scale) {
         :key="`${point.name}-axis`"
         :x1="center"
         :y1="center"
-        :x2="point.labelX - ((point.labelX - center) * 0.12)"
-        :y2="point.labelY - ((point.labelY - center) * 0.12)"
+        :x2="point.labelX - (point.labelX - center) * 0.12"
+        :y2="point.labelY - (point.labelY - center) * 0.12"
         :stroke="gridStroke"
       />
       <polygon :points="polygon" :fill="polygonFill" :stroke="polygonStroke" stroke-width="2" />

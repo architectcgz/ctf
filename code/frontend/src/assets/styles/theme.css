@@ -3,8 +3,8 @@
     'IBM Plex Sans', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
     system-ui, -apple-system, sans-serif;
   --font-family-mono:
-    'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Consolas',
-    'Liberation Mono', monospace;
+    'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', 'Consolas', 'Liberation Mono',
+    monospace;
   --font-size-11: 11px;
   --font-size-11-5: 11.5px;
   --font-size-12: 12px;
@@ -151,31 +151,31 @@
   --shell-sidebar-expanded: 15.5rem;
 }
 
-[data-brand="green"] {
+[data-brand='green'] {
   --theme-primary: #2f8f5b;
   --theme-primary-hover: #39a96a;
   --theme-primary-soft: rgba(47, 143, 91, 0.18);
 }
 
-[data-brand="cyan"] {
+[data-brand='cyan'] {
   --theme-primary: #0f7f99;
   --theme-primary-hover: #0891b2;
   --theme-primary-soft: rgba(8, 145, 178, 0.16);
 }
 
-[data-brand="blue"] {
+[data-brand='blue'] {
   --theme-primary: #2563eb;
   --theme-primary-hover: #3b82f6;
   --theme-primary-soft: rgba(37, 99, 235, 0.16);
 }
 
-[data-brand="orange"] {
+[data-brand='orange'] {
   --theme-primary: #c97018;
   --theme-primary-hover: #e18a2a;
   --theme-primary-soft: rgba(225, 138, 42, 0.18);
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --theme-bg-base: #f4f7fb;
   --theme-bg-surface: #ffffff;
   --theme-bg-elevated: #edf2f7;

@@ -42,7 +42,8 @@ export function useTeacherDashboardMetrics({
   })
 
   const studentCountText = computed(
-    () => summary.value?.student_count || selectedClass.value?.student_count || students.value.length
+    () =>
+      summary.value?.student_count || selectedClass.value?.student_count || students.value.length
   )
 
   const activeStudentCountText = computed(() => summary.value?.active_student_count ?? '--')

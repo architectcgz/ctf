@@ -121,23 +121,14 @@ const workspaceTabs: WorkspaceTabItem[] = [
 ]
 
 const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
-  {
-    orderedTabs: workspaceTabOrder,
-    defaultTab: 'overview',
-  }
-)
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'overview',
+})
 </script>
 
 <template>
   <div class="workspace-shell journal-eyebrow-text">
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Student Workspace</span>
-        <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
-      </div>
-    </header>
-
     <nav class="top-tabs" role="tablist" aria-label="学员分析标签页">
       <button
         v-for="(tab, index) in workspaceTabs"
@@ -169,9 +160,7 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
             <h1 class="teacher-title">
               {{ selectedStudent?.name || selectedStudent?.username || '学员分析' }}
             </h1>
-            <p class="teacher-copy">
-              查看当前学员的学习进度、推荐任务、题解与审核信息。
-            </p>
+            <p class="teacher-copy">查看当前学员的学习进度、推荐任务、题解与审核信息。</p>
           </div>
 
           <div class="teacher-actions" role="group" aria-label="学员分析快捷操作">
@@ -220,7 +209,9 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
         <section v-if="activeTab === 'overview'" class="summary-strip metric-panel-grid">
           <article class="summary-card metric-panel-card">
             <div class="summary-card__label metric-panel-label">已做题目数</div>
-            <div class="summary-card__value metric-panel-value">{{ progress?.solved_challenges ?? 0 }}</div>
+            <div class="summary-card__value metric-panel-value">
+              {{ progress?.solved_challenges ?? 0 }}
+            </div>
             <div class="summary-card__hint metric-panel-helper">已成功完成的题目数量</div>
           </article>
           <article class="summary-card metric-panel-card">
@@ -275,7 +266,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
           />
         </section>
       </main>
-
     </div>
   </div>
 </template>
@@ -688,7 +678,6 @@ const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSynced
 }
 
 @media (max-width: 767px) {
-  .workspace-topbar,
   .top-tabs,
   .content-pane,
   .context-rail {

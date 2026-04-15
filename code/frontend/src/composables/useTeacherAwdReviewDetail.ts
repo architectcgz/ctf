@@ -33,23 +33,28 @@ export function useTeacherAwdReviewDetail() {
   const contestId = computed(() => String(route.params.contestId || ''))
   const selectedRoundNumber = computed(() => parseRoundQuery(route.query.round))
   const selectedRound = computed(() => review.value?.selected_round)
-  const selectedTeam = computed(() =>
-    selectedRound.value?.teams.find((item) => item.team_id === selectedTeamId.value) ?? null
+  const selectedTeam = computed(
+    () => selectedRound.value?.teams.find((item) => item.team_id === selectedTeamId.value) ?? null
   )
-  const selectedTeamServices = computed(() =>
-    selectedRound.value?.services.filter((item) => item.team_id === selectedTeamId.value) ?? []
+  const selectedTeamServices = computed(
+    () =>
+      selectedRound.value?.services.filter((item) => item.team_id === selectedTeamId.value) ?? []
   )
-  const selectedTeamAttacks = computed(() =>
-    selectedRound.value?.attacks.filter(
-      (item) =>
-        item.attacker_team_id === selectedTeamId.value || item.victim_team_id === selectedTeamId.value
-    ) ?? []
+  const selectedTeamAttacks = computed(
+    () =>
+      selectedRound.value?.attacks.filter(
+        (item) =>
+          item.attacker_team_id === selectedTeamId.value ||
+          item.victim_team_id === selectedTeamId.value
+      ) ?? []
   )
-  const selectedTeamTraffic = computed(() =>
-    selectedRound.value?.traffic.filter(
-      (item) =>
-        item.attacker_team_id === selectedTeamId.value || item.victim_team_id === selectedTeamId.value
-    ) ?? []
+  const selectedTeamTraffic = computed(
+    () =>
+      selectedRound.value?.traffic.filter(
+        (item) =>
+          item.attacker_team_id === selectedTeamId.value ||
+          item.victim_team_id === selectedTeamId.value
+      ) ?? []
   )
   const canExportReport = computed(() => Boolean(review.value?.contest.export_ready))
 
@@ -110,14 +115,18 @@ export function useTeacherAwdReviewDetail() {
       pendingReportId.value = null
       stopPolling()
       void downloadGeneratedReport(next.report_id)
-      toast.success(kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载')
+      toast.success(
+        kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载'
+      )
       return
     }
 
     if (next.status === 'failed') {
       pendingReportId.value = null
       stopPolling()
-      toast.error(next.error_message || (kind === 'archive' ? '复盘归档生成失败' : '教师复盘报告生成失败'))
+      toast.error(
+        next.error_message || (kind === 'archive' ? '复盘归档生成失败' : '教师复盘报告生成失败')
+      )
     }
   }
 
@@ -136,13 +145,17 @@ export function useTeacherAwdReviewDetail() {
       if (result.status === 'ready') {
         stopPolling()
         await downloadGeneratedReport(result.report_id)
-        toast.success(kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载')
+        toast.success(
+          kind === 'archive' ? '复盘归档已生成并开始下载' : '教师复盘报告已生成并开始下载'
+        )
         return
       }
 
       if (result.status === 'failed') {
         stopPolling()
-        toast.error(result.error_message || (kind === 'archive' ? '复盘归档生成失败' : '教师复盘报告生成失败'))
+        toast.error(
+          result.error_message || (kind === 'archive' ? '复盘归档生成失败' : '教师复盘报告生成失败')
+        )
         return
       }
 
@@ -150,7 +163,11 @@ export function useTeacherAwdReviewDetail() {
       startPolling(result.report_id, (next) => {
         handleExportUpdate(kind, next)
       })
-      toast.info(kind === 'archive' ? '复盘归档开始生成，完成后会自动下载' : '教师复盘报告开始生成，完成后会自动下载')
+      toast.info(
+        kind === 'archive'
+          ? '复盘归档开始生成，完成后会自动下载'
+          : '教师复盘报告开始生成，完成后会自动下载'
+      )
     } finally {
       exporting.value = null
     }

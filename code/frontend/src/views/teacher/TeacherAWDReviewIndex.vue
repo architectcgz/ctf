@@ -70,26 +70,35 @@ function contestStatusLabel(status: string): string {
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">赛事数量</div>
               <div class="progress-card-value metric-panel-value">{{ contests.length }}</div>
-              <div class="progress-card-hint metric-panel-helper">当前可进入 AWD 复盘的赛事总数</div>
+              <div class="progress-card-hint metric-panel-helper">
+                当前可进入 AWD 复盘的赛事总数
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">进行中</div>
               <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.status === 'running').length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">仍在持续产出实时攻防信号的赛事</div>
+              <div class="progress-card-hint metric-panel-helper">
+                仍在持续产出实时攻防信号的赛事
+              </div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">可导出教师报告</div>
               <div class="progress-card-value metric-panel-value">
                 {{ contests.filter((item) => item.export_ready).length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">已结束并允许生成教师复盘报告的赛事</div>
+              <div class="progress-card-hint metric-panel-helper">
+                已结束并允许生成教师复盘报告的赛事
+              </div>
             </article>
           </div>
         </section>
 
-        <section class="workspace-directory-section teacher-directory-section" aria-label="AWD 赛事目录">
+        <section
+          class="workspace-directory-section teacher-directory-section"
+          aria-label="AWD 赛事目录"
+        >
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Review Directory</div>
@@ -185,7 +194,9 @@ function contestStatusLabel(status: string): string {
               </div>
 
               <div class="teacher-directory-row-metrics">
-                <span>{{ contest.current_round ? `第 ${contest.current_round} 轮` : '未开始' }}</span>
+                <span>{{
+                  contest.current_round ? `第 ${contest.current_round} 轮` : '未开始'
+                }}</span>
                 <span>共 {{ contest.round_count }} 轮</span>
               </div>
 
@@ -224,7 +235,8 @@ function contestStatusLabel(status: string): string {
   min-height: 100%;
   flex: 1 1 auto;
   flex-direction: column;
-  --awd-review-directory-columns: minmax(0, 7rem) minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 0.85fr) minmax(0, 1fr) auto;
+  --awd-review-directory-columns: minmax(0, 7rem) minmax(0, 2.1fr) minmax(0, 1fr) minmax(0, 0.85fr)
+    minmax(0, 1fr) auto;
 }
 
 .teacher-summary--flat {

@@ -692,7 +692,8 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       applyTopologyDraft(createEmptyTopologyDraft())
       toast.success('题目拓扑已删除')
     } catch (error) {
-      const message = error instanceof Error && error.message.trim() ? error.message : '删除题目拓扑失败'
+      const message =
+        error instanceof Error && error.message.trim() ? error.message : '删除题目拓扑失败'
       toast.error(message)
     } finally {
       saving.value = false
@@ -770,7 +771,8 @@ export function useChallengeTopologyStudioPage(options: UseChallengeTopologyStud
       toast.success('模板已删除')
       await loadTemplates()
     } catch (error) {
-      const message = error instanceof Error && error.message.trim() ? error.message : '删除模板失败'
+      const message =
+        error instanceof Error && error.message.trim() ? error.message : '删除模板失败'
       toast.error(message)
     } finally {
       templateBusy.value = false

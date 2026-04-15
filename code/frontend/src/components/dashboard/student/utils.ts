@@ -46,7 +46,9 @@ export function rankCategoryActionItems<T extends CategoryProgressStat>(
 }
 
 function difficultyOrderIndex(difficulty: string): number {
-  const index = canonicalDifficultyOrder.indexOf(difficulty as (typeof canonicalDifficultyOrder)[number])
+  const index = canonicalDifficultyOrder.indexOf(
+    difficulty as (typeof canonicalDifficultyOrder)[number]
+  )
   return index === -1 ? canonicalDifficultyOrder.length : index
 }
 
@@ -85,10 +87,16 @@ export function timelineSummary(event: TimelineEvent): string {
   if (event.detail) {
     return event.detail
   }
-  if (event.type === 'challenge_detail_view' || (event.meta?.raw_type as string | undefined) === 'challenge_detail_view') {
+  if (
+    event.type === 'challenge_detail_view' ||
+    (event.meta?.raw_type as string | undefined) === 'challenge_detail_view'
+  ) {
     return '查看题目详情，进入读题与线索分析阶段'
   }
-  if (event.type === 'instance_access' || (event.meta?.raw_type as string | undefined) === 'instance_access') {
+  if (
+    event.type === 'instance_access' ||
+    (event.meta?.raw_type as string | undefined) === 'instance_access'
+  ) {
     return '访问攻击目标，开始与靶机进行实际交互'
   }
   if (
@@ -106,7 +114,10 @@ export function timelineSummary(event: TimelineEvent): string {
   if (event.type === 'hint' || (event.meta?.raw_type as string | undefined) === 'hint_unlock') {
     return '解锁了一条提示，说明训练进入了更具体的利用定位阶段'
   }
-  if (event.type === 'instance_extend' || (event.meta?.raw_type as string | undefined) === 'instance_extend') {
+  if (
+    event.type === 'instance_extend' ||
+    (event.meta?.raw_type as string | undefined) === 'instance_extend'
+  ) {
     return '延长实例有效期，继续当前利用过程'
   }
   if ((event.meta?.raw_type as string | undefined) === 'instance_destroy') {
@@ -128,11 +139,17 @@ export function timelineTypeLabel(event: TimelineEvent): string {
 }
 
 export function timelineTypeTone(event: TimelineEvent): string {
-  if (event.type === 'challenge_detail_view') return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-  if (event.type === 'instance_access') return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-  if (event.type === 'instance_proxy_request') return 'border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
-  if (event.type === 'solve') return 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
-  if (event.type === 'submit') return 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
-  if (event.type === 'hint') return 'border-[var(--color-cat-reverse)]/30 bg-[var(--color-cat-reverse)]/10 text-[var(--color-cat-reverse)]'
+  if (event.type === 'challenge_detail_view')
+    return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+  if (event.type === 'instance_access')
+    return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+  if (event.type === 'instance_proxy_request')
+    return 'border-[var(--color-danger)]/30 bg-[var(--color-danger)]/10 text-[var(--color-danger)]'
+  if (event.type === 'solve')
+    return 'border-[var(--color-success)]/30 bg-[var(--color-success)]/10 text-[var(--color-success)]'
+  if (event.type === 'submit')
+    return 'border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
+  if (event.type === 'hint')
+    return 'border-[var(--color-cat-reverse)]/30 bg-[var(--color-cat-reverse)]/10 text-[var(--color-cat-reverse)]'
   return 'border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
 }

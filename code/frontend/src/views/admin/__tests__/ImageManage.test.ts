@@ -101,7 +101,9 @@ describe('ImageManage', () => {
   it('应在头部展示轻量状态条而不是总量卡片', () => {
     expect(imageManageSource).toContain('class="image-status-strip"')
     expect(imageManageSource).toContain('data-testid="image-status-pill"')
-    expect(imageManageSource).toContain('<div class="image-status-strip__note">{{ refreshHint }}</div>')
+    expect(imageManageSource).toContain(
+      '<div class="image-status-strip__note">{{ refreshHint }}</div>'
+    )
     expect(imageManageSource).not.toContain('镜像总量')
     expect(imageManageSource).not.toContain('当前查询结果的镜像总数')
     expect(imageManageSource).not.toContain('这一页已加载的镜像数量')
@@ -133,10 +135,18 @@ describe('ImageManage', () => {
   it('应该为镜像列表长文本保留省略样式和完整悬浮提示', () => {
     expect(imageManageSource).toMatch(/class="image-row__name"[\s\S]*:title="row\.name"/s)
     expect(imageManageSource).toMatch(/class="image-row__tag"[\s\S]*:title="row\.tag"/s)
-    expect(imageManageSource).toMatch(/class="image-row__description"[\s\S]*:title="row\.description \|\| '未填写镜像说明'"/s)
-    expect(imageManageSource).toMatch(/\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(imageManageSource).toMatch(/\.image-row__tag\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(imageManageSource).toMatch(/\.image-row__description\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
+    expect(imageManageSource).toMatch(
+      /class="image-row__description"[\s\S]*:title="row\.description \|\| '未填写镜像说明'"/s
+    )
+    expect(imageManageSource).toMatch(
+      /\.image-row__name\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(imageManageSource).toMatch(
+      /\.image-row__tag\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(imageManageSource).toMatch(
+      /\.image-row__description\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
+    )
   })
 
   it('应该支持手动刷新镜像列表', async () => {
@@ -164,7 +174,9 @@ describe('ImageManage', () => {
     expect(pills).toHaveLength(1)
     expect(pills[0].text()).toContain('可用')
     expect(pills[0].text()).toContain('1')
-    expect(wrapper.find('.image-status-strip__note').text()).toContain('当前无进行中镜像，可手动刷新')
+    expect(wrapper.find('.image-status-strip__note').text()).toContain(
+      '当前无进行中镜像，可手动刷新'
+    )
   })
 
   it('当前页存在构建中镜像时应展示状态摘要并自动刷新提示', async () => {
@@ -180,7 +192,9 @@ describe('ImageManage', () => {
     expect(pills).toHaveLength(1)
     expect(pills[0].text()).toContain('构建中')
     expect(pills[0].text()).toContain('1')
-    expect(wrapper.find('.image-status-strip__note').text()).toContain('构建中镜像会每 10 秒自动刷新')
+    expect(wrapper.find('.image-status-strip__note').text()).toContain(
+      '构建中镜像会每 10 秒自动刷新'
+    )
   })
 
   it('当没有进行中镜像时不应该继续自动轮询', async () => {

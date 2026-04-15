@@ -620,6 +620,12 @@ const routes: RouteRecordRaw[] = [
     path: '/:pathMatch(.*)*',
     redirect: '/404',
   },
+  {
+    path: '/ui-lab',
+    name: 'UILab',
+    component: () => import('@/views/UILab.vue'),
+    meta: { title: 'UI 设计实验室' },
+  },
 ]
 
 const router = createRouter({

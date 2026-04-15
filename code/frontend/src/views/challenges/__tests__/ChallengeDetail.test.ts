@@ -185,8 +185,12 @@ describe('ChallengeDetail', () => {
 
   it('工作区应建立满高伸展布局链', () => {
     expect(challengeDetailSource).toContain('min-height: max(100%, calc(100vh - 5rem));')
-    expect(challengeDetailSource).toContain('.detail-content {\n  display: flex;\n  flex: 1 1 auto;')
-    expect(challengeDetailSource).toMatch(/\.detail-grid,\s*\.workspace-grid\s*{\s*display:\s*grid;\s*flex:\s*1 1 auto;/)
+    expect(challengeDetailSource).toContain(
+      '.detail-content {\n  display: flex;\n  flex: 1 1 auto;'
+    )
+    expect(challengeDetailSource).toMatch(
+      /\.detail-grid,\s*\.workspace-grid\s*{\s*display:\s*grid;\s*flex:\s*1 1 auto;/
+    )
   })
 
   it('未解题时应显示题解锁定态', async () => {
@@ -826,7 +830,9 @@ describe('ChallengeDetail', () => {
     await new Promise((resolve) => setTimeout(resolve, 100))
 
     expect(wrapper.text()).toContain('重启实例')
-    expect(wrapper.text()).not.toContain('当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。')
+    expect(wrapper.text()).not.toContain(
+      '当前题目已完成，如仍需验证环境可前往实例列表查看历史实例。'
+    )
 
     const restartButton = wrapper.findAll('button').find((node) => node.text().includes('重启实例'))
     expect(restartButton).toBeTruthy()

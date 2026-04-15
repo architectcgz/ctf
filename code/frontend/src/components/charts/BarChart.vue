@@ -9,13 +9,16 @@ import VChart from 'vue-echarts'
 
 use([GridComponent, TooltipComponent, EChartsBarChart, CanvasRenderer])
 
-const props = withDefaults(defineProps<{
-  categories: string[]
-  data: number[]
-  seriesName?: string
-}>(), {
-  seriesName: '统计值',
-})
+const props = withDefaults(
+  defineProps<{
+    categories: string[]
+    data: number[]
+    seriesName?: string
+  }>(),
+  {
+    seriesName: '统计值',
+  }
+)
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()

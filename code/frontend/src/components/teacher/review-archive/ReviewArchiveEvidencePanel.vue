@@ -38,11 +38,7 @@ function toggleCase(caseId: string): void {
 }
 
 function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string[] {
-  return [
-    'archive-case',
-    `archive-case--${section}`,
-    `archive-case--${item.tone}`,
-  ]
+  return ['archive-case', `archive-case--${section}`, `archive-case--${item.tone}`]
 }
 </script>
 
@@ -58,10 +54,7 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           以练习题为单位整理接入、利用、提交和复盘材料，优先还原训练闭环。
         </p>
       </header>
-      <div
-        v-if="caseGroups.practiceCases.length === 0"
-        class="archive-panel__empty"
-      >
+      <div v-if="caseGroups.practiceCases.length === 0" class="archive-panel__empty">
         暂无练习复盘案例。
       </div>
       <div v-else class="case-list">
@@ -80,22 +73,14 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
               <p class="archive-case__subtitle">{{ item.subtitle }}</p>
             </div>
             <div class="archive-case__meta-grid">
-              <div
-                v-for="metric in item.metrics"
-                :key="metric.label"
-                class="archive-case__metric"
-              >
+              <div v-for="metric in item.metrics" :key="metric.label" class="archive-case__metric">
                 <span>{{ metric.label }}</span>
                 <strong>{{ metric.value }}</strong>
               </div>
             </div>
           </div>
           <div class="archive-case__stages">
-            <span
-              v-for="stage in item.stages"
-              :key="stage.key"
-              class="archive-case__stage"
-            >
+            <span v-for="stage in item.stages" :key="stage.key" class="archive-case__stage">
               {{ stage.label }} {{ stage.count }}
             </span>
           </div>
@@ -110,11 +95,7 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           </button>
           <div v-if="isExpanded(item.id)" class="archive-case__details">
             <ol class="archive-event-list">
-              <li
-                v-for="event in item.events"
-                :key="event.id"
-                class="archive-event"
-              >
+              <li v-for="event in item.events" :key="event.id" class="archive-event">
                 <div class="archive-event__head">
                   <strong>{{ event.label }}</strong>
                   <span>{{ event.timestamp }}</span>
@@ -141,10 +122,7 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           以题目和目标队伍为单位收束对抗过程，突出命中结果、得分和攻击节奏。
         </p>
       </header>
-      <div
-        v-if="caseGroups.awdCases.length === 0"
-        class="archive-panel__empty"
-      >
+      <div v-if="caseGroups.awdCases.length === 0" class="archive-panel__empty">
         暂无 AWD 对抗案例。
       </div>
       <div v-else class="case-list">
@@ -163,22 +141,14 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
               <p class="archive-case__subtitle">{{ item.subtitle }}</p>
             </div>
             <div class="archive-case__meta-grid">
-              <div
-                v-for="metric in item.metrics"
-                :key="metric.label"
-                class="archive-case__metric"
-              >
+              <div v-for="metric in item.metrics" :key="metric.label" class="archive-case__metric">
                 <span>{{ metric.label }}</span>
                 <strong>{{ metric.value }}</strong>
               </div>
             </div>
           </div>
           <div class="archive-case__stages">
-            <span
-              v-for="stage in item.stages"
-              :key="stage.key"
-              class="archive-case__stage"
-            >
+            <span v-for="stage in item.stages" :key="stage.key" class="archive-case__stage">
               {{ stage.label }} {{ stage.count }}
             </span>
           </div>
@@ -192,11 +162,7 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
           </button>
           <div v-if="isExpanded(item.id)" class="archive-case__details">
             <ol class="archive-event-list">
-              <li
-                v-for="event in item.events"
-                :key="event.id"
-                class="archive-event"
-              >
+              <li v-for="event in item.events" :key="event.id" class="archive-event">
                 <div class="archive-event__head">
                   <strong>{{ event.label }}</strong>
                   <span>{{ event.timestamp }}</span>
@@ -367,7 +333,9 @@ function cardClass(item: ReviewArchiveCase, section: 'practice' | 'awd'): string
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   background: transparent;
   color: var(--journal-ink);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
 }
 
 .archive-case__toggle:hover,

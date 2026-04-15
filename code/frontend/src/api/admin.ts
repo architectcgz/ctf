@@ -1039,7 +1039,9 @@ function normalizeAdminContestTeam(item: RawAdminContestTeamItem): AdminContestT
   }
 }
 
-function normalizeAdminContestChallenge(item: RawAdminContestChallengeItem): AdminContestChallengeData {
+function normalizeAdminContestChallenge(
+  item: RawAdminContestChallengeItem
+): AdminContestChallengeData {
   return {
     id: String(item.id),
     contest_id: String(item.contest_id),
@@ -1104,11 +1106,7 @@ function normalizeChallengePublishRequest(
   item: RawAdminChallengePublishRequestData
 ): AdminChallengePublishRequestData {
   const status =
-    item.status === 'pending'
-      ? 'queued'
-      : item.status === 'passed'
-        ? 'succeeded'
-        : item.status
+    item.status === 'pending' ? 'queued' : item.status === 'passed' ? 'succeeded' : item.status
 
   return {
     id: String(item.id),
@@ -1155,7 +1153,9 @@ function normalizeChallengePublishRequest(
   }
 }
 
-function normalizeChallengeImportPreview(item: RawChallengeImportPreview): AdminChallengeImportPreview {
+function normalizeChallengeImportPreview(
+  item: RawChallengeImportPreview
+): AdminChallengeImportPreview {
   return {
     id: String(item.id),
     file_name: item.file_name,

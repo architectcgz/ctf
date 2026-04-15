@@ -49,7 +49,9 @@ export function useAwdTrafficPanel({
     if (!trafficSummary.value || trafficSummary.value.total_request_count <= 0) {
       return 0
     }
-    return (trafficSummary.value.error_request_count / trafficSummary.value.total_request_count) * 100
+    return (
+      (trafficSummary.value.error_request_count / trafficSummary.value.total_request_count) * 100
+    )
   })
 
   const trafficTotalPages = computed(() =>
@@ -124,13 +126,14 @@ export function useAwdTrafficPanel({
     return `${peakBucket.label} 请求最高，共 ${peakBucket.request_count}，错误 ${peakBucket.error_count}。`
   })
 
-  const trafficStatusGroupOptions: Array<{ value: 'all' | AWDTrafficStatusGroup; label: string }> = [
-    { value: 'all', label: '全部状态' },
-    { value: 'success', label: '成功' },
-    { value: 'redirect', label: '重定向' },
-    { value: 'client_error', label: '客户端错误' },
-    { value: 'server_error', label: '服务端错误' },
-  ]
+  const trafficStatusGroupOptions: Array<{ value: 'all' | AWDTrafficStatusGroup; label: string }> =
+    [
+      { value: 'all', label: '全部状态' },
+      { value: 'success', label: '成功' },
+      { value: 'redirect', label: '重定向' },
+      { value: 'client_error', label: '客户端错误' },
+      { value: 'server_error', label: '服务端错误' },
+    ]
 
   function applyTrafficFilterPatch(patch: Partial<AWDTrafficFilters>): void {
     applyTrafficFilters(patch)

@@ -64,11 +64,15 @@
               <h1 class="workspace-page-title">题目管理</h1>
             </div>
             <p class="workspace-page-copy">
-              聚合《{{ challenge.title }}》的基础信息、附件与判题模式配置，便于和拓扑、题解工作区来回切换。
+              聚合《{{
+                challenge.title
+              }}》的基础信息、附件与判题模式配置，便于和拓扑、题解工作区来回切换。
             </p>
           </header>
 
-          <div class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface">
+          <div
+            class="challenge-overview-summary progress-strip metric-panel-grid metric-panel-default-surface"
+          >
             <article class="journal-note progress-card metric-panel-card">
               <div class="journal-note-label progress-card-label metric-panel-label">分类</div>
               <div class="journal-note-value progress-card-value metric-panel-value">
@@ -161,7 +165,10 @@
             </div>
           </section>
 
-          <section v-if="challenge.description" class="workspace-directory-section challenge-section">
+          <section
+            v-if="challenge.description"
+            class="workspace-directory-section challenge-section"
+          >
             <header class="list-heading">
               <div>
                 <div class="journal-note-label">Challenge Description</div>
@@ -176,7 +183,10 @@
             />
           </section>
 
-          <section v-if="challenge.hints?.length" class="workspace-directory-section challenge-section">
+          <section
+            v-if="challenge.hints?.length"
+            class="workspace-directory-section challenge-section"
+          >
             <div class="list-heading">
               <div>
                 <div class="journal-note-label">Hints</div>
@@ -258,22 +268,19 @@
                 </label>
               </div>
 
-              <div
-                v-if="isSharedInstanceChallenge"
-                class="challenge-flag-panel__warning"
-              >
-                共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用 per_user 或 per_team。
+              <div v-if="isSharedInstanceChallenge" class="challenge-flag-panel__warning">
+                共享实例只适用于无状态题。该模式不提供用户级答案隔离，静态/正则答案可能被转发；若需隔离答案，请使用
+                per_user 或 per_team。
               </div>
 
-              <div
-                v-if="flagType === 'manual_review'"
-                class="challenge-flag-panel__warning"
-              >
+              <div v-if="flagType === 'manual_review'" class="challenge-flag-panel__warning">
                 学生提交的答案将进入教师审核队列。审核通过后才会计分并更新通过状态。
               </div>
 
               <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="text-sm text-[var(--journal-muted)]">当前配置：{{ flagConfigSummary }}</div>
+                <div class="text-sm text-[var(--journal-muted)]">
+                  当前配置：{{ flagConfigSummary }}
+                </div>
                 <button
                   :disabled="saving"
                   class="admin-btn admin-btn-primary"
@@ -536,7 +543,9 @@ async function loadChallenge(id: string): Promise<void> {
 
 async function saveFlagConfig() {
   if (isSharedInstanceChallenge.value && flagType.value === 'dynamic') {
-    toast.error('共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team')
+    toast.error(
+      '共享实例只适用于无状态题，不支持动态 Flag；若需隔离答案，请使用 per_user 或 per_team'
+    )
     return
   }
 
@@ -699,12 +708,7 @@ watch(
 }
 
 .challenge-meta-item__mono {
-  font-family:
-    'IBM Plex Mono',
-    'JetBrains Mono',
-    'SFMono-Regular',
-    'Consolas',
-    monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', 'Consolas', monospace;
 }
 
 .challenge-meta-item--full {

@@ -183,9 +183,7 @@ const startButtonLabel = computed(() => {
     <div class="instance-kicker">Instance</div>
     <h2 class="instance-title">靶机实例</h2>
 
-    <div v-if="loading && !instance" class="instance-note">
-      正在同步当前题目的实例状态...
-    </div>
+    <div v-if="loading && !instance" class="instance-note">正在同步当前题目的实例状态...</div>
 
     <div v-else-if="instance">
       <div class="instance-hero">
@@ -193,9 +191,7 @@ const startButtonLabel = computed(() => {
         <div class="instance-time" :class="isUrgent ? 'instance-time--urgent' : ''">
           {{ remainingLabel }}
         </div>
-        <div class="instance-created">
-          创建于 {{ createdAtLabel }}
-        </div>
+        <div class="instance-created">创建于 {{ createdAtLabel }}</div>
         <div v-if="sharedStrategyLabel" class="instance-created">
           {{ sharedStrategyLabel }}
         </div>
@@ -216,29 +212,30 @@ const startButtonLabel = computed(() => {
         </div>
       </div>
 
-      <div
-        v-if="isWaiting"
-        class="instance-callout instance-callout--warning"
-      >
+      <div v-if="isWaiting" class="instance-callout instance-callout--warning">
         <div>实例正在排队创建，系统会自动刷新状态。</div>
         <div>{{ queueLabel }}</div>
         <div>{{ etaLabel }}</div>
         <div v-if="progressLabel">{{ progressLabel }}</div>
       </div>
-      <div
-        v-else-if="isReclaimingState"
-        class="instance-callout instance-callout--success"
-      >
+      <div v-else-if="isReclaimingState" class="instance-callout instance-callout--success">
         <div>
-          {{ effectiveStatus === 'expired' ? '实例已到期，系统已自动回收当前环境。' : '实例已结束，可直接重新启动。' }}
+          {{
+            effectiveStatus === 'expired'
+              ? '实例已到期，系统已自动回收当前环境。'
+              : '实例已结束，可直接重新启动。'
+          }}
         </div>
         <div>如需继续验证，可直接重启实例。</div>
       </div>
-      <div
-        v-else-if="isFailed"
-        class="instance-callout instance-callout--danger"
-      >
-        <div>{{ props.instance?.status === 'failed' ? '实例启动失败，当前目标不可访问。' : '实例运行异常，当前目标不可访问。' }}</div>
+      <div v-else-if="isFailed" class="instance-callout instance-callout--danger">
+        <div>
+          {{
+            props.instance?.status === 'failed'
+              ? '实例启动失败，当前目标不可访问。'
+              : '实例运行异常，当前目标不可访问。'
+          }}
+        </div>
         <div>可直接重启实例，系统会为你申请新的环境。</div>
       </div>
 
@@ -297,7 +294,9 @@ const startButtonLabel = computed(() => {
         </div>
         <div>
           {{
-            props.challengeSolved ? '题目已解出后仍可继续起环境验证，重复正确提交不会重复计分。' : '默认有效期 2 小时。'
+            props.challengeSolved
+              ? '题目已解出后仍可继续起环境验证，重复正确提交不会重复计分。'
+              : '默认有效期 2 小时。'
           }}
         </div>
       </div>

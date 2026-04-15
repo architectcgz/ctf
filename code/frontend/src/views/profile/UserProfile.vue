@@ -190,12 +190,7 @@ onUnmounted(() => {
     </div>
 
     <div v-else class="profile-page flex flex-1 flex-col">
-      <PageHeader
-        class="profile-topbar"
-        title="个人资料"
-        :description="pageCopy"
-        eyebrow="Profile"
-      >
+      <PageHeader class="profile-topbar" title="个人资料" :description="pageCopy" eyebrow="Profile">
         <div class="profile-topbar-actions">
           <div class="profile-pill">
             <span class="status-dot status-dot-ready" />
@@ -214,13 +209,20 @@ onUnmounted(() => {
           <span>账号概况</span>
         </div>
         <div class="profile-summary-grid metric-panel-grid">
-          <article v-for="item in profileSummaryItems" :key="item.key" class="profile-summary-item metric-panel-card">
+          <article
+            v-for="item in profileSummaryItems"
+            :key="item.key"
+            class="profile-summary-item metric-panel-card"
+          >
             <div class="profile-summary-icon">
               <component :is="item.icon" class="h-4 w-4" />
             </div>
             <div>
               <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
-              <div class="profile-summary-value metric-panel-value" :class="{ 'tech-font': item.techFont }">
+              <div
+                class="profile-summary-value metric-panel-value"
+                :class="{ 'tech-font': item.techFont }"
+              >
                 {{ item.value }}
               </div>
               <div class="journal-note-helper metric-panel-helper">{{ item.helper }}</div>
@@ -377,12 +379,24 @@ onUnmounted(() => {
 .journal-shell {
   --journal-shell-font: var(--font-family-sans);
   --journal-shell-accent: var(--color-primary);
-  --journal-shell-accent-strong: color-mix(in srgb, var(--color-primary-hover) 82%, var(--journal-ink));
+  --journal-shell-accent-strong: color-mix(
+    in srgb,
+    var(--color-primary-hover) 82%,
+    var(--journal-ink)
+  );
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-base));
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 74%,
+    var(--color-bg-base)
+  );
   --journal-shell-hero-radial-strength: 8%;
   --journal-shell-hero-radial-size: 18rem;
-  --journal-shell-hero-end: color-mix(in srgb, var(--journal-surface-subtle) 94%, var(--color-bg-base));
+  --journal-shell-hero-end: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 94%,
+    var(--color-bg-base)
+  );
   --journal-shell-hero-shadow: 0 18px 40px var(--color-shadow-soft);
   --journal-user-button-height: 2.7rem;
   --journal-user-button-radius: 999px;
@@ -396,7 +410,11 @@ onUnmounted(() => {
     var(--journal-accent) 12%,
     var(--journal-surface)
   );
-  --journal-user-button-primary-color: color-mix(in srgb, var(--journal-accent) 88%, var(--journal-ink));
+  --journal-user-button-primary-color: color-mix(
+    in srgb,
+    var(--journal-accent) 88%,
+    var(--journal-ink)
+  );
   --journal-user-tech-font: var(--font-family-mono);
 }
 

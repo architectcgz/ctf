@@ -87,7 +87,11 @@ function levelClass(level: string): string {
   padding: var(--space-4) var(--space-4);
   border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)), color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base)));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base)),
+    color-mix(in srgb, var(--journal-surface-subtle) 96%, var(--color-bg-base))
+  );
 }
 
 .observation--good {

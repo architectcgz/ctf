@@ -7,9 +7,7 @@ const sharedStylesSource = readFileSync(`${process.cwd()}/src/style.css`, 'utf-8
 describe('destructive confirm theme alignment', () => {
   it('危险确认框应通过主题 token 适配深浅色，而不是继续写死旧颜色回退', () => {
     expect(sharedStylesSource).toContain('.app-destructive-confirm-box.el-message-box {')
-    expect(sharedStylesSource).toContain(
-      '--destructive-confirm-accent: var(--color-danger);'
-    )
+    expect(sharedStylesSource).toContain('--destructive-confirm-accent: var(--color-danger);')
     expect(sharedStylesSource).toMatch(
       /--destructive-confirm-border:\s*color-mix\([\s\S]*var\(--destructive-confirm-accent\) 24%,[\s\S]*var\(--journal-border,\s*var\(--color-border-default\)\)[\s\S]*\);/
     )

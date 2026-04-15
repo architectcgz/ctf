@@ -123,7 +123,10 @@ function toISOString(value: string): string {
   return new Date(value).toISOString()
 }
 
-function shouldGateAWDContestStart(mode: ContestDetailData['mode'] | null, targetStatus: AdminContestStatus): boolean {
+function shouldGateAWDContestStart(
+  mode: ContestDetailData['mode'] | null,
+  targetStatus: AdminContestStatus
+): boolean {
   return mode === 'awd' && targetStatus === 'running'
 }
 

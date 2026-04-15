@@ -206,19 +206,27 @@ describe('TeacherClassStudents', () => {
     })
   })
 
-  it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构', () => {
+  it('班级详情页应采用与教学概览一致的顶部 tabs 壳层结构，并去掉页面内重复顶栏', () => {
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bworkspace-shell\b[^"]*"/)
     expect(classStudentsPageSource).toMatch(/class="[^"]*\bteacher-management-shell\b[^"]*"/)
-    expect(classStudentsPageSource).toContain('class="workspace-topbar"')
+    expect(classStudentsPageSource).not.toContain('class="workspace-topbar"')
     expect(classStudentsPageSource).toContain('class="top-tabs"')
     expect(classStudentsPageSource).toContain('class="content-pane"')
     expect(classStudentsPageSource).toMatch(
-      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<header class="workspace-topbar">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
+      /<div class="[^"]*\bworkspace-shell\b[^"]*">[\s\S]*<nav class="top-tabs"[\s\S]*<main class="content-pane">/s
     )
-    expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s)
-    expect(classStudentsPageSource).toMatch(/class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s)
-    expect(classStudentsPageSource).toMatch(/\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(classStudentsPageSource).toMatch(/\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
+    expect(classStudentsPageSource).toMatch(
+      /class="teacher-directory-row-title"[\s\S]*:title="student\.name \|\| '未设置姓名'"/s
+    )
+    expect(classStudentsPageSource).toMatch(
+      /class="teacher-directory-row-points"[\s\S]*:title="`@\$\{student\.username\}`"/s
+    )
+    expect(classStudentsPageSource).toMatch(
+      /\.teacher-directory-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(classStudentsPageSource).toMatch(
+      /\.teacher-directory-row-points\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
   })
 
   it('应该保留已解码的班级名并使用原值请求学生列表', async () => {

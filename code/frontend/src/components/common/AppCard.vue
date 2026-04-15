@@ -130,7 +130,8 @@ const headerClass = computed(() => {
 
 const titleClass = computed(() => {
   if (props.variant === 'hero') return 'text-xl font-semibold tracking-tight text-text-primary'
-  if (props.variant === 'metric') return 'text-[24px] font-semibold tracking-tight text-text-primary'
+  if (props.variant === 'metric')
+    return 'text-[24px] font-semibold tracking-tight text-text-primary'
   if (props.variant === 'action') return 'text-[15px] font-semibold text-text-primary'
   return 'text-base font-semibold text-text-primary'
 })
@@ -152,10 +153,7 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
     :type="props.as === 'button' ? 'button' : undefined"
   >
     <div>
-      <header
-        v-if="hasHeader || $slots.header"
-        :class="headerClass"
-      >
+      <header v-if="hasHeader || $slots.header" :class="headerClass">
         <div class="min-w-0">
           <div
             v-if="eyebrow"
@@ -164,16 +162,10 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
           >
             {{ eyebrow }}
           </div>
-          <h2
-            v-if="title"
-            :class="[titleClass, eyebrow ? 'mt-3' : '']"
-          >
+          <h2 v-if="title" :class="[titleClass, eyebrow ? 'mt-3' : '']">
             {{ title }}
           </h2>
-          <p
-            v-if="subtitle"
-            :class="subtitleClass"
-          >
+          <p v-if="subtitle" :class="subtitleClass">
             {{ subtitle }}
           </p>
         </div>
@@ -193,10 +185,7 @@ const accentChipStyle = computed<Record<string, string>>(() => ({
         <slot />
       </div>
 
-      <footer
-        v-if="$slots.footer"
-        class="mt-3 border-t border-border-subtle pt-3"
-      >
+      <footer v-if="$slots.footer" class="mt-3 border-t border-border-subtle pt-3">
         <slot name="footer" />
       </footer>
     </div>

@@ -51,11 +51,13 @@ const servicesByChallenge = computed(() => {
 const currentRound = computed(() => workspace.value?.current_round)
 const myTeam = computed(() => workspace.value?.my_team ?? null)
 const topScore = computed(() => scoreboardRows.value[0]?.score ?? 0)
-const lastSyncedLabel = computed(() => (lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'))
+const lastSyncedLabel = computed(() =>
+  lastSyncedAt.value ? formatTime(lastSyncedAt.value) : '未同步'
+)
 const targetFilterKeyword = computed(() => targetKeyword.value.trim().toLowerCase())
 
-const activeChallenge = computed(() =>
-  props.challenges.find((item) => item.challenge_id === activeChallengeId.value) || null
+const activeChallenge = computed(
+  () => props.challenges.find((item) => item.challenge_id === activeChallengeId.value) || null
 )
 
 const activeTargets = computed(() => {
@@ -64,7 +66,9 @@ const activeTargets = computed(() => {
   }
   return workspace.value.targets.map((target) => ({
     ...target,
-    active_service: target.services.find((service) => service.challenge_id === activeChallengeId.value),
+    active_service: target.services.find(
+      (service) => service.challenge_id === activeChallengeId.value
+    ),
   }))
 })
 
@@ -73,7 +77,8 @@ const filteredTargets = computed(() =>
     const matchesKeyword =
       targetFilterKeyword.value.length === 0 ||
       target.team_name.toLowerCase().includes(targetFilterKeyword.value)
-    const matchesReachable = !showOnlyReachableTargets.value || Boolean(target.active_service?.access_url)
+    const matchesReachable =
+      !showOnlyReachableTargets.value || Boolean(target.active_service?.access_url)
     return matchesKeyword && matchesReachable
   })
 )
@@ -179,7 +184,9 @@ function buildAttackKey(challengeId: string, teamId: string): string {
 }
 
 function getDefenseAlertClass(tone: 'danger' | 'warning'): string {
-  return tone === 'danger' ? 'awd-defense-row awd-defense-row--danger' : 'awd-defense-row awd-defense-row--warning'
+  return tone === 'danger'
+    ? 'awd-defense-row awd-defense-row--danger'
+    : 'awd-defense-row awd-defense-row--warning'
 }
 
 async function handleSubmit(challengeId: string, teamId: string): Promise<void> {
@@ -207,7 +214,11 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
           {{ currentRound ? `Round ${currentRound.round_number}` : '等待开赛' }}
         </div>
         <div class="metric-panel-helper">
-          {{ currentRound ? `${currentRound.attack_score}/${currentRound.defense_score} 分值` : '轮次尚未开始' }}
+          {{
+            currentRound
+              ? `${currentRound.attack_score}/${currentRound.defense_score} 分值`
+              : '轮次尚未开始'
+          }}
         </div>
       </article>
       <article class="metric-panel-card">
@@ -269,7 +280,12 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="awd-defense-row__head">
                 <div class="awd-defense-row__title">
                   <h3>{{ alert.challengeTitle }}</h3>
-                  <span class="contest-chip" :class="alert.tone === 'danger' ? 'contest-chip--status' : 'contest-chip--neutral'">
+                  <span
+                    class="contest-chip"
+                    :class="
+                      alert.tone === 'danger' ? 'contest-chip--status' : 'contest-chip--neutral'
+                    "
+                  >
                     {{ alert.statusLabel }}
                   </span>
                 </div>
@@ -295,16 +311,22 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
           </div>
 
           <div v-else class="awd-service-list">
-            <article
-              v-for="challenge in challenges"
-              :key="challenge.id"
-              class="awd-service-row"
-            >
+            <article v-for="challenge in challenges" :key="challenge.id" class="awd-service-row">
               <div class="awd-service-row__main">
                 <div class="awd-service-row__head">
                   <h3>{{ challenge.title }}</h3>
-                  <span :class="getServiceStatusClass(servicesByChallenge.get(challenge.challenge_id)?.service_status)">
-                    {{ getServiceStatusLabel(servicesByChallenge.get(challenge.challenge_id)?.service_status) }}
+                  <span
+                    :class="
+                      getServiceStatusClass(
+                        servicesByChallenge.get(challenge.challenge_id)?.service_status
+                      )
+                    "
+                  >
+                    {{
+                      getServiceStatusLabel(
+                        servicesByChallenge.get(challenge.challenge_id)?.service_status
+                      )
+                    }}
                   </span>
                 </div>
                 <div class="awd-service-row__meta">
@@ -352,15 +374,27 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="contest-overline">Targets</div>
               <h2 class="contest-section__title workspace-tab-heading__title">目标目录</h2>
             </div>
-            <div class="contest-section__hint">{{ filteredTargets.length }}/{{ activeTargets.length }} 支队伍</div>
+            <div class="contest-section__hint">
+              {{ filteredTargets.length }}/{{ activeTargets.length }} 支队伍
+            </div>
           </div>
 
           <div class="awd-target-toolbar">
             <div class="awd-target-toolbar__field">
               <label class="flag-submit__label" for="awd-target-challenge">攻击题目</label>
-              <select id="awd-target-challenge" v-model="activeChallengeId" class="awd-target-select">
-                <option v-if="challenges.length === 0" value="" disabled>当前没有可选攻击题目</option>
-                <option v-for="challenge in challenges" :key="challenge.challenge_id" :value="challenge.challenge_id">
+              <select
+                id="awd-target-challenge"
+                v-model="activeChallengeId"
+                class="awd-target-select"
+              >
+                <option v-if="challenges.length === 0" value="" disabled>
+                  当前没有可选攻击题目
+                </option>
+                <option
+                  v-for="challenge in challenges"
+                  :key="challenge.challenge_id"
+                  :value="challenge.challenge_id"
+                >
                   {{ challenge.title }}
                 </option>
               </select>
@@ -378,25 +412,23 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
             </div>
 
             <label class="awd-target-toggle" for="awd-target-reachable-only">
-              <input id="awd-target-reachable-only" v-model="showOnlyReachableTargets" type="checkbox" />
+              <input
+                id="awd-target-reachable-only"
+                v-model="showOnlyReachableTargets"
+                type="checkbox"
+              />
               <span>仅看可用地址</span>
             </label>
           </div>
 
-          <div v-if="!activeChallenge" class="contest-inline-note">
-            当前没有可选攻击题目。
-          </div>
+          <div v-if="!activeChallenge" class="contest-inline-note">当前没有可选攻击题目。</div>
 
           <div v-else-if="filteredTargets.length === 0" class="contest-inline-note">
             没有匹配的目标队伍。
           </div>
 
           <div v-else class="awd-target-list">
-            <article
-              v-for="target in filteredTargets"
-              :key="target.team_id"
-              class="awd-target-row"
-            >
+            <article v-for="target in filteredTargets" :key="target.team_id" class="awd-target-row">
               <div class="awd-target-row__main">
                 <div class="awd-target-row__head">
                   <div class="contest-chip contest-chip--neutral">{{ target.team_name }}</div>
@@ -408,16 +440,24 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
 
               <div class="awd-target-row__form">
                 <input
-                  :value="flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] || ''"
+                  :value="
+                    flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] || ''
+                  "
                   type="text"
                   class="flag-submit__input"
                   placeholder="flag{...}"
-                  @input="flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] = String(($event.target as HTMLInputElement).value)"
+                  @input="
+                    flagInputs[buildAttackKey(activeChallenge.challenge_id, target.team_id)] =
+                      String(($event.target as HTMLInputElement).value)
+                  "
                 />
                 <button
                   type="button"
                   class="contest-btn contest-btn--primary"
-                  :disabled="!target.active_service?.access_url || submittingKey === buildAttackKey(activeChallenge.challenge_id, target.team_id)"
+                  :disabled="
+                    !target.active_service?.access_url ||
+                    submittingKey === buildAttackKey(activeChallenge.challenge_id, target.team_id)
+                  "
                   @click="handleSubmit(activeChallenge.challenge_id, target.team_id)"
                 >
                   {{
@@ -451,7 +491,12 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               <div class="contest-overline">Status</div>
               <h2 class="contest-section__title workspace-tab-heading__title">战场状态</h2>
             </div>
-            <button type="button" class="contest-btn contest-btn--ghost contest-btn--compact" :disabled="loading" @click="refreshAll">
+            <button
+              type="button"
+              class="contest-btn contest-btn--ghost contest-btn--compact"
+              :disabled="loading"
+              @click="refreshAll"
+            >
               {{ loading ? '刷新中...' : '立即刷新' }}
             </button>
           </div>
@@ -459,7 +504,9 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
           <div class="awd-rail-list">
             <div class="awd-rail-row">
               <span>当前轮次</span>
-              <strong>{{ currentRound ? `Round ${currentRound.round_number}` : '等待开赛' }}</strong>
+              <strong>{{
+                currentRound ? `Round ${currentRound.round_number}` : '等待开赛'
+              }}</strong>
             </div>
             <div class="awd-rail-row">
               <span>轮次状态</span>
@@ -493,11 +540,7 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
           </div>
 
           <div v-else class="awd-scoreboard-list">
-            <div
-              v-for="item in scoreboardRows"
-              :key="item.team_id"
-              class="awd-scoreboard-row"
-            >
+            <div v-for="item in scoreboardRows" :key="item.team_id" class="awd-scoreboard-row">
               <span class="awd-scoreboard-rank">{{ item.rank }}</span>
               <span class="awd-scoreboard-team">{{ item.team_name }}</span>
               <strong class="awd-scoreboard-score">{{ item.score }}</strong>
@@ -524,7 +567,9 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
               class="awd-event-row"
             >
               <div class="awd-event-row__head">
-                <span class="contest-chip contest-chip--neutral">{{ eventDirectionLabel(event.direction) }}</span>
+                <span class="contest-chip contest-chip--neutral">{{
+                  eventDirectionLabel(event.direction)
+                }}</span>
                 <span>{{ event.peer_team_name }}</span>
               </div>
               <div class="awd-event-row__meta">
@@ -644,7 +689,10 @@ async function handleSubmit(challengeId: string, teamId: string): Promise<void> 
   padding: 0.55rem 0.95rem;
   font-size: var(--font-size-0-84);
   font-weight: 700;
-  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .contest-btn:disabled {

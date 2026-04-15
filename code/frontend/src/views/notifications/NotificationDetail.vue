@@ -134,11 +134,7 @@ watch(
       <article v-else class="notification-detail-page">
         <header class="notification-detail-header">
           <div class="notification-detail-header-main">
-            <button
-              type="button"
-              class="notification-detail-back"
-              @click="goBackToNotifications"
-            >
+            <button type="button" class="notification-detail-back" @click="goBackToNotifications">
               <ArrowLeft class="h-4 w-4" />
               返回通知列表
             </button>

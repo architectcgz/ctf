@@ -16,12 +16,7 @@ const emit = defineEmits<{
   edit: []
 }>()
 
-const {
-  loading,
-  challenge,
-  writeup,
-  loadPage,
-} = useChallengeWriteupEditorPage(props.challengeId)
+const { loading, challenge, writeup, loadPage } = useChallengeWriteupEditorPage(props.challengeId)
 </script>
 
 <template>
@@ -34,7 +29,9 @@ const {
         <span class="class-chip">查看题解</span>
       </div>
       <div class="writeup-top-actions">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">返回题目</button>
+        <button class="admin-btn admin-btn-ghost" type="button" @click="emit('back')">
+          返回题目
+        </button>
         <button
           v-if="writeup"
           class="admin-btn admin-btn-primary"

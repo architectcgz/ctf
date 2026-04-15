@@ -195,7 +195,10 @@ export function useTeacherStudentAnalysisPage() {
         page: targetPage,
         page_size: writeupPageSize.value,
       })
-      const totalPages = Math.max(1, Math.ceil(nextWriteups.total / Math.max(1, nextWriteups.page_size)))
+      const totalPages = Math.max(
+        1,
+        Math.ceil(nextWriteups.total / Math.max(1, nextWriteups.page_size))
+      )
       if (targetPage > totalPages) {
         writeupPaginationLoading.value = false
         await refreshWriteupSubmissions(studentId, totalPages)

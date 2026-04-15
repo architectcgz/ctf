@@ -159,7 +159,11 @@
                 <template v-else>
                   <div class="solution-layout">
                     <div class="solution-nav">
-                      <div class="solution-tabbar top-tabs challenge-subtabs" role="tablist" aria-label="题解分类">
+                      <div
+                        class="solution-tabbar top-tabs challenge-subtabs"
+                        role="tablist"
+                        aria-label="题解分类"
+                      >
                         <button
                           id="challenge-solutions-tab-recommended"
                           type="button"
@@ -312,7 +316,10 @@
                 </div>
               </div>
 
-              <div v-if="submissionRecordTotal > 0" class="submission-pagination workspace-directory-pagination">
+              <div
+                v-if="submissionRecordTotal > 0"
+                class="submission-pagination workspace-directory-pagination"
+              >
                 <PagePaginationControls
                   :page="submissionRecordPage"
                   :total-pages="submissionRecordTotalPages"
@@ -439,10 +446,10 @@
         <aside v-if="activeWorkspaceTab === 'question'" class="detail-aside tool-pane">
           <div class="tool-pane-inner">
             <section class="tool-group">
-                <div>
-                  <div class="overline">Primary Action</div>
-                  <h2 class="tool-title">{{ submitPanelTitle }}</h2>
-                  <p class="tool-copy">{{ submitPanelCopy }}</p>
+              <div>
+                <div class="overline">Primary Action</div>
+                <h2 class="tool-title">{{ submitPanelTitle }}</h2>
+                <p class="tool-copy">{{ submitPanelCopy }}</p>
               </div>
               <span
                 v-if="challenge?.is_solved"
@@ -451,7 +458,9 @@
                 已通过
               </span>
               <div class="flag-field">
-                <label for="challenge-flag-input" class="flag-label"> {{ submitFieldLabel }} </label>
+                <label for="challenge-flag-input" class="flag-label">
+                  {{ submitFieldLabel }}
+                </label>
                 <div class="flag-row">
                   <input
                     id="challenge-flag-input"
@@ -658,13 +667,11 @@ function changeSubmissionRecordPage(page: number): void {
   submissionRecordPage.value = page
 }
 
-const {
-  setTabButtonRef: setSolutionTabButtonRef,
-  handleTabKeydown: handleSolutionTabKeydown,
-} = useTabKeyboardNavigation<ChallengeSolutionTab>({
-  orderedTabs: solutionTabOrder,
-  selectTab: selectSolutionTab,
-})
+const { setTabButtonRef: setSolutionTabButtonRef, handleTabKeydown: handleSolutionTabKeydown } =
+  useTabKeyboardNavigation<ChallengeSolutionTab>({
+    orderedTabs: solutionTabOrder,
+    selectTab: selectSolutionTab,
+  })
 
 async function loadSolutions(id: string): Promise<void> {
   try {

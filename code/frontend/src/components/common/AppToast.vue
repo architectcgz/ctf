@@ -3,9 +3,7 @@
     <div
       v-for="item in toasts"
       :key="item.id"
-      :class="[
-        'app-toast-item group relative overflow-hidden rounded-[22px] border px-4 py-3.5',
-      ]"
+      :class="['app-toast-item group relative overflow-hidden rounded-[22px] border px-4 py-3.5']"
       :style="toneMeta(item.type).containerStyle"
       :role="item.type === 'error' ? 'alert' : 'status'"
       :aria-live="item.type === 'error' ? 'assertive' : 'polite'"

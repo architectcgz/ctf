@@ -34,14 +34,19 @@ const { selectedClassName, searchQuery, studentNoQuery } = filters
 const { students, loading: loadingStudents } = studentListQuery
 const error = computed(() => pageError.value ?? studentListQuery.error.value)
 const filteredTotal = computed(() => students.value.length)
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1))))
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(filteredTotal.value / Math.max(pageSize.value, 1)))
+)
 const paginatedStudents = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return students.value.slice(start, start + pageSize.value)
 })
 const totalStudents = computed(() => {
   if (selectedClassName.value) {
-    return classes.value.find((item) => item.name === selectedClassName.value)?.student_count ?? students.value.length
+    return (
+      classes.value.find((item) => item.name === selectedClassName.value)?.student_count ??
+      students.value.length
+    )
   }
 
   return classes.value.reduce((total, item) => total + (item.student_count || 0), 0)

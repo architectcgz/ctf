@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF UI 风格方案演示中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body { font-family: 'Inter', sans-serif; transition: var(--transition); }
+        
+        /* --- 风格一：Hacker Console --- */
+        .theme-hacker {
+            background-color: #050505;
+            color: #00ff41;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .theme-hacker .card {
+            border: 1px solid #00ff41;
+            background: rgba(0, 255, 65, 0.05);
+            border-radius: 0;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);
+        }
+        .theme-hacker .btn-primary {
+            background: #00ff41;
+            color: #000;
+            font-weight: bold;
+            border-radius: 0;
+            text-transform: uppercase;
+        }
+        .theme-hacker .scanline {
+            position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 255, 65, 0.1);
+            z-index: 100; pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+
+        /* --- 风格二：Modern Dev --- */
+        .theme-modern {
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .theme-modern .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .theme-modern .btn-primary {
+            background: #2563eb;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        /* --- 风格三：Tactical HUD --- */
+        .theme-tactical {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            background-image: radial-gradient(#2d3748 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .theme-tactical .card {
+            background: #2d3748;
+            border-left: 4px solid #ed8936;
+            border-radius: 4px;
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+        }
+        .theme-tactical .btn-primary {
+            background: #ed8936;
+            color: #1a202c;
+            border-radius: 2px;
+            font-weight: 800;
+        }
+
+        /* --- 风格四：Minimal Academy --- */
+        .theme-academy {
+            background-color: #ffffff;
+            color: #2d3748;
+        }
+        .theme-academy .card {
+            background: #f7fafc;
+            border: 2px solid #edf2f7;
+            border-radius: 24px;
+        }
+        .theme-academy .btn-primary {
+            background: #48bb78;
+            color: white;
+            border-radius: 999px;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+    </style>
+</head>
+<body class="theme-modern" id="main-body">
+    <div class="scanline hidden" id="hacker-scanline"></div>
+    
+    <!-- 顶部控制条（不随风格变化） -->
+    <nav class="bg-gray-900 text-white p-4 sticky top-0 z-50 shadow-2xl">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <span class="font-bold tracking-widest text-sm">STYLE SWITCHER</span>
+            <div class="flex gap-2">
+                <button onclick="switchTheme('hacker')" class="px-3 py-1 bg-green-900 border border-green-400 text-[10px] rounded hover:bg-green-700 transition">风格1: HACKER</button>
+                <button onclick="switchTheme('modern')" class="px-3 py-1 bg-blue-900 border border-blue-400 text-[10px] rounded hover:bg-blue-700 transition">风格2: MODERN</button>
+                <button onclick="switchTheme('tactical')" class="px-3 py-1 bg-orange-900 border border-orange-400 text-[10px] rounded hover:bg-orange-700 transition">风格3: TACTICAL</button>
+                <button onclick="switchTheme('academy')" class="px-3 py-1 bg-gray-600 border border-gray-400 text-[10px] rounded hover:bg-gray-500 transition">风格4: ACADEMY</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-8">
+        <!-- 头部 -->
+        <div class="flex justify-between items-end mb-12">
+            <div>
+                <h1 class="text-4xl font-extrabold tracking-tighter mb-2" id="ui-title">资源管理中心</h1>
+                <p class="opacity-60 text-sm uppercase tracking-widest font-bold">Project / Challenge / Platform</p>
+            </div>
+            <div class="flex gap-4">
+                <button class="btn-primary px-6 py-3 transition-transform active:scale-95 shadow-lg">新建题目任务</button>
+            </div>
+        </div>
+
+        <!-- 统计面板 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="card p-6">
+                <div class="opacity-50 text-[10px] font-bold mb-4">TOTAL_CHALLENGES</div>
+                <div class="text-5xl font-black">256</div>
+                <div class="mt-4 text-[10px] font-bold text-green-500">+12% 同比增长</div>
+            </div>
+            <div class="card p-6">
+                <div class="opacity-50 text-[10px] font-bold mb-4">ACTIVE_INSTANCES</div>
+                <div class="text-5xl font-black">42</div>
+                <div class="mt-4 text-[10px] font-bold text-blue-400">运行状态良好</div>
+            </div>
+            <div class="card p-6">
+                <div class="opacity-50 text-[10px] font-bold mb-4">PENDING_REVIEW</div>
+                <div class="text-5xl font-black">08</div>
+                <div class="mt-4 text-[10px] font-bold text-red-500">需要立即处理</div>
+            </div>
+        </div>
+
+        <!-- 列表区域 -->
+        <div class="card overflow-hidden">
+            <div class="p-4 border-b border-current border-opacity-10 flex justify-between items-center bg-current bg-opacity-5">
+                <span class="font-bold text-xs">题目列表清单</span>
+                <div class="flex gap-2">
+                    <input type="text" placeholder="搜索关键词..." class="bg-black bg-opacity-10 border border-current border-opacity-20 rounded px-3 py-1 text-xs outline-none focus:border-opacity-100 transition">
+                </div>
+            </div>
+            <table class="w-full text-left">
+                <thead class="text-[10px] opacity-50 uppercase tracking-widest">
+                    <tr>
+                        <th class="p-6">题目名称</th>
+                        <th class="p-6">分类</th>
+                        <th class="p-6">难度系数</th>
+                        <th class="p-6 text-right">分值</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-current divide-opacity-10">
+                    <tr class="hover:bg-current hover:bg-opacity-5 transition">
+                        <td class="p-6 font-bold">SQL Injection Mastery</td>
+                        <td class="p-6"><span class="px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-500 text-[10px] font-bold rounded">WEB</span></td>
+                        <td class="p-6">MEDIUM</td>
+                        <td class="p-6 text-right font-mono font-bold">500</td>
+                    </tr>
+                    <tr class="hover:bg-current hover:bg-opacity-5 transition">
+                        <td class="p-6 font-bold">Binary Overflow 0x01</td>
+                        <td class="p-6"><span class="px-2 py-1 bg-red-500 bg-opacity-20 text-red-500 text-[10px] font-bold rounded">PWN</span></td>
+                        <td class="p-6">HARD</td>
+                        <td class="p-6 text-right font-mono font-bold">850</td>
+                    </tr>
+                    <tr class="hover:bg-current hover:bg-opacity-5 transition">
+                        <td class="p-6 font-bold">Hidden Signal Analysis</td>
+                        <td class="p-6"><span class="px-2 py-1 bg-purple-500 bg-opacity-20 text-purple-500 text-[10px] font-bold rounded">MISC</span></td>
+                        <td class="p-6">EASY</td>
+                        <td class="p-6 text-right font-mono font-bold">150</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="mt-12 text-center opacity-30 text-[10px] font-bold tracking-widest">
+            DESIGNED FOR CTF OPS SYSTEM BY GEMINI-CLI
+        </div>
+    </main>
+
+    <script>
+        function switchTheme(theme) {
+            const body = document.getElementById('main-body');
+            const scanline = document.getElementById('hacker-scanline');
+            const title = document.getElementById('ui-title');
+            
+            // 重置
+            body.className = 'theme-' + theme;
+            scanline.classList.add('hidden');
+            
+            if (theme === 'hacker') {
+                scanline.classList.remove('hidden');
+                title.innerText = 'SYSTEM_ADMIN_VAULT';
+            } else if (theme === 'tactical') {
+                title.innerText = 'COMMAND CENTER';
+            } else if (theme === 'academy') {
+                title.innerText = '题库中心';
+            } else {
+                title.innerText = '资源管理中心';
+            }
+        }
+    </script>
+</body>
+</html>

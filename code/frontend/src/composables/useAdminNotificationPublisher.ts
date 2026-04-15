@@ -36,7 +36,9 @@ function createDefaultForm(): NotificationPublishFormDraft {
 }
 
 function uniqueValues(values: string[]): string[] {
-  return Array.from(new Set(values.map((value) => value.trim()).filter((value) => value.length > 0)))
+  return Array.from(
+    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
+  )
 }
 
 export function useAdminNotificationPublisher() {
@@ -219,7 +221,9 @@ export function useAdminNotificationPublisher() {
       toast.success(`通知发布成功，已投递 ${result.recipient_count} 人。`)
       return result
     } catch (error) {
-      toast.error(error instanceof Error && error.message ? error.message : '通知发布失败，请稍后重试。')
+      toast.error(
+        error instanceof Error && error.message ? error.message : '通知发布失败，请稍后重试。'
+      )
       return null
     } finally {
       submitting.value = false

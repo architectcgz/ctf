@@ -40,6 +40,14 @@ export const useContestStore = defineStore('contest', () => {
     isFrozen.value = val
   }
 
-  return { currentContest, scoreboard, announcements, isFrozen, myTeam, updateScoreboard, addAnnouncement, setFrozen }
+  return {
+    currentContest,
+    scoreboard,
+    announcements,
+    isFrozen,
+    myTeam,
+    updateScoreboard,
+    addAnnouncement,
+    setFrozen,
+  }
 })
-

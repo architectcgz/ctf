@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { ReviewArchiveManualReviewItemData, ReviewArchiveWriteupItemData } from '@/api/contracts'
+import type {
+  ReviewArchiveManualReviewItemData,
+  ReviewArchiveWriteupItemData,
+} from '@/api/contracts'
 
 function submissionStatusLabel(status: ReviewArchiveWriteupItemData['submission_status']): string {
   return status === 'published' || status === 'submitted' ? '已发布' : '草稿'
@@ -26,14 +29,12 @@ defineProps<{
       </header>
       <div v-if="writeups.length === 0" class="archive-panel__empty">暂无 Writeup 记录。</div>
       <div v-else class="reflection-list">
-        <article
-          v-for="item in writeups"
-          :key="item.id"
-          class="reflection-item"
-        >
+        <article v-for="item in writeups" :key="item.id" class="reflection-item">
           <div class="reflection-item__head">
             <strong>{{ item.title }}</strong>
-            <span>{{ item.is_recommended ? '推荐题解' : visibilityStatusLabel(item.visibility_status) }}</span>
+            <span>{{
+              item.is_recommended ? '推荐题解' : visibilityStatusLabel(item.visibility_status)
+            }}</span>
           </div>
           <p class="reflection-item__subhead">{{ item.challenge_title }}</p>
           <div class="reflection-item__meta">
@@ -54,11 +55,7 @@ defineProps<{
       </header>
       <div v-if="manualReviews.length === 0" class="archive-panel__empty">暂无人工审核记录。</div>
       <div v-else class="reflection-list">
-        <article
-          v-for="item in manualReviews"
-          :key="item.id"
-          class="reflection-item"
-        >
+        <article v-for="item in manualReviews" :key="item.id" class="reflection-item">
           <div class="reflection-item__head">
             <strong>{{ item.challenge_title }}</strong>
             <span>{{ item.review_status }}</span>
@@ -120,7 +117,11 @@ defineProps<{
   padding: var(--space-4) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 92%, var(--color-bg-base));
+  background: color-mix(
+    in srgb,
+    var(--journal-surface, var(--color-bg-surface)) 92%,
+    var(--color-bg-base)
+  );
 }
 
 .reflection-item__head,

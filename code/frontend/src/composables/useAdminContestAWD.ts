@@ -103,7 +103,11 @@ function persistSelectedRoundId(contestId: string, roundId: string | null): void
   window.sessionStorage.removeItem(storageKey)
 }
 
-function pickRoundId(rounds: AWDRoundData[], currentRoundId: string | null, preferredRoundId?: string): string | null {
+function pickRoundId(
+  rounds: AWDRoundData[],
+  currentRoundId: string | null,
+  preferredRoundId?: string
+): string | null {
   if (preferredRoundId && rounds.some((item) => item.id === preferredRoundId)) {
     return preferredRoundId
   }
@@ -170,8 +174,8 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     createDefaultOverrideDialogState()
   )
 
-  const selectedRound = computed(() =>
-    rounds.value.find((item) => item.id === selectedRoundId.value) || null
+  const selectedRound = computed(
+    () => rounds.value.find((item) => item.id === selectedRoundId.value) || null
   )
 
   const hasSelectedContest = computed(
@@ -331,13 +335,23 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
     loadingTrafficSummary.value = true
     loadingTrafficEvents.value = true
     try {
-      const [nextServices, nextAttacks, nextSummary, nextTrafficSummary, nextTrafficEvents, nextScoreboard] =
-        await Promise.all([
+      const [
+        nextServices,
+        nextAttacks,
+        nextSummary,
+        nextTrafficSummary,
+        nextTrafficEvents,
+        nextScoreboard,
+      ] = await Promise.all([
         listContestAWDRoundServices(selectedContest.value.id, roundId),
         listContestAWDRoundAttacks(selectedContest.value.id, roundId),
         getContestAWDRoundSummary(selectedContest.value.id, roundId),
         getContestAWDRoundTrafficSummary(selectedContest.value.id, roundId),
-        listContestAWDRoundTrafficEvents(selectedContest.value.id, roundId, getTrafficEventsParams()),
+        listContestAWDRoundTrafficEvents(
+          selectedContest.value.id,
+          roundId,
+          getTrafficEventsParams()
+        ),
         getAdminContestLiveScoreboard(selectedContest.value.id, { page: 1, page_size: 10 }),
       ])
 
@@ -470,15 +484,12 @@ export function useAdminContestAWD(selectedContest: Readonly<Ref<ContestDetailDa
           (item) => item.id === previousSelectedRound?.id && item.status === 'running'
         )
         if (!previousRoundStillRunning) {
-          nextPreferredRoundId = nextRounds.find((item) => item.status === 'running')?.id || nextPreferredRoundId
+          nextPreferredRoundId =
+            nextRounds.find((item) => item.status === 'running')?.id || nextPreferredRoundId
         }
       }
       syncingSelectedRound = true
-      selectedRoundId.value = pickRoundId(
-        nextRounds,
-        selectedRoundId.value,
-        nextPreferredRoundId
-      )
+      selectedRoundId.value = pickRoundId(nextRounds, selectedRoundId.value, nextPreferredRoundId)
       syncingSelectedRound = false
       await refreshRoundDetail(selectedRoundId.value)
     } finally {

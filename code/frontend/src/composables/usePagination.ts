@@ -15,7 +15,10 @@ export interface PaginationState<T> {
 }
 
 export function usePagination<T>(
-  fetchFn: (params: { page: number; page_size: number }) => Promise<{ list: T[]; total: number; page: number; page_size: number }>
+  fetchFn: (params: {
+    page: number
+    page_size: number
+  }) => Promise<{ list: T[]; total: number; page: number; page_size: number }>
 ): PaginationState<T> {
   const list = ref<T[]>([]) as Ref<T[]>
   const total = ref(0)

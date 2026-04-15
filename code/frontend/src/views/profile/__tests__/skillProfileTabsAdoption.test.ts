@@ -8,10 +8,18 @@ describe('skill profile tabs adoption', () => {
       "import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'"
     )
     expect(skillProfileSource).toContain('useUrlSyncedTabs<SkillProfileTabKey>(')
-    expect(skillProfileSource).not.toContain('const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])')
-    expect(skillProfileSource).not.toContain('function resolveTabFromLocation(): SkillProfileTabKey {')
-    expect(skillProfileSource).not.toContain('function syncPanelToLocation(tabKey: SkillProfileTabKey): void {')
+    expect(skillProfileSource).not.toContain(
+      'const tabButtonRefs = ref<Array<HTMLButtonElement | null>>([])'
+    )
+    expect(skillProfileSource).not.toContain(
+      'function resolveTabFromLocation(): SkillProfileTabKey {'
+    )
+    expect(skillProfileSource).not.toContain(
+      'function syncPanelToLocation(tabKey: SkillProfileTabKey): void {'
+    )
     expect(skillProfileSource).not.toContain('function focusTab(index: number): void {')
-    expect(skillProfileSource).not.toContain('function handleTabKeydown(event: KeyboardEvent, index: number): void {')
+    expect(skillProfileSource).not.toContain(
+      'function handleTabKeydown(event: KeyboardEvent, index: number): void {'
+    )
   })
 })

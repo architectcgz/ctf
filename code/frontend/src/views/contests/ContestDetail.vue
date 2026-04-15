@@ -106,7 +106,6 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
     solved ? 'contest-challenge--solved' : '',
   ]
 }
-
 </script>
 
 <template>
@@ -120,7 +119,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
       </div>
 
       <template v-else-if="contest">
-        <ContestAnnouncementRealtimeBridge :contest-id="contest.id" @updated="refreshAnnouncements" />
+        <ContestAnnouncementRealtimeBridge
+          :contest-id="contest.id"
+          @updated="refreshAnnouncements"
+        />
 
         <div class="workspace-tabbar top-tabs" role="tablist" aria-label="竞赛页面主切换">
           <button
@@ -341,13 +343,19 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
           <section class="contest-section">
             <div class="contest-section__head workspace-tab-heading">
               <div class="workspace-tab-heading__main">
-                <div class="contest-overline">{{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}</div>
+                <div class="contest-overline">
+                  {{ contest.mode === 'awd' ? 'Battle' : 'Challenges' }}
+                </div>
                 <h2 class="contest-section__title workspace-tab-heading__title">
                   {{ contest.mode === 'awd' ? '战场' : '题目' }}
                 </h2>
               </div>
               <div class="contest-section__hint">
-                {{ contest.mode === 'awd' ? `${challenges.length} 题` : `${solvedCount} / ${challenges.length} 已解` }}
+                {{
+                  contest.mode === 'awd'
+                    ? `${challenges.length} 题`
+                    : `${solvedCount} / ${challenges.length} 已解`
+                }}
               </div>
             </div>
 
@@ -396,7 +404,10 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                     <span class="contest-chip contest-chip--neutral">
                       解出人数 {{ selectedChallenge.solved_count }}
                     </span>
-                    <span v-if="selectedChallenge.is_solved" class="contest-chip contest-chip--success">
+                    <span
+                      v-if="selectedChallenge.is_solved"
+                      class="contest-chip contest-chip--success"
+                    >
                       已解出
                     </span>
                   </div>
@@ -432,7 +443,9 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                     <div
                       v-if="submitResult"
                       class="contest-alert"
-                      :class="submitResult.is_correct ? 'contest-alert--success' : 'contest-alert--danger'"
+                      :class="
+                        submitResult.is_correct ? 'contest-alert--success' : 'contest-alert--danger'
+                      "
                     >
                       {{
                         submitResult.is_correct
@@ -468,7 +481,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
             <div v-if="!team" class="team-empty">
               <div class="contest-inline-note">当前账号尚未加入队伍。</div>
               <div class="team-actions">
-                <button type="button" class="contest-btn contest-btn--primary" @click="openCreateTeam">
+                <button
+                  type="button"
+                  class="contest-btn contest-btn--primary"
+                  @click="openCreateTeam"
+                >
                   创建队伍
                 </button>
                 <button type="button" class="contest-btn contest-btn--ghost" @click="openJoinTeam">
@@ -483,14 +500,19 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
                   <div class="contest-overline">Current Team</div>
                   <h3 class="team-summary__name">{{ team.name }}</h3>
                 </div>
-                <span v-if="team.invite_code" class="team-summary__invite">邀请码: {{ team.invite_code }}</span>
+                <span v-if="team.invite_code" class="team-summary__invite"
+                  >邀请码: {{ team.invite_code }}</span
+                >
               </div>
 
               <div class="team-member-list">
                 <div v-for="member in team.members" :key="member.user_id" class="team-member">
                   <span class="team-member__name">{{ member.username }}</span>
                   <div class="team-member__actions">
-                    <span v-if="member.user_id === team.captain_user_id" class="team-member__captain">
+                    <span
+                      v-if="member.user_id === team.captain_user_id"
+                      class="team-member__captain"
+                    >
                       队长
                     </span>
                     <button
@@ -585,7 +607,11 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
   --journal-shell-accent: var(--contest-accent);
   --journal-shell-border: color-mix(in srgb, var(--color-border-default) 82%, transparent);
   --journal-shell-surface: color-mix(in srgb, var(--color-bg-surface) 90%, var(--color-bg-base));
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 76%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 76%,
+    var(--color-bg-base)
+  );
   --page-top-tabs-gap: 0.35rem;
   --page-top-tabs-margin: 0;
   --page-top-tabs-padding: 0;
@@ -880,7 +906,8 @@ function challengeClass(challengeId: string, solved: boolean): string[] {
 
 .contest-challenge {
   border: 0;
-  border-inline-start: 2px solid color-mix(in srgb, var(--contest-accent) 24%, var(--journal-border));
+  border-inline-start: 2px solid
+    color-mix(in srgb, var(--contest-accent) 24%, var(--journal-border));
   border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 82%, transparent);
   background: transparent;
   padding: 0.75rem 0.35rem 0.75rem 0.85rem;

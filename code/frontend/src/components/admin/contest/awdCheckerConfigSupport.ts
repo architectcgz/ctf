@@ -265,7 +265,12 @@ function buildActionConfig(
         : 200,
   }
 
-  const headers = parseHeadersText(action.headers_text, options.headersErrorKey, errors, options.strict)
+  const headers = parseHeadersText(
+    action.headers_text,
+    options.headersErrorKey,
+    errors,
+    options.strict
+  )
   if (Object.keys(headers).length > 0) {
     result.headers = headers
   }
@@ -275,8 +280,7 @@ function buildActionConfig(
   }
 
   if (options.defaultExpectedSubstring) {
-    result.expected_substring =
-      action.expected_substring.trim() || options.defaultExpectedSubstring
+    result.expected_substring = action.expected_substring.trim() || options.defaultExpectedSubstring
   }
 
   return result
@@ -310,8 +314,7 @@ export function createHTTPStandardDraft(
       path: readString(getFlag.path).trim(),
       expected_status: readPositiveInteger(getFlag.expected_status, 200),
       headers_text: stringifyHeaders(getFlag.headers),
-      expected_substring:
-        readString(getFlag.expected_substring) || DEFAULT_GET_EXPECTED_SUBSTRING,
+      expected_substring: readString(getFlag.expected_substring) || DEFAULT_GET_EXPECTED_SUBSTRING,
     }),
     havoc: createDefaultActionDraft('GET', {
       method: readString(havoc.method) || 'GET',
@@ -335,9 +338,7 @@ export function getHTTPStandardPresetDraft(presetId: string): AWDHTTPStandardDra
   return cloneHTTPStandardDraft(preset?.draft || AWD_HTTP_STANDARD_PRESETS[0].draft)
 }
 
-export function buildLegacyProbeCheckerConfig(
-  draft: AWDLegacyProbeDraft
-): AWDCheckerBuildResult {
+export function buildLegacyProbeCheckerConfig(draft: AWDLegacyProbeDraft): AWDCheckerBuildResult {
   const healthPath = draft.health_path.trim()
   return {
     config: healthPath ? { health_path: healthPath } : {},

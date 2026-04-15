@@ -10,6 +10,8 @@ const router = useRouter()
 <template>
   <ChallengeTopologyStudioPage
     :challenge-id="String(route.params.id || '')"
-    @back="router.push({ name: 'AdminChallengeDetail', params: { id: String(route.params.id || '') } })"
+    @back="
+      router.push({ name: 'AdminChallengeDetail', params: { id: String(route.params.id || '') } })
+    "
   />
 </template>

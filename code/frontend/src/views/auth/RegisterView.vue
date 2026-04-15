@@ -11,11 +11,7 @@
       @submit.prevent="onSubmit"
     >
       <ElFormItem label="用户名">
-        <ElInput
-          v-model="form.username"
-          autocomplete="username"
-          size="large"
-        />
+        <ElInput v-model="form.username" autocomplete="username" size="large" />
       </ElFormItem>
       <ElFormItem label="密码">
         <ElInput
@@ -27,10 +23,7 @@
         />
       </ElFormItem>
       <ElFormItem label="班级（可选）">
-        <ElInput
-          v-model="form.class_name"
-          size="large"
-        />
+        <ElInput v-model="form.class_name" size="large" />
       </ElFormItem>
 
       <ElButton
@@ -47,12 +40,7 @@
     <template #footer>
       <div class="auth-register-form__footer">
         已有账号，
-        <RouterLink
-          class="auth-register-form__link"
-          to="/login"
-        >
-          去登录
-        </RouterLink>
+        <RouterLink class="auth-register-form__link" to="/login"> 去登录 </RouterLink>
       </div>
     </template>
   </AuthEntryShell>

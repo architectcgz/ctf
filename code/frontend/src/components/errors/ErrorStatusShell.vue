@@ -246,12 +246,11 @@ function executeAction(action: NonNullable<Props['primaryAction'] | Props['secon
 
 .error-status-action-primary {
   border-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--color-primary) 94%, var(--color-bg-surface)),
-      color-mix(in srgb, var(--color-primary-hover) 78%, var(--color-bg-surface))
-    );
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-primary) 94%, var(--color-bg-surface)),
+    color-mix(in srgb, var(--color-primary-hover) 78%, var(--color-bg-surface))
+  );
   color: var(--color-text-primary);
 }
 
