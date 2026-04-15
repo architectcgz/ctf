@@ -23,10 +23,13 @@ import ContestChallengeEditorDialog from './ContestChallengeEditorDialog.vue'
 const props = defineProps<{
   contestId: string
   contestMode: ContestDetailData['mode']
+  challengeLinks?: AdminContestChallengeData[]
+  loadingExternal?: boolean
 }>()
 
 const emit = defineEmits<{
   'open:awd-config': [challenge: AdminContestChallengeData]
+  updated: []
 }>()
 
 const toast = useToast()
@@ -34,12 +37,15 @@ const CHALLENGE_CATALOG_PAGE_SIZE = 100
 const loading = ref(true)
 const saving = ref(false)
 const loadingChallengeCatalog = ref(false)
-const challengeLinks = ref<AdminContestChallengeData[]>([])
+const localChallengeLinks = ref<AdminContestChallengeData[]>([])
 const challengeCatalog = ref<AdminChallengeListItem[]>([])
 const dialogOpen = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const editingChallenge = ref<AdminContestChallengeData | null>(null)
 const removingChallengeId = ref<string | null>(null)
+const usingExternalChallengeLinks = computed(() => props.challengeLinks !== undefined)
+const currentChallengeLinks = computed(() => props.challengeLinks ?? localChallengeLinks.value)
+const panelLoading = computed(() => (usingExternalChallengeLinks.value ? Boolean(props.loadingExternal) : loading.value))
 
 const {
   visibleItems,
@@ -48,7 +54,7 @@ const {
   activeFilter,
   isAwdContest,
   setFilter,
-} = useContestChallengePool(challengeLinks, toRef(props, 'contestMode'))
+} = useContestChallengePool(currentChallengeLinks, toRef(props, 'contestMode'))
 
 const panelCopy = computed(() =>
   isAwdContest.value
@@ -67,7 +73,7 @@ const emptyState = computed(() =>
       }
 )
 
-const existingChallengeIds = computed(() => challengeLinks.value.map((item) => item.challenge_id))
+const existingChallengeIds = computed(() => currentChallengeLinks.value.map((item) => item.challenge_id))
 const listTitle = computed(() => (isAwdContest.value ? '统一题目池' : '已关联题目'))
 
 function formatDateTime(value?: string): string {
@@ -118,9 +124,14 @@ function humanizeRequestError(error: unknown, fallback: string): string {
 }
 
 async function refresh() {
+  if (usingExternalChallengeLinks.value) {
+    emit('updated')
+    return
+  }
+
   loading.value = true
   try {
-    challengeLinks.value = await listAdminContestChallenges(props.contestId)
+    localChallengeLinks.value = await listAdminContestChallenges(props.contestId)
   } catch (error) {
     toast.error(humanizeRequestError(error, '赛事题目加载失败'))
   } finally {
@@ -197,7 +208,11 @@ async function handleSave(payload: {
     }
 
     closeDialog()
-    await refresh()
+    if (usingExternalChallengeLinks.value) {
+      emit('updated')
+    } else {
+      await refresh()
+    }
   } catch (error) {
     toast.error(humanizeRequestError(error, dialogMode.value === 'create' ? '关联题目失败' : '更新题目失败'))
   } finally {
@@ -219,7 +234,11 @@ async function handleRemove(challenge: AdminContestChallengeData) {
   try {
     await deleteAdminContestChallenge(props.contestId, challenge.challenge_id)
     toast.success('赛事题目已移除')
-    await refresh()
+    if (usingExternalChallengeLinks.value) {
+      emit('updated')
+    } else {
+      await refresh()
+    }
   } catch (error) {
     toast.error(humanizeRequestError(error, '移除题目失败'))
   } finally {
@@ -228,7 +247,9 @@ async function handleRemove(challenge: AdminContestChallengeData) {
 }
 
 onMounted(() => {
-  void refresh()
+  if (!usingExternalChallengeLinks.value) {
+    void refresh()
+  }
 })
 </script>
 
@@ -269,7 +290,7 @@ onMounted(() => {
           <div class="journal-note-label">Challenge Directory</div>
           <h2 class="list-heading__title">{{ listTitle }}</h2>
         </div>
-        <div class="contest-section-meta">共 {{ challengeLinks.length }} 道题目</div>
+        <div class="contest-section-meta">共 {{ currentChallengeLinks.length }} 道题目</div>
       </header>
 
       <div v-if="isAwdContest && filterItems.length > 0" class="contest-challenge-filters">
@@ -289,7 +310,7 @@ onMounted(() => {
       </div>
 
       <div
-        v-if="loading"
+        v-if="panelLoading"
         class="contest-challenge-directory__loading"
       >
         <AppLoading>正在同步赛事题目...</AppLoading>
