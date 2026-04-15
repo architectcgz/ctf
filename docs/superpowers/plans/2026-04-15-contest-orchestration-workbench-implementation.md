@@ -489,3 +489,16 @@ git diff --stat
 git add docs/superpowers/specs/2026-04-14-contest-orchestration-workbench-design.md docs/superpowers/plans/2026-04-15-contest-orchestration-workbench-implementation.md
 git commit -m "docs(竞赛): 更新编排工作台实施记录"
 ```
+
+## Implementation Backlink（2026-04-15）
+
+- 最小充分验证已执行：
+  - `npx vitest run src/views/admin/__tests__/ContestEdit.test.ts src/views/admin/__tests__/ContestManage.test.ts src/components/admin/__tests__/ContestChallengeOrchestrationPanel.test.ts src/components/admin/__tests__/AWDReadinessSummary.test.ts src/components/admin/__tests__/AWDOperationsPanel.test.ts src/components/admin/__tests__/ContestWorkbenchStageRail.test.ts src/composables/__tests__/useContestWorkbench.test.ts`
+    - 结果：`7` 个测试文件、`45` 个用例全部通过
+  - `npx vue-tsc --noEmit`
+    - 结果：通过，退出码 `0`
+- 本轮已落地阶段：`基础信息`、`题目池`、`AWD 配置`、`赛前检查`、`轮次运行`
+- 明确保留到后续 phase 的交互：
+  - 题目池批量操作与复杂拖拽编排
+  - `mode=jeopardy` 下的 `赛前检查` 扩展
+  - 已开赛后对前置阶段高风险字段的更强限制或风险提示
