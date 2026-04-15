@@ -1019,7 +1019,7 @@ function handleSubmit() {
           </p>
         </header>
 
-        <article class="checker-validation-card">
+        <article class="journal-note checker-validation-card">
           <div class="checker-validation-card__top">
             <span :class="getValidationStateClass(props.draft?.awd_checker_validation_state)">
               {{ savedValidationStateLabel || '未验证' }}
@@ -1106,20 +1106,20 @@ function handleSubmit() {
         <p
           v-if="previewError"
           id="awd-challenge-preview-error"
-          class="checker-preview-notice checker-preview-notice--error"
+          class="journal-note checker-preview-notice checker-preview-notice--error"
         >
           {{ previewError }}
         </p>
 
         <p
           v-else-if="previewTokenInvalidated"
-          class="checker-preview-notice checker-preview-notice--warning"
+          class="journal-note checker-preview-notice checker-preview-notice--warning"
         >
           需要重新试跑，当前 Checker 草稿已经不同于最近一次试跑配置。
         </p>
         <p
           v-else-if="canAttachPreviewToken"
-          class="checker-preview-notice checker-preview-notice--success"
+          class="journal-note checker-preview-notice checker-preview-notice--success"
         >
           当前保存会附带最近一次试跑结果。
         </p>
@@ -1184,7 +1184,7 @@ function handleSubmit() {
             </article>
           </div>
 
-          <div class="checker-preview-result__json">
+          <div class="journal-note checker-preview-result__json">
             <div class="journal-note-label">原始结果</div>
             <pre id="awd-challenge-preview-result-json" class="checker-preview">{{
               previewResultJSONText
@@ -1388,13 +1388,6 @@ function handleSubmit() {
   color: var(--color-text-secondary);
   font-size: 0.8rem;
   line-height: 1.6;
-}
-
-.checker-preview-notice {
-  margin: 0;
-  padding: 0.85rem 1rem;
-  border-radius: 1rem;
-  font-size: 0.85rem;
 }
 
 .checker-preview-notice--error {
