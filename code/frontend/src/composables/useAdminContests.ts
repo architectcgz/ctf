@@ -160,6 +160,27 @@ export async function confirmContestTermination(contestTitle: string): Promise<b
   })
 }
 
+export function buildContestUpdatePayload(
+  draft: ContestFormDraft,
+  fieldLocks: ContestFieldLocks
+): AdminContestUpdatePayload {
+  const payload: AdminContestUpdatePayload = {
+    title: draft.title.trim(),
+    description: draft.description.trim(),
+    mode: draft.mode,
+    status: draft.status,
+  }
+
+  if (!fieldLocks.starts_at) {
+    payload.starts_at = toISOString(draft.starts_at)
+  }
+  if (!fieldLocks.ends_at) {
+    payload.ends_at = toISOString(draft.ends_at)
+  }
+
+  return payload
+}
+
 function shouldGateAWDContestStart(
   mode: ContestDetailData['mode'] | null,
   targetStatus: AdminContestStatus
@@ -319,14 +340,7 @@ export function useAdminContests() {
           }
         }
 
-        const payload: AdminContestUpdatePayload = {
-          title,
-          description,
-          mode: draft.mode,
-          starts_at: toISOString(draft.starts_at),
-          ends_at: toISOString(draft.ends_at),
-          status: draft.status,
-        }
+        const payload = buildContestUpdatePayload(draft, fieldLocks.value)
         if (shouldGateAWDContestStart(draft.mode, draft.status)) {
           try {
             await updateContest(editingContestId.value, payload, { suppressErrorToast: true })

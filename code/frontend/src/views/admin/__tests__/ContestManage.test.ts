@@ -274,6 +274,71 @@ describe('ContestManage', () => {
     expect(contestMocks.updateContest).not.toHaveBeenCalled()
   })
 
+  it('应该在管理弹窗中冻结进行中的竞赛时省略不可修改的时间字段', async () => {
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-running',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<div><button id="open-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑</button></div>',
+          },
+          AdminContestFormDialog: {
+            props: ['open', 'draft'],
+            template:
+              '<div><button v-if="open" id="submit-frozen" type="button" @click="$emit(\'save\', { ...draft, status: \'frozen\' })">冻结</button></div>',
+          },
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#open-edit').trigger('click')
+    await flushPromises()
+    await wrapper.get('#submit-frozen').trigger('click')
+    await flushPromises()
+
+    expect(contestMocks.updateContest).toHaveBeenCalledWith(
+      'contest-running',
+      expect.objectContaining({
+        title: '2026 春季校园 CTF',
+        status: 'frozen',
+      })
+    )
+    expect(contestMocks.updateContest).toHaveBeenCalledWith(
+      'contest-running',
+      expect.not.objectContaining({
+        starts_at: expect.anything(),
+      })
+    )
+    expect(contestMocks.updateContest).toHaveBeenCalledWith(
+      'contest-running',
+      expect.not.objectContaining({
+        ends_at: expect.anything(),
+      })
+    )
+  })
+
   it('应该渲染真实竞赛列表', async () => {
     contestMocks.getContests.mockResolvedValue({
       list: [
