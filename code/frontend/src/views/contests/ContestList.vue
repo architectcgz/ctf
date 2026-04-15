@@ -11,6 +11,7 @@ import {
   getContestAccentColor,
   getContestActionLabel,
   getModeLabel,
+  isStudentVisibleContestStatus,
   getStatusLabel,
 } from '@/utils/contest'
 
@@ -28,15 +29,24 @@ interface ContestSummaryMetric {
   hint: string
 }
 
+const visibleContests = computed(() =>
+  list.value.filter((contest) => isStudentVisibleContestStatus(contest.status))
+)
+
 const summaryMetrics = computed<ContestSummaryMetric[]>(() => {
-  const runningCount = list.value.filter((contest) => contest.status === 'running').length
-  const registeringCount = list.value.filter((contest) => contest.status === 'registering').length
-  const endedCount = list.value.filter((contest) =>
+  const runningCount = visibleContests.value.filter((contest) => contest.status === 'running').length
+  const registeringCount = visibleContests.value.filter((contest) => contest.status === 'registering').length
+  const endedCount = visibleContests.value.filter((contest) =>
     ['ended', 'cancelled', 'archived', 'frozen'].includes(contest.status)
   ).length
 
   return [
-    { key: 'total', label: '竞赛总数', value: list.value.length, hint: '当前可查看的竞赛数量' },
+    {
+      key: 'total',
+      label: '竞赛总数',
+      value: visibleContests.value.length,
+      hint: '当前可查看的竞赛数量',
+    },
     { key: 'running', label: '进行中', value: runningCount, hint: '已经开赛且仍可参与' },
     { key: 'registering', label: '报名中', value: registeringCount, hint: '近期可以报名的竞赛' },
     { key: 'ended', label: '已结束', value: endedCount, hint: '可用于复盘或排行回看' },
@@ -158,7 +168,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
       </AppEmpty>
 
       <AppEmpty
-        v-else-if="list.length === 0"
+        v-else-if="visibleContests.length === 0"
         class="contest-empty-state"
         icon="Flag"
         title="暂无竞赛"
@@ -168,7 +178,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
       <section v-else class="contest-directory" aria-label="竞赛目录">
         <div class="contest-directory-top">
           <h2 class="contest-directory-title">竞赛列表</h2>
-          <div class="contest-directory-meta">共 {{ list.length }} 场</div>
+          <div class="contest-directory-meta">共 {{ visibleContests.length }} 场</div>
         </div>
 
         <div class="contest-directory-head">
@@ -180,7 +190,7 @@ function contestAccentStyle(status: ContestStatus): Record<string, string> {
         </div>
 
         <button
-          v-for="contest in list"
+          v-for="contest in visibleContests"
           :key="contest.id"
           type="button"
           class="contest-row"

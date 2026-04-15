@@ -154,7 +154,10 @@ describe('ContestDetail', () => {
 
     router = createRouter({
       history: createMemoryHistory(),
-      routes: [{ path: '/contests/:id', component: { template: '<div />' } }],
+      routes: [
+        { path: '/contests', component: { template: '<div>contests</div>' } },
+        { path: '/contests/:id', component: { template: '<div />' } },
+      ],
     })
     await router.push('/contests/1')
     await router.isReady()
@@ -172,6 +175,31 @@ describe('ContestDetail', () => {
     expect(wrapper.exists()).toBe(true)
     expect(wrapper.text()).toContain('公告')
     expect(wrapper.text()).toContain('比赛开始')
+  })
+
+  it('不应该向学生暴露草稿竞赛详情或报名入口', async () => {
+    contestApiMocks.getContestDetail.mockResolvedValueOnce({
+      id: '1',
+      title: '草稿竞赛',
+      description: '未开放',
+      status: 'draft',
+      mode: 'jeopardy',
+      starts_at: '2024-03-15T09:00:00Z',
+      ends_at: '2024-03-15T21:00:00Z',
+    })
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('当前竞赛暂未开放')
+    expect(wrapper.text()).not.toContain('创建队伍')
+    expect(wrapper.text()).not.toContain('加入队伍')
+    expect(wrapper.text()).not.toContain('草稿')
   })
 
   it('收到公告实时事件后会刷新公告列表', async () => {
