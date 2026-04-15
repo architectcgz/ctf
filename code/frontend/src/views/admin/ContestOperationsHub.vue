@@ -255,7 +255,7 @@ onMounted(() => {
         <button
           id="contest-ops-primary-action"
           type="button"
-          class="admin-btn admin-btn-primary"
+          class="ui-btn ui-btn--primary"
           @click="executeAction(currentDefinition.primaryAction)"
         >
           <ArrowRight class="h-4 w-4" />
@@ -263,7 +263,7 @@ onMounted(() => {
         </button>
         <button
           type="button"
-          class="admin-btn admin-btn-ghost"
+          class="ui-btn ui-btn--ghost"
           @click="executeAction(currentDefinition.secondaryAction)"
         >
           {{ currentDefinition.secondaryAction.label }}
@@ -310,7 +310,7 @@ onMounted(() => {
       icon="AlertTriangle"
     >
       <template #action>
-        <button type="button" class="admin-btn admin-btn-ghost" @click="loadContests">重试加载</button>
+        <button type="button" class="ui-btn ui-btn--ghost" @click="loadContests">重试加载</button>
       </template>
     </AppEmpty>
 
@@ -322,7 +322,7 @@ onMounted(() => {
       icon="Trophy"
     >
       <template #action>
-        <button type="button" class="admin-btn admin-btn-primary" @click="router.push({ name: 'ContestManage', query: { panel: 'create' } })">
+        <button type="button" class="ui-btn ui-btn--primary" @click="router.push({ name: 'ContestManage', query: { panel: 'create' } })">
           前往创建竞赛
         </button>
       </template>
@@ -379,7 +379,7 @@ onMounted(() => {
           <button
             id="contest-ops-inline-primary"
             type="button"
-            class="admin-btn admin-btn-primary"
+            class="ui-btn ui-btn--primary"
             @click="executeAction(currentDefinition.primaryAction)"
           >
             <ArrowRight class="h-4 w-4" />
@@ -387,14 +387,14 @@ onMounted(() => {
           </button>
           <button
             type="button"
-            class="admin-btn admin-btn-ghost"
+            class="ui-btn ui-btn--ghost"
             @click="executeAction(currentDefinition.secondaryAction)"
           >
             {{ currentDefinition.secondaryAction.label }}
           </button>
           <button
             type="button"
-            class="admin-btn admin-btn-ghost"
+            class="ui-btn ui-btn--ghost"
             @click="router.push({ name: 'ContestManage', query: { panel: 'list' } })"
           >
             返回竞赛目录

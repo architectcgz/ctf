@@ -162,12 +162,12 @@ function openContestWorkbench() {
             </p>
           </div>
 
-          <div class="contest-panel-actions">
-            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+          <div class="ui-toolbar-actions contest-panel-actions">
+            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
-            <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
+            <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
               <Plus class="h-4 w-4" />
               创建竞赛
             </button>
@@ -231,7 +231,11 @@ function openContestWorkbench() {
                   场赛事正在进行。
                 </p>
               </div>
-              <button type="button" class="contest-inline-link" @click="selectPanel('list')">
+              <button
+                type="button"
+                class="ui-btn ui-btn--link contest-inline-link"
+                @click="selectPanel('list')"
+              >
                 查看赛事目录
               </button>
             </article>
@@ -246,7 +250,7 @@ function openContestWorkbench() {
               <button
                 id="contest-open-workbench"
                 type="button"
-                class="contest-inline-link"
+                class="ui-btn ui-btn--link contest-inline-link"
                 :disabled="!preferredWorkbenchContest"
                 @click="openContestWorkbench"
               >
@@ -271,13 +275,13 @@ function openContestWorkbench() {
             <h2 class="list-heading__title">赛事目录</h2>
           </div>
 
-          <div class="contest-list-actions">
+          <div class="ui-toolbar-actions contest-list-actions">
             <div class="contest-section-meta">共 {{ total }} 场赛事</div>
-            <button type="button" class="admin-btn admin-btn-ghost" @click="emit('refresh')">
+            <button type="button" class="ui-btn ui-btn--ghost" @click="emit('refresh')">
               <RefreshCw class="h-4 w-4" />
               刷新列表
             </button>
-            <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
+            <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
               <Plus class="h-4 w-4" />
               创建竞赛
             </button>
@@ -287,34 +291,36 @@ function openContestWorkbench() {
         <section class="workspace-directory-section contest-list-panel">
           <section class="contest-filter-strip" aria-label="赛事筛选">
             <div class="contest-filter-grid">
-              <label class="contest-filter-field">
-                <span class="contest-filter-label">状态筛选</span>
-                <select
-                  :value="statusFilter"
-                  class="admin-input"
-                  @change="
-                    emit(
-                      'updateStatusFilter',
-                      ($event.target as HTMLSelectElement).value as StatusFilter
-                    )
-                  "
-                >
-                  <option value="all">全部状态</option>
-                  <option value="draft">草稿</option>
-                  <option value="registering">报名中</option>
-                  <option value="running">进行中</option>
-                  <option value="frozen">已冻结</option>
-                  <option value="ended">已结束</option>
-                </select>
+              <label class="ui-field contest-filter-field">
+                <span class="ui-field__label contest-filter-label">状态筛选</span>
+                <span class="ui-control-wrap">
+                  <select
+                    :value="statusFilter"
+                    class="ui-control"
+                    @change="
+                      emit(
+                        'updateStatusFilter',
+                        ($event.target as HTMLSelectElement).value as StatusFilter
+                      )
+                    "
+                  >
+                    <option value="all">全部状态</option>
+                    <option value="draft">草稿</option>
+                    <option value="registering">报名中</option>
+                    <option value="running">进行中</option>
+                    <option value="frozen">已冻结</option>
+                    <option value="ended">已结束</option>
+                  </select>
+                </span>
               </label>
 
-              <div class="contest-filter-field contest-filter-field--action">
+              <div class="ui-field contest-filter-field contest-filter-field--action">
                 <span class="contest-filter-label contest-filter-label--ghost" aria-hidden="true">
                   操作
                 </span>
                 <button
                   type="button"
-                  class="admin-btn admin-btn-ghost contest-filter-clear"
+                  class="ui-btn ui-btn--ghost contest-filter-clear"
                   :disabled="!hasStatusFilter"
                   @click="emit('updateStatusFilter', 'all')"
                 >
@@ -339,7 +345,7 @@ function openContestWorkbench() {
             icon="Trophy"
           >
             <template #action>
-              <button type="button" class="admin-btn admin-btn-primary" @click="openCreatePanel">
+              <button type="button" class="ui-btn ui-btn--primary" @click="openCreatePanel">
                 创建第一场竞赛
               </button>
             </template>
@@ -535,80 +541,15 @@ function openContestWorkbench() {
 }
 
 .contest-inline-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  padding: var(--space-1-5) var(--space-3);
+  justify-self: start;
   font-size: var(--font-size-0-84);
-  font-weight: 600;
-  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    color 150ms ease;
-}
-
-.contest-inline-link:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 36%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 14%, var(--journal-surface));
+  font-weight: 700;
+  --ui-btn-link-color: color-mix(in srgb, var(--journal-accent) 76%, var(--journal-ink));
+  --ui-btn-link-hover-color: var(--journal-accent);
 }
 
 .contest-list-head {
   align-items: flex-end;
-}
-
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition: all 150ms ease;
-}
-
-.admin-btn-primary {
-  background: var(--journal-accent);
-  color: #fff;
-}
-
-.admin-btn-primary:hover {
-  background: var(--color-primary-hover);
-}
-
-.admin-btn-ghost {
-  border: 1px solid var(--admin-control-border);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
-}
-
-.admin-input {
-  width: 100%;
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  border: 1px solid var(--admin-control-border);
-  background: var(--journal-surface);
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink);
-  outline: none;
-  transition: border-color 150ms ease;
-}
-
-.admin-input:focus {
-  border-color: color-mix(in srgb, var(--journal-accent) 42%, transparent);
 }
 
 .contest-filter-strip {
@@ -624,8 +565,7 @@ function openContestWorkbench() {
 }
 
 .contest-filter-field {
-  display: grid;
-  gap: var(--space-2);
+  min-width: 0;
 }
 
 .contest-filter-field--action {
@@ -640,6 +580,10 @@ function openContestWorkbench() {
 
 .contest-filter-label--ghost {
   opacity: 0;
+}
+
+.contest-filter-field :deep(.ui-control-wrap) {
+  width: 100%;
 }
 
 .contest-filter-clear {

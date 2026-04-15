@@ -134,52 +134,65 @@ function handleSubmit() {
       </header>
 
       <div class="contest-form-grid">
-        <label class="contest-form-field contest-form-field--wide" for="contest-title">
-          <span class="contest-form-label">竞赛标题</span>
-          <input
-            id="contest-title"
-            v-model="localDraft.title"
-            type="text"
-            class="contest-form-control"
-            placeholder="例如：2026 春季校园 CTF"
-          />
-          <span v-if="fieldErrors.title" class="contest-form-error">{{ fieldErrors.title }}</span>
+        <label class="ui-field contest-form-field contest-form-field--wide" for="contest-title">
+          <span class="ui-field__label contest-form-label">竞赛标题</span>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.title }">
+            <input
+              id="contest-title"
+              v-model="localDraft.title"
+              type="text"
+              class="ui-control"
+              placeholder="例如：2026 春季校园 CTF"
+            />
+          </span>
+          <span v-if="fieldErrors.title" class="ui-field__error contest-form-error">
+            {{ fieldErrors.title }}
+          </span>
         </label>
 
-        <label class="contest-form-field" for="contest-mode">
-          <span class="contest-form-label">竞赛模式</span>
-          <select
-            id="contest-mode"
-            v-model="localDraft.mode"
-            class="contest-form-control"
-            :disabled="fieldLocks.mode"
+        <label class="ui-field contest-form-field" for="contest-mode">
+          <span class="ui-field__label contest-form-label">竞赛模式</span>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-disabled': fieldLocks.mode }"
           >
-            <option value="jeopardy">Jeopardy</option>
-            <option value="awd">AWD</option>
-          </select>
-          <span v-if="fieldLocks.mode" class="contest-form-hint">
+            <select
+              id="contest-mode"
+              v-model="localDraft.mode"
+              class="ui-control"
+              :disabled="fieldLocks.mode"
+            >
+              <option value="jeopardy">Jeopardy</option>
+              <option value="awd">AWD</option>
+            </select>
+          </span>
+          <span v-if="fieldLocks.mode" class="ui-field__hint contest-form-hint">
             竞赛进入 draft 之后不再允许修改模式。
           </span>
         </label>
 
-        <label v-if="mode === 'edit'" class="contest-form-field" for="contest-status">
-          <span class="contest-form-label">状态</span>
-          <select id="contest-status" v-model="localDraft.status" class="contest-form-control">
-            <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-              {{ getStatusLabel(option.value) }}
-            </option>
-          </select>
+        <label v-if="mode === 'edit'" class="ui-field contest-form-field" for="contest-status">
+          <span class="ui-field__label contest-form-label">状态</span>
+          <span class="ui-control-wrap">
+            <select id="contest-status" v-model="localDraft.status" class="ui-control">
+              <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+                {{ getStatusLabel(option.value) }}
+              </option>
+            </select>
+          </span>
         </label>
 
-        <label class="contest-form-field contest-form-field--wide" for="contest-description">
-          <span class="contest-form-label">竞赛描述</span>
-          <textarea
-            id="contest-description"
-            v-model="localDraft.description"
-            rows="4"
-            class="contest-form-control contest-form-control--textarea"
-            placeholder="描述赛制、参赛范围或报名说明。"
-          />
+        <label class="ui-field contest-form-field contest-form-field--wide" for="contest-description">
+          <span class="ui-field__label contest-form-label">竞赛描述</span>
+          <span class="ui-control-wrap">
+            <textarea
+              id="contest-description"
+              v-model="localDraft.description"
+              rows="4"
+              class="ui-control contest-form-control--textarea"
+              placeholder="描述赛制、参赛范围或报名说明。"
+            />
+          </span>
         </label>
       </div>
     </section>
@@ -193,36 +206,46 @@ function handleSubmit() {
       </header>
 
       <div class="contest-form-grid">
-        <label class="contest-form-field" for="contest-starts-at">
-          <span class="contest-form-label">开始时间</span>
-          <input
-            id="contest-starts-at"
-            v-model="localDraft.starts_at"
-            type="datetime-local"
-            class="contest-form-control"
-            :disabled="fieldLocks.starts_at"
-          />
-          <span v-if="fieldErrors.starts_at" class="contest-form-error">
+        <label class="ui-field contest-form-field" for="contest-starts-at">
+          <span class="ui-field__label contest-form-label">开始时间</span>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.starts_at, 'is-disabled': fieldLocks.starts_at }"
+          >
+            <input
+              id="contest-starts-at"
+              v-model="localDraft.starts_at"
+              type="datetime-local"
+              class="ui-control"
+              :disabled="fieldLocks.starts_at"
+            />
+          </span>
+          <span v-if="fieldErrors.starts_at" class="ui-field__error contest-form-error">
             {{ fieldErrors.starts_at }}
           </span>
-          <span v-else-if="fieldLocks.starts_at" class="contest-form-hint">
+          <span v-else-if="fieldLocks.starts_at" class="ui-field__hint contest-form-hint">
             报名中、进行中、已结束状态禁止修改开始时间。
           </span>
         </label>
 
-        <label class="contest-form-field" for="contest-ends-at">
-          <span class="contest-form-label">结束时间</span>
-          <input
-            id="contest-ends-at"
-            v-model="localDraft.ends_at"
-            type="datetime-local"
-            class="contest-form-control"
-            :disabled="fieldLocks.ends_at"
-          />
-          <span v-if="fieldErrors.ends_at" class="contest-form-error">
+        <label class="ui-field contest-form-field" for="contest-ends-at">
+          <span class="ui-field__label contest-form-label">结束时间</span>
+          <span
+            class="ui-control-wrap"
+            :class="{ 'is-error': !!fieldErrors.ends_at, 'is-disabled': fieldLocks.ends_at }"
+          >
+            <input
+              id="contest-ends-at"
+              v-model="localDraft.ends_at"
+              type="datetime-local"
+              class="ui-control"
+              :disabled="fieldLocks.ends_at"
+            />
+          </span>
+          <span v-if="fieldErrors.ends_at" class="ui-field__error contest-form-error">
             {{ fieldErrors.ends_at }}
           </span>
-          <span v-else-if="fieldLocks.ends_at" class="contest-form-hint">
+          <span v-else-if="fieldLocks.ends_at" class="ui-field__hint contest-form-hint">
             进行中、已结束状态禁止修改结束时间。
           </span>
         </label>
@@ -236,14 +259,14 @@ function handleSubmit() {
       <button
         v-if="showCancel"
         type="button"
-        class="contest-form-button contest-form-button--ghost"
+        class="ui-btn ui-btn--secondary contest-form-button contest-form-button--ghost"
         @click="emit('cancel')"
       >
         取消
       </button>
       <button
         type="button"
-        class="contest-form-button contest-form-button--primary"
+        class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"
         :disabled="saving"
         @click="handleSubmit"
       >
@@ -300,37 +323,11 @@ function handleSubmit() {
 }
 
 .contest-form-label {
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
   color: var(--journal-ink, var(--color-text-primary));
 }
 
-.contest-form-control {
+.contest-form-field .ui-control-wrap {
   width: 100%;
-  min-height: 2.875rem;
-  border-radius: 1rem;
-  border: 1px solid
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 78%, transparent);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, transparent);
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--font-size-0-875);
-  color: var(--journal-ink, var(--color-text-primary));
-  outline: none;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background-color 150ms ease;
-}
-
-.contest-form-control:focus {
-  border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 42%, transparent);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--journal-accent, var(--color-primary)) 12%, transparent);
-}
-
-.contest-form-control:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .contest-form-control--textarea {
@@ -366,46 +363,7 @@ function handleSubmit() {
 }
 
 .contest-form-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.625rem;
-  border-radius: 1rem;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    color 150ms ease,
-    opacity 150ms ease;
-}
-
-.contest-form-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.contest-form-button--ghost {
-  border: 1px solid
-    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 78%, transparent);
-  background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, transparent);
-  color: var(--journal-ink, var(--color-text-primary));
-}
-
-.contest-form-button--ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent, var(--color-primary)) 28%, transparent);
-  color: var(--journal-accent, var(--color-primary));
-}
-
-.contest-form-button--primary {
-  border: 1px solid transparent;
-  background: var(--journal-accent, var(--color-primary));
-  color: #fff;
-}
-
-.contest-form-button--primary:hover {
-  background: var(--color-primary-hover, var(--journal-accent, var(--color-primary)));
+  min-width: 7.5rem;
 }
 
 @media (max-width: 767px) {

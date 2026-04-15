@@ -120,7 +120,7 @@ describe('admin management surface alignment', () => {
     expect(adminContestTableSource).toContain('<span>开始时间</span>')
     expect(adminContestTableSource).toContain('<span>结束时间</span>')
     expect(adminContestTableSource).not.toContain('<span>时间窗口</span>')
-    expect(adminContestTableSource).toContain('class="contest-status-pill"')
+    expect(adminContestTableSource).toContain('class="ui-badge contest-status-pill"')
     expect(adminContestTableSource).toContain('.contest-status-pill--registering')
     expect(adminContestTableSource).toContain('.contest-status-pill--running')
     expect(adminContestTableSource).toContain('.contest-row__starts-at')
@@ -135,7 +135,7 @@ describe('admin management surface alignment', () => {
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">基础信息</h3>')
     expect(adminContestFormPanelSource).toContain('<h3 class="list-heading__title">赛制与时间</h3>')
     expect(adminContestFormPanelSource).toContain(
-      'class="contest-form-button contest-form-button--primary"'
+      'class="ui-btn ui-btn--primary contest-form-button contest-form-button--primary"'
     )
   })
 

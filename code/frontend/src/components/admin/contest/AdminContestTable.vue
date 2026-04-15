@@ -64,7 +64,7 @@ function getStatusPillClass(status: ContestStatus): string {
         <div class="contest-row__mode">{{ getModeLabel(contest.mode) }}</div>
 
         <div class="contest-row__status">
-          <span class="contest-status-pill" :class="getStatusPillClass(contest.status)">
+          <span class="ui-badge contest-status-pill" :class="getStatusPillClass(contest.status)">
             {{ getStatusLabel(contest.status) }}
           </span>
         </div>
@@ -77,17 +77,17 @@ function getStatusPillClass(status: ContestStatus): string {
           <p>{{ formatTime(contest.ends_at) }}</p>
         </div>
 
-        <div class="contest-row__actions" role="group" aria-label="竞赛操作">
+        <div class="ui-row-actions contest-row__actions" role="group" aria-label="竞赛操作">
           <button
             type="button"
-            class="contest-action contest-action--primary"
+            class="ui-btn ui-btn--sm ui-btn--primary contest-action contest-action--primary"
             @click="emit('edit', contest)"
           >
             编辑
           </button>
           <button
             type="button"
-            class="contest-action contest-action--ghost"
+            class="ui-btn ui-btn--sm ui-btn--secondary contest-action contest-action--ghost"
             @click="emit('export', contest)"
           >
             导出结果
@@ -201,104 +201,56 @@ function getStatusPillClass(status: ContestStatus): string {
 }
 
 .contest-status-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 0.35rem 0.75rem;
-  font-size: var(--font-size-0-78);
-  font-weight: 700;
+  --ui-badge-radius: 999px;
+  --ui-badge-padding: 0.35rem 0.75rem;
+  --ui-badge-size: var(--font-size-0-78);
+  --ui-badge-spacing: 0.02em;
   line-height: 1;
-  letter-spacing: 0.02em;
 }
 
 .contest-status-pill--running {
-  border-color: color-mix(in srgb, #22d3ee 38%, transparent);
-  background: color-mix(in srgb, #22d3ee 16%, var(--journal-surface));
-  color: #67e8f9;
+  --ui-badge-border: color-mix(in srgb, #22d3ee 38%, transparent);
+  --ui-badge-background: color-mix(in srgb, #22d3ee 16%, var(--journal-surface));
+  --ui-badge-color: #67e8f9;
 }
 
 .contest-status-pill--registering {
-  border-color: color-mix(in srgb, #f59e0b 34%, transparent);
-  background: color-mix(in srgb, #f59e0b 15%, var(--journal-surface));
-  color: #fbbf24;
+  --ui-badge-border: color-mix(in srgb, #f59e0b 34%, transparent);
+  --ui-badge-background: color-mix(in srgb, #f59e0b 15%, var(--journal-surface));
+  --ui-badge-color: #fbbf24;
 }
 
 .contest-status-pill--draft {
-  border-color: color-mix(in srgb, #a78bfa 28%, transparent);
-  background: color-mix(in srgb, #a78bfa 12%, var(--journal-surface));
-  color: #c4b5fd;
+  --ui-badge-border: color-mix(in srgb, #a78bfa 28%, transparent);
+  --ui-badge-background: color-mix(in srgb, #a78bfa 12%, var(--journal-surface));
+  --ui-badge-color: #c4b5fd;
 }
 
 .contest-status-pill--frozen {
-  border-color: color-mix(in srgb, #60a5fa 30%, transparent);
-  background: color-mix(in srgb, #60a5fa 13%, var(--journal-surface));
-  color: #93c5fd;
+  --ui-badge-border: color-mix(in srgb, #60a5fa 30%, transparent);
+  --ui-badge-background: color-mix(in srgb, #60a5fa 13%, var(--journal-surface));
+  --ui-badge-color: #93c5fd;
 }
 
 .contest-status-pill--ended {
-  border-color: color-mix(in srgb, #34d399 28%, transparent);
-  background: color-mix(in srgb, #34d399 12%, var(--journal-surface));
-  color: #6ee7b7;
+  --ui-badge-border: color-mix(in srgb, #34d399 28%, transparent);
+  --ui-badge-background: color-mix(in srgb, #34d399 12%, var(--journal-surface));
+  --ui-badge-color: #6ee7b7;
 }
 
 .contest-status-pill--cancelled,
 .contest-status-pill--neutral {
-  border-color: color-mix(in srgb, var(--journal-border) 84%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
-  color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
+  --ui-badge-border: color-mix(in srgb, var(--journal-border) 84%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--journal-surface) 92%, transparent);
+  --ui-badge-color: color-mix(in srgb, var(--journal-muted) 92%, var(--journal-ink));
 }
 
 .contest-row__actions {
-  display: flex;
-  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 .contest-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 34px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  padding: var(--space-1-5) var(--space-3);
-  font-size: var(--font-size-0-84);
-  font-weight: 600;
-  line-height: 1;
-  transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    color 150ms ease;
-}
-
-.contest-action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent) 45%, transparent);
-  outline-offset: 2px;
-}
-
-.contest-action--primary {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 12%, var(--journal-surface));
-  color: color-mix(in srgb, var(--journal-accent) 76%, var(--journal-ink));
-}
-
-.contest-action--primary:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 44%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 18%, var(--journal-surface));
-}
-
-.contest-action--ghost {
-  border-color: color-mix(in srgb, var(--journal-border) 80%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.contest-action--ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 32%, transparent);
-  color: color-mix(in srgb, var(--journal-accent) 74%, var(--journal-ink));
+  min-width: 5.25rem;
 }
 
 @media (max-width: 1023px) {
