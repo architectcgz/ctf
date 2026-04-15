@@ -802,6 +802,42 @@ describe('ContestEdit', () => {
     expect(pushMock).not.toHaveBeenCalled()
   })
 
+  it('应该在进行中的竞赛切换为已冻结时省略不可修改的时间字段', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 春季校园 CTF',
+        status: 'running',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-status').setValue('frozen')
+    await wrapper.get('.contest-form-button--primary').trigger('click')
+    await flushPromises()
+
+    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
+      'contest-1',
+      expect.objectContaining({
+        title: '2026 春季校园 CTF',
+        status: 'frozen',
+      })
+    )
+    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
+      'contest-1',
+      expect.not.objectContaining({
+        starts_at: expect.anything(),
+      })
+    )
+    expect(contestApiMocks.updateContest).toHaveBeenCalledWith(
+      'contest-1',
+      expect.not.objectContaining({
+        ends_at: expect.anything(),
+      })
+    )
+  })
+
   it('应该在 AWD 启动门禁拦截后展示放行弹层并在确认后回到赛事目录', async () => {
     contestApiMocks.getContest.mockResolvedValue({
       id: 'contest-1',

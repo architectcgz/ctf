@@ -31,6 +31,7 @@ import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessO
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import {
+  buildContestUpdatePayload,
   confirmContestTermination,
   createFieldLocks,
   createContestStatusOptions,
@@ -372,14 +373,13 @@ function createRunningPayloadFromDraft(): AdminContestUpdatePayload | null {
     return null
   }
 
-  return {
-    title: formDraft.value.title.trim(),
-    description: formDraft.value.description.trim(),
-    mode: formDraft.value.mode,
-    starts_at: toISOString(formDraft.value.starts_at),
-    ends_at: toISOString(formDraft.value.ends_at),
-    status: 'running',
-  }
+  return buildContestUpdatePayload(
+    {
+      ...formDraft.value,
+      status: 'running',
+    },
+    fieldLocks.value
+  )
 }
 
 async function openPreflightOverrideDialog() {
@@ -517,14 +517,7 @@ async function handleSave(draft: ContestFormDraft): Promise<void> {
 
   saving.value = true
   try {
-    const payload: AdminContestUpdatePayload = {
-      title: draft.title.trim(),
-      description: draft.description.trim(),
-      mode: draft.mode,
-      starts_at: toISOString(draft.starts_at),
-      ends_at: toISOString(draft.ends_at),
-      status: draft.status,
-    }
+    const payload = buildContestUpdatePayload(draft, fieldLocks.value)
 
     if (shouldGateAWDContestStart(contest.value.mode, draft.status)) {
       try {
