@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import ContestEdit from '../ContestEdit.vue'
 import { ApiError } from '@/api/request'
 import type { ContestDetailData } from '@/api/contracts'
+import type { VueWrapper } from '@vue/test-utils'
 
 const pushMock = vi.fn()
 const routeState = vi.hoisted(() => ({
@@ -75,6 +76,10 @@ function mountContestEdit() {
       },
     },
   })
+}
+
+function getWorkbenchStageRail(wrapper: VueWrapper<any>) {
+  return wrapper.get('[role="tablist"][aria-label="竞赛工作台阶段切换"]')
 }
 
 describe('ContestEdit', () => {
@@ -228,11 +233,13 @@ describe('ContestEdit', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('基础信息')
-    expect(wrapper.text()).toContain('题目池')
-    expect(wrapper.text()).not.toContain('AWD 配置')
-    expect(wrapper.text()).not.toContain('赛前检查')
-    expect(wrapper.text()).not.toContain('轮次运行')
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.text()).toContain('基础信息')
+    expect(stageRail.text()).toContain('题目池')
+    expect(stageRail.text()).not.toContain('AWD 配置')
+    expect(stageRail.text()).not.toContain('赛前检查')
+    expect(stageRail.text()).not.toContain('轮次运行')
   })
 
   it('应该在 AWD 赛事下展示基础信息、题目池、AWD 配置、赛前检查与轮次运行', async () => {
@@ -249,11 +256,13 @@ describe('ContestEdit', () => {
 
     await flushPromises()
 
-    expect(wrapper.text()).toContain('基础信息')
-    expect(wrapper.text()).toContain('题目池')
-    expect(wrapper.text()).toContain('AWD 配置')
-    expect(wrapper.text()).toContain('赛前检查')
-    expect(wrapper.text()).toContain('轮次运行')
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.text()).toContain('基础信息')
+    expect(stageRail.text()).toContain('题目池')
+    expect(stageRail.text()).toContain('AWD 配置')
+    expect(stageRail.text()).toContain('赛前检查')
+    expect(stageRail.text()).toContain('轮次运行')
   })
 
   it('应该在 AWD 赛事已开赛时默认聚焦轮次运行阶段', async () => {
@@ -270,7 +279,9 @@ describe('ContestEdit', () => {
 
     await flushPromises()
 
-    expect(wrapper.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
+    const stageRail = getWorkbenchStageRail(wrapper)
+
+    expect(stageRail.get('[role="tab"][aria-selected="true"]').text()).toContain('轮次运行')
   })
 
   it('应该加载竞赛详情并在保存成功后返回赛事目录', async () => {

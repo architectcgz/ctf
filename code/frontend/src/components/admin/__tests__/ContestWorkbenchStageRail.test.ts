@@ -1,7 +1,6 @@
 import { defineComponent, h, nextTick, ref } from 'vue'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-
 import ContestWorkbenchStageRail from '../contest/ContestWorkbenchStageRail.vue'
 
 type ContestWorkbenchStageKey =
