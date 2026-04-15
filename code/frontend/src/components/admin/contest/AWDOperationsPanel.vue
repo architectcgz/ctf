@@ -18,6 +18,7 @@ import AWDServiceCheckDialog from './AWDServiceCheckDialog.vue'
 const props = defineProps<{
   contests: ContestDetailData[]
   selectedContestId: string | null
+  hideContestSelector?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,6 +27,10 @@ const emit = defineEmits<{
 
 const selectedContest = computed(
   () => props.contests.find((item) => item.id === props.selectedContestId) || null
+)
+const shouldShowContestSelector = computed(() => !props.hideContestSelector)
+const runtimeStageReady = computed(
+  () => selectedContest.value?.status === 'running' || selectedContest.value?.status === 'frozen'
 )
 const roundDialogOpen = ref(false)
 const serviceCheckDialogOpen = ref(false)
@@ -159,6 +164,9 @@ function updateSelectedRoundId(value: string) {
 }
 
 function openRoundDialog() {
+  if (!runtimeStageReady.value) {
+    return
+  }
   roundDialogOpen.value = true
 }
 
@@ -167,6 +175,9 @@ function updateRoundDialogOpen(value: boolean) {
 }
 
 function openServiceCheckDialog() {
+  if (!runtimeStageReady.value) {
+    return
+  }
   serviceCheckDialogOpen.value = true
 }
 
@@ -175,6 +186,9 @@ function updateServiceCheckDialogOpen(value: boolean) {
 }
 
 function openAttackLogDialog() {
+  if (!runtimeStageReady.value) {
+    return
+  }
   attackLogDialogOpen.value = true
 }
 
@@ -324,7 +338,7 @@ watch(
 
 <template>
   <div class="space-y-6">
-    <label class="space-y-2">
+    <label v-if="shouldShowContestSelector" class="space-y-2">
       <span class="text-sm text-[var(--color-text-secondary)]">选择 AWD 赛事</span>
       <select
         id="awd-contest-selector"
@@ -390,6 +404,7 @@ watch(
         v-show="activePanel === 'inspector'"
       >
         <AWDRoundInspector
+          v-if="runtimeStageReady"
           :contest="selectedContest"
           :rounds="rounds"
           :selected-round-id="selectedRoundId"
@@ -423,6 +438,63 @@ watch(
           @run-selected-round-check="runSelectedRoundCheck"
           @update:selected-round-id="updateSelectedRoundId"
         />
+
+        <section
+          v-else
+          class="awd-runtime-shell rounded-[28px] border p-6 shadow-[0_24px_70px_var(--color-shadow-soft)]"
+        >
+          <div
+            class="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--color-primary-hover)]/75"
+          >
+            <span>Operations</span>
+            <span class="awd-runtime-shell-chip rounded-full px-2 py-1">待开赛</span>
+          </div>
+          <div class="mt-3 grid gap-4">
+            <div>
+              <h2 class="text-3xl font-semibold tracking-tight text-white">尚未进入运行阶段</h2>
+              <p class="mt-3 text-sm leading-7 text-[var(--color-text-secondary)]/90">
+                当前赛事还不能进入轮次运行。需先通过赛前检查并开赛，随后才会接管创建轮次、服务巡检、攻击补录和当前轮态势。
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+              <button
+                id="awd-runtime-shell-create-round"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+              >
+                创建轮次
+              </button>
+              <button
+                id="awd-runtime-shell-record-service"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+              >
+                录入服务检查
+              </button>
+              <button
+                id="awd-runtime-shell-record-attack"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] transition disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+              >
+                补录攻击日志
+              </button>
+              <button
+                id="awd-runtime-shell-run-check"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+              >
+                立即巡检当前轮
+              </button>
+            </div>
+
+            <p class="text-xs text-[var(--color-primary-hover)]/75">需先通过赛前检查并开赛</p>
+          </div>
+        </section>
       </section>
 
       <section
@@ -499,5 +571,16 @@ watch(
 
 .awd-ops-tab-panel {
   min-width: 0;
+}
+
+.awd-runtime-shell {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-surface-panel) 94%, white 6%), var(--color-surface-panel)),
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 52%);
+}
+
+.awd-runtime-shell-chip {
+  background: color-mix(in srgb, var(--color-warning) 18%, transparent);
+  color: color-mix(in srgb, var(--color-warning) 74%, white 26%);
 }
 </style>

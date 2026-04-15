@@ -22,6 +22,7 @@ import type { AdminContestUpdatePayload } from '@/api/admin'
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
 import AWDChallengeConfigDialog from '@/components/admin/contest/AWDChallengeConfigDialog.vue'
 import AWDChallengeConfigPanel from '@/components/admin/contest/AWDChallengeConfigPanel.vue'
+import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 import ContestAwdPreflightPanel from '@/components/admin/contest/ContestAwdPreflightPanel.vue'
 import ContestChallengeOrchestrationPanel from '@/components/admin/contest/ContestChallengeOrchestrationPanel.vue'
 import ContestWorkbenchStageRail from '@/components/admin/contest/ContestWorkbenchStageRail.vue'
@@ -709,16 +710,12 @@ onMounted(() => {
           aria-labelledby="contest-workbench-stage-tab-operations"
           :aria-hidden="activeStage === 'operations' ? 'false' : 'true'"
         >
-          <section class="workspace-directory-section contest-edit-section">
-            <header class="contest-edit-header">
-              <div class="workspace-tab-heading__main">
-                <div class="workspace-overline">Operations</div>
-                <h2 class="workspace-page-title">轮次运行</h2>
-                <p class="workspace-page-copy">
-                  在这里查看轮次运行信息与现场状态，便于赛事进行中的值守与处理。
-                </p>
-              </div>
-            </header>
+          <section v-if="activeStage === 'operations'" class="contest-edit-section contest-edit-section--flat">
+            <AWDOperationsPanel
+              :contests="[contest]"
+              :selected-contest-id="contest.id"
+              :hide-contest-selector="true"
+            />
           </section>
         </section>
       </template>
