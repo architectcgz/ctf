@@ -10,6 +10,7 @@ import {
 } from '@/api/admin'
 import { ApiError } from '@/api/request'
 import type { AWDReadinessData, ContestDetailData, ContestStatus } from '@/api/contracts'
+import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'
 
@@ -138,6 +139,25 @@ export function createContestStatusOptions(status: AdminContestStatus | null) {
     return []
   }
   return STATUS_TRANSITIONS[status].map((nextStatus) => ({ label: nextStatus, value: nextStatus }))
+}
+
+export function shouldConfirmContestTermination(
+  currentStatus: AdminContestStatus | null,
+  targetStatus: AdminContestStatus
+): boolean {
+  return targetStatus === 'ended' && (currentStatus === 'running' || currentStatus === 'frozen')
+}
+
+export async function confirmContestTermination(contestTitle: string): Promise<boolean> {
+  const normalizedTitle = contestTitle.trim()
+  return confirmDestructiveAction({
+    title: '确认结束赛事',
+    message: normalizedTitle
+      ? `结束赛事“${normalizedTitle}”后，学生端将立即停止参赛入口，当前进行中的作答与攻防操作也会一并终止。确认继续吗？`
+      : '结束当前赛事后，学生端将立即停止参赛入口，当前进行中的作答与攻防操作也会一并终止。确认继续吗？',
+    confirmButtonText: '确认结束',
+    cancelButtonText: '继续编辑',
+  })
 }
 
 function shouldGateAWDContestStart(
@@ -292,6 +312,13 @@ export function useAdminContests() {
     saving.value = true
     try {
       if (editingContestId.value) {
+        if (shouldConfirmContestTermination(editingBaseStatus.value, draft.status)) {
+          const confirmed = await confirmContestTermination(title)
+          if (!confirmed) {
+            return null
+          }
+        }
+
         const payload: AdminContestUpdatePayload = {
           title,
           description,

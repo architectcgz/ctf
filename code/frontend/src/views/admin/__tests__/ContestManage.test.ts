@@ -13,6 +13,7 @@ const contestMocks = vi.hoisted(() => ({
   updateContest: vi.fn(),
   getContestAWDReadiness: vi.fn(),
 }))
+const destructiveConfirmMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/api/admin', async () => {
   const actual = await vi.importActual<typeof import('@/api/admin')>('@/api/admin')
@@ -34,6 +35,10 @@ vi.mock('vue-router', async () => {
   }
 })
 
+vi.mock('@/composables/useDestructiveConfirm', () => ({
+  confirmDestructiveAction: destructiveConfirmMock,
+}))
+
 describe('ContestManage', () => {
   beforeEach(() => {
     pushMock.mockReset()
@@ -42,6 +47,7 @@ describe('ContestManage', () => {
     contestMocks.createContest.mockReset()
     contestMocks.updateContest.mockReset()
     contestMocks.getContestAWDReadiness.mockReset()
+    destructiveConfirmMock.mockReset()
 
     contestMocks.getChallenges.mockResolvedValue({
       list: [],
@@ -213,6 +219,59 @@ describe('ContestManage', () => {
 
     expect(contestMocks.getContestAWDReadiness).not.toHaveBeenCalled()
     expect(wrapper.text()).not.toContain('填写本次放行原因')
+  })
+
+  it('应该在管理弹窗中结束进行中的竞赛前先请求确认', async () => {
+    destructiveConfirmMock.mockResolvedValue(false)
+    contestMocks.getContests.mockResolvedValue({
+      list: [
+        {
+          id: 'contest-running',
+          title: '2026 春季校园 CTF',
+          description: '校内赛',
+          mode: 'jeopardy',
+          status: 'running',
+          starts_at: '2026-04-12T09:00:00.000Z',
+          ends_at: '2026-04-12T18:00:00.000Z',
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+
+    const wrapper = mount(ContestManage, {
+      global: {
+        stubs: {
+          ContestOrchestrationPage: {
+            props: ['list'],
+            template:
+              '<div><button id="open-edit" type="button" @click="$emit(\'openEditDialog\', list[0])">编辑</button></div>',
+          },
+          AdminContestFormDialog: {
+            props: ['open', 'draft'],
+            template:
+              '<div><button v-if="open" id="submit-ended" type="button" @click="$emit(\'save\', { ...draft, status: \'ended\' })">结束</button></div>',
+          },
+          ElDialog: {
+            template: '<div><slot /><slot name="footer" /></div>',
+          },
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#open-edit').trigger('click')
+    await flushPromises()
+    await wrapper.get('#submit-ended').trigger('click')
+    await flushPromises()
+
+    expect(destructiveConfirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '确认结束赛事',
+      })
+    )
+    expect(contestMocks.updateContest).not.toHaveBeenCalled()
   })
 
   it('应该渲染真实竞赛列表', async () => {

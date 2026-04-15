@@ -777,6 +777,31 @@ describe('ContestEdit', () => {
     expect(pushMock).toHaveBeenCalledWith({ name: 'ContestManage', query: { panel: 'list' } })
   })
 
+  it('应该在终止进行中的竞赛前弹出二次确认', async () => {
+    destructiveConfirmMock.mockResolvedValue(false)
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 春季校园 CTF',
+        status: 'running',
+      })
+    )
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-status').setValue('ended')
+    await wrapper.get('.contest-form-button--primary').trigger('click')
+    await flushPromises()
+
+    expect(destructiveConfirmMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '确认结束赛事',
+      })
+    )
+    expect(contestApiMocks.updateContest).not.toHaveBeenCalled()
+    expect(pushMock).not.toHaveBeenCalled()
+  })
+
   it('应该在 AWD 启动门禁拦截后展示放行弹层并在确认后回到赛事目录', async () => {
     contestApiMocks.getContest.mockResolvedValue({
       id: 'contest-1',
