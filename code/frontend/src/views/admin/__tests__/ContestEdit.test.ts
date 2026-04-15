@@ -388,7 +388,7 @@ describe('ContestEdit', () => {
     })
 
     await flushPromises()
-    await wrapper.get('#contest-edit-tab-challenges').trigger('click')
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
     await flushPromises()
 
     expect(contestApiMocks.listAdminContestChallenges).toHaveBeenCalledWith('contest-1')
