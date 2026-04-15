@@ -31,10 +31,12 @@ import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessO
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import {
+  confirmContestTermination,
   createFieldLocks,
   createContestStatusOptions,
   createDraftFromContest,
   normalizeEditableStatus,
+  shouldConfirmContestTermination,
   type AdminContestStatus,
   type ContestFormDraft,
 } from '@/composables/useAdminContests'
@@ -504,6 +506,13 @@ async function confirmAWDStartOverride(reason: string) {
 async function handleSave(draft: ContestFormDraft): Promise<void> {
   if (!contest.value) {
     return
+  }
+
+  if (shouldConfirmContestTermination(editingBaseStatus.value, draft.status)) {
+    const confirmed = await confirmContestTermination(draft.title)
+    if (!confirmed) {
+      return
+    }
   }
 
   saving.value = true
