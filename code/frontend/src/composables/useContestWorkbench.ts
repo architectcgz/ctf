@@ -1,4 +1,4 @@
-import { computed, proxyRefs, type Readonly, type Ref } from 'vue'
+import { computed, proxyRefs, type Ref } from 'vue'
 
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 
@@ -58,6 +58,10 @@ const CONTEST_STATUS_LABELS: Partial<Record<ContestStatus, string>> = {
   archived: '已归档',
 }
 
+function formatContestStatus(status: ContestStatus): string {
+  return CONTEST_STATUS_LABELS[status] ?? status
+}
+
 function isAwdContest(contest: ContestDetailData | null): boolean {
   return contest?.mode === 'awd'
 }
@@ -67,19 +71,10 @@ function hasContestStarted(status: ContestStatus | undefined): boolean {
 }
 
 function pickChallengeCount(contest: ContestDetailData | null): string {
-  const countCandidates = [
-    contest?.meta?.linked_challenge_count,
-    contest?.meta?.challenge_count,
-    contest?.meta?.total_challenges,
-  ]
-
-  for (const candidate of countCandidates) {
-    if (typeof candidate === 'number' && Number.isFinite(candidate)) {
-      return String(candidate)
-    }
+  if (!contest) {
+    return '--'
   }
-
-  return '待同步'
+  return '待配置'
 }
 
 function buildAwdReadinessSummary(contest: ContestDetailData | null): string {
@@ -87,9 +82,9 @@ function buildAwdReadinessSummary(contest: ContestDetailData | null): string {
     return ''
   }
   if (hasContestStarted(contest.status)) {
-    return '已进入轮次运行占位阶段'
+    return '轮次运行已开启'
   }
-  return '待补齐 Checker、赛前检查与运行配置'
+  return '请在开赛前完成 AWD 配置与赛前检查'
 }
 
 export function useContestWorkbench(contest: Readonly<Ref<ContestDetailData | null>>) {
@@ -118,13 +113,13 @@ export function useContestWorkbench(contest: Readonly<Ref<ContestDetailData | nu
       {
         key: 'status',
         label: '当前状态',
-        value: CONTEST_STATUS_LABELS[contest.value.status] ?? contest.value.status,
+        value: formatContestStatus(contest.value.status),
       },
       {
         key: 'challenge-count',
         label: '已关联题目数',
         value: pickChallengeCount(contest.value),
-        hint: '工作台骨架阶段先展示汇总信息，题目池详情仍在下方维护。',
+        hint: '题目池调整后，这里会同步显示当前配置情况。',
       },
     ]
 

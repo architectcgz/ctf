@@ -94,8 +94,37 @@ function humanizeRequestError(error: unknown, fallback: string): string {
   return fallback
 }
 
+function readRequestedWorkbenchStage(): ContestWorkbenchStageKey | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const requestedStage = new URLSearchParams(window.location.search).get('panel')
+  if (!requestedStage) {
+    return null
+  }
+
+  if (CONTEST_WORKBENCH_STAGE_ORDER.includes(requestedStage as ContestWorkbenchStageKey)) {
+    return requestedStage as ContestWorkbenchStageKey
+  }
+
+  return null
+}
+
 function syncWorkbenchStageSelection(): void {
-  selectTab(workbench.defaultStage)
+  const visibleStageKeys = workbench.visibleStages.map((stage) => stage.key)
+  const requestedStage = readRequestedWorkbenchStage()
+
+  if (requestedStage && visibleStageKeys.includes(requestedStage)) {
+    if (activeStage.value !== requestedStage) {
+      selectTab(requestedStage)
+    }
+    return
+  }
+
+  if (requestedStage || !visibleStageKeys.includes(activeStage.value) || activeStage.value !== workbench.defaultStage) {
+    selectTab(workbench.defaultStage)
+  }
 }
 
 async function loadContestDetail(): Promise<void> {
@@ -335,7 +364,7 @@ onMounted(() => {
                 <div class="workspace-overline">AWD Config</div>
                 <h2 class="workspace-page-title">AWD 配置</h2>
                 <p class="workspace-page-copy">
-                  这里先保留 Checker、SLA 和防守分配置的挂载位，后续会接入完整运维配置面板。
+                  在这里整理 Checker、SLA 与防守分配置，确保赛事进入运行阶段前参数完整。
                 </p>
               </div>
             </header>
@@ -357,7 +386,7 @@ onMounted(() => {
                 <div class="workspace-overline">Preflight</div>
                 <h2 class="workspace-page-title">赛前检查</h2>
                 <p class="workspace-page-copy">
-                  这里先保留赛前检查结果的挂载位，后续会补齐 Checker 试跑与阻塞项汇总。
+                  在开赛前集中查看当前准备情况，确认关键检查项已经满足运行要求。
                 </p>
               </div>
             </header>
@@ -379,7 +408,7 @@ onMounted(() => {
                 <div class="workspace-overline">Operations</div>
                 <h2 class="workspace-page-title">轮次运行</h2>
                 <p class="workspace-page-copy">
-                  这里先保留 AWD 轮次调度与运行摘要的挂载位，已开赛赛事会默认停在这个阶段。
+                  在这里查看轮次运行信息与现场状态，便于赛事进行中的值守与处理。
                 </p>
               </div>
             </header>
