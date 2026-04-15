@@ -8,6 +8,8 @@ import type { AWDReadinessData, ContestDetailData } from '@/api/contracts'
 import type { AdminContestUpdatePayload } from '@/api/admin'
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
 import ContestChallengeOrchestrationPanel from '@/components/admin/contest/ContestChallengeOrchestrationPanel.vue'
+import ContestWorkbenchStageRail from '@/components/admin/contest/ContestWorkbenchStageRail.vue'
+import ContestWorkbenchSummaryStrip from '@/components/admin/contest/ContestWorkbenchSummaryStrip.vue'
 import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -19,6 +21,7 @@ import {
   type AdminContestStatus,
   type ContestFormDraft,
 } from '@/composables/useAdminContests'
+import { useContestWorkbench, type ContestWorkbenchStageKey } from '@/composables/useContestWorkbench'
 import { ApiError } from '@/api/request'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
 import { useToast } from '@/composables/useToast'
@@ -49,29 +52,16 @@ const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefau
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
-const editPanels = [
-  {
-    key: 'basics',
-    label: '基础设置',
-    tabId: 'contest-edit-tab-basics',
-    panelId: 'contest-edit-panel-basics',
-  },
-  {
-    key: 'challenges',
-    label: '题目编排',
-    tabId: 'contest-edit-tab-challenges',
-    panelId: 'contest-edit-panel-challenges',
-  },
-] as const
-type ContestEditPanelKey = (typeof editPanels)[number]['key']
-const contestEditPanelOrder = editPanels.map((panel) => panel.key) as ContestEditPanelKey[]
-const {
-  activeTab: activePanel,
-  setTabButtonRef,
-  selectTab,
-  handleTabKeydown,
-} = useUrlSyncedTabs<ContestEditPanelKey>({
-  orderedTabs: contestEditPanelOrder,
+const workbench = useContestWorkbench(contest)
+const contestWorkbenchStageOrder: ContestWorkbenchStageKey[] = [
+  'basics',
+  'pool',
+  'awd-config',
+  'preflight',
+  'operations',
+]
+const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchStageKey>({
+  orderedTabs: contestWorkbenchStageOrder,
   defaultTab: 'basics',
 })
 
@@ -107,6 +97,10 @@ function humanizeRequestError(error: unknown, fallback: string): string {
   return fallback
 }
 
+function syncWorkbenchStageSelection(): void {
+  selectTab(workbench.defaultStage)
+}
+
 async function loadContestDetail(): Promise<void> {
   if (!contestId.value) {
     loadError.value = '缺少赛事 ID，无法进入编辑页。'
@@ -121,6 +115,7 @@ async function loadContestDetail(): Promise<void> {
     contest.value = detail
     editingBaseStatus.value = normalizeEditableStatus(detail.status)
     formDraft.value = createDraftFromContest(detail)
+    syncWorkbenchStageSelection()
   } catch (error) {
     loadError.value = humanizeRequestError(error, '竞赛详情加载失败')
   } finally {
@@ -253,26 +248,6 @@ onMounted(() => {
       </div>
     </header>
 
-    <nav class="top-tabs contest-edit-tabs" role="tablist" aria-label="竞赛编辑视图切换">
-      <button
-        v-for="(panel, index) in editPanels"
-        :id="panel.tabId"
-        :key="panel.key"
-        :ref="(element) => setTabButtonRef(panel.key, element as HTMLButtonElement | null)"
-        type="button"
-        role="tab"
-        class="top-tab"
-        :class="{ active: activePanel === panel.key }"
-        :aria-selected="activePanel === panel.key ? 'true' : 'false'"
-        :aria-controls="panel.panelId"
-        :tabindex="activePanel === panel.key ? 0 : -1"
-        @click="selectTab(panel.key)"
-        @keydown="handleTabKeydown($event, index)"
-      >
-        {{ panel.label }}
-      </button>
-    </nav>
-
     <main class="content-pane">
       <div v-if="loading" class="flex justify-center py-12">
         <AppLoading>正在同步竞赛详情...</AppLoading>
@@ -292,13 +267,21 @@ onMounted(() => {
       </AppEmpty>
 
       <template v-else-if="formDraft && contest">
+        <ContestWorkbenchStageRail
+          :stages="workbench.visibleStages"
+          :active-stage="activeStage"
+          :select-stage="selectTab"
+        />
+
+        <ContestWorkbenchSummaryStrip :items="workbench.summaryItems" />
+
         <section
-          id="contest-edit-panel-basics"
+          id="contest-workbench-panel-basics"
           class="tab-panel contest-edit-panel"
-          :class="{ active: activePanel === 'basics' }"
+          :class="{ active: activeStage === 'basics' }"
           role="tabpanel"
-          aria-labelledby="contest-edit-tab-basics"
-          :aria-hidden="activePanel === 'basics' ? 'false' : 'true'"
+          aria-labelledby="contest-workbench-stage-tab-basics"
+          :aria-hidden="activeStage === 'basics' ? 'false' : 'true'"
         >
           <section class="workspace-directory-section contest-edit-section">
             <header class="contest-edit-header">
@@ -325,18 +308,84 @@ onMounted(() => {
         </section>
 
         <section
-          id="contest-edit-panel-challenges"
+          id="contest-workbench-panel-pool"
           class="tab-panel contest-edit-panel"
-          :class="{ active: activePanel === 'challenges' }"
+          :class="{ active: activeStage === 'pool' }"
           role="tabpanel"
-          aria-labelledby="contest-edit-tab-challenges"
-          :aria-hidden="activePanel === 'challenges' ? 'false' : 'true'"
+          aria-labelledby="contest-workbench-stage-tab-pool"
+          :aria-hidden="activeStage === 'pool' ? 'false' : 'true'"
         >
           <section class="contest-edit-section contest-edit-section--flat">
             <ContestChallengeOrchestrationPanel
               :contest-id="contest.id"
               :contest-mode="contest.mode"
             />
+          </section>
+        </section>
+
+        <section
+          v-if="contest.mode === 'awd'"
+          id="contest-workbench-panel-awd-config"
+          class="tab-panel contest-edit-panel"
+          :class="{ active: activeStage === 'awd-config' }"
+          role="tabpanel"
+          aria-labelledby="contest-workbench-stage-tab-awd-config"
+          :aria-hidden="activeStage === 'awd-config' ? 'false' : 'true'"
+        >
+          <section class="workspace-directory-section contest-edit-section">
+            <header class="contest-edit-header">
+              <div class="workspace-tab-heading__main">
+                <div class="workspace-overline">AWD Config</div>
+                <h2 class="workspace-page-title">AWD 配置</h2>
+                <p class="workspace-page-copy">
+                  这里先保留 Checker、SLA 和防守分配置的挂载位，后续会接入完整运维配置面板。
+                </p>
+              </div>
+            </header>
+          </section>
+        </section>
+
+        <section
+          v-if="contest.mode === 'awd'"
+          id="contest-workbench-panel-preflight"
+          class="tab-panel contest-edit-panel"
+          :class="{ active: activeStage === 'preflight' }"
+          role="tabpanel"
+          aria-labelledby="contest-workbench-stage-tab-preflight"
+          :aria-hidden="activeStage === 'preflight' ? 'false' : 'true'"
+        >
+          <section class="workspace-directory-section contest-edit-section">
+            <header class="contest-edit-header">
+              <div class="workspace-tab-heading__main">
+                <div class="workspace-overline">Preflight</div>
+                <h2 class="workspace-page-title">赛前检查</h2>
+                <p class="workspace-page-copy">
+                  这里先保留赛前检查结果的挂载位，后续会补齐 Checker 试跑与阻塞项汇总。
+                </p>
+              </div>
+            </header>
+          </section>
+        </section>
+
+        <section
+          v-if="contest.mode === 'awd'"
+          id="contest-workbench-panel-operations"
+          class="tab-panel contest-edit-panel"
+          :class="{ active: activeStage === 'operations' }"
+          role="tabpanel"
+          aria-labelledby="contest-workbench-stage-tab-operations"
+          :aria-hidden="activeStage === 'operations' ? 'false' : 'true'"
+        >
+          <section class="workspace-directory-section contest-edit-section">
+            <header class="contest-edit-header">
+              <div class="workspace-tab-heading__main">
+                <div class="workspace-overline">Operations</div>
+                <h2 class="workspace-page-title">轮次运行</h2>
+                <p class="workspace-page-copy">
+                  这里先保留 AWD 轮次调度与运行摘要的挂载位，已开赛赛事会默认停在这个阶段。
+                </p>
+              </div>
+            </header>
           </section>
         </section>
       </template>
@@ -359,11 +408,6 @@ onMounted(() => {
   flex: 1 1 auto;
   flex-direction: column;
   gap: var(--space-6);
-}
-
-.contest-edit-tabs {
-  margin-top: var(--space-4);
-  border-bottom: 1px solid color-mix(in srgb, var(--journal-border) 84%, transparent);
 }
 
 .contest-edit-panel {
