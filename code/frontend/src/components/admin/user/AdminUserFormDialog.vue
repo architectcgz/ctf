@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
 
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { AdminUserFormDraft } from '@/composables/useAdminUsers'
 import { USER_ROLES } from '@/utils/constants'
 
@@ -92,12 +93,18 @@ function handleSubmit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     :title="mode === 'create' ? '创建用户' : '编辑用户'"
-    width="640px"
+    :subtitle="
+      mode === 'create'
+        ? '填写账号、角色和身份字段，保存后即可进入用户目录继续治理。'
+        : '更新用户基础资料、角色和状态，保持用户目录与班级上下文同步。'
+    "
+    eyebrow="User Governance"
+    width="40rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
@@ -261,5 +268,5 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>

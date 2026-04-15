@@ -113,7 +113,15 @@
       </template>
     </section>
 
-    <ElDialog v-model="dialogVisible" title="创建镜像" width="500px">
+    <AdminSurfaceModal
+      :open="dialogVisible"
+      title="创建镜像"
+      subtitle="填写镜像名称、标签和说明，提交后会进入镜像目录并参与构建状态跟踪。"
+      eyebrow="Image Registry"
+      width="31.25rem"
+      @close="dialogVisible = false"
+      @update:open="dialogVisible = $event"
+    >
       <ElForm :model="form" label-width="100px">
         <ElFormItem label="镜像名称" required>
           <ElInput v-model="form.name" placeholder="例如：ubuntu" />
@@ -142,7 +150,7 @@
           {{ creating ? '创建中...' : '创建' }}
         </button>
       </template>
-    </ElDialog>
+    </AdminSurfaceModal>
   </section>
 </template>
 
@@ -150,6 +158,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { getImages, createImage, deleteImage } from '@/api/admin'
 import AdminPaginationControls from '@/components/admin/AdminPaginationControls.vue'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import { confirmDestructiveAction } from '@/composables/useDestructiveConfirm'
 import { usePagination } from '@/composables/usePagination'
 import { useToast } from '@/composables/useToast'

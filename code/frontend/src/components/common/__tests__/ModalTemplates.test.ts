@@ -12,6 +12,8 @@ const cTooltipPath = `${process.cwd()}/src/components/common/modal-templates/CCo
 const cPopoverPath = `${process.cwd()}/src/components/common/modal-templates/CLightActionPopover.vue`
 const cConfirmPath = `${process.cwd()}/src/components/common/modal-templates/CImmersiveConfirmDialog.vue`
 const cInputPath = `${process.cwd()}/src/components/common/modal-templates/CFocusedInputDialog.vue`
+const adminModalPath = `${process.cwd()}/src/components/common/modal-templates/AdminSurfaceModal.vue`
+const adminDrawerPath = `${process.cwd()}/src/components/common/modal-templates/AdminSurfaceDrawer.vue`
 
 function readSource(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8') : ''
@@ -46,6 +48,8 @@ describe('modal templates', () => {
     expect(existsSync(cPopoverPath)).toBe(true)
     expect(existsSync(cConfirmPath)).toBe(true)
     expect(existsSync(cInputPath)).toBe(true)
+    expect(existsSync(adminModalPath)).toBe(true)
+    expect(existsSync(adminDrawerPath)).toBe(true)
   })
 
   it('经典居中弹窗应支持标题、插槽内容以及 backdrop 和 Escape 关闭', async () => {
@@ -100,6 +104,8 @@ describe('modal templates', () => {
     const popoverSource = readSource(cPopoverPath)
     const confirmSource = readSource(cConfirmPath)
     const inputSource = readSource(cInputPath)
+    const adminModalSource = readSource(adminModalPath)
+    const adminDrawerSource = readSource(adminDrawerPath)
 
     expect(shellSource).toContain('Teleport to="body"')
     expect(shellSource).toContain("emit('update:open', false)")
@@ -134,6 +140,11 @@ describe('modal templates', () => {
     expect(inputSource).toContain('.c-focused-input-dialog__surface')
     expect(inputSource).toContain('.c-focused-input-dialog__header')
     expect(inputSource).toContain('.c-focused-input-dialog__form')
+
+    expect(adminModalSource).toContain('ClassicCenteredModal')
+    expect(adminModalSource).toContain('Admin Workspace')
+    expect(adminDrawerSource).toContain('SlideOverDrawer')
+    expect(adminDrawerSource).toContain('Admin Actions')
   })
 
   it('C 端专注型输入弹窗应支持标题、描述、表单与页脚动作插槽', async () => {
