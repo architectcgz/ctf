@@ -437,16 +437,17 @@ function getPreviewStatusLabel(status: AWDTeamServiceData['service_status']): st
 
 function getPreviewStatusClass(status: AWDTeamServiceData['service_status']): string {
   const classes: Record<AWDTeamServiceData['service_status'], string> = {
-    up: 'checker-preview-status checker-preview-status--up',
-    down: 'checker-preview-status checker-preview-status--down',
-    compromised: 'checker-preview-status checker-preview-status--compromised',
+    up: 'ui-badge ui-badge--pill ui-badge--soft checker-preview-status checker-preview-status--up',
+    down: 'ui-badge ui-badge--pill ui-badge--soft checker-preview-status checker-preview-status--down',
+    compromised:
+      'ui-badge ui-badge--pill ui-badge--soft checker-preview-status checker-preview-status--compromised',
   }
   return classes[status]
 }
 
 function getValidationStateClass(value?: string): string {
   const state = value || 'pending'
-  return `checker-validation-chip checker-validation-chip--${state}`
+  return `ui-badge ui-badge--pill ui-badge--soft checker-validation-chip checker-validation-chip--${state}`
 }
 
 function getPreviewActionStateText(action: {
@@ -1149,7 +1150,7 @@ function handleSubmit() {
               v-for="action in previewActions"
               :id="`awd-checker-preview-action-${action.key}`"
               :key="action.key"
-              class="checker-preview-action-card"
+              class="journal-note checker-preview-action-card"
             >
               <div class="checker-preview-action-card__top">
                 <div class="journal-note-label">{{ action.label }}</div>
@@ -1167,7 +1168,7 @@ function handleSubmit() {
             <article
               v-for="(target, index) in previewTargets"
               :key="target.access_url || index"
-              class="checker-preview-target-card"
+              class="journal-note checker-preview-target-card"
             >
               <div class="checker-preview-target-card__top">
                 <strong class="checker-preview-target-card__url">
@@ -1450,40 +1451,20 @@ function handleSubmit() {
   word-break: break-all;
 }
 
-.checker-validation-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.25rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
 .checker-validation-chip--pending {
-  border-color: color-mix(in srgb, var(--journal-border) 82%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 92%, var(--color-bg-surface-elevated));
-  color: var(--color-text-secondary);
+  --ui-badge-tone: var(--color-text-muted);
 }
 
 .checker-validation-chip--passed {
-  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
+  --ui-badge-tone: var(--color-success);
 }
 
 .checker-validation-chip--failed {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
+  --ui-badge-tone: var(--color-danger);
 }
 
 .checker-validation-chip--stale {
-  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: color-mix(in srgb, var(--color-warning) 82%, var(--color-text-primary));
+  --ui-badge-tone: var(--color-warning);
 }
 
 .checker-preview-result {
@@ -1514,34 +1495,16 @@ function handleSubmit() {
   font-size: 0.82rem;
 }
 
-.checker-preview-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2rem;
-  padding: 0.25rem 0.85rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
 .checker-preview-status--up {
-  border-color: color-mix(in srgb, var(--color-success) 28%, transparent);
-  background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
+  --ui-badge-tone: var(--color-success);
 }
 
 .checker-preview-status--down {
-  border-color: color-mix(in srgb, var(--color-warning) 28%, transparent);
-  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: var(--color-warning);
+  --ui-badge-tone: var(--color-warning);
 }
 
 .checker-preview-status--compromised {
-  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
+  --ui-badge-tone: var(--color-danger);
 }
 
 .checker-preview-action-list,
