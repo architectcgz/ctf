@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
+import { computed, defineComponent, ref, watch } from 'vue'
 
 import ContestEdit from '../ContestEdit.vue'
 import AWDReadinessOverrideDialog from '@/components/admin/contest/AWDReadinessOverrideDialog.vue'
@@ -196,10 +197,152 @@ function buildContestDetail(overrides: Partial<ContestDetailData> = {}): Contest
   }
 }
 
+const AWDReadinessOverrideDialogStub = defineComponent({
+  name: 'AWDReadinessOverrideDialog',
+  props: {
+    open: { type: Boolean, default: false },
+    title: { type: String, default: '' },
+    confirmLoading: { type: Boolean, default: false },
+  },
+  emits: ['update:open', 'confirm'],
+  setup(props, { emit }) {
+    const reason = ref('')
+
+    watch(
+      () => props.open,
+      (open) => {
+        if (!open) {
+          reason.value = ''
+        }
+      },
+      { immediate: true }
+    )
+
+    function handleSubmit() {
+      emit('confirm', reason.value)
+    }
+
+    return { reason, handleSubmit }
+  },
+  template: `
+    <div v-if="open">
+      <div>{{ title }}</div>
+      <textarea id="awd-readiness-override-reason" v-model="reason" />
+      <button
+        id="awd-readiness-override-submit"
+        type="button"
+        @click="handleSubmit"
+      >
+        {{ confirmLoading ? '强制继续中...' : '强制继续' }}
+      </button>
+    </div>
+  `,
+})
+
+const ContestChallengeEditorDialogStub = defineComponent({
+  name: 'ContestChallengeEditorDialog',
+  props: {
+    open: { type: Boolean, default: false },
+    mode: { type: String, default: 'create' },
+    challengeOptions: { type: Array, default: () => [] },
+    existingChallengeIds: { type: Array, default: () => [] },
+    draft: { type: Object, default: null },
+    loadingChallengeCatalog: { type: Boolean, default: false },
+    saving: { type: Boolean, default: false },
+  },
+  emits: ['update:open', 'save'],
+  setup(props, { emit }) {
+    const challengeId = ref('')
+    const points = ref('100')
+    const order = ref('0')
+    const isVisible = ref('true')
+
+    const selectableChallenges = computed(() =>
+      (props.challengeOptions as Array<{ id: string }>).filter(
+        (item) => props.mode === 'edit' || !(props.existingChallengeIds as string[]).includes(item.id)
+      )
+    )
+
+    watch(
+      () => [props.open, props.mode, props.draft, selectableChallenges.value] as const,
+      ([open]) => {
+        if (!open) {
+          return
+        }
+
+        challengeId.value =
+          props.mode === 'edit'
+            ? String((props.draft as { challenge_id?: string } | null)?.challenge_id ?? '')
+            : String(selectableChallenges.value[0]?.id ?? '')
+        points.value = String((props.draft as { points?: number } | null)?.points ?? 100)
+        order.value = String((props.draft as { order?: number } | null)?.order ?? 0)
+        isVisible.value =
+          (props.draft as { is_visible?: boolean } | null)?.is_visible === false ? 'false' : 'true'
+      },
+      { immediate: true, deep: true }
+    )
+
+    function submit() {
+      emit('save', {
+        challenge_id: Number(challengeId.value),
+        points: Number(points.value),
+        order: Number(order.value),
+        is_visible: isVisible.value === 'true',
+      })
+    }
+
+    return { challengeId, points, order, isVisible, selectableChallenges, submit }
+  },
+  template: `
+    <div v-if="open">
+      <select
+        v-if="mode === 'create'"
+        id="contest-challenge-select"
+        v-model="challengeId"
+        :disabled="loadingChallengeCatalog"
+      >
+        <option
+          v-for="challenge in selectableChallenges"
+          :key="challenge.id"
+          :value="challenge.id"
+        >
+          {{ challenge.title }}
+        </option>
+      </select>
+      <div v-else>{{ draft?.title }}</div>
+      <input id="contest-challenge-points" v-model="points" />
+      <input id="contest-challenge-order" v-model="order" />
+      <select id="contest-challenge-visibility" v-model="isVisible">
+        <option value="true">可见</option>
+        <option value="false">隐藏</option>
+      </select>
+      <button
+        id="contest-challenge-dialog-submit"
+        type="button"
+        @click="submit"
+      >
+        {{ saving ? '保存中...' : mode === 'create' ? '关联题目' : '保存变更' }}
+      </button>
+    </div>
+  `,
+})
+
 function mountContestEdit() {
   return mount(ContestEdit, {
     global: {
       stubs: {
+        AWDReadinessOverrideDialog: AWDReadinessOverrideDialogStub,
+        ContestChallengeEditorDialog: ContestChallengeEditorDialogStub,
+        AdminSurfaceModal: {
+          props: ['open', 'title'],
+          template:
+            '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+        },
+        AdminSurfaceDrawer: {
+          props: ['open', 'title'],
+          template:
+            '<div><div v-if="open"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
+        },
         ElDialog: {
           props: ['modelValue', 'title'],
           template: '<div><div v-if="title">{{ title }}</div><slot /><slot name="footer" /></div>',
@@ -483,17 +626,7 @@ describe('ContestEdit', () => {
   it('应该在普通赛下只展示基础信息与题目池阶段', async () => {
     contestApiMocks.getContest.mockResolvedValue(buildContestDetail())
 
-    const wrapper = mount(ContestEdit, {
-      global: {
-        stubs: {
-          ElDialog: {
-            props: ['modelValue', 'title'],
-            template:
-              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
-          },
-        },
-      },
-    })
+    const wrapper = mountContestEdit()
 
     await flushPromises()
 
@@ -516,17 +649,7 @@ describe('ContestEdit', () => {
       })
     )
 
-    const wrapper = mount(ContestEdit, {
-      global: {
-        stubs: {
-          ElDialog: {
-            props: ['modelValue', 'title'],
-            template:
-              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
-          },
-        },
-      },
-    })
+    const wrapper = mountContestEdit()
 
     await flushPromises()
 
@@ -750,15 +873,7 @@ describe('ContestEdit', () => {
   })
 
   it('应该加载竞赛详情并在保存成功后返回赛事目录', async () => {
-    const wrapper = mount(ContestEdit, {
-      global: {
-        stubs: {
-          ElDialog: {
-            template: '<div><slot /><slot name="footer" /></div>',
-          },
-        },
-      },
-    })
+    const wrapper = mountContestEdit()
 
     await flushPromises()
 
@@ -862,17 +977,7 @@ describe('ContestEdit', () => {
         },
       })
 
-    const wrapper = mount(ContestEdit, {
-      global: {
-        stubs: {
-          ElDialog: {
-            props: ['modelValue', 'title'],
-            template:
-              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
-          },
-        },
-      },
-    })
+    const wrapper = mountContestEdit()
 
     await flushPromises()
     await wrapper.get('#contest-status').setValue('running')
@@ -1154,17 +1259,7 @@ describe('ContestEdit', () => {
   })
 
   it('应该允许管理员在竞赛编辑页编排题目', async () => {
-    const wrapper = mount(ContestEdit, {
-      global: {
-        stubs: {
-          ElDialog: {
-            props: ['modelValue', 'title'],
-            template:
-              '<div><div v-if="modelValue"><div>{{ title }}</div><slot /><slot name="footer" /></div></div>',
-          },
-        },
-      },
-    })
+    const wrapper = mountContestEdit()
 
     await flushPromises()
     await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')

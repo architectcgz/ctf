@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type { AWDReadinessData, AWDReadinessItemData } from '@/api/contracts'
 
 const props = defineProps<{
@@ -129,12 +130,14 @@ function handleSubmit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     :title="title"
-    width="760px"
+    subtitle="本次放行只跳过当前门禁，不会覆盖题目的 checker 校验状态。"
+    eyebrow="AWD Readiness"
+    width="47.5rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
     <div class="readiness-override-dialog">
       <p class="readiness-override-lead">
@@ -245,7 +248,7 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>

@@ -3,6 +3,7 @@ import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 
 import type { AdminNotificationPublishResult } from '@/api/contracts'
+import AdminSurfaceDrawer from '@/components/common/modal-templates/AdminSurfaceDrawer.vue'
 import { useAdminNotificationPublisher } from '@/composables/useAdminNotificationPublisher'
 import { USER_ROLES, type UserRole } from '@/utils/constants'
 
@@ -99,46 +100,27 @@ async function handleUserSearch(): Promise<void> {
 </script>
 
 <template>
-  <Transition name="publish-overlay">
-    <div
-      v-if="open"
-      class="publish-overlay fixed inset-0 z-40 flex justify-end bg-slate-950/45"
-      @click.self="handleClose"
+  <AdminSurfaceDrawer
+    :open="open"
+    title="发布通知"
+    subtitle="配置通知内容与受众范围，发布后会立即写入目标用户通知中心。"
+    eyebrow="Admin Actions"
+    width="36rem"
+    @close="handleClose"
+  >
+    <form
+      class="publish-form flex-1 space-y-5 overflow-y-auto px-6 py-5"
+      @submit.prevent="handleSubmit"
     >
-      <aside
-        class="publish-panel flex h-full w-full max-w-xl flex-col border-l bg-[var(--color-bg-elevated)]"
-        role="dialog"
-        aria-modal="true"
-        aria-label="发布通知"
-      >
-        <header class="publish-header border-b px-6 py-4">
-          <div
-            class="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--color-text-muted)]"
-          >
-            Admin Actions
-          </div>
-          <div class="mt-2 flex items-center justify-between">
-            <h3 class="text-2xl font-semibold text-[var(--color-text-primary)]">发布通知</h3>
-            <button type="button" class="publish-close-btn" @click="handleClose">关闭</button>
-          </div>
-          <p class="mt-2 text-sm text-[var(--color-text-muted)]">
-            配置通知内容与受众范围，发布后会立即写入目标用户通知中心。
-          </p>
-        </header>
-
-        <form
-          class="publish-form flex-1 space-y-5 overflow-y-auto px-6 py-5"
-          @submit.prevent="handleSubmit"
-        >
-          <label class="publish-field">
-            <span class="publish-label">通知类型</span>
-            <select v-model="publisher.form.type" class="publish-input">
-              <option value="system">系统</option>
-              <option value="contest">竞赛</option>
-              <option value="challenge">训练</option>
-              <option value="team">团队</option>
-            </select>
-          </label>
+      <label class="publish-field">
+        <span class="publish-label">通知类型</span>
+        <select v-model="publisher.form.type" class="publish-input">
+          <option value="system">系统</option>
+          <option value="contest">竞赛</option>
+          <option value="challenge">训练</option>
+          <option value="team">团队</option>
+        </select>
+      </label>
 
           <label class="publish-field">
             <span class="publish-label">标题</span>
@@ -297,30 +279,26 @@ async function handleUserSearch(): Promise<void> {
               publisher.errors.audience
             }}</span>
           </fieldset>
-        </form>
+    </form>
 
-        <footer class="publish-footer border-t px-6 py-4">
-          <button type="button" class="publish-btn" @click="handleClose">取消</button>
-          <button
-            type="button"
-            class="publish-btn publish-btn-primary"
-            :disabled="publisher.submitting.value"
-            @click="handleSubmit"
-          >
-            {{ publisher.submitting.value ? '发布中...' : '确认发布' }}
-          </button>
-        </footer>
-      </aside>
-    </div>
-  </Transition>
+    <template #footer>
+      <footer class="publish-footer border-t px-6 py-4">
+        <button type="button" class="publish-btn" @click="handleClose">取消</button>
+        <button
+          type="button"
+          class="publish-btn publish-btn-primary"
+          :disabled="publisher.submitting.value"
+          @click="handleSubmit"
+        >
+          {{ publisher.submitting.value ? '发布中...' : '确认发布' }}
+        </button>
+      </footer>
+    </template>
+  </AdminSurfaceDrawer>
 </template>
 
 <style scoped>
-.publish-panel {
-  border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
-}
-
-.publish-header,
+:deep(.modal-template-panel--drawer),
 .publish-footer {
   border-color: color-mix(in srgb, var(--color-border-default) 78%, transparent);
 }
@@ -388,8 +366,7 @@ async function handleUserSearch(): Promise<void> {
 }
 
 .publish-inline-btn,
-.publish-btn,
-.publish-close-btn {
+.publish-btn {
   border: 1px solid color-mix(in srgb, var(--color-border-default) 80%, transparent);
   border-radius: 0.75rem;
   padding: 0.45rem 0.75rem;
@@ -424,16 +401,6 @@ async function handleUserSearch(): Promise<void> {
 .publish-error {
   font-size: var(--font-size-0-78);
   color: var(--color-danger);
-}
-
-.publish-overlay-enter-active,
-.publish-overlay-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.publish-overlay-enter-from,
-.publish-overlay-leave-to {
-  opacity: 0;
 }
 
 @media (max-width: 640px) {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import type {
   AdminContestChallengeData,
   AdminContestTeamData,
@@ -120,12 +121,14 @@ function handleSubmit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     title="补录攻击日志"
-    width="560px"
+    subtitle="将线下核实过的攻击事件补录进复盘记录，不直接改写正式排行榜。"
+    eyebrow="AWD Operations"
+    width="35rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
@@ -256,5 +259,5 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
