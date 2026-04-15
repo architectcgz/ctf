@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { describe, expect, it } from 'vitest'
-import { useContestWorkbench } from '../useContestWorkbench'
+import { CONTEST_WORKBENCH_STAGE_ORDER, useContestWorkbench } from '../useContestWorkbench'
 import type { ContestDetailData } from '@/api/contracts'
 
 function buildContestDetail(overrides: Partial<ContestDetailData> = {}): ContestDetailData {
@@ -17,6 +17,16 @@ function buildContestDetail(overrides: Partial<ContestDetailData> = {}): Contest
 }
 
 describe('useContestWorkbench', () => {
+  it('应该导出统一的工作台阶段顺序常量', () => {
+    expect(CONTEST_WORKBENCH_STAGE_ORDER).toEqual([
+      'basics',
+      'pool',
+      'awd-config',
+      'preflight',
+      'operations',
+    ])
+  })
+
   it('jeopardy 模式仅返回基础编排阶段', async () => {
     const result = useContestWorkbench(ref(buildContestDetail()))
 
