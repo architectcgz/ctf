@@ -1185,7 +1185,9 @@ function handleSubmit() {
           </div>
 
           <div class="journal-note checker-preview-result__json">
-            <div class="journal-note-label">原始结果</div>
+            <header class="list-heading checker-preview-result__json-head">
+              <h4 class="list-heading__title checker-preview-result__json-title">原始结果</h4>
+            </header>
             <pre id="awd-challenge-preview-result-json" class="checker-preview">{{
               previewResultJSONText
             }}</pre>
@@ -1570,6 +1572,16 @@ function handleSubmit() {
 .checker-preview-result__json {
   display: grid;
   gap: 0.65rem;
+}
+
+.checker-preview-result__json-head {
+  align-items: center;
+}
+
+.checker-preview-result__json-title {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-primary);
 }
 
 @media (max-width: 960px) {
