@@ -143,7 +143,8 @@ export function buildReviewArchiveCaseGroups(input: {
     if (!challengeId) return
 
     if (item.type === 'awd_attack_submission') {
-      const victimTeamName = asString(item.meta?.victim_team_name) || extractVictimTeamName(item.detail)
+      const victimTeamName =
+        asString(item.meta?.victim_team_name) || extractVictimTeamName(item.detail)
       const bucket = ensureAWDBucket(awdBuckets, {
         challengeId,
         title: item.title,
@@ -222,9 +223,7 @@ export function buildReviewArchiveCaseGroups(input: {
     practiceCases: Array.from(practiceBuckets.values())
       .map(toPracticeCase)
       .sort(sortCasesByLastActivity),
-    awdCases: Array.from(awdBuckets.values())
-      .map(toAWDCase)
-      .sort(sortCasesByLastActivity),
+    awdCases: Array.from(awdBuckets.values()).map(toAWDCase).sort(sortCasesByLastActivity),
   }
 }
 
@@ -288,7 +287,11 @@ function toPracticeCase(bucket: PracticeBucket): ReviewArchiveCase {
           : '已记录'
 
   const tone: CaseTone =
-    bucket.successCount > 0 ? 'success' : bucket.submitCount > 0 || bucket.exploitCount > 0 ? 'warning' : 'neutral'
+    bucket.successCount > 0
+      ? 'success'
+      : bucket.submitCount > 0 || bucket.exploitCount > 0
+        ? 'warning'
+        : 'neutral'
 
   return {
     id: bucket.id,
@@ -399,7 +402,11 @@ function rawTimelineType(item: TimelineEvent): string {
 }
 
 function isPracticeEvidence(type: string): boolean {
-  return type === 'instance_access' || type === 'instance_proxy_request' || type === 'challenge_submission'
+  return (
+    type === 'instance_access' ||
+    type === 'instance_proxy_request' ||
+    type === 'challenge_submission'
+  )
 }
 
 function extractVictimTeamName(detail?: string): string {

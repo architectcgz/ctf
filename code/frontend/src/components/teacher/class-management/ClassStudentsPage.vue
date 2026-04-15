@@ -75,12 +75,10 @@ const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
 const panelWorkspaceTabs = workspaceTabs.filter(
   (tab): tab is WorkspacePanelTabItem => tab.key !== 'overview' && tab.key !== 'students'
 )
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
-  {
-    orderedTabs: workspaceTabOrder,
-    defaultTab: 'overview',
-  }
-)
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'overview',
+})
 
 function resolveWorkspacePanelComponent(tabKey: WorkspacePanelTab): Component {
   switch (tabKey) {
@@ -131,13 +129,6 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Class Workspace</span>
-        <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
-      </div>
-    </header>
-
     <nav class="top-tabs" role="tablist" aria-label="班级详情标签页">
       <button
         v-for="(tab, index) in workspaceTabs"
@@ -181,17 +172,23 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                     <div class="progress-card-value metric-panel-value">
                       {{ props.summary?.student_count ?? students.length }}
                     </div>
-                    <div class="progress-card-hint metric-panel-helper">当前班级纳入统计的学生数量</div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      当前班级纳入统计的学生数量
+                    </div>
                   </div>
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">平均解题</div>
-                    <div class="progress-card-value metric-panel-value">{{ averageSolvedText }}</div>
+                    <div class="progress-card-value metric-panel-value">
+                      {{ averageSolvedText }}
+                    </div>
                     <div class="progress-card-hint metric-panel-helper">班级当前平均完成情况</div>
                   </div>
                   <div class="progress-card metric-panel-card">
                     <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
                     <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
-                    <div class="progress-card-hint metric-panel-helper">当前班级近 7 天训练参与情况</div>
+                    <div class="progress-card-hint metric-panel-helper">
+                      当前班级近 7 天训练参与情况
+                    </div>
                   </div>
                 </div>
               </section>
@@ -288,7 +285,9 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
               <div class="teacher-filter-grid">
                 <label class="teacher-field teacher-field--class-switch">
                   <span class="teacher-field-label">班级切换</span>
-                  <div class="teacher-field-control teacher-filter-control teacher-filter-control--select">
+                  <div
+                    class="teacher-field-control teacher-filter-control teacher-filter-control--select"
+                  >
                     <select
                       :value="selectedClassName"
                       class="teacher-input teacher-select"
@@ -357,9 +356,15 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
                 <span class="teacher-directory-head-cell teacher-directory-head-cell-alias"
                   >昵称</span
                 >
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-status">状态</span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics">数据</span>
-                <span class="teacher-directory-head-cell teacher-directory-head-cell-action">操作</span>
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-status"
+                  >状态</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-metrics"
+                  >数据</span
+                >
+                <span class="teacher-directory-head-cell teacher-directory-head-cell-action"
+                  >操作</span
+                >
               </div>
 
               <button
@@ -474,10 +479,22 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
   --teacher-workspace-panel-shadow: 0 14px 34px var(--color-shadow-soft);
   --teacher-workspace-panel-padding: var(--space-8);
   --teacher-workspace-panel-header-gap: var(--space-8);
-  --teacher-workspace-eyebrow-color: color-mix(in srgb, var(--journal-accent) 60%, var(--journal-muted));
+  --teacher-workspace-eyebrow-color: color-mix(
+    in srgb,
+    var(--journal-accent) 60%,
+    var(--journal-muted)
+  );
   --teacher-workspace-line-soft: color-mix(in srgb, var(--journal-border) 88%, transparent);
-  --teacher-workspace-chart-background: color-mix(in srgb, var(--journal-surface-subtle) 82%, transparent);
-  --teacher-workspace-review-background: color-mix(in srgb, var(--journal-surface-subtle) 86%, transparent);
+  --teacher-workspace-chart-background: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 82%,
+    transparent
+  );
+  --teacher-workspace-review-background: color-mix(
+    in srgb,
+    var(--journal-surface-subtle) 86%,
+    transparent
+  );
   --teacher-workspace-mono-font: var(--font-family-mono);
 }
 
@@ -910,15 +927,10 @@ function resolveWorkspacePanelWrapperClass(tabKey: WorkspacePanelTab): string[] 
 }
 
 @media (max-width: 640px) {
-  .workspace-topbar,
   .top-tabs,
   .content-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);
-  }
-
-  .workspace-topbar {
-    display: block;
   }
 }
 </style>

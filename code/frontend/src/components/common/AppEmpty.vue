@@ -11,7 +11,16 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { AlertTriangle, Bell, BookOpen, FileChartColumnIncreasing, Flag, GraduationCap, Inbox, UsersRound } from 'lucide-vue-next'
+import {
+  AlertTriangle,
+  Bell,
+  BookOpen,
+  FileChartColumnIncreasing,
+  Flag,
+  GraduationCap,
+  Inbox,
+  UsersRound,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 
 type IconComp = Component

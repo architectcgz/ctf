@@ -120,7 +120,9 @@ describe('workspace page header styles', () => {
       expect(sharedStylesSource).toContain(selector)
     }
 
-    expect(sharedStylesSource).toContain('--workspace-page-title-font-size: clamp(24px, 3vw, 34px);')
+    expect(sharedStylesSource).toContain(
+      '--workspace-page-title-font-size: clamp(24px, 3vw, 34px);'
+    )
     expect(sharedStylesSource).toContain('--workspace-page-title-line-height: 1.08;')
     expect(sharedStylesSource).toContain('--workspace-page-title-letter-spacing: -0.03em;')
   })
@@ -142,7 +144,10 @@ describe('workspace page header styles', () => {
     expectNoLocalTitleTypography(studentAnalysisPageSource, '.teacher-title')
     expectNoLocalTitleTypography(studentManagementPageSource, '.teacher-title')
     expectNoLocalTitleTypography(teacherInstanceManagementPageSource, '.teacher-title')
-    expectNoLocalTitleTypography(topologyStudioSource, '.topology-page--template-library .topology-hero-title')
+    expectNoLocalTitleTypography(
+      topologyStudioSource,
+      '.topology-page--template-library .topology-hero-title'
+    )
   })
 
   it('不应在页面局部重复声明公共说明排版', () => {
@@ -158,7 +163,10 @@ describe('workspace page header styles', () => {
     expectNoLocalCopyTypography(studentAnalysisPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(studentManagementPageSource, '.teacher-copy')
     expectNoLocalCopyTypography(teacherInstanceManagementPageSource, '.teacher-copy')
-    expectNoLocalCopyTypography(topologyStudioSource, '.topology-page--template-library .topology-hero-description')
+    expectNoLocalCopyTypography(
+      topologyStudioSource,
+      '.topology-page--template-library .topology-hero-description'
+    )
   })
 
   it('student overview 标题应接入共享页级标题类，而不是继续混用 tab 标题类', () => {
@@ -220,7 +228,8 @@ describe('workspace page header styles', () => {
       {
         source: challengeManageSource,
         include: /<h1 class="workspace-page-title">(?:题目管理|导入题目包|待确认导入)<\/h1>/,
-        exclude: /<h1 class="workspace-tab-heading__title">(?:题目管理|导入题目包|待确认导入)<\/h1>/,
+        exclude:
+          /<h1 class="workspace-tab-heading__title">(?:题目管理|导入题目包|待确认导入)<\/h1>/,
       },
       {
         source: challengeImportPreviewSource,
@@ -255,7 +264,8 @@ describe('workspace page header styles', () => {
       {
         source: pageHeaderSource,
         include: '<h1 class="workspace-page-title">{{ title }}</h1>',
-        exclude: '<h1 class="text-3xl font-semibold tracking-tight text-text-primary">{{ title }}</h1>',
+        exclude:
+          '<h1 class="text-3xl font-semibold tracking-tight text-text-primary">{{ title }}</h1>',
       },
     ]
 
@@ -309,18 +319,12 @@ describe('workspace page header styles', () => {
       expectSourceNotToContain(entry.source, entry.exclude)
     }
 
-    expect(contestDetailSource).toContain(
-      '<p class="contest-hero__desc workspace-page-copy">'
-    )
+    expect(contestDetailSource).toContain('<p class="contest-hero__desc workspace-page-copy">')
     expect(reviewArchiveHeroSource).toContain(
       '<p class="archive-hero__description workspace-page-copy">'
     )
-    expect(authEntryShellSource).toContain(
-      '<p class="auth-entry-shell__copy workspace-page-copy">'
-    )
-    expect(errorStatusShellSource).toContain(
-      '<p class="error-status-text workspace-page-copy">'
-    )
+    expect(authEntryShellSource).toContain('<p class="auth-entry-shell__copy workspace-page-copy">')
+    expect(errorStatusShellSource).toContain('<p class="error-status-text workspace-page-copy">')
   })
 
   it('页级说明应统一接入共享页级说明类，而不是继续使用 tab copy', () => {
@@ -328,27 +332,32 @@ describe('workspace page header styles', () => {
       {
         source: studentOverviewSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+        exclude:
+          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
         source: studentRecommendationSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+        exclude:
+          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
         source: studentCategoryProgressSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+        exclude:
+          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
         source: studentDifficultySource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+        exclude:
+          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
         source: studentTimelineSource,
         include: /<p class="workspace-page-copy max-w-2xl[^"]*">/,
-        exclude: '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
+        exclude:
+          '<p class="workspace-tab-copy max-w-2xl text-sm leading-7 text-[var(--journal-muted)]">',
       },
       {
         source: userGovernanceSource,

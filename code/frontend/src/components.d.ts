@@ -34,6 +34,7 @@ declare module 'vue' {
     AWDRoundCreateDialog: typeof import('./components/admin/contest/AWDRoundCreateDialog.vue')['default']
     AWDRoundInspector: typeof import('./components/admin/contest/AWDRoundInspector.vue')['default']
     AWDServiceCheckDialog: typeof import('./components/admin/contest/AWDServiceCheckDialog.vue')['default']
+    BackofficeSubNav: typeof import('./components/layout/BackofficeSubNav.vue')['default']
     BarChart: typeof import('./components/charts/BarChart.vue')['default']
     ChallengeDescriptionPanel: typeof import('./components/admin/challenge/ChallengeDescriptionPanel.vue')['default']
     ChallengeInstanceCard: typeof import('./components/challenge/ChallengeInstanceCard.vue')['default']

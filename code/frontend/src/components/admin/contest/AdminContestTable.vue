@@ -64,10 +64,7 @@ function getStatusPillClass(status: ContestStatus): string {
         <div class="contest-row__mode">{{ getModeLabel(contest.mode) }}</div>
 
         <div class="contest-row__status">
-          <span
-            class="contest-status-pill"
-            :class="getStatusPillClass(contest.status)"
-          >
+          <span class="contest-status-pill" :class="getStatusPillClass(contest.status)">
             {{ getStatusLabel(contest.status) }}
           </span>
         </div>
@@ -115,13 +112,8 @@ function getStatusPillClass(status: ContestStatus): string {
 
 <style scoped>
 .contest-directory {
-  --contest-directory-columns:
-    minmax(17rem, 1.46fr)
-    minmax(6rem, 0.54fr)
-    minmax(7rem, 0.68fr)
-    minmax(9.5rem, 0.78fr)
-    minmax(9.5rem, 0.78fr)
-    minmax(11rem, 11rem);
+  --contest-directory-columns: minmax(17rem, 1.46fr) minmax(6rem, 0.54fr) minmax(7rem, 0.68fr)
+    minmax(9.5rem, 0.78fr) minmax(9.5rem, 0.78fr) minmax(11rem, 11rem);
   display: grid;
   gap: 0;
 }

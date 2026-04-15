@@ -166,19 +166,21 @@ function handleImportChange(event: Event): void {
           <div class="journal-note-label">User Governance</div>
           <h1 class="workspace-page-title">用户治理台</h1>
         </div>
-        <p class="workspace-page-copy">
-          在这里筛选账号、批量导入并处理用户状态。
-        </p>
+        <p class="workspace-page-copy">在这里筛选账号、批量导入并处理用户状态。</p>
 
         <div class="user-overview-summary">
           <div class="flex items-center gap-3 text-sm font-medium text-[var(--journal-ink)]">
             <UsersRound class="h-5 w-5 text-[var(--journal-accent)]" />
             当前用户概况
           </div>
-          <div class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface mt-5">
+          <div
+            class="admin-summary-grid user-overview-grid progress-strip metric-panel-grid metric-panel-default-surface mt-5"
+          >
             <div class="journal-note user-overview-stat progress-card metric-panel-card">
               <div class="journal-note-label progress-card-label metric-panel-label">用户总量</div>
-              <div class="journal-note-value progress-card-value metric-panel-value">{{ total }}</div>
+              <div class="journal-note-value progress-card-value metric-panel-value">
+                {{ total }}
+              </div>
               <div class="journal-note-helper progress-card-hint metric-panel-helper">
                 当前筛选条件下的用户总数
               </div>

@@ -401,7 +401,9 @@ describe('ContestDetail', () => {
     await challengesTab!.trigger('click')
     await flushPromises()
 
-    const challengeButton = wrapper.findAll('button').find((node) => node.text().includes('Web 101'))
+    const challengeButton = wrapper
+      .findAll('button')
+      .find((node) => node.text().includes('Web 101'))
     expect(challengeButton).toBeTruthy()
     await challengeButton!.trigger('click')
     await flushPromises()

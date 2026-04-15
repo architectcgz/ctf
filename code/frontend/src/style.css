@@ -1,12 +1,14 @@
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --el-color-primary: var(--color-primary);
@@ -29,7 +31,7 @@
   color-scheme: dark;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   color-scheme: light;
 }
 
@@ -83,7 +85,8 @@ select {
   border: 0;
 }
 
-.workspace-directory-section > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
+.workspace-directory-section
+  > :where(.workspace-directory-loading, .workspace-directory-empty, .workspace-directory-list) {
   margin-top: var(--workspace-directory-gap-top);
 }
 
@@ -173,10 +176,20 @@ select {
 }
 
 /* 滚动条 */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-border-default); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
 
 .app-destructive-confirm-modal {
   background: color-mix(
@@ -300,7 +313,8 @@ select {
   width: 1.65rem;
   height: 1.65rem;
   margin: 0;
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 85%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 85%, transparent);
   border-radius: 0.55rem;
   color: var(--journal-muted, var(--color-text-secondary));
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, transparent);
@@ -378,7 +392,8 @@ select {
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button--default {
-  border: 1px solid color-mix(in srgb, var(--journal-border, var(--color-border-default)) 72%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--journal-border, var(--color-border-default)) 72%, transparent);
   background: color-mix(in srgb, var(--journal-surface, var(--color-bg-surface)) 96%, transparent);
   color: var(--journal-ink, var(--color-text-primary));
 }
@@ -396,7 +411,9 @@ select {
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):hover,
-.app-destructive-confirm-box .el-message-box__btns .el-button:not(.el-button--primary):focus-visible {
+.app-destructive-confirm-box
+  .el-message-box__btns
+  .el-button:not(.el-button--primary):focus-visible {
   border-color: var(--destructive-confirm-neutral-border-hover) !important;
   background: var(--destructive-confirm-neutral-bg-hover) !important;
   color: var(--destructive-confirm-neutral-text-hover) !important;
@@ -426,6 +443,7 @@ select {
 }
 
 .app-destructive-confirm-box .el-message-box__btns .el-button:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--journal-accent, var(--color-primary)) 46%, transparent);
+  outline: 2px solid
+    color-mix(in srgb, var(--journal-accent, var(--color-primary)) 46%, transparent);
   outline-offset: 2px;
 }

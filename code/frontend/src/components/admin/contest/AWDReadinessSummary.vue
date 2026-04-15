@@ -51,7 +51,9 @@ const summaryItems = computed(() => {
 
 const blockingItems = computed(() => props.readiness?.items || [])
 const globalBlockingReasons = computed(() => props.readiness?.global_blocking_reasons ?? [])
-const hasGlobalBlockingReasons = computed(() => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0)
+const hasGlobalBlockingReasons = computed(
+  () => (props.readiness?.global_blocking_reasons?.length ?? 0) > 0
+)
 const blockingActionLabels = computed(() =>
   (props.readiness?.blocking_actions || []).map((action) => getBlockingActionLabel(action))
 )
@@ -140,7 +142,11 @@ function formatDateTime(value?: string): string {
       </div>
 
       <div class="metric-panel-grid metric-panel-default-surface readiness-summary-grid">
-        <article v-for="item in summaryItems" :key="item.key" class="journal-note metric-panel-card">
+        <article
+          v-for="item in summaryItems"
+          :key="item.key"
+          class="journal-note metric-panel-card"
+        >
           <div class="journal-note-label metric-panel-label">{{ item.label }}</div>
           <div class="journal-note-value metric-panel-value">{{ item.value }}</div>
           <div class="journal-note-helper metric-panel-helper">{{ item.hint }}</div>
@@ -153,10 +159,7 @@ function formatDateTime(value?: string): string {
     </section>
 
     <template v-else>
-      <section
-        v-if="hasGlobalBlockingReasons"
-        class="workspace-directory-section readiness-alert"
-      >
+      <section v-if="hasGlobalBlockingReasons" class="workspace-directory-section readiness-alert">
         <header class="list-heading">
           <div>
             <div class="journal-note-label">Global Blocking</div>
@@ -164,11 +167,7 @@ function formatDateTime(value?: string): string {
           </div>
         </header>
         <ul class="readiness-alert-list">
-          <li
-            v-for="reason in globalBlockingReasons"
-            :key="reason"
-            class="readiness-alert-item"
-          >
+          <li v-for="reason in globalBlockingReasons" :key="reason" class="readiness-alert-item">
             {{ getGlobalReasonCopy(reason) }}
           </li>
         </ul>
@@ -182,8 +181,16 @@ function formatDateTime(value?: string): string {
           </div>
           <div class="readiness-list-head__meta">
             <span class="readiness-count">阻塞 {{ readiness?.blocking_count ?? 0 }} 项</span>
-            <div v-if="blockingActionLabels.length > 0" class="readiness-action-list" aria-label="阻塞动作">
-              <span v-for="label in blockingActionLabels" :key="label" class="readiness-action-chip">
+            <div
+              v-if="blockingActionLabels.length > 0"
+              class="readiness-action-list"
+              aria-label="阻塞动作"
+            >
+              <span
+                v-for="label in blockingActionLabels"
+                :key="label"
+                class="readiness-action-chip"
+              >
                 {{ label }}
               </span>
             </div>
@@ -222,7 +229,11 @@ function formatDateTime(value?: string): string {
             <div class="readiness-row__reason">{{ getBlockingReasonLabel(item) }}</div>
             <div class="readiness-row__time">{{ formatDateTime(item.last_preview_at) }}</div>
             <div class="readiness-row__target">{{ item.last_access_url || '无目标地址' }}</div>
-            <div class="readiness-row__actions" role="group" :aria-label="`题目 ${item.title} 操作`">
+            <div
+              class="readiness-row__actions"
+              role="group"
+              :aria-label="`题目 ${item.title} 操作`"
+            >
               <button
                 :id="`awd-readiness-edit-${item.challenge_id}`"
                 type="button"
@@ -329,7 +340,10 @@ function formatDateTime(value?: string): string {
 .readiness-directory-head,
 .readiness-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.8fr) minmax(180px, 0.9fr) minmax(170px, 0.8fr) minmax(180px, 1fr) minmax(112px, 0.6fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(140px, 0.8fr) minmax(180px, 0.9fr) minmax(
+      170px,
+      0.8fr
+    ) minmax(180px, 1fr) minmax(112px, 0.6fr);
   gap: 1rem;
   align-items: center;
 }

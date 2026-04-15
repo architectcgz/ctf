@@ -64,7 +64,8 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
     loading.value = true
     try {
       const instances = await getMyInstances()
-      instance.value = instances.find((item) => String(item.challenge_id) === currentChallengeId) ?? null
+      instance.value =
+        instances.find((item) => String(item.challenge_id) === currentChallengeId) ?? null
     } catch (error) {
       if (!options?.silent) {
         toast.error('加载实例状态失败')
@@ -171,7 +172,8 @@ export function useChallengeInstance(challengeId: MaybeRefOrGetter<string | unde
       clearPollingTimer()
       toast.success('实例已销毁')
     } catch (error) {
-      const message = error instanceof Error && error.message.trim() ? error.message : '销毁实例失败'
+      const message =
+        error instanceof Error && error.message.trim() ? error.message : '销毁实例失败'
       toast.error(message)
     } finally {
       destroying.value = false

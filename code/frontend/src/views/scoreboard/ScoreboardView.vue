@@ -14,31 +14,28 @@ type ScoreboardPanelKey = 'contest' | 'points'
 
 const route = useRoute()
 const router = useRouter()
-const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> = [
-  {
-    key: 'contest',
-    label: '竞赛排行榜',
-    panelId: 'scoreboard-panel-contest',
-    tabId: 'scoreboard-tab-contest',
-  },
-  {
-    key: 'points',
-    label: '积分排行榜',
-    panelId: 'scoreboard-panel-points',
-    tabId: 'scoreboard-tab-points',
-  },
-]
-const {
-  activeTab,
-  setTabButtonRef,
-  selectTab,
-  handleTabKeydown,
-} = useRouteQueryTabs<ScoreboardPanelKey>({
-  route,
-  router,
-  orderedTabs: panelTabs.map((tab) => tab.key) as ScoreboardPanelKey[],
-  defaultTab: 'contest',
-})
+const panelTabs: Array<{ key: ScoreboardPanelKey; label: string; panelId: string; tabId: string }> =
+  [
+    {
+      key: 'contest',
+      label: '竞赛排行榜',
+      panelId: 'scoreboard-panel-contest',
+      tabId: 'scoreboard-tab-contest',
+    },
+    {
+      key: 'points',
+      label: '积分排行榜',
+      panelId: 'scoreboard-panel-points',
+      tabId: 'scoreboard-tab-points',
+    },
+  ]
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } =
+  useRouteQueryTabs<ScoreboardPanelKey>({
+    route,
+    router,
+    orderedTabs: panelTabs.map((tab) => tab.key) as ScoreboardPanelKey[],
+    defaultTab: 'contest',
+  })
 
 const {
   hasSections,
@@ -179,22 +176,30 @@ function getCardDescription(
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">展示竞赛</div>
                 <div class="scoreboard-summary-value metric-panel-value">{{ contestCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">当前可查看排行的竞赛总数</div>
+                <div class="scoreboard-summary-helper metric-panel-helper">
+                  当前可查看排行的竞赛总数
+                </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">参赛队伍</div>
                 <div class="scoreboard-summary-value metric-panel-value">{{ teamCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">已进入榜单统计的队伍规模</div>
+                <div class="scoreboard-summary-helper metric-panel-helper">
+                  已进入榜单统计的队伍规模
+                </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">冻结竞赛</div>
                 <div class="scoreboard-summary-value metric-panel-value">{{ frozenCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">当前处于封榜阶段的竞赛数量</div>
+                <div class="scoreboard-summary-helper metric-panel-helper">
+                  当前处于封榜阶段的竞赛数量
+                </div>
               </div>
               <div class="scoreboard-summary-item metric-panel-card">
                 <div class="scoreboard-summary-label metric-panel-label">异常分区</div>
                 <div class="scoreboard-summary-value metric-panel-value">{{ failureCount }}</div>
-                <div class="scoreboard-summary-helper metric-panel-helper">排行榜加载异常的竞赛分区</div>
+                <div class="scoreboard-summary-helper metric-panel-helper">
+                  排行榜加载异常的竞赛分区
+                </div>
               </div>
             </div>
             <div v-if="hasPartialFailure" class="scoreboard-inline-note">部分竞赛加载失败</div>
@@ -239,7 +244,9 @@ function getCardDescription(
                   <div class="scoreboard-card-main">
                     <div class="scoreboard-card-chips">
                       <span class="sb-index">{{ String(index + 1).padStart(2, '0') }}</span>
-                      <span class="sb-status-chip">{{ getStatusLabel(section.contest.status) }}</span>
+                      <span class="sb-status-chip">{{
+                        getStatusLabel(section.contest.status)
+                      }}</span>
                       <span class="sb-mode-chip">{{ getModeLabel(section.contest.mode) }}</span>
                       <span v-if="section.frozen" class="sb-frozen-chip">
                         <Shield class="h-3 w-3" /> 已冻结
@@ -263,7 +270,9 @@ function getCardDescription(
                   <div class="scoreboard-card-meta">
                     <Users class="h-3.5 w-3.5" />
                     {{
-                      section.rows.length > 0 ? `展示前 ${section.rows.length} 支队伍` : '暂无排行队伍'
+                      section.rows.length > 0
+                        ? `展示前 ${section.rows.length} 支队伍`
+                        : '暂无排行队伍'
                     }}
                   </div>
                 </div>
@@ -304,7 +313,9 @@ function getCardDescription(
                         <td>{{ item.team_name }}</td>
                         <td class="sb-cell--mono">{{ item.score }}</td>
                         <td>{{ item.solved_count }}</td>
-                        <td class="sb-cell--muted">{{ formatDateTime(item.last_submission_at) }}</td>
+                        <td class="sb-cell--muted">
+                          {{ formatDateTime(item.last_submission_at) }}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -354,11 +365,7 @@ function getCardDescription(
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="item in rankingRows"
-                  :key="item.user_id"
-                  :class="getRowClass(item.rank)"
-                >
+                <tr v-for="item in rankingRows" :key="item.user_id" :class="getRowClass(item.rank)">
                   <td class="sb-cell--rank">
                     <span :class="getRankPillClass(item.rank)">{{ item.rank }}</span>
                   </td>
@@ -591,5 +598,4 @@ function getCardDescription(
     transform: rotate(360deg);
   }
 }
-
 </style>

@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next'
 
-import type { TeacherAWDReviewAttackItemData, TeacherAWDReviewServiceItemData, TeacherAWDReviewTeamItemData, TeacherAWDReviewTrafficItemData } from '@/api/contracts'
+import type {
+  TeacherAWDReviewAttackItemData,
+  TeacherAWDReviewServiceItemData,
+  TeacherAWDReviewTeamItemData,
+  TeacherAWDReviewTrafficItemData,
+} from '@/api/contracts'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import { formatDate } from '@/utils/format'
 
@@ -21,11 +26,7 @@ const emit = defineEmits<{
 <template>
   <Teleport to="body">
     <transition name="awd-review-drawer-fade">
-      <div
-        v-if="visible"
-        class="awd-review-drawer-shell"
-        @click.self="emit('close')"
-      >
+      <div v-if="visible" class="awd-review-drawer-shell" @click.self="emit('close')">
         <aside class="awd-review-drawer teacher-surface-dialog">
           <header class="awd-review-drawer__header">
             <div>
@@ -36,7 +37,11 @@ const emit = defineEmits<{
               </p>
             </div>
 
-            <button type="button" class="teacher-btn teacher-btn--ghost awd-review-drawer__close" @click="emit('close')">
+            <button
+              type="button"
+              class="teacher-btn teacher-btn--ghost awd-review-drawer__close"
+              @click="emit('close')"
+            >
               <X class="h-4 w-4" />
             </button>
           </header>
@@ -75,7 +80,11 @@ const emit = defineEmits<{
               description="当前筛选下还没有可展示的服务状态。"
             />
             <div v-else class="awd-review-drawer__list">
-              <article v-for="service in services" :key="service.id" class="awd-review-drawer__item">
+              <article
+                v-for="service in services"
+                :key="service.id"
+                class="awd-review-drawer__item"
+              >
                 <div>
                   <strong>{{ service.challenge_title }}</strong>
                   <p>{{ service.team_name }} · {{ service.service_status }}</p>
@@ -104,7 +113,9 @@ const emit = defineEmits<{
               <article v-for="attack in attacks" :key="attack.id" class="awd-review-drawer__item">
                 <div>
                   <strong>{{ attack.attacker_team_name }} → {{ attack.victim_team_name }}</strong>
-                  <p>{{ attack.challenge_title }} · {{ attack.attack_type }} · {{ attack.source }}</p>
+                  <p>
+                    {{ attack.challenge_title }} · {{ attack.attack_type }} · {{ attack.source }}
+                  </p>
                 </div>
                 <div class="awd-review-drawer__item-meta">
                   <span>{{ attack.is_success ? '成功' : '失败' }}</span>
@@ -129,7 +140,10 @@ const emit = defineEmits<{
               <article v-for="event in traffic" :key="event.id" class="awd-review-drawer__item">
                 <div>
                   <strong>{{ event.method }} {{ event.path }}</strong>
-                  <p>{{ event.attacker_team_name }} → {{ event.victim_team_name }} · {{ event.challenge_title }}</p>
+                  <p>
+                    {{ event.attacker_team_name }} → {{ event.victim_team_name }} ·
+                    {{ event.challenge_title }}
+                  </p>
                 </div>
                 <div class="awd-review-drawer__item-meta">
                   <span>{{ event.status_code }}</span>

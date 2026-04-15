@@ -51,12 +51,10 @@ const workspaceTabs: WorkspaceTabItem[] = [
 ]
 
 const workspaceTabOrder = workspaceTabs.map((tab) => tab.key) as WorkspaceTab[]
-const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>(
-  {
-    orderedTabs: workspaceTabOrder,
-    defaultTab: 'overview',
-  }
-)
+const { activeTab, setTabButtonRef, selectTab, handleTabKeydown } = useUrlSyncedTabs<WorkspaceTab>({
+  orderedTabs: workspaceTabOrder,
+  defaultTab: 'overview',
+})
 
 const {
   averageSolvedText,
@@ -90,13 +88,6 @@ const {
 
 <template>
   <div class="workspace-shell teacher-management-shell teacher-surface">
-    <header class="workspace-topbar">
-      <div class="topbar-leading">
-        <span class="workspace-overline">Teaching Workspace</span>
-        <span class="class-chip">{{ selectedClassName || '未选择班级' }}</span>
-      </div>
-    </header>
-
     <nav class="top-tabs" role="tablist" aria-label="教学概览标签页">
       <button
         v-for="(tab, index) in workspaceTabs"
@@ -145,7 +136,11 @@ const {
             </div>
 
             <div class="progress-strip metric-panel-grid">
-              <article v-for="item in overviewMetrics" :key="item.key" class="progress-card metric-panel-card">
+              <article
+                v-for="item in overviewMetrics"
+                :key="item.key"
+                class="progress-card metric-panel-card"
+              >
                 <div class="progress-card-label metric-panel-label">{{ item.label }}</div>
                 <div class="progress-card-value metric-panel-value">{{ item.value }}</div>
                 <div class="progress-card-hint metric-panel-helper">{{ item.hint }}</div>
@@ -190,7 +185,7 @@ const {
               {{
                 riskStudentCount > 0
                   ? `当前仍有 ${riskStudentCount} 名学生需要优先回流训练节奏，建议先投放低门槛补训题，再通过复盘结论安排课堂干预。`
-                : '班级整体节奏稳定，可以把更多注意力放在薄弱维度补强和中段学生进阶上。'
+                  : '班级整体节奏稳定，可以把更多注意力放在薄弱维度补强和中段学生进阶上。'
               }}
             </div>
           </aside>
@@ -226,9 +221,7 @@ const {
                   <div>
                     <div class="weak-name">{{ item.dimension }}</div>
                     <div class="weak-copy">
-                      {{
-                        item.count
-                      }}
+                      {{ item.count }}
                       名学生当前在该方向暴露弱项，建议优先投放基础题并安排一次路径梳理。
                     </div>
                   </div>
@@ -237,15 +230,23 @@ const {
               </div>
               <div v-else class="empty-inline">当前班级还没有足够的能力画像数据。</div>
 
-              <div class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface">
+              <div
+                class="summary-grid progress-strip metric-panel-grid metric-panel-default-surface"
+              >
                 <article
                   v-for="item in portraitSummaryNotes"
                   :key="item.key"
                   class="summary-note progress-card metric-panel-card"
                 >
-                  <div class="summary-note-label progress-card-label metric-panel-label">{{ item.label }}</div>
-                  <div class="summary-note-value progress-card-value metric-panel-value">{{ item.value }}</div>
-                  <div class="summary-note-copy progress-card-hint metric-panel-helper">{{ item.copy }}</div>
+                  <div class="summary-note-label progress-card-label metric-panel-label">
+                    {{ item.label }}
+                  </div>
+                  <div class="summary-note-value progress-card-value metric-panel-value">
+                    {{ item.value }}
+                  </div>
+                  <div class="summary-note-copy progress-card-hint metric-panel-helper">
+                    {{ item.copy }}
+                  </div>
                 </article>
               </div>
             </div>
@@ -422,10 +423,22 @@ const {
   --teacher-workspace-panel-shadow: var(--workspace-shadow-panel);
   --teacher-workspace-panel-padding: var(--space-5);
   --teacher-workspace-panel-header-gap: var(--space-4);
-  --teacher-workspace-eyebrow-color: color-mix(in srgb, var(--workspace-brand) 60%, var(--workspace-faint));
+  --teacher-workspace-eyebrow-color: color-mix(
+    in srgb,
+    var(--workspace-brand) 60%,
+    var(--workspace-faint)
+  );
   --teacher-workspace-line-soft: var(--workspace-line-soft);
-  --teacher-workspace-chart-background: color-mix(in srgb, var(--workspace-panel-soft) 82%, transparent);
-  --teacher-workspace-review-background: color-mix(in srgb, var(--workspace-panel-soft) 86%, transparent);
+  --teacher-workspace-chart-background: color-mix(
+    in srgb,
+    var(--workspace-panel-soft) 82%,
+    transparent
+  );
+  --teacher-workspace-review-background: color-mix(
+    in srgb,
+    var(--workspace-panel-soft) 86%,
+    transparent
+  );
   --teacher-workspace-mono-font: var(--workspace-font-mono);
 }
 
@@ -910,20 +923,10 @@ const {
 }
 
 @media (max-width: 640px) {
-  .workspace-topbar,
   .top-tabs,
   .content-pane {
     padding-left: var(--space-4-5);
     padding-right: var(--space-4-5);
-  }
-
-  .workspace-topbar {
-    display: block;
-  }
-
-  .top-note {
-    justify-content: flex-start;
-    margin-top: var(--space-3);
   }
 
   .progress-strip,

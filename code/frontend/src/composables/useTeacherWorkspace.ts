@@ -1,7 +1,19 @@
 import { computed, ref } from 'vue'
 
-import { getStudentRecommendations, getStudentProgress, getStudentSkillProfile, getClasses, getClassStudents } from '@/api/teacher'
-import type { MyProgressData, RecommendationItem, SkillProfileData, TeacherClassItem, TeacherStudentItem } from '@/api/contracts'
+import {
+  getStudentRecommendations,
+  getStudentProgress,
+  getStudentSkillProfile,
+  getClasses,
+  getClassStudents,
+} from '@/api/teacher'
+import type {
+  MyProgressData,
+  RecommendationItem,
+  SkillProfileData,
+  TeacherClassItem,
+  TeacherStudentItem,
+} from '@/api/contracts'
 import { useAuthStore } from '@/stores/auth'
 import { getWeakDimensions } from '@/utils/skillProfile'
 
@@ -22,11 +34,17 @@ export function useTeacherWorkspace() {
   const skillProfile = ref<SkillProfileData | null>(null)
   const recommendations = ref<RecommendationItem[]>([])
 
-  const selectedClass = computed(() => classes.value.find((item) => item.name === selectedClassName.value) ?? null)
-  const selectedStudent = computed(() => students.value.find((item) => item.id === selectedStudentId.value) ?? null)
+  const selectedClass = computed(
+    () => classes.value.find((item) => item.name === selectedClassName.value) ?? null
+  )
+  const selectedStudent = computed(
+    () => students.value.find((item) => item.id === selectedStudentId.value) ?? null
+  )
   const solvedRate = computed(() => {
     if (!progress.value?.total_challenges) return 0
-    return Math.round(((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100)
+    return Math.round(
+      ((progress.value.solved_challenges ?? 0) / progress.value.total_challenges) * 100
+    )
   })
   const weakDimensions = computed(() => getWeakDimensions(skillProfile.value))
 

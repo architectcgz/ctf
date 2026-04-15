@@ -1,0 +1,291 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Book, 
+  CheckCircle, 
+  Edit3, 
+  Search, 
+  Filter, 
+  MoreHorizontal, 
+  Plus, 
+  ArrowRight,
+  Database,
+  Calendar,
+  Users,
+  Activity,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  Tag,
+  ShieldCheck,
+  Zap,
+  Eye,
+  FileSearch,
+  Layers,
+  BarChart3,
+  Fingerprint,
+  X,
+  RotateCcw,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow,
+  SortAsc,
+  Pencil,
+  Copy,
+  Download,
+  Trash2,
+  Power
+} from 'lucide-react';
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState('题目管理');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  
+  const [filterCategory, setFilterCategory] = useState('全部');
+  const [filterDifficulty, setFilterDifficulty] = useState('全部');
+  const [sortConfig, setSortConfig] = useState({ key: 'updateTime', order: 'desc', label: '最近更新' });
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveMenuId(null);
+      setIsSortOpen(false);
+    };
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const stats = [
+    { label: '题目总数', value: 4, icon: <Book size={16} />, trend: '+0%', detail: '题目资源总计', colorClass: 'text-blue-500' },
+    { label: '已发布', value: 3, icon: <CheckCircle size={16} />, trend: '75%', detail: '线上公开题目', colorClass: 'text-emerald-500' },
+    { label: '环境运行', value: 2, icon: <Zap size={16} />, trend: '正常', detail: '运行状态良好', colorClass: 'text-purple-500' },
+    { label: '待处理', value: 1, icon: <Edit3 size={16} />, trend: '待办', detail: '需审核题目', colorClass: 'text-orange-500' },
+  ];
+
+  const challenges = [
+    { id: 1, uuid: 'CHALLENGE-WEB-N01', title: '内部笔记下载器', category: 'Web', difficulty: '简单', points: 100, status: '已发布', updateTime: '2024-03-20', users: 124, health: '检查通过' },
+    { id: 2, uuid: 'CHALLENGE-WEB-N02', title: 'Web-01 源码审计：双层伪装', category: 'Web', difficulty: '简单', points: 120, status: '已发布', updateTime: '2024-03-19', users: 85, health: '检查通过' },
+    { id: 3, uuid: 'CHALLENGE-PWN-N01', title: '格式化字符串漏洞利用初探', category: 'Pwn', difficulty: '中等', points: 250, status: '草稿', updateTime: '2024-04-10', users: 0, health: '待检查' },
+    // 增加一个极长标题的测试项，用于演示省略号效果
+    { id: 4, uuid: 'CHALLENGE-MISC-099', title: '这是一个非常非常长的题目名称示例用于测试在列表宽度受限时的自动省略和悬浮提示功能是否正常工作', category: 'Misc', difficulty: '困难', points: 500, status: '已发布', updateTime: '2024-04-14', users: 5, health: '检查通过' },
+  ];
+
+  const sortOptions = [
+    { key: 'updateTime', order: 'desc', label: '最近更新', icon: <Calendar size={14} /> },
+    { key: 'points', order: 'desc', label: '分值由高到低', icon: <ArrowDownWideNarrow size={14} /> },
+    { key: 'points', order: 'asc', label: '分值由低到高', icon: <ArrowUpNarrowWide size={14} /> },
+    { key: 'title', order: 'asc', label: '标题 A-Z', icon: <SortAsc size={14} /> },
+  ];
+
+  const processedChallenges = useMemo(() => {
+    let result = challenges.filter(c => {
+      const matchSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          c.uuid.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchCategory = filterCategory === '全部' || c.category === filterCategory;
+      const matchDifficulty = filterDifficulty === '全部' || c.difficulty === filterDifficulty;
+      return matchSearch && matchCategory && matchDifficulty;
+    });
+
+    result.sort((a, b) => {
+      const valA = a[sortConfig.key];
+      const valB = b[sortConfig.key];
+      return sortConfig.order === 'asc' ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    });
+
+    return result;
+  }, [searchQuery, filterCategory, filterDifficulty, sortConfig]);
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased selection:bg-blue-100">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm font-medium">
+        <div className="max-w-[1500px] mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center shadow-sm">
+                <Database className="text-white" size={16} />
+              </div>
+              <span className="font-bold text-base tracking-tight uppercase">Challenge<span className="text-blue-600">Ops</span></span>
+            </div>
+            <div className="hidden lg:flex items-center gap-1">
+              {['题目管理', '导入中心', '审计中心'].map(item => (
+                <button key={item} onClick={() => setActiveTab(item)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${activeTab === item ? 'text-blue-600 bg-blue-50' : 'text-slate-500 hover:bg-slate-50'}`}>{item}</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-md uppercase tracking-widest bg-slate-50 font-mono">NODE_PRIMARY</span>
+            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="avatar" /></div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-[1500px] mx-auto px-6 py-6 overflow-visible">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">资源管理中心</h1>
+            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-wider mt-0.5 font-medium italic">Asset Management / Challenges</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold text-xs hover:bg-slate-50 transition-all flex items-center gap-1.5 shadow-sm"><FileSearch size={14} /> 审计中心</button>
+            <button className="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-1.5 active:scale-95 transition-transform"><Plus size={16} /> 新建题目</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:border-blue-400 transition-all group relative overflow-hidden text-sm">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-slate-50 rounded-bl-full -mr-6 -mt-6 group-hover:bg-blue-50 transition-colors"></div>
+              <div className="flex flex-col h-full relative z-10">
+                <div className="flex justify-between items-start mb-auto text-slate-400 group-hover:text-blue-500 transition-colors font-bold uppercase text-[10px]">
+                  <span>{s.label}</span>
+                  {s.icon}
+                </div>
+                <div className="flex items-end justify-between mt-4">
+                  <div className="flex flex-col">
+                    <h3 className="text-3xl font-black text-slate-900 leading-none font-mono tracking-tighter">{s.value.toString().padStart(2, '0')}</h3>
+                    <p className="text-[10px] font-bold text-slate-400 mt-2 tracking-wide font-bold">{s.detail}</p>
+                  </div>
+                  <div className="text-right font-bold text-[10px] text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 font-bold">{s.trend}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="relative mb-6 z-30">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input 
+                  type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="检索题目 ID 或名称..." 
+                  className="bg-slate-50 border border-slate-100 pl-9 pr-4 py-2 rounded-xl text-xs w-full sm:w-80 outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all font-medium"
+                />
+              </div>
+              <button onClick={(e) => { e.stopPropagation(); setIsFilterOpen(!isFilterOpen); setIsSortOpen(false); }} className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold transition-all rounded-xl ${isFilterOpen ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}><Filter size={14} /> 筛选</button>
+            </div>
+            <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+              <div className="relative">
+                <span>排序: </span>
+                <button onClick={(e) => { e.stopPropagation(); setIsSortOpen(!isSortOpen); setIsFilterOpen(false); }} className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg ${isSortOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-900 hover:text-blue-600'}`}>
+                  <span className="font-black underline decoration-blue-200 underline-offset-4 tracking-wider">{sortConfig.label}</span>
+                  <ChevronDown size={12} className={`transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isSortOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 font-bold">
+                    <div className="p-2 bg-slate-50/50 border-b border-slate-100 text-[9px] font-black text-slate-400 px-4 py-2 uppercase font-bold tracking-widest">Sort Options</div>
+                    <div className="py-1">
+                      {sortOptions.map((opt) => (
+                        <button key={opt.label} onClick={() => { setSortConfig(opt); setIsSortOpen(false); }} className={`w-full flex items-center justify-between px-4 py-2.5 text-[11px] font-bold transition-colors ${sortConfig.label === opt.label ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50'}`}><div className="flex items-center gap-2">{opt.icon}{opt.label}</div></button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="w-[1px] h-3 bg-slate-200"></div>
+              <span>共 <span className="text-slate-900 font-mono font-black">{processedChallenges.length}</span> 道题目</span>
+            </div>
+          </div>
+          {/* 筛选面板略... */}
+        </div>
+
+        {/* 题目列表 - 强化了列宽控制和文本省略 */}
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-visible font-bold">
+          <div className="overflow-visible">
+            <table className="w-full text-left border-collapse table-fixed overflow-visible">
+              <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-400">
+                <tr>
+                  {/* 题目名称列使用 truncate，防止无限拉伸 */}
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest w-[30%] min-w-[180px]">题目名称</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest w-[18%] text-center border-x border-slate-100/50">题目 ID</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest w-24 text-center border-r border-slate-100/50">分类</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest w-20 text-center border-r border-slate-100/50">难度</th>
+                  <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest w-20 text-center border-r border-slate-100/50">分值</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest w-32">运行状态</th>
+                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest w-40 text-right">管理操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-sm overflow-visible">
+                {processedChallenges.map((c, index) => {
+                  const isLastRows = index >= processedChallenges.length - 2 && processedChallenges.length > 2;
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors group">
+                      {/* 应用了 truncate 和 title 悬浮提示 */}
+                      <td className="px-6 py-3.5 font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate" title={c.title}>
+                        {c.title}
+                      </td>
+                      <td className="px-4 py-3.5 border-x border-slate-50/50 text-center font-mono text-[10px] text-slate-400 group-hover:text-slate-600 font-bold tracking-tighter uppercase truncate" title={c.uuid}>
+                        {c.uuid}
+                      </td>
+                      <td className="px-4 py-3.5 text-center border-r border-slate-50/50">
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-blue-50 text-blue-600 rounded border border-blue-100">{c.category}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center border-r border-slate-50/50 font-bold">
+                        <span className="text-[10px] font-bold uppercase text-slate-500">{c.difficulty}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center border-r border-slate-50/50 font-black text-slate-900 font-mono tracking-tighter">{c.points}</td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex items-center gap-2 font-medium">
+                          <div className={`w-1.5 h-1.5 rounded-full ${c.status === '已发布' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                          <span className="text-[11px] text-slate-700 font-bold uppercase">{c.status}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5 text-right relative overflow-visible">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button className="flex items-center gap-1 text-blue-600 hover:bg-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-[11px] font-black transition-all border border-blue-100 active:scale-95 shadow-sm"><Eye size={12} /> 查看</button>
+                          <div className="relative inline-block text-left">
+                            <button onClick={(e) => { e.stopPropagation(); setActiveMenuId(activeMenuId === c.id ? null : c.id); }} className={`p-1.5 rounded-lg transition-all ${activeMenuId === c.id ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><MoreHorizontal size={14} /></button>
+                            {activeMenuId === c.id && (
+                              <div className={`absolute right-0 w-44 bg-white border border-slate-200 rounded-xl shadow-2xl z-[100] py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-100 ${isLastRows ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right'}`}>
+                                <div className="px-3 py-2 bg-slate-50/50 border-b border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">Management</div>
+                                <button className="w-full flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors"><Pencil size={12} /> 编辑题目</button>
+                                <button className="w-full flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors"><Copy size={12} /> 复制题目</button>
+                                <button className="w-full flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors border-b border-slate-100"><Download size={12} /> 导出包</button>
+                                <button className="w-full flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-orange-500 hover:bg-orange-50 transition-colors"><Power size={12} /> 下线题目</button>
+                                <button className="w-full flex items-center gap-2 px-4 py-2 text-[11px] font-bold text-red-500 hover:bg-red-50 transition-colors font-black"><Trash2 size={12} /> 永久删除</button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* 分页组件 */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[12px] font-medium px-2">
+          <div className="flex items-center gap-6 font-bold">
+            <span>共 <span className="text-slate-900 font-black">{processedChallenges.length}</span> 条结果</span>
+            <button className="flex items-center gap-4 bg-white border border-slate-200 px-3 py-1.5 rounded-lg hover:border-blue-400 transition-all shadow-sm group">
+              <span className="text-slate-700 font-bold">{pageSize} 条/页</span>
+              <ChevronDown size={14} className="text-slate-300" />
+            </button>
+          </div>
+          <div className="flex items-center gap-6 font-bold">
+            <div className="flex items-center gap-1.5 font-bold">
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-300 cursor-not-allowed shadow-sm"><ChevronLeft size={16} /></button>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200">1</button>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:border-blue-400 hover:text-blue-500 shadow-sm transition-all font-bold"><ChevronRight size={16} /></button>
+            </div>
+            <div className="flex items-center gap-2 font-bold text-slate-400">
+              <span>跳至</span>
+              <input type="text" defaultValue="1" className="w-10 h-8 text-center bg-white border border-slate-200 rounded-lg outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 font-black text-slate-900 shadow-sm transition-all" />
+              <span>页</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default App;

@@ -4,12 +4,7 @@
     panel-title="登录平台"
     panel-description="使用你的训练账号进入工作台。"
   >
-    <ElForm
-      class="auth-login-form"
-      :model="form"
-      label-position="top"
-      @submit.prevent="onSubmit"
-    >
+    <ElForm class="auth-login-form" :model="form" label-position="top" @submit.prevent="onSubmit">
       <ElFormItem label="用户名">
         <ElInput
           ref="usernameInput"
@@ -44,12 +39,7 @@
     <template #footer>
       <div class="auth-login-form__footer">
         没有账号？
-        <RouterLink
-          class="auth-login-form__link"
-          to="/register"
-        >
-          创建新账号
-        </RouterLink>
+        <RouterLink class="auth-login-form__link" to="/register"> 创建新账号 </RouterLink>
       </div>
     </template>
   </AuthEntryShell>
@@ -79,7 +69,10 @@ async function onSubmit() {
   loading.value = true
   try {
     const redirectTo = sanitizeRedirectPath(route.query.redirect)
-    await login({ username: form.username, password: form.password }, redirectTo === '/' ? undefined : redirectTo)
+    await login(
+      { username: form.username, password: form.password },
+      redirectTo === '/' ? undefined : redirectTo
+    )
   } finally {
     loading.value = false
   }

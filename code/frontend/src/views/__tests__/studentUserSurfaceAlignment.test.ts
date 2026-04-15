@@ -38,7 +38,9 @@ describe('student and user surface alignment', () => {
     expect(studentDifficultySource).not.toContain('bg-[rgba(226,232,240,0.65)]')
 
     expect(studentTimelineSource).toContain('journal-soft-surface')
-    expect(studentTimelineSource).toMatch(/\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s)
+    expect(studentTimelineSource).toMatch(
+      /\.stat-icon\s*\{[\s\S]*border:\s*1px solid var\(--journal-soft-border\);/s
+    )
     expect(studentTimelineSource).not.toContain('rgba(226, 232, 240, 0.72)')
 
     expect(journalSoftSurfacesSource).toMatch(
@@ -52,7 +54,9 @@ describe('student and user surface alignment', () => {
     expect(studentRecommendationSource).not.toContain('bg-emerald-50')
 
     expect(studentCategoryProgressSource).toContain('journal-soft-surface')
-    expect(studentCategoryProgressSource).toMatch(/\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s)
+    expect(studentCategoryProgressSource).toMatch(
+      /\.category-track\s*\{[\s\S]*background:\s*var\(--journal-track\);/s
+    )
     expect(studentCategoryProgressSource).not.toMatch(/^\.journal-btn-outline\s*\{/m)
     expect(studentCategoryProgressSource).not.toContain('rgba(226, 232, 240, 0.65)')
   })
@@ -61,7 +65,9 @@ describe('student and user surface alignment', () => {
     expect(studentTimelineSource).toContain(
       'class="timeline-metric-grid mt-5 progress-strip metric-panel-grid metric-panel-default-surface"'
     )
-    expect(studentTimelineSource).toContain('class="timeline-metric-card progress-card metric-panel-card"')
+    expect(studentTimelineSource).toContain(
+      'class="timeline-metric-card progress-card metric-panel-card"'
+    )
     expect(studentTimelineSource).toContain(
       'class="journal-note-label progress-card-label metric-panel-label"'
     )
@@ -103,7 +109,9 @@ describe('student and user surface alignment', () => {
       "'story-metric-grid mt-6 progress-strip metric-panel-grid metric-panel-default-surface'"
     )
     expect(studentOverviewSource).toContain(':class="storyMetricGridClass"')
-    expect(studentOverviewSource).toContain('class="journal-metric progress-card metric-panel-card"')
+    expect(studentOverviewSource).toContain(
+      'class="journal-metric progress-card metric-panel-card"'
+    )
     expect(studentOverviewSource).toContain('class="progress-card-label metric-panel-label"')
     expect(studentOverviewSource).toContain('class="progress-card-value metric-panel-value"')
     expect(studentOverviewSource).toContain('class="progress-card-hint metric-panel-helper"')
@@ -144,7 +152,9 @@ describe('student and user surface alignment', () => {
     expect(studentCategoryProgressSource).toContain(
       'class="journal-note-helper progress-card-hint metric-panel-helper"'
     )
-    expect(studentCategoryProgressSource).toContain(':data-test="`category-action-${item.category}`"')
+    expect(studentCategoryProgressSource).toContain(
+      ':data-test="`category-action-${item.category}`"'
+    )
     expect(studentCategoryProgressSource).not.toContain('category-highlight')
     expect(studentCategoryProgressSource).not.toContain('Strongest Direction')
     expect(studentCategoryProgressSource).not.toContain('Weakest Direction')

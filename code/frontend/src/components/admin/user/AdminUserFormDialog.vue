@@ -102,7 +102,9 @@ function handleSubmit() {
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-username">用户名</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-username"
+            >用户名</label
+          >
           <input
             id="user-username"
             v-model="localDraft.username"
@@ -117,7 +119,9 @@ function handleSubmit() {
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-name">姓名</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-name"
+            >姓名</label
+          >
           <input
             id="user-name"
             v-model="localDraft.name"
@@ -149,7 +153,9 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-email">邮箱</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-email"
+            >邮箱</label
+          >
           <input
             id="user-email"
             v-model="localDraft.email"
@@ -157,7 +163,9 @@ function handleSubmit() {
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
             placeholder="user@example.com"
           />
-          <p v-if="fieldErrors.email" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.email }}</p>
+          <p v-if="fieldErrors.email" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.email }}
+          </p>
         </div>
 
         <div class="space-y-2">
@@ -184,7 +192,9 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-class-name">班级</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-class-name"
+            >班级</label
+          >
           <input
             id="user-class-name"
             v-model="localDraft.class_name"
@@ -197,7 +207,9 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-role">角色</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-role"
+            >角色</label
+          >
           <select
             id="user-role"
             v-model="localDraft.role"
@@ -213,7 +225,9 @@ function handleSubmit() {
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-status">状态</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="user-status"
+            >状态</label
+          >
           <select
             id="user-status"
             v-model="localDraft.status"

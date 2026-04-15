@@ -42,14 +42,20 @@ export async function logout(): Promise<void> {
 }
 
 export async function getProfile(): Promise<AuthUser> {
-  const payload = await request<Omit<AuthUser, 'id'> & { id: string | number }>({ method: 'GET', url: '/auth/profile' })
+  const payload = await request<Omit<AuthUser, 'id'> & { id: string | number }>({
+    method: 'GET',
+    url: '/auth/profile',
+  })
   return {
     ...payload,
     id: String(payload.id),
   }
 }
 
-export async function changePassword(data: { old_password: string; new_password: string }): Promise<void> {
+export async function changePassword(data: {
+  old_password: string
+  new_password: string
+}): Promise<void> {
   await request<void>({ method: 'PUT', url: '/auth/password', data })
 }
 

@@ -83,10 +83,7 @@
             </p>
 
             <div class="image-row__status">
-              <span
-                class="admin-status-chip"
-                :style="getStatusStyle(row.status)"
-              >
+              <span class="admin-status-chip" :style="getStatusStyle(row.status)">
                 {{ getStatusLabel(row.status) }}
               </span>
             </div>
@@ -213,7 +210,10 @@ const statusSummary = computed(() => {
   return [{ key: 'empty', label: '当前页', value: 0, tone: 'muted' as const }]
 })
 
-const imageStatusMeta: Record<ImageStatus, { label: string; color: string; backgroundColor: string }> = {
+const imageStatusMeta: Record<
+  ImageStatus,
+  { label: string; color: string; backgroundColor: string }
+> = {
   pending: {
     label: '等待中',
     color: 'color-mix(in srgb, var(--journal-muted) 84%, var(--journal-ink))',
@@ -335,14 +335,22 @@ onUnmounted(() => {
   --journal-shell-hero-shadow: 0 22px 50px var(--color-shadow-soft);
   --journal-shell-dark-ink: var(--color-text-primary);
   --journal-shell-dark-accent: var(--color-primary-hover);
-  --journal-shell-dark-surface: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base));
+  --journal-shell-dark-surface: color-mix(
+    in srgb,
+    var(--color-bg-surface) 92%,
+    var(--color-bg-base)
+  );
   --journal-shell-dark-surface-subtle: color-mix(
     in srgb,
     var(--color-bg-surface) 78%,
     var(--color-bg-base)
   );
   --journal-shell-dark-hero-radial-strength: 10%;
-  --journal-shell-dark-hero-top: color-mix(in srgb, var(--journal-surface) 97%, var(--color-bg-base));
+  --journal-shell-dark-hero-top: color-mix(
+    in srgb,
+    var(--journal-surface) 97%,
+    var(--color-bg-base)
+  );
   --journal-shell-dark-hero-end: color-mix(
     in srgb,
     var(--journal-surface-subtle) 95%,

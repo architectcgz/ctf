@@ -73,7 +73,9 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
   function startHeartbeat(): void {
     heartbeatTimer = window.setInterval(() => {
       if (!socket || socket.readyState !== WebSocket.OPEN) return
-      socket.send(JSON.stringify({ type: 'ping', payload: {}, timestamp: new Date().toISOString() }))
+      socket.send(
+        JSON.stringify({ type: 'ping', payload: {}, timestamp: new Date().toISOString() })
+      )
       startPongTimeout()
     }, WS_HEARTBEAT_INTERVAL_MS)
   }
@@ -89,7 +91,10 @@ export function useWebSocket(endpoint: string, handlers: WebSocketHandlers) {
     if (reconnectAttempt >= WS_MAX_RECONNECT_ATTEMPTS) return
 
     reconnectAttempt += 1
-    const delayMs = Math.min(WS_MAX_RECONNECT_DELAY_MS, WS_RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttempt - 1))
+    const delayMs = Math.min(
+      WS_MAX_RECONNECT_DELAY_MS,
+      WS_RECONNECT_BASE_DELAY_MS * 2 ** (reconnectAttempt - 1)
+    )
     reconnectTimer = window.setTimeout(() => {
       connect().catch((err) => {
         console.error('WS reconnect failed:', err)

@@ -121,7 +121,9 @@ describe('NotificationList', () => {
 
     const firstRow = wrapper.find('.notification-row')
     expect(firstRow.find('.notification-row-title').attributes('title')).toBe('系统通知')
-    expect(firstRow.find('.notification-row-copy').attributes('title')).toBe('请及时查看系统更新说明。')
+    expect(firstRow.find('.notification-row-copy').attributes('title')).toBe(
+      '请及时查看系统更新说明。'
+    )
   })
 
   it('keeps bulk mark-as-read action working on the list page', async () => {
@@ -150,17 +152,31 @@ describe('NotificationList', () => {
   })
 
   it('keeps notification list titles and content truncated with full hover text', () => {
-    expect(notificationListSource).toMatch(/class="notification-row-title"[\s\S]*:title="item\.title"/s)
-    expect(notificationListSource).toMatch(/class="notification-row-copy"[\s\S]*:title="item\.content"/s)
-    expect(notificationListSource).toMatch(/\.notification-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(notificationListSource).toMatch(/\.notification-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
+    expect(notificationListSource).toMatch(
+      /class="notification-row-title"[\s\S]*:title="item\.title"/s
+    )
+    expect(notificationListSource).toMatch(
+      /class="notification-row-copy"[\s\S]*:title="item\.content"/s
+    )
+    expect(notificationListSource).toMatch(
+      /\.notification-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(notificationListSource).toMatch(
+      /\.notification-row-copy\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
+    )
   })
 
   it('通知页概况卡片应使用统一 metric-panel 样式类', () => {
     expect(notificationListSource).toContain('class="notification-summary-grid metric-panel-grid"')
     expect(notificationListSource).toContain('class="notification-summary-item metric-panel-card"')
-    expect(notificationListSource).toContain('class="notification-summary-label metric-panel-label"')
-    expect(notificationListSource).toContain('class="notification-summary-value metric-panel-value"')
-    expect(notificationListSource).toContain('class="notification-summary-helper metric-panel-helper"')
+    expect(notificationListSource).toContain(
+      'class="notification-summary-label metric-panel-label"'
+    )
+    expect(notificationListSource).toContain(
+      'class="notification-summary-value metric-panel-value"'
+    )
+    expect(notificationListSource).toContain(
+      'class="notification-summary-helper metric-panel-helper"'
+    )
   })
 })

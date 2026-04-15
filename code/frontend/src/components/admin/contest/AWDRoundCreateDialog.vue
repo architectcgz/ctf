@@ -101,7 +101,9 @@ function handleSubmit() {
   >
     <form class="space-y-5" @submit.prevent="handleSubmit">
       <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-number">轮次编号</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-number"
+          >轮次编号</label
+        >
         <input
           id="awd-round-number"
           v-model.number="form.round_number"
@@ -109,12 +111,16 @@ function handleSubmit() {
           min="1"
           step="1"
           class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-        >
-        <p v-if="fieldErrors.round_number" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.round_number }}</p>
+        />
+        <p v-if="fieldErrors.round_number" class="text-xs text-[var(--color-danger)]">
+          {{ fieldErrors.round_number }}
+        </p>
       </div>
 
       <div class="space-y-2">
-        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-status">初始状态</label>
+        <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-round-status"
+          >初始状态</label
+        >
         <select
           id="awd-round-status"
           v-model="form.status"
@@ -128,7 +134,9 @@ function handleSubmit() {
 
       <div class="grid gap-4 sm:grid-cols-2">
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-score">攻击分</label>
+          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-attack-score"
+            >攻击分</label
+          >
           <input
             id="awd-attack-score"
             v-model.number="form.attack_score"
@@ -136,12 +144,18 @@ function handleSubmit() {
             min="0"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-          <p v-if="fieldErrors.attack_score" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.attack_score }}</p>
+          />
+          <p v-if="fieldErrors.attack_score" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.attack_score }}
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-defense-score">防守分</label>
+          <label
+            class="text-sm font-medium text-[var(--color-text-primary)]"
+            for="awd-defense-score"
+            >防守分</label
+          >
           <input
             id="awd-defense-score"
             v-model.number="form.defense_score"
@@ -149,8 +163,10 @@ function handleSubmit() {
             min="0"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-          <p v-if="fieldErrors.defense_score" class="text-xs text-[var(--color-danger)]">{{ fieldErrors.defense_score }}</p>
+          />
+          <p v-if="fieldErrors.defense_score" class="text-xs text-[var(--color-danger)]">
+            {{ fieldErrors.defense_score }}
+          </p>
         </div>
       </div>
     </form>

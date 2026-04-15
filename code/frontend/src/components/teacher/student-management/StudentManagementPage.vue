@@ -73,32 +73,29 @@ const emit = defineEmits<{
               <div class="progress-card-value metric-panel-value">
                 {{ classes.length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前教师可切换的班级数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">当前教师可切换的班级数量</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">当前班级学生</div>
               <div class="progress-card-value metric-panel-value">
                 {{ totalStudents }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前选中班级的学生总数
-              </div>
+              <div class="progress-card-hint metric-panel-helper">当前选中班级的学生总数</div>
             </article>
             <article class="progress-card metric-panel-card">
               <div class="progress-card-label metric-panel-label">搜索结果</div>
               <div class="progress-card-value metric-panel-value">
                 {{ filteredStudents.length }}
               </div>
-              <div class="progress-card-hint metric-panel-helper">
-                当前搜索条件下匹配的学生数量
-              </div>
+              <div class="progress-card-hint metric-panel-helper">当前搜索条件下匹配的学生数量</div>
             </article>
           </div>
         </section>
 
-        <section class="workspace-directory-section teacher-directory-section" aria-label="学生目录">
+        <section
+          class="workspace-directory-section teacher-directory-section"
+          aria-label="学生目录"
+        >
           <header class="list-heading">
             <div>
               <div class="journal-note-label">Student Directory</div>

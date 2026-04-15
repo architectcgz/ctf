@@ -9,7 +9,7 @@
   --el-border-color: #30363d;
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   --el-color-primary: var(--color-primary);
   --el-color-primary-light-3: color-mix(in srgb, var(--color-primary-hover) 78%, white);
   --el-color-primary-light-5: color-mix(in srgb, var(--color-primary-hover) 58%, white);

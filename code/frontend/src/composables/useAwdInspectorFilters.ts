@@ -58,12 +58,19 @@ function loadFilterState(contestId: string, roundId: string): AwdInspectorFilter
   }
 }
 
-function persistFilterState(contestId: string, roundId: string, state: AwdInspectorFilterState): void {
+function persistFilterState(
+  contestId: string,
+  roundId: string,
+  state: AwdInspectorFilterState
+): void {
   if (typeof window === 'undefined') return
   window.sessionStorage.setItem(getStorageKey(contestId, roundId), JSON.stringify(state))
 }
 
-export function useAwdInspectorFilters({ contestId, selectedRoundId }: UseAwdInspectorFiltersOptions) {
+export function useAwdInspectorFilters({
+  contestId,
+  selectedRoundId,
+}: UseAwdInspectorFiltersOptions) {
   const serviceTeamFilter = ref('')
   const serviceStatusFilter = ref<'all' | AWDTeamServiceData['service_status']>('all')
   const serviceCheckSourceFilter = ref('')

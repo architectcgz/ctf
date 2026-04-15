@@ -44,11 +44,7 @@ const signals: AuthSignalItem[] = [
         </p>
 
         <div class="auth-entry-shell__signals">
-          <article
-            v-for="signal in signals"
-            :key="signal.key"
-            class="auth-entry-shell__signal"
-          >
+          <article v-for="signal in signals" :key="signal.key" class="auth-entry-shell__signal">
             <div class="auth-entry-shell__signal-title">
               {{ signal.title }}
             </div>
@@ -76,10 +72,7 @@ const signals: AuthSignalItem[] = [
           <slot />
         </div>
 
-        <footer
-          v-if="$slots.footer"
-          class="auth-entry-shell__panel-footer"
-        >
+        <footer v-if="$slots.footer" class="auth-entry-shell__panel-footer">
           <slot name="footer" />
         </footer>
       </section>
@@ -134,8 +127,16 @@ const signals: AuthSignalItem[] = [
   border: 1px solid color-mix(in srgb, var(--color-border-default) 78%, transparent);
   border-radius: 1.5rem;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)), color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 18rem);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-base)),
+      color-mix(in srgb, var(--color-bg-surface) 86%, var(--color-bg-base))
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 12%, transparent),
+      transparent 18rem
+    );
   box-shadow: 0 22px 48px var(--color-shadow-strong);
   overflow: hidden;
 }
@@ -251,8 +252,16 @@ const signals: AuthSignalItem[] = [
 :global([data-theme='light']) .auth-entry-shell__signal,
 :global([data-theme='light']) .auth-entry-shell__frame {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-surface) 96%, white), color-mix(in srgb, var(--color-bg-elevated) 94%, white)),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 18rem);
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-surface) 96%, white),
+      color-mix(in srgb, var(--color-bg-elevated) 94%, white)
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 18rem
+    );
 }
 
 @media (max-width: 960px) {

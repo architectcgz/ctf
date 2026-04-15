@@ -97,15 +97,23 @@ describe('InstanceList', () => {
     expect(wrapper.text()).toContain('启动失败，当前目标不可访问')
     expect(wrapper.text()).toContain('系统托管')
     expect(wrapper.find('.instance-row-title').attributes('title')).toBe('SQL 注入基础')
-    expect(wrapper.find('.instance-row-access-value').attributes('title')).toBe('http://example.test')
+    expect(wrapper.find('.instance-row-access-value').attributes('title')).toBe(
+      'http://example.test'
+    )
     expect(wrapper.text()).not.toContain('http://127.0.0.1:39999')
   })
 
   it('应该为实例列表长标题和访问地址保留省略样式与完整提示', () => {
-    expect(instanceListSource).toMatch(/class="instance-row-title"[\s\S]*:title="instance\.challenge_title"/s)
+    expect(instanceListSource).toMatch(
+      /class="instance-row-title"[\s\S]*:title="instance\.challenge_title"/s
+    )
     expect(instanceListSource).toMatch(/instance-row-access-value[\s\S]*:title="/s)
-    expect(instanceListSource).toMatch(/\.instance-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s)
-    expect(instanceListSource).toMatch(/\.instance-row-access-value\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s)
+    expect(instanceListSource).toMatch(
+      /\.instance-row-title\s*\{[^}]*overflow:\s*hidden;[^}]*text-overflow:\s*ellipsis;[^}]*white-space:\s*nowrap;/s
+    )
+    expect(instanceListSource).toMatch(
+      /\.instance-row-access-value\s*\{[^}]*display:\s*-webkit-box;[^}]*-webkit-line-clamp:\s*2;[^}]*overflow:\s*hidden;/s
+    )
   })
 
   it('实例页概况卡片应使用统一 metric-panel 样式类', () => {

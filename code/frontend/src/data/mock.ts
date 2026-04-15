@@ -33,24 +33,107 @@ export const activityFeed = [
 ]
 
 export const recommendations = [
-  { title: '流量包取证训练', category: 'Forensics', level: '中等', reason: '补齐你在取证分析上的短板' },
+  {
+    title: '流量包取证训练',
+    category: 'Forensics',
+    level: '中等',
+    reason: '补齐你在取证分析上的短板',
+  },
   { title: 'ELF 入门逆向', category: 'Reverse', level: '简单', reason: '适合作为逆向工程热身题' },
   { title: 'RCE 链路梳理', category: 'Web', level: '困难', reason: '提升漏洞利用链构建能力' },
 ]
 
 export const challengeCards = [
-  { id: 1, title: 'SQL 注入基础', category: 'Web', level: '简单', solved: 128, points: 100, summary: '通过登录注入获取管理员数据表中的敏感信息。', solvedByMe: true },
-  { id: 2, title: 'XSS 反射型', category: 'Web', level: '中等', solved: 95, points: 200, summary: '定位输入点并构造反射型脚本完成 Cookie 窃取。', solvedByMe: false },
-  { id: 3, title: '栈溢出入门', category: 'Pwn', level: '中等', solved: 44, points: 300, summary: '利用函数返回地址覆盖拿到 shell。', solvedByMe: false },
-  { id: 4, title: 'RSA 基础', category: 'Crypto', level: '简单', solved: 157, points: 150, summary: '识别错误密钥生成逻辑并恢复明文。', solvedByMe: true },
-  { id: 5, title: '流量包取证训练', category: 'Forensics', level: '困难', solved: 19, points: 450, summary: '从大体量抓包中抽丝剥茧定位失陷主机。', solvedByMe: false },
-  { id: 6, title: 'PE 壳识别', category: 'Reverse', level: '中等', solved: 31, points: 260, summary: '识别打包壳并恢复关键逻辑路径。', solvedByMe: false },
+  {
+    id: 1,
+    title: 'SQL 注入基础',
+    category: 'Web',
+    level: '简单',
+    solved: 128,
+    points: 100,
+    summary: '通过登录注入获取管理员数据表中的敏感信息。',
+    solvedByMe: true,
+  },
+  {
+    id: 2,
+    title: 'XSS 反射型',
+    category: 'Web',
+    level: '中等',
+    solved: 95,
+    points: 200,
+    summary: '定位输入点并构造反射型脚本完成 Cookie 窃取。',
+    solvedByMe: false,
+  },
+  {
+    id: 3,
+    title: '栈溢出入门',
+    category: 'Pwn',
+    level: '中等',
+    solved: 44,
+    points: 300,
+    summary: '利用函数返回地址覆盖拿到 shell。',
+    solvedByMe: false,
+  },
+  {
+    id: 4,
+    title: 'RSA 基础',
+    category: 'Crypto',
+    level: '简单',
+    solved: 157,
+    points: 150,
+    summary: '识别错误密钥生成逻辑并恢复明文。',
+    solvedByMe: true,
+  },
+  {
+    id: 5,
+    title: '流量包取证训练',
+    category: 'Forensics',
+    level: '困难',
+    solved: 19,
+    points: 450,
+    summary: '从大体量抓包中抽丝剥茧定位失陷主机。',
+    solvedByMe: false,
+  },
+  {
+    id: 6,
+    title: 'PE 壳识别',
+    category: 'Reverse',
+    level: '中等',
+    solved: 31,
+    points: 260,
+    summary: '识别打包壳并恢复关键逻辑路径。',
+    solvedByMe: false,
+  },
 ]
 
 export const contestCards = [
-  { id: 1, title: '春季选拔赛', status: '进行中', time: '剩余 01:42:18', teams: 38, solved: 17, accent: 'primary' },
-  { id: 2, title: '校内周赛 #12', status: '即将开始', time: '今晚 19:30', teams: 24, solved: 0, accent: 'accent' },
-  { id: 3, title: '新生训练营结营赛', status: '已结束', time: '2 天前结束', teams: 42, solved: 23, accent: 'muted' },
+  {
+    id: 1,
+    title: '春季选拔赛',
+    status: '进行中',
+    time: '剩余 01:42:18',
+    teams: 38,
+    solved: 17,
+    accent: 'primary',
+  },
+  {
+    id: 2,
+    title: '校内周赛 #12',
+    status: '即将开始',
+    time: '今晚 19:30',
+    teams: 24,
+    solved: 0,
+    accent: 'accent',
+  },
+  {
+    id: 3,
+    title: '新生训练营结营赛',
+    status: '已结束',
+    time: '2 天前结束',
+    teams: 42,
+    solved: 23,
+    accent: 'muted',
+  },
 ]
 
 export const contestScoreboard = [
@@ -97,8 +180,20 @@ export const instances = [
 
 export const notifications = [
   { id: 1, type: '竞赛公告', title: '春季赛新增 3 道 Web 题目', time: '5 分钟前', unread: true },
-  { id: 2, type: '系统通知', title: '你的靶机“栈溢出入门”将在 5 分钟后过期', time: '1 小时前', unread: true },
-  { id: 3, type: '解题通知', title: '恭喜解出“SQL 注入基础”，获得 100 分', time: '2 小时前', unread: false },
+  {
+    id: 2,
+    type: '系统通知',
+    title: '你的靶机“栈溢出入门”将在 5 分钟后过期',
+    time: '1 小时前',
+    unread: true,
+  },
+  {
+    id: 3,
+    type: '解题通知',
+    title: '恭喜解出“SQL 注入基础”，获得 100 分',
+    time: '2 小时前',
+    unread: false,
+  },
   { id: 4, type: '排队更新', title: '“流量包取证训练”已前进至第 3 位', time: '刚刚', unread: true },
 ]
 
@@ -130,4 +225,3 @@ export function toneClass(tone: string): string | undefined {
     accent: 'text-violet-300 bg-violet-500/10 border-violet-500/20',
   }[tone]
 }
-

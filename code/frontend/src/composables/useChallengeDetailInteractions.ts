@@ -116,7 +116,8 @@ export function useChallengeDetailInteractions({
   }
 
   function buildSubmitResultMessage(result: SubmitFlagData): string {
-    const repeatedCorrect = result.status === 'correct' && (result.points ?? 0) <= 0 && challenge.value?.is_solved
+    const repeatedCorrect =
+      result.status === 'correct' && (result.points ?? 0) <= 0 && challenge.value?.is_solved
 
     if (repeatedCorrect) {
       return 'Flag 校验通过，本题已解出，不重复计分'

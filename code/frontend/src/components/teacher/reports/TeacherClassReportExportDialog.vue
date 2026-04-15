@@ -142,7 +142,9 @@ watch(
                   <input v-model="form.format" type="radio" value="excel" />
                   <span>
                     <span class="class-report-format-option__title">Excel</span>
-                    <span class="class-report-format-option__copy">适合继续分析、筛选和二次加工。</span>
+                    <span class="class-report-format-option__copy"
+                      >适合继续分析、筛选和二次加工。</span
+                    >
                   </span>
                 </label>
               </div>
@@ -175,8 +177,12 @@ watch(
             <div class="class-report-preview-summary__grid progress-strip metric-panel-grid">
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">目标班级</div>
-                <div class="progress-card-value metric-panel-value">{{ normalizedClassNameText }}</div>
-                <div class="progress-card-hint metric-panel-helper">预览与导出都会优先使用这个班级</div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ normalizedClassNameText }}
+                </div>
+                <div class="progress-card-hint metric-panel-helper">
+                  预览与导出都会优先使用这个班级
+                </div>
               </article>
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">导出格式</div>
@@ -185,7 +191,9 @@ watch(
               </article>
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">任务状态</div>
-                <div class="progress-card-value metric-panel-value">{{ latestStatusMeta.label }}</div>
+                <div class="progress-card-value metric-panel-value">
+                  {{ latestStatusMeta.label }}
+                </div>
                 <div class="progress-card-hint metric-panel-helper">
                   {{
                     latestExport
@@ -234,7 +242,9 @@ watch(
               <article class="progress-card metric-panel-card">
                 <div class="progress-card-label metric-panel-label">近 7 天活跃率</div>
                 <div class="progress-card-value metric-panel-value">{{ activeRateText }}</div>
-                <div class="progress-card-hint metric-panel-helper">近 7 天至少有一次训练动作的学生占比</div>
+                <div class="progress-card-hint metric-panel-helper">
+                  近 7 天至少有一次训练动作的学生占比
+                </div>
               </article>
             </section>
 
@@ -247,7 +257,10 @@ watch(
 
               <TeacherClassReviewPanel :review="previewReview" :class-name="previewClassName" />
 
-              <TeacherClassInsightsPanel :students="previewStudents" :class-name="previewClassName" />
+              <TeacherClassInsightsPanel
+                :students="previewStudents"
+                :class-name="previewClassName"
+              />
             </div>
           </template>
 

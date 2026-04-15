@@ -116,8 +116,7 @@ const activeChallengeLabel = computed(() => {
     return title
   }
   return (
-    selectableChallenges.value.find((item) => item.id === form.challenge_id)?.title ||
-    '请选择题目'
+    selectableChallenges.value.find((item) => item.id === form.challenge_id)?.title || '请选择题目'
   )
 })
 
@@ -188,7 +187,9 @@ const previewActions = computed(() => getCheckActions(previewCheckResult.value))
 const previewTargets = computed(() => getCheckTargets(previewCheckResult.value))
 
 const savedPreviewResult = computed(() => props.draft?.awd_checker_last_preview_result || null)
-const savedPreviewPresentationResult = computed(() => buildPresentationResult(savedPreviewResult.value))
+const savedPreviewPresentationResult = computed(() =>
+  buildPresentationResult(savedPreviewResult.value)
+)
 const savedPreviewSummaryText = computed(() =>
   savedPreviewResult.value ? summarizeCheckResult(savedPreviewPresentationResult.value) : ''
 )
@@ -247,7 +248,9 @@ watch(
 
     syncingDialogState.value = true
     form.challenge_id =
-      props.mode === 'edit' ? props.draft?.challenge_id || '' : selectableChallenges.value[0]?.id || ''
+      props.mode === 'edit'
+        ? props.draft?.challenge_id || ''
+        : selectableChallenges.value[0]?.id || ''
     form.points = props.draft?.points ?? 100
     form.order = props.draft?.order ?? 0
     form.is_visible = props.draft?.is_visible === false ? 'false' : 'true'
@@ -270,7 +273,8 @@ watch(
 )
 
 watch(
-  () => [props.open, props.mode, selectableChallenges.value.map((item) => item.id).join(',')] as const,
+  () =>
+    [props.open, props.mode, selectableChallenges.value.map((item) => item.id).join(',')] as const,
   ([open, mode]) => {
     if (!open || mode !== 'create') {
       return
@@ -511,7 +515,9 @@ function handleSubmit() {
             v-model="form.challenge_id"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
           >
-            <option value="" disabled>{{ loadingChallengeCatalog ? '正在加载题库...' : '请选择题目' }}</option>
+            <option value="" disabled>
+              {{ loadingChallengeCatalog ? '正在加载题库...' : '请选择题目' }}
+            </option>
             <option
               v-for="challenge in selectableChallenges"
               :key="challenge.id"
@@ -547,7 +553,7 @@ function handleSubmit() {
             min="1"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
+          />
           <p v-if="fieldErrors.points" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.points }}
           </p>
@@ -567,7 +573,7 @@ function handleSubmit() {
             min="0"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
+          />
           <p v-if="fieldErrors.order" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.order }}
           </p>
@@ -623,7 +629,7 @@ function handleSubmit() {
             min="0"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
+          />
           <p v-if="fieldErrors.awd_sla_score" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.awd_sla_score }}
           </p>
@@ -643,11 +649,8 @@ function handleSubmit() {
             min="0"
             step="1"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-          <p
-            v-if="fieldErrors.awd_defense_score"
-            class="text-xs text-[var(--color-danger)]"
-          >
+          />
+          <p v-if="fieldErrors.awd_defense_score" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.awd_defense_score }}
           </p>
         </div>
@@ -658,7 +661,11 @@ function handleSubmit() {
           <div>
             <div class="journal-note-label">Checker Config</div>
             <h3 class="checker-config-block__title">
-              {{ form.awd_checker_type === 'http_standard' ? 'HTTP Standard 配置' : 'Legacy Probe 配置' }}
+              {{
+                form.awd_checker_type === 'http_standard'
+                  ? 'HTTP Standard 配置'
+                  : 'Legacy Probe 配置'
+              }}
             </h3>
           </div>
           <p class="checker-config-block__hint">
@@ -683,14 +690,9 @@ function handleSubmit() {
             type="text"
             placeholder="/healthz"
             class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-          <p class="text-xs text-[var(--color-text-secondary)]">
-            留空时使用当前全局健康检查路径。
-          </p>
-          <p
-            v-if="fieldErrors.legacy_health_path"
-            class="text-xs text-[var(--color-danger)]"
-          >
+          />
+          <p class="text-xs text-[var(--color-text-secondary)]">留空时使用当前全局健康检查路径。</p>
+          <p v-if="fieldErrors.legacy_health_path" class="text-xs text-[var(--color-danger)]">
             {{ fieldErrors.legacy_health_path }}
           </p>
         </div>
@@ -717,7 +719,11 @@ function handleSubmit() {
             </header>
             <div class="checker-action-grid">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-put-method">Method</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-put-method"
+                  >Method</label
+                >
                 <select
                   id="awd-http-put-method"
                   v-model="httpStandardDraft.put_flag.method"
@@ -730,21 +736,29 @@ function handleSubmit() {
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-put-path">Path</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-put-path"
+                  >Path</label
+                >
                 <input
                   id="awd-http-put-path"
                   v-model="httpStandardDraft.put_flag.path"
                   type="text"
                   placeholder="/api/flag"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
                 <p v-if="fieldErrors.http_put_path" class="text-xs text-[var(--color-danger)]">
                   {{ fieldErrors.http_put_path }}
                 </p>
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-put-expected-status">状态码</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-put-expected-status"
+                  >状态码</label
+                >
                 <input
                   id="awd-http-put-expected-status"
                   v-model.number="httpStandardDraft.put_flag.expected_status"
@@ -752,7 +766,7 @@ function handleSubmit() {
                   min="1"
                   step="1"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
                 <p
                   v-if="fieldErrors.http_put_expected_status"
                   class="text-xs text-[var(--color-danger)]"
@@ -764,7 +778,11 @@ function handleSubmit() {
 
             <div class="checker-action-extra-grid">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-put-body-template">Body Template</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-put-body-template"
+                  >Body Template</label
+                >
                 <textarea
                   id="awd-http-put-body-template"
                   v-model="httpStandardDraft.put_flag.body_template"
@@ -774,7 +792,11 @@ function handleSubmit() {
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-put-headers">Headers JSON</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-put-headers"
+                  >Headers JSON</label
+                >
                 <textarea
                   id="awd-http-put-headers"
                   v-model="httpStandardDraft.put_flag.headers_text"
@@ -782,7 +804,10 @@ function handleSubmit() {
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   placeholder='{"Content-Type":"application/json"}'
                 />
-                <p v-if="fieldErrors.http_put_headers_text" class="text-xs text-[var(--color-danger)]">
+                <p
+                  v-if="fieldErrors.http_put_headers_text"
+                  class="text-xs text-[var(--color-danger)]"
+                >
                   {{ fieldErrors.http_put_headers_text }}
                 </p>
               </div>
@@ -796,7 +821,11 @@ function handleSubmit() {
             </header>
             <div class="checker-action-grid">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-get-method">Method</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-get-method"
+                  >Method</label
+                >
                 <select
                   id="awd-http-get-method"
                   v-model="httpStandardDraft.get_flag.method"
@@ -809,21 +838,29 @@ function handleSubmit() {
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-get-path">Path</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-get-path"
+                  >Path</label
+                >
                 <input
                   id="awd-http-get-path"
                   v-model="httpStandardDraft.get_flag.path"
                   type="text"
                   placeholder="/api/flag"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
                 <p v-if="fieldErrors.http_get_path" class="text-xs text-[var(--color-danger)]">
                   {{ fieldErrors.http_get_path }}
                 </p>
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-get-expected-status">状态码</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-get-expected-status"
+                  >状态码</label
+                >
                 <input
                   id="awd-http-get-expected-status"
                   v-model.number="httpStandardDraft.get_flag.expected_status"
@@ -831,7 +868,7 @@ function handleSubmit() {
                   min="1"
                   step="1"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
                 <p
                   v-if="fieldErrors.http_get_expected_status"
                   class="text-xs text-[var(--color-danger)]"
@@ -843,18 +880,26 @@ function handleSubmit() {
 
             <div class="checker-action-extra-grid">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-get-expected-substring">预期片段</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-get-expected-substring"
+                  >预期片段</label
+                >
                 <input
                   id="awd-http-get-expected-substring"
                   v-model="httpStandardDraft.get_flag.expected_substring"
                   type="text"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   placeholder="{{FLAG}}"
-                >
+                />
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-get-headers">Headers JSON</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-get-headers"
+                  >Headers JSON</label
+                >
                 <textarea
                   id="awd-http-get-headers"
                   v-model="httpStandardDraft.get_flag.headers_text"
@@ -862,7 +907,10 @@ function handleSubmit() {
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                   placeholder='{"Accept":"application/json"}'
                 />
-                <p v-if="fieldErrors.http_get_headers_text" class="text-xs text-[var(--color-danger)]">
+                <p
+                  v-if="fieldErrors.http_get_headers_text"
+                  class="text-xs text-[var(--color-danger)]"
+                >
                   {{ fieldErrors.http_get_headers_text }}
                 </p>
               </div>
@@ -876,7 +924,11 @@ function handleSubmit() {
             </header>
             <div class="checker-action-grid">
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-havoc-method">Method</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-havoc-method"
+                  >Method</label
+                >
                 <select
                   id="awd-http-havoc-method"
                   v-model="httpStandardDraft.havoc.method"
@@ -889,18 +941,26 @@ function handleSubmit() {
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-havoc-path">Path</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-havoc-path"
+                  >Path</label
+                >
                 <input
                   id="awd-http-havoc-path"
                   v-model="httpStandardDraft.havoc.path"
                   type="text"
                   placeholder="/healthz"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-havoc-expected-status">状态码</label>
+                <label
+                  class="text-sm font-medium text-[var(--color-text-primary)]"
+                  for="awd-http-havoc-expected-status"
+                  >状态码</label
+                >
                 <input
                   id="awd-http-havoc-expected-status"
                   v-model.number="httpStandardDraft.havoc.expected_status"
@@ -908,7 +968,7 @@ function handleSubmit() {
                   min="1"
                   step="1"
                   class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-                >
+                />
                 <p
                   v-if="fieldErrors.http_havoc_expected_status"
                   class="text-xs text-[var(--color-danger)]"
@@ -919,7 +979,11 @@ function handleSubmit() {
             </div>
 
             <div class="space-y-2">
-              <label class="text-sm font-medium text-[var(--color-text-primary)]" for="awd-http-havoc-headers">Headers JSON</label>
+              <label
+                class="text-sm font-medium text-[var(--color-text-primary)]"
+                for="awd-http-havoc-headers"
+                >Headers JSON</label
+              >
               <textarea
                 id="awd-http-havoc-headers"
                 v-model="httpStandardDraft.havoc.headers_text"
@@ -927,7 +991,10 @@ function handleSubmit() {
                 class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
                 placeholder='{"X-Checker":"havoc"}'
               />
-              <p v-if="fieldErrors.http_havoc_headers_text" class="text-xs text-[var(--color-danger)]">
+              <p
+                v-if="fieldErrors.http_havoc_headers_text"
+                class="text-xs text-[var(--color-danger)]"
+              >
                 {{ fieldErrors.http_havoc_headers_text }}
               </p>
             </div>
@@ -944,7 +1011,9 @@ function handleSubmit() {
           <p class="checker-config-block__hint">保存时会按下面的结构写入 `awd_checker_config`。</p>
         </header>
 
-        <pre id="awd-challenge-config-preview" class="checker-preview">{{ checkerPreviewText }}</pre>
+        <pre id="awd-challenge-config-preview" class="checker-preview">{{
+          checkerPreviewText
+        }}</pre>
       </section>
 
       <section
@@ -976,9 +1045,7 @@ function handleSubmit() {
           <p v-if="savedPreviewSummaryText" class="checker-validation-card__summary">
             {{ savedPreviewSummaryText }}
           </p>
-          <p v-else class="checker-validation-card__summary">
-            当前配置还没有保存过试跑结果。
-          </p>
+          <p v-else class="checker-validation-card__summary">当前配置还没有保存过试跑结果。</p>
           <p v-if="savedPreviewAccessURL" class="checker-validation-card__meta">
             目标地址 {{ savedPreviewAccessURL }}
           </p>
@@ -1010,7 +1077,7 @@ function handleSubmit() {
               type="text"
               placeholder="http://team1.example.com:8080"
               class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-            >
+            />
             <p v-if="fieldErrors.preview_access_url" class="text-xs text-[var(--color-danger)]">
               {{ fieldErrors.preview_access_url }}
             </p>
@@ -1029,7 +1096,7 @@ function handleSubmit() {
               type="text"
               placeholder="flag{preview}"
               class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-            >
+            />
             <p class="text-xs text-[var(--color-text-secondary)]">
               未绑定正式轮次时，这个值会替代 FLAG 模板变量。
             </p>
@@ -1134,7 +1201,9 @@ function handleSubmit() {
 
           <div class="checker-preview-result__json">
             <div class="journal-note-label">原始结果</div>
-            <pre id="awd-challenge-preview-result-json" class="checker-preview">{{ previewResultJSONText }}</pre>
+            <pre id="awd-challenge-preview-result-json" class="checker-preview">{{
+              previewResultJSONText
+            }}</pre>
           </div>
         </section>
       </section>
@@ -1203,7 +1272,9 @@ function handleSubmit() {
   background: color-mix(in srgb, var(--journal-surface) 88%, var(--color-bg-surface-elevated));
   color: var(--color-text-primary);
   text-align: left;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .checker-preset-button:hover {

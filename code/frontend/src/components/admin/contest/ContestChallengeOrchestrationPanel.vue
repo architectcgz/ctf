@@ -9,7 +9,11 @@ import {
   listAdminContestChallenges,
   updateAdminContestChallenge,
 } from '@/api/admin'
-import type { AdminChallengeListItem, AdminContestChallengeData, ContestDetailData } from '@/api/contracts'
+import type {
+  AdminChallengeListItem,
+  AdminContestChallengeData,
+  ContestDetailData,
+} from '@/api/contracts'
 import { ApiError } from '@/api/request'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
@@ -166,7 +170,9 @@ async function handleSave(payload: {
     closeDialog()
     await refresh()
   } catch (error) {
-    toast.error(humanizeRequestError(error, dialogMode.value === 'create' ? '关联题目失败' : '更新题目失败'))
+    toast.error(
+      humanizeRequestError(error, dialogMode.value === 'create' ? '关联题目失败' : '更新题目失败')
+    )
   } finally {
     saving.value = false
   }
@@ -215,7 +221,12 @@ onMounted(() => {
           <RefreshCw class="h-4 w-4" />
           刷新列表
         </button>
-        <button id="contest-challenge-add" type="button" class="admin-btn admin-btn-primary" @click="openCreateDialog">
+        <button
+          id="contest-challenge-add"
+          type="button"
+          class="admin-btn admin-btn-primary"
+          @click="openCreateDialog"
+        >
           <Plus class="h-4 w-4" />
           关联题目
         </button>
@@ -239,10 +250,7 @@ onMounted(() => {
         <div class="contest-section-meta">共 {{ challengeLinks.length }} 道题目</div>
       </header>
 
-      <div
-        v-if="loading"
-        class="contest-challenge-directory__loading"
-      >
+      <div v-if="loading" class="contest-challenge-directory__loading">
         <AppLoading>正在同步赛事题目...</AppLoading>
       </div>
 
@@ -411,7 +419,10 @@ onMounted(() => {
 .contest-challenge-row {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: minmax(16rem, 1.7fr) minmax(6rem, 0.7fr) minmax(5rem, 0.55fr) minmax(5rem, 0.55fr) auto;
+  grid-template-columns: minmax(16rem, 1.7fr) minmax(6rem, 0.7fr) minmax(5rem, 0.55fr) minmax(
+      5rem,
+      0.55fr
+    ) auto;
 }
 
 .contest-challenge-directory__head {

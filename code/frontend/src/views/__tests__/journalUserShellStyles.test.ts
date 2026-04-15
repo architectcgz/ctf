@@ -33,7 +33,9 @@ describe('journal user shell shared styles', () => {
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user')
     expect(journalUserShellSource).toContain('.journal-shell.journal-shell-user.journal-hero')
     expect(journalUserShellSource).toContain('--journal-shell-accent')
-    expect(journalUserShellSource).toContain("[data-theme='dark'] .journal-shell.journal-shell-user")
+    expect(journalUserShellSource).toContain(
+      "[data-theme='dark'] .journal-shell.journal-shell-user"
+    )
     expect(surfaceShellBackgroundSource).toContain(
       "[data-theme='dark'] .journal-shell.journal-shell-user.journal-hero"
     )
@@ -103,7 +105,9 @@ describe('journal user shell shared styles', () => {
     expect(securitySettingsSource).toContain('class="journal-note-helper metric-panel-helper"')
 
     expect(journalUserShellSource).toContain('--metric-panel-columns: repeat(2, minmax(0, 1fr));')
-    expect(journalUserShellSource).toContain('--metric-panel-border: color-mix(in srgb, var(--journal-border) 86%, transparent);')
+    expect(journalUserShellSource).toContain(
+      '--metric-panel-border: color-mix(in srgb, var(--journal-border) 86%, transparent);'
+    )
     expect(journalUserShellSource).toContain('--metric-panel-value-size: var(--font-size-0-98);')
     expect(journalUserShellSource).not.toMatch(
       /\.journal-shell\.journal-shell-user :is\(\.profile-summary-item, \.security-summary-item\)\s*\{[\s\S]*border-top:\s*1px solid/s

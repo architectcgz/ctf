@@ -8,19 +8,20 @@ interface RawExtendFields {
   max_extends?: number
 }
 
-export interface RawInstanceData extends Omit<InstanceData, 'id' | 'challenge_id' | 'remaining_extends'>, RawExtendFields {
+export interface RawInstanceData
+  extends Omit<InstanceData, 'id' | 'challenge_id' | 'remaining_extends'>, RawExtendFields {
   id: string | number
   challenge_id: string | number
 }
 
 interface RawInstanceListItem
-  extends Omit<InstanceListItem, 'id' | 'challenge_id' | 'remaining_extends'>,
-    RawExtendFields {
+  extends Omit<InstanceListItem, 'id' | 'challenge_id' | 'remaining_extends'>, RawExtendFields {
   id: string | number
   challenge_id: string | number
 }
 
-interface RawInstanceExtendData extends Omit<InstanceExtendData, 'id' | 'remaining_extends'>, RawExtendFields {
+interface RawInstanceExtendData
+  extends Omit<InstanceExtendData, 'id' | 'remaining_extends'>, RawExtendFields {
   id: string | number
 }
 

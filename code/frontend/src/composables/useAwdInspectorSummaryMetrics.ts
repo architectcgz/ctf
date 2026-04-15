@@ -31,7 +31,9 @@ export function useAwdInspectorSummaryMetrics({
   const totalServiceCount = computed(
     () => summaryMetrics.value?.total_service_count ?? services.value.length
   )
-  const totalAttackCount = computed(() => summaryMetrics.value?.total_attack_count ?? attacks.value.length)
+  const totalAttackCount = computed(
+    () => summaryMetrics.value?.total_attack_count ?? attacks.value.length
+  )
   const upCount = computed(
     () =>
       summaryMetrics.value?.service_up_count ??
@@ -65,9 +67,8 @@ export function useAwdInspectorSummaryMetrics({
   const defenseSuccessCount = computed(
     () =>
       summaryMetrics.value?.defense_success_count ??
-      services.value.filter(
-        (item) => item.attack_received > 0 && item.service_status === 'up'
-      ).length
+      services.value.filter((item) => item.attack_received > 0 && item.service_status === 'up')
+        .length
   )
   const manualCheckCount = computed(() => {
     if (summaryMetrics.value) {

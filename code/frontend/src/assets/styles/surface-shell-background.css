@@ -120,7 +120,11 @@
   --surface-shell-brand: var(--teacher-workspace-brand);
   --surface-shell-radial-strength: 6%;
   --surface-shell-radial-size: 26rem;
-  --surface-shell-top: color-mix(in srgb, var(--teacher-workspace-bg) 96%, var(--teacher-workspace-page));
+  --surface-shell-top: color-mix(
+    in srgb,
+    var(--teacher-workspace-bg) 96%,
+    var(--teacher-workspace-page)
+  );
   --surface-shell-end: var(--teacher-workspace-bg);
 }
 
@@ -146,8 +150,7 @@
       circle at top right,
       color-mix(
         in srgb,
-        var(--surface-shell-brand, var(--color-primary))
-          var(--surface-shell-radial-strength, 6%),
+        var(--surface-shell-brand, var(--color-primary)) var(--surface-shell-radial-strength, 6%),
         transparent
       ),
       transparent var(--surface-shell-radial-size, 26rem)

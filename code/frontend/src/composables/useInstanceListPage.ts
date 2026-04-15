@@ -221,7 +221,8 @@ export function useInstanceListPage() {
       }
     } catch (error) {
       console.error('销毁失败:', error)
-      const message = error instanceof Error && error.message.trim() ? error.message : '销毁失败，请稍后重试'
+      const message =
+        error instanceof Error && error.message.trim() ? error.message : '销毁失败，请稍后重试'
       toast.error(message)
     }
   }

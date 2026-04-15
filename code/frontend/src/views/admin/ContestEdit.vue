@@ -44,7 +44,9 @@ const saving = ref(false)
 const contest = ref<ContestDetailData | null>(null)
 const editingBaseStatus = ref<AdminContestStatus | null>(null)
 const formDraft = ref<ContestFormDraft | null>(null)
-const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefaultAWDStartOverrideDialogState())
+const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(
+  createDefaultAWDStartOverrideDialogState()
+)
 
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
@@ -89,7 +91,10 @@ function toISOString(value: string): string {
   return new Date(value).toISOString()
 }
 
-function shouldGateAWDContestStart(mode: ContestDetailData['mode'] | null, targetStatus: AdminContestStatus): boolean {
+function shouldGateAWDContestStart(
+  mode: ContestDetailData['mode'] | null,
+  targetStatus: AdminContestStatus
+): boolean {
   return mode === 'awd' && targetStatus === 'running'
 }
 

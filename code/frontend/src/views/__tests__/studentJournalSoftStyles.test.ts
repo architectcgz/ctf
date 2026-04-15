@@ -23,7 +23,9 @@ describe('student journal soft shared styles', () => {
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-note-value')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-eyebrow')
     expect(journalSoftSurfacesSource).toContain('.journal-soft-surface .journal-eyebrow-soft')
-    expect(journalSoftSurfacesSource).toContain("[data-theme='dark'] .journal-soft-surface .journal-note")
+    expect(journalSoftSurfacesSource).toContain(
+      "[data-theme='dark'] .journal-soft-surface .journal-note"
+    )
   })
 
   it('student journal 页面应通过根节点 class 接入共享 soft 样式，而不是继续本地重写基础规则', () => {

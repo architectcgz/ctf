@@ -171,7 +171,9 @@ watch(
         <h1 class="admin-page-title">审计日志</h1>
       </div>
 
-      <div class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface">
+      <div
+        class="admin-summary-grid progress-strip metric-panel-grid metric-panel-default-surface metric-panel-workspace-surface"
+      >
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">当前页</div>
           <div class="journal-note-value progress-card-value metric-panel-value">
@@ -190,7 +192,9 @@ watch(
         </article>
         <article class="journal-note progress-card metric-panel-card">
           <div class="journal-note-label progress-card-label metric-panel-label">总页数</div>
-          <div class="journal-note-value progress-card-value metric-panel-value">{{ totalPages }}</div>
+          <div class="journal-note-value progress-card-value metric-panel-value">
+            {{ totalPages }}
+          </div>
           <div class="journal-note-helper progress-card-hint metric-panel-helper">
             当前筛选结果的分页范围
           </div>
@@ -342,7 +346,11 @@ watch(
 
 <style scoped>
 .journal-shell {
-  --journal-shell-surface-subtle: color-mix(in srgb, var(--color-bg-surface) 80%, var(--color-bg-base));
+  --journal-shell-surface-subtle: color-mix(
+    in srgb,
+    var(--color-bg-surface) 80%,
+    var(--color-bg-base)
+  );
   --admin-summary-grid-columns: repeat(3, minmax(0, 1fr));
   --admin-control-border: color-mix(in srgb, var(--journal-border) 76%, transparent);
   --audit-table-border: color-mix(in srgb, var(--journal-border) 74%, transparent);

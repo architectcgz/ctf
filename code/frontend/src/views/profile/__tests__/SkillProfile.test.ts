@@ -97,10 +97,14 @@ describe('SkillProfile', () => {
     expect(wrapper.find('#skill-profile-tab-analysis').attributes('aria-selected')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('true')
-    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
+      'true'
+    )
     expect(wrapper.find('.skill-overview-head').exists()).toBe(true)
     expect(wrapper.find('.skill-overview-head').text()).toContain('能力画像')
-    expect(wrapper.find('.skill-overview-head').text()).toContain('查看当前能力维度表现，并根据薄弱项获取推荐靶场。')
+    expect(wrapper.find('.skill-overview-head').text()).toContain(
+      '查看当前能力维度表现，并根据薄弱项获取推荐靶场。'
+    )
     expect(wrapper.find('.skill-overview-actions').exists()).toBe(true)
     expect(wrapper.text()).toContain('能力维度分析')
     expect(wrapper.find('[data-test="radar-chart"]').exists()).toBe(true)
@@ -112,16 +116,26 @@ describe('SkillProfile', () => {
     expect(wrapper.find('#skill-profile-panel-analysis').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('#skill-profile-panel-weakness').attributes('aria-hidden')).toBe('false')
     expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-head').exists()).toBe(false)
-    expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(false)
+    expect(wrapper.find('#skill-profile-panel-weakness .skill-overview-actions').exists()).toBe(
+      false
+    )
     expect(wrapper.text()).toContain('薄弱项提示')
 
     await wrapper.get('#skill-profile-tab-recommendations').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('#skill-profile-tab-recommendations').attributes('aria-selected')).toBe('true')
-    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe('false')
-    expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-head').exists()).toBe(false)
-    expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-actions').exists()).toBe(false)
+    expect(wrapper.find('#skill-profile-tab-recommendations').attributes('aria-selected')).toBe(
+      'true'
+    )
+    expect(wrapper.find('#skill-profile-panel-recommendations').attributes('aria-hidden')).toBe(
+      'false'
+    )
+    expect(wrapper.find('#skill-profile-panel-recommendations .skill-overview-head').exists()).toBe(
+      false
+    )
+    expect(
+      wrapper.find('#skill-profile-panel-recommendations .skill-overview-actions').exists()
+    ).toBe(false)
     expect(wrapper.text()).toContain('密码学入门')
   })
 
@@ -144,7 +158,9 @@ describe('SkillProfile', () => {
     )
     expect(skillProfileSource).toContain('class="skill-board px-1 md:px-2"')
     expect(skillProfileSource).not.toContain('class="skill-board mt-6')
-    expect(skillProfileSource).not.toMatch(/\.skill-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s)
+    expect(skillProfileSource).not.toMatch(
+      /\.skill-board\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
+    )
     expect(skillProfileSource).not.toMatch(
       /\.skill-section \+ \.skill-section\s*\{[\s\S]*border-top:\s*1px solid var\(--journal-divider\);/s
     )

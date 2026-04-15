@@ -36,7 +36,8 @@ describe('LoginView', () => {
         expose({ input: inputRef })
         return {
           inputRef,
-          emitInput: (event: Event) => emit('update:modelValue', (event.target as HTMLInputElement).value),
+          emitInput: (event: Event) =>
+            emit('update:modelValue', (event.target as HTMLInputElement).value),
           emitEnter: () => emit('keyup.enter'),
         }
       },
@@ -52,7 +53,8 @@ describe('LoginView', () => {
           ElInput: ElInputStub,
           ElButton: {
             props: ['loading', 'size', 'type', 'disabled', 'nativeType'],
-            template: '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
+            template:
+              '<button :type="nativeType || \'button\'" @click="$emit(\'click\')"><slot /></button>',
           },
         },
       },
@@ -88,7 +90,10 @@ describe('LoginView', () => {
     await passwordInput.setValue('saved-password')
     await usernameInput.trigger('keyup.enter')
 
-    expect(authMocks.login).toHaveBeenCalledWith({ username: 'alice', password: 'saved-password' }, undefined)
+    expect(authMocks.login).toHaveBeenCalledWith(
+      { username: 'alice', password: 'saved-password' },
+      undefined
+    )
   })
 
   it('登录按钮应使用原生 submit 类型以支持表单回车提交', async () => {

@@ -51,7 +51,9 @@ describe('error status page helpers', () => {
     window.history.replaceState({}, '', '/student/dashboard?panel=difficulty#chart')
 
     expect(redirectToErrorStatusPage(500, '/api/dashboard')).toBe(true)
-    expect(redirectTo).toHaveBeenCalledWith('/500?from=%2Fstudent%2Fdashboard%3Fpanel%3Ddifficulty%23chart')
+    expect(redirectTo).toHaveBeenCalledWith(
+      '/500?from=%2Fstudent%2Fdashboard%3Fpanel%3Ddifficulty%23chart'
+    )
   })
 
   it('reads the retry target from the error page query string', () => {
