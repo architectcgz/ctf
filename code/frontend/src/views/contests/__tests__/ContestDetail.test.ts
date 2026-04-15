@@ -391,6 +391,46 @@ describe('ContestDetail', () => {
     expect(wrapper.text()).toContain('战场')
   })
 
+  it('队伍页创建和加入弹窗应切换到 C 端输入模板', async () => {
+    const contestDetailSource = (await import('../ContestDetail.vue?raw')).default
+
+    expect(contestDetailSource).toContain("from '@/components/common/modal-templates/CFocusedInputDialog.vue'")
+    expect(contestDetailSource).not.toContain('class="contest-modal"')
+
+    const wrapper = mount(ContestDetail, {
+      global: {
+        plugins: [createPinia(), router],
+      },
+      attachTo: document.body,
+    })
+
+    await router.push('/contests/1?panel=team')
+    await router.isReady()
+    await flushPromises()
+
+    const teamTab = wrapper.findAll('button').find((node) => node.text().trim() === '队伍')
+    expect(teamTab).toBeTruthy()
+    await teamTab!.trigger('click')
+    await flushPromises()
+
+    await wrapper.findAll('button').find((node) => node.text().trim() === '创建队伍')?.trigger('click')
+    await flushPromises()
+    expect(document.body.textContent).toContain('创建新队伍')
+    expect(document.body.textContent).toContain('队伍名称')
+
+    const closeButtons = Array.from(document.body.querySelectorAll('button'))
+    const cancelCreateButton = closeButtons.find((button) => button.textContent?.trim() === '取消')
+    cancelCreateButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await flushPromises()
+
+    await wrapper.findAll('button').find((node) => node.text().trim() === '加入队伍')?.trigger('click')
+    await flushPromises()
+    expect(document.body.textContent).toContain('加入现有队伍')
+    expect(document.body.textContent).toContain('队伍 ID')
+
+    wrapper.unmount()
+  })
+
   it('普通竞赛提交反馈应由前端根据结果生成', async () => {
     contestApiMocks.getContestChallenges.mockResolvedValueOnce([
       {
