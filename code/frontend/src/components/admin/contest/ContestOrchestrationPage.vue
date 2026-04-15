@@ -6,7 +6,6 @@ import { useRouter } from 'vue-router'
 import AdminContestFormPanel from '@/components/admin/contest/AdminContestFormPanel.vue'
 import type { ContestDetailData, ContestStatus } from '@/api/contracts'
 import AdminContestTable from '@/components/admin/contest/AdminContestTable.vue'
-import AWDOperationsPanel from '@/components/admin/contest/AWDOperationsPanel.vue'
 import AppEmpty from '@/components/common/AppEmpty.vue'
 import AppLoading from '@/components/common/AppLoading.vue'
 import { useUrlSyncedTabs } from '@/composables/useUrlSyncedTabs'
@@ -24,7 +23,6 @@ const props = defineProps<{
   loading: boolean
   statusFilter: StatusFilter
   awdContests: ContestDetailData[]
-  selectedAwdContestId: string | null
   createDraft: ContestFormDraft
   createSaving: boolean
   createFieldLocks: ContestFieldLocks
@@ -40,7 +38,6 @@ const emit = defineEmits<{
   openEditDialog: [contest: ContestDetailData]
   exportContest: [contest: ContestDetailData]
   changePage: [page: number]
-  'update:selectedAwdContestId': [value: string]
 }>()
 
 const panelTabs = [
@@ -61,12 +58,6 @@ const panelTabs = [
     label: '创建竞赛',
     tabId: 'contest-tab-create',
     panelId: 'contest-panel-create',
-  },
-  {
-    key: 'operations',
-    label: 'AWD 运维',
-    tabId: 'contest-tab-operations',
-    panelId: 'contest-panel-operations',
   },
 ] as const
 
@@ -91,6 +82,12 @@ const runningCount = computed(() => props.list.filter((item) => item.status === 
 const awdCount = computed(() => props.awdContests.length)
 const listCount = computed(() => props.list.length)
 const hasStatusFilter = computed(() => props.statusFilter !== 'all')
+const preferredWorkbenchContest = computed(
+  () =>
+    props.awdContests.find((item) => item.status === 'running' || item.status === 'frozen') ||
+    props.awdContests[0] ||
+    null
+)
 
 watch(
   () => props.requestedPanelVersion,
@@ -108,6 +105,18 @@ function openCreatePanel() {
 
 function openEditContest(contest: ContestDetailData) {
   void router.push({ name: 'ContestEdit', params: { id: contest.id } })
+}
+
+function openContestWorkbench() {
+  if (!preferredWorkbenchContest.value) {
+    return
+  }
+
+  void router.push({
+    name: 'ContestEdit',
+    params: { id: preferredWorkbenchContest.value.id },
+    query: { panel: 'operations' },
+  })
 }
 </script>
 
@@ -238,7 +247,13 @@ function openEditContest(contest: ContestDetailData) {
                   AWD 赛事会在这里汇总，便于进入对应竞赛的工作台运行段，继续处理攻防轮次、服务巡检和流量排查。
                 </p>
               </div>
-              <button type="button" class="contest-inline-link" @click="selectPanel('operations')">
+              <button
+                id="contest-open-workbench"
+                type="button"
+                class="contest-inline-link"
+                :disabled="!preferredWorkbenchContest"
+                @click="openContestWorkbench"
+              >
                 进入竞赛工作台
               </button>
             </article>
@@ -386,20 +401,6 @@ function openEditContest(contest: ContestDetailData) {
         </section>
       </section>
 
-      <section
-        id="contest-panel-operations"
-        class="tab-panel contest-panel"
-        :class="{ active: activePanel === 'operations' }"
-        role="tabpanel"
-        aria-labelledby="contest-tab-operations"
-        :aria-hidden="activePanel === 'operations' ? 'false' : 'true'"
-      >
-        <AWDOperationsPanel
-          :contests="awdContests"
-          :selected-contest-id="selectedAwdContestId"
-          @update:selected-contest-id="emit('update:selectedAwdContestId', $event)"
-        />
-      </section>
     </main>
   </section>
 </template>

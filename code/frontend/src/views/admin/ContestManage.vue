@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { downloadReport } from '@/api/assessment'
 import { exportContestArchive } from '@/api/admin'
@@ -11,28 +11,8 @@ import { useReportStatusPolling } from '@/composables/useReportStatusPolling'
 import { useToast } from '@/composables/useToast'
 import { useAdminContests } from '@/composables/useAdminContests'
 
-const AWD_SELECTED_CONTEST_STORAGE_KEY = 'ctf_admin_awd_selected_contest'
 const toast = useToast()
 const { start: startPolling, stop: stopPolling } = useReportStatusPolling()
-
-function loadStoredSelectedAwdContestId(): string | null {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  const value = window.sessionStorage.getItem(AWD_SELECTED_CONTEST_STORAGE_KEY)
-  return value?.trim() || null
-}
-
-function persistSelectedAwdContestId(value: string | null): void {
-  if (typeof window === 'undefined') {
-    return
-  }
-  if (value) {
-    window.sessionStorage.setItem(AWD_SELECTED_CONTEST_STORAGE_KEY, value)
-    return
-  }
-  window.sessionStorage.removeItem(AWD_SELECTED_CONTEST_STORAGE_KEY)
-}
 
 const {
   list,
@@ -58,50 +38,22 @@ const {
   saveContest,
 } = useAdminContests()
 
-const selectedAwdContestId = ref<string | null>(loadStoredSelectedAwdContestId())
 const awdContests = computed(() => list.value.filter((item) => item.mode === 'awd'))
 const exportingContestId = ref<string | null>(null)
 const downloadingContestReport = ref(false)
 const pendingContestReportId = ref<string | null>(null)
-const requestedPanel = ref<'overview' | 'list' | 'create' | 'operations' | null>(null)
+const requestedPanel = ref<'overview' | 'list' | 'create' | null>(null)
 const requestedPanelVersion = ref(0)
 
 onMounted(() => {
   void refresh()
 })
 
-watch(
-  awdContests,
-  (nextContests) => {
-    if (nextContests.length === 0) {
-      return
-    }
-
-    const stillExists = nextContests.some((item) => item.id === selectedAwdContestId.value)
-    if (!stillExists) {
-      selectedAwdContestId.value = nextContests[0].id
-    }
-  },
-  { immediate: true }
-)
-
-watch(
-  () => selectedAwdContestId.value,
-  (value) => {
-    persistSelectedAwdContestId(value)
-  },
-  { immediate: true }
-)
-
 function updateStatusFilter(value: typeof statusFilter.value) {
   statusFilter.value = value
 }
 
-function updateSelectedAwdContestId(value: string) {
-  selectedAwdContestId.value = value
-}
-
-function requestContestPanel(panel: 'overview' | 'list' | 'create' | 'operations') {
+function requestContestPanel(panel: 'overview' | 'list' | 'create') {
   requestedPanel.value = panel
   requestedPanelVersion.value += 1
 }
@@ -191,7 +143,6 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
       :loading="loading"
       :status-filter="statusFilter"
       :awd-contests="awdContests"
-      :selected-awd-contest-id="selectedAwdContestId"
       :create-draft="formDraft"
       :create-saving="saving"
       :create-field-locks="fieldLocks"
@@ -204,7 +155,6 @@ async function handleCreateContestSave(draft: Parameters<typeof saveContest>[0])
       @open-edit-dialog="openEditDialog"
       @export-contest="handleExportContest"
       @change-page="changePage"
-      @update:selected-awd-contest-id="updateSelectedAwdContestId"
     />
 
     <AdminContestFormDialog
