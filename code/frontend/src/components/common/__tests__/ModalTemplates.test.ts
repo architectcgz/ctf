@@ -131,7 +131,9 @@ describe('modal templates', () => {
 
     expect(inputSource).toContain('创建新队伍')
     expect(inputSource).toContain('确认创建')
-    expect(inputSource).toContain('#2a7a58')
+    expect(inputSource).toContain('.c-focused-input-dialog__surface')
+    expect(inputSource).toContain('.c-focused-input-dialog__header')
+    expect(inputSource).toContain('.c-focused-input-dialog__form')
   })
 
   it('C 端专注型输入弹窗应支持标题、描述、表单与页脚动作插槽', async () => {
@@ -161,7 +163,9 @@ describe('modal templates', () => {
 
     expect(wrapper.text()).toContain('创建新队伍')
     expect(wrapper.text()).toContain('为你的战队起一个响亮的代号。')
-    expect(wrapper.html()).toContain('focused-input-slot')
+    expect(wrapper.find('.c-focused-input-dialog__surface').exists()).toBe(true)
+    expect(wrapper.find('.c-focused-input-dialog__header').exists()).toBe(true)
+    expect(wrapper.find('.c-focused-input-dialog__form').html()).toContain('focused-input-slot')
     expect(wrapper.html()).toContain('focused-footer-slot')
   })
 })
