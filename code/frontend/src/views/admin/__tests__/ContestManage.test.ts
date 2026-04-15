@@ -291,6 +291,7 @@ describe('ContestManage', () => {
   })
 
   it('管理页工作台入口应跳转到具体竞赛工作台，且不再保留顶层并行运维标签', async () => {
+    window.sessionStorage.setItem('ctf_admin_awd_ops_panel:awd-running', 'challenges')
     contestMocks.getContests.mockResolvedValue({
       list: [
         {
@@ -338,7 +339,7 @@ describe('ContestManage', () => {
     expect(pushMock).toHaveBeenCalledWith({
       name: 'ContestEdit',
       params: { id: 'awd-running' },
-      query: { panel: 'operations' },
+      query: { panel: 'operations', opsPanel: 'inspector' },
     })
   })
 
