@@ -555,7 +555,7 @@ onMounted(() => {
         <span class="class-chip">竞赛编辑</span>
       </div>
       <div class="topbar-actions">
-        <button class="admin-btn admin-btn-ghost" type="button" @click="goBackToContestList">
+        <button class="ui-btn ui-btn--ghost" type="button" @click="goBackToContestList">
           <ChevronLeft class="h-4 w-4" />
           返回竞赛目录
         </button>
@@ -574,7 +574,7 @@ onMounted(() => {
         icon="AlertTriangle"
       >
         <template #action>
-          <button type="button" class="admin-btn admin-btn-ghost" @click="goBackToContestList">
+          <button type="button" class="ui-btn ui-btn--ghost" @click="goBackToContestList">
             返回竞赛目录
           </button>
         </template>
@@ -666,7 +666,7 @@ onMounted(() => {
               icon="AlertTriangle"
             >
               <template #action>
-                <button type="button" class="admin-btn admin-btn-ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
                   重试加载
                 </button>
               </template>
@@ -707,7 +707,7 @@ onMounted(() => {
               icon="AlertTriangle"
             >
               <template #action>
-                <button type="button" class="admin-btn admin-btn-ghost" @click="refreshAwdWorkbenchData(contest.id)">
+                <button type="button" class="ui-btn ui-btn--ghost" @click="refreshAwdWorkbenchData(contest.id)">
                   重试加载
                 </button>
               </template>
@@ -806,30 +806,6 @@ onMounted(() => {
 .contest-edit-header {
   display: grid;
   gap: var(--space-4);
-}
-
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition: all 150ms ease;
-}
-
-.admin-btn-ghost {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
 }
 
 @media (max-width: 767px) {

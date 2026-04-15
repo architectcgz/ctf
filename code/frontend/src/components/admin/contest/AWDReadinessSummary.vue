@@ -273,7 +273,7 @@ function formatDateTime(value?: string): string {
               </p>
             </div>
             <div class="readiness-row__status">
-              <span class="readiness-status-chip">
+              <span class="ui-badge readiness-status-chip">
                 {{ getValidationStateLabel(item) }}
               </span>
             </div>
@@ -281,14 +281,14 @@ function formatDateTime(value?: string): string {
             <div class="readiness-row__time">{{ formatDateTime(item.last_preview_at) }}</div>
             <div class="readiness-row__target">{{ item.last_access_url || '无目标地址' }}</div>
             <div
-              class="readiness-row__actions"
+              class="ui-row-actions readiness-row__actions"
               role="group"
               :aria-label="`题目 ${item.title} 操作`"
             >
               <button
                 :id="`awd-readiness-edit-${item.challenge_id}`"
                 type="button"
-                class="rounded-xl border border-border px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] transition hover:border-primary"
+                class="ui-btn ui-btn--sm ui-btn--secondary"
                 @click="emit('editConfig', item.challenge_id)"
               >
                 {{ props.actionLabel }}
@@ -491,21 +491,18 @@ function formatDateTime(value?: string): string {
 }
 
 .readiness-row__actions {
-  display: flex;
   justify-content: flex-end;
 }
 
 .readiness-status-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 0.8rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--journal-border) 88%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
-  color: var(--journal-ink);
-  font-size: 0.8rem;
-  font-weight: 600;
+  --ui-badge-radius: 999px;
+  --ui-badge-padding: 0.35rem 0.8rem;
+  --ui-badge-size: 0.8rem;
+  --ui-badge-spacing: 0;
+  --ui-badge-border: color-mix(in srgb, var(--journal-border) 88%, transparent);
+  --ui-badge-background: color-mix(in srgb, var(--journal-surface) 94%, var(--color-bg-base));
+  --ui-badge-color: var(--journal-ink);
+  text-transform: none;
 }
 
 @media (max-width: 1100px) {

@@ -9,6 +9,7 @@ import type {
   AWDCheckerType,
   AWDTeamServiceData,
 } from '@/api/contracts'
+import AdminSurfaceModal from '@/components/common/modal-templates/AdminSurfaceModal.vue'
 import { useAwdCheckResultPresentation } from '@/composables/useAwdCheckResultPresentation'
 import {
   AWD_CHECKER_FIELD_ERROR_KEYS,
@@ -494,163 +495,149 @@ function handleSubmit() {
 </script>
 
 <template>
-  <ElDialog
-    :model-value="open"
+  <AdminSurfaceModal
+    :open="open"
     :title="dialogTitle"
-    width="920px"
+    :subtitle="
+      mode === 'create'
+        ? '先完成题目关联和 Checker 草稿配置，保存后即可继续赛前试跑。'
+        : '统一维护赛事题目的 Checker、分值、顺序和试跑结果。'
+    "
+    eyebrow="AWD Operations"
+    width="57.5rem"
     @close="closeDialog"
-    @update:model-value="emit('update:open', $event)"
+    @update:open="emit('update:open', $event)"
   >
     <form class="space-y-6" @submit.prevent="handleSubmit">
-      <div class="space-y-2">
-        <label
-          class="text-sm font-medium text-[var(--color-text-primary)]"
-          for="awd-challenge-config-challenge"
-        >
-          题目
-        </label>
+      <div class="ui-field awd-config-field">
+        <label class="ui-field__label" for="awd-challenge-config-challenge">题目</label>
         <template v-if="mode === 'create'">
-          <select
-            id="awd-challenge-config-challenge"
-            v-model="form.challenge_id"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="" disabled>
-              {{ loadingChallengeCatalog ? '正在加载题库...' : '请选择题目' }}
-            </option>
-            <option
-              v-for="challenge in selectableChallenges"
-              :key="challenge.id"
-              :value="challenge.id"
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.challenge_id }">
+            <select
+              id="awd-challenge-config-challenge"
+              v-model="form.challenge_id"
+              class="ui-control"
             >
-              {{ challenge.title }}
-            </option>
-          </select>
+              <option value="" disabled>
+                {{ loadingChallengeCatalog ? '正在加载题库...' : '请选择题目' }}
+              </option>
+              <option
+                v-for="challenge in selectableChallenges"
+                :key="challenge.id"
+                :value="challenge.id"
+              >
+                {{ challenge.title }}
+              </option>
+            </select>
+          </span>
         </template>
-        <div
-          v-else
-          class="rounded-xl border border-border bg-surface-alt/40 px-4 py-3 text-sm text-[var(--color-text-primary)]"
-        >
-          {{ activeChallengeLabel }}
-        </div>
-        <p v-if="fieldErrors.challenge_id" class="text-xs text-[var(--color-danger)]">
+        <span v-else class="ui-control-wrap awd-config-readonly">
+          <span class="ui-control awd-config-readonly__value">
+            {{ activeChallengeLabel }}
+          </span>
+        </span>
+        <p v-if="fieldErrors.challenge_id" class="ui-field__error">
           {{ fieldErrors.challenge_id }}
         </p>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-3">
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-points"
-          >
-            分值
-          </label>
-          <input
-            id="awd-challenge-config-points"
-            v-model.number="form.points"
-            type="number"
-            min="1"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.points" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-points">分值</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.points }">
+            <input
+              id="awd-challenge-config-points"
+              v-model.number="form.points"
+              type="number"
+              min="1"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.points" class="ui-field__error">
             {{ fieldErrors.points }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-order"
-          >
-            顺序
-          </label>
-          <input
-            id="awd-challenge-config-order"
-            v-model.number="form.order"
-            type="number"
-            min="0"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.order" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-order">顺序</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.order }">
+            <input
+              id="awd-challenge-config-order"
+              v-model.number="form.order"
+              type="number"
+              min="0"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.order" class="ui-field__error">
             {{ fieldErrors.order }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-visible"
-          >
-            可见性
-          </label>
-          <select
-            id="awd-challenge-config-visible"
-            v-model="form.is_visible"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="true">可见</option>
-            <option value="false">隐藏</option>
-          </select>
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-visible">可见性</label>
+          <span class="ui-control-wrap">
+            <select
+              id="awd-challenge-config-visible"
+              v-model="form.is_visible"
+              class="ui-control"
+            >
+              <option value="true">可见</option>
+              <option value="false">隐藏</option>
+            </select>
+          </span>
         </div>
       </div>
 
       <div class="grid gap-4 sm:grid-cols-3">
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-checker-type"
-          >
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-checker-type">
             Checker 类型
           </label>
-          <select
-            id="awd-challenge-config-checker-type"
-            v-model="form.awd_checker_type"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          >
-            <option value="legacy_probe">基础探活</option>
-            <option value="http_standard">HTTP 标准 Checker</option>
-          </select>
+          <span class="ui-control-wrap">
+            <select
+              id="awd-challenge-config-checker-type"
+              v-model="form.awd_checker_type"
+              class="ui-control"
+            >
+              <option value="legacy_probe">基础探活</option>
+              <option value="http_standard">HTTP 标准 Checker</option>
+            </select>
+          </span>
         </div>
 
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-sla-score"
-          >
-            SLA 分
-          </label>
-          <input
-            id="awd-challenge-config-sla-score"
-            v-model.number="form.awd_sla_score"
-            type="number"
-            min="0"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.awd_sla_score" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-sla-score">SLA 分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.awd_sla_score }">
+            <input
+              id="awd-challenge-config-sla-score"
+              v-model.number="form.awd_sla_score"
+              type="number"
+              min="0"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.awd_sla_score" class="ui-field__error">
             {{ fieldErrors.awd_sla_score }}
           </p>
         </div>
 
-        <div class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-defense-score"
-          >
-            防守分
-          </label>
-          <input
-            id="awd-challenge-config-defense-score"
-            v-model.number="form.awd_defense_score"
-            type="number"
-            min="0"
-            step="1"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p v-if="fieldErrors.awd_defense_score" class="text-xs text-[var(--color-danger)]">
+        <div class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-defense-score">防守分</label>
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.awd_defense_score }">
+            <input
+              id="awd-challenge-config-defense-score"
+              v-model.number="form.awd_defense_score"
+              type="number"
+              min="0"
+              step="1"
+              class="ui-control"
+            />
+          </span>
+          <p v-if="fieldErrors.awd_defense_score" class="ui-field__error">
             {{ fieldErrors.awd_defense_score }}
           </p>
         </div>
@@ -677,22 +664,21 @@ function handleSubmit() {
           </p>
         </header>
 
-        <div v-if="form.awd_checker_type === 'legacy_probe'" class="space-y-2">
-          <label
-            class="text-sm font-medium text-[var(--color-text-primary)]"
-            for="awd-challenge-config-legacy-health-path"
-          >
+        <div v-if="form.awd_checker_type === 'legacy_probe'" class="ui-field awd-config-field">
+          <label class="ui-field__label" for="awd-challenge-config-legacy-health-path">
             健康检查路径
           </label>
-          <input
-            id="awd-challenge-config-legacy-health-path"
-            v-model="legacyProbeDraft.health_path"
-            type="text"
-            placeholder="/healthz"
-            class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-          />
-          <p class="text-xs text-[var(--color-text-secondary)]">留空时使用当前全局健康检查路径。</p>
-          <p v-if="fieldErrors.legacy_health_path" class="text-xs text-[var(--color-danger)]">
+          <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.legacy_health_path }">
+            <input
+              id="awd-challenge-config-legacy-health-path"
+              v-model="legacyProbeDraft.health_path"
+              type="text"
+              placeholder="/healthz"
+              class="ui-control"
+            />
+          </span>
+          <p class="ui-field__hint">留空时使用当前全局健康检查路径。</p>
+          <p v-if="fieldErrors.legacy_health_path" class="ui-field__error">
             {{ fieldErrors.legacy_health_path }}
           </p>
         </div>
@@ -1064,40 +1050,36 @@ function handleSubmit() {
         </header>
 
         <div class="checker-preview-input-grid">
-          <div class="space-y-2">
-            <label
-              class="text-sm font-medium text-[var(--color-text-primary)]"
-              for="awd-challenge-preview-access-url"
-            >
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-preview-access-url">
               目标访问地址
             </label>
-            <input
-              id="awd-challenge-preview-access-url"
-              v-model="previewForm.access_url"
-              type="text"
-              placeholder="http://team1.example.com:8080"
-              class="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-            />
-            <p v-if="fieldErrors.preview_access_url" class="text-xs text-[var(--color-danger)]">
+            <span class="ui-control-wrap" :class="{ 'is-error': !!fieldErrors.preview_access_url }">
+              <input
+                id="awd-challenge-preview-access-url"
+                v-model="previewForm.access_url"
+                type="text"
+                placeholder="http://team1.example.com:8080"
+                class="ui-control"
+              />
+            </span>
+            <p v-if="fieldErrors.preview_access_url" class="ui-field__error">
               {{ fieldErrors.preview_access_url }}
             </p>
           </div>
 
-          <div class="space-y-2">
-            <label
-              class="text-sm font-medium text-[var(--color-text-primary)]"
-              for="awd-challenge-preview-flag"
-            >
-              预览 Flag
-            </label>
-            <input
-              id="awd-challenge-preview-flag"
-              v-model="previewForm.preview_flag"
-              type="text"
-              placeholder="flag{preview}"
-              class="w-full rounded-xl border border-border bg-surface px-4 py-3 font-mono text-sm text-[var(--color-text-primary)] outline-none transition focus:border-primary"
-            />
-            <p class="text-xs text-[var(--color-text-secondary)]">
+          <div class="ui-field awd-config-field">
+            <label class="ui-field__label" for="awd-challenge-preview-flag">预览 Flag</label>
+            <span class="ui-control-wrap">
+              <input
+                id="awd-challenge-preview-flag"
+                v-model="previewForm.preview_flag"
+                type="text"
+                placeholder="flag{preview}"
+                class="ui-control awd-config-control--mono"
+              />
+            </span>
+            <p class="ui-field__hint">
               未绑定正式轮次时，这个值会替代 FLAG 模板变量。
             </p>
           </div>
@@ -1110,7 +1092,7 @@ function handleSubmit() {
           <button
             id="awd-challenge-preview-submit"
             type="button"
-            class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            class="ui-btn ui-btn--primary"
             :disabled="previewing || !contestId"
             @click="handlePreview"
           >
@@ -1210,10 +1192,10 @@ function handleSubmit() {
     </form>
 
     <template #footer>
-      <div class="flex items-center justify-end gap-2">
+      <div class="awd-config-dialog__footer">
         <button
           type="button"
-          class="rounded-xl border border-border px-4 py-2 text-sm text-[var(--color-text-primary)] transition hover:border-primary"
+          class="ui-btn ui-btn--secondary"
           @click="closeDialog"
         >
           取消
@@ -1221,7 +1203,7 @@ function handleSubmit() {
         <button
           id="awd-challenge-config-submit"
           type="button"
-          class="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          class="ui-btn ui-btn--primary"
           :disabled="saving || (mode === 'create' && loadingChallengeCatalog)"
           @click="handleSubmit"
         >
@@ -1229,10 +1211,33 @@ function handleSubmit() {
         </button>
       </div>
     </template>
-  </ElDialog>
+  </AdminSurfaceModal>
 </template>
 
 <style scoped>
+.awd-config-field {
+  --ui-field-gap: var(--space-2);
+}
+
+.awd-config-readonly {
+  background: color-mix(in srgb, var(--color-bg-surface) 74%, var(--color-bg-elevated));
+}
+
+.awd-config-readonly__value {
+  cursor: default;
+}
+
+.awd-config-control--mono {
+  font-family: var(--font-family-mono);
+}
+
+.awd-config-dialog__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
 .checker-config-block {
   display: grid;
   gap: 1rem;

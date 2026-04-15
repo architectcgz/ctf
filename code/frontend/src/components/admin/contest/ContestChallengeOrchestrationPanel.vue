@@ -278,14 +278,14 @@ onMounted(() => {
       </div>
 
       <div class="contest-challenge-panel__actions">
-        <button type="button" class="admin-btn admin-btn-ghost" @click="refresh">
+        <button type="button" class="ui-btn ui-btn--ghost" @click="refresh">
           <RefreshCw class="h-4 w-4" />
           刷新列表
         </button>
         <button
           id="contest-challenge-add"
           type="button"
-          class="admin-btn admin-btn-primary"
+          class="ui-btn ui-btn--primary"
           @click="openCreateDialog"
         >
           <Plus class="h-4 w-4" />
@@ -301,7 +301,7 @@ onMounted(() => {
       icon="AlertTriangle"
     >
       <template #action>
-        <button type="button" class="admin-btn admin-btn-ghost" @click="refresh">
+        <button type="button" class="ui-btn ui-btn--ghost" @click="refresh">
           重试加载
         </button>
       </template>
@@ -410,7 +410,7 @@ onMounted(() => {
               </div>
             </template>
             <div
-              class="contest-challenge-row__actions"
+              class="ui-row-actions contest-challenge-row__actions"
               role="group"
               :aria-label="`题目 ${getChallengeTitle(challenge)} 操作`"
             >
@@ -418,7 +418,7 @@ onMounted(() => {
                 v-if="isAwdContest"
                 :id="`contest-challenge-open-awd-config-${challenge.id}`"
                 type="button"
-                class="contest-challenge-row__button contest-challenge-row__button--ghost"
+                class="ui-btn ui-btn--sm ui-btn--secondary contest-challenge-row__button"
                 @click="emit('open:awd-config', challenge)"
               >
                 补 AWD 配置
@@ -426,7 +426,7 @@ onMounted(() => {
               <button
                 :id="`contest-challenge-edit-${challenge.id}`"
                 type="button"
-                class="contest-challenge-row__button contest-challenge-row__button--primary"
+                class="ui-btn ui-btn--sm ui-btn--primary contest-challenge-row__button"
                 @click="openEditDialog(challenge)"
               >
                 编辑
@@ -434,7 +434,7 @@ onMounted(() => {
               <button
                 :id="`contest-challenge-remove-${challenge.id}`"
                 type="button"
-                class="contest-challenge-row__button contest-challenge-row__button--danger"
+                class="ui-btn ui-btn--sm ui-btn--danger contest-challenge-row__button"
                 :disabled="removingChallengeId === challenge.id"
                 @click="handleRemove(challenge)"
               >
@@ -476,40 +476,6 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-}
-
-.admin-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  border-radius: 1rem;
-  padding: var(--space-2-5) var(--space-4);
-  font-size: var(--font-size-0-875);
-  font-weight: 600;
-  transition: all 150ms ease;
-}
-
-.admin-btn-primary {
-  border: 1px solid transparent;
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.admin-btn-primary:hover {
-  opacity: 0.92;
-}
-
-.admin-btn-ghost {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.admin-btn-ghost:hover {
-  border-color: color-mix(in srgb, var(--journal-accent) 28%, transparent);
-  color: var(--journal-accent);
 }
 
 .contest-challenge-panel__summary {
@@ -663,44 +629,12 @@ onMounted(() => {
 }
 
 .contest-challenge-row__actions {
-  display: flex;
   justify-content: flex-end;
-  gap: var(--space-2);
 }
 
 .contest-challenge-row__button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.2rem;
-  border-radius: 0.7rem;
-  padding: 0.5rem 0.85rem;
-  font-size: var(--font-size-0-82);
-  font-weight: 600;
-  transition: all 150ms ease;
-}
-
-.contest-challenge-row__button--primary {
-  border: 1px solid color-mix(in srgb, var(--journal-accent) 24%, transparent);
-  background: color-mix(in srgb, var(--journal-accent) 10%, var(--journal-surface));
-  color: var(--journal-accent);
-}
-
-.contest-challenge-row__button--ghost {
-  border: 1px solid color-mix(in srgb, var(--journal-border) 76%, transparent);
-  background: color-mix(in srgb, var(--journal-surface) 94%, transparent);
-  color: var(--journal-ink);
-}
-
-.contest-challenge-row__button--danger {
-  border: 1px solid color-mix(in srgb, var(--color-danger) 28%, transparent);
-  background: color-mix(in srgb, var(--color-danger) 8%, var(--journal-surface));
-  color: color-mix(in srgb, var(--color-danger) 82%, var(--journal-ink));
-}
-
-.contest-challenge-row__button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+  --ui-btn-radius: 0.7rem;
+  --ui-btn-font-size: var(--font-size-0-82);
 }
 
 @media (max-width: 900px) {
