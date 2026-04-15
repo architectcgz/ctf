@@ -1,6 +1,11 @@
 export type BackofficeRole = 'teacher' | 'admin'
 
-export type BackofficeModuleKey = 'overview' | 'operations' | 'resources' | 'governance'
+export type BackofficeModuleKey =
+  | 'overview'
+  | 'operations'
+  | 'resources'
+  | 'contestOps'
+  | 'governance'
 
 export interface BackofficeSecondaryItem {
   routeName: string
@@ -119,6 +124,41 @@ const backofficeModules: BackofficeModule[] = [
         path: '/platform/images',
         roles: ['teacher', 'admin'],
         isMatch: (path) => matchAny(path, ['/platform/images', '/admin/images']),
+      },
+    ],
+  },
+  {
+    key: 'contestOps',
+    label: '赛事运维',
+    roles: ['admin'],
+    secondaryItems: [
+      {
+        routeName: 'AdminContestOpsEnvironment',
+        label: '环境管理',
+        path: '/admin/contest-ops/environment',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/admin/contest-ops/environment']),
+      },
+      {
+        routeName: 'AdminContestOpsTraffic',
+        label: '流量监控',
+        path: '/admin/contest-ops/traffic',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/admin/contest-ops/traffic']),
+      },
+      {
+        routeName: 'AdminContestOpsProjector',
+        label: '大屏投射',
+        path: '/admin/contest-ops/projector',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/admin/contest-ops/projector']),
+      },
+      {
+        routeName: 'AdminContestOpsScoreboard',
+        label: '排行榜',
+        path: '/admin/contest-ops/scoreboard',
+        roles: ['admin'],
+        isMatch: (path) => matchAny(path, ['/admin/contest-ops/scoreboard']),
       },
     ],
   },

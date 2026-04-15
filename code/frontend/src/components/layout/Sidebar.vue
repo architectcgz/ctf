@@ -539,6 +539,7 @@ const backofficeModuleIconMap: Record<BackofficeModuleKey, IconComp> = {
   overview: LayoutDashboard,
   operations: GraduationCap,
   resources: Swords,
+  contestOps: Trophy,
   governance: Shield,
 }
 

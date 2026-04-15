@@ -61,6 +61,7 @@ describe('Sidebar desktop layout', () => {
         { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
         { path: '/academy/classes', component: { template: '<div>classes</div>' } },
         { path: '/platform/challenges', component: { template: '<div>challenges</div>' } },
+        { path: '/admin/contest-ops/environment', component: { template: '<div>event ops</div>' } },
         { path: '/admin/contests', component: { template: '<div>contests</div>' } },
       ],
     })
@@ -92,7 +93,53 @@ describe('Sidebar desktop layout', () => {
     expect(wrapper.text()).toContain('总览')
     expect(wrapper.text()).toContain('教学运营')
     expect(wrapper.text()).toContain('题库与资源')
+    expect(wrapper.text()).toContain('赛事运维')
     expect(wrapper.text()).toContain('系统治理')
+
+    wrapper.unmount()
+  })
+
+  it('expands the contest operations module and renders its secondary entries for admin users', async () => {
+    const router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        { path: '/admin/dashboard', component: { template: '<div>admin</div>' } },
+        { path: '/admin/contest-ops/environment', component: { template: '<div>environment</div>' } },
+        { path: '/admin/contest-ops/traffic', component: { template: '<div>traffic</div>' } },
+        { path: '/admin/contest-ops/projector', component: { template: '<div>projector</div>' } },
+        { path: '/admin/contest-ops/scoreboard', component: { template: '<div>scoreboard</div>' } },
+      ],
+    })
+
+    const authStore = useAuthStore()
+    authStore.setAuth(
+      {
+        id: 'admin-1',
+        username: 'admin',
+        role: 'admin',
+        name: 'Admin',
+      },
+      'token'
+    )
+
+    await router.push('/admin/contest-ops/environment')
+    await router.isReady()
+
+    const wrapper = mount(Sidebar, {
+      props: {
+        collapsed: false,
+        mobileOpen: false,
+      },
+      global: {
+        plugins: [router],
+      },
+    })
+
+    expect(wrapper.text()).toContain('赛事运维')
+    expect(wrapper.text()).toContain('环境管理')
+    expect(wrapper.text()).toContain('流量监控')
+    expect(wrapper.text()).toContain('大屏投射')
+    expect(wrapper.text()).toContain('排行榜')
 
     wrapper.unmount()
   })
