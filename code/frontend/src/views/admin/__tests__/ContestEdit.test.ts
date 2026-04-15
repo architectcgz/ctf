@@ -1102,6 +1102,252 @@ describe('ContestEdit', () => {
     expect(contestApiMocks.deleteAdminContestChallenge).toHaveBeenCalledWith('contest-1', '101')
   })
 
+  it('题目池变更后应同步更新 AWD 配置与赛前检查数据', async () => {
+    const challengeLinksState: any[] = []
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.listAdminContestChallenges.mockImplementation(async () =>
+      challengeLinksState.map((item) => ({ ...item }))
+    )
+    contestApiMocks.getContestAWDReadiness.mockImplementation(async () => ({
+      contest_id: 'contest-1',
+      ready: challengeLinksState.length > 0,
+      total_challenges: challengeLinksState.length,
+      passed_challenges: challengeLinksState.length,
+      pending_challenges: 0,
+      failed_challenges: 0,
+      stale_challenges: 0,
+      missing_checker_challenges: 0,
+      blocking_count: 0,
+      global_blocking_reasons: challengeLinksState.length > 0 ? [] : ['no_challenges'],
+      blocking_actions: challengeLinksState.length > 0 ? [] : ['start_contest'],
+      items: [],
+    }))
+    contestApiMocks.getChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '102',
+          title: 'Upload Service',
+          description: '新增题目',
+          category: 'web',
+          difficulty: 'medium',
+          points: 150,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-02T00:00:00.000Z',
+          updated_at: '2026-03-02T00:00:00.000Z',
+          flag_config: undefined,
+        },
+      ],
+      total: 1,
+      page: 1,
+      page_size: 20,
+    })
+    contestApiMocks.createAdminContestChallenge.mockImplementation(async (_contestId, payload) => {
+      const created = {
+        id: 'link-2',
+        contest_id: 'contest-1',
+        challenge_id: String(payload.challenge_id),
+        title: 'Upload Service',
+        category: 'web',
+        difficulty: 'medium',
+        points: payload.points,
+        order: payload.order,
+        is_visible: payload.is_visible,
+        awd_checker_type: undefined,
+        awd_checker_config: {},
+        awd_sla_score: 0,
+        awd_defense_score: 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T01:00:00.000Z',
+      }
+      challengeLinksState.push(created)
+      return created
+    })
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    await wrapper.get('#contest-challenge-select').setValue('102')
+    await wrapper.get('#contest-challenge-points').setValue('160')
+    await wrapper.get('#contest-challenge-order').setValue('3')
+    await wrapper.get('#contest-challenge-dialog-submit').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Upload Service')
+
+    await wrapper.get('#contest-workbench-stage-tab-preflight').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('可开赛')
+    expect(wrapper.text()).not.toContain('当前赛事还没有关联题目，无法执行开赛关键动作')
+  })
+
+  it('AWD 配置变更后题目池应同步更新并阻止重复关联', async () => {
+    const challengeLinksState: any[] = [
+      {
+        id: 'link-1',
+        contest_id: 'contest-1',
+        challenge_id: '101',
+        title: 'Web 入门',
+        category: 'web',
+        difficulty: 'easy',
+        points: 120,
+        order: 1,
+        is_visible: true,
+        awd_checker_type: undefined,
+        awd_checker_config: {},
+        awd_sla_score: 0,
+        awd_defense_score: 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T00:00:00.000Z',
+      },
+    ]
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.listAdminContestChallenges.mockImplementation(async () =>
+      challengeLinksState.map((item) => ({ ...item }))
+    )
+    contestApiMocks.getChallenges.mockResolvedValue({
+      list: [
+        {
+          id: '101',
+          title: 'Web 入门',
+          description: '现有题目',
+          category: 'web',
+          difficulty: 'easy',
+          points: 120,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-01T00:00:00.000Z',
+          updated_at: '2026-03-01T00:00:00.000Z',
+          flag_config: undefined,
+        },
+        {
+          id: '102',
+          title: 'Crypto 进阶',
+          description: '新增题目',
+          category: 'crypto',
+          difficulty: 'medium',
+          points: 150,
+          instance_sharing: 'per_user',
+          created_by: '9',
+          image_id: undefined,
+          attachment_url: undefined,
+          hints: undefined,
+          status: 'published',
+          created_at: '2026-03-02T00:00:00.000Z',
+          updated_at: '2026-03-02T00:00:00.000Z',
+          flag_config: undefined,
+        },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 20,
+    })
+    contestApiMocks.createAdminContestChallenge.mockImplementation(async (_contestId, payload) => {
+      const created = {
+        id: 'link-2',
+        contest_id: 'contest-1',
+        challenge_id: String(payload.challenge_id),
+        title: 'Crypto 进阶',
+        category: 'crypto',
+        difficulty: 'medium',
+        points: payload.points,
+        order: payload.order,
+        is_visible: payload.is_visible,
+        awd_checker_type: payload.awd_checker_type,
+        awd_checker_config: payload.awd_checker_config ?? {},
+        awd_sla_score: payload.awd_sla_score ?? 0,
+        awd_defense_score: payload.awd_defense_score ?? 0,
+        awd_checker_validation_state: 'pending',
+        awd_checker_last_preview_at: undefined,
+        awd_checker_last_preview_result: undefined,
+        created_at: '2026-03-10T01:00:00.000Z',
+      }
+      challengeLinksState.push(created)
+      return created
+    })
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-challenge').setValue('102')
+    await wrapper.get('#awd-challenge-config-points').setValue('160')
+    await wrapper.get('#awd-challenge-config-order').setValue('2')
+    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+    await flushPromises()
+
+    await wrapper.get('#contest-workbench-stage-tab-pool').trigger('click')
+    await flushPromises()
+    expect(wrapper.text()).toContain('Crypto 进阶')
+
+    await wrapper.get('#contest-challenge-add').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('#contest-challenge-select').text()).not.toContain('Crypto 进阶')
+  })
+
+  it('AWD 配置保存失败时应提示错误并保持弹层打开', async () => {
+    contestApiMocks.getContest.mockResolvedValue(
+      buildContestDetail({
+        title: '2026 AWD 联赛',
+        description: '攻防赛',
+        mode: 'awd',
+        status: 'registering',
+      })
+    )
+    contestApiMocks.createAdminContestChallenge.mockRejectedValueOnce(new Error('save failed'))
+
+    const wrapper = mountContestEdit()
+
+    await flushPromises()
+    await wrapper.get('#contest-workbench-stage-tab-awd-config').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-create').trigger('click')
+    await flushPromises()
+    await wrapper.get('#awd-challenge-config-challenge').setValue('102')
+    await wrapper.get('#awd-challenge-config-points').setValue('160')
+    await wrapper.get('#awd-challenge-config-order').setValue('2')
+    await wrapper.get('#awd-challenge-config-submit').trigger('click')
+    await flushPromises()
+
+    expect(toastMocks.error).toHaveBeenCalledWith('save failed')
+    expect(wrapper.text()).toContain('新增 AWD 题目')
+  })
+
   it('应该在 AWD 赛事的题目池阶段展示摘要列与筛选入口', async () => {
     contestApiMocks.getContest.mockResolvedValue(
       buildContestDetail({

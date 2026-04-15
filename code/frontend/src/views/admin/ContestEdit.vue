@@ -86,7 +86,10 @@ const awdStartOverrideDialogState = ref<AWDStartOverrideDialogState>(createDefau
 const fieldLocks = computed(() => createFieldLocks(editingBaseStatus.value))
 const statusOptions = computed(() => createContestStatusOptions(editingBaseStatus.value))
 const pageTitle = computed(() => (contest.value ? `编辑《${contest.value.title}》` : '编辑竞赛'))
-const workbench = useContestWorkbench(contest)
+const awdWorkbenchChallengeCount = computed(() =>
+  contest.value?.mode === 'awd' ? awdChallengeLinks.value.length : null
+)
+const workbench = useContestWorkbench(contest, awdWorkbenchChallengeCount)
 const { activeTab: activeStage, selectTab } = useUrlSyncedTabs<ContestWorkbenchStageKey>({
   orderedTabs: CONTEST_WORKBENCH_STAGE_ORDER,
   defaultTab: 'basics',
@@ -339,6 +342,10 @@ async function handleSaveAwdChallengeConfig(payload: {
     awdChallengeConfigDialogOpen.value = false
     editingAwdChallengeLink.value = null
     await refreshAwdWorkbenchData(contest.value.id)
+  } catch (error) {
+    toast.error(
+      humanizeRequestError(error, awdChallengeConfigMode.value === 'create' ? '新增 AWD 题目失败' : '更新 AWD 题目失败')
+    )
   } finally {
     savingChallengeConfig.value = false
   }
@@ -620,7 +627,10 @@ onMounted(() => {
             <ContestChallengeOrchestrationPanel
               :contest-id="contest.id"
               :contest-mode="contest.mode"
+              :challenge-links="contest.mode === 'awd' ? awdChallengeLinks : undefined"
+              :loading-external="contest.mode === 'awd' ? loadingAwdStageData : undefined"
               @open:awd-config="handleOpenAwdConfigFromPool"
+              @updated="refreshAwdWorkbenchData(contest.id)"
             />
           </section>
         </section>

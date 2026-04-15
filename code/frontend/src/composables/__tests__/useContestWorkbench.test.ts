@@ -77,4 +77,37 @@ describe('useContestWorkbench', () => {
     ])
     expect(result.defaultStage).toBe('pool')
   })
+
+  it('未提供真实题目数时不应展示伪造的已关联题目数摘要', () => {
+    const result = useContestWorkbench(
+      ref(
+        buildContestDetail({
+          mode: 'awd',
+          status: 'registering',
+        })
+      )
+    )
+
+    expect(result.summaryItems.find((item) => item.key === 'challenge-count')).toBeUndefined()
+  })
+
+  it('提供真实题目数时应展示准确的已关联题目数摘要', () => {
+    const challengeCount = ref(3)
+    const result = useContestWorkbench(
+      ref(
+        buildContestDetail({
+          mode: 'awd',
+          status: 'registering',
+        })
+      ),
+      challengeCount
+    )
+
+    expect(result.summaryItems.find((item) => item.key === 'challenge-count')).toEqual(
+      expect.objectContaining({
+        key: 'challenge-count',
+        value: '3',
+      })
+    )
+  })
 })

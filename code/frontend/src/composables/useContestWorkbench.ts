@@ -70,13 +70,6 @@ function hasContestStarted(status: ContestStatus | undefined): boolean {
   return status === 'running' || status === 'frozen' || status === 'ended'
 }
 
-function pickChallengeCount(contest: ContestDetailData | null): string {
-  if (!contest) {
-    return '--'
-  }
-  return '待配置'
-}
-
 function buildAwdReadinessSummary(contest: ContestDetailData | null): string {
   if (!contest || contest.mode !== 'awd') {
     return ''
@@ -87,7 +80,10 @@ function buildAwdReadinessSummary(contest: ContestDetailData | null): string {
   return '请在开赛前完成 AWD 配置与赛前检查'
 }
 
-export function useContestWorkbench(contest: Readonly<Ref<ContestDetailData | null>>) {
+export function useContestWorkbench(
+  contest: Readonly<Ref<ContestDetailData | null>>,
+  linkedChallengeCount?: Readonly<Ref<number | null>>
+) {
   const visibleStages = computed<ContestWorkbenchStage[]>(() =>
     isAwdContest(contest.value) ? AWD_STAGES : BASE_STAGES
   )
@@ -115,13 +111,16 @@ export function useContestWorkbench(contest: Readonly<Ref<ContestDetailData | nu
         label: '当前状态',
         value: formatContestStatus(contest.value.status),
       },
-      {
+    ]
+
+    if (linkedChallengeCount?.value != null) {
+      items.push({
         key: 'challenge-count',
         label: '已关联题目数',
-        value: pickChallengeCount(contest.value),
+        value: String(linkedChallengeCount.value),
         hint: '题目池调整后，这里会同步显示当前配置情况。',
-      },
-    ]
+      })
+    }
 
     if (contest.value.mode === 'awd') {
       items.push({
